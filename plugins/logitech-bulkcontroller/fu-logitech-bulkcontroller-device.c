@@ -305,7 +305,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	g_byte_array_append(response->data,
 			    buf + st->len,
 			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
-	if (response->data == 0) {
+	if (response->data->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
