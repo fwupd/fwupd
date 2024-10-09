@@ -137,3 +137,8 @@ Additionally, the list of approved firmware can be supplemented using
 ## Other frontends
 
 fwupdmgr is a command line client, but various additional graphical frontends are enumerated in the [fwupdmgr man page](https://fwupd.github.io/libfwupdplugin/fwupdmgr.html#description).
+
+## SAST Tools
+
+- [Coverity](https://scan.coverity.com/) - static analyzer for Java, C/C++, C#, JavaScript, Ruby, and Python code.
+- [PVS-Studio](https://pvs-studio.com/en/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
