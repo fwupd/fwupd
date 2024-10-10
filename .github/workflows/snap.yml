@@ -48,6 +48,7 @@ jobs:
         name: snap
     - id: install-snap
       run: |
+        sudo apt remove fwupd -y
         sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
         sudo snap connect fwupd:polkit :polkit
         sudo fwupd.fwupdtool enable-test-devices
