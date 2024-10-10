@@ -57,7 +57,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 	g_autoptr(GBytes) fw_raw = NULL;
 
 	/* parse to get version */
-	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	if (fu_firmware_get_version(firmware) != NULL)
 		fu_device_set_version(device, fu_firmware_get_version(firmware));
@@ -189,7 +189,7 @@ fu_uf2_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	fw = fu_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 
 	return g_steal_pointer(&firmware);

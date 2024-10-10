@@ -187,7 +187,11 @@ fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 		/* get the total size using the CSR header */
 		if (i == 0) {
 			g_autoptr(FuFirmware) firmware = fu_dfu_csr_firmware_new();
-			if (!fu_firmware_parse(firmware, chunk, FWUPD_INSTALL_FLAG_NONE, error))
+			if (!fu_firmware_parse_bytes(firmware,
+						     chunk,
+						     0x0,
+						     FWUPD_INSTALL_FLAG_NONE,
+						     error))
 				return NULL;
 			total_sz = fu_dfu_csr_firmware_get_total_sz(FU_DFU_CSR_FIRMWARE(firmware));
 		}

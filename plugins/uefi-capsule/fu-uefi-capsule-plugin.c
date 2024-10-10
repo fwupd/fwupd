@@ -331,11 +331,11 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */
-	if (!fu_firmware_parse_full(FU_FIRMWARE(bmp_image),
-				    blob,
-				    0x0,
-				    FWUPD_INSTALL_FLAG_NONE,
-				    error)) {
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(bmp_image),
+				     blob,
+				     0x0,
+				     FWUPD_INSTALL_FLAG_NONE,
+				     error)) {
 		g_prefix_error(error, "splash invalid: ");
 		return FALSE;
 	}

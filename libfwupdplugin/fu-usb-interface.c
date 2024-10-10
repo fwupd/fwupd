@@ -49,11 +49,11 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 	/* this is common to all descriptor types */
 	while (offset < bufsz) {
 		g_autoptr(FuUsbDescriptor) img = g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
-		if (!fu_firmware_parse_full(FU_FIRMWARE(img),
-					    bytes,
-					    offset,
-					    FWUPD_INSTALL_FLAG_NONE,
-					    error))
+		if (!fu_firmware_parse_bytes(FU_FIRMWARE(img),
+					     bytes,
+					     offset,
+					     FWUPD_INSTALL_FLAG_NONE,
+					     error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 			return FALSE;

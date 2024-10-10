@@ -160,10 +160,11 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		fw2 = fu_bytes_new_offset(payload, offset_tmp, payloadsz - offset_tmp, error);
 		if (fw2 == NULL)
 			return FALSE;
-		if (!fu_firmware_parse(firmware_coswid,
-				       fw2,
-				       flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
-				       error))
+		if (!fu_firmware_parse_bytes(firmware_coswid,
+					     fw2,
+					     0x0,
+					     flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))
 			return FALSE;

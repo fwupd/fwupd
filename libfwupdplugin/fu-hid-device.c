@@ -114,7 +114,7 @@ fu_hid_device_parse_descriptors(FuHidDevice *self, GError **error)
 		g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
 		g_autofree gchar *title = g_strdup_printf("HidDescriptor:0x%x", i);
 		fu_dump_bytes(G_LOG_DOMAIN, title, fw);
-		if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, error))
+		if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 			return NULL;
 		g_ptr_array_add(descriptors, g_steal_pointer(&descriptor));
 	}

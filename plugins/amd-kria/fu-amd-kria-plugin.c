@@ -43,7 +43,7 @@ fu_amd_kria_plugin_process_image(FuPlugin *plugin, FuDevice *dev, GError **error
 		return FALSE;
 	firmware = fu_amd_kria_image_firmware_new();
 
-	if (!fu_firmware_parse(firmware, bytes, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, bytes, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	fu_device_set_version(dev, fu_firmware_get_version(firmware));
@@ -64,7 +64,7 @@ fu_amd_kria_plugin_process_persistent(FuPlugin *plugin, FuDevice *dev, GError **
 		return FALSE;
 	firmware = fu_amd_kria_persistent_firmware_new();
 
-	if (!fu_firmware_parse(firmware, bytes, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, bytes, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	if (fu_amd_kria_persistent_firmware_booted_image_a(

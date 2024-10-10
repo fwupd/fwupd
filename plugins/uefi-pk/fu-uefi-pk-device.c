@@ -179,7 +179,7 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	pk_blob = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "PK", NULL, error);
 	if (pk_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(pk, pk_blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_bytes(pk, pk_blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to parse PK: ");
 		return FALSE;
 	}

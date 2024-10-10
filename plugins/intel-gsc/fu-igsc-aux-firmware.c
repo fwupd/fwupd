@@ -214,7 +214,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse as CPD */
-	if (!fu_firmware_parse(fw_cpd, blob_dataimg, flags, error))
+	if (!fu_firmware_parse_bytes(fw_cpd, blob_dataimg, 0x0, flags, error))
 		return FALSE;
 
 	/* get manifest */
