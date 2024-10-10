@@ -1,0 +1,27 @@
+# N-Key for Rog Ally
+[USB\VID_0B05&PID_1ABE]
+Plugin = asus_hid
+GType = FuAsusHidDevice
+AsusHidNumMcu = 2
+CounterpartGuid = USB\VID_048D&PID_89DB
+FirmwareSizeMax = 0x40000
+
+# Rog Ally-X
+[USB\VID_0B05&PID_1B4C]
+Plugin = asus_hid
+GType = FuAsusHidDevice
+AsusHidNumMcu = 1
+CounterpartGuid = USB\VID_048D&PID_89DC
+FirmwareSizeMax = 0x40000
+
+# Ally Bootloader
+[USB\VID_048D&PID_89DB]
+Plugin = asus_hid
+Flags = is-bootloader,can-verify-image
+FirmwareSizeMax = 0x40000
+
+# Ally X Bootloader
+[USB\VID_048D&PID_89DC]
+Plugin = asus_hid
+Flags = is-bootloader,can-verify-image
+FirmwareSizeMax = 0x40000
