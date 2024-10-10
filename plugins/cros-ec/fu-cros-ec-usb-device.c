@@ -439,8 +439,12 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_cros_ec_usb_device_reload(FuDevice *device, GError **error)
 {
+	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN) &&
+	    fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO))
+		return TRUE;
+
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-	return fu_cros_ec_usb_device_setup(device, error);
+	return TRUE;
 }
 
 static gboolean
@@ -820,7 +824,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 							    section,
 							    fu_progress_get_child(progress),
 							    &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
 				g_debug("failed to transfer section, trying another write, "
 					"ignoring error: %s",
 					error_local->message);
@@ -947,6 +951,34 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
+fu_cros_ec_usb_device_replace(FuDevice *device, FuDevice *donor)
+{
+	if (fu_device_has_private_flag(donor, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN))
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
+	if (fu_device_has_private_flag(donor, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN))
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
+	if (fu_device_has_private_flag(donor, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO))
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+	if (fu_device_has_private_flag(donor, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL))
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+}
+
+static gboolean
+fu_cros_ec_usb_device_cleanup(FuDevice *device,
+			      FuProgress *progress,
+			      FwupdInstallFlags flags,
+			      GError **error)
+{
+	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
+	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
+	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+
+	/* success */
+	return TRUE;
+}
+
+static void
 fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.usb.crosec");
@@ -1008,4 +1040,6 @@ fu_cros_ec_usb_device_class_init(FuCrosEcUsbDeviceClass *klass)
 	device_class->probe = fu_cros_ec_usb_device_probe;
 	device_class->set_progress = fu_cros_ec_usb_device_set_progress;
 	device_class->reload = fu_cros_ec_usb_device_reload;
+	device_class->replace = fu_cros_ec_usb_device_replace;
+	device_class->cleanup = fu_cros_ec_usb_device_cleanup;
 }
