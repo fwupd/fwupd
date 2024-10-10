@@ -67,7 +67,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 		guint32 crc_calc = 0xFFFFFFFF;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
-		stream_tmp = fu_partial_input_stream_new(stream, 8, streamsz - 8, error);
+		stream_tmp = fu_partial_input_stream_new(stream, 8, G_MAXSIZE, error);
 		if (stream_tmp == NULL)
 			return FALSE;
 		if (!fu_input_stream_compute_crc32(stream_tmp,

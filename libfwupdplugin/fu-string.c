@@ -472,11 +472,7 @@ fu_strsplit_stream(GInputStream *stream,
 
 	helper.delimiter_sz = strlen(delimiter);
 	if (offset > 0) {
-		gsize streamsz = 0;
-		if (!fu_input_stream_size(stream, &streamsz, error))
-			return FALSE;
-		stream_partial =
-		    fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+		stream_partial = fu_partial_input_stream_new(stream, offset, G_MAXSIZE, error);
 		if (stream_partial == NULL)
 			return FALSE;
 	} else {

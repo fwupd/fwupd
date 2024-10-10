@@ -614,8 +614,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* as as easy-to-grab payload blob */
 	if (offset > 0) {
-		stream_payload =
-		    fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
+		stream_payload = fu_partial_input_stream_new(stream, offset, G_MAXSIZE, error);
 		if (stream_payload == NULL)
 			return FALSE;
 	} else {
