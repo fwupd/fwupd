@@ -1178,13 +1178,13 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
+		if (!fu_engine_add_device_flag_emulation_tag_internal(self,
+								      fu_device_get_id(device),
+								      error))
+			return FALSE;
+
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 			fu_device_add_flag(device, flag);
-			if (!fu_engine_add_device_flag_emulation_tag_internal(
-				self,
-				fu_device_get_id(device),
-				error))
-				return FALSE;
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 			return TRUE;
 		}
