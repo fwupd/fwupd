@@ -806,7 +806,11 @@ fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
 	blob = fu_efivars_get_data_bytes(self, FU_EFIVARS_GUID_EFI_GLOBAL, name, NULL, error);
 	if (blob == NULL)
 		return NULL;
-	if (!fu_firmware_parse(FU_FIRMWARE(loadopt), blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(loadopt),
+				     blob,
+				     0x0,
+				     FWUPD_INSTALL_FLAG_NONE,
+				     error))
 		return NULL;
 	fu_firmware_set_idx(FU_FIRMWARE(loadopt), idx);
 	return g_steal_pointer(&loadopt);

@@ -1068,7 +1068,11 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull(bad_data);
 
 	/* parse; should fail, bad image */
-	ret = fu_firmware_parse(firmware_bad, bad_data, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	ret = fu_firmware_parse_bytes(firmware_bad,
+				      bad_data,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_debug("expected image validation error [ctl]: %s", error->message);

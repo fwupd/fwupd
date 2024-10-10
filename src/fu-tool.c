@@ -2982,7 +2982,7 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* show what we wrote */
 	firmware_dst = g_object_new(gtype, NULL);
-	if (!fu_firmware_parse(firmware_dst, blob_dst, priv->flags, error))
+	if (!fu_firmware_parse_bytes(firmware_dst, blob_dst, 0x0, priv->flags, error))
 		return FALSE;
 	str = fu_firmware_to_string(firmware_dst);
 	fu_console_print_literal(priv->console, str);
@@ -4231,7 +4231,11 @@ fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* sanity check JCat and XML MetaInfo files */
-	if (!fu_firmware_parse(FU_FIRMWARE(cab_file), cab_blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(cab_file),
+				     cab_blob,
+				     0x0,
+				     FWUPD_INSTALL_FLAG_NONE,
+				     error))
 		return FALSE;
 
 	return fu_bytes_set_contents(values[0], cab_blob, error);

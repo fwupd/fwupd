@@ -586,7 +586,7 @@ fu_genesys_gl32xx_device_read_firmware(FuDevice *device, FuProgress *progress, G
 	fw = fu_genesys_gl32xx_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 
 	/* success */

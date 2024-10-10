@@ -294,7 +294,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 
 	/* parse the descriptor, but use the defaults if it fails */
 	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
-	if (!fu_firmware_parse(descriptor, fw, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
+	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
 		g_debug("failed to parse descriptor: %s", error_local->message);
 		return TRUE;
 	}

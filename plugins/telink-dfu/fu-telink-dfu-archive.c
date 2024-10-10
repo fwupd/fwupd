@@ -82,7 +82,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	 *   will compare 'image_id' in fu_firmware_get_image_by_id()
 	 *   e.g. 8278_otav1_bank0 */
 	image_id = g_strdup_printf("%s_%s_bank%01u", board_name, bootloader_name, i);
-	if (!fu_firmware_parse(image, blob, flags, error))
+	if (!fu_firmware_parse_bytes(image, blob, 0x0, flags, error))
 		return FALSE;
 	g_debug("image_id=%s", image_id);
 

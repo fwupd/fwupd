@@ -4700,7 +4700,11 @@ fu_plugin_composite_func(gconstpointer user_data)
 	    "firmware.bin",
 	    "world",
 	    NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	components = fu_cabinet_get_components(cabinet, &error);
@@ -5362,7 +5366,11 @@ fu_common_store_cab_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5428,7 +5436,11 @@ fu_common_store_cab_artifact_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet1), blob1, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet1),
+				      blob1,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5455,7 +5467,11 @@ fu_common_store_cab_artifact_func(void)
 				  "firmware.dfu.asc",
 				  "signature",
 				  NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet2), blob2, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet2),
+				      blob2,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5485,7 +5501,11 @@ fu_common_store_cab_artifact_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet3), blob3, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet3),
+				      blob3,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5510,7 +5530,11 @@ fu_common_store_cab_artifact_func(void)
 			      "firmware.dfu.asc",
 			      "signature",
 			      NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet4), blob4, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet4),
+				      blob4,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -5540,7 +5564,11 @@ fu_common_store_cab_unsigned_func(void)
 				 "firmware.bin",
 				 "world",
 				 NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5589,7 +5617,11 @@ fu_common_store_cab_sha256_func(void)
 	    "firmware.bin",
 	    "world",
 	    NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
@@ -5618,7 +5650,11 @@ fu_common_store_cab_folder_func(void)
 				 "lvfs\\firmware.bin",
 				 "world",
 				 NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5649,7 +5685,11 @@ fu_common_store_cab_error_no_metadata_func(void)
 	g_autoptr(GError) error = NULL;
 
 	blob = fu_test_build_cab(FALSE, "foo.txt", "hello", "bar.txt", "world", NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
@@ -5677,7 +5717,11 @@ fu_common_store_cab_error_wrong_size_func(void)
 				 "firmware.bin",
 				 "world",
 				 NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
@@ -5703,7 +5747,11 @@ fu_common_store_cab_error_missing_file_func(void)
 				 "firmware.bin",
 				 "world",
 				 NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
@@ -5728,7 +5776,11 @@ fu_common_store_cab_error_size_func(void)
 				 "world",
 				 NULL);
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet), 123);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }
@@ -5755,7 +5807,11 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 				 "firmware.bin",
 				 "world",
 				 NULL);
-	ret = fu_firmware_parse(FU_FIRMWARE(cabinet), blob, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
+				      blob,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
 }

@@ -233,11 +233,11 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 		/* parse SREC file and add as image */
 		blob = g_bytes_new(helper->image_buffer->str, helper->image_buffer->len);
 		fu_srec_firmware_set_addr_min(FU_SREC_FIRMWARE(firmware_srec), hdr->addr);
-		if (!fu_firmware_parse_full(firmware_srec,
-					    blob,
-					    0x0,
-					    helper->flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
-					    error))
+		if (!fu_firmware_parse_bytes(firmware_srec,
+					     blob,
+					     0x0,
+					     helper->flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     error))
 			return FALSE;
 		fw_srec = fu_firmware_get_bytes(firmware_srec, error);
 		if (fw_srec == NULL)

@@ -548,7 +548,7 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	blob = g_bytes_new(buf, sizeof(buf));
-	if (!fu_firmware_parse(fw, blob, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_bytes(fw, blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error)) {
 		g_prefix_error(error, "NVM parse error: ");
 		return FALSE;
 	}

@@ -172,7 +172,7 @@ fu_amd_kria_device_setup(FuDevice *device, GError **error)
 	/* parse the eeprom */
 	bytes = g_bytes_new(buf, bufsz);
 	firmware = fu_amd_kria_som_eeprom_new();
-	if (!fu_firmware_parse(firmware, bytes, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, bytes, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	/* build instance IDs from EEPROM data */

@@ -130,7 +130,7 @@ typedef enum {
 	/**
 	 * FU_FIRMWARE_FLAG_DONE_PARSE:
 	 *
-	 * The firmware object has been used by fu_firmware_parse_full().
+	 * The firmware object has been used by fu_firmware_parse_bytes().
 	 *
 	 * Since: 1.7.3
 	 **/
@@ -364,9 +364,6 @@ fu_firmware_build_from_filename(FuFirmware *self,
 				const gchar *filename,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_parse(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
-gboolean
 fu_firmware_parse_stream(FuFirmware *self,
 			 GInputStream *stream,
 			 gsize offset,
@@ -376,11 +373,11 @@ gboolean
 fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_parse_full(FuFirmware *self,
-		       GBytes *fw,
-		       gsize offset,
-		       FwupdInstallFlags flags,
-		       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+fu_firmware_parse_bytes(FuFirmware *self,
+			GBytes *fw,
+			gsize offset,
+			FwupdInstallFlags flags,
+			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_firmware_write(FuFirmware *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GBytes *

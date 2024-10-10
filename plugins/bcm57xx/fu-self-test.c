@@ -84,7 +84,7 @@ fu_bcm57xx_firmware_talos_func(void)
 	blob = fu_bytes_get_contents(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
-	ret = fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	ret = fu_firmware_parse_bytes(firmware, blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	images = fu_firmware_get_images(firmware);

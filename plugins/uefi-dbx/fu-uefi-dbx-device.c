@@ -72,7 +72,7 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 					     error);
 	if (dbx_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(dbx, dbx_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(dbx, dbx_blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
 
 	/* add the last checksum to the device */
@@ -144,7 +144,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	    fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "KEK", NULL, error);
 	if (kek_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse(kek, kek_blob, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(kek, kek_blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	fu_device_add_instance_strup(device, "ARCH", EFI_MACHINE_TYPE_NAME);
 

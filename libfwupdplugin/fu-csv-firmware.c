@@ -170,7 +170,7 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 	fu_firmware_set_idx(entry, token_idx);
 	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), entry, error))
 		return FALSE;
-	if (!fu_firmware_parse(entry, fw, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(entry, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	return TRUE;
 }

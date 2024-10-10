@@ -1171,7 +1171,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 }
 
 /**
- * fu_firmware_parse_full:
+ * fu_firmware_parse_bytes:
  * @self: a #FuFirmware
  * @fw: firmware blob
  * @offset: start offset, useful for ignoring a bootloader
@@ -1182,14 +1182,14 @@ fu_firmware_parse_stream(FuFirmware *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.8.2
+ * Since: 2.0.1
  **/
 gboolean
-fu_firmware_parse_full(FuFirmware *self,
-		       GBytes *fw,
-		       gsize offset,
-		       FwupdInstallFlags flags,
-		       GError **error)
+fu_firmware_parse_bytes(FuFirmware *self,
+			GBytes *fw,
+			gsize offset,
+			FwupdInstallFlags flags,
+			GError **error)
 {
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -1199,25 +1199,6 @@ fu_firmware_parse_full(FuFirmware *self,
 
 	stream = g_memory_input_stream_new_from_bytes(fw);
 	return fu_firmware_parse_stream(self, stream, offset, flags, error);
-}
-
-/**
- * fu_firmware_parse:
- * @self: a #FuFirmware
- * @fw: firmware blob
- * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
- * @error: (nullable): optional return location for an error
- *
- * Parses a firmware, typically breaking the firmware into images.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.3.1
- **/
-gboolean
-fu_firmware_parse(FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
-{
-	return fu_firmware_parse_full(self, fw, 0x0, flags, error);
 }
 
 /**

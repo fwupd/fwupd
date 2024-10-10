@@ -139,10 +139,11 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 			g_debug("failed to get data for name %s: %s", name, error_local->message);
 			continue;
 		}
-		if (!fu_firmware_parse(FU_FIRMWARE(loadopt_tmp),
-				       loadopt_blob_tmp,
-				       FWUPD_INSTALL_FLAG_NONE,
-				       &error_local)) {
+		if (!fu_firmware_parse_bytes(FU_FIRMWARE(loadopt_tmp),
+					     loadopt_blob_tmp,
+					     0x0,
+					     FWUPD_INSTALL_FLAG_NONE,
+					     &error_local)) {
 			g_debug("%s -> load option was invalid: %s", name, error_local->message);
 			continue;
 		}
@@ -251,10 +252,11 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "$id");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "component_generation");
 	fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(current_sbatlevel), "date_stamp");
-	if (!fu_firmware_parse(current_sbatlevel,
-			       current_sbatlevel_bytes,
-			       FWUPD_INSTALL_FLAG_NONE,
-			       error)) {
+	if (!fu_firmware_parse_bytes(current_sbatlevel,
+				     current_sbatlevel_bytes,
+				     0x0,
+				     FWUPD_INSTALL_FLAG_NONE,
+				     error)) {
 		g_prefix_error(error, "failed to load SbatLevelRT: ");
 		return FALSE;
 	}
