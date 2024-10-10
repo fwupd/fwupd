@@ -78,7 +78,6 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -87,7 +86,7 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 
 	/* if device family not specified by caller, try to get from firmware file */
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_UNKNOWN) {
-		if (!fu_synaptics_mst_firmware_detect_family(self, stream, offset, error))
+		if (!fu_synaptics_mst_firmware_detect_family(self, stream, 0x0, error))
 			return FALSE;
 	}
 
@@ -112,7 +111,7 @@ fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 			    fu_synaptics_mst_family_to_string(self->family));
 		return FALSE;
 	}
-	if (!fu_input_stream_read_u16(stream, offset + addr, &self->board_id, G_BIG_ENDIAN, error))
+	if (!fu_input_stream_read_u16(stream, addr, &self->board_id, G_BIG_ENDIAN, error))
 		return FALSE;
 
 	/* success */

@@ -44,7 +44,6 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 static gboolean
 fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -58,7 +57,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* map into header */
-	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, offset, error);
+	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL) {
 		g_prefix_error(error, "failed to read header: ");
 		return FALSE;

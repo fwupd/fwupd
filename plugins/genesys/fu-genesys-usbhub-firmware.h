@@ -21,7 +21,6 @@ gboolean
 fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error);
 gboolean
 fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
-					  gsize offset,
 					  gsize *size,
 					  GError **error);
 gboolean

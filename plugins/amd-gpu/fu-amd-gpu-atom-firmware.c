@@ -265,7 +265,6 @@ fu_amd_gpu_atom_firmware_parse_config_filename(FuAmdGpuAtomFirmware *self,
 static gboolean
 fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -276,11 +275,11 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) blob = NULL;
 
 	if (!FU_FIRMWARE_CLASS(fu_amd_gpu_atom_firmware_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	/* atom rom image */
-	atom_image = fu_struct_atom_image_parse_stream(stream, offset, error);
+	atom_image = fu_struct_atom_image_parse_stream(stream, 0x0, error);
 	if (atom_image == NULL)
 		return FALSE;
 
@@ -288,12 +287,12 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, fu_struct_atom_image_get_size(atom_image) * 512);
 
 	/* atom rom header */
-	loc = fu_struct_atom_image_get_rom_loc(atom_image) + offset;
+	loc = fu_struct_atom_image_get_rom_loc(atom_image);
 	atom_rom = fu_struct_atom_rom21_header_parse_stream(stream, loc, error);
 	if (atom_rom == NULL)
 		return FALSE;
 
-	blob = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
 	if (blob == NULL)
 		return FALSE;
 	if (!fu_amd_gpu_atom_firmware_parse_config_filename(self, blob, atom_rom, error))

@@ -215,7 +215,6 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id(JsonObject *obj,
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {

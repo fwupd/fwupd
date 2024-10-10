@@ -28,7 +28,6 @@ fu_parade_usbhub_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_parade_usbhub_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {

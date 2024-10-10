@@ -178,12 +178,11 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 static gboolean
 fu_csv_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
 	FuCsvFirmware *self = FU_CSV_FIRMWARE(firmware);
-	return fu_strsplit_stream(stream, offset, "\n", fu_csv_firmware_parse_line_cb, self, error);
+	return fu_strsplit_stream(stream, 0x0, "\n", fu_csv_firmware_parse_line_cb, self, error);
 }
 
 static GByteArray *

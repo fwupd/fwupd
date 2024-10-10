@@ -239,11 +239,11 @@ fu_efi_load_option_parse_optional(FuEfiLoadOption *self,
 static gboolean
 fu_efi_load_option_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);
+	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autofree gchar *id = NULL;
 	g_autoptr(FuEfiDevicePathList) device_path_list = fu_efi_device_path_list_new();

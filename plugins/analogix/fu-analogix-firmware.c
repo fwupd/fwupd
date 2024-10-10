@@ -18,7 +18,6 @@ G_DEFINE_TYPE(FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_IHEX_FIRMWARE)
 static gboolean
 fu_analogix_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -36,7 +35,7 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) blob_stx = NULL;
 
 	/* convert to binary with FuIhexFirmware->parse */
-	if (!klass->parse(firmware, stream, offset, flags, error))
+	if (!klass->parse(firmware, stream, flags, error))
 		return FALSE;
 	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)

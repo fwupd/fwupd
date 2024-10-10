@@ -65,7 +65,6 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 static gboolean
 fu_jabra_file_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -84,7 +83,7 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 				       FU_ARCHIVE_FORMAT_ZIP);
 	fu_archive_firmware_set_compression(FU_ARCHIVE_FIRMWARE(firmware_archive),
 					    FU_ARCHIVE_COMPRESSION_NONE);
-	if (!fu_firmware_parse_stream(firmware_archive, stream, offset, flags, error))
+	if (!fu_firmware_parse_stream(firmware_archive, stream, 0x0, flags, error))
 		return FALSE;
 
 	img_xml = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),

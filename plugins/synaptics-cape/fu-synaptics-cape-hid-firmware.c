@@ -22,7 +22,6 @@ G_DEFINE_TYPE(FuSynapticsCapeHidFirmware,
 static gboolean
 fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 				     GInputStream *stream,
-				     gsize offset,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
@@ -46,7 +45,7 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* unpack */
-	st = fu_struct_synaptics_cape_hid_hdr_parse_stream(stream, offset, error);
+	st = fu_struct_synaptics_cape_hid_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	fu_synaptics_cape_firmware_set_vid(FU_SYNAPTICS_CAPE_FIRMWARE(self),

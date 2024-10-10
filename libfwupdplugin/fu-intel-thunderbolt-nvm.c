@@ -412,7 +412,6 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -448,11 +447,10 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			   {0x1137, 4, FU_INTEL_THUNDERBOLT_NVM_FAMILY_MAPLE_RIDGE, 2},
 			   {0}};
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GInputStream) stream_payload = NULL;
 	gsize streamsz = 0;
 
 	/* add this straight away */
-	priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] = offset;
+	priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] = 0x0;
 
 	/* is native */
 	if (!fu_intel_thunderbolt_nvm_read_uint8(
@@ -594,7 +592,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 
 	/* we're only reading enough to get the vendor-id and model-id */
-	if (offset == 0x0 && streamsz < priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS])
+	if (streamsz < priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS])
 		return TRUE;
 
 	/* has PD */
@@ -613,14 +611,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 
 	/* as as easy-to-grab payload blob */
-	if (offset > 0) {
-		stream_payload = fu_partial_input_stream_new(stream, offset, G_MAXSIZE, error);
-		if (stream_payload == NULL)
-			return FALSE;
-	} else {
-		stream_payload = g_object_ref(stream);
-	}
-	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
+	if (!fu_firmware_parse_stream(img_payload, stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
 	if (!fu_firmware_add_image_full(firmware, img_payload, error))

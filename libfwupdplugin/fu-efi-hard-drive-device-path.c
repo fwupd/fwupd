@@ -93,7 +93,6 @@ fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
 static gboolean
 fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    gsize offset,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -101,7 +100,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* re-parse */
-	st = fu_struct_efi_hard_drive_device_path_parse_stream(stream, offset, error);
+	st = fu_struct_efi_hard_drive_device_path_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	self->partition_number = fu_struct_efi_hard_drive_device_path_get_partition_number(st);

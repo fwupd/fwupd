@@ -45,7 +45,6 @@ fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -57,7 +56,7 @@ fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
 	g_autofree gchar *version = NULL;
 
 	/* verify header */
-	st_hdr = fu_struct_synaptics_vmm9_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_synaptics_vmm9_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 

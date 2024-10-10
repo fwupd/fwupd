@@ -27,22 +27,23 @@
 G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_fmap_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
-{
-	return fu_struct_fmap_validate_stream(stream, offset, error);
-}
-
-static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
-	FuFmapFirmwareClass *firmware_class = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
+	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(GByteArray) st_hdr = NULL;
+
+	/* find the magic token */
+	if (!fu_input_stream_find(stream,
+				  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+				  FU_STRUCT_FMAP_SIZE_SIGNATURE,
+				  &offset,
+				  error))
+		return FALSE;
 
 	/* parse */
 	st_hdr = fu_struct_fmap_parse_stream(stream, offset, error);
@@ -109,12 +110,6 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 			fu_firmware_set_version(img, version);
 		}
 		offset += st_area->len;
-	}
-
-	/* subclassed */
-	if (firmware_class->parse != NULL) {
-		if (!firmware_class->parse(firmware, stream, offset, flags, error))
-			return FALSE;
 	}
 
 	/* success */
@@ -188,7 +183,6 @@ static void
 fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
-	firmware_class->validate = fu_fmap_firmware_validate;
 	firmware_class->parse = fu_fmap_firmware_parse;
 	firmware_class->write = fu_fmap_firmware_write;
 }

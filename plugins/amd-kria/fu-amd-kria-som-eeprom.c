@@ -29,7 +29,6 @@ G_DEFINE_TYPE(FuAmdKriaSomEeprom, fu_amd_kria_som_eeprom, FU_TYPE_FIRMWARE)
 static gboolean
 fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -44,10 +43,10 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* parse IPMI common header */
-	common = fu_struct_ipmi_common_parse_stream(stream, offset, error);
+	common = fu_struct_ipmi_common_parse_stream(stream, 0x0, error);
 	if (common == NULL)
 		return FALSE;
-	board_offset = offset + fu_struct_ipmi_common_get_board_offset(common) * 8;
+	board_offset = fu_struct_ipmi_common_get_board_offset(common) * 8;
 
 	/* parse board info area */
 	board = fu_struct_board_info_parse_stream(stream, board_offset, error);

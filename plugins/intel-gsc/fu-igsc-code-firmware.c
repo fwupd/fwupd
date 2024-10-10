@@ -54,7 +54,6 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
@@ -80,7 +79,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	stream_info = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),

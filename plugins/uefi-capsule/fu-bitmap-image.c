@@ -28,7 +28,6 @@ fu_bitmap_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_bitmap_image_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
@@ -36,13 +35,13 @@ fu_bitmap_image_parse(FuFirmware *firmware,
 	g_autoptr(FuStructBitmapFileHeader) st_file = NULL;
 	g_autoptr(FuStructBitmapInfoHeader) st_info = NULL;
 
-	st_file = fu_struct_bitmap_file_header_parse_stream(stream, offset, error);
+	st_file = fu_struct_bitmap_file_header_parse_stream(stream, 0x0, error);
 	if (st_file == NULL) {
 		g_prefix_error(error, "image is corrupt: ");
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, fu_struct_bitmap_file_header_get_size(st_file));
-	st_info = fu_struct_bitmap_info_header_parse_stream(stream, offset + st_file->len, error);
+	st_info = fu_struct_bitmap_info_header_parse_stream(stream, st_file->len, error);
 	if (st_info == NULL) {
 		g_prefix_error(error, "header is corrupt: ");
 		return FALSE;

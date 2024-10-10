@@ -70,16 +70,9 @@ fu_cros_ec_firmware_get_needed_sections(FuCrosEcFirmware *self, GError **error)
 	return g_steal_pointer(&needed_sections);
 }
 
-static gboolean
-fu_cros_ec_firmware_parse(FuFirmware *firmware,
-			  GInputStream *stream,
-			  gsize offset,
-			  FwupdInstallFlags flags,
-			  GError **error)
+gboolean
+fu_cros_ec_firmware_ensure_version(FuCrosEcFirmware *self, GError **error)
 {
-	FuCrosEcFirmware *self = FU_CROS_EC_FIRMWARE(firmware);
-	FuFirmware *fmap_firmware = FU_FIRMWARE(firmware);
-
 	for (gsize i = 0; i < self->sections->len; i++) {
 		gboolean rw = FALSE;
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(self->sections, i);
@@ -106,13 +99,13 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 
-		img = fu_firmware_get_image_by_id(fmap_firmware, fmap_name, error);
+		img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), fmap_name, error);
 		if (img == NULL) {
 			g_prefix_error(error, "%s image not found: ", fmap_name);
 			return FALSE;
 		}
 
-		fwid_img = fu_firmware_get_image_by_id(fmap_firmware, fmap_fwid_name, error);
+		fwid_img = fu_firmware_get_image_by_id(FU_FIRMWARE(self), fmap_fwid_name, error);
 		if (fwid_img == NULL) {
 			g_prefix_error(error, "%s image not found: ", fmap_fwid_name);
 			return FALSE;
@@ -159,7 +152,7 @@ fu_cros_ec_firmware_parse(FuFirmware *firmware,
 					       section->raw_version);
 				return FALSE;
 			}
-			fu_firmware_set_version(firmware, version_rw->triplet);
+			fu_firmware_set_version(FU_FIRMWARE(self), version_rw->triplet);
 		}
 	}
 
@@ -193,8 +186,6 @@ static void
 fu_cros_ec_firmware_class_init(FuCrosEcFirmwareClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuFmapFirmwareClass *firmware_class = FU_FMAP_FIRMWARE_CLASS(klass);
-	firmware_class->parse = fu_cros_ec_firmware_parse;
 	object_class->finalize = fu_cros_ec_firmware_finalize;
 }
 

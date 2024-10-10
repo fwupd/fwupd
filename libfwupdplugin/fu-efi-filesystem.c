@@ -29,10 +29,10 @@ G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 static gboolean
 fu_efi_filesystem_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
+	gsize offset = 0;
 	gsize streamsz = 0;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;

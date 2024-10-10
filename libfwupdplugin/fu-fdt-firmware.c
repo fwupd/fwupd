@@ -334,7 +334,6 @@ fu_fdt_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_fdt_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
@@ -346,7 +345,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */
-	st_hdr = fu_struct_fdt_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_fdt_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -367,7 +366,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	priv->cpuid = fu_struct_fdt_get_boot_cpuid_phys(st_hdr);
 	off_mem_rsvmap = fu_struct_fdt_get_off_mem_rsvmap(st_hdr);
 	if (off_mem_rsvmap != 0x0) {
-		if (!fu_fdt_firmware_parse_mem_rsvmap(self, stream, offset + off_mem_rsvmap, error))
+		if (!fu_fdt_firmware_parse_mem_rsvmap(self, stream, off_mem_rsvmap, error))
 			return FALSE;
 	}
 	if (fu_struct_fdt_get_last_comp_version(st_hdr) < FDT_LAST_COMP_VERSION) {
@@ -387,18 +386,18 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GByteArray) dt_strings = NULL;
 		g_autoptr(GByteArray) dt_struct = NULL;
 		g_autoptr(GBytes) dt_struct_buf = NULL;
-		dt_strings = fu_input_stream_read_byte_array(
-		    stream,
-		    offset + fu_struct_fdt_get_off_dt_strings(st_hdr),
-		    fu_struct_fdt_get_size_dt_strings(st_hdr),
-		    error);
+		dt_strings =
+		    fu_input_stream_read_byte_array(stream,
+						    fu_struct_fdt_get_off_dt_strings(st_hdr),
+						    fu_struct_fdt_get_size_dt_strings(st_hdr),
+						    error);
 		if (dt_strings == NULL)
 			return FALSE;
-		dt_struct = fu_input_stream_read_byte_array(
-		    stream,
-		    offset + fu_struct_fdt_get_off_dt_struct(st_hdr),
-		    fu_struct_fdt_get_size_dt_struct(st_hdr),
-		    error);
+		dt_struct =
+		    fu_input_stream_read_byte_array(stream,
+						    fu_struct_fdt_get_off_dt_struct(st_hdr),
+						    fu_struct_fdt_get_size_dt_struct(st_hdr),
+						    error);
 		if (dt_struct == NULL)
 			return FALSE;
 		if (dt_struct->len != fu_struct_fdt_get_size_dt_struct(st_hdr)) {

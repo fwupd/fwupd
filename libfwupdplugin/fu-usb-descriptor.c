@@ -14,7 +14,6 @@ G_DEFINE_TYPE(FuUsbDescriptor, fu_usb_descriptor, FU_TYPE_FIRMWARE)
 static gboolean
 fu_usb_descriptor_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
@@ -23,11 +22,11 @@ fu_usb_descriptor_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) stream_partial = NULL;
 
 	/* parse */
-	st = fu_usb_base_hdr_parse_stream(stream, offset, error);
+	st = fu_usb_base_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	stream_partial =
-	    fu_partial_input_stream_new(stream, offset, fu_usb_base_hdr_get_length(st), error);
+	    fu_partial_input_stream_new(stream, 0x0, fu_usb_base_hdr_get_length(st), error);
 	if (stream_partial == NULL)
 		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_partial, error))

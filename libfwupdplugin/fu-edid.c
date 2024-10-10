@@ -219,12 +219,12 @@ fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GErro
 static gboolean
 fu_edid_parse(FuFirmware *firmware,
 	      GInputStream *stream,
-	      gsize offset,
 	      FwupdInstallFlags flags,
 	      GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
 	const guint8 *manu_id;
+	gsize offset = 0;
 	g_autofree gchar *pnp_id = NULL;
 	g_autoptr(GByteArray) st = NULL;
 

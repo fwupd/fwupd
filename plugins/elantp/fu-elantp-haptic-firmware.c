@@ -45,7 +45,6 @@ fu_elantp_haptic_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elantp_haptic_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -57,13 +56,13 @@ fu_elantp_haptic_firmware_parse(FuFirmware *firmware,
 	guint8 tmp = 0;
 	g_autofree gchar *version_str = NULL;
 
-	if (!fu_input_stream_read_u8(stream, offset + 0x4, &tmp, error))
+	if (!fu_input_stream_read_u8(stream, 0x4, &tmp, error))
 		return FALSE;
 	v_m = tmp & 0xF;
 	v_s = (tmp & 0xF0) >> 4;
-	if (!fu_input_stream_read_u8(stream, offset + 0x5, &v_d, error))
+	if (!fu_input_stream_read_u8(stream, 0x5, &v_d, error))
 		return FALSE;
-	if (!fu_input_stream_read_u8(stream, offset + 0x6, &v_y, error))
+	if (!fu_input_stream_read_u8(stream, 0x6, &v_y, error))
 		return FALSE;
 	if (v_y == 0xFF || v_d == 0xFF || v_m == 0xF) {
 		g_set_error(error,

@@ -37,14 +37,13 @@ fu_fpc_ff2_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_fpc_ff2_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuFpcFf2Firmware *self = FU_FPC_FF2_FIRMWARE(firmware);
 	g_autoptr(FuStructFpcFf2Hdr) st_hdr = NULL;
 
-	st_hdr = fu_struct_fpc_ff2_hdr_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_fpc_ff2_hdr_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	self->blocks_num = fu_struct_fpc_ff2_hdr_get_blocks_num(st_hdr);

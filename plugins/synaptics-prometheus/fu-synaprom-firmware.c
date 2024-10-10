@@ -50,11 +50,11 @@ fu_synaprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_synaprom_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);
+	gsize offset = 0;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

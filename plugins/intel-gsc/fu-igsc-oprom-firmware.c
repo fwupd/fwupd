@@ -145,7 +145,6 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -155,7 +154,7 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 
 	/* FuOpromFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_oprom_firmware_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	/* check sanity */

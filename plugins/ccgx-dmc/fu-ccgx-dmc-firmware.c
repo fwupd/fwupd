@@ -258,7 +258,6 @@ fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -271,7 +270,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_ccgx_dmc_fwct_info_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_ccgx_dmc_fwct_info_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 
@@ -293,22 +292,18 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_version_raw(firmware, hdr_composite_version);
 
 	/* read fwct data */
-	self->fwct_blob = fu_input_stream_read_bytes(stream, offset, hdr_size, error);
+	self->fwct_blob = fu_input_stream_read_bytes(stream, 0x0, hdr_size, error);
 	if (self->fwct_blob == NULL)
 		return FALSE;
 
 	/* create custom meta binary */
-	if (!fu_input_stream_read_u16(stream,
-				      offset + hdr_size,
-				      &mdbufsz,
-				      G_LITTLE_ENDIAN,
-				      error)) {
+	if (!fu_input_stream_read_u16(stream, hdr_size, &mdbufsz, G_LITTLE_ENDIAN, error)) {
 		g_prefix_error(error, "failed to read metadata size: ");
 		return FALSE;
 	}
 	if (mdbufsz > 0) {
 		self->custom_meta_blob =
-		    fu_input_stream_read_bytes(stream, offset + hdr_size + 2, mdbufsz, error);
+		    fu_input_stream_read_bytes(stream, hdr_size + 2, mdbufsz, error);
 		if (self->custom_meta_blob == NULL)
 			return FALSE;
 	}

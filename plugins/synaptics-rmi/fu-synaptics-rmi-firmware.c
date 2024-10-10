@@ -398,7 +398,6 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 static gboolean
 fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -409,13 +408,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
-	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 
 	/* sanity check */
-	st_img = fu_struct_rmi_img_parse_stream(stream, offset, error);
+	st_img = fu_struct_rmi_img_parse_stream(stream, 0x0, error);
 	if (st_img == NULL)
 		return FALSE;
 	if (bufsz % 2 != 0) {

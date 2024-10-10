@@ -117,7 +117,6 @@ fu_acpi_table_get_oem_revision(FuAcpiTable *self)
 static gboolean
 fu_acpi_table_parse(FuFirmware *firmware,
 		    GInputStream *stream,
-		    gsize offset,
 		    FwupdInstallFlags flags,
 		    GError **error)
 {
@@ -129,7 +128,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 	g_autoptr(FuStructAcpiTable) st = NULL;
 
 	/* parse */
-	st = fu_struct_acpi_table_parse_stream(stream, offset, error);
+	st = fu_struct_acpi_table_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	id = fu_struct_acpi_table_get_signature(st);

@@ -57,7 +57,6 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -67,7 +66,7 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 	guint8 tag;
 	guint8 val = 0;
 
-	if (!fu_input_stream_read_u8(stream, offset, &val, error))
+	if (!fu_input_stream_read_u8(stream, 0x0, &val, error))
 		return FALSE;
 	data_size = size_lookup[val & 0b11];
 	tag = (val & 0b11111100) >> 2;
@@ -78,40 +77,36 @@ fu_hid_report_item_parse(FuFirmware *firmware,
 		gsize streamsz = 0;
 		if (!fu_input_stream_size(stream, &streamsz, error))
 			return FALSE;
-		if (offset + 1 >= streamsz) {
+		if (streamsz < 1) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "not enough data to read long tag");
 			return FALSE;
 		}
-		if (!fu_input_stream_read_u8(stream, offset + 1, &data_size, error))
+		if (!fu_input_stream_read_u8(stream, 1, &data_size, error))
 			return FALSE;
 	} else {
 		g_autoptr(GInputStream) partial_stream = NULL;
 		if (data_size == 1) {
 			guint8 value = 0;
-			if (!fu_input_stream_read_u8(stream, offset + 1, &value, error))
+			if (!fu_input_stream_read_u8(stream, 1, &value, error))
 				return FALSE;
 			self->value = value;
 		} else if (data_size == 2) {
 			guint16 value = 0;
-			if (!fu_input_stream_read_u16(stream,
-						      offset + 1,
-						      &value,
-						      G_LITTLE_ENDIAN,
-						      error))
+			if (!fu_input_stream_read_u16(stream, 1, &value, G_LITTLE_ENDIAN, error))
 				return FALSE;
 			self->value = value;
 		} else if (data_size == 4) {
 			if (!fu_input_stream_read_u32(stream,
-						      offset + 1,
+						      1,
 						      &self->value,
 						      G_LITTLE_ENDIAN,
 						      error))
 				return FALSE;
 		}
-		partial_stream = fu_partial_input_stream_new(stream, offset + 1, data_size, error);
+		partial_stream = fu_partial_input_stream_new(stream, 1, data_size, error);
 		if (partial_stream == NULL)
 			return FALSE;
 		if (!fu_firmware_set_stream(firmware, partial_stream, error))

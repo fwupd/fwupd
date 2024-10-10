@@ -293,7 +293,6 @@ fu_fit_firmware_verify_configuration(FuFirmware *firmware,
 static gboolean
 fu_fit_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
@@ -304,8 +303,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GPtrArray) img_cfgs_array = NULL;
 
 	/* FuFdtFirmware->parse */
-	if (!FU_FIRMWARE_CLASS(fu_fit_firmware_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+	if (!FU_FIRMWARE_CLASS(fu_fit_firmware_parent_class)->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	/* sanity check */

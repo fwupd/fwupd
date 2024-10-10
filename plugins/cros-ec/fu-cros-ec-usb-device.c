@@ -867,15 +867,17 @@ fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
-	FuCrosEcFirmware *cros_ec_firmware = NULL;
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_firmware_new();
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	cros_ec_firmware = FU_CROS_EC_FIRMWARE(firmware);
+	if (!fu_cros_ec_firmware_ensure_version(FU_CROS_EC_FIRMWARE(firmware), error))
+		return NULL;
 
 	/* pick sections */
-	if (!fu_cros_ec_firmware_pick_sections(cros_ec_firmware, self->writeable_offset, error)) {
+	if (!fu_cros_ec_firmware_pick_sections(FU_CROS_EC_FIRMWARE(firmware),
+					       self->writeable_offset,
+					       error)) {
 		g_prefix_error(error, "failed to pick sections: ");
 		return NULL;
 	}

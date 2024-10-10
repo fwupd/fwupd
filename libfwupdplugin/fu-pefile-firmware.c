@@ -201,13 +201,13 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 static gboolean
 fu_pefile_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);
 	FuPefileFirmwarePrivate *priv = GET_PRIVATE(self);
 	guint32 cert_table_sz = 0;
+	gsize offset = 0;
 	gsize streamsz = 0;
 	gsize strtab_offset;
 	guint32 nr_sections;

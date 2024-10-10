@@ -41,7 +41,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 	st = fu_struct_uf2_parse(fu_chunk_get_data(chk),
 				 fu_chunk_get_data_sz(chk),
 				 0, /* offset */
-
 				 error);
 	if (st == NULL)
 		return FALSE;
@@ -170,7 +169,6 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
@@ -180,7 +178,7 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* read in fixed sized chunks */
-	chunks = fu_chunk_array_new_from_stream(stream, offset, 512, error);
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 512, error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

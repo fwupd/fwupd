@@ -59,14 +59,12 @@ struct _FuFirmwareClass {
 	GObjectClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
 			  GInputStream *stream,
-			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*build)(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT;

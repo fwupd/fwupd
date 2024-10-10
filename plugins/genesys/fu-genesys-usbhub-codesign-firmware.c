@@ -50,7 +50,6 @@ fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 					  GInputStream *stream,
-					  gsize offset,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -60,19 +59,15 @@ fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	code_size = streamsz - offset;
+	code_size = streamsz;
 	if (code_size == FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE) {
-		if (!fu_struct_genesys_fw_codesign_info_rsa_validate_stream(stream,
-									    offset,
-									    error)) {
+		if (!fu_struct_genesys_fw_codesign_info_rsa_validate_stream(stream, 0x0, error)) {
 			g_prefix_error(error, "not valid for codesign: ");
 			return FALSE;
 		}
 		self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
 	} else if (code_size == FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE) {
-		if (!fu_struct_genesys_fw_codesign_info_ecdsa_validate_stream(stream,
-									      offset,
-									      error)) {
+		if (!fu_struct_genesys_fw_codesign_info_ecdsa_validate_stream(stream, 0x0, error)) {
 			g_prefix_error(error, "not valid for codesign: ");
 			return FALSE;
 		}
@@ -81,8 +76,7 @@ fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "unknown file format at 0x%x:0x%x",
-			    (guint)offset,
+			    "unknown file format of size 0x%x",
 			    (guint)streamsz);
 		return FALSE;
 	}

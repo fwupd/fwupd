@@ -54,7 +54,6 @@ fu_qc_s5gen2_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
@@ -66,7 +65,7 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) hdr = NULL;
 
 	/* FIXME: deal with encrypted? */
-	hdr = fu_struct_qc_fw_update_hdr_parse_stream(stream, offset, error);
+	hdr = fu_struct_qc_fw_update_hdr_parse_stream(stream, 0x0, error);
 	if (hdr == NULL)
 		return FALSE;
 

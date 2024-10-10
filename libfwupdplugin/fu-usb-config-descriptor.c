@@ -114,7 +114,6 @@ fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self)
 static gboolean
 fu_usb_config_descriptor_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -122,7 +121,7 @@ fu_usb_config_descriptor_parse(FuFirmware *firmware,
 	g_autoptr(FuUsbDescriptorHdr) st = NULL;
 
 	/* parse */
-	st = fu_usb_descriptor_hdr_parse_stream(stream, offset, error);
+	st = fu_usb_descriptor_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	self->configuration = fu_usb_descriptor_hdr_get_configuration(st);

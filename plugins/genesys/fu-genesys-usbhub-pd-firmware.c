@@ -29,7 +29,6 @@ fu_genesys_usbhub_pd_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_pd_firmware_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    gsize offset,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -41,11 +40,11 @@ fu_genesys_usbhub_pd_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_alignment(firmware, FU_FIRMWARE_ALIGNMENT_1K);
 
 	/* truncate to correct size */
-	if (!fu_genesys_usbhub_firmware_calculate_size(stream, offset, &code_size, error)) {
+	if (!fu_genesys_usbhub_firmware_calculate_size(stream, &code_size, error)) {
 		g_prefix_error(error, "not valid for pd: ");
 		return FALSE;
 	}
-	stream_trunc = fu_partial_input_stream_new(stream, offset, code_size, error);
+	stream_trunc = fu_partial_input_stream_new(stream, 0x0, code_size, error);
 	if (stream_trunc == NULL)
 		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_trunc, error))

@@ -32,10 +32,10 @@ G_DEFINE_TYPE(FuCfuPayload, fu_cfu_payload, FU_TYPE_FIRMWARE)
 static gboolean
 fu_cfu_payload_parse(FuFirmware *firmware,
 		     GInputStream *stream,
-		     gsize offset,
 		     FwupdInstallFlags flags,
 		     GError **error)
 {
+	gsize offset = 0;
 	gsize streamsz = 0;
 
 	/* process into chunks */

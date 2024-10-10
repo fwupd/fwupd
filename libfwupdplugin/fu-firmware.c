@@ -964,7 +964,7 @@ fu_firmware_tokenize(FuFirmware *self,
 
 	/* optionally subclassed */
 	if (klass->tokenize != NULL)
-		return klass->tokenize(self, stream, 0x0, flags, error);
+		return klass->tokenize(self, stream, flags, error);
 	return TRUE;
 }
 
@@ -1100,6 +1100,12 @@ fu_firmware_parse_stream(FuFirmware *self,
 			    (guint)offset);
 		return FALSE;
 	}
+
+	/* optional */
+	if (!fu_firmware_validate_for_offset(self, stream, &offset, flags, error))
+		return FALSE;
+
+	/* save stream size */
 	priv->streamsz = streamsz - offset;
 	if (priv->streamsz == 0) {
 		g_set_error_literal(error,
@@ -1120,10 +1126,6 @@ fu_firmware_parse_stream(FuFirmware *self,
 		return FALSE;
 	}
 
-	/* optional */
-	if (!fu_firmware_validate_for_offset(self, stream, &offset, flags, error))
-		return FALSE;
-
 	/* any FuFirmware subclass that gets past this point might have allocated memory in
 	 * ->tokenize() or ->parse() and needs to be destroyed before parsing again */
 	fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_DONE_PARSE);
@@ -1132,26 +1134,26 @@ fu_firmware_parse_stream(FuFirmware *self,
 	if (klass->check_compatible != NULL)
 		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE);
 
-	/* optional */
-	if (klass->tokenize != NULL) {
-		if (!klass->tokenize(self, stream, offset, flags, error))
-			return FALSE;
-	}
-
 	/* save stream */
 	if (offset == 0) {
 		g_set_object(&priv->stream, stream);
 	} else {
 		g_autoptr(GInputStream) partial_stream =
-		    fu_partial_input_stream_new(stream, offset, priv->streamsz - offset, error);
+		    fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL)
 			return FALSE;
 		g_set_object(&priv->stream, partial_stream);
 	}
 
 	/* optional */
+	if (klass->tokenize != NULL) {
+		if (!klass->tokenize(self, priv->stream, flags, error))
+			return FALSE;
+	}
+
+	/* optional */
 	if (klass->parse != NULL)
-		return klass->parse(self, stream, offset, flags, error);
+		return klass->parse(self, priv->stream, flags, error);
 
 	/* verify alignment */
 	if (streamsz % (1ull << priv->alignment) != 0) {
