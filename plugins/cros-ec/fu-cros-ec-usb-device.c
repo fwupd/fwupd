@@ -23,6 +23,8 @@
 #define FU_CROS_EC_BULK_RECV_TIMEOUT	   5000 /* ms */
 #define FU_CROS_EC_USB_DEVICE_REMOVE_DELAY 20000
 
+#define FU_CROS_EC_RESET_DELAY 2500 /* ms */
+
 #define FU_CROS_EC_REQUEST_UPDATE_DONE	    0xB007AB1E
 #define FU_CROS_EC_REQUEST_UPDATE_EXTRA_CMD 0xB007AB1F
 
@@ -678,6 +680,11 @@ fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self, GError **error)
 		g_debug("ignoring failure: %s", error_local->message);
 	}
 
+	/* immediately disappeared.
+	 * Give some time to detect the device absence
+	 * and prevent sending packets to non-existing USB device. */
+	fu_device_sleep(FU_DEVICE(self), FU_CROS_EC_RESET_DELAY); /* ms */
+
 	/* success */
 	return TRUE;
 }
@@ -705,18 +712,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 
 	/* Jump to rw may not work, so if we've reached here, initiate a
 	 * full reset using immediate reset */
-	subcommand = FU_CROS_EC_UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
-	fu_cros_ec_usb_device_send_subcommand(self,
-					      subcommand,
-					      command_body,
-					      command_body_size,
-					      &response,
-					      &response_size,
-					      FALSE,
-					      NULL);
-
-	/* success */
-	return TRUE;
+	return fu_cros_ec_usb_device_reset_to_ro(self, NULL);
 }
 
 static gboolean
