@@ -268,7 +268,7 @@ libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl
 if libcurl.found()
   conf.set('HAVE_LIBCURL', '1')
 endif
-libdrm = dependency('libdrm', required: false)
+libdrm = dependency('libdrm', required: get_option('libdrm'))
 if libdrm.found()
   conf.set('HAVE_LIBDRM' , '1')
 endif
@@ -723,6 +723,7 @@ summary({
   'gnutls': gnutls,
   'introspection': introspection.allowed(),
   'libcurl': libcurl,
+  'libdrm': libdrm,
   'lzma': lzma,
   'polkit': polkit,
   'python3': python3,
