@@ -659,8 +659,8 @@ fu_cros_ec_usb_device_send_subcommand(FuCrosEcUsbDevice *self,
 	return TRUE;
 }
 
-static gboolean
-fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self, GError **error)
+static void
+fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self)
 {
 	guint8 response = 0x0;
 	guint16 subcommand = FU_CROS_EC_UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
@@ -669,7 +669,6 @@ fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self, GError **error)
 	gsize response_size = 1;
 	g_autoptr(GError) error_local = NULL;
 
-	fu_device_add_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
 						   command_body,
@@ -681,9 +680,6 @@ fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self, GError **error)
 		/* failure here is ok */
 		g_debug("ignoring failure: %s", error_local->message);
 	}
-
-	/* success */
-	return TRUE;
 }
 
 static gboolean
@@ -709,15 +705,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 
 	/* Jump to rw may not work, so if we've reached here, initiate a
 	 * full reset using immediate reset */
-	subcommand = FU_CROS_EC_UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
-	fu_cros_ec_usb_device_send_subcommand(self,
-					      subcommand,
-					      command_body,
-					      command_body_size,
-					      &response,
-					      &response_size,
-					      FALSE,
-					      NULL);
+	fu_cros_ec_usb_device_reset_to_ro(self);
 
 	/* success */
 	return TRUE;
@@ -909,9 +897,9 @@ fu_cros_ec_usb_device_attach(FuDevice *device, FuProgress *progress, GError **er
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN) &&
 	    !fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN)) {
-		if (!fu_cros_ec_usb_device_reset_to_ro(self, error)) {
-			return FALSE;
-		}
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+		fu_cros_ec_usb_device_reset_to_ro(self);
 	} else {
 		fu_cros_ec_usb_device_jump_to_rw(self);
 	}
@@ -941,8 +929,8 @@ fu_cros_ec_usb_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	if (self->flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-		if (!fu_cros_ec_usb_device_reset_to_ro(self, error))
-			return FALSE;
+		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
+		fu_cros_ec_usb_device_reset_to_ro(self);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 
