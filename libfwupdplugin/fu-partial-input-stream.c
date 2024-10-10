@@ -146,7 +146,7 @@ fu_partial_input_stream_seekable_iface_init(GSeekableIface *iface)
  * fu_partial_input_stream_new:
  * @stream: a base #GInputStream
  * @offset: offset into @stream
- * @size: size of @stream in bytes
+ * @size: size of @stream in bytes, or %G_MAXSIZE for the "rest" of the stream
  * @error: (nullable): optional return location for an error
  *
  * Creates a partial input stream where content is read from the donor stream.
@@ -166,23 +166,37 @@ fu_partial_input_stream_new(GInputStream *stream, gsize offset, gsize size, GErr
 
 	self->base_stream = g_object_ref(stream);
 	self->offset = offset;
-	self->size = size;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &base_sz, error)) {
 		g_prefix_error(error, "failed to get size: ");
 		return NULL;
 	}
-	if (offset + size > base_sz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "base stream was 0x%x bytes in size, and tried to create partial "
-			    "stream @0x%x of 0x%x bytes",
-			    (guint)base_sz,
-			    (guint)offset,
-			    (guint)size);
-		return NULL;
+	if (size == G_MAXSIZE) {
+		if (offset > base_sz) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "base stream was 0x%x bytes in size "
+				    "and tried to create partial stream @0x%x",
+				    (guint)base_sz,
+				    (guint)offset);
+			return NULL;
+		}
+		self->size = base_sz - offset;
+	} else {
+		if (offset + size > base_sz) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "base stream was 0x%x bytes in size, and tried to create "
+				    "partial stream @0x%x of 0x%x bytes",
+				    (guint)base_sz,
+				    (guint)offset,
+				    (guint)size);
+			return NULL;
+		}
+		self->size = size;
 	}
 
 	/* success */

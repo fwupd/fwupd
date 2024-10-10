@@ -5174,6 +5174,34 @@ fu_progress_child_finished(void)
 }
 
 static void
+fu_partial_input_stream_simple_func(void)
+{
+	gboolean ret;
+	gssize rc;
+	guint8 buf[2] = {0x0};
+	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* use G_MAXSIZE for "rest of the stream" */
+	stream = fu_partial_input_stream_new(base_stream, 4, G_MAXSIZE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	ret = g_seekable_seek(G_SEEKABLE(stream), 0x2, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(stream)), ==, 0x2);
+
+	/* read from offset */
+	rc = g_input_stream_read(stream, buf, 2, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, '7');
+	g_assert_cmpint(buf[1], ==, '8');
+}
+
+static void
 fu_partial_input_stream_func(void)
 {
 	gboolean ret;
@@ -6028,6 +6056,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/input-stream{chunkify}", fu_input_stream_chunkify_func);
 	g_test_add_func("/fwupd/input-stream{find}", fu_input_stream_find_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
+	g_test_add_func("/fwupd/partial-input-stream{simple}", fu_partial_input_stream_simple_func);
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
