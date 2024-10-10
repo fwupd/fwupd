@@ -64,6 +64,10 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 	configuration = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(self), index, error);
 	if (configuration == NULL)
 		return FALSE;
+	g_debug("%s(%s): raw configuration read: %s",
+		fu_device_get_id(FU_DEVICE(self)),
+		fu_device_get_name(FU_DEVICE(self)),
+		configuration);
 
 	if (g_strlcpy(self->configuration,
 		      configuration,
@@ -678,7 +682,7 @@ fu_cros_ec_usb_device_reset_to_ro(FuCrosEcUsbDevice *self)
 						   FALSE,
 						   &error_local)) {
 		/* failure here is ok */
-		g_debug("ignoring failure: %s", error_local->message);
+		g_debug("ignoring failure: reset: %s", error_local->message);
 	}
 }
 
@@ -690,6 +694,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 	gsize response_size = 1;
+	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
@@ -698,8 +703,9 @@ fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 						   &response,
 						   &response_size,
 						   FALSE,
-						   NULL)) {
+						   &error_local)) {
 		/* bail out early here if subcommand failed, which is normal */
+		g_debug("ignoring failure: jump to rw: %s", error_local->message);
 		return TRUE;
 	}
 
