@@ -337,6 +337,7 @@ fu_common_bitwise_func(void)
 	g_assert_cmpint(val, ==, 0x8000000000000002ull);
 
 	FU_BIT_CLEAR(val, 1);
+	g_assert_cmpint(val, ==, 0x8000000000000000ull);
 	FU_BIT_CLEAR(val, 63);
 	g_assert_cmpint(val, ==, 0);
 }
