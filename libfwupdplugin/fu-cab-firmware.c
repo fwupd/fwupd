@@ -30,6 +30,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCabFirmware, fu_cab_firmware, FU_TYPE_FIRMWARE)
 #define FU_CAB_FIRMWARE_MAX_FILES   1024
 #define FU_CAB_FIRMWARE_MAX_FOLDERS 64
 
+#define FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ 0x4000 /* bytes */
+
 /**
  * fu_cab_firmware_get_compressed:
  * @self: a #FuCabFirmware
@@ -109,6 +111,8 @@ typedef struct {
 	FuCabCompression compression;
 	GPtrArray *folder_data; /* of GBytes */
 	z_stream zstrm;
+	guint8 *decompress_buf;
+	gsize decompress_bufsz;
 } FuCabFirmwareParseHelper;
 
 static void
@@ -119,6 +123,7 @@ fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 		g_bytes_unref(helper->fw);
 	if (helper->folder_data != NULL)
 		g_ptr_array_unref(helper->folder_data);
+	g_free(helper->decompress_buf);
 	g_free(helper);
 }
 
@@ -243,7 +248,6 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 
 	/* decompress Zlib data after removing *another *header... */
 	if (helper->compression == FU_CAB_COMPRESSION_MSZIP) {
-		guint8 tmp[0x4000] = {0x0};
 		int zret;
 		g_autofree gchar *kind = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -266,13 +270,17 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		}
 		helper->zstrm.avail_in = g_bytes_get_size(data_blob) - 2;
 		helper->zstrm.next_in = (z_const Bytef *)g_bytes_get_data(data_blob, NULL) + 2;
+		if (helper->decompress_buf == NULL)
+			helper->decompress_buf = g_malloc0(helper->decompress_bufsz);
 		while (1) {
-			helper->zstrm.avail_out = sizeof(tmp);
-			helper->zstrm.next_out = tmp;
+			helper->zstrm.avail_out = helper->decompress_bufsz;
+			helper->zstrm.next_out = helper->decompress_buf;
 			zret = inflate(&helper->zstrm, Z_BLOCK);
 			if (zret == Z_STREAM_END)
 				break;
-			g_byte_array_append(buf, tmp, sizeof(tmp) - helper->zstrm.avail_out);
+			g_byte_array_append(buf,
+					    helper->decompress_buf,
+					    helper->decompress_bufsz - helper->zstrm.avail_out);
 			if (zret != Z_OK) {
 				g_set_error(error,
 					    G_IO_ERROR,
@@ -480,6 +488,7 @@ fu_cab_firmware_parse_helper_new(GBytes *fw, FwupdInstallFlags flags, GError **e
 	helper->fw = g_bytes_ref(fw);
 	helper->install_flags = flags;
 	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
+	helper->decompress_bufsz = FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ;
 	return g_steal_pointer(&helper);
 }
 
