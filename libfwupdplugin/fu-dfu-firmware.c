@@ -272,7 +272,6 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {

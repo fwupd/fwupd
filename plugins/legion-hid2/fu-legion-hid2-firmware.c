@@ -38,7 +38,6 @@ fu_legion_hid2_firmware_get_version(FuFirmware *firmware)
 static gboolean
 fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {

@@ -18,7 +18,6 @@ G_DEFINE_TYPE(FuEbitdoFirmware, fu_ebitdo_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_ebitdo_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -31,7 +30,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) stream_payload = NULL;
 
 	/* check the file size */
-	st = fu_struct_ebitdo_hdr_parse_stream(stream, offset, error);
+	st = fu_struct_ebitdo_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))

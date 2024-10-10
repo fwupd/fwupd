@@ -111,7 +111,6 @@ fu_elantp_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elantp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -123,7 +122,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 
 	/* presumably in words */
 	if (!fu_input_stream_read_u16(stream,
-				      offset + ETP_IAP_START_ADDR_WRDS * 2,
+				      ETP_IAP_START_ADDR_WRDS * 2,
 				      &iap_addr_wrds,
 				      G_LITTLE_ENDIAN,
 				      error))
@@ -140,7 +139,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 
 	/* read module ID */
 	if (!fu_input_stream_read_u16(stream,
-				      offset + self->iap_addr,
+				      self->iap_addr,
 				      &module_id_wrds,
 				      G_LITTLE_ENDIAN,
 				      error))
@@ -154,19 +153,19 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	if (!fu_input_stream_read_u16(stream,
-				      offset + module_id_wrds * 2,
+				      module_id_wrds * 2,
 				      &self->module_id,
 				      G_LITTLE_ENDIAN,
 				      error))
 		return FALSE;
 	if (!fu_input_stream_read_u16(stream,
-				      offset + ETP_IC_TYPE_ADDR_WRDS * 2,
+				      ETP_IC_TYPE_ADDR_WRDS * 2,
 				      &self->ic_type,
 				      G_LITTLE_ENDIAN,
 				      error))
 		return FALSE;
 	if (!fu_input_stream_read_u16(stream,
-				      offset + ETP_IAP_VER_ADDR_WRDS * 2,
+				      ETP_IAP_VER_ADDR_WRDS * 2,
 				      &self->iap_ver,
 				      G_LITTLE_ENDIAN,
 				      error))
@@ -177,7 +176,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 
 	if (self->iap_ver <= 4) {
 		if (!fu_input_stream_read_u16(stream,
-					      offset + (self->iap_addr + 6),
+					      self->iap_addr + 6,
 					      &force_table_addr_wrds,
 					      G_LITTLE_ENDIAN,
 					      &error_local)) {
@@ -186,7 +185,7 @@ fu_elantp_firmware_parse(FuFirmware *firmware,
 		}
 	} else {
 		if (!fu_input_stream_read_u16(stream,
-					      offset + ETP_IAP_FORCETABLE_ADDR_V5 * 2,
+					      ETP_IAP_FORCETABLE_ADDR_V5 * 2,
 					      &force_table_addr_wrds,
 					      G_LITTLE_ENDIAN,
 					      &error_local)) {

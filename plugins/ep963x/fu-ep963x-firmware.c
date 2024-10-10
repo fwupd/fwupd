@@ -30,7 +30,6 @@ fu_ep963x_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ep963x_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {

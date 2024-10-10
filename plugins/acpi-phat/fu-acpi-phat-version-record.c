@@ -20,10 +20,10 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				  GInputStream *stream,
-				  gsize offset,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
+	gsize offset = 0;
 	guint32 record_count = 0;
 	g_autoptr(GByteArray) st = NULL;
 

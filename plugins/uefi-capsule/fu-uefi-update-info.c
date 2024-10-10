@@ -142,7 +142,6 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 static gboolean
 fu_uefi_update_info_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {

@@ -93,7 +93,6 @@ fu_dell_k2_pd_firmware_set_version(FuFirmware *firmware,
 static gboolean
 fu_dell_k2_pd_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     gsize offset,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {

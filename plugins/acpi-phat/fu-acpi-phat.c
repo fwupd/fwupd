@@ -98,7 +98,6 @@ fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {
@@ -114,7 +113,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* parse table */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (!fu_input_stream_read_u32(stream, offset + 4, &length, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u32(stream, 4, &length, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	if (streamsz < length) {
 		g_set_error(error,
@@ -129,7 +128,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	/* spec revision */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		guint8 revision = 0;
-		if (!fu_input_stream_read_u8(stream, offset + 8, &revision, error))
+		if (!fu_input_stream_read_u8(stream, 8, &revision, error))
 			return FALSE;
 		if (revision != FU_ACPI_PHAT_REVISION) {
 			g_set_error(error,
@@ -165,8 +164,8 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	if (!fu_input_stream_read_safe(stream,
 				       (guint8 *)oem_id,
 				       sizeof(oem_id),
-				       0x0,	    /* dst */
-				       offset + 10, /* src */
+				       0x0, /* dst */
+				       10,  /* src */
 				       sizeof(oem_id),
 				       error))
 		return FALSE;
@@ -177,19 +176,19 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	if (!fu_input_stream_read_safe(stream,
 				       (guint8 *)oem_table_id,
 				       sizeof(oem_table_id),
-				       0x0,	    /* dst */
-				       offset + 16, /* src */
+				       0x0, /* dst */
+				       16,  /* src */
 				       sizeof(oem_table_id),
 				       error))
 		return FALSE;
 	oem_table_id_safe = fu_strsafe((const gchar *)oem_table_id, sizeof(oem_table_id));
 	fu_firmware_set_id(firmware, oem_table_id_safe);
-	if (!fu_input_stream_read_u32(stream, offset + 24, &oem_revision, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u32(stream, 24, &oem_revision, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, oem_revision);
 
 	/* platform telemetry records */
-	for (gsize offset_tmp = offset + 36; offset_tmp < length;) {
+	for (gsize offset_tmp = 36; offset_tmp < length;) {
 		if (!fu_acpi_phat_record_parse(firmware, stream, &offset_tmp, flags, error))
 			return FALSE;
 	}

@@ -326,13 +326,12 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 static gboolean
 fu_smbios_parse(FuFirmware *firmware,
 		GInputStream *stream,
-		gsize offset,
 		FwupdInstallFlags flags,
 		GError **error)
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
 	g_autoptr(GBytes) fw = NULL;
-	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
 	if (fw == NULL)
 		return FALSE;
 	return fu_smbios_setup_from_data(self,

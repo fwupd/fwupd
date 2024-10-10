@@ -110,12 +110,11 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuFirmware *firmware, GInputStream *stream
 static gboolean
 fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				gsize offset,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_b0_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 	return fu_nordic_hid_firmware_b0_read_fwinfo(firmware, stream, error);
 }

@@ -36,7 +36,6 @@ fu_acpi_phat_health_record_export(FuFirmware *firmware,
 static gboolean
 fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -47,7 +46,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st = NULL;
 
 	/* sanity check record length */
-	st = fu_struct_acpi_phat_health_record_parse_stream(stream, offset, error);
+	st = fu_struct_acpi_phat_health_record_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	rcdlen = fu_struct_acpi_phat_health_record_get_rcdlen(st);
@@ -88,7 +87,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 
 		/* align and convert */
-		ubuf = fu_input_stream_read_bytes(stream, offset + 28, ubufsz, error);
+		ubuf = fu_input_stream_read_bytes(stream, 28, ubufsz, error);
 		if (ubuf == NULL)
 			return FALSE;
 		self->device_path = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);

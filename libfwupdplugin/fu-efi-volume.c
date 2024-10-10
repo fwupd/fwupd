@@ -56,13 +56,13 @@ fu_efi_volume_validate(FuFirmware *firmware, GInputStream *stream, gsize offset,
 static gboolean
 fu_efi_volume_parse(FuFirmware *firmware,
 		    GInputStream *stream,
-		    gsize offset,
 		    FwupdInstallFlags flags,
 		    GError **error)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	gsize blockmap_sz = 0;
+	gsize offset = 0;
 	gsize streamsz = 0;
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;
@@ -73,7 +73,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
-	st_hdr = fu_struct_efi_volume_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_efi_volume_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 
@@ -123,7 +123,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 		guint16 checksum_verify;
 		g_autoptr(GBytes) blob_hdr = NULL;
 
-		blob_hdr = fu_input_stream_read_bytes(stream, offset, hdr_length, error);
+		blob_hdr = fu_input_stream_read_bytes(stream, 0x0, hdr_length, error);
 		if (blob_hdr == NULL)
 			return FALSE;
 		checksum_verify = fu_sum16w_bytes(blob_hdr, G_LITTLE_ENDIAN);
@@ -141,7 +141,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	/* extended header items */
 	if (fu_struct_efi_volume_get_ext_hdr(st_hdr) != 0) {
 		g_autoptr(GByteArray) st_ext_hdr = NULL;
-		goffset offset_ext = offset + fu_struct_efi_volume_get_ext_hdr(st_hdr);
+		goffset offset_ext = fu_struct_efi_volume_get_ext_hdr(st_hdr);
 		st_ext_hdr =
 		    fu_struct_efi_volume_ext_header_parse_stream(stream, offset_ext, error);
 		if (st_ext_hdr == NULL)
@@ -168,10 +168,9 @@ fu_efi_volume_parse(FuFirmware *firmware,
 
 	/* add image */
 	partial_stream =
-	    fu_partial_input_stream_new(stream, offset + hdr_length, fv_length - hdr_length, error);
+	    fu_partial_input_stream_new(stream, hdr_length, fv_length - hdr_length, error);
 	if (partial_stream == NULL)
 		return FALSE;
-	fu_firmware_set_offset(firmware, offset);
 	fu_firmware_set_id(firmware, guid_str);
 	fu_firmware_set_size(firmware, fv_length);
 

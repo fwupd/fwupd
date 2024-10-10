@@ -191,7 +191,6 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 static gboolean
 fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      gsize offset,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {

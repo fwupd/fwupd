@@ -373,7 +373,6 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_srec_firmware_tokenize(FuFirmware *firmware,
 			  GInputStream *stream,
-			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
@@ -381,7 +380,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware,
 	FuSrecFirmwareTokenHelper helper = {.self = self, .flags = flags, .got_eof = FALSE};
 
 	/* parse records */
-	if (!fu_strsplit_stream(stream, offset, "\n", fu_srec_firmware_tokenize_cb, &helper, error))
+	if (!fu_strsplit_stream(stream, 0x0, "\n", fu_srec_firmware_tokenize_cb, &helper, error))
 		return FALSE;
 
 	/* no EOF */
@@ -398,7 +397,6 @@ fu_srec_firmware_tokenize(FuFirmware *firmware,
 static gboolean
 fu_srec_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       gsize offset,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {

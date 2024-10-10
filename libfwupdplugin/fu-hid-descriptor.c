@@ -52,10 +52,10 @@ fu_hid_descriptor_count_table_dupes(GPtrArray *table, FuHidReportItem *item)
 static gboolean
 fu_hid_descriptor_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
+	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(GPtrArray) table_state =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);

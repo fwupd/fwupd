@@ -72,7 +72,6 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 static gboolean
 fu_efi_file_parse(FuFirmware *firmware,
 		  GInputStream *stream,
-		  gsize offset,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
@@ -84,7 +83,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
-	st = fu_struct_efi_file_parse_stream(stream, offset, error);
+	st = fu_struct_efi_file_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	priv->type = fu_struct_efi_file_get_type(st);
@@ -104,7 +103,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		g_byte_array_unref(st);
-		st = fu_struct_efi_file2_parse_stream(stream, offset, error);
+		st = fu_struct_efi_file2_parse_stream(stream, 0x0, error);
 		if (st == NULL)
 			return FALSE;
 		size = fu_struct_efi_file2_get_extended_size(st);

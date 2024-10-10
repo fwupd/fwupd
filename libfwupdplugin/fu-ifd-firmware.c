@@ -126,7 +126,6 @@ fu_ifd_firmware_fixup_stream(GInputStream *stream, GError **error)
 static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {

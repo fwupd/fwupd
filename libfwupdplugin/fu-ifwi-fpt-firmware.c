@@ -46,11 +46,11 @@ fu_ifwi_fpt_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	guint32 num_of_entries;
+	gsize offset = 0;
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* sanity check */

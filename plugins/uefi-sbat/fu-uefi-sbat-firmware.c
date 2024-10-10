@@ -17,7 +17,6 @@ G_DEFINE_TYPE(FuUefiSbatFirmware, fu_uefi_sbat_firmware, FU_TYPE_CSV_FIRMWARE)
 static gboolean
 fu_uefi_sbat_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
@@ -29,7 +28,7 @@ fu_uefi_sbat_firmware_parse(FuFirmware *firmware,
 
 	/* FuCsvFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_uefi_sbat_firmware_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	imgs = fu_firmware_get_images(firmware);

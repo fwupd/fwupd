@@ -37,12 +37,11 @@ fu_elf_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_elf_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	gsize offset_secthdr = offset;
-	gsize offset_proghdr = offset;
+	gsize offset_secthdr = 0;
+	gsize offset_proghdr = 0;
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
@@ -52,7 +51,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
 
 	/* file header */
-	st_fhdr = fu_struct_elf_file_header64le_parse_stream(stream, offset, error);
+	st_fhdr = fu_struct_elf_file_header64le_parse_stream(stream, 0x0, error);
 	if (st_fhdr == NULL)
 		return FALSE;
 
@@ -100,10 +99,8 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 					fu_struct_elf_section_header64le_get_type(shstrndx_buf)));
 				return FALSE;
 			}
-			shstrndx_buf = fu_input_stream_read_byte_array(stream,
-								       offset + sect_offset,
-								       sect_size,
-								       error);
+			shstrndx_buf =
+			    fu_input_stream_read_byte_array(stream, sect_offset, sect_size, error);
 			if (shstrndx_buf == NULL)
 				return FALSE;
 			continue;
@@ -116,10 +113,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 			continue;
 		if (sect_size > 0) {
 			g_autoptr(GInputStream) img_stream =
-			    fu_partial_input_stream_new(stream,
-							offset + sect_offset,
-							sect_size,
-							error);
+			    fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
 			if (img_stream == NULL)
 				return FALSE;
 			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))

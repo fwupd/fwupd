@@ -91,7 +91,6 @@ fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
 static gboolean
 fu_efi_device_path_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -103,7 +102,7 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) payload = NULL;
 
 	/* parse */
-	st = fu_struct_efi_device_path_parse_stream(stream, offset, error);
+	st = fu_struct_efi_device_path_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_efi_device_path_get_length(st) < FU_STRUCT_EFI_DEVICE_PATH_SIZE) {
@@ -121,16 +120,15 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	dp_length = fu_struct_efi_device_path_get_length(st);
-	if (offset + dp_length > streamsz) {
-		dp_length = (streamsz - offset) - 0x4;
+	if (dp_length > streamsz) {
+		dp_length = streamsz - 0x4;
 		g_debug("fixing up DP length from 0x%x to 0x%x, because of a bug in efiboot",
 			fu_struct_efi_device_path_get_length(st),
 			(guint)dp_length);
 	}
-	payload = fu_input_stream_read_bytes(stream, offset + st->len, dp_length - st->len, error);
+	payload = fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, error);
 	if (payload == NULL)
 		return FALSE;
-	fu_firmware_set_offset(firmware, offset);
 	fu_firmware_set_bytes(firmware, payload);
 	fu_firmware_set_size(firmware, dp_length);
 

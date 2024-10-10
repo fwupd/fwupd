@@ -119,7 +119,6 @@ fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
 static gboolean
 fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    gsize offset,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
@@ -128,11 +127,11 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 
 	/* FuUsbDescriptor */
 	if (!FU_FIRMWARE_CLASS(fu_usb_bos_descriptor_parent_class)
-		 ->parse(firmware, stream, offset, flags, error))
+		 ->parse(firmware, stream, flags, error))
 		return FALSE;
 
 	/* parse */
-	st = fu_usb_bos_hdr_parse_stream(stream, offset, error);
+	st = fu_usb_bos_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	self->bos_cap.bLength = fu_usb_bos_hdr_get_length(st);
@@ -144,7 +143,7 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 		g_autoptr(GInputStream) img_stream = NULL;
 
 		img_stream = fu_partial_input_stream_new(stream,
-							 offset + st->len,
+							 st->len,
 							 self->bos_cap.bLength - st->len,
 							 error);
 		if (img_stream == NULL)

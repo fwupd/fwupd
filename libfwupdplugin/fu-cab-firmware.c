@@ -528,12 +528,12 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	gsize off_cffile = 0;
+	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;

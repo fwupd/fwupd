@@ -86,12 +86,12 @@ fu_linear_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static gboolean
 fu_linear_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuLinearFirmware *self = FU_LINEAR_FIRMWARE(firmware);
 	FuLinearFirmwarePrivate *priv = GET_PRIVATE(self);
+	gsize offset = 0;
 	gsize streamsz = 0;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

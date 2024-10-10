@@ -25,7 +25,6 @@ G_DEFINE_TYPE(FuAmdKriaImageFirmware, fu_amd_kria_image_firmware, FU_TYPE_FIRMWA
 static gboolean
 fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -34,7 +33,7 @@ fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *version = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, offset + VERSION_OFFSET, VERSION_SIZE, error);
+	fw = fu_input_stream_read_bytes(stream, VERSION_OFFSET, VERSION_SIZE, error);
 	if (fw == NULL)
 		return FALSE;
 

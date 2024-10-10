@@ -20,7 +20,6 @@ G_DEFINE_TYPE(FuAcpiDmar, fu_acpi_dmar, FU_TYPE_ACPI_TABLE)
 static gboolean
 fu_acpi_dmar_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   gsize offset,
 		   FwupdInstallFlags flags,
 		   GError **error)
 {
@@ -29,7 +28,7 @@ fu_acpi_dmar_parse(FuFirmware *firmware,
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_dmar_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+		 ->parse(FU_FIRMWARE(self), stream, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 
 	/* check signature and read flags */

@@ -71,19 +71,18 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 static gboolean
 fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;
 
-	st = fu_struct_sbat_level_section_header_parse_stream(stream, offset, error);
+	st = fu_struct_sbat_level_section_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	if (!fu_sbatlevel_section_add_entry(
 		firmware,
 		stream,
-		offset + sizeof(guint32) + fu_struct_sbat_level_section_header_get_previous(st),
+		sizeof(guint32) + fu_struct_sbat_level_section_header_get_previous(st),
 		"previous",
 		0,
 		flags,
@@ -91,7 +90,7 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_sbatlevel_section_add_entry(firmware,
 					    stream,
-					    offset + sizeof(guint32) +
+					    sizeof(guint32) +
 						fu_struct_sbat_level_section_header_get_latest(st),
 					    "latest",
 					    1,

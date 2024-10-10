@@ -267,18 +267,18 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 static gboolean
 fu_redfish_smbios_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			gsize offset,
 			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
+	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz < 0x09 + offset) {
+	if (streamsz < 0x09) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,

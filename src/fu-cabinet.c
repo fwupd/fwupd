@@ -862,7 +862,6 @@ fu_cabinet_sign(FuCabinet *self,
 static gboolean
 fu_cabinet_parse(FuFirmware *firmware,
 		 GInputStream *stream,
-		 gsize offset,
 		 FwupdInstallFlags flags,
 		 GError **error)
 {
@@ -879,7 +878,7 @@ fu_cabinet_parse(FuFirmware *firmware,
 	/* decompress and calculate container hashes */
 	if (stream != NULL) {
 		if (!FU_FIRMWARE_CLASS(fu_cabinet_parent_class)
-			 ->parse(firmware, stream, offset, flags, error))
+			 ->parse(firmware, stream, flags, error))
 			return FALSE;
 		self->container_checksum =
 		    fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA1, error);

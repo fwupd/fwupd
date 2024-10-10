@@ -20,7 +20,6 @@ G_DEFINE_TYPE(FuDellK2IlanFirmware, fu_dell_k2_ilan_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_dell_k2_ilan_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {

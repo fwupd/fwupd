@@ -24,14 +24,13 @@ G_DEFINE_TYPE(FuAmdKriaPersistentFirmware, fu_amd_kria_persistent_firmware, FU_T
 static gboolean
 fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
 				      GInputStream *stream,
-				      gsize offset,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
 	FuAmdKriaPersistentFirmware *self = FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware);
 	g_autoptr(FuStructAmdKriaPersistReg) content = NULL;
 
-	content = fu_struct_amd_kria_persist_reg_parse_stream(stream, offset, error);
+	content = fu_struct_amd_kria_persist_reg_parse_stream(stream, 0x0, error);
 	if (content == NULL)
 		return FALSE;
 	self->last_booted = fu_struct_amd_kria_persist_reg_get_last_booted_img(content);

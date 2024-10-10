@@ -56,7 +56,6 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 static gboolean
 fu_archive_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  gsize offset,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {

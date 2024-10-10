@@ -145,13 +145,13 @@ fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   gsize offset,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) st_hdr = NULL;
+	gsize offset = 0;
 	guint32 num_of_entries;
 
 	/* other header fields */

@@ -50,11 +50,11 @@ fu_elanfp_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elanfp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 gsize offset,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
+	gsize offset = 0;
 
 	/* file format version */
 	if (!fu_input_stream_read_u32(stream,

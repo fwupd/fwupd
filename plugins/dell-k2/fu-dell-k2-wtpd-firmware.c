@@ -26,7 +26,6 @@ fu_dell_k2_wtpd_firmware_convert_version(FuFirmware *firmware, guint64 version_r
 static gboolean
 fu_dell_k2_wtpd_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       gsize offset,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {

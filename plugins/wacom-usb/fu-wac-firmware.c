@@ -266,7 +266,6 @@ fu_wac_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_wac_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      gsize offset,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
@@ -279,7 +278,7 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 					   .images_cnt = 0};
 
 	/* tokenize */
-	if (!fu_strsplit_stream(stream, offset, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
+	if (!fu_strsplit_stream(stream, 0x0, "\n", fu_wac_firmware_tokenize_cb, &helper, error))
 		return FALSE;
 
 	/* verify data is complete */

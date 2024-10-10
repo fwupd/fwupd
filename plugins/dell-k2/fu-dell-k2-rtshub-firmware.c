@@ -63,7 +63,6 @@ fu_dell_k2_rtshub_firmware_set_offset(GInputStream *stream,
 static gboolean
 fu_dell_k2_rtshub_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {

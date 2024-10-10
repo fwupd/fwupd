@@ -56,7 +56,6 @@ fu_{{vendor_example}}_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_{{vendor_example}}_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 gsize offset,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -64,7 +63,7 @@ fu_{{vendor_example}}_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GByteArray) st_hdr = NULL;
 
 	/* TODO: parse firmware into images */
-	st_hdr = fu_struct_{{vendor_example}}_hdr_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_{{vendor_example}}_hdr_parse_stream(stream, 0x0, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	self->start_addr = 0x1234;
