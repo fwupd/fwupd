@@ -91,6 +91,10 @@ option('libarchive',
   type: 'feature',
   description: 'libarchive support',
 )
+option('libdrm',
+  type: 'feature',
+  description: 'libdrm support',
+)
 option('lvfs',
   type: 'combo',
   choices: [
