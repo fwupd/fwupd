@@ -2140,7 +2140,7 @@ fu_util_set_test_devices_enabled(FuUtilPrivate *priv, gboolean enable, GError **
 static gboolean
 fu_util_disable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
 		return FALSE;
 
 	if (!fu_util_set_test_devices_enabled(priv, FALSE, error))
@@ -2158,7 +2158,10 @@ fu_util_enable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	gboolean found = FALSE;
 	g_autoptr(GPtrArray) remotes = NULL;
 
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  priv->progress,
+				  error))
 		return FALSE;
 
 	if (!fu_util_set_test_devices_enabled(priv, TRUE, error))
