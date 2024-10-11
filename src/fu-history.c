@@ -36,8 +36,9 @@
  * v11	no changes, bumped due to bungled migration to v10
  * v12	add install_duration to history
  * v13	add release_flags to history
+ * v14	create table emulation_tag
  */
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 13
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 14
 
 static void
 fu_history_finalize(GObject *object);
@@ -233,6 +234,8 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			  "hsi_details TEXT DEFAULT NULL,"
 			  "hsi_score TEXT DEFAULT NULL);"
+			  "CREATE TABLE emulation_tag (device_id TEXT);"
+			  "CREATE UNIQUE INDEX idx_device_id ON emulation_tag (device_id);"
 			  "COMMIT;",
 			  NULL,
 			  NULL,
@@ -450,6 +453,29 @@ fu_history_migrate_database_v11(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v12(FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec(self->db,
+			  "BEGIN TRANSACTION;"
+			  "CREATE TABLE emulation_tag (device_id TEXT);"
+			  "CREATE UNIQUE INDEX idx_device_id ON emulation_tag (device_id);"
+			  "COMMIT;",
+			  NULL,
+			  NULL,
+			  NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to create table: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -530,6 +556,10 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 12:
 		if (!fu_history_migrate_database_v11(self, error))
+			return FALSE;
+	/* fall through */
+	case 13:
+		if (!fu_history_migrate_database_v12(self, error))
 			return FALSE;
 		/* no longer fall through */
 		break;
@@ -1600,6 +1630,186 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 	}
 #endif
 	return g_steal_pointer(&array);
+}
+
+/**
+ * fu_history_has_emulation_tag:
+ * @self: a #FuHistory
+ * @device_id: (nullable): a device ID, or %NULL for "any"
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns if the device has been tagged for emulation.
+ *
+ * Returns: %TRUE if tagged
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+{
+#ifdef HAVE_SQLITE
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load(self, error))
+			return FALSE;
+	}
+
+	/* get tagged device ID */
+	if (device_id != NULL) {
+		rc = sqlite3_prepare_v2(self->db,
+					"SELECT device_id FROM emulation_tag "
+					"WHERE device_id = ?1 LIMIT 1;",
+					-1,
+					&stmt,
+					NULL);
+	} else {
+		rc = sqlite3_prepare_v2(self->db,
+					"SELECT device_id FROM emulation_tag LIMIT 1;",
+					-1,
+					&stmt,
+					NULL);
+	}
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to prepare SQL to get emulation tag: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text(stmt, 1, device_id, -1, SQLITE_STATIC);
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		if (device_id == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "no devices were found for emulation tag");
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "%s was not found for emulation tag",
+			    device_id);
+		return FALSE;
+	}
+	if (rc != SQLITE_ROW) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to execute prepared statement: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_history_add_emulation_tag:
+ * @self: a #FuHistory
+ * @device_id: a device ID
+ * @error: (nullable): optional return location for an error
+ *
+ * Add a hash of a device to be tagged for emulation to the database
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_history_add_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+{
+#ifdef HAVE_SQLITE
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
+	g_return_val_if_fail(device_id != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load(self, error))
+		return FALSE;
+
+	/* add */
+	rc = sqlite3_prepare_v2(self->db,
+				"INSERT INTO emulation_tag (device_id) "
+				"VALUES (?1)",
+				-1,
+				&stmt,
+				NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to prepare SQL to insert emulation tag: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text(stmt, 1, device_id, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec(self, stmt, NULL, error);
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_history_remove_emulation_tag:
+ * @self: a #FuHistory
+ * @error: (nullable): optional return location for an error
+ *
+ * Remove a hash of a device to be tagged for emulation from the database
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 2.0.1
+ **/
+gboolean
+fu_history_remove_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+{
+#ifdef HAVE_SQLITE
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
+	g_return_val_if_fail(device_id != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load(self, error))
+		return FALSE;
+
+	/* remove entries */
+	rc = sqlite3_prepare_v2(self->db,
+				"DELETE FROM emulation_tag WHERE device_id = ?1;",
+				-1,
+				&stmt,
+				NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to prepare SQL to delete emulation tag: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text(stmt, 1, device_id, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec(self, stmt, NULL, error);
+#else
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
+	return FALSE;
+#endif
 }
 
 static void

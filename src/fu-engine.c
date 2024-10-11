@@ -125,7 +125,6 @@ struct _FuEngine {
 	GHashTable *approved_firmware;	      /* (nullable) */
 	GHashTable *blocked_firmware;	      /* (nullable) */
 	GHashTable *emulation_phases;	      /* (element-type int GBytes) */
-	GHashTable *emulation_ids;	      /* (element-type str int) */
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
@@ -480,6 +479,18 @@ fu_engine_wait_for_acquiesce(FuEngine *self, guint acquiesce_delay)
 }
 
 static void
+fu_engine_ensure_context_flag_save_events(FuEngine *self)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_history_has_emulation_tag(self->history, NULL, &error_local)) {
+		g_debug("ignoring: %s", error_local->message);
+		fu_context_remove_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+		return;
+	}
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
+}
+
+static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
@@ -826,7 +837,6 @@ fu_engine_modify_config(FuEngine *self,
 		    "BlockedFirmware",
 		    "DisabledDevices",
 		    "DisabledPlugins",
-		    "EmulatedDevices",
 		    "EnumerateAllDevices",
 		    "EspLocation",
 		    "HostBkc",
@@ -1004,57 +1014,6 @@ fu_engine_modify_bios_settings(FuEngine *self,
 	return TRUE;
 }
 
-static void
-fu_engine_ensure_context_flag_save_events(FuEngine *self)
-{
-	if (g_hash_table_size(self->emulation_ids) > 0) {
-		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
-	} else {
-		fu_context_remove_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS);
-	}
-}
-
-static gboolean
-fu_engine_add_device_flag_emulation_tag_internal(FuEngine *self,
-						 const gchar *device_id,
-						 GError **error)
-{
-	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
-	g_autofree gchar *str = NULL;
-
-	if (g_ptr_array_find_with_equal_func(emulated_devices, device_id, g_str_equal, NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "device is already tagged for emulation");
-		return FALSE;
-	}
-	g_ptr_array_add(emulated_devices, g_strdup(device_id));
-	str = fu_strjoin(";", emulated_devices);
-	return fu_config_set_value(FU_CONFIG(self->config), "fwupd", "EmulatedDevices", str, error);
-}
-
-static gboolean
-fu_engine_remove_device_flag_emulation_tag_internal(FuEngine *self,
-						    const gchar *device_id,
-						    GError **error)
-{
-	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
-	guint idx = 0;
-	g_autofree gchar *str = NULL;
-
-	if (!g_ptr_array_find_with_equal_func(emulated_devices, device_id, g_str_equal, &idx)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "device is not tagged for emulation");
-		return FALSE;
-	}
-	g_ptr_array_remove_index(emulated_devices, idx);
-	str = fu_strjoin(";", emulated_devices);
-	return fu_config_set_value(FU_CONFIG(self->config), "fwupd", "EmulatedDevices", str, error);
-}
-
 static gboolean
 fu_engine_remove_device_flag(FuEngine *self,
 			     const gchar *device_id,
@@ -1098,6 +1057,14 @@ fu_engine_remove_device_flag(FuEngine *self,
 		device = fu_device_list_get_by_id(self->device_list, device_id, error);
 		if (device == NULL)
 			return FALSE;
+		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device %s is not tagged for emulation",
+				    fu_device_get_id(device));
+			return FALSE;
+		}
 		proxy = fu_device_get_proxy(device);
 		if (proxy != NULL) {
 			g_set_error(error,
@@ -1108,16 +1075,12 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		g_hash_table_remove(self->emulation_ids, fu_device_get_id(device));
-		fu_engine_ensure_context_flag_save_events(self);
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
-			if (!fu_engine_remove_device_flag_emulation_tag_internal(
-				self,
-				fu_device_get_id(device),
-				error))
-				return FALSE;
-		}
 		fu_device_remove_flag(device, flag);
+		if (!fu_history_remove_emulation_tag(self->history,
+						     fu_device_get_id(device),
+						     error))
+			return FALSE;
+		fu_engine_ensure_context_flag_save_events(self);
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -1137,6 +1100,20 @@ fu_engine_emit_device_request_replug_and_install(FuEngine *self, FuDevice *devic
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(request,
 				  "Unplug and replug the device, then install the firmware.");
+	g_signal_emit(self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
+}
+
+static void
+fu_engine_emit_device_request_restart_daemon(FuEngine *self, FuDevice *device)
+{
+	g_autoptr(FwupdRequest) request = fwupd_request_new();
+	fwupd_request_set_id(request, FWUPD_REQUEST_ID_RESTART_DAEMON);
+	fwupd_request_set_device_id(request, fu_device_get_id(device));
+	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fwupd_request_set_message(
+	    request,
+	    "Please restart the fwupd service so device enumeration is recorded.");
 	g_signal_emit(self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
 }
 
@@ -1168,6 +1145,14 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(device));
 			return FALSE;
 		}
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device %s is already tagged for emulation",
+				    fu_device_get_id(device));
+			return FALSE;
+		}
 		proxy = fu_device_get_proxy(device);
 		if (proxy != NULL) {
 			g_set_error(error,
@@ -1178,22 +1163,15 @@ fu_engine_add_device_flag(FuEngine *self,
 				    fu_device_get_id(proxy));
 			return FALSE;
 		}
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
-			fu_device_add_flag(device, flag);
-			if (!fu_engine_add_device_flag_emulation_tag_internal(
-				self,
-				fu_device_get_id(device),
-				error))
-				return FALSE;
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-			return TRUE;
-		}
-		g_hash_table_insert(self->emulation_ids,
-				    g_strdup(fu_device_get_id(device)),
-				    GUINT_TO_POINTER(1));
-		fu_engine_ensure_context_flag_save_events(self);
-		fu_engine_emit_device_request_replug_and_install(self, device);
 		fu_device_add_flag(device, flag);
+		if (!fu_history_add_emulation_tag(self->history, fu_device_get_id(device), error))
+			return FALSE;
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+			fu_engine_emit_device_request_restart_daemon(self, device);
+		} else {
+			fu_engine_emit_device_request_replug_and_install(self, device);
+		}
+		fu_engine_ensure_context_flag_save_events(self);
 		return TRUE;
 	}
 	g_set_error_literal(error,
@@ -4158,22 +4136,10 @@ fu_engine_remote_list_ensure_p2p_policy_remote(FuEngine *self, FwupdRemote *remo
 }
 
 static void
-fu_engine_config_ensure_emulated_devices(FuEngine *self)
-{
-	GPtrArray *emulated_devices = fu_engine_config_get_emulated_devices(self->config);
-	for (guint i = 0; i < emulated_devices->len; i++) {
-		const gchar *device_id = g_ptr_array_index(emulated_devices, i);
-		g_hash_table_insert(self->emulation_ids, g_strdup(device_id), GUINT_TO_POINTER(1));
-	}
-	fu_engine_ensure_context_flag_save_events(self);
-}
-
-static void
 fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 {
 	GPtrArray *remotes = fu_remote_list_get_all(self->remote_list);
 
-	fu_engine_config_ensure_emulated_devices(self);
 	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
 	/* allow changing the hardcoded ESP location */
@@ -6266,13 +6232,12 @@ fu_engine_ensure_device_emulation_tag(FuEngine *self, FuDevice *device)
 	/* we matched this physical ID */
 	if (fu_device_get_id(device) == NULL)
 		return;
-	if (!g_hash_table_contains(self->emulation_ids, fu_device_get_id(device)))
+	if (!fu_history_has_emulation_tag(self->history, fu_device_get_id(device), NULL))
 		return;
 
 	/* success */
 	g_info("adding emulation-tag to %s", fu_device_get_backend_id(device));
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
-	fu_engine_ensure_context_flag_save_events(self);
 }
 
 void
@@ -8197,7 +8162,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_prefix_error(error, "Failed to load config: ");
 		return FALSE;
 	}
-	fu_engine_config_ensure_emulated_devices(self);
 	fu_progress_step_done(progress);
 
 	/* set the hardcoded ESP */
@@ -8446,6 +8410,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 	/* add devices */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		fu_engine_ensure_context_flag_save_events(self);
 		fu_engine_plugins_startup(self, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
 		fu_engine_plugins_coldplug(self, fu_progress_get_child(progress));
@@ -8912,7 +8877,6 @@ fu_engine_init(FuEngine *self)
 						       g_direct_equal,
 						       NULL,
 						       (GDestroyNotify)g_bytes_unref);
-	self->emulation_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 #ifdef HAVE_PASSIM
@@ -8971,7 +8935,6 @@ fu_engine_finalize(GObject *obj)
 	g_ptr_array_unref(self->plugin_filter);
 	g_ptr_array_unref(self->local_monitors);
 	g_hash_table_unref(self->emulation_phases);
-	g_hash_table_unref(self->emulation_ids);
 	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 

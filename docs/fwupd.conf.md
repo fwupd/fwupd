@@ -46,13 +46,6 @@ The `[fwupd]` section can contain the following parameters:
 
   Allow blocking specific devices by their GUID, using semicolons as delimiter.
 
-**EmulatedDevices={{EmulatedDevices}}**
-
-  Allow adding specific devices by their device ID, using semicolons as delimiter.
-
-  This config option is useful to build emulations of "internal" devices which typically cannot be
-  hotplugged.
-
 **DisabledPlugins={{DisabledPlugins}}**
 
   Allow blocking specific plugins by name.

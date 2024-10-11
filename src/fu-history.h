@@ -57,3 +57,13 @@ fu_history_add_security_attribute(FuHistory *self,
 				  GError **error) G_GNUC_NON_NULL(1, 2, 3);
 GPtrArray *
 fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error) G_GNUC_NON_NULL(1);
+
+gboolean
+fu_history_add_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_history_remove_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
+    G_GNUC_NON_NULL(1);
