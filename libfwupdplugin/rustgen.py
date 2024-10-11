@@ -574,7 +574,7 @@ class Generator:
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
 
-        for line in contents.split("\n"):
+        for line_num, line in enumerate(contents.split("\n")):
 
             # replace all tabs with spaces
             line = line.replace("\t", "  ")
@@ -588,14 +588,16 @@ class Generator:
             if line.startswith("struct ") and line.endswith("{"):
                 name = line[6:-1].strip()
                 if name in self.struct_objs:
-                    raise ValueError(f"struct {name} already defined")
+                    raise ValueError(
+                        f"struct {name} already defined on line {line_num}"
+                    )
                 struct_cur = StructObj(name)
                 self.struct_objs[name] = struct_cur
                 continue
             if line.startswith("enum ") and line.endswith("{"):
                 name = line[4:-1].strip()
                 if name in self.enum_objs:
-                    raise ValueError(f"enum {name} already defined")
+                    raise ValueError(f"enum {name} already defined on line {line_num}")
                 enum_cur = EnumObj(name)
                 enum_cur.repr_type = repr_type
                 self.enum_objs[name] = enum_cur
@@ -639,7 +641,9 @@ class Generator:
 
             # check for trailing comma
             if not line.endswith(","):
-                raise ValueError(f"invalid struct line: {line} -- needs trailing comma")
+                raise ValueError(
+                    f"invalid struct line on line {line_num}: {line} -- needs trailing comma"
+                )
             line = line[:-1]
 
             # split enumeration into sections
@@ -657,7 +661,7 @@ class Generator:
                 # parse "signature: u32be == 0x12345678"
                 parts = line.replace(" ", "").split(":", maxsplit=2)
                 if len(parts) == 1:
-                    raise ValueError(f"invalid struct line: {line}")
+                    raise ValueError(f"invalid struct line on line {line_num}: {line}")
 
                 # parse one element
                 item = StructItem(struct_cur)
@@ -666,11 +670,14 @@ class Generator:
                 item.element_id = parts[0]
 
                 type_parts = parts[1].split("=", maxsplit=3)
-                item.parse_type(
-                    type_parts[0],
-                    enum_objs=self.enum_objs,
-                    struct_objs=self.struct_objs,
-                )
+                try:
+                    item.parse_type(
+                        type_parts[0],
+                        enum_objs=self.enum_objs,
+                        struct_objs=self.struct_objs,
+                    )
+                except ValueError as e:
+                    raise ValueError(f"{str(e)} on line {line_num}: {line}")
                 if len(type_parts) == 3:
                     item.parse_constant(type_parts[2])
                 elif len(type_parts) == 2:
