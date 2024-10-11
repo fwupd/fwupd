@@ -1348,20 +1348,50 @@ fu_dbus_daemon_method_set_blocked_firmware(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_authorize_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	fu_daemon_schedule_process_quit(FU_DAEMON(helper->self));
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
+static void
 fu_dbus_daemon_method_quit(FuDbusDaemon *self,
 			   GVariant *parameters,
 			   FuEngineRequest *request,
 			   GDBusMethodInvocation *invocation)
 {
-	if (!fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
-		g_dbus_method_invocation_return_error_literal(invocation,
-							      FWUPD_ERROR,
-							      FWUPD_ERROR_PERMISSION_DENIED,
-							      "Permission denied");
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	/* is root */
+	if (fu_engine_request_has_converter_flag(request, FWUPD_CODEC_FLAG_TRUSTED)) {
+		fu_daemon_schedule_process_quit(FU_DAEMON(self));
+		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
-	fu_daemon_schedule_process_quit(FU_DAEMON(self));
-	g_dbus_method_invocation_return_value(invocation, NULL);
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->self = self;
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.quit",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_quit_cb,
+				  g_steal_pointer(&helper));
 }
 
 static void
