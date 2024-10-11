@@ -401,6 +401,8 @@ fwupd_request_get_message(FwupdRequest *self)
 			return "Press unlock on the device.";
 		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_DO_NOT_POWER_OFF) == 0)
 			return "Do not turn off your computer or remove the AC adaptor.";
+		if (g_strcmp0(priv->id, FWUPD_REQUEST_ID_RESTART_DAEMON) == 0)
+			return "Please restart the fwupd service.";
 	}
 
 	/* unknown */

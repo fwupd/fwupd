@@ -4439,13 +4439,13 @@ static void
 fu_history_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
-	GError *error = NULL;
 	GPtrArray *checksums;
 	gboolean ret;
 	FuDevice *device;
 	FuRelease *release;
 	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) approved_firmware = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
@@ -4569,6 +4569,26 @@ fu_history_func(gconstpointer user_data)
 	g_assert_cmpint(approved_firmware->len, ==, 2);
 	g_assert_cmpstr(g_ptr_array_index(approved_firmware, 0), ==, "foo");
 	g_assert_cmpstr(g_ptr_array_index(approved_firmware, 1), ==, "bar");
+
+	/* emulation-tag */
+	ret = fu_history_add_emulation_tag(history, "id", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_has_emulation_tag(history, "id", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_has_emulation_tag(history, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_remove_emulation_tag(history, "id", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_remove_emulation_tag(history, "id", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_history_has_emulation_tag(history, "id", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
 }
 
 static GBytes *

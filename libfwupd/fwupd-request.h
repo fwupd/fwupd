@@ -131,6 +131,16 @@ typedef enum {
 #define FWUPD_REQUEST_ID_REPLUG_POWER "org.freedesktop.fwupd.replug-power"
 
 /**
+ * FWUPD_REQUEST_ID_RESTART_DAEMON:
+ *
+ * Show the user a message that they need to restart the daemon, e.g.
+ * "Please restart the fwupd service."
+ *
+ * Since 2.0.1
+ */
+#define FWUPD_REQUEST_ID_RESTART_DAEMON "org.freedesktop.fwupd.restart-daemon"
+
+/**
  * FwupdRequestFlags:
  *
  * Flags used to represent request attributes

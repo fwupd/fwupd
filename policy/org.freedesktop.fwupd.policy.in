@@ -270,7 +270,7 @@
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
+      <allow_active>auth_admin_keep</allow_active>
     </defaults>
     <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.emulation-load</annotate>
   </action>
@@ -282,7 +282,7 @@
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
+      <allow_active>auth_admin_keep</allow_active>
     </defaults>
     <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.emulation-load</annotate>
   </action>
