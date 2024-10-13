@@ -326,6 +326,9 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_device = NULL;
 	g_autofree gchar *attr_vendor = NULL;
 
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+
 	/* find the subsystem, driver and devtype */
 	if (priv->subsystem == NULL) {
 		g_autofree gchar *subsystem_tmp =
@@ -2180,7 +2183,6 @@ fu_udev_device_init(FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	priv->properties = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	fu_device_set_acquiesce_delay(FU_DEVICE(self), 2500);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_udev_device_vid_notify_cb),
