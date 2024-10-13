@@ -508,6 +508,9 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
+	// TODO: why isn't this applying from probe() to bootloader in emulation case?
+	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
+
 	if (fu_asus_hid_device_verify_ite_part(device, error))
 		return FALSE;
 
