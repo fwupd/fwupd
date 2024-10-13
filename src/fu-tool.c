@@ -1984,7 +1984,7 @@ static gboolean
 fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	/* start engine */
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_NONE, priv->progress, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
 		return FALSE;
 
 	/* check args */
