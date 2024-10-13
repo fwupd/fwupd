@@ -164,6 +164,10 @@ fu_asus_hid_device_probe(FuDevice *device, GError **error)
 	else
 		fu_hid_device_set_interface(FU_HID_DEVICE(device), 2);
 
+	/* FuHidDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -195,6 +199,7 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		fu_device_add_flag(dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_protocol(dev_tmp, "com.asus.hid");
+		fu_device_set_proxy(dev_tmp, NULL);
 		fu_device_add_child(device, dev_tmp);
 	}
 
