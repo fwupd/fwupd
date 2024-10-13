@@ -89,7 +89,7 @@ struct FuStructAsusPreUpdateCommand {
 
 #[repr(u8)]
 enum FuAsusHidFlashCommand {
-    IdentifyFlash = 0x070020f0,
+    IdentifyFlash = 0xf0200007,
     ReadFlash = 0xd1,
     ClearRemoteBuffer = 0xc0,
     WritePage = 0xc1,
@@ -101,8 +101,10 @@ enum FuAsusHidFlashCommand {
 
 #[derive(New, Getters)]
 struct FuStructFlashIdentify {
-    command: u32 == 0x070020f0,
+    command: u8 == 0x07,
+    offset: u24 = 0xf02000,
     datasz: u8 == 0x2,
+    data: [u8; 58],
 }
 
 #[derive(New, Getters)]
