@@ -4,7 +4,7 @@ Plugin = legion_hid2
 GType = FuLegionHid2Device
 CounterpartGuid = USB\VID_1A86&PID_FE10
 FirmwareSizeMax = 0x2C000
-Flags = needs-bootloader,use-runtime-version
+Flags = use-runtime-version
 InstallDuration = 15
 
 # Dinput
@@ -13,7 +13,7 @@ Plugin = legion_hid2
 GType = FuLegionHid2Device
 CounterpartGuid = USB\VID_1A86&PID_FE10
 FirmwareSizeMax = 0x2C000
-Flags = needs-bootloader,use-runtime-version
+Flags = use-runtime-version
 InstallDuration = 15
 
 # IAP
