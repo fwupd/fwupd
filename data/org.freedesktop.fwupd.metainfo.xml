@@ -38,6 +38,24 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.26" date="2024-10-14">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add HSI tests for Arrow and Meteor Lake CSME</li>
+          <li>Allow UEFI capsule config values to be set with fwupdmgr modify-config</li>
+          <li>Check for the logitech-bulkcontroller response packet length correctly</li>
+          <li>Fix using ID_LIKE for fallback when ESP isn't mounted</li>
+          <li>Fix various Coverity-reported overflowed constants</li>
+          <li>Only compare the first 10 characters of the AMD GPU part number</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Jabra PanaCast</li>
+          <li>Some Lenovo Legion HID devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.25" date="2024-09-25">
       <description>
         <p>This release fixes the following bugs:</p>
