@@ -47,7 +47,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	st = fu_struct_synaptics_cape_sngl_hdr_parse_bytes(fw, offset, error);
 	if (st == NULL)
 		return FALSE;
-	if (fu_struct_synaptics_cape_sngl_hdr_get_file_size(st) != bufsz) {
+	if (fu_struct_synaptics_cape_sngl_hdr_get_file_size(st) != bufsz || bufsz < 8) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
