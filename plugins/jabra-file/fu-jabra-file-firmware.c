@@ -90,6 +90,8 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 	img_xml = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
 							"info.xml",
 							error);
+	if (img_xml == NULL)
+		return FALSE;
 	img_blob = fu_firmware_get_bytes(img_xml, error);
 	if (img_blob == NULL)
 		return FALSE;
