@@ -123,6 +123,9 @@ fu_dell_k2_pd_write(FuDevice *device,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 
+	/* check version is not required */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
+
 	/* success */
 	g_debug("%s firmware written successfully.", fu_device_get_name(device));
 	return TRUE;
