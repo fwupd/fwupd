@@ -96,6 +96,16 @@ the dock's Type-C cable from the host, at which point they will take effect.
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `uod-off`
+
+Disable update on disconnect feature, default unset.
+
+Since 2.0.2
+
 ## Owners
 
 Anyone can submit a pull request to modify this plugin, but the following people should be

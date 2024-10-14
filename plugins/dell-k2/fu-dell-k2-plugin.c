@@ -312,9 +312,11 @@ fu_dell_k2_plugin_prepare(FuPlugin *plugin,
 	if (!fu_dell_k2_ec_modify_lock(parent, TRUE, error))
 		return FALSE;
 
-	/* always enable passive flow */
-	if (!fu_dell_k2_ec_run_passive_update(parent, error))
-		return FALSE;
+	/* conditionally enable passive flow */
+	if (!fu_device_has_private_flag(parent, FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF)) {
+		if (!fu_dell_k2_ec_run_passive_update(parent, error))
+			return FALSE;
+	}
 
 	/* usb4 device reboot is suppressed, let ec handle it in passive update */
 	if (fu_device_has_guid(device, DELL_K2_TBT4) || fu_device_has_guid(device, DELL_K2_TBT5)) {
