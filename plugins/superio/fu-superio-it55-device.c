@@ -186,6 +186,13 @@ fu_plugin_superio_patch_autoload(FuDevice *device, GBytes *fw, GError **error)
 	if (self->autoload_action == AUTOLOAD_NO_ACTION)
 		return g_bytes_ref(fw);
 
+	if (sz < 6) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "image is too small");
+		return NULL;
+	}
 	for (offset = 0; offset < sz - 6; ++offset) {
 		if (unpatched[offset] == 0xa5 &&
 		    (unpatched[offset + 1] == 0xa5 || unpatched[offset + 1] == 0xa4) &&
