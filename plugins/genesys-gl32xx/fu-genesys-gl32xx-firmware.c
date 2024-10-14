@@ -45,6 +45,13 @@ fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version(firmware, version);
 
 	/* verify checksum */
+	if (bufsz < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buf was too small");
+		return FALSE;
+	}
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 chksum_expected = buf[bufsz - 1];
 		guint8 chksum_actual = FU_GENESYS_GL32XX_CHECKSUM_MAGIC - fu_sum8(buf, bufsz - 2);
