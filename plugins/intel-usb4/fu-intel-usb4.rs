@@ -17,3 +17,9 @@ struct FuStructIntelUsb4Mbox {
     _rsvd: u8,
     status: u8,
 }
+
+#[derive(New)]
+struct FuStructIntelUsb4MetadataNvmRead {
+    address: u24le,
+    length: u8, // in DWORDs
+}
