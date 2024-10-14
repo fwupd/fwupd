@@ -44,12 +44,14 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint32 dock_status;
 	guint16 dock_state;
 	guint16 dock_config;
-	guint8 dock_mac_addr[48];
+	guint8 dock_mac_addr[6];
 	guint32 dock_capabilities;
 	guint32 dock_policy;
 	guint32 dock_temperature;
 	guint32 dock_fan_speed;
-	guint8 unused[35];
+	guint16 upf_power;
+	guint8 eppid;
+	guint8 unused[74];
 } FuDellK2DockDataStructure;
 
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
