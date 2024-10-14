@@ -41,6 +41,8 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 
 	blob_header =
 	    fu_bytes_new_offset(fw, offset, FU_STRUCT_ALGOLTEK_PRODUCT_IDENTITY_SIZE, error);
+	if (blob_header == NULL)
+		return FALSE;
 	fu_byte_array_append_bytes(header_array, blob_header);
 
 	version = fu_struct_algoltek_product_identity_get_version(header_array);
