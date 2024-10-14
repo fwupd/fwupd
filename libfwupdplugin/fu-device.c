@@ -3848,6 +3848,14 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	if (flag == FWUPD_DEVICE_FLAG_NONE)
 		return;
 
+	/* an emulated device cannot be used to record emulation events,
+	 * and an emulated device cannot be tagged for emulation */
+	if (flag == FWUPD_DEVICE_FLAG_EMULATED)
+		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	if (flag == FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG &&
+	    fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		return;
+
 	/* being both a bootloader and requiring a bootloader is invalid */
 	if (flag & FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)
 		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
