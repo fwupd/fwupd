@@ -189,6 +189,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "only-explicit-updates";
 	if (device_flag == FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG)
 		return "can-emulation-tag";
+	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK)
+		return "install-skip-version-check";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -283,6 +285,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ONLY_EXPLICIT_UPDATES;
 	if (g_strcmp0(device_flag, "can-emulation-tag") == 0)
 		return FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG;
+	if (g_strcmp0(device_flag, "install-skip-version-check") == 0)
+		return FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

@@ -580,6 +580,14 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG = 1ull << 52,
 	/**
+	 * FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK:
+	 *
+	 * The device doesn't require verification of the newly installed version.
+	 *
+	 * Since: 2.0.2
+	 */
+	FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK = 1ull << 53,
+	/**
 	 * FWUPD_DEVICE_FLAG_UNKNOWN:
 	 *
 	 * This flag is not defined, this typically will happen from mismatched fwupd library and
