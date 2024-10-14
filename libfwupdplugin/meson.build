@@ -170,7 +170,7 @@ fwupdplugin_src = [
   'fu-volume.c', # fuzzing
 ]
 
-if host_machine.system() == 'linux'
+if host_machine.system() in ['linux', 'android']
   fwupdplugin_src += 'fu-common-linux.c' # fuzzing
   fwupdplugin_src += 'fu-linux-efivars.c'
 elif host_machine.system() == 'freebsd'
