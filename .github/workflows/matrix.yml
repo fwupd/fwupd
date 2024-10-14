@@ -32,7 +32,7 @@ jobs:
         run: |
           docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: ${{ matrix.os }}
           path: ${{ github.workspace }}/dist/*
@@ -104,7 +104,7 @@ jobs:
         run: |
           echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
       - name: Save tarball
-        uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # v4.4.1
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: tarball
           path: ${{ github.workspace }}/build/meson-dist/*xz
