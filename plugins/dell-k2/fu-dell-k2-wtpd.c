@@ -89,6 +89,9 @@ fu_dell_k2_wtpd_write(FuDevice *device,
 			return FALSE;
 	}
 
+	/* check version is not required */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
+
 	/* success */
 	g_debug("pd firmware written successfully");
 	return TRUE;

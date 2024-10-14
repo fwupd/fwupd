@@ -97,8 +97,8 @@ fu_dell_k2_rmm_write(FuDevice *device,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 
-	/* appease daemon as EC cannot read it correctly */
-	fu_device_set_version(device, fu_firmware_get_version(firmware)); /* nocheck:set-version */
+	/* check version is not required */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 
 	/* success */
 	g_debug("Remote Management firmware written successfully");
