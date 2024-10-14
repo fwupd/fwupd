@@ -97,6 +97,9 @@ fu_dell_k2_dpmux_write(FuDevice *device,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 
+	/* check version is not required */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
+
 	/* success */
 	g_debug("dpmux/retimer firmware written successfully");
 	return TRUE;
