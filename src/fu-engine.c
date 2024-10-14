@@ -1916,6 +1916,7 @@ fu_engine_install_release_version_check(FuEngine *self,
 	const gchar *version_old = fu_release_get_device_version_old(release);
 	if (version_rel != NULL && fu_version_compare(version_old, version_rel, fmt) != 0 &&
 	    fu_version_compare(version_old, fu_device_get_version(device), fmt) == 0 &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
