@@ -26,6 +26,13 @@ fu_bcm57xx_verify_crc(GBytes *fw, GError **error)
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	/* expected */
+	if (bufsz < sizeof(guint32)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "buf was too small");
+		return FALSE;
+	}
 	if (!fu_memread_uint32_safe(buf,
 				    bufsz,
 				    bufsz - sizeof(guint32),
