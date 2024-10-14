@@ -11,6 +11,13 @@
 #include "fu-dell-k2-common.h"
 #include "fu-dell-k2-struct.h"
 
+/**
+ * FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF:
+ *
+ * Device needs to disable update on disconnect.
+ */
+#define FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF (1 << 0)
+
 #define FU_TYPE_DELL_K2_EC (fu_dell_k2_ec_get_type())
 G_DECLARE_FINAL_TYPE(FuDellK2Ec, fu_dell_k2_ec, FU, DELL_K2_EC, FuHidDevice)
 
