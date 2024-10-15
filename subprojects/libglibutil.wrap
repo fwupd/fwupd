@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/sailfishos/libglibutil.git
+revision = 7df665e17f00345ff2cbd12452a0bf67e203dccd
+patch_directory = libglibutil
+
+[provide]
+libglibutil=libglibutil_dep
