@@ -26,13 +26,7 @@ fu_asus_hid_device_transfer_feature(FuDevice *device,
 				    guint8 report,
 				    GError **error)
 {
-	FuHidDevice *hid_dev;
-
-	/* can be called from child or proxy */
-	if (FU_IS_HID_DEVICE(device))
-		hid_dev = FU_HID_DEVICE(device);
-	else
-		hid_dev = FU_HID_DEVICE(fu_device_get_proxy(device));
+	FuHidDevice *hid_dev = FU_HID_DEVICE(fu_device_get_proxy_with_fallback(device));
 
 	if (req != NULL) {
 		if (!fu_hid_device_set_report(hid_dev,
@@ -65,7 +59,7 @@ fu_asus_hid_device_transfer_feature(FuDevice *device,
 static gboolean
 fu_asus_hid_device_init_seq(FuDevice *device, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_asus_hid_command_new();
+	g_autoptr(FuStructAsusHidCommand) cmd = fu_struct_asus_hid_command_new();
 
 	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_INIT_SEQUENCE);
 
@@ -85,8 +79,8 @@ static gboolean
 fu_asus_hid_device_ensure_manufacturer(FuDevice *device, GError **error)
 {
 	const gchar *man;
-	g_autoptr(GByteArray) cmd = fu_struct_asus_man_command_new();
-	g_autoptr(GByteArray) result = fu_struct_asus_man_result_new();
+	g_autoptr(FuStructAsusManCommand) cmd = fu_struct_asus_man_command_new();
+	g_autoptr(FuStructAsusManResult) result = fu_struct_asus_man_result_new();
 
 	if (!fu_asus_hid_device_transfer_feature(device,
 						 cmd,
@@ -111,8 +105,8 @@ fu_asus_hid_device_ensure_manufacturer(FuDevice *device, GError **error)
 static gboolean
 fu_asus_hid_device_ensure_version(FuDevice *device, guint mcu, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_asus_hid_command_new();
-	g_autoptr(GByteArray) result = fu_struct_asus_hid_fw_info_new();
+	g_autoptr(FuStructAsusHidCommand) cmd = fu_struct_asus_hid_command_new();
+	g_autoptr(FuStructAsusHidFwInfo) result = fu_struct_asus_hid_fw_info_new();
 	g_autofree gchar *name = NULL;
 
 	if (mcu == FU_ASUS_HID_CONTROLLER_PRIMARY)
@@ -210,7 +204,7 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_asus_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_asus_flash_reset_new();
+	g_autoptr(FuStructAsusFlashReset) cmd = fu_struct_asus_flash_reset_new();
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
@@ -232,8 +226,8 @@ fu_asus_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error
 static gboolean
 fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_asus_pre_update_command_new();
-	g_autoptr(GByteArray) result = fu_struct_asus_hid_result_new();
+	g_autoptr(FuStructAsusPreUpdateCommand) cmd = fu_struct_asus_pre_update_command_new();
+	g_autoptr(FuStructAsusHidResult) result = fu_struct_asus_hid_result_new();
 	guint32 previous_result;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -352,8 +346,10 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 	fu_progress_set_steps(progress, blocks->len);
 	for (guint i = 0, offset = 0; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(blocks, i);
-		g_autoptr(GByteArray) cmd = fu_struct_asus_read_flash_command_new();
-		g_autoptr(GByteArray) result = fu_struct_asus_read_flash_command_new();
+		g_autoptr(FuStructAsusReadFlashCommand) cmd =
+		    fu_struct_asus_read_flash_command_new();
+		g_autoptr(FuStructAsusReadFlashCommand) result =
+		    fu_struct_asus_read_flash_command_new();
 
 		fu_struct_asus_read_flash_command_set_offset(cmd, offset);
 		fu_struct_asus_read_flash_command_set_datasz(cmd, fu_chunk_get_data_sz(chk));
@@ -383,8 +379,8 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 static gboolean
 fu_asus_hid_device_verify_ite_part(FuDevice *device, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_flash_identify_new();
-	g_autoptr(GByteArray) result = fu_struct_flash_identify_response_new();
+	g_autoptr(FuStructFlashIdentify) cmd = fu_struct_flash_identify_new();
+	g_autoptr(FuStructFlashIdentifyResponse) result = fu_struct_flash_identify_response_new();
 	guint16 part;
 
 	if (!fu_asus_hid_device_transfer_feature(device,
@@ -395,7 +391,7 @@ fu_asus_hid_device_verify_ite_part(FuDevice *device, GError **error)
 		return FALSE;
 
 	part = fu_struct_flash_identify_response_get_part(result);
-	if (part != 0x8237) {
+	if (part != 0x3782) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -511,7 +507,7 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 	// TODO: why isn't this applying from probe() to bootloader in emulation case?
 	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
-	if (fu_asus_hid_device_verify_ite_part(device, error))
+	if (!fu_asus_hid_device_verify_ite_part(device, error))
 		return FALSE;
 
 	/* automatic backup should happen when FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL is set */

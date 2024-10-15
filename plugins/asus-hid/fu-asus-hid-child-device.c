@@ -105,6 +105,7 @@ fu_asus_hid_child_device_detach(FuDevice *device, FuProgress *progress, GError *
 static void
 fu_asus_hid_child_device_init(FuAsusHidChildDevice *self)
 {
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	// TODO: is it?
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 }
