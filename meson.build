@@ -241,7 +241,7 @@ sqlite = dependency('sqlite3', required: get_option('sqlite'))
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
-passim = dependency('passim', version: '>= 0.1.5', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
+passim = dependency('passim', version: '>= 0.1.2', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
 if passim.found()
   conf.set('HAVE_PASSIM', '1')
 endif
@@ -253,7 +253,7 @@ if libarchive.found()
   endif
 endif
 endif
-libjcat = dependency('jcat', version: '>= 0.2.0', fallback: ['libjcat', 'libjcat_dep'])
+libjcat = dependency('jcat', version: '>= 0.1.4', fallback: ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
 valgrind = dependency('valgrind', required: false)
 libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl'))
