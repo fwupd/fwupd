@@ -244,14 +244,20 @@ conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 # FreeBSD is missing some libusb symbols
 libusb = dependency('libusb-1.0', version : '>= 0.1.27')
 conf.set_quoted('LIBUSB_VERSION', libusb.version())
-if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+if libusb.type_name() == 'internal'
   conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-endif
-if cc.has_header_symbol('libusb.h', 'libusb_init_context', dependencies: libusb)
   conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-endif
-if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+else
+  if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_init_context', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+  endif
 endif
 
 readline = dependency('readline', required: get_option('readline'))

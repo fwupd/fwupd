@@ -1,0 +1,28 @@
+option('udev', type : 'feature',
+  description : 'use udev for device enumeration and hotplug support (recommended)',
+)
+
+option('logging', type : 'boolean',
+  value: true,
+  description: 'Enable or disable logging',
+)
+
+option('debug-logging', type : 'boolean',
+  value: false,
+  description : 'start with debug message logging enabled',
+)
+
+option('system-log', type : 'boolean',
+  value: false,
+  description : 'output logging messages to the systemwide log, if supported by the OS',
+)
+
+option('examples', type : 'boolean',
+  value: true,
+  description : 'Build libusb example programs',
+)
+
+option('tests', type : 'boolean',
+  value: true,
+  description : 'Build libusb example tests',
+)
