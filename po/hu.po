@@ -742,10 +742,6 @@ msgstr "Az eszköz képes helyreállítani a beírási hibákat"
 msgid "Device changed:"
 msgstr "Eszköz megváltoztatva:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Az eszközemuláció nincs engedélyezve."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Az eszköz belső vezérlőprogramja szükséges a verzió-ellenőrzéshez"
@@ -920,10 +916,6 @@ msgstr "Megértette a belső vezérlőprogram ágának megváltoztatásával já
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Szeretné letiltani ezt a funkciót a jövőbeni frissítéseknél?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Szeretné most engedélyezni?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1139,13 +1131,6 @@ msgstr "Nem sikerült az argumentumok feldolgozása"
 msgid "Failed to parse file"
 msgstr "Nem sikerült a fájl feldolgozása"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Nem sikerült a --filter jelzőinek feldolgozása"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Nem sikerült a --filter-release jelzőinek feldolgozása"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Nem sikerült a helyi dbx feldolgozása"
@@ -1268,10 +1253,6 @@ msgstr[1] "A belső vezérlőprogram metaadatai %u napja nem lettek frissítve, 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Belső vezérlőprogram frissítések"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "A belsővezérlőprogram-frissítések le vannak tiltva, futtassa az „fwupdmgr unlock” parancsot az engedélyezéséhez"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1797,11 +1778,6 @@ msgstr "Metaadatok URI-ja"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "A metaadatok nem szerezhetőek be a Linux gyártói belső vezérlőprogram szolgáltatásból."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "A metaadatok naprakészek, használja a --force kapcsolót az újbóli frissítéshez."
-
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Legkisebb verzió"
@@ -2007,11 +1983,6 @@ msgstr "A folytatás előtt győződjön meg arról, hogy rendelkezik-e a kötet
 msgid "Please enter a number from 0 to %u: "
 msgstr "Adjon meg egy számot 0 és %u között: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Adjon meg Y (igen) vagy N (nem) értéket: "
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "A bővítmény függőségei hiányoznak"
@@ -2190,10 +2161,6 @@ msgstr "A gép összes hardverazonosítójának visszaadása"
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "A visszaállítási védelem megakadályozza, hogy az eszközszoftvert visszaállítsák egy olyan régebbi verzióra, amely biztonsági problémákkal rendelkezik."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Futtassa az „fwupdmgr get-upgrades” parancsot a további információkért."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2951,6 +2918,8 @@ msgstr "A belső vezérlőprogram jelentéseinek feltöltése segít a hardvergy
 msgid "Urgency"
 msgstr "Sürgősség"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -2961,10 +2930,6 @@ msgstr "Használja a(z) „%s” parancsot a súgóért"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Használja a CTRL^C billentyűkombinációt a megszakításhoz."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Használja az „fwupdtool --help” parancsot a súgóért"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3078,10 +3043,6 @@ msgstr "[FÁJLNÉV1] [FÁJLNÉV2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[INDOK]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[1. BEÁLLÍTÁS] [ 2. BEÁLLÍTÁS]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

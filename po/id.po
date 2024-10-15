@@ -751,10 +751,6 @@ msgstr "Perangkat dapat memulihkan kegagalan flash"
 msgid "Device changed:"
 msgstr "Perangkat diubah:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulasi perangkat tidak diaktifkan."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Firmware perangkat harus memiliki pemeriksaan versi"
@@ -933,10 +929,6 @@ msgstr "Apakah Anda memahami konsekuensi dari mengubah cabang firmware?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Apakah Anda ingin menonaktifkan fitur ini untuk pembaruan di masa mendatang?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Apakah Anda ingin mengaktifkannya sekarang?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1148,10 +1140,6 @@ msgstr "Gagal mengurai argumen"
 msgid "Failed to parse file"
 msgstr "Gagal mengurai berkas"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Gagal mengurai flag untuk --filter"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Gagal mengurai dbx lokal"
@@ -1265,10 +1253,6 @@ msgstr[0] "Metadata firmware belum diperbarui selama %uhari dan mungkin tidak mu
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Pemutakhiran firmware"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Pembaruan firmware dinonaktifkan; jalankan 'fwupdmgr unlock' untuk mengaktifkan"
 
 #. TRANSLATORS: we've fixed a security problem on the machine
 msgid "Fix reverted successfully"
@@ -1969,11 +1953,6 @@ msgstr "Pastikan Anda memiliki kunci pemulihan volume sebelum melanjutkan."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Silakan masukkan angka dari 0 hingga %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Silakan masukkan Y atau T:"
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependensi plugin kurang"
@@ -2148,14 +2127,6 @@ msgstr "Ambil pengaturan BIOS.  Jika tidak ada argumen yang diteruskan, semua pe
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Memberikan kembalian semua ID perangkat keras bagi mesin"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Jalankan `fwupdmgr get-upgrade` untuk informasi lebih lanjut."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Jalankan `fwupdmgr sync` untuk menyelesaikan tindakan ini."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2877,6 +2848,8 @@ msgstr "Mengunggah laporan firmware membantu vendor perangkat keras untuk dengan
 msgid "Urgency"
 msgstr "Urgensi"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -2887,10 +2860,6 @@ msgstr "Gunakan %s untuk bantuan"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Gunakan CTRL^C untuk membatalkan."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Gunakan fwupdtool --help untuk bantuan"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3000,10 +2969,6 @@ msgstr "[NAMABERKAS1] [NAMABERKAS2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[ALASAN]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[PENGATURAN1] [ PENGATURAN2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

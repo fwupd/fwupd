@@ -123,6 +123,11 @@ msgstr "Posodobitev GPE %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Posodobitev grafične tablice %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Posodobitev vhodnega krmilnika %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -804,10 +809,6 @@ msgstr "Naprave ni mogoče posodobiti, ko je pokrov zaprt"
 msgid "Device changed:"
 msgstr "Spremenjena naprava:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulacija naprave ni omogočena."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Vdelana programska oprema naprave mora imeti preverjanje različice"
@@ -823,6 +824,11 @@ msgstr "Naprava je v uporabi"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Naprava je zaklenjena"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Naprava ima nižjo prednost kot ekvivalentna naprava"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -999,10 +1005,6 @@ msgstr "Ali razumete posledice spremembe veje vdelane programske opreme?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Ali želite onemogočiti to funkcijo za prihodnje posodobitve?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Ali jo želite omogočiti zdaj?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1230,12 +1232,15 @@ msgstr "Argumentov ni bilo mogoče razčleniti"
 msgid "Failed to parse file"
 msgstr "Razčlenjevanje datoteke je spodletelo"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Zastavic za -filter ni bilo mogoče razčleniti"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Zastavic za --filter-release ni bilo mogoče razčleniti"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Zastavic za %s ni bilo mogoče razčleniti"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1362,9 +1367,10 @@ msgstr[3] "Metapodatki vdelane programske oprem niso bili posodobljeni %u dni in
 msgid "Firmware updates"
 msgstr "Posodobitve vdelane programske opreme"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Posodobitve vdelane programske opreme so onemogočene; zaženite »fwupdmgr unlock«, da jih omogočite"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Posodobitve vdelane programske opreme so onemogočene; zaženite »%s«, da jih omogočite"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1940,9 +1946,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metapodatke je mogoče pridobiti iz storitve vdelane programske opreme ponudnika Linuxa (Linux Vendor Firmware Service)."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metapodatki so posodobljeni; Uporabite --force za ponovno osvežitev."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metapodatki so posodobljeni; Uporabite %s za ponovno osvežitev."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2149,10 +2156,10 @@ msgstr "Pred nadaljevanjem se prepričajte, da imate ključ za obnovitev nosilca
 msgid "Please enter a number from 0 to %u: "
 msgstr "Vnesite številko od 0 do %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Vnesite Y (D) ali N: "
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Vnesite %s ali %s:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2352,13 +2359,17 @@ msgstr "Želite pregledati in naložiti poročilo zdaj?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Zaščita pred povrnitvijo preprečuje zamenjavo programske opreme naprave s starejšo različico, ki ima varnostne težave."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Za več informacij zaženite »fwupdmgr get-upgrades«."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Za več informacij zaženite »%s«."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Zaženite »fwupdmgr sync«, da dokončate to dejanje."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Zaženite »%s«, da dokončate to dejanje."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3165,6 +3176,15 @@ msgstr "Posodobi shranjene metapodatke s trenutno vsebino"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Posodobi vse navedene naprave na najnovejšo različico vdelane programske opreme ali vse naprave, če niso navedene"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Posodobitve so objavljene za %u krajevnih naprav"
+msgstr[1] "Posodobitve so objavljene za %u od %u krajevnih naprav"
+msgstr[2] "Posodobitve so objavljene za %u od %u krajevnih naprav"
+msgstr[3] "Posodobitve so objavljene za %u od %u krajevnih naprav"
+
 msgid "Updating"
 msgstr "Posodabljanje"
 
@@ -3206,6 +3226,8 @@ msgstr "Nalaganje poročil o vdelani programski opremi pomaga prodajalcem strojn
 msgid "Urgency"
 msgstr "Nujnost"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3216,10 +3238,6 @@ msgstr "Uporabite %s za pomoč"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Za preklic uporabite CTRL^C."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Uporabite fwupdtool --help za pomoč"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3351,12 +3369,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[RAZDELEK] KLJUČ VREDNOST"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[NASTAVITEV1] [NASTAVITEV2] …"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[NASTAVITEV1] [NASTAVITEV2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[NASTAVITEV1] [NASTAVITEV2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

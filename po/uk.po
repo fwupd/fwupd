@@ -123,6 +123,11 @@ msgstr "Оновлення для відеокартки %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Оновлення графічного планшета %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Оновлення контролера введення %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -804,10 +809,6 @@ msgstr "Мікропрограму пристрою не можна оновлю
 msgid "Device changed:"
 msgstr "Змінено пристрій:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Емуляцію пристрою не увімкнено."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Для перевірки версії потрібна мікропрограма пристрою"
@@ -823,6 +824,11 @@ msgstr "Пристрій використано сторонніми засоб�
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Пристрій заблоковано"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Пріоритетність пристрою є нижчою за пріоритетність еквівалентного пристрою"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -999,10 +1005,6 @@ msgstr "Чи розумієте ви наслідки зміни гілки мі
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Хочете вимкнути цю можливість для наступних оновлень?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Хочете увімкнути її зараз?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1230,12 +1232,15 @@ msgstr "Не вдалося обробити аргументи"
 msgid "Failed to parse file"
 msgstr "Не вдалося обробити файл"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Не вдалося обробити прапорці до --filter"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Не вдалося обробити прапорці до --filter-release"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Не вдалося обробити прапорці до %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1362,9 +1367,10 @@ msgstr[3] "Метадані мікропрограми не оновлювали
 msgid "Firmware updates"
 msgstr "Оновлення мікропрограми"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Оновлення мікропрограми вимкнено; віддайте команду 'fwupdmgr unlock', щоб їх увімкнути"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Оновлення мікропрограми вимкнено; віддайте команду '%s', щоб їх увімкнути"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1940,9 +1946,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Метадані можна отримати від служби надання мікропрограм для Linux від виробника."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Метадані є актуальними; скористайтеся --force для освіження відомостей."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Метадані є актуальними; скористайтеся %s для освіження відомостей."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2149,10 +2156,10 @@ msgstr "Будь ласка, переконайтеся, що у вас є кл�
 msgid "Please enter a number from 0 to %u: "
 msgstr "Будь ласка, введіть число від 0 до %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Будь ласка, введіть Y або N: "
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Будь ласка, введіть %s або %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2352,13 +2359,17 @@ msgstr "Переглянути і вивантажити звіт зараз?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Захист від відновлення попередніх версій запобігає зниженню версій програмного забезпечення до тих, у яких виявлено проблеми із захистом."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Віддайте команду «fwupdmgr get-upgrades», щоб дізнатися більше."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Віддайте команду «%s», щоб дізнатися більше."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Віддайте команду «fwupdmgr sync», щоб завершити цю дію."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Віддайте команду «%s», щоб завершити цю дію."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3165,6 +3176,15 @@ msgstr "Оновити збережені метадані поточними д
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Оновлює усі вказані пристрої до найсвіжішої версії мікропрограми. Якщо пристрої не вказано, оновлює усі пристрої."
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Оприлюднено оновлення для %u локального пристрою"
+msgstr[1] "Оприлюднено оновлення для %u з %u локальних пристроїв"
+msgstr[2] "Оприлюднено оновлення для %u з %u локальних пристроїв"
+msgstr[3] "Оприлюднено оновлення для %u з %u локального пристрою"
+
 msgid "Updating"
 msgstr "Оновлення"
 
@@ -3206,6 +3226,8 @@ msgstr "Вивантаження звітів щодо мікропрограм 
 msgid "Urgency"
 msgstr "Рівень важливості"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3216,10 +3238,6 @@ msgstr "Скористайтеся командою %s, щоб дізнатис�
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Скористайтеся CTRL^C, щоб скасувати."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Скористайтеся fwupdtool --help, щоб дізнатися більше"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3351,12 +3369,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[РОЗДІЛ] КЛЮЧ ЗНАЧЕННЯ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2]..."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[ПАРАМЕТР1] [ПАРАМЕТР2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

@@ -123,6 +123,11 @@ msgstr "Aktualizacja karty graficznej %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Aktualizacja tabletu graficznego %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Aktualizacja kontrolera %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -796,10 +801,6 @@ msgstr "Nie można zaktualizować urządzenia, kiedy pokrywa jest zamknięta"
 msgid "Device changed:"
 msgstr "Zmieniono urządzenie:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulacja urządzenia nie jest włączona."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Oprogramowanie sprzętowe urządzenia musi mieć test wersji"
@@ -815,6 +816,11 @@ msgstr "Urządzenie jest używane"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Urządzenie jest zablokowane"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Urządzenie ma niższy priorytet niż jego odpowiednik"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -987,10 +993,6 @@ msgstr "Czy rozumiesz konsekwencje zmiany gałęzi oprogramowania sprzętowego?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Wyłączyć tę funkcję dla przyszłych aktualizacji?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Włączyć ją teraz?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1207,12 +1209,15 @@ msgstr "Przetworzenie parametrów się nie powiodło"
 msgid "Failed to parse file"
 msgstr "Przetworzenie pliku się nie powiodło"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Przetworzenie flag dla opcji --filter się nie powiodło"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Przetworzenie flag dla opcji --filter-release się nie powiodło"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Przetworzenie flag dla opcji %s się nie powiodło"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1320,9 +1325,10 @@ msgstr[3] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane prze
 msgid "Firmware updates"
 msgstr "Aktualizacje oprogramowania sprzętowego"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Aktualizacje oprogramowania sprzętowego są wyłączone; wykonanie polecenia „fwupdmgr unlock” je włączy"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Aktualizacje oprogramowania sprzętowego są wyłączone; wykonanie polecenia „%s” je włączy"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1869,9 +1875,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadane można uzyskać z serwisu Linux Vendor Firmware Service."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadane są aktualne, opcja --force odświeży je ponownie."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadane są aktualne, opcja %s odświeży je ponownie."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2074,10 +2081,10 @@ msgstr "Przed kontynuacją proszę się upewnić, że posiadany jest klucz odzys
 msgid "Please enter a number from 0 to %u: "
 msgstr "Proszę podać liczbę od 0 do %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Proszę nacisnąć Y lub N:"
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Proszę podać %s lub %s:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2269,13 +2276,17 @@ msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
 msgid "Review and upload report now?"
 msgstr "Przejrzeć i wysłać zgłoszenie?"
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Polecenie „fwupdmgr get-upgrades” wyświetli więcej informacji."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Polecenie „%s” wyświetli więcej informacji."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Polecenie „fwupdmgr sync” dokończy to działanie."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Polecenie „%s” dokończy to działanie."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3038,6 +3049,15 @@ msgstr "Aktualizuje przechowywane metadane obecną zawartością"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Aktualizuje wszystkie podane urządzenia do najnowszej wersji oprogramowania sprzętowego, lub wszystkie urządzenia, jeśli nie podano żadnych"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Aktualizacje zostały opublikowane dla %u lokalnego urządzenia"
+msgstr[1] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
+msgstr[2] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
+msgstr[3] "Aktualizacje zostały opublikowane dla %u z %u lokalnych urządzeń"
+
 msgid "Updating"
 msgstr "Aktualizowanie"
 
@@ -3079,6 +3099,8 @@ msgstr "Wysyłanie zgłoszeń o oprogramowaniu sprzętowym pomaga dostawcom spr
 msgid "Urgency"
 msgstr "Pilność"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3089,10 +3111,6 @@ msgstr "Polecenie %s wyświetli pomoc"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Naciśnięcie CTRL^C anuluje."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Polecenie fwupdtool --help wyświetli pomoc"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3224,12 +3242,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[SEKCJA] KLUCZ WARTOŚĆ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[USTAWIENIE1] [USTAWIENIE2]…"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[USTAWIENIE1] [USTAWIENIE2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[USTAWIENIE1] [USTAWIENIE2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

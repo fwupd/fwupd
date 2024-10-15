@@ -122,6 +122,11 @@ msgstr "Actualització de la GPU %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Actualització de la tauleta gràfica %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Actualització del controlador d'entrada %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -789,10 +794,6 @@ msgstr "El dispositiu no es podrà actualitzar mentre la tapa estigui tancada"
 msgid "Device changed:"
 msgstr "S'ha canviat el dispositiu:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "L'emulació del dispositiu no està activada."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "És obligatori el microprogramari del dispositiu per a comprovar la versió"
@@ -808,6 +809,11 @@ msgstr "El dispositiu està en ús"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "El dispositiu està bloquejat"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "El dispositiu té una prioritat més baixa que la d'un dispositiu equivalent"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -984,10 +990,6 @@ msgstr "Enteneu les conseqüències de canviar la branca del microprogramari?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Voleu inhabilitar aquesta característica per a futures actualitzacions?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Voleu activar-la ara?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1215,12 +1217,15 @@ msgstr "Ha fallat en analitzar els arguments"
 msgid "Failed to parse file"
 msgstr "Ha fallat en analitzar el fitxer"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Ha fallat en analitzar les etiquetes per a --filter"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Ha fallat en analitzar els indicadors --filter-release"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "S'ha fallat en analitzar els indicadors de %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1345,9 +1350,10 @@ msgstr[1] "Les metadades del microprogramari no s'han actualitzat durant %u dies
 msgid "Firmware updates"
 msgstr "Actualitzacions de microprogramari"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Actualitzacions de microprogramari inhabilitades: executeu «fwupdmgr unlock» per a habilitar-les"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "L'actualització del microprogramari està inhabilitada. Executeu «%s» per a habilitar-la"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1919,9 +1925,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Les metadades es poden obtenir des del servei de microprogramari del proveïdor Linux."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Les metadades estan actualitzades, useu --force per a actualitzar-les de nou."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Les metadades estan actualitzades. Useu %s per a actualitzar de nou."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2128,10 +2135,10 @@ msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del 
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Introduïu S o N:"
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Introduïu %s o %s:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2331,13 +2338,17 @@ msgstr "Voleu revisar i penjar ara l'informe?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "La protecció contra la reversió evita que el programari del dispositiu torni a una versió anterior que potser conté problemes de seguretat."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Per a més informació, executeu «fwupdmgr get-upgrades»."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Executeu «%s» per a obtenir més informació."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Executeu «fwupdmgr sync» per a completar aquesta acció."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Executeu «%s» per a completar aquesta acció."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3140,6 +3151,13 @@ msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualitza tots els dispositius especificats a la versió més recent del microprogramari o tots els dispositius sense especificar"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "S'han publicat les actualitzacions per a %u dispositiu local"
+msgstr[1] "S'han publicat les actualitzacions de %u per a %u dispositius locals"
+
 msgid "Updating"
 msgstr "S'està actualitzant"
 
@@ -3181,6 +3199,8 @@ msgstr "L'enviament dels informes de microprogramari ajudarà als proveïdors de
 msgid "Urgency"
 msgstr "Urgència"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3191,10 +3211,6 @@ msgstr "Useu %s per a obtenir ajuda"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Useu CTRL^C per a cancel·lar."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Empreu «fwupdtool --help» per a l'ajuda"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3326,12 +3342,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[SECCIÓ] CLAU VALOR"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[CONFIG_1] [ CONFIG_2]..."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[CONFIG_1] [CONFIG_2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[CONFIGURACIÓ_1] [CONFIGURACIÓ_2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

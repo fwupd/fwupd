@@ -38,6 +38,34 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.1" date="2024-10-15">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add API so that gnome-firmware can record devices for emulation</li>
+          <li>Save the emulation-tag devices to the database rather than the config file</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow controlling the libdrm dependency when building</li>
+          <li>Check the logitech-bulkcontroller response packet length correctly</li>
+          <li>Convert the wacom-raw device command buffers to Rust format</li>
+          <li>Convert the wacom-usb descriptor to Rust format</li>
+          <li>Fix a kinetic-dp enumeration regression</li>
+          <li>Fix compiling on Android</li>
+          <li>Fix compiling without git installed</li>
+          <li>Fix FU_PLUGIN_RULE_BETTER_THAN to ignore lower priority devices</li>
+          <li>Ignore needs-reboot and needs-shutdown for emulated devices</li>
+          <li>Read the Intel Thunderbot NVM firmware in a more efficient way</li>
+          <li>Simplify firmware loading from a specific offset</li>
+          <li>Skip the serio self tests if gnutls support was disabled</li>
+          <li>Speed up fwupdtool by only loading engine features when required</li>
+          <li>Speed up getting details about local firmware archives</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.0" date="2024-10-04">
       <description>
         <p>

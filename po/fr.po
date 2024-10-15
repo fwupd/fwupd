@@ -446,10 +446,6 @@ msgstr "Le micrologiciel n'est pas déjà bloqué"
 msgid "Firmware updates"
 msgstr "Mises à jour de micrologiciels"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Les mises à jour de micrologiciel sont désactivées ; exécutez «fwupdmgr unlock» pour les activer"
-
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
 msgstr "Drapeaux"
@@ -764,10 +760,6 @@ msgstr "Redémarrer le service pour rendre la modification effective ?"
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Redémarrage du périphérique…"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Exécutez «fwupdmgr get-upgrades» pour plus d'informations."
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"

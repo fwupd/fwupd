@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Daniele Guarascio, 2024
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
 # Milo Casagrande <milo@ubuntu.com>, 2017-2023
 msgid ""
@@ -459,6 +460,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "È richiesto autenticarsi tornare al precedente firmware su questa macchina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "È richiesta l'autenticazione per risolvere un problema di sicurezza dell'host"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "È richiesto autenticarsi per modificare le impostazioni BIOS"
 
@@ -475,6 +480,10 @@ msgid "Authentication is required to read BIOS settings"
 msgstr "È richiesto autenticarsi per leggere le impostazioni BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "È richiesta l'autenticazione per poter resettare la configurazione del demone ai valori di default"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "È richiesto autenticarsi per impostare l'elenco dei firmware approvati"
 
@@ -485,6 +494,10 @@ msgstr "È richiesto autenticarsi per firmare i dati utilizzando il certificato 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "È richiesto autenticarsi per passare alla nuova versione del firmware "
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "È richiesta l'autenticazione per annullare la risoluzione di un problema di sicurezza dell'host"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -717,10 +730,6 @@ msgstr "Il dispositivo è in grado di correggere problemi di flash"
 msgid "Device changed:"
 msgstr "Dispositivo modificato:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulazione dispositivo non abilitata."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "È richiesto il firmware dispositivo per eseguire un controllo della versione"
@@ -887,10 +896,6 @@ msgstr "Le conseguenze del cambio di ramo del firmware sono state comprese?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Disabilitare questa funzionalità per i prossimi aggiornamenti?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Abilitarlo ora?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1095,10 +1100,6 @@ msgstr "Analisi degli argomenti non riuscita"
 msgid "Failed to parse file"
 msgstr "Lettura del file non riuscita"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Analisi del flag --filter non riuscita"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Lettura dbx locale non riuscita"
@@ -1199,10 +1200,6 @@ msgstr[2] "I metadati del firmware non sono stati controllati per %u giorni e po
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Aggiornamenti firmware"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Aggiornamenti firmware disabilitati; eseguire «fwupdmgr unlock» per abilitarli"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1851,11 +1848,6 @@ msgstr "Assicurarsi di avere la chiave di ripristino prima di continuare."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Inserire un numero tra 0 e %u:"
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Digitare Y o N:"
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dipendenze plugin mancanti"
@@ -1999,6 +1991,9 @@ msgstr "Richiede un bootloader"
 msgid "Requires internet connection"
 msgstr "Richiede una connessione a Internet"
 
+msgid "Reset daemon configuration"
+msgstr "Resetta la configurazione del demone"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Riavviare ora?"
@@ -2014,10 +2009,6 @@ msgstr "Riavvio del dispositivo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Fornisce tutti gli ID hardware per un dispositivo"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Per maggiori informazioni eseguire «fwupdmgr get-upgrades»."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2675,6 +2666,8 @@ msgstr "Inviare resoconti sul firmware aiuta gli sviluppatori a identificare vel
 msgid "Urgency"
 msgstr "Urgenza"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -2685,10 +2678,6 @@ msgstr "Usare %s per l'aiuto"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Usare CTRL^C per annullare."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Usare «fwupdtool --help» per maggiori informazioni"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -2789,10 +2778,6 @@ msgstr "[NOMEFILE1] [NOMEFILE2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[MOTIVO]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[IMPOSTAZIONE1] [ IMPOSTAZIONE2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

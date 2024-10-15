@@ -6,9 +6,11 @@
 # Adolfo Jayme-Barrientos, 2021
 # Adolfo Jayme-Barrientos, 2021
 # César Enrique García <cquike@gmail.com>, 2023
+# D Marzal, 2024
 # Francisco Serrador, 2022-2024
 # Francisco Serrador <serrador@protonmail.com>, 2022
 # Giovanni Alfredo Garciliano Diaz <giobeatle10@gmail.com>, 2024
+# Santiago FN, 2024
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -233,6 +235,12 @@ msgstr "%s ha desaparecido: %s"
 #, c-format
 msgid "%s is not currently updatable"
 msgstr "%s no es actualizable actualmente"
+
+#. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+#. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
+#, c-format
+msgid "%s is pending activation; use %s to complete the update."
+msgstr "%s está pendiente de activación, use %s para completar la actualización."
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -497,6 +505,10 @@ msgstr "Se requiere autenticación para modificar la configuración del demonio"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
 msgstr "Requiere autenticarse para leer parámetros de BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "Autenticación requerida para reiniciar la configuración del demonio a su estado por defecto"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -787,10 +799,6 @@ msgstr "El dispositivo puede recuperar errores de flash"
 msgid "Device changed:"
 msgstr "Dispositivo modificado:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "La emulación de dispositivo no está activada."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "El dispositivo firmware es necesario para hacer una comprobación de versión"
@@ -806,6 +814,11 @@ msgstr "Dispositivo en uso"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "El dispositivo está bloqueado"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "El dispositivo tiene una prioridad menor que el dispositivo equivalente"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -828,6 +841,10 @@ msgstr "El dispositivo es utilizable durante la actualización"
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
 msgstr "El dispositivo está esperando a que se actualice para ser aplicado"
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Device list uploaded successfully, thanks!"
+msgstr "Listado de dispositivos correctamente subido, ¡gracias!"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -876,6 +893,11 @@ msgstr "Dispositivos que han sido actualizados correctamente:"
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
 msgstr "Dispositivos que no fueron actualizados correctamente:"
+
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "Dispositivos con actualizaciones de firmware que necesitan interacción del usuario:"
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -969,10 +991,6 @@ msgstr "¿Comprende las consecuencias de cambiar la rama del firmware?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "¿No desea deshabilitar esta característica para actualizaciones futuras?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "¿Desea activarlo ahora?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1196,13 +1214,6 @@ msgstr "No se pudieron procesar los argumentos"
 msgid "Failed to parse file"
 msgstr "No se pudo procesar el archivo"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Error al interpretar indicadores para --filter"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Ha fallado al interpretar indicaciones para --filter-release"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Intérprete erróneo del dbx local"
@@ -1326,10 +1337,6 @@ msgstr[2] "Los metadatos de firmware no han sido actualizados para %u días y pu
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Actualizaciones del firmware"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Actualizaciones firmware desactivada; ejecute 'fwupdmgr unlock' para habilitar"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1509,6 +1516,10 @@ msgstr "Hace caso omiso a errores del sumatorio del firmware"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Hace caso omiso a errores del concordancia del hardware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore non-critical firmware requirements"
+msgstr "Ignorar requisitos del firmware no críticos"
 
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
@@ -1716,11 +1727,11 @@ msgstr[2] "Informes"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
-msgstr "El núcleo no está manoseado por más tiempo"
+msgstr "El núcleo ya no está contaminado"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is tainted"
-msgstr "El Kernel está manoseado"
+msgstr "El núcleo está contaminado"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1785,6 +1796,14 @@ msgstr "Kernel Linux bloqueado"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Intercambio de Linux"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot files"
+msgstr "Listado de ficheros de arranque EFI"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot parameters"
+msgstr "Listado de parámetros de arranque EFI"
 
 #. TRANSLATORS: command description
 msgid "List EFI variables with a specific GUID"
@@ -1889,11 +1908,6 @@ msgstr "URI Metadatos"
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadatos pueden obtenerse desde el Servicio de Firmware del Proveedor Linux."
-
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadatos están actualizados; utilice --force para actualizarlo de nuevo."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2100,14 +2114,13 @@ msgstr "Asegure que tenga la tecla de recuperación del volumen antes de continu
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduzca un número desde 0 hasta %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Introduzca o S o N:"
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependencias ausentes del complemento"
+
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr "El complemento es solo para pruebas"
 
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
@@ -2260,6 +2273,9 @@ msgstr "Requiere un cargador de arranque"
 msgid "Requires internet connection"
 msgstr "Requiere conexión a Internet"
 
+msgid "Reset daemon configuration"
+msgstr "Reiniciar la configuración del demonio"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "¿Reiniciar ahora?"
@@ -2288,13 +2304,17 @@ msgstr "¿Ahora informo de revisión y subida?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Retroceder Protección previene software de dispositivo sea degradado a una versión más antigua que tenga problemas de seguridad."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Ejecute `fwupdmgr get-upgrades` para más información."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Ejecute `%s` para más información."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Ejecute `fwupdmgr sync` para completar esta acción."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Ejecute `%s` para completar esta acción."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -2542,6 +2562,10 @@ msgstr "Se activaron correctamente todos los dispositivos"
 msgid "Successfully disabled remote"
 msgstr "Remoto desactivado correctamente"
 
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully disabled test devices"
+msgstr "Se desactivaron correctamente los dispositivos de prueba"
+
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -2554,6 +2578,10 @@ msgstr "Remoto activado y recargado correctamente"
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
 msgstr "Remoto activado correctamente"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully enabled test devices"
+msgstr "Se activaron correctamente los dispositivos de prueba"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
@@ -2570,6 +2598,10 @@ msgstr "Remoto modificado correctamente"
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
 msgstr "Metadatos actualizados manualmente correctamente"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration values"
+msgstr "Valores de configuración reiniciados correctamente"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2723,7 +2755,7 @@ msgstr "Etiquetado para emulación"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
-msgstr "Manoseado"
+msgstr "Contaminado"
 
 #. show the user the entire data blob
 msgid "Target"
@@ -3030,7 +3062,7 @@ msgstr "Versión %s no mantenida del demonio, versión de cliente es %s"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
-msgstr "No manoseado"
+msgstr "No contaminado"
 
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
@@ -3089,6 +3121,14 @@ msgstr "Actualizando %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "¿Moderniza %s desde %s hasta %s?"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Upload data now?"
+msgstr "¿Subir los datos ahora?"
+
+#. TRANSLATORS: command description
+msgid "Upload the list of updatable devices to a remote server"
+msgstr "Subir el listado de dispositivos actualizables a un servidor remoto"
+
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
 #, c-format
@@ -3103,6 +3143,8 @@ msgstr "Subiendo comunicados firmware ayuda proveedores de hardware para identif
 msgid "Urgency"
 msgstr "Urgencia"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3113,10 +3155,6 @@ msgstr "Utilice %s para ayuda"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Utilice CTRL^C para cancelar."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Emplee fwupdtool --help para ayuda"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3152,7 +3190,7 @@ msgstr "Versión"
 
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
-msgstr "Versión"
+msgstr "Versión[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
@@ -3242,10 +3280,6 @@ msgstr "[ARCHIVO-NOMBRE1] [ARCHIVO-NOMBRE2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[RAZÓN]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[PARÁMETRO1] [PARÁMETRO2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

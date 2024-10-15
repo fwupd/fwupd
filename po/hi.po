@@ -775,10 +775,6 @@ msgstr "उपकरण फ़्लैश विफलताओं से व�
 msgid "Device changed:"
 msgstr "उपकरण बदला गया:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "उपकरण अनुकरण सक्षम नहीं है।"
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "उपकरण फर्मवेयर का संस्करण जांचना आवश्यक है"
@@ -957,10 +953,6 @@ msgstr "क्या आप फर्मवेयर शाखा बदलन�
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "क्या आप भविष्य के अद्यतन के लिए इस सुविधा को अक्षम करना चाहते हैं?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "क्या आप इसे अभी सक्षम करना चाहते हैं?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1184,13 +1176,6 @@ msgstr "तर्कों का विश्लेषण करने मे�
 msgid "Failed to parse file"
 msgstr "फाइल का विश्लेषण करने में विफल"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "--filter के लिए फ्लैग का विश्लेषण करने में विफल"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "--filter-release के लिए फ्लैग का विश्लेषण करने में विफल"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "स्थानीय dbx का विश्लेषण करने में विफल"
@@ -1313,10 +1298,6 @@ msgstr[1] "फ़र्मवेयर मेटाडेटा %u दिनो�
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "फर्मवेयर अद्यतन"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "फर्मवेयर अद्यतन अक्षम; सक्षम करने के लिए 'fwupdmgr unlock' चलाएं"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1875,11 +1856,6 @@ msgstr "मेटाडेटा URI"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "मेटाडेटा Linux विक्रेता फर्मवेयर सेवा से प्राप्त किया जा सकता है।"
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "मेटाडेटा अद्यतित है; पुनः ताजा करने के लिए --force का उपयोग करें।"
-
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "न्यूनतम संस्करण"
@@ -2085,11 +2061,6 @@ msgstr "कृपया जारी रखने से पहले सुन�
 msgid "Please enter a number from 0 to %u: "
 msgstr "कृपया 0 से %u तक कोई संख्या दर्ज करें: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "कृपया Y या N दर्ज करें: "
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "प्लगइन निर्भरताएं गायब हैं"
@@ -2272,14 +2243,6 @@ msgstr "अभी रिपोर्ट की समीक्षा और अ�
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "रोलबैक प्रोटेक्शन उपकरण सॉफ्टवेयर को पुराने संस्करण में पदावनत होने से रोकता है जिसमें सुरक्षा समस्याएं होती हैं।"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "अधिक जानकारी के लिए `fwupdmgr get-upgrades` चलाएं।"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "इस कार्रवाई को पूरा करने के लिए `fwupdmgr sync` चलाएं।"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3086,6 +3049,8 @@ msgstr "फर्मवेयर रिपोर्ट अपलोड करन
 msgid "Urgency"
 msgstr "अत्यावश्यकता"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3096,10 +3061,6 @@ msgstr "सहायता के लिए %s का उपयोग करे�
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "रद्द करने के लिए CTRL^C का उपयोग करें।"
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "सहायता के लिए fwupdtool --help का उपयोग करें"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3225,10 +3186,6 @@ msgstr "[फाइलनाम1] [फाइलनाम2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[कारण]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[सेटिंग1] [ सेटिंग2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

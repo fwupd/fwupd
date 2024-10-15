@@ -121,6 +121,11 @@ msgstr "Actualizarea GPU %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Actualizarea tabletei grafice %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Actualizare pentru controlorul de intrare al %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -795,10 +800,6 @@ msgstr "Dispozitivul nu poate fi actualizat în timp ce capacul este închis"
 msgid "Device changed:"
 msgstr "Dispozitiv modificat:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emularea dispozitivului nu este activată."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Firmware-ul dispozitivului este necesar pentru a avea o verificare a versiunii"
@@ -814,6 +815,11 @@ msgstr "Dispozitivul este în uz"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Dispozitivul este blocat"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Dispozitivul are o prioritate mai mică decât un dispozitiv echivalent"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -990,10 +996,6 @@ msgstr "Înțelegeți consecințele schimbării ramurii firmware?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Doriți să dezactivați această caracteristică pentru actualizările viitoare?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Doriți să o activați acum?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1221,12 +1223,15 @@ msgstr "Analizarea argumentelor a eșuat"
 msgid "Failed to parse file"
 msgstr "Analizarea fișierului a eșuat"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "A eșuat analizarea argumentelor pentru „--filter”"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "A eșuat analizarea argumentelor pentru „--filter-release”"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Analizarea opțiunilor pentru „%s” a eșuat"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1352,9 +1357,10 @@ msgstr[2] "Metadatele firmware-ului nu au fost actualizate de %u de zile și est
 msgid "Firmware updates"
 msgstr "Actualizări firmware"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Actualizările firmware sunt dezactivate; executați «fwupdmgr unlock» pentru a le activa"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Actualizări firmware dezactivate; executați «%s» pentru activare"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1928,9 +1934,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadatele pot fi obținute de la Serviciul de furnizare a firmware-ului Linux de la producător „LVFS”."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadatele sunt la zi; utilizați „--force” pentru a actualiza din nou."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadatele sunt la zi; utilizați „%s” pentru a actualiza din nou."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2137,10 +2144,10 @@ msgstr "Vă rugăm să vă asigurați că aveți cheia de recuperare a volumului
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduceți un număr de la 0 la %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Introduceți Y sau N: "
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Introduceți %s sau %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2340,13 +2347,17 @@ msgstr "Revizuiți și încărcați raportul acum?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Protecția de restaurare la starea anterioară previne ca software-ul dispozitivului să fie retrogradat la o versiune mai veche care are probleme de securitate."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Rulați «fwupdmgr get-upgrades» pentru mai multe informații."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Rulați «%s» pentru mai multe informații."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Rulați «fwupdmgr sync» pentru a finaliza această acțiune."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Rulați «%s» pentru a finaliza această acțiune."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3151,6 +3162,14 @@ msgstr "Actualizează metadatele stocate cu conținutul curent"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualizează toate dispozitivele specificate la cea mai recentă versiune de firmware sau toate dispozitivele dacă nu se specifică niciunul"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Au fost publicate actualizări pentru %u dispozitiv local"
+msgstr[1] "Au fost publicate actualizări pentru %u din %u dispozitive locale"
+msgstr[2] "Au fost publicate actualizări pentru %u din %u de dispozitive locale"
+
 msgid "Updating"
 msgstr "Se actualizează"
 
@@ -3192,20 +3211,18 @@ msgstr "Încărcarea rapoartelor de firmware ajută producătorii de hardware s�
 msgid "Urgency"
 msgstr "Urgentă"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
 msgid "Use %s for help"
-msgstr "Utilizați %s pentru ajutor"
+msgstr "Utilizați «%s» pentru ajutor"
 
 #. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Utilizați «CTRL^C» pentru a anula."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Utilizați «fwupdtool --help» pentru ajutor"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3337,12 +3354,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[SECȚIUNE] CHEIE VALOARE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[PARAMETRU1] [ PARAMETRU2]..."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[PARAMETRU1] [PARAMETRU2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[PARAMETRU1] [ PARAMETRU2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

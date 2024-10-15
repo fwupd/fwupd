@@ -917,10 +917,6 @@ msgstr "තර්ක විග්‍රහ කිරීමට අසමත් �
 msgid "Failed to parse file"
 msgstr "ගොනුව විග්‍රහ කිරීමට අසමත් විය"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "--ෆිල්ටර් සඳහා කොඩි විග්‍රහ කිරීමට අසමත් විය"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "දේශීය dbx විග්‍රහ කිරීමට අසමත් විය"
@@ -984,10 +980,6 @@ msgstr[1] "ස්ථිරාංග පාරදත්ත දින %u ක් �
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "ස්ථිරාංග යාවත්කාල"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "ස්ථිරාංග යාවත්කාලීන කිරීම් අක්‍රීය කර ඇත; සබල කිරීමට 'fwupdmgr unlock' ධාවනය කරන්න"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1619,10 +1611,6 @@ msgstr "උපාංගය යළි ඇරඹෙමින්…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "යන්ත්‍රය සඳහා සියලුම දෘඪාංග හැඳුනුම්පත් ආපසු දෙන්න"
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "වැඩි විස්තර සඳහා `fwupdmgr get-upgrades` ධාවනය කරන්න."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Install-blob භාවිතා කරන විට ප්ලගින සංයුක්ත පිරිසිදු කිරීමේ පුරුද්ද ක්‍රියාත්මක කරන්න"
@@ -2186,10 +2174,6 @@ msgstr "ස්ථිරාංග වාර්තා උඩුගත කිරී
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "හදිසිය"
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "උදව් සඳහා fwupdtool --help භාවිතා කරන්න"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

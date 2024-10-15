@@ -104,6 +104,11 @@ msgstr "„%s“ jutiklinio kilimėlio naujinimas"
 msgid "%s Update"
 msgstr "„%s“ naujinimas"
 
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s override"
+msgstr "%s nustelbimas"
+
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 #, c-format
 msgid "%s v%s"
@@ -257,12 +262,24 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Norint šiame įrenginyje sendinti aparatinę programinę įrangą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "Norint modifikuoti BIOS nustatymus, reikalingas tapatybės nustatymas"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Norint modifikuoti aparatinės programinės įrangos naujinimams naudojamą sukonfigūruotą saugyklą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Norint modifikuoti tarnybos konfigūraciją, reikalingas tapatybės nustatymas"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Norint skaityti BIOS nustatymus, reikalingas tapatybės nustatymas"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "Norint atstatyti tarnybos konfigūraciją į numatytąsias reikšmes, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -291,6 +308,14 @@ msgstr "Norint šiame įrenginyje atnaujinti aparatinę programinę įrangą, re
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Norint atnaujinti saugomas įrenginio kontrolines sumas, reikalingas tapatybės nustatymas"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "BIOS programinės aparatinės įrangos atnaujinimai"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "BIOS programinės aparatinės įrangos atnaujinimai"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
@@ -640,6 +665,9 @@ msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Gauti BIOS nustatymus"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Gauti visus „fwupd“ palaikomus įrenginio požymius (gaireles)"
@@ -671,6 +699,11 @@ msgstr "Gauna laidas įrenginiui"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Gauna rezultatus iš paskutinio naujinimo"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU apsauga"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -757,6 +790,13 @@ msgstr "Įkeliama…"
 msgid "Locked"
 msgstr "Užrakintas"
 
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
+#. * "override" is the physical PIN that can be driven to
+#. * logic high -- luckily it is probably not accessible to
+#. * end users on consumer boards
+msgid "MEI override"
+msgstr "MEI nustelbimas"
+
 msgid "MEI version"
 msgstr "MEI versija"
 
@@ -811,6 +851,10 @@ msgstr "Nėra sendinimų, skirtų %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Nerasta jokių aparatinės programinės įrangos ID"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "Nerasta jokios programinės aparatinės įrangos"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -868,6 +912,10 @@ msgid "Perform operation?"
 msgstr "Atlikti operaciją?"
 
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "Platformos derinimas"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
 msgstr "Platformos derinimas"
 
@@ -875,6 +923,11 @@ msgstr "Platformos derinimas"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Įveskite skaičių nuo 0 iki %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Įveskite %s arba %s: "
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -931,6 +984,9 @@ msgstr "Ataskaitų URI"
 msgid "Requires internet connection"
 msgstr "Reikalauja interneto ryšio"
 
+msgid "Reset daemon configuration"
+msgstr "Atstatyti tarnybos konfigūraciją"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Paleisti iš naujo dabar?"
@@ -946,10 +1002,6 @@ msgstr "Įrenginys paleidžiamas iš naujo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Grąžinti visus kompiuterio aparatinės įrangos ID"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Išsamesnei informacijai, paleiskite „fwupdmgr get-upgrades“."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -971,6 +1023,9 @@ msgstr "Išsamesnės informacijos ieškokite adresu %s."
 #. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Pasirinktas įrenginys"
+
+msgid "Set one or more BIOS settings"
+msgstr "Nustatyti vieną ar daugiau BIOS nustatymų"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"

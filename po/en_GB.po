@@ -795,10 +795,6 @@ msgstr "Device cannot be updated while the lid is closed"
 msgid "Device changed:"
 msgstr "Device changed:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Device emulation is not enabled."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Device firmware is required to have a version check"
@@ -995,10 +991,6 @@ msgstr "Do you understand the consequences of changing the firmware branch?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Do you want to disable this feature for future updates?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Do you want to enable it now?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1226,12 +1218,15 @@ msgstr "Failed to parse arguments"
 msgid "Failed to parse file"
 msgstr "Failed to parse file"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Failed to parse flags for --filter"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Failed to parse flags for --filter-release"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Failed to parse flags for %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1356,9 +1351,10 @@ msgstr[1] "Firmware metadata has not been updated for %u days and may not be up 
 msgid "Firmware updates"
 msgstr "Firmware updates"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Firmware updates disabled; run '%s' to enable"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1930,9 +1926,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata can be obtained from the Linux Vendor Firmware Service."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadata is up to date; use --force to refresh again."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadata is up to date; use %s to refresh again."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2139,10 +2136,10 @@ msgstr "Please ensure you have the volume recovery key before continuing."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Please enter a number from 0 to %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Please enter either Y or N: "
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Please enter either %s or %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2342,13 +2339,17 @@ msgstr "Review and upload report now?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Run `fwupdmgr get-upgrades` for more information."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Run `%s` for more information."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Run `fwupdmgr sync` to complete this action."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Run `%s` to complete this action."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3151,6 +3152,13 @@ msgstr "Update the stored metadata with current contents"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Updates all specified devices to latest firmware version, or all devices if unspecified"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Updates have been published for %u local device"
+msgstr[1] "Updates have been published for %u of %u local devices"
+
 msgid "Updating"
 msgstr "Updating"
 
@@ -3192,6 +3200,8 @@ msgstr "Uploading firmware reports helps hardware vendors to quickly identify fa
 msgid "Urgency"
 msgstr "Urgency"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3202,10 +3212,6 @@ msgstr "Use %s for help"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Use CTRL^C to cancel."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Use fwupdtool --help for help"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3337,12 +3343,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[SECTION] KEY VALUE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[SETTING1] [ SETTING2]..."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[SETTING1] [SETTING2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[SETTING1] [SETTING2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

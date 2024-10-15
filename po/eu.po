@@ -223,10 +223,6 @@ msgstr "Gailua badago lehendik"
 msgid "Device changed:"
 msgstr "Gailua aldatu da:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Gailu-emulazioa ez dago gaituta."
-
 #. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
 msgid "Device is in use"
 msgstr "Gailua erabiltzen ari da"
@@ -271,10 +267,6 @@ msgstr "Ez egiaztatu urruneko deskargak gaitu behar diren ala ez"
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Ez idatzi historiaren datu-basean"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Gaitu nahi al duzu?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -880,10 +872,6 @@ msgstr "Eguneratzen"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Erabili CTRL^C bertan behera uzteko."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Erabili fwupdtool --help laguntzarako"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

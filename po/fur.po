@@ -532,10 +532,6 @@ msgstr "No si è rivâts a analizâ i argoments"
 msgid "Failed to parse file"
 msgstr "No si è rivâts a analizâ il file"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Impussibil analizâ lis variabilis/flags par --filter"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Impussibil analizâ il dbx locâl"
@@ -1013,11 +1009,6 @@ msgstr "Debug de plateforme"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Inserìs un numar di 0 a %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Inserìs Y (sì) o N (no):"
-
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Protezion DMA di pre-inviament"
@@ -1119,14 +1110,6 @@ msgstr "Daûr a tornâ a inviâ il dispositîf…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Torne ducj i ID dal hardware pe machine"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Eseguìs `fwupdmgr get-upgrades` par vê plui informazions."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Eseguìs `fwupdmgr sync` par completâ cheste azion."
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"

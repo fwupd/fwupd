@@ -717,10 +717,6 @@ msgstr "Uređaj se može oporaviti od neuspjelog zapisivanja frimvera"
 msgid "Device changed:"
 msgstr "Uređaj promijenjen:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulacija uređaja nije aktivirana."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Potreban je firmver uređaja za provjeru inačice"
@@ -887,10 +883,6 @@ msgstr "Razumijete li posljedice promjene ogranka firmvera?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Želite li onemogućiti ovu značajku za buduće nadopune?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Želiš li je sada aktivirati?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1106,10 +1098,6 @@ msgstr "Neuspjela obrada argumenata"
 msgid "Failed to parse file"
 msgstr "Neuspjela obrada datoteke"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Neuspjela obrada oznake za --filter"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Neuspjela obrada lokalnog dbx-a"
@@ -1225,10 +1213,6 @@ msgstr[2] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji.
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Nadopune frimvera"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Nadopune firmvera su onemogućene ; pokrenite 'fwupdmgr unlock' za omogućavanje"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -2053,10 +2037,6 @@ msgstr "Vrati sve ID-ove hardvera za uređaj"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Zaštita od vraćanja na stariju inačicu sprječava softver uređaja da ga vrati na stariju inačicu koja ima sigurnosne probleme."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Pokrenite `fwupdmgr get-upgrades` za više informacija."
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Pokreni rutinu čišćenja sastavljanja priključka kada se koristi install-blob"
@@ -2776,6 +2756,8 @@ msgstr "Slanje izvještaja firmvera pomaže proizvođačima hardvera brzo otkriv
 msgid "Urgency"
 msgstr "Hitnost"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -2786,10 +2768,6 @@ msgstr "Koristi %s za pomoć"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Koristi CTRL^C za prekidanje."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Koristite fwupdtool --help za prikaz pomoći"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -2899,10 +2877,6 @@ msgstr "[NAZIV DATOTEKE1] [NAZIV DATOTEKE2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[RAZLOG]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[POSTAVKA1] [POSTAVKAG2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

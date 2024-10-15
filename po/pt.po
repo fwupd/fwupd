@@ -817,10 +817,6 @@ msgstr "Falha ao interpretar argumentos"
 msgid "Failed to parse file"
 msgstr "Falha ao analisar o ficheiro"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Falha ao analisar opções para --filter"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Falha ao analisar o dbx local"
@@ -885,10 +881,6 @@ msgstr[2] "Os metadados do firmware não foram atualizados a %u dias e podem nã
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Atualizações de firmware"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Atualizações de firmware desabilitadas; execute \"fwupdmgr unlock\" para habilitar"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1320,11 +1312,6 @@ msgstr "Depuração de plataforma"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Por favor, insira um número de 0 a %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Introduza S ou N:"
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependências de plugin ausentes"
@@ -1439,14 +1426,6 @@ msgstr "A reiniciar o dispositivo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna todos os IDs de hardware para a máquina"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Execute `fwupdmgr get-upgrades` para mais informações."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Execute `fwupdmgr sync` para concluir esta ação."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1943,10 +1922,6 @@ msgstr "O envio de relatórios de firmware ajuda os fornecedores de hardware a i
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "Urgência"
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Use fwupdtool --help para ajuda"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

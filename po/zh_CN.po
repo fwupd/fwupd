@@ -796,10 +796,6 @@ msgstr "未能解析参数"
 msgid "Failed to parse file"
 msgstr "解析文件失败"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "无法解析 --filter 的标志"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "解析本地 dbx 失败"
@@ -870,10 +866,6 @@ msgstr[0] "固件元数据已有 %u 天未更新，数据可能不是最新的�
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "固件更新"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "固件更新已禁用；运行“fwupdmgr unlock”以启用"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 msgid "Flags"
@@ -1417,10 +1409,6 @@ msgstr "正在重启设备…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "返回机器的所有硬件 ID"
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "运行 \"fwupdmgr get-upgrades\" 获取更多信息。"
-
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "当使用安装比特块时运行插件组合清理例程"
@@ -1905,10 +1893,6 @@ msgstr "上传固件报告可帮助硬件供应商尽快确定真实设备上更
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
 msgstr "紧急性"
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "使用 fwupdtool --help 获取帮助信息"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

@@ -621,10 +621,6 @@ msgstr "不要寫入歷史資料庫中"
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "您是否瞭解切換韌體分支的後果？"
 
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "您要現在啟用它嗎？"
-
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
 msgstr "您要現在重新整理這個遠端站點嗎？"
@@ -759,13 +755,6 @@ msgstr "無法剖析引數"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "無法剖析檔案"
-
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "無法剖析 --filter 的旗標"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "無法剖析 --filter-release 的旗標"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1429,14 +1418,6 @@ msgstr "回傳所有機器的硬體 ID"
 msgid "Review and upload report now?"
 msgstr "現在審閱後上傳報告嗎？"
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "執行 `fwupdmgr get-upgrades` 來取得更多資訊。"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "執行 `fwupdmgr sync` 來完成這個操作。"
-
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "執行中的核心太舊了"
@@ -1843,6 +1824,8 @@ msgstr "上傳韌體報告可以協助硬體廠商快速辨識出更新作業在
 msgid "Urgency"
 msgstr "緊急程度"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format

@@ -1117,11 +1117,6 @@ msgstr "Platform hata ayıklaması"
 msgid "Please enter a number from 0 to %u: "
 msgstr "0-%u arası bir sayı girin:"
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Y (Evet) veya N (Hayır) girin:"
-
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA Protection"
 msgstr "Önyükleme Öncesi DMA Koruması"
@@ -1209,14 +1204,6 @@ msgstr "Değişikliklerin etkili olması için art alan hizmeti yeniden başlat�
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Aygıt yeniden başlatılıyor…"
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Daha fazla bilgi için `fwupdmgr get-upgrades` çalıştırın."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Bu eylemi tamamlamak için `fwupdmgr sync` çalıştırın."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

@@ -127,6 +127,11 @@ msgstr "%s GPU-uppdatering"
 msgid "%s Graphics Tablet Update"
 msgstr "%s-ritplatteuppdatering"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "%s-inmatningsstyrenhetsuppdatering"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -794,10 +799,6 @@ msgstr "Enheten kan inte uppdateras medan locket är stängt."
 msgid "Device changed:"
 msgstr "Enhet ändrad:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Enhetsemulering är inte aktiverad."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
@@ -813,6 +814,11 @@ msgstr "Enheten används"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Enhet är låst"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Enheten har lägre prioritet än en likvärdig enhet"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -989,10 +995,6 @@ msgstr "Förstår du konsekvenserna av att byta gren av fast programvara?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Vill du inaktivera den här funktionen för framtida uppdateringar?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Vill du aktivera den nu?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1220,12 +1222,15 @@ msgstr "Misslyckades med att tolka argument"
 msgid "Failed to parse file"
 msgstr "Misslyckades med att tolka fil"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Misslyckades med att tolka --filter-flaggor"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Misslyckades med att tolka flaggor för --filter-release"
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Misslyckades med att tolka flaggor för %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1350,9 +1355,10 @@ msgstr[1] "Metadata för fast programvara har inte uppdaterats på %u dagar och 
 msgid "Firmware updates"
 msgstr "Uppdateringar för fast programvara"
 
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Uppdateringar för fast programvara är inaktiverade; kör ”fwupdmgr unlock” för att aktivera"
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Uppdateringar av fast programvara inaktiverade; kör ”%s” för att  aktivera"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1924,9 +1930,10 @@ msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata kan hämtas från Linux Vendor Firmware Service."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadata är uppdaterade; använd --force för att uppdatera igen."
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadata är aktuellt; använd %s för att uppdatera igen."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -2133,10 +2140,10 @@ msgstr "Se till att du har volymåterställningsnyckeln innan du fortsätter."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Ange en siffra mellan 0 och %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Ange antingen Y eller N:"
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Ange antingen %s eller %s:"
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2336,13 +2343,17 @@ msgstr "Granska och skicka rapport nu?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Tillbakarullningsskydd förhindrar enhetsprogramvara från att nedgraderas till en äldre version som har säkerhetsproblem."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Kör ”fwupdmgr get-upgrades” för vidare information."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Kör ”%s” för mer information."
 
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Kör `fwupdmgr sync` för att slutföra denna åtgärd."
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Kör ”%s” för att slutföra denna åtgärd."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3145,6 +3156,13 @@ msgstr "Uppdatera lagrad metadata med aktuellt innehåll"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Uppdaterar alla angivna enheter till senaste version av fast programvara, eller alla enheter om ej angivet"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Uppdateringar har publicerats för %u lokal enhet"
+msgstr[1] "Uppdateringar har publicerats för %u av %u lokala enheter"
+
 msgid "Updating"
 msgstr "Uppdaterar"
 
@@ -3186,6 +3204,8 @@ msgstr "Att skicka upp rapporter för fast programvara hjälper hårdvarutillver
 msgid "Urgency"
 msgstr "Viktighet"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3196,10 +3216,6 @@ msgstr "Använd %s för hjälp"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Använd CTRL^C för att avbryta."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Använd fwupdtool --help för hjälp"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3331,12 +3347,12 @@ msgid "[SECTION] KEY VALUE"
 msgstr "[AVSNITT] NYCKEL VÄRDE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[INSTÄLLNING1] [ INSTÄLLNING2]…"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[INSTÄLLNING1] [INSTÄLLNING2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[INSTÄLLNING1] [INSTÄLLNING2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

@@ -681,10 +681,6 @@ msgstr "Het doorvoeren van argumenten is mislukt"
 msgid "Failed to parse file"
 msgstr "Bestand parsen mislukt"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Flags voor ‘--filter’ parsen mislukt"
-
 #. TRANSLATORS: item is FALSE
 msgid "False"
 msgstr "Onwaar"
@@ -1529,6 +1525,8 @@ msgstr "%s bijwerken…"
 msgid "Urgency"
 msgstr "Urgentie"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -1539,10 +1537,6 @@ msgstr "Gebruik %s voor hulp"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Gebruik Ctrl-C om te annuleren"
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Gebruik ‘fwupdtool --help’ voor hulp"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -1619,10 +1613,6 @@ msgstr "[BESTANDSNAAM1][BESTANDSNAAM2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[REDEN]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[INSTELLING1] [INSTELLING2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"

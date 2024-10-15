@@ -775,10 +775,6 @@ msgstr "Zařízení se dovede vzpamatovat z nezdaru při zápisu firmware"
 msgid "Device changed:"
 msgstr "Změněno zařízení:"
 
-#. ability to load emulated devices is opt-in
-msgid "Device emulation is not enabled."
-msgstr "Emulace zařízení není zapnutá."
-
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
 msgstr "Je třeba, aby firmware zařízení měl kontrolu verze"
@@ -957,10 +953,6 @@ msgstr "Rozumíte důsledkům změny větve firmwaru?"
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Chcete pro budoucí aktualizace tuto funkci vypnout?"
-
-#. TRANSLATORS: we can do this live
-msgid "Do you want to enable it now?"
-msgstr "Chcete ji zapnout?"
 
 #. TRANSLATORS: ask if we can update the metadata
 msgid "Do you want to refresh this remote now?"
@@ -1180,13 +1172,6 @@ msgstr "Zpracování argumentů se nezdařilo"
 msgid "Failed to parse file"
 msgstr "Soubor se nepodařilo zpracovat"
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse flags for --filter"
-msgstr "Nepodařilo se zpracovat příznaky pro --filter"
-
-msgid "Failed to parse flags for --filter-release"
-msgstr "Nepodařilo se zpracovat příznaky pro --filter-release"
-
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Nepodařilo se zpracovat místní dbx"
@@ -1311,10 +1296,6 @@ msgstr[3] "Metadata o firmwarech nebyla aktualizována už celé %u dny a nemus�
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Aktualizace firmware"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Aktualizace firmware jsou zakázané. Pokud je chcete povolit, spusťte „fwupdmgr unlock“"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1877,11 +1858,6 @@ msgstr "URI pro metadata"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata lze získat ze služby Linux Vendor Firmware Service."
 
-#. TRANSLATORS: error message for a user who ran fwupdmgr
-#. * refresh recently
-msgid "Metadata is up to date; use --force to refresh again."
-msgstr "Metadata jsou aktuální. Pokud je přesto chcete znovu načíst, použijte přepínač --force."
-
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Nejstarší použitelná verze"
@@ -2087,11 +2063,6 @@ msgstr "Než budete pokračovat, zajistěte si, abyste měli k dispozici záchra
 msgid "Please enter a number from 0 to %u: "
 msgstr "Zadejte prosím číslo od 0 do %u:"
 
-#. TRANSLATORS: the user isn't reading the question -- please don't translate
-#. * 'Y' or 'N' as these are hardcoded
-msgid "Please enter either Y or N: "
-msgstr "Zadejte Y (ano) nebo N (ne):"
-
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Chybí komponenty, na kterých zásuvný modul závisí"
@@ -2274,14 +2245,6 @@ msgstr "Prohlédnout si a odeslat hlášení nyní?"
 #. TRANSLATORS: longer description
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Zamezení instalace starší verze brání přechodu na starší verzi software zařízení (mohly by obsahovat už známé problémy v zabezpečení)."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr get-upgrades` for more information."
-msgstr "Podrobnosti získáte spuštěním `fwupdmgr get-upgrades`."
-
-#. TRANSLATORS: this is shown in the MOTD
-msgid "Run `fwupdmgr sync` to complete this action."
-msgstr "Pokud chcete tuto akci dokončit, spusťte `fwupdmgr sync`."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -3076,6 +3039,8 @@ msgstr "Posíláním hlášení o firmwarech pomůžete výrobcům hardwaru rych
 msgid "Urgency"
 msgstr "Naléhavost"
 
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
 #. TRANSLATORS: explain how to get help,
 #. * where $1 is something like 'fwupdmgr --help'
 #, c-format
@@ -3086,10 +3051,6 @@ msgstr "Nápovědu vyvoláte pomocí %s"
 #. program
 msgid "Use CTRL^C to cancel."
 msgstr "Zrušíte stisknutím CTRL+C."
-
-#. TRANSLATORS: explain how to get help
-msgid "Use fwupdtool --help for help"
-msgstr "Nápovědu obdržíte spuštěním fwupdtool --help"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -3215,10 +3176,6 @@ msgstr "[SOUBOR1] [SOUBOR2]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON]"
 msgstr "[DŮVOD]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SETTING1] [ SETTING2]..."
-msgstr "[NASTAVENi1] [NASTAVENI2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
