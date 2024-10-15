@@ -216,71 +216,6 @@ fu_intel_thunderbolt_nvm_valid_pd_pointer(guint32 pointer)
 	return pointer != 0 && pointer != 0xFFFFFFFF;
 }
 
-static gboolean
-fu_intel_thunderbolt_nvm_read_uint8(FuIntelThunderboltNvm *self,
-				    FuIntelThunderboltNvmSection section,
-				    guint32 offset,
-				    guint8 *value,
-				    GError **error)
-{
-	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get blob and read */
-	fw = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
-	if (fw == NULL)
-		return FALSE;
-	return fu_memread_uint8_safe(g_bytes_get_data(fw, NULL),
-				     g_bytes_get_size(fw),
-				     priv->sections[section] + offset,
-				     value,
-				     error);
-}
-
-static gboolean
-fu_intel_thunderbolt_nvm_read_uint16(FuIntelThunderboltNvm *self,
-				     FuIntelThunderboltNvmSection section,
-				     guint32 offset,
-				     guint16 *value,
-				     GError **error)
-{
-	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get blob and read */
-	fw = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
-	if (fw == NULL)
-		return FALSE;
-	return fu_memread_uint16_safe(g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      priv->sections[section] + offset,
-				      value,
-				      G_LITTLE_ENDIAN,
-				      error);
-}
-
-static gboolean
-fu_intel_thunderbolt_nvm_read_uint32(FuIntelThunderboltNvm *self,
-				     FuIntelThunderboltNvmSection section,
-				     guint32 offset,
-				     guint32 *value,
-				     GError **error)
-{
-	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GBytes) fw = NULL;
-
-	/* get blob and read */
-	fw = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
-	if (fw == NULL)
-		return FALSE;
-	return fu_memread_uint32_safe(g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      priv->sections[section] + offset,
-				      value,
-				      G_LITTLE_ENDIAN,
-				      error);
-}
-
 /*
  * Size of ucode sections is uint16 value saved at the start of the section,
  * it's in DWORDS (4-bytes) units and it doesn't include itself. We need the
@@ -291,15 +226,18 @@ fu_intel_thunderbolt_nvm_read_uint32(FuIntelThunderboltNvm *self,
  */
 static gboolean
 fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
+						GInputStream *stream,
 						guint32 offset,
 						guint16 *value,
 						GError **error)
 {
-	if (!fu_intel_thunderbolt_nvm_read_uint16(self,
-						  FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-						  offset,
-						  value,
-						  error)) {
+	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
+	if (!fu_input_stream_read_u16(stream,
+				      priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+					  offset,
+				      value,
+				      G_LITTLE_ENDIAN,
+				      error)) {
 		g_prefix_error(error, "failed to read ucode section len: ");
 		return FALSE;
 	}
@@ -310,27 +248,31 @@ fu_intel_thunderbolt_nvm_read_ucode_section_len(FuIntelThunderboltNvm *self,
 
 /* assumes sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL].offset is already set */
 static gboolean
-fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **error)
+fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self,
+				       GInputStream *stream,
+				       GError **error)
 {
 	guint32 offset;
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
 
 	if (priv->gen >= 3 || priv->gen == 0) {
-		if (!fu_intel_thunderbolt_nvm_read_uint32(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-			FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DROM,
+		if (!fu_input_stream_read_u32(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DROM,
 			&offset,
+			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM] =
 		    offset + priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL];
 
-		if (!fu_intel_thunderbolt_nvm_read_uint32(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-			FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_ARC_PARAMS,
+		if (!fu_input_stream_read_u32(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_ARC_PARAMS,
 			&offset,
+			G_LITTLE_ENDIAN,
 			error))
 			return FALSE;
 		priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] =
@@ -354,20 +296,21 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **err
 		guint16 ucode_offset;
 		guint8 available_sections = 0;
 
-		if (!fu_intel_thunderbolt_nvm_read_uint8(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-			FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_AVAILABLE_SECTIONS,
+		if (!fu_input_stream_read_u8(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_AVAILABLE_SECTIONS,
 			&available_sections,
 			error)) {
 			g_prefix_error(error, "failed to read available sections: ");
 			return FALSE;
 		}
-		if (!fu_intel_thunderbolt_nvm_read_uint16(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-			FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_UCODE,
+		if (!fu_input_stream_read_u16(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_UCODE,
 			&ucode_offset,
+			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error(error, "failed to read ucode offset: ");
 			return FALSE;
@@ -384,6 +327,7 @@ fu_intel_thunderbolt_nvm_read_sections(FuIntelThunderboltNvm *self, GError **err
 		for (guint8 i = 1; i < FU_INTEL_THUNDERBOLT_NVM_SECTION_FLAG_DRAM; i <<= 1) {
 			if (available_sections & i) {
 				if (!fu_intel_thunderbolt_nvm_read_ucode_section_len(self,
+										     stream,
 										     offset,
 										     &ucode_offset,
 										     error))
@@ -453,12 +397,11 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] = 0x0;
 
 	/* is native */
-	if (!fu_intel_thunderbolt_nvm_read_uint8(
-		self,
-		FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-		FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_IS_NATIVE,
-		&tmp,
-		error)) {
+	if (!fu_input_stream_read_u8(stream,
+				     priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+					 FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_IS_NATIVE,
+				     &tmp,
+				     error)) {
 		g_prefix_error(error, "failed to read native: ");
 		return FALSE;
 	}
@@ -471,22 +414,23 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		return TRUE;
 
 	/* host or device */
-	if (!fu_intel_thunderbolt_nvm_read_uint8(self,
-						 FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-						 FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_HOST,
-						 &tmp,
-						 error)) {
+	if (!fu_input_stream_read_u8(stream,
+				     priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+					 FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLAGS_HOST,
+				     &tmp,
+				     error)) {
 		g_prefix_error(error, "failed to read is-host: ");
 		return FALSE;
 	}
 	priv->is_host = tmp & (1 << 1);
 
 	/* device ID */
-	if (!fu_intel_thunderbolt_nvm_read_uint16(self,
-						  FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-						  FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DEVICE_ID,
-						  &priv->device_id,
-						  error)) {
+	if (!fu_input_stream_read_u16(stream,
+				      priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+					  FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_DEVICE_ID,
+				      &priv->device_id,
+				      G_LITTLE_ENDIAN,
+				      error)) {
 		g_prefix_error(error, "failed to read device-id: ");
 		return FALSE;
 	}
@@ -517,7 +461,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	}
 
 	/* read sections from file */
-	if (!fu_intel_thunderbolt_nvm_read_sections(self, error))
+	if (!fu_intel_thunderbolt_nvm_read_sections(self, stream, error))
 		return FALSE;
 	if (fu_intel_thunderbolt_nvm_missing_needed_drom(self)) {
 		g_set_error_literal(error,
@@ -529,20 +473,22 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 
 	/* vendor:model */
 	if (priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM] != 0x0) {
-		if (!fu_intel_thunderbolt_nvm_read_uint16(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM,
-			FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_VENDOR_ID,
+		if (!fu_input_stream_read_u16(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM] +
+			    FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_VENDOR_ID,
 			&priv->vendor_id,
+			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error(error, "failed to read vendor-id: ");
 			return FALSE;
 		}
-		if (!fu_intel_thunderbolt_nvm_read_uint16(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM,
-			FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_MODEL_ID,
+		if (!fu_input_stream_read_u16(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DROM] +
+			    FU_INTEL_THUNDERBOLT_NVM_DROM_OFFSET_MODEL_ID,
 			&priv->model_id,
+			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error(error, "failed to read model-id: ");
 			return FALSE;
@@ -554,11 +500,12 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_GOSHEN_RIDGE:
 	case FU_INTEL_THUNDERBOLT_NVM_FAMILY_BARLOW_RIDGE:
-		if (!fu_intel_thunderbolt_nvm_read_uint16(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-			FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_VERSION,
+		if (!fu_input_stream_read_u16(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+			    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_VERSION,
 			&version_raw,
+			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error(error, "failed to read version: ");
 			return FALSE;
@@ -575,10 +522,10 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_ALPINE_RIDGE_C:
 		case FU_INTEL_THUNDERBOLT_NVM_FAMILY_TITAN_RIDGE:
 			/* used for comparison between old and new image, not a raw number */
-			if (!fu_intel_thunderbolt_nvm_read_uint8(
-				self,
-				FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL,
-				FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLASH_SIZE,
+			if (!fu_input_stream_read_u8(
+				stream,
+				priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_DIGITAL] +
+				    FU_INTEL_THUNDERBOLT_NVM_DIGITAL_OFFSET_FLASH_SIZE,
 				&tmp,
 				error)) {
 				g_prefix_error(error, "failed to read flash size: ");
@@ -598,11 +545,12 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	/* has PD */
 	if (priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] != 0x0) {
 		guint32 pd_pointer = 0x0;
-		if (!fu_intel_thunderbolt_nvm_read_uint32(
-			self,
-			FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS,
-			FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER,
+		if (!fu_input_stream_read_u32(
+			stream,
+			priv->sections[FU_INTEL_THUNDERBOLT_NVM_SECTION_ARC_PARAMS] +
+			    FU_INTEL_THUNDERBOLT_NVM_ARC_PARAMS_OFFSET_PD_POINTER,
 			&pd_pointer,
+			G_LITTLE_ENDIAN,
 			error)) {
 			g_prefix_error(error, "failed to read pd-pointer: ");
 			return FALSE;
