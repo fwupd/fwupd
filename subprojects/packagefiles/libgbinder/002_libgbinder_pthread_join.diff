@@ -1,0 +1,40 @@
+diff --git a/src/binder.h b/src/binder.h
+index c8ca4c9..946a3e6 100644
+--- a/src/binder.h
++++ b/src/binder.h
+@@ -20,6 +20,7 @@
+ #define _UAPI_LINUX_BINDER_H
+ #include <linux/types.h>
+ #include <linux/ioctl.h>
++#include <sys/types.h>
+ #define B_PACK_CHARS(c1,c2,c3,c4) ((((c1) << 24)) | (((c2) << 16)) | (((c3) << 8)) | (c4))
+ #define B_TYPE_LARGE 0x85
+ enum {
+diff --git a/src/gbinder_config.c b/src/gbinder_config.c
+index b467ac5..6c8110f 100644
+--- a/src/gbinder_config.c
++++ b/src/gbinder_config.c
+@@ -262,6 +262,9 @@ gbinder_config_load_files()
+     char** files = gbinder_config_collect_files(gbinder_config_dir,
+         gbinder_config_suffix);
+ 
++    if (gbinder_config_file)
++        gbinder_config_file = getenv("GBINDER_CONFIG_FILE");
++
+     if (gbinder_config_file &&
+         g_file_test(gbinder_config_file, G_FILE_TEST_EXISTS)) {
+         out = g_key_file_new();
+diff --git a/src/gbinder_ipc.c b/src/gbinder_ipc.c
+index c43fb81..2105fb5 100644
+--- a/src/gbinder_ipc.c
++++ b/src/gbinder_ipc.c
+@@ -982,7 +982,8 @@ gbinder_ipc_looper_join(
+ 
+             ts.tv_sec += ns / sec;
+             ts.tv_nsec = ns % sec;
+-            err = pthread_timedjoin_np(looper->thread, NULL, &ts);
++            //err = pthread_timedjoin_np(looper->thread, NULL, &ts);
++            err = pthread_join(looper->thread, NULL);
+         }
+ 
+         if (err) {
