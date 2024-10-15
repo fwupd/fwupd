@@ -1,0 +1,9 @@
+[wrap-file]
+directory = libusb-1.0.27
+source_url = https://github.com/libusb/libusb/releases/download/v1.0.27/libusb-1.0.27.tar.bz2
+source_filename = libusb-1.0.27.tar.bz2
+source_hash = ffaa41d741a8a3bee244ac8e54a72ea05bf2879663c098c82fc5757853441575
+patch_directory = libusb
+
+[provide]
+libusb-1.0 = libusb_dep
