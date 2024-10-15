@@ -339,6 +339,7 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 	    fu_struct_cros_ec_first_response_pdu_new();
 	g_autoptr(FuCrosEcVersion) active_version = NULL;
 	g_autoptr(FuCrosEcVersion) version = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_cros_ec_usb_device_parent_class)->setup(device, error))
@@ -409,10 +410,25 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* get the other region's version string from targ */
-	version = fu_cros_ec_version_parse(self->raw_version, error);
+	version = fu_cros_ec_version_parse(self->raw_version, &error_local);
 	if (version == NULL) {
-		g_prefix_error(error, "failed parsing device's version: %32s: ", self->raw_version);
-		return FALSE;
+		if (!self->in_bootloader) {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed parsing device's version: %32s: ",
+						   self->raw_version);
+			return FALSE;
+		}
+		/* if unable to parse version, copy from the active_version.
+		 * This allows to restore devices failed on write due different reasons. */
+		version = g_new0(FuCrosEcVersion, 1);
+		version->boardname = g_strndup(active_version->boardname,
+					       FU_STRUCT_CROS_EC_FIRST_RESPONSE_PDU_SIZE_VERSION);
+		version->triplet = g_strndup(active_version->triplet,
+					     FU_STRUCT_CROS_EC_FIRST_RESPONSE_PDU_SIZE_VERSION);
+		version->sha1 = g_strndup(active_version->sha1,
+					  FU_STRUCT_CROS_EC_FIRST_RESPONSE_PDU_SIZE_VERSION);
+		version->dirty = active_version->dirty;
 	}
 
 	if (self->in_bootloader) {
