@@ -24,6 +24,7 @@
 typedef struct {
 	gchar *fs_type;
 	gchar *fs_uuid;
+	gchar *fs_label;
 } FuBlockPartitionPrivate;
 
 #define GET_PRIVATE(o) (fu_block_partition_get_instance_private(o))
@@ -41,6 +42,7 @@ fu_block_partition_to_string(FuDevice *device, guint idt, GString *str)
 	FuBlockPartitionPrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append(str, idt, "FsType", priv->fs_type);
 	fwupd_codec_string_append(str, idt, "FsUuid", priv->fs_uuid);
+	fwupd_codec_string_append(str, idt, "FsLabel", priv->fs_label);
 }
 
 #ifdef HAVE_BLKID
@@ -69,6 +71,19 @@ fu_block_partition_set_fs_uuid(FuBlockPartition *self, const gchar *fs_uuid, gsi
 	g_free(priv->fs_uuid);
 	priv->fs_uuid = fu_strsafe(fs_uuid, fs_uuidlen);
 }
+
+static void
+fu_block_partition_set_fs_label(FuBlockPartition *self, const gchar *fs_label, gsize fs_labellen)
+{
+	FuBlockPartitionPrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->fs_label, fs_label) == 0)
+		return;
+
+	g_free(priv->fs_label);
+	priv->fs_label = fu_strsafe(fs_label, fs_labellen);
+}
 #endif
 
 static void
@@ -85,6 +100,8 @@ fu_block_partition_incorporate(FuDevice *self, FuDevice *donor)
 		priv->fs_type = g_strdup(fu_block_partition_get_fs_type(udonor));
 	if (priv->fs_uuid == NULL)
 		priv->fs_uuid = g_strdup(fu_block_partition_get_fs_uuid(udonor));
+	if (priv->fs_label == NULL)
+		priv->fs_label = g_strdup(fu_block_partition_get_fs_label(udonor));
 }
 
 /**
@@ -123,6 +140,24 @@ fu_block_partition_get_fs_uuid(FuBlockPartition *self)
 	return priv->fs_uuid;
 }
 
+/**
+ * fu_block_partition_get_fs_label:
+ * @self: a #FuBlockPartition
+ *
+ * Returns the filesystem label.
+ *
+ * Returns: string, or %NULL for unset
+ *
+ * Since: 2.0.2
+ **/
+const gchar *
+fu_block_partition_get_fs_label(FuBlockPartition *self)
+{
+	FuBlockPartitionPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_BLOCK_PARTITION(self), NULL);
+	return priv->fs_label;
+}
+
 static gboolean
 fu_block_partition_setup(FuDevice *device, GError **error)
 {
@@ -153,6 +188,7 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 			return FALSE;
 		priv->fs_type = g_strdup(fu_device_event_get_str(event, "FsType", NULL));
 		priv->fs_uuid = g_strdup(fu_device_event_get_str(event, "FsUuid", NULL));
+		priv->fs_label = g_strdup(fu_device_event_get_str(event, "FsLabel", NULL));
 		return TRUE;
 	}
 
@@ -176,7 +212,9 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 				    "failed to create blkid prober");
 		return FALSE;
 	}
-	blkid_probe_set_superblocks_flags(pr, BLKID_SUBLKS_UUID | BLKID_SUBLKS_TYPE);
+	blkid_probe_set_superblocks_flags(pr,
+					  BLKID_SUBLKS_UUID | BLKID_SUBLKS_TYPE |
+					      BLKID_SUBLKS_LABEL);
 	rc = blkid_probe_set_device(pr, fu_io_channel_unix_get_fd(io_channel), 0x0, 0x0);
 	if (rc < 0) {
 		g_set_error(error,
@@ -209,6 +247,8 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 		fu_block_partition_set_fs_type(self, data, datalen);
 	if (blkid_probe_lookup_value(pr, "UUID", &data, &datalen) == 0)
 		fu_block_partition_set_fs_uuid(self, data, datalen);
+	if (blkid_probe_lookup_value(pr, "LABEL", &data, &datalen) == 0)
+		fu_block_partition_set_fs_label(self, data, datalen);
 #else
 	g_set_error(error,
 		    FWUPD_ERROR,
@@ -223,6 +263,8 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 			fu_device_event_set_str(event, "FsType", priv->fs_type);
 		if (priv->fs_uuid != NULL)
 			fu_device_event_set_str(event, "FsUuid", priv->fs_uuid);
+		if (priv->fs_label != NULL)
+			fu_device_event_set_str(event, "FsLabel", priv->fs_label);
 	}
 	/* success */
 	return TRUE;
@@ -236,6 +278,7 @@ fu_block_partition_finalize(GObject *object)
 
 	g_free(priv->fs_type);
 	g_free(priv->fs_uuid);
+	g_free(priv->fs_label);
 
 	G_OBJECT_CLASS(fu_block_partition_parent_class)->finalize(object);
 }
