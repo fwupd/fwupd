@@ -100,6 +100,7 @@ plugins = {
   'qsi-dock': false,
   'realtek-mst': false,
   'redfish': false,
+  'rp-pico': false,
   'rts54hid': false,
   'rts54hub': false,
   'steelseries': false,
