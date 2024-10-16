@@ -1715,16 +1715,21 @@ fu_device_set_quirk_inhibit_section(FuDevice *self, const gchar *value, GError *
  * @self: a #FuDevice
  * @key: a string key
  * @value: a string value
+ * @source: a #FuContextQuirkSource, e.g. %FU_CONTEXT_QUIRK_SOURCE_DB
  * @error: (nullable): optional return location for an error
  *
  * Sets a specific quirk on the device.
  *
  * Returns: %TRUE on success
  *
- * Since: 1.8.5
+ * Since: 2.0.2
  **/
 gboolean
-fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
+fu_device_set_quirk_kv(FuDevice *self,
+		       const gchar *key,
+		       const gchar *value,
+		       FuContextQuirkSource source,
+		       GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
@@ -1746,6 +1751,8 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_NAME) == 0) {
+		if (fu_device_get_name(self) != NULL && source >= FU_CONTEXT_QUIRK_SOURCE_DB)
+			return TRUE;
 		fu_device_set_name(self, value);
 		return TRUE;
 	}
@@ -1758,6 +1765,8 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VENDOR) == 0) {
+		if (fu_device_get_vendor(self) != NULL && source >= FU_CONTEXT_QUIRK_SOURCE_DB)
+			return TRUE;
 		fu_device_set_vendor(self, value);
 		return TRUE;
 	}
@@ -2065,11 +2074,15 @@ fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype)
 }
 
 static void
-fu_device_quirks_iter_cb(FuContext *ctx, const gchar *key, const gchar *value, gpointer user_data)
+fu_device_quirks_iter_cb(FuContext *ctx,
+			 const gchar *key,
+			 const gchar *value,
+			 FuContextQuirkSource source,
+			 gpointer user_data)
 {
 	FuDevice *self = FU_DEVICE(user_data);
 	g_autoptr(GError) error = NULL;
-	if (!fu_device_set_quirk_kv(self, key, value, &error)) {
+	if (!fu_device_set_quirk_kv(self, key, value, source, &error)) {
 		if (!g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 			g_warning("failed to set quirk key %s=%s: %s", key, value, error->message);
 	}

@@ -899,10 +899,11 @@ static void
 fu_context_lookup_quirk_by_id_iter_cb(FuQuirks *self,
 				      const gchar *key,
 				      const gchar *value,
+				      FuContextQuirkSource source,
 				      gpointer user_data)
 {
 	FuContextQuirkLookupHelper *helper = (FuContextQuirkLookupHelper *)user_data;
-	helper->iter_cb(helper->self, key, value, helper->user_data);
+	helper->iter_cb(helper->self, key, value, source, helper->user_data);
 }
 
 /**
@@ -975,7 +976,11 @@ fu_context_housekeeping(FuContext *self)
 typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
 
 static void
-fu_context_hwid_quirk_cb(FuContext *self, const gchar *key, const gchar *value, gpointer user_data)
+fu_context_hwid_quirk_cb(FuContext *self,
+			 const gchar *key,
+			 const gchar *value,
+			 FuContextQuirkSource source,
+			 gpointer user_data)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	if (value != NULL) {

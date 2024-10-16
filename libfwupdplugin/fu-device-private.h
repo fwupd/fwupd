@@ -56,8 +56,11 @@ fu_device_get_request_cnt(FuDevice *self, FwupdRequestKind request_kind) G_GNUC_
 void
 fu_device_set_progress(FuDevice *self, FuProgress *progress) G_GNUC_NON_NULL(1);
 gboolean
-fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GError **error)
-    G_GNUC_NON_NULL(1, 2, 3);
+fu_device_set_quirk_kv(FuDevice *self,
+		       const gchar *key,
+		       const gchar *value,
+		       FuContextQuirkSource source,
+		       GError **error) G_GNUC_NON_NULL(1, 2, 3);
 void
 fu_device_set_specialized_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
 void

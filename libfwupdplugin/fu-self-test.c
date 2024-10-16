@@ -1403,6 +1403,7 @@ static void
 fu_plugin_quirks_append_cb(FuQuirks *quirks,
 			   const gchar *key,
 			   const gchar *value,
+			   FuContextQuirkSource source,
 			   gpointer user_data)
 {
 	FuPluginQuirksAppendHelper *helper = (FuPluginQuirksAppendHelper *)user_data;

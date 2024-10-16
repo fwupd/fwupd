@@ -107,7 +107,11 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 		/* it's fine to be strict here, as we checked the fwupd version was new enough in
 		 * FuUsbDeviceDs20Item */
 		g_debug("setting ds20 device quirk '%s'='%s'", key, value);
-		if (!fu_device_set_quirk_kv(FU_DEVICE(device), key, value, error))
+		if (!fu_device_set_quirk_kv(FU_DEVICE(device),
+					    key,
+					    value,
+					    FU_CONTEXT_QUIRK_SOURCE_DEVICE,
+					    error))
 			return FALSE;
 	}
 
