@@ -52,16 +52,6 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuDevice) device_scsi = NULL;
 	const gchar *subsystem_parents[] = {"pci", "platform", NULL};
 
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)), "disk") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct devtype=%s, expected disk",
-			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(self)));
-		return FALSE;
-	}
-
 	/* the ufshci controller could really be on any bus... search in order of priority */
 	for (guint i = 0; subsystem_parents[i] != NULL && ufshci_parent == NULL; i++) {
 		ufshci_parent =
