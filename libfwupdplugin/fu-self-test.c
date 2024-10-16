@@ -13,6 +13,7 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
+#include "fwupd-enums-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-backend-private.h"
@@ -1475,6 +1476,8 @@ fu_quirks_vendor_ids_func(void)
 	g_autofree gchar *guid1 = fwupd_guid_hash_string("PCI\\VEN_8086");
 	g_autofree gchar *guid2 = fwupd_guid_hash_string("USB\\VID_8086");
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
+	g_autofree gchar *guid4 = fwupd_guid_hash_string("PCI\\VEN_8086&DEV_0007");
+	g_autofree gchar *guid5 = fwupd_guid_hash_string("USB\\VID_8086&PID_0001");
 	g_autofree gchar *datadata = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	g_autofree gchar *quirksdb = g_build_filename(datadata, "quirks.db", NULL);
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
@@ -1497,9 +1500,15 @@ fu_quirks_vendor_ids_func(void)
 	tmp = fu_quirks_lookup_by_id(quirks, guid2, "Vendor");
 	g_assert_true(ret);
 	g_assert_cmpstr(tmp, ==, "Intel Corp.");
-	tmp = fu_quirks_lookup_by_id(quirks, guid3, "Vendor");
+	tmp = fu_quirks_lookup_by_id(quirks, guid3, FWUPD_RESULT_KEY_VENDOR);
 	g_assert_true(ret);
 	g_assert_cmpstr(tmp, ==, "Intel Corp");
+	tmp = fu_quirks_lookup_by_id(quirks, guid4, FWUPD_RESULT_KEY_NAME);
+	g_assert_true(ret);
+	g_assert_cmpstr(tmp, ==, "82379AB");
+	tmp = fu_quirks_lookup_by_id(quirks, guid5, FWUPD_RESULT_KEY_NAME);
+	g_assert_true(ret);
+	g_assert_cmpstr(tmp, ==, "AnyPoint (TM) Home Network 1.6 Mbps Wireless Adapter");
 }
 
 static void
