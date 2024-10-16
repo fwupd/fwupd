@@ -204,11 +204,12 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
 	if (fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)) != NULL) {
-		g_autoptr(GPtrArray) possible_plugins =
-		    fu_context_get_plugin_names_for_udev_subsystem(
-			ctx,
-			fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)),
-			NULL);
+		g_autoptr(GPtrArray) possible_plugins = NULL;
+		g_autofree gchar *subsystem =
+		    fu_udev_device_get_subsystem_devtype(FU_UDEV_DEVICE(device));
+
+		possible_plugins =
+		    fu_context_get_plugin_names_for_udev_subsystem(ctx, subsystem, NULL);
 		if (possible_plugins != NULL) {
 			for (guint i = 0; i < possible_plugins->len; i++) {
 				const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
@@ -605,6 +606,12 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 		const gchar *subsystem = g_ptr_array_index(udev_subsystems, i);
 		g_autofree gchar *class_fn = NULL;
 		g_autofree gchar *bus_fn = NULL;
+
+		/* we only care about subsystems, not subsystem:devtype matches */
+		if (g_strstr_len(subsystem, -1, ":") != NULL) {
+			fu_progress_step_done(progress);
+			continue;
+		}
 
 		class_fn = g_build_filename(sysfsdir, "class", subsystem, NULL);
 		if (g_file_test(class_fn, G_FILE_TEST_EXISTS)) {
