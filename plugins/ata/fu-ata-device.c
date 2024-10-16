@@ -461,16 +461,6 @@ fu_ata_device_probe(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
 
-	/* check is valid */
-	if (g_strcmp0(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), "disk") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "is not correct devtype=%s, expected disk",
-			    fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)));
-		return FALSE;
-	}
-
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi", error))
 		return FALSE;
