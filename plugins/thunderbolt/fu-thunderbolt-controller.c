@@ -114,6 +114,7 @@ static gboolean
 fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GError **error)
 {
 	gsize nr_chunks;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 	g_autoptr(GInputStream) istr = NULL;
 	g_autoptr(GInputStream) istr_partial = NULL;
@@ -128,9 +129,10 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	istr = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
 	if (istr == NULL)
 		return FALSE;
-	istr_partial = fu_partial_input_stream_new(istr, 0, nr_chunks * FU_TBT_CHUNK_SZ, error);
-	if (istr_partial == NULL)
+	blob = fu_input_stream_read_bytes(istr, 0x0, nr_chunks * FU_TBT_CHUNK_SZ, error);
+	if (blob == NULL)
 		return FALSE;
+	istr_partial = g_memory_input_stream_new_from_bytes(blob);
 	firmware = fu_firmware_new_from_gtypes(istr_partial,
 					       0x0,
 					       FWUPD_INSTALL_FLAG_NO_SEARCH,
