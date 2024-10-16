@@ -110,12 +110,12 @@ jobs:
           path: ${{ github.workspace }}/build/meson-dist/*xz
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
     - name: install dependencies
       run: |
         brew install meson libusb usb.ids gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
-        python3 -m pip install --user jinja2
+        python3 -m pip install --user jinja2 --break-system-packages
     - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
     - name: configure
       run: ./contrib/ci/build_macos.sh
