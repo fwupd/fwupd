@@ -457,15 +457,15 @@ fu_asus_hid_device_write_data_chunks(FuAsusHidDevice *self,
 							 d0_res,
 							 FU_ASUS_HID_REPORT_ID_FLASHING,
 							 error))
+			return FALSE;
 
-			// TODO: need to add arguments for address and page size!!
-
-			if (!fu_asus_hid_device_transfer_feature(device,
-								 c3,
-								 NULL,
-								 FU_ASUS_HID_REPORT_ID_FLASHING,
-								 error))
-				return FALSE;
+		// TODO: need to add arguments for address and page size!!
+		if (!fu_asus_hid_device_transfer_feature(device,
+							 c3,
+							 NULL,
+							 FU_ASUS_HID_REPORT_ID_FLASHING,
+							 error))
+			return FALSE;
 
 		fu_progress_step_done(progress);
 	}
@@ -487,7 +487,10 @@ fu_asus_hid_device_write_data(FuAsusHidDevice *self,
 	if (stream == NULL)
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0, 0x400, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						0,
+						FU_STRUCT_ASUS_WRITE_FLASH_COMMAND_SIZE_DATA,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 
