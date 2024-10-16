@@ -81,6 +81,7 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 		return FALSE;
 	csum_sha256 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, fw_raw);
 	fu_device_add_checksum(device, csum_sha256);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 
 	/* success */
 	return TRUE;
@@ -409,7 +410,6 @@ fu_uf2_device_init(FuUf2Device *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.uf2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	g_signal_connect(FU_DEVICE(self),
