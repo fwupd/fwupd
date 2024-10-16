@@ -25,6 +25,8 @@ struct _FuSteelseriesDeviceClass {
 #define STEELSERIES_TRANSACTION_TIMEOUT 5000
 
 #define FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER "is-receiver"
+/* device needs bootloader mode for flashing */
+#define FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER "detach-bootloader"
 
 void
 fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset);
