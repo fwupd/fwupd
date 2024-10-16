@@ -624,8 +624,20 @@ typedef struct {
 	FuQuirks *self;
 	sqlite3_stmt *stmt;
 	const gchar *subsystem;
-	const gchar *title;
+	const gchar *title_vid;
+	const gchar *title_pid;
+	GString *vid;
 } FuQuirksDbHelper;
+
+static void
+fu_quirks_db_helper_free(FuQuirksDbHelper *helper)
+{
+	if (helper->vid != NULL)
+		g_string_free(helper->vid, TRUE);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuQuirksDbHelper, fu_quirks_db_helper_free)
 
 static gboolean
 fu_quirks_db_add_vendor_entry(FuQuirksDbHelper *helper,
@@ -638,11 +650,48 @@ fu_quirks_db_add_vendor_entry(FuQuirksDbHelper *helper,
 	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *vid_strup = g_ascii_strup(vid, -1);
 
-	instance_id = g_strdup_printf("%s\\%s_%s", helper->subsystem, helper->title, vid_strup);
+	instance_id = g_strdup_printf("%s\\%s_%s", helper->subsystem, helper->title_vid, vid_strup);
 	guid = fwupd_guid_hash_string(instance_id);
 	sqlite3_reset(helper->stmt);
 	sqlite3_bind_text(helper->stmt, 1, guid, -1, SQLITE_STATIC);
 	sqlite3_bind_text(helper->stmt, 2, FWUPD_RESULT_KEY_VENDOR, -1, SQLITE_STATIC);
+	sqlite3_bind_text(helper->stmt, 3, name, -1, SQLITE_STATIC);
+	if (sqlite3_step(helper->stmt) != SQLITE_DONE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to execute prepared statement: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_quirks_db_add_name_entry(FuQuirksDbHelper *helper,
+			    const gchar *vid,
+			    const gchar *pid,
+			    const gchar *name,
+			    GError **error)
+{
+	FuQuirks *self = FU_QUIRKS(helper->self);
+	g_autofree gchar *guid = NULL;
+	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *vid_strup = g_ascii_strup(vid, -1);
+	g_autofree gchar *pid_strup = g_ascii_strup(pid, -1);
+
+	instance_id = g_strdup_printf("%s\\%s_%s&%s_%s",
+				      helper->subsystem,
+				      helper->title_vid,
+				      vid_strup,
+				      helper->title_pid,
+				      pid_strup);
+	guid = fwupd_guid_hash_string(instance_id);
+	sqlite3_reset(helper->stmt);
+	sqlite3_bind_text(helper->stmt, 1, guid, -1, SQLITE_STATIC);
+	sqlite3_bind_text(helper->stmt, 2, FWUPD_RESULT_KEY_NAME, -1, SQLITE_STATIC);
 	sqlite3_bind_text(helper->stmt, 3, name, -1, SQLITE_STATIC);
 	if (sqlite3_step(helper->stmt) != SQLITE_DONE) {
 		g_set_error(error,
@@ -671,14 +720,9 @@ static gboolean
 fu_quirks_db_add_usbids_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
 {
 	FuQuirksDbHelper *helper = (FuQuirksDbHelper *)user_data;
-	g_autofree gchar *vid = NULL;
 
 	/* not vendor lines */
-	if (token->len < 6)
-		return TRUE;
-
-	/* not 4 hex digits */
-	if (!_g_ascii_isxstrn(token->str, 4))
+	if (token->len < 7)
 		return TRUE;
 
 	/* ignore the wrong ones */
@@ -686,9 +730,28 @@ fu_quirks_db_add_usbids_cb(GString *token, guint token_idx, gpointer user_data, 
 	    g_strstr_len(token->str, -1, "wrong ID") != NULL)
 		return TRUE;
 
+	/* 4 hex digits */
+	if (_g_ascii_isxstrn(token->str, 4)) {
+		g_string_set_size(helper->vid, 0);
+		g_string_append_len(helper->vid, token->str, 4);
+		return fu_quirks_db_add_vendor_entry(helper,
+						     helper->vid->str,
+						     token->str + 6,
+						     error);
+	}
+
+	/* tab, then 4 hex digits */
+	if (helper->vid->len > 0 && token->str[0] == '\t' && _g_ascii_isxstrn(token->str + 1, 4)) {
+		g_autofree gchar *pid = g_strndup(token->str + 1, 4);
+		return fu_quirks_db_add_name_entry(helper,
+						   helper->vid->str,
+						   pid,
+						   token->str + 7,
+						   error);
+	}
+
 	/* build into XML */
-	vid = g_strndup(token->str, 4);
-	return fu_quirks_db_add_vendor_entry(helper, vid, token->str + 6, error);
+	return TRUE;
 }
 
 static gboolean
@@ -732,7 +795,8 @@ fu_quirks_db_add_pnpids_cb(GString *token, guint token_idx, gpointer user_data, 
 typedef struct {
 	const gchar *fn;
 	const gchar *subsystem;
-	const gchar *title;
+	const gchar *title_vid;
+	const gchar *title_pid;
 	FuStrsplitFunc func;
 } FuQuirksDbItem;
 
@@ -770,10 +834,10 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	g_autoptr(GString) fn_mtimes = g_string_new("quirks");
 	g_autofree gchar *guid_fwupd = fwupd_guid_hash_string("fwupd");
 	const FuQuirksDbItem map[] = {
-	    {"pci.ids", "PCI", "VEN", fu_quirks_db_add_usbids_cb},
-	    {"usb.ids", "USB", "VID", fu_quirks_db_add_usbids_cb},
-	    {"pnp.ids", "PNP", "VID", fu_quirks_db_add_pnpids_cb},
-	    {"oui.txt", "OUI", "VID", fu_quirks_db_add_ouitxt_cb},
+	    {"pci.ids", "PCI", "VEN", "DEV", fu_quirks_db_add_usbids_cb},
+	    {"usb.ids", "USB", "VID", "PID", fu_quirks_db_add_usbids_cb},
+	    {"pnp.ids", "PNP", "VID", "PID", fu_quirks_db_add_pnpids_cb},
+	    {"oui.txt", "OUI", "VID", "PID", fu_quirks_db_add_ouitxt_cb},
 	};
 
 	/* nothing to do */
@@ -862,14 +926,9 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		const FuQuirksDbItem *item = &map[i];
 		g_autofree gchar *fn = g_build_filename(vendor_ids_dir, item->fn, NULL);
+		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
 		g_autoptr(GFile) file = g_file_new_for_path(fn);
 		g_autoptr(GInputStream) stream = NULL;
-		FuQuirksDbHelper helper = {
-		    .self = self,
-		    .subsystem = item->subsystem,
-		    .title = item->title,
-		    .stmt = stmt_insert,
-		};
 
 		/* split into lines */
 		if (!g_file_query_exists(file, NULL)) {
@@ -880,7 +939,13 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 		stream = G_INPUT_STREAM(g_file_read(file, NULL, error));
 		if (stream == NULL)
 			return FALSE;
-		if (!fu_strsplit_stream(stream, 0x0, "\n", item->func, &helper, error))
+		helper->self = self;
+		helper->subsystem = item->subsystem;
+		helper->title_vid = item->title_vid;
+		helper->title_pid = item->title_pid;
+		helper->stmt = stmt_insert;
+		helper->vid = g_string_new(NULL);
+		if (!fu_strsplit_stream(stream, 0x0, "\n", item->func, helper, error))
 			return FALSE;
 	}
 
