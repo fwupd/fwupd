@@ -1,0 +1,61 @@
+# reform-keyboard-2.0
+[USB\VID_1209&PID_6D00]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-keyboard
+
+# reform-keyboard-3.0
+[USB\VID_1209&PID_6D01]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-keyboard
+
+# reform-keyboard-4.0
+[USB\VID_1209&PID_6D01]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-keyboard
+
+# reform-trackball-1.0
+[USB\VID_1209&PID_6D04]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-mouse
+
+# reform-trackball-2.0
+[USB\VID_1209&PID_6D05]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-mouse
+
+# pocket-hid
+[USB\VID_1209&PID_6D06]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = input-keyboard
+
+# pocket-sysctl
+[USB\VID_1209&PID_6D07]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = computer
+
+# next-sysctl
+[USB\VID_1209&PID_6D08]
+Vendor = MNT Research
+Plugin = mntre
+Flags = internal
+Icon = computer
+
+# camera
+[USB\VID_1209&PID_6D09]
+Vendor = MNT Research
+Plugin = mntre
+Icon = camera-web
