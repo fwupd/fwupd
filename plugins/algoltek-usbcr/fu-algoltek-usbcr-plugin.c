@@ -25,7 +25,7 @@ static void
 fu_algoltek_usbcr_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_device_udev_subsystem(plugin, "block");
+	fu_plugin_add_device_udev_subsystem(plugin, "block:disk");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ALGOLTEK_USBCR_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ALGOLTEK_USBCR_FIRMWARE);
 }
