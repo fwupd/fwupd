@@ -157,18 +157,20 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	fu_progress_step_done(progress);
 
 	g_info("waiting for SM");
-	if (!gbinder_servicemanager_wait(self->sm, -1)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_BROKEN_SYSTEM,
-				    "failed to wait for service manager");
-		return FALSE;
+	if (!gbinder_servicemanager_wait(self->sm, 0)) {
+		g_warning("we didn't connect, and that's okay. Lets just be a dumb fwupd daemon");
+		//g_set_error_literal(error,
+		//		    FWUPD_ERROR,
+		//		    FWUPD_ERROR_BROKEN_SYSTEM,
+		//		    "failed to wait for service manager");
+		//return FALSE;
+	} else {
+		g_debug("waited for SM, creating local object");
+		self->obj = gbinder_servicemanager_new_local_object(self->sm,
+								    DEFAULT_IFACE,
+								    fu_binder_daemon_app_reply,
+								    self);
 	}
-	g_debug("waited for SM, creating local object");
-	self->obj = gbinder_servicemanager_new_local_object(self->sm,
-							    DEFAULT_IFACE,
-							    fu_binder_daemon_app_reply,
-							    self);
 	fu_progress_step_done(progress);
 
 	/* success */
