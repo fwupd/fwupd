@@ -574,7 +574,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
 			const gchar *key_tmp = (const gchar *)sqlite3_column_text(stmt, 0);
 			const gchar *value = (const gchar *)sqlite3_column_text(stmt, 1);
-			iter_cb(self, key_tmp, value, user_data);
+			iter_cb(self, key_tmp, value, FU_CONTEXT_QUIRK_SOURCE_DB, user_data);
 		}
 	}
 #endif
@@ -612,7 +612,11 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		XbNode *n = g_ptr_array_index(results, i);
 		if (self->verbose)
 			g_debug("%s → %s", guid, xb_node_get_text(n));
-		iter_cb(self, xb_node_get_attr(n, "key"), xb_node_get_text(n), user_data);
+		iter_cb(self,
+			xb_node_get_attr(n, "key"),
+			xb_node_get_text(n),
+			FU_CONTEXT_QUIRK_SOURCE_FILE,
+			user_data);
 	}
 
 	return TRUE;

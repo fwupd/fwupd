@@ -42,6 +42,7 @@ typedef enum {
 typedef void (*FuQuirksIter)(FuQuirks *self,
 			     const gchar *key,
 			     const gchar *value,
+			     FuContextQuirkSource source,
 			     gpointer user_data);
 
 FuQuirks *

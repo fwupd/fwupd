@@ -27,10 +27,43 @@ struct _FuContextClass {
 };
 
 /**
+ * FuContextQuirkSource:
+ *
+ * The source of the quirk data, ordered by how good the data is.
+ **/
+typedef enum {
+	/**
+	 * FU_CONTEXT_QUIRK_SOURCE_DEVICE:
+	 *
+	 * From the device itself, perhaps a USB descriptor.
+	 *
+	 * Since: 2.0.2
+	 **/
+	FU_CONTEXT_QUIRK_SOURCE_DEVICE,
+	/**
+	 * FU_CONTEXT_QUIRK_SOURCE_FILE:
+	 *
+	 * From an internal `.quirk` file.
+	 *
+	 * Since: 2.0.2
+	 **/
+	FU_CONTEXT_QUIRK_SOURCE_FILE,
+	/**
+	 * FU_CONTEXT_QUIRK_SOURCE_DB:
+	 *
+	 * From the database, populated from `usb.ids` and `pci.ids`.
+	 *
+	 * Since: 2.0.2
+	 **/
+	FU_CONTEXT_QUIRK_SOURCE_DB,
+} FuContextQuirkSource;
+
+/**
  * FuContextLookupIter:
  * @self: a #FuContext
  * @key: a key
  * @value: a value
+ * @source: a #FuContextQuirkSource, e.g. %FU_CONTEXT_QUIRK_SOURCE_DB
  * @user_data: user data
  *
  * The context lookup iteration callback.
@@ -38,6 +71,7 @@ struct _FuContextClass {
 typedef void (*FuContextLookupIter)(FuContext *self,
 				    const gchar *key,
 				    const gchar *value,
+				    FuContextQuirkSource source,
 				    gpointer user_data);
 
 /**
