@@ -25,36 +25,6 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 } FuDellK2DockFWVersion;
 
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint8 dock_configuration;
-	guint8 dock_type;
-	guint16 power_supply_wattage;
-	guint16 module_type;
-	guint16 board_id;
-	guint16 port0_dock_status;
-	guint16 port1_dock_status; // unused for K2 dock, should be 0
-	guint32 dock_firmware_pkg_ver;
-	guint64 module_serial;
-	guint64 original_module_serial;
-	guint8 service_tag[7];
-	guint8 marketing_name[32];
-	guint32 dock_error;
-	guint32 dock_module_status;
-	guint32 dock_module_error;
-	guint8 reserved;
-	guint32 dock_status;
-	guint16 dock_state;
-	guint16 dock_config;
-	guint8 dock_mac_addr[6];
-	guint32 dock_capabilities;
-	guint32 dock_policy;
-	guint32 dock_temperature;
-	guint32 dock_fan_speed;
-	guint16 upf_power;
-	guint8 eppid;
-	guint8 unused[74];
-} FuDellK2DockDataStructure;
-
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	struct FuDellK2V2DockInfoHeader {
 		guint8 total_devices;
 		guint8 first_index;
@@ -78,7 +48,7 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 /* Private structure */
 struct _FuDellK2Ec {
 	FuDevice parent_instance;
-	FuDellK2DockDataStructure *dock_data;
+	FuStructDellK2DockData *dock_data;
 	FuDellK2DockInfoStructure *dock_info;
 	FuDellK2DockFWVersion *raw_versions;
 	FuDellK2BaseType base_type;
@@ -470,31 +440,17 @@ static gboolean
 fu_dell_k2_ec_dock_data_extract(FuDevice *device, GError **error)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
-	const gchar *service_tag_default = "0000000";
+	g_autofree gchar *mkt_name = NULL;
 	g_autofree gchar *serial = NULL;
 
 	/* set FuDevice name */
-	if (self->dock_data->marketing_name[0] != '\0')
-		fu_device_set_name(device, (const gchar *)&self->dock_data->marketing_name);
-	else
-		g_warning("[EC bug] Invalid dock name detected");
-
-	/* repair service tag (if not set) */
-	if (self->dock_data->service_tag[0] == '\0')
-		if (!fu_memcpy_safe(self->dock_data->service_tag,
-				    sizeof(self->dock_data->service_tag),
-				    0,
-				    (const guint8 *)service_tag_default,
-				    sizeof(service_tag_default),
-				    0,
-				    sizeof(self->dock_data->service_tag),
-				    error))
-			return FALSE;
+	mkt_name = fu_struct_dell_k2_dock_data_get_marketing_name(self->dock_data);
+	fu_device_set_name(device, mkt_name);
 
 	/* set FuDevice serial */
 	serial = g_strdup_printf("%.7s/%016" G_GUINT64_FORMAT,
-				 self->dock_data->service_tag,
-				 self->dock_data->module_serial);
+				 fu_struct_dell_k2_dock_data_get_service_tag(self->dock_data),
+				 fu_struct_dell_k2_dock_data_get_module_serial(self->dock_data));
 	fu_device_set_serial(device, serial);
 
 	return TRUE;
@@ -504,8 +460,7 @@ static gboolean
 fu_dell_k2_ec_dock_data_cmd(FuDevice *device, GError **error)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
-	gsize length = sizeof(FuDellK2DockDataStructure);
-	g_autoptr(GByteArray) res = g_byte_array_new_take(g_malloc0(length), length);
+	g_autoptr(GByteArray) res = fu_struct_dell_k2_dock_data_new();
 	guint8 cmd = DELL_K2_EC_HID_CMD_GET_DOCK_DATA;
 
 	/* get dock data over HID */
@@ -513,26 +468,8 @@ fu_dell_k2_ec_dock_data_cmd(FuDevice *device, GError **error)
 		g_prefix_error(error, "Failed to query dock data: ");
 		return FALSE;
 	}
-	if (res->len != length) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid dock info size: expected %" G_GSIZE_FORMAT ",got %u",
-			    length,
-			    res->len);
-		return FALSE;
-	}
 
-	if (!fu_memcpy_safe((guint8 *)self->dock_data,
-			    length,
-			    0,
-			    res->data,
-			    res->len,
-			    0,
-			    length,
-			    error))
-		return FALSE;
-
+	self->dock_data = fu_struct_dell_k2_dock_data_parse(res->data, res->len, 0, error);
 	if (!fu_dell_k2_ec_dock_data_extract(device, error))
 		return FALSE;
 	return TRUE;
@@ -543,57 +480,22 @@ fu_dell_k2_ec_is_dock_ready4update(FuDevice *device, GError **error)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
 	guint16 bitmask_fw_update_pending = 1 << 8;
+	guint32 dock_status = 0;
 
 	if (!fu_dell_k2_ec_dock_data_cmd(device, error))
 		return FALSE;
 
-	if ((self->dock_data->dock_status & bitmask_fw_update_pending) != 0) {
+	dock_status = fu_struct_dell_k2_dock_data_get_dock_status(self->dock_data);
+	if ((dock_status & bitmask_fw_update_pending) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "dock status (%x) has pending updates, unavailable for now.",
-			    self->dock_data->dock_status);
+			    dock_status);
 		return FALSE;
 	}
+
 	return TRUE;
-}
-
-static void
-fu_dell_k2_ec_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuDellK2Ec *self = FU_DELL_K2_EC(device);
-	gchar service_tag[8] = {0x00};
-
-	if (!fu_memcpy_safe((guint8 *)service_tag,
-			    sizeof(service_tag),
-			    0,
-			    self->dock_data->service_tag,
-			    sizeof(self->dock_data->service_tag),
-			    0,
-			    7,
-			    NULL))
-		g_debug("failed to save dock service tag");
-
-	fwupd_codec_string_append(str, idt, "ServiceTag", service_tag);
-	fwupd_codec_string_append_int(str, idt, "DockBaseType", self->base_type);
-	fwupd_codec_string_append_int(str, idt, "BoardId", self->dock_data->board_id);
-	fwupd_codec_string_append_int(str, idt, "ModuleSerial", self->dock_data->module_serial);
-	fwupd_codec_string_append_int(str,
-				      idt,
-				      "PowerSupply",
-				      self->dock_data->power_supply_wattage);
-	fwupd_codec_string_append_int(str,
-				      idt,
-				      "Configuration",
-				      self->dock_data->dock_configuration);
-	fwupd_codec_string_append_hex(str,
-				      idt,
-				      "PackageFirmwareVersion",
-				      self->dock_data->dock_firmware_pkg_ver);
-	fwupd_codec_string_append_int(str,
-				      idt,
-				      "OriginalModuleSerial",
-				      self->dock_data->original_module_serial);
 }
 
 gboolean
@@ -736,7 +638,7 @@ guint32
 fu_dell_k2_ec_get_package_version(FuDevice *device)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
-	return self->dock_data->dock_firmware_pkg_ver;
+	return fu_struct_dell_k2_dock_data_get_dock_firmware_pkg_ver(self->dock_data);
 }
 
 gboolean
@@ -932,7 +834,7 @@ fu_dell_k2_ec_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_dell_k2_ec_init(FuDellK2Ec *self)
 {
-	self->dock_data = g_new0(FuDellK2DockDataStructure, 1);
+	self->dock_data = g_new0(FuStructDellK2DockData, 1);
 	self->raw_versions = g_new0(FuDellK2DockFWVersion, 1);
 	self->dock_info = g_new0(FuDellK2DockInfoStructure, 1);
 
@@ -960,7 +862,6 @@ fu_dell_k2_ec_class_init(FuDellK2EcClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_dell_k2_ec_finalize;
-	device_class->to_string = fu_dell_k2_ec_to_string;
 	device_class->open = fu_dell_k2_ec_open;
 	device_class->setup = fu_dell_k2_ec_setup;
 	device_class->write_firmware = fu_dell_k2_ec_write_firmware;
