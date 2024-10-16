@@ -212,9 +212,13 @@ fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self,
 		    fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_new();
 		gsize length = st->len - 3;
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st, length);
@@ -225,22 +229,22 @@ fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self,
 		    FU_ALGOLTEK_AUX_CMD_ISP);
 		if (!fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_data(
 			st,
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			g_bytes_get_data(blob, NULL),
+			g_bytes_get_size(blob),
 			error)) {
 			g_prefix_error(error, "assign isp data failure: ");
 			return FALSE;
 		}
 
-		if (fu_chunk_get_data_sz(chk) < 8) {
+		if (g_bytes_get_size(blob) < 8) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "incomplete chunk");
 			return FALSE;
 		}
-		*wcrc = fu_algoltek_aux_device_crc16(fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
+		*wcrc = fu_algoltek_aux_device_crc16(g_bytes_get_data(blob, NULL),
+						     g_bytes_get_size(blob),
 						     *wcrc);
 		if (!fu_algoltek_aux_device_write(self, st, 20, error))
 			return FALSE;
@@ -326,9 +330,13 @@ fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_sublen(st,
@@ -341,12 +349,12 @@ fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self,
 		    FU_ALGOLTEK_AUX_CMD_WRF);
 		if (!fu_struct_algoltek_aux_isp_flash_write_cmd_address_pkt_set_data(
 			st,
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			g_bytes_get_data(blob, NULL),
+			g_bytes_get_size(blob),
 			error))
 			return FALSE;
-		*wcrc = fu_algoltek_aux_device_crc16(fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
+		*wcrc = fu_algoltek_aux_device_crc16(g_bytes_get_data(blob, NULL),
+						     g_bytes_get_size(blob),
 						     *wcrc);
 		if (!fu_algoltek_aux_device_write(self, st, 10, error))
 			return FALSE;

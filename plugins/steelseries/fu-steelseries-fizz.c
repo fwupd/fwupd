@@ -150,10 +150,14 @@ fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 		g_autoptr(FuStructSteelseriesFizzWriteAccessFileReq) st_req =
 		    fu_struct_steelseries_fizz_write_access_file_req_new();
 		g_autoptr(GByteArray) buf_res = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		fu_struct_steelseries_fizz_write_access_file_req_set_cmd(st_req, cmd);
 		fu_struct_steelseries_fizz_write_access_file_req_set_filesystem(st_req, fs);
@@ -166,8 +170,8 @@ fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 		    fu_chunk_get_address(chk));
 		if (!fu_struct_steelseries_fizz_write_access_file_req_set_data(
 			st_req,
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			g_bytes_get_data(blob, NULL),
+			g_bytes_get_size(blob),
 			error))
 			return FALSE;
 		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);

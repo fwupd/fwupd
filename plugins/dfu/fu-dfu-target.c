@@ -1047,7 +1047,9 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* round up as we have to transfer incomplete blocks */
-	bytes = fu_chunk_get_bytes(chk);
+	bytes = fu_chunk_get_bytes(chk, error);
+	if (bytes == NULL)
+		return FALSE;
 	nr_chunks = (guint)ceil((gdouble)g_bytes_get_size(bytes) / (gdouble)transfer_size);
 	if (nr_chunks == 0) {
 		g_set_error_literal(error,
@@ -1135,7 +1137,10 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 		g_autoptr(FuChunk) chunk_tmp = NULL;
-		bytes = fu_chunk_get_bytes(chk);
+
+		bytes = fu_chunk_get_bytes(chk, error);
+		if (bytes == NULL)
+			return FALSE;
 		chunk_tmp = fu_dfu_target_upload_element(self,
 							 fu_chunk_get_address(chk),
 							 g_bytes_get_size(bytes),
@@ -1144,7 +1149,9 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 							 error);
 		if (chunk_tmp == NULL)
 			return FALSE;
-		bytes_tmp = fu_chunk_get_bytes(chunk_tmp);
+		bytes_tmp = fu_chunk_get_bytes(chunk_tmp, error);
+		if (bytes_tmp == NULL)
+			return FALSE;
 		if (g_bytes_compare(bytes_tmp, bytes) != 0) {
 			g_autofree gchar *bytes_cmp_str = NULL;
 			bytes_cmp_str = _g_bytes_compare_verbose(bytes_tmp, bytes);

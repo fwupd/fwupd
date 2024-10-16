@@ -320,7 +320,9 @@ fu_dfu_csr_device_download(FuDevice *device,
 			return FALSE;
 
 		/* send packet */
-		blob_tmp = fu_chunk_get_bytes(chk);
+		blob_tmp = fu_chunk_get_bytes(chk, error);
+		if (blob_tmp == NULL)
+			return FALSE;
 		if (!fu_dfu_csr_device_download_chunk(self, idx, blob_tmp, error))
 			return FALSE;
 

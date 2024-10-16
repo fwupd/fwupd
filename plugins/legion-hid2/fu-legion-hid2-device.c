@@ -273,20 +273,24 @@ fu_legion_hid2_device_write_data_chunks(FuLegionHid2Device *self,
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = fu_struct_legion_iap_tlv_new();
 		g_autoptr(GByteArray) res = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		fu_struct_legion_iap_tlv_set_tag(req, tag);
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		if (!fu_struct_legion_iap_tlv_set_value(req,
-							fu_chunk_get_data(chk),
-							fu_chunk_get_data_sz(chk),
+							g_bytes_get_data(blob, NULL),
+							g_bytes_get_size(blob),
 							error))
 			return FALSE;
 
-		fu_struct_legion_iap_tlv_set_length(req, fu_chunk_get_data_sz(chk));
+		fu_struct_legion_iap_tlv_set_length(req, g_bytes_get_size(blob));
 
 		res = fu_legion_hid2_device_tlv(self, req, error);
 		if (res == NULL) {

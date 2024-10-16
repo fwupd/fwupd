@@ -627,16 +627,20 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 						  64);
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			g_autoptr(FuChunk) chk = NULL;
+			g_autoptr(GBytes) blob = NULL;
 
 			/* prepare chunk */
 			chk = fu_chunk_array_index(chunks, i, error);
 			if (chk == NULL)
 				return NULL;
+			blob = fu_chunk_get_bytes(chk, error);
+			if (blob == NULL)
+				return NULL;
 			fu_srec_firmware_write_line(str,
 						    kind_data,
 						    fu_chunk_get_address(chk),
-						    fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk));
+						    g_bytes_get_data(blob, NULL),
+						    g_bytes_get_size(blob));
 		}
 		/* upgrade to longer format */
 		if (fu_chunk_array_length(chunks) > G_MAXUINT16)

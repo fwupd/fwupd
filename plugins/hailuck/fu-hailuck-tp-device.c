@@ -124,10 +124,14 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* write block */
@@ -136,7 +140,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		fu_byte_array_append_uint16(buf, 0xCCCC, G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint16(buf, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint16(buf, 0xCCCC, G_LITTLE_ENDIAN);
-		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_append_uint8(buf, 0xEE);
 		fu_byte_array_append_uint8(buf, 0xD2);
 		fu_byte_array_append_uint16(buf, 0xCCCC, G_LITTLE_ENDIAN);

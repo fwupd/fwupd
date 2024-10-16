@@ -188,7 +188,7 @@ fu_wacom_device_write_firmware(FuDevice *device,
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
 	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS(device);
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* use the correct image from the firmware */
@@ -203,8 +203,8 @@ fu_wacom_device_write_firmware(FuDevice *device,
 			    (guint)fu_firmware_get_addr(firmware));
 		return FALSE;
 	}
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* we're in bootloader mode now */
@@ -214,10 +214,13 @@ fu_wacom_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* flash chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       priv->flash_base_addr,
-					       FU_CHUNK_PAGESZ_NONE,
-					       priv->flash_block_size);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						priv->flash_base_addr,
+						FU_CHUNK_PAGESZ_NONE,
+						priv->flash_block_size,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	return klass->write_firmware(device, chunks, progress, error);
 }
 

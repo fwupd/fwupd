@@ -387,7 +387,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
 	gssize rc;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* notify UI */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -416,14 +416,21 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 	}
 
 	/* process in chunks */
-	chunks = fu_chunk_array_new(NULL, self->area_size - self->area_start, 0x0, 0x0, 0x100000);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autofree guint8 *tmpbuf = g_malloc0(fu_chunk_get_data_sz(chk));
+	chunks = fu_chunk_array_new_virtual(self->area_size - self->area_start,
+					    FU_CHUNK_ADDR_OFFSET_NONE,
+					    FU_CHUNK_PAGESZ_NONE,
+					    0x100000);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GByteArray) tmpbuf = g_byte_array_new();
 
-		rc = read(self->fd, tmpbuf, fu_chunk_get_data_sz(chk));
-		if (rc != (gssize)fu_chunk_get_data_sz(chk)) {
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
+		fu_byte_array_set_size(tmpbuf, fu_chunk_get_data_sz(chk), 0x0);
+		rc = read(self->fd, tmpbuf->data, tmpbuf->len);
+		if (rc != (gssize)tmpbuf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
@@ -432,7 +439,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 				    (guint)fu_chunk_get_address(chk));
 			return NULL;
 		}
-		g_byte_array_append(buf, tmpbuf, fu_chunk_get_data_sz(chk));
+		g_byte_array_append(buf, tmpbuf->data, tmpbuf->len);
 		fu_progress_step_done(progress);
 	}
 

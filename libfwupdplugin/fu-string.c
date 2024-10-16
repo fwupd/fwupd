@@ -486,10 +486,16 @@ fu_strsplit_stream(GInputStream *stream,
 	if (chunks == NULL)
 		return FALSE;
 	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(buf, blob);
 		if (!fu_strsplit_buffer_drain(buf, &helper, error))
 			return FALSE;
 		if (helper.detected_nul)

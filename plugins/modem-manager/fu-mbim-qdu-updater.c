@@ -301,6 +301,7 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 					(gsize)fu_chunk_array_length(ctx->chunks));
 	if (ctx->chunk_sent < fu_chunk_array_length(ctx->chunks)) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(MbimMessage) request = NULL;
 
 		/* prepare chunk */
@@ -309,10 +310,14 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 			g_main_loop_quit(ctx->mainloop);
 			return;
 		}
-		request =
-		    mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
-							(const guint8 *)fu_chunk_get_data(chk),
-							NULL);
+		blob = fu_chunk_get_bytes(chk, &ctx->error);
+		if (blob == NULL) {
+			g_main_loop_quit(ctx->mainloop);
+			return;
+		}
+		request = mbim_message_qdu_file_write_set_new(g_bytes_get_size(blob),
+							      g_bytes_get_data(blob, NULL),
+							      NULL);
 		mbim_device_command(ctx->mbim_device,
 				    request,
 				    20,
@@ -334,6 +339,7 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 	g_autoptr(FuChunk) chk = NULL;
 	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	response = mbim_device_command_finish(device, res, &ctx->error);
 	if (!response || !mbim_message_response_get_result(response,
@@ -362,8 +368,13 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}
-	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
-						      (const guint8 *)fu_chunk_get_data(chk),
+	blob = fu_chunk_get_bytes(chk, &ctx->error);
+	if (blob == NULL) {
+		g_main_loop_quit(ctx->mainloop);
+		return;
+	}
+	request = mbim_message_qdu_file_write_set_new(g_bytes_get_size(blob),
+						      g_bytes_get_data(blob, NULL),
 						      NULL);
 	mbim_device_command(ctx->mbim_device,
 			    request,

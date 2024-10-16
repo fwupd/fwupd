@@ -87,12 +87,16 @@ fu_dell_k2_dpmux_write(FuDevice *device,
 	/* write to device */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
 
-		if (!fu_dell_k2_ec_hid_write(proxy, fu_chunk_get_bytes(chk), error))
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_dell_k2_ec_hid_write(proxy, blob, error))
 			return FALSE;
 
 		/* update progress */

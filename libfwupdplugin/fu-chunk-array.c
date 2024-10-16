@@ -10,7 +10,9 @@
 
 #include "fu-bytes.h"
 #include "fu-chunk-array.h"
+#include "fu-chunk-private.h"
 #include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * FuChunkArray:
@@ -29,7 +31,14 @@ struct _FuChunkArray {
 	gsize total_size;
 };
 
-G_DEFINE_TYPE(FuChunkArray, fu_chunk_array, G_TYPE_OBJECT)
+static void
+fu_chunk_array_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuChunkArray,
+		       fu_chunk_array,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_chunk_array_codec_iface_init))
 
 /**
  * fu_chunk_array_length:
@@ -82,6 +91,7 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
  * fu_chunk_array_index:
  * @self: a #FuChunkArray
  * @idx: the chunk index
+ * @error: (nullable): optional return location for an error
  *
  * Gets the next chunk.
  *
@@ -97,9 +107,9 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 	gsize offset;
 	gsize page = 0;
 	g_autoptr(FuChunk) chk = NULL;
-	g_autoptr(GBytes) blob_chk = NULL;
 
 	g_return_val_if_fail(FU_IS_CHUNK_ARRAY(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (idx >= self->offsets->len) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "idx %u invalid", idx);
@@ -116,20 +126,19 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 
 	/* create new chunk */
 	if (self->blob != NULL) {
-		blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		g_autoptr(GBytes) blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		chk = fu_chunk_bytes_new(blob_chk);
 	} else if (self->stream != NULL) {
-		blob_chk = fu_input_stream_read_bytes(self->stream, offset, chunksz, NULL, error);
-		if (blob_chk == NULL) {
-			g_prefix_error(error,
-				       "failed to get stream at 0x%x for 0x%x: ",
-				       (guint)offset,
-				       (guint)chunksz);
+		g_autoptr(GInputStream) partial_stream =
+		    fu_partial_input_stream_new(self->stream, offset, chunksz, error);
+		if (partial_stream == NULL)
 			return NULL;
-		}
+		chk = fu_chunk_stream_new(partial_stream);
+		fu_chunk_set_data_sz(chk, chunksz);
 	} else {
-		blob_chk = g_bytes_new(NULL, 0);
+		g_autoptr(GBytes) blob_chk = g_bytes_new(NULL, 0);
+		chk = fu_chunk_bytes_new(blob_chk);
 	}
-	chk = fu_chunk_bytes_new(blob_chk);
 	fu_chunk_set_idx(chk, idx);
 	fu_chunk_set_page(chk, page);
 	fu_chunk_set_address(chk, address);
@@ -182,6 +191,37 @@ fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gs
 }
 
 /**
+ * fu_chunk_array_new_virtual:
+ * @bufsz: size of the buffer
+ * @addr_offset: the hardware address offset, or %FU_CHUNK_ADDR_OFFSET_NONE
+ * @page_sz: the hardware page size, typically %FU_CHUNK_PAGESZ_NONE
+ * @packet_sz: the packet size, or 0x0
+ *
+ * Chunks a virtual buffer memory into packets, ensuring each packet is less that a specific
+ * transfer size.
+ *
+ * Returns: (transfer full): a #FuChunkArray
+ *
+ * Since: 2.0.0
+ **/
+FuChunkArray *
+fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize packet_sz)
+{
+	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
+
+	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+
+	self->addr_offset = addr_offset;
+	self->page_sz = page_sz;
+	self->packet_sz = packet_sz;
+	self->total_size = bufsz;
+
+	/* success */
+	fu_chunk_array_ensure_offsets(self);
+	return g_steal_pointer(&self);
+}
+
+/**
  * fu_chunk_array_new_from_stream:
  * @stream: a #GInputStream
  * @addr_offset: the hardware address offset, or %FU_CHUNK_ADDR_OFFSET_NONE
@@ -223,6 +263,26 @@ fu_chunk_array_new_from_stream(GInputStream *stream,
 	return g_steal_pointer(&self);
 }
 
+static gchar *
+fu_chunk_array_to_string(FwupdCodec *codec)
+{
+	FuChunkArray *self = FU_CHUNK_ARRAY(codec);
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunks");
+	for (guint i = 0; i < fu_chunk_array_length(self); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "chunk", NULL);
+		chk = fu_chunk_array_index(self, i, NULL);
+		if (chk == NULL)
+			return NULL;
+		fu_chunk_export(chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bc);
+	}
+	return xb_builder_node_export(bn,
+				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				      NULL);
+}
+
 static void
 fu_chunk_array_finalize(GObject *object)
 {
@@ -233,6 +293,12 @@ fu_chunk_array_finalize(GObject *object)
 	if (self->stream != NULL)
 		g_object_unref(self->stream);
 	G_OBJECT_CLASS(fu_chunk_array_parent_class)->finalize(object);
+}
+
+static void
+fu_chunk_array_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->to_string = fu_chunk_array_to_string;
 }
 
 static void

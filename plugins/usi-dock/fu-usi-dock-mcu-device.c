@@ -399,16 +399,20 @@ static gboolean
 fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) st_req = fu_struct_usi_dock_hid_req_new();
+	g_autoptr(GBytes) blob = NULL;
 
-	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
+	fu_struct_usi_dock_hid_req_set_length(st_req, g_bytes_get_size(blob));
 	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);
 	if (!fu_memcpy_safe(st_req->data,
 			    st_req->len,
 			    FU_STRUCT_USI_DOCK_HID_REQ_OFFSET_BUF, /* dst */
-			    fu_chunk_get_data(chk),
-			    fu_chunk_get_data_sz(chk),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0x0, /* src */
-			    fu_chunk_get_data_sz(chk),
+			    g_bytes_get_size(blob),
 			    error))
 		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -426,12 +430,15 @@ static gboolean
 fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk_page);
+	g_autoptr(GInputStream) stream = fu_chunk_get_stream(chk_page);
 
-	chunks = fu_chunk_array_new_from_bytes(chk_blob,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

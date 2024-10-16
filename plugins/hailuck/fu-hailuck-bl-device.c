@@ -166,12 +166,9 @@ fu_hailuck_bl_device_write_block_start(FuHailuckBlDevice *self, guint32 length, 
 }
 
 static gboolean
-fu_hailuck_bl_device_write_block(FuHailuckBlDevice *self,
-				 const guint8 *data,
-				 gsize data_sz,
-				 GError **error)
+fu_hailuck_bl_device_write_block(FuHailuckBlDevice *self, GBytes *blob, GError **error)
 {
-	gsize bufsz = data_sz + 2;
+	gsize bufsz = g_bytes_get_size(blob) + 2;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 
 	buf[0] = FU_HAILUCK_REPORT_ID_LONG;
@@ -179,10 +176,10 @@ fu_hailuck_bl_device_write_block(FuHailuckBlDevice *self,
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
 			    0x02, /* dst */
-			    data,
-			    data_sz,
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0x0, /* src */
-			    data_sz,
+			    g_bytes_get_size(blob),
 			    error))
 		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -207,6 +204,8 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuHailuckBlDevice *self = FU_HAILUCK_BL_DEVICE(device);
+	g_autoptr(GBytes) blob0 = NULL;
+	g_autoptr(GBytes) blob0_corrupt = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_new = NULL;
 	g_autoptr(FuChunk) chk0 = NULL;
@@ -245,25 +244,30 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	chk0 = fu_chunk_array_index(chunks, 0, error);
 	if (chk0 == NULL)
 		return FALSE;
-	chk0_data = fu_memdup_safe(fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0), error);
+	blob0 = fu_chunk_get_bytes(chk0, error);
+	if (blob0 == NULL)
+		return FALSE;
+	chk0_data = fu_memdup_safe(g_bytes_get_data(blob0, NULL), g_bytes_get_size(blob0), error);
 	if (chk0_data == NULL)
 		return FALSE;
 	chk0_data[0] = 0x00;
-	if (!fu_hailuck_bl_device_write_block(self, chk0_data, fu_chunk_get_data_sz(chk0), error))
+	blob0_corrupt = g_bytes_new(chk0_data, g_bytes_get_size(blob0));
+	if (!fu_hailuck_bl_device_write_block(self, blob0_corrupt, error))
 		return FALSE;
 
 	/* send the rest of the chunks */
 	for (guint i = 1; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_hailuck_bl_device_write_block(self,
-						      fu_chunk_get_data(chk),
-						      fu_chunk_get_data_sz(chk),
-						      error))
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_hailuck_bl_device_write_block(self, blob, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
@@ -274,10 +278,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	/* retry write of first block */
 	if (!fu_hailuck_bl_device_write_block_start(self, g_bytes_get_size(fw), error))
 		return FALSE;
-	if (!fu_hailuck_bl_device_write_block(self,
-					      fu_chunk_get_data(chk0),
-					      fu_chunk_get_data_sz(chk0),
-					      error))
+	if (!fu_hailuck_bl_device_write_block(self, blob0, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

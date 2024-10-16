@@ -15,6 +15,8 @@
 G_DECLARE_FINAL_TYPE(FuChunkArray, fu_chunk_array, FU, CHUNK_ARRAY, GObject)
 
 FuChunkArray *
+fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize packet_sz);
+FuChunkArray *
 fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gsize packet_sz)
     G_GNUC_NON_NULL(1);
 FuChunkArray *

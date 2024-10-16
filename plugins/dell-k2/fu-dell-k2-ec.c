@@ -719,12 +719,16 @@ fu_dell_k2_ec_write_firmware(FuDevice *device,
 	/* write to device */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
-		if (!fu_dell_k2_ec_hid_write(device, fu_chunk_get_bytes(chk), error))
+		if (!fu_dell_k2_ec_hid_write(device, blob, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);
