@@ -629,7 +629,7 @@ fu_context_udev_plugin_names_sort_cb(gconstpointer a, gconstpointer b)
 /**
  * fu_context_add_udev_subsystem:
  * @self: a #FuContext
- * @subsystem: a subsystem name, e.g. `pciport`
+ * @subsystem: a subsystem name, e.g. `pciport`, or `block:partition`
  * @plugin_name: (nullable): a plugin name, e.g. `iommu`
  *
  * Registers the udev subsystem to be watched by the daemon.
@@ -643,9 +643,15 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	GPtrArray *plugin_names;
+	g_auto(GStrv) subsystem_devtype = NULL;
 
 	g_return_if_fail(FU_IS_CONTEXT(self));
 	g_return_if_fail(subsystem != NULL);
+
+	/* add the base subsystem watch if passed a subsystem:devtype */
+	subsystem_devtype = g_strsplit(subsystem, ":", 2);
+	if (g_strv_length(subsystem_devtype) > 1)
+		fu_context_add_udev_subsystem(self, subsystem_devtype[0], NULL);
 
 	/* already exists */
 	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
@@ -678,7 +684,7 @@ fu_context_add_udev_subsystem(FuContext *self, const gchar *subsystem, const gch
 /**
  * fu_context_get_plugin_names_for_udev_subsystem:
  * @self: a #FuContext
- * @subsystem: a subsystem name, e.g. `pciport`
+ * @subsystem: a subsystem name, e.g. `pciport`, or `block:partition`
  * @error: (nullable): optional return location for an error
  *
  * Gets the plugins which registered for a specific subsystem.
@@ -693,13 +699,31 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
-	GPtrArray *plugin_names;
+	GPtrArray *plugin_names_tmp;
+	g_auto(GStrv) subsystem_devtype = NULL;
+	g_autoptr(GPtrArray) plugin_names = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	g_return_val_if_fail(subsystem != NULL, NULL);
 
-	plugin_names = g_hash_table_lookup(priv->udev_subsystems, subsystem);
-	if (plugin_names == NULL) {
+	/* add the base subsystem first */
+	subsystem_devtype = g_strsplit(subsystem, ":", 2);
+	if (g_strv_length(subsystem_devtype) > 1) {
+		plugin_names_tmp = g_hash_table_lookup(priv->udev_subsystems, subsystem_devtype[0]);
+		if (plugin_names_tmp != NULL)
+			g_ptr_array_extend(plugin_names,
+					   plugin_names_tmp,
+					   (GCopyFunc)g_strdup,
+					   NULL);
+	}
+
+	/* add the exact match */
+	plugin_names_tmp = g_hash_table_lookup(priv->udev_subsystems, subsystem);
+	if (plugin_names_tmp != NULL)
+		g_ptr_array_extend(plugin_names, plugin_names_tmp, (GCopyFunc)g_strdup, NULL);
+
+	/* no matches */
+	if (plugin_names->len == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
@@ -707,7 +731,9 @@ fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 			    subsystem);
 		return NULL;
 	}
-	return g_ptr_array_ref(plugin_names);
+
+	/* success */
+	return g_steal_pointer(&plugin_names);
 }
 
 /**
