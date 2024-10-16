@@ -143,6 +143,7 @@ fu_udev_backend_get_gtype_for_subsystem_devtype(const gchar *subsystem, const gc
 	    {"drm_dp_aux_dev", NULL, FU_TYPE_DPAUX_DEVICE},
 	    {"hidraw", NULL, FU_TYPE_HIDRAW_DEVICE},
 	    {"block", "disk", FU_TYPE_BLOCK_DEVICE},
+	    {"block", "partition", FU_TYPE_BLOCK_PARTITION},
 	    {"serio", NULL, FU_TYPE_SERIO_DEVICE},
 	    {"pci", NULL, FU_TYPE_PCI_DEVICE},
 	    {"video4linux", NULL, FU_TYPE_V4L_DEVICE},
