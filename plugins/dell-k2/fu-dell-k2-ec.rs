@@ -92,3 +92,35 @@ enum K2DockSku {
     Tbt4,
     Tbt5,
 }
+
+#[repr(C, packed)]
+#[derive(New, Getters, Parse)]
+struct FuStructDellK2DockData {
+    dock_configuration: u8,
+    dock_type: u8,
+    power_supply_wattage: u16,
+    module_type: u16,
+    board_id: u16,
+    port0_dock_status: u16,
+    port1_dock_status: u16,
+    dock_firmware_pkg_ver: u32,
+    module_serial: u64,
+    original_module_serial: u64,
+    service_tag: [char; 7],
+    marketing_name: [char; 32],
+    dock_error: u32,
+    dock_module_status: u32,
+    dock_module_error: u32,
+    reserved: u8,
+    dock_status: u32,
+    dock_state: u16,
+    dock_config: u16,
+    dock_mac_addr: [u8; 6],
+    dock_capabilities: u32,
+    dock_policy: u32,
+    dock_temperature: u32,
+    dock_fan_speed: u32,
+    upf_power: u16,
+    eppid: u8,
+    reserved: [u8; 74],
+}
