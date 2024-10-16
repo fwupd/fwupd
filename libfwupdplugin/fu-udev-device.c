@@ -1829,6 +1829,26 @@ fu_udev_device_get_devtype(FuUdevDevice *self)
 	return priv->devtype;
 }
 
+/**
+ * fu_udev_device_get_subsystem_devtype:
+ * @self: a #FuUdevDevice
+ *
+ * Returns the Udev subsystem and device type, as a string.
+ *
+ * Returns: (transfer full): `subsystem:devtype`, or just `subsystem` if the latter is unset
+ *
+ * Since: 2.0.2
+ **/
+gchar *
+fu_udev_device_get_subsystem_devtype(FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	if (priv->devtype != NULL)
+		return g_strdup_printf("%s:%s", priv->subsystem, priv->devtype);
+	return g_strdup(priv->subsystem);
+}
+
 static GBytes *
 fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
