@@ -38,12 +38,13 @@ jobs:
           ./contrib/build-openbmc.sh --prefix=/home/runner/.root
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
     - name: install dependencies
       run: |
+        brew uninstall --ignore-dependencies --force pkg-config@0.29.2
         brew install meson libgusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala gi-docgen
-        python3 -m pip install --user jinja2
+        python3 -m pip install --user jinja2 --break-system-packages
     - uses: actions/checkout@v4
     - name: configure
       run: ./contrib/ci/build_macos.sh
