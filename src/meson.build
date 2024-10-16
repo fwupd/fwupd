@@ -361,6 +361,9 @@ if libgbinder.found()
       fwupdengine,
       plugin_libs,
     ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: daemon_dir
   )
   fwupdmgr = executable(
     'fwupdmgr-binder',
@@ -383,6 +386,7 @@ if libgbinder.found()
       fwupdplugin,
       fwupdutil,
     ],
+    install: true,
   )
 endif
 
