@@ -68,6 +68,7 @@ BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
+BuildRequires: libblkid-devel
 %if 0%{?rhel} >= 10 || 0%{?fedora} >= 28
 BuildRequires: passim-devel
 %endif
