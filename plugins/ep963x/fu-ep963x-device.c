@@ -298,7 +298,9 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		chk2 = fu_chunk_array_index(blocks, i, error);
 		if (chk2 == NULL)
 			return FALSE;
-		chk_blob = fu_chunk_get_bytes(chk2);
+		chk_blob = fu_chunk_get_bytes(chk2, error);
+		if (chk_blob == NULL)
+			return FALSE;
 		chunks = fu_chunk_array_new_from_bytes(chk_blob,
 						       fu_chunk_get_address(chk2),
 						       FU_CHUNK_PAGESZ_NONE,
@@ -306,18 +308,22 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GError) error_loop = NULL;
+			g_autoptr(GBytes) blob = NULL;
 
 			/* prepare chunk */
 			chk = fu_chunk_array_index(chunks, j, error);
 			if (chk == NULL)
+				return FALSE;
+			blob = fu_chunk_get_bytes(chk, error);
+			if (blob == NULL)
 				return FALSE;
 
 			/* copy data and write */
 			if (!fu_ep963x_device_write(self,
 						    FU_EP963_USB_CONTROL_ID,
 						    FU_EP963_OPCODE_SUBMCU_WRITE_BLOCK_DATA,
-						    fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk),
+						    g_bytes_get_data(blob, NULL),
+						    g_bytes_get_size(blob),
 						    &error_loop)) {
 				g_set_error(error,
 					    FWUPD_ERROR,

@@ -383,7 +383,9 @@ fu_dfu_target_stm_download_element3(FuDfuTarget *target,
 		}
 
 		/* we have to write one final zero-sized chunk for EOF */
-		bytes_tmp = fu_chunk_get_bytes(chk_tmp);
+		bytes_tmp = fu_chunk_get_bytes(chk_tmp, error);
+		if (bytes_tmp == NULL)
+			return FALSE;
 		g_debug("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
 			(guint)fu_chunk_get_address(chk_tmp),
 			g_bytes_get_size(bytes_tmp));
@@ -431,7 +433,9 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 
 	/* 1st pass: work out which sectors need erasing */
-	bytes = fu_chunk_get_bytes(chk);
+	bytes = fu_chunk_get_bytes(chk, error);
+	if (bytes == NULL)
+		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(bytes,
 					       fu_chunk_get_address(chk),
 					       FU_CHUNK_PAGESZ_NONE,

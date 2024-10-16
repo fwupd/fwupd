@@ -132,17 +132,20 @@ fu_steelseries_gamepad_write_firmware_chunk(FuSteelseriesGamepad *self,
 	guint16 chunk_checksum;
 	g_autoptr(FuStructSteelseriesGamepadWriteChunkReq) st_req =
 	    fu_struct_steelseries_gamepad_write_chunk_req_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fu_chunk_get_bytes(chunk, error);
+	if (blob == NULL)
+		return FALSE;
 
 	/* block ID, 32B of data then block checksum -- probably not necessary */
 	fu_struct_steelseries_gamepad_write_chunk_req_set_block_id(st_req, fu_chunk_get_idx(chunk));
 	if (!fu_struct_steelseries_gamepad_write_chunk_req_set_data(st_req,
-								    fu_chunk_get_data(chunk),
-								    fu_chunk_get_data_sz(chunk),
+								    g_bytes_get_data(blob, NULL),
+								    g_bytes_get_size(blob),
 								    error))
 		return FALSE;
-	chunk_checksum =
-	    fu_sum16(st_req->data + FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_OFFSET_DATA,
-		     FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA);
+	chunk_checksum = fu_sum16_bytes(blob);
 	fu_struct_steelseries_gamepad_write_chunk_req_set_checksum(st_req, chunk_checksum);
 	*checksum += (guint32)chunk_checksum;
 

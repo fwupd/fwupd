@@ -6,7 +6,7 @@ struct FuStructWacFirmwareHdr {
     magic: [char; 5] == "WACOM",
 }
 
-#[derive(Parse)]
+#[derive(ParseStream)]
 struct FuStructWtaBlockHeader {
     block_start: u32le,
     block_size: u32le,

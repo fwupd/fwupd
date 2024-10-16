@@ -98,20 +98,24 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 }
 
 static GBytes *
-fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
+fu_wac_module_sub_cpu_build_packet(FuChunk *chk, GError **error)
 {
 	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5];
+	g_autoptr(GBytes) blob = NULL;
 
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return NULL;
 	memset(buf, 0xff, sizeof(buf));
-	fu_memwrite_uint32(&buf[0], fu_chunk_get_address(chunk), G_BIG_ENDIAN);
-	buf[4] = fu_chunk_get_data_sz(chunk) / 2;
+	fu_memwrite_uint32(&buf[0], fu_chunk_get_address(chk), G_BIG_ENDIAN);
+	buf[4] = g_bytes_get_size(blob) / 2;
 	if (!fu_memcpy_safe(buf,
 			    sizeof(buf),
 			    5, /* dst */
-			    fu_chunk_get_data(chunk),
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0, /* src */
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_size(blob),
 			    error)) {
 		g_prefix_error(error, "wacom sub_cpu module failed to build packet: ");
 		return NULL;

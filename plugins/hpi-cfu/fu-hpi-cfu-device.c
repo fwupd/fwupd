@@ -932,8 +932,12 @@ fu_hpi_cfu_device_handler_send_payload_chunk(FuHpiCfuDevice *self,
 {
 	g_autoptr(GByteArray) payload_buf = g_byte_array_new();
 	g_autoptr(GByteArray) untransmitted_data = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
 
-	g_byte_array_append(payload_buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
+	fu_byte_array_append_bytes(payload_buf, blob);
 
 	for (guint32 read_index = 0; read_index < payload_buf->len;) {
 		g_autoptr(GByteArray) payload_header = g_byte_array_new();

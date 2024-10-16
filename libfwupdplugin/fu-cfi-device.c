@@ -755,6 +755,11 @@ fu_cfi_device_write_page(FuCfiDevice *self, FuChunk *page, FuProgress *progress,
 	guint8 cmd = 0x0;
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) page_blob = NULL;
+
+	page_blob = fu_chunk_get_bytes(page, error);
+	if (page_blob == NULL)
+		return FALSE;
 
 	if (!fu_cfi_device_write_enable(self, error))
 		return FALSE;
@@ -768,7 +773,7 @@ fu_cfi_device_write_page(FuCfiDevice *self, FuChunk *page, FuProgress *progress,
 		return FALSE;
 	fu_byte_array_append_uint8(buf, cmd);
 	fu_byte_array_append_uint24(buf, fu_chunk_get_address(page), G_BIG_ENDIAN);
-	g_byte_array_append(buf, fu_chunk_get_data(page), fu_chunk_get_data_sz(page));
+	fu_byte_array_append_bytes(buf, page_blob);
 	g_debug("writing page at 0x%x", (guint)fu_chunk_get_address(page));
 	if (!fu_cfi_device_send_command(self, buf->data, buf->len, NULL, 0, progress, error))
 		return FALSE;

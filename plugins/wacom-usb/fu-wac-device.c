@@ -554,7 +554,9 @@ fu_wac_device_write_firmware(FuDevice *device,
 			chk = fu_chunk_array_index(chunks, j, error);
 			if (chk == NULL)
 				return FALSE;
-			blob_chunk = fu_chunk_get_bytes(chk);
+			blob_chunk = fu_chunk_get_bytes(chk, error);
+			if (blob_chunk == NULL)
+				return FALSE;
 			if (!fu_wac_device_write_block(self,
 						       fu_chunk_get_address(chk),
 						       blob_chunk,

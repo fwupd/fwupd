@@ -379,16 +379,20 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) chk_blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		chk_blob = fu_chunk_get_bytes(chk, error);
+		if (chk_blob == NULL)
+			return FALSE;
 
 		/* write data to mbox data regs */
 		if (!fu_intel_usb4_device_mbox_data_write(self,
-							  fu_chunk_get_data(chk),
-							  fu_chunk_get_data_sz(chk),
+							  g_bytes_get_data(chk_blob, NULL),
+							  g_bytes_get_size(chk_blob),
 							  error)) {
 			g_prefix_error(error, "hub mbox data write error: ");
 			return FALSE;

@@ -206,8 +206,6 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
-	gsize bufsz = 0;
-	const guint8 *buf;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -227,10 +225,9 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* erase */
-	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(parent),
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
-				     bufsz,
+				     fw,
 				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
@@ -239,8 +236,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 	/* write */
 	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(parent),
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
-				     buf,
-				     bufsz,
+				     fw,
 				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;

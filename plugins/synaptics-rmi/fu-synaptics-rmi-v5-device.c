@@ -373,14 +373,20 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 						   FU_CHUNK_PAGESZ_NONE,
 						   flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks_bin); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_bin, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks_bin, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		if (!fu_synaptics_rmi_v5_device_write_block(self,
 							    RMI_F34_WRITE_FW_BLOCK,
 							    address,
-							    fu_chunk_get_data(chk),
-							    fu_chunk_get_data_sz(chk),
+							    g_bytes_get_data(blob, NULL),
+							    g_bytes_get_size(blob),
 							    error)) {
 			g_prefix_error(error,
 				       "failed to write bin block %u: ",
@@ -412,14 +418,20 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		fu_progress_set_id(progress_child, G_STRLOC);
 		fu_progress_set_steps(progress_child, fu_chunk_array_length(chunks_sig));
 		for (guint i = 0; i < fu_chunk_array_length(chunks_sig); i++) {
-			g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_sig, i, error);
+			g_autoptr(FuChunk) chk = NULL;
+			g_autoptr(GBytes) blob = NULL;
+
+			chk = fu_chunk_array_index(chunks_sig, i, error);
 			if (chk == NULL)
+				return FALSE;
+			blob = fu_chunk_get_bytes(chk, error);
+			if (blob == NULL)
 				return FALSE;
 			if (!fu_synaptics_rmi_v5_device_write_block(self,
 								    RMI_F34_WRITE_SIGNATURE,
 								    address,
-								    fu_chunk_get_data(chk),
-								    fu_chunk_get_data_sz(chk),
+								    g_bytes_get_data(blob, NULL),
+								    g_bytes_get_size(blob),
 								    error)) {
 				g_prefix_error(error,
 					       "failed to write bin block %u: ",
@@ -447,14 +459,20 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks_cfg); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_cfg, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks_cfg, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		if (!fu_synaptics_rmi_v5_device_write_block(self,
 							    RMI_F34_WRITE_CONFIG_BLOCK,
 							    address,
-							    fu_chunk_get_data(chk),
-							    fu_chunk_get_data_sz(chk),
+							    g_bytes_get_data(blob, NULL),
+							    g_bytes_get_size(blob),
 							    error)) {
 			g_prefix_error(error,
 				       "failed to write cfg block %u: ",

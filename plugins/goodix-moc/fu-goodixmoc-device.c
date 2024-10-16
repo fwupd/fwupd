@@ -372,12 +372,16 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
 		g_autoptr(GError) error_block = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(req, blob);
 
 		/* the last chunk */
 		if (i == fu_chunk_array_length(chunks) - 1) {

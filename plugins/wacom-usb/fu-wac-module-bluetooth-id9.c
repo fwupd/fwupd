@@ -89,15 +89,19 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 static gboolean
 fu_wac_module_bluetooth_id9_write_block(FuWacModule *self,
 					guint8 phase,
-					FuChunk *chunk,
+					FuChunk *chk,
 					FuProgress *progress,
 					GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) blob_chunk = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	fu_byte_array_append_uint8(buf, phase);
-	g_byte_array_append(buf, fu_chunk_get_data(chunk), fu_chunk_get_data_sz(chunk));
+	fu_byte_array_append_bytes(buf, blob);
 
 	blob_chunk = g_bytes_new(buf->data, buf->len);
 	return fu_wac_module_set_feature(self,

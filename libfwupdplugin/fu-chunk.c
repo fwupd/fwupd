@@ -13,6 +13,7 @@
 #include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 
 /**
@@ -26,10 +27,10 @@ struct _FuChunk {
 	guint idx;
 	guint page;
 	gsize address;
-	const guint8 *data;
+	guint8 *data_out; /* noref */
 	gsize data_sz;
-	gboolean is_mutable;
 	GBytes *bytes;
+	GInputStream *stream;
 };
 
 G_DEFINE_TYPE(FuChunk, fu_chunk, G_TYPE_OBJECT)
@@ -134,32 +135,10 @@ fu_chunk_get_address(FuChunk *self)
 }
 
 /**
- * fu_chunk_get_data:
- * @self: a #FuChunk
- *
- * Gets the data of the chunk.
- *
- * Returns: bytes
- *
- * Since: 1.5.6
- **/
-const guint8 *
-fu_chunk_get_data(FuChunk *self)
-{
-	g_return_val_if_fail(FU_IS_CHUNK(self), NULL);
-	return self->data;
-}
-
-/**
  * fu_chunk_get_data_out:
  * @self: a #FuChunk
  *
  * Gets the mutable data of the chunk.
- *
- * WARNING: At the moment fu_chunk_get_data_out() returns the same data as
- * fu_chunk_get_data() in all cases. The caller should verify the data passed to
- * fu_chunk_array_new() is also writable (i.e. not `const` or `mmap`) before
- * using this function.
  *
  * Returns: (transfer none): bytes
  *
@@ -169,13 +148,7 @@ guint8 *
 fu_chunk_get_data_out(FuChunk *self)
 {
 	g_return_val_if_fail(FU_IS_CHUNK(self), NULL);
-
-	/* warn, but allow to proceed */
-	if (!self->is_mutable) {
-		g_critical("calling fu_chunk_get_data_out() from immutable chunk");
-		self->is_mutable = TRUE;
-	}
-	return (guint8 *)self->data;
+	return self->data_out;
 }
 
 /**
@@ -227,7 +200,6 @@ fu_chunk_set_bytes(FuChunk *self, GBytes *bytes)
 	}
 	if (bytes != NULL) {
 		self->bytes = g_bytes_ref(bytes);
-		self->data = g_bytes_get_data(bytes, NULL);
 		self->data_sz = g_bytes_get_size(bytes);
 	}
 }
@@ -235,44 +207,55 @@ fu_chunk_set_bytes(FuChunk *self, GBytes *bytes)
 /**
  * fu_chunk_get_bytes:
  * @self: a #FuChunk
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the data of the chunk.
+ *
+ * Returns: (transfer full): data, or %NULL on error
+ *
+ * Since: 2.0.2
+ **/
+GBytes *
+fu_chunk_get_bytes(FuChunk *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_CHUNK(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	if (self->stream != NULL)
+		return fu_input_stream_read_bytes(self->stream, 0x0, G_MAXSIZE, NULL, error);
+	if (self->bytes != NULL)
+		return g_bytes_ref(self->bytes);
+	return g_bytes_new_static(self->data_out, self->data_sz);
+}
+
+/**
+ * fu_chunk_get_stream:
+ * @self: a #FuChunk
  *
  * Gets the data of the chunk.
  *
  * Returns: (transfer full): data
  *
- * Since: 1.5.6
+ * Since: 2.0.2
  **/
-GBytes *
-fu_chunk_get_bytes(FuChunk *self)
+GInputStream *
+fu_chunk_get_stream(FuChunk *self)
 {
 	g_return_val_if_fail(FU_IS_CHUNK(self), NULL);
+	if (self->stream != NULL)
+		return g_object_ref(self->stream);
 	if (self->bytes != NULL)
-		return g_bytes_ref(self->bytes);
-	return g_bytes_new_static(self->data, self->data_sz);
+		return g_memory_input_stream_new_from_bytes(self->bytes);
+	return g_memory_input_stream_new_from_data(self->data_out, self->data_sz, NULL);
 }
 
-/**
- * fu_chunk_new:
- * @idx: the packet number
- * @page: the hardware memory page
- * @address: the address *within* the page
- * @data: the data
- * @data_sz: size of @data_sz
- *
- * Creates a new packet of chunked data.
- *
- * Returns: (transfer full): a #FuChunk
- *
- * Since: 1.1.2
- **/
-FuChunk *
-fu_chunk_new(guint idx, guint page, gsize address, const guint8 *data, gsize data_sz)
+static FuChunk *
+fu_chunk_new(guint idx, guint page, gsize address, guint8 *data_out, gsize data_sz)
 {
 	FuChunk *self = g_object_new(FU_TYPE_CHUNK, NULL);
 	self->idx = idx;
 	self->page = page;
 	self->address = address;
-	self->data = data;
+	self->data_out = data_out;
 	self->data_sz = data_sz;
 	return self;
 }
@@ -295,23 +278,42 @@ fu_chunk_bytes_new(GBytes *bytes)
 	return self;
 }
 
+/**
+ * fu_chunk_stream_new:
+ * @stream: (nullable): data
+ *
+ * Creates a new packet of data.
+ *
+ * Returns: (transfer full): a #FuChunk
+ *
+ * Since: 2.0.2
+ **/
+FuChunk *
+fu_chunk_stream_new(GInputStream *stream)
+{
+	FuChunk *self = g_object_new(FU_TYPE_CHUNK, NULL);
+	g_set_object(&self->stream, stream);
+	return self;
+}
+
 void
 fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	fu_xmlb_builder_insert_kx(bn, "idx", self->idx);
 	fu_xmlb_builder_insert_kx(bn, "page", self->page);
 	fu_xmlb_builder_insert_kx(bn, "addr", self->address);
-	if (self->data != NULL) {
+	if (self->bytes != NULL) {
 		g_autofree gchar *datastr = NULL;
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)self->data_sz);
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
-			datastr = fu_memstrsafe(self->data,
-						self->data_sz,
+			datastr = fu_memstrsafe(g_bytes_get_data(self->bytes, NULL),
+						g_bytes_get_size(self->bytes),
 						0x0,
 						MIN(self->data_sz, 16),
 						NULL);
 		} else {
-			datastr = g_base64_encode(self->data, self->data_sz);
+			datastr = g_base64_encode(g_bytes_get_data(self->bytes, NULL),
+						  g_bytes_get_size(self->bytes));
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
 	}
@@ -332,32 +334,6 @@ fu_chunk_to_string(FuChunk *self)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunk");
 	fu_chunk_export(self, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bn);
-	return xb_builder_node_export(bn,
-				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-				      NULL);
-}
-
-/**
- * fu_chunk_array_to_string:
- * @chunks: (element-type FuChunk): array of chunks
- *
- * Converts all the chunked packets in an array to a string representation.
- *
- * Returns: (transfer full): a string
- *
- * Since: 1.0.1
- **/
-gchar *
-fu_chunk_array_to_string(GPtrArray *chunks)
-{
-	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunks");
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "chunk", NULL);
-		fu_chunk_export(chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bc);
-	}
 	return xb_builder_node_export(bn,
 				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
 					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
@@ -387,46 +363,11 @@ fu_chunk_array_mutable_new(guint8 *data,
 			   gsize page_sz,
 			   gsize packet_sz)
 {
-	GPtrArray *chunks;
-
-	g_return_val_if_fail(data != NULL, NULL);
-	g_return_val_if_fail(data_sz > 0, NULL);
-
-	chunks = fu_chunk_array_new(data, data_sz, addr_offset, page_sz, packet_sz);
-	if (chunks == NULL)
-		return NULL;
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		chk->is_mutable = TRUE;
-	}
-	return chunks;
-}
-
-/**
- * fu_chunk_array_new:
- * @data: (nullable): an optional linear blob of memory
- * @data_sz: size of @data_sz
- * @addr_offset: the hardware address offset, or 0
- * @page_sz: the hardware page size, or 0
- * @packet_sz: the transfer size, or 0
- *
- * Chunks a linear blob of memory into packets, ensuring each packet does not
- * cross a package boundary and is less that a specific transfer size.
- *
- * Returns: (transfer container) (element-type FuChunk): array of packets
- *
- * Since: 1.1.2
- **/
-GPtrArray *
-fu_chunk_array_new(const guint8 *data,
-		   gsize data_sz,
-		   gsize addr_offset,
-		   gsize page_sz,
-		   gsize packet_sz)
-{
 	GPtrArray *chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	gsize offset = 0;
 
+	g_return_val_if_fail(data != NULL, NULL);
+	g_return_val_if_fail(data_sz > 0, NULL);
 	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
 
 	while (offset < data_sz) {
@@ -448,15 +389,6 @@ fu_chunk_array_new(const guint8 *data,
 		    fu_chunk_new(chunks->len, page, address_offset, data + offset, chunksz));
 		offset += chunksz;
 	}
-
-#ifndef SUPPORTED_BUILD
-	/* show the programmer a warning */
-	if (page_sz == 0x0 && chunks->len > 10000) {
-		g_warning("fu_chunk_array_new() generated a lot of chunks (%u), "
-			  "maybe use FuChunkArray instead?",
-			  chunks->len);
-	}
-#endif
 	return chunks;
 }
 
@@ -505,6 +437,8 @@ fu_chunk_finalize(GObject *object)
 	FuChunk *self = FU_CHUNK(object);
 	if (self->bytes != NULL)
 		g_bytes_unref(self->bytes);
+	if (self->stream != NULL)
+		g_object_unref(self->stream);
 	G_OBJECT_CLASS(fu_chunk_parent_class)->finalize(object);
 }
 

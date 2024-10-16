@@ -405,12 +405,16 @@ fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) data_pkt = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(data_pkt, blob);
 		if (!fu_logitech_scribe_device_send_upd_cmd(self,
 							    usb_device,
 							    CMD_DATA_TRANSFER,

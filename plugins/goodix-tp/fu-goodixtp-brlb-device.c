@@ -78,42 +78,54 @@ fu_goodixtp_brlb_device_hid_read(FuGoodixtpBrlbDevice *self,
 static gboolean
 fu_goodixtp_brlb_device_hid_write(FuGoodixtpBrlbDevice *self,
 				  gsize addr,
-				  guint8 *buf,
+				  const guint8 *buf,
 				  gsize bufsz,
 				  GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, addr, 0, PACKAGE_LEN - 12);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) fw = g_bytes_new(buf, bufsz);
+
+	chunks = fu_chunk_array_new_from_bytes(fw, addr, FU_CHUNK_PAGESZ_NONE, PACKAGE_LEN - 12);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		guint8 hidbuf[PACKAGE_LEN] = {0};
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+
 		hidbuf[0] = REPORT_ID;
 		hidbuf[1] = I2C_DIRECT_RW;
-		if (i == chunks->len - 1)
+		if (i == fu_chunk_array_length(chunks) - 1)
 			hidbuf[2] = 0x00;
 		else
 			hidbuf[2] = 0x01;
 		hidbuf[3] = i;
-		hidbuf[4] = fu_chunk_get_data_sz(chk) + 7;
+		hidbuf[4] = g_bytes_get_size(blob) + 7;
 		hidbuf[5] = I2C_WRITE_FLAG;
 		fu_memwrite_uint32(hidbuf + 6, fu_chunk_get_address(chk), G_BIG_ENDIAN);
-		fu_memwrite_uint16(hidbuf + 10, fu_chunk_get_data_sz(chk), G_BIG_ENDIAN);
+		fu_memwrite_uint16(hidbuf + 10, g_bytes_get_size(blob), G_BIG_ENDIAN);
 		if (!fu_memcpy_safe(hidbuf,
 				    sizeof(hidbuf),
 				    12,
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0,
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		if (!fu_goodixtp_hid_device_set_report(FU_GOODIXTP_HID_DEVICE(self),
 						       hidbuf,
-						       fu_chunk_get_data_sz(chk) + 12,
+						       g_bytes_get_size(blob) + 12,
 						       error)) {
 			g_prefix_error(error,
 				       "failed write data to addr=0x%x, len=%d: ",
 				       (guint)fu_chunk_get_address(chk),
-				       (gint)fu_chunk_get_data_sz(chk));
+				       (gint)g_bytes_get_size(blob));
 			return FALSE;
 		}
 	}
@@ -291,14 +303,18 @@ fu_goodixtp_brlb_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 	guint32 checksum = 0;
 	guint8 buf_align4k[RAM_BUFFER_SIZE] = {0};
 	guint8 cmdbuf[10] = {0};
+	g_autoptr(GBytes) blob = NULL;
 
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	if (!fu_memcpy_safe(buf_align4k,
 			    sizeof(buf_align4k),
 			    0,
-			    (guint8 *)fu_chunk_get_data(chk),
-			    fu_chunk_get_data_sz(chk),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0,
-			    fu_chunk_get_data_sz(chk),
+			    g_bytes_get_size(blob),
 			    error))
 		return FALSE;
 

@@ -348,10 +348,14 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self),
 							    NULL,
@@ -360,8 +364,8 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 		if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 							  UC_ISP_TARGET_ADDR,
 							  UC_FOREGROUND_ISP_DATA_OPCODE,
-							  fu_chunk_get_data(chk),
-							  fu_chunk_get_data_sz(chk),
+							  g_bytes_get_data(blob, NULL),
+							  g_bytes_get_size(blob),
 							  error)) {
 			g_prefix_error(error,
 				       "failed to write @0x%04x: ",

@@ -408,25 +408,29 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4];
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
-		buf[2] = fu_chunk_get_data_sz(chk);
-		buf[3] = fu_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
-							       fu_chunk_get_data_sz(chk));
+		buf[2] = g_bytes_get_size(blob);
+		buf[3] = fu_colorhug_device_calculate_checksum(g_bytes_get_data(blob, NULL),
+							       g_bytes_get_size(blob));
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
 				    0x4, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		if (!fu_colorhug_device_msg(self,
@@ -466,15 +470,19 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 		guint8 buf[3];
 		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE + 1];
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* set address */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
-		buf[2] = fu_chunk_get_data_sz(chk);
+		buf[2] = g_bytes_get_size(blob);
 		if (!fu_colorhug_device_msg(self,
 					    CH_CMD_READ_FLASH,
 					    buf,
@@ -491,7 +499,8 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 		}
 
 		/* verify */
-		if (memcmp(buf_out + 1, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk)) != 0) {
+		if (memcmp(buf_out + 1, g_bytes_get_data(blob, NULL), g_bytes_get_size(blob)) !=
+		    0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -499,7 +508,7 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 				    "address 0x%0x, length 0x%0x",
 				    i,
 				    (guint)fu_chunk_get_address(chk),
-				    (guint)fu_chunk_get_data_sz(chk));
+				    (guint)g_bytes_get_size(blob));
 			return FALSE;
 		}
 

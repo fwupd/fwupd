@@ -81,17 +81,21 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf[FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ + 7] = {0x00, 0x01, 0xFF};
 		g_autoptr(GBytes) blob_chunk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* build data packet */
 		fu_memwrite_uint32(buf + 0x3, 0x0, G_LITTLE_ENDIAN); /* addr, always zero */
 		memcpy(buf + 0x7,				     /* nocheck:blocked */
-		       fu_chunk_get_data(chk),
-		       fu_chunk_get_data_sz(chk));
+		       g_bytes_get_data(blob, NULL),
+		       g_bytes_get_size(blob));
 		buf[2] = fu_wac_module_bluetooth_id6_calculate_crc(
 		    buf + 0x7,
 		    FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ); /* include 0xFF for the possibly

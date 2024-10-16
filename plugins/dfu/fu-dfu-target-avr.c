@@ -554,7 +554,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 
 static gboolean
 fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
-					  GPtrArray *chunks,
+					  FuChunkArray *chunks,
 					  guint16 *page_last,
 					  gsize header_sz,
 					  FuProgress *progress,
@@ -579,11 +579,18 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
-		g_autoptr(GBytes) chunk_tmp = fu_chunk_get_bytes(chk);
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* select page if required */
 		if (fu_chunk_get_page(chk) != *page_last) {
@@ -614,7 +621,7 @@ fu_dfu_target_avr_download_element_chunks(FuDfuTarget *target,
 						1,
 					    G_BIG_ENDIAN);
 		fu_byte_array_set_size(buf, header_sz, 0x0);
-		fu_byte_array_append_bytes(buf, chunk_tmp);
+		fu_byte_array_append_bytes(buf, blob);
 		g_byte_array_append(buf, footer, sizeof(footer));
 
 		/* download data */
@@ -645,13 +652,13 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				   GError **error)
 {
 	FuDfuSector *sector;
-	const guint8 *data;
 	gsize header_sz = ATMEL_AVR32_CONTROL_BLOCK_SIZE;
 	guint16 page_last = G_MAXUINT16;
 	guint32 address;
 	guint32 address_offset = 0x0;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -669,7 +676,9 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 	fu_progress_step_done(progress);
 
 	/* verify the element isn't larger than the target size */
-	blob = fu_chunk_get_bytes(chk);
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	sector = fu_dfu_target_get_sector_default(target);
 	if (sector == NULL) {
 		g_set_error_literal(error,
@@ -703,12 +712,16 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 	}
 
 	/* chunk up the memory space into pages */
-	data = g_bytes_get_data(blob, NULL);
-	chunks = fu_chunk_array_new(data + address_offset,
+	blob2 = fu_bytes_new_offset(blob,
+				    address_offset,
 				    g_bytes_get_size(blob) - address_offset,
-				    fu_dfu_sector_get_address(sector),
-				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+				    error);
+	if (blob2 == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_bytes(blob2,
+					       fu_dfu_sector_get_address(sector),
+					       ATMEL_64KB_PAGE,
+					       ATMEL_MAX_TRANSFER_SIZE);
 	if (!fu_dfu_target_avr_download_element_chunks(target,
 						       chunks,
 						       &page_last,
@@ -766,7 +779,7 @@ static FuChunk *
 fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 					guint32 address,
 					gsize expected_size,
-					GPtrArray *chunks,
+					FuChunkArray *chunks,
 					FuProgress *progress,
 					GError **error)
 {
@@ -779,15 +792,18 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	/* process each chunk */
 	blobs = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
-	for (guint i = 0; i < chunks->len; i++) {
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 		GBytes *blob_tmp = NULL;
-		FuChunk *chk = g_ptr_array_index(chunks, i);
 
 		/* select page if required */
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return NULL;
 		if (fu_chunk_get_page(chk) != page_last) {
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 			if (fu_device_has_private_flag(fu_device_get_proxy(FU_DEVICE(target)),
@@ -832,7 +848,7 @@ fu_dfu_target_avr_upload_element_chunks(FuDfuTarget *target,
 	/* truncate the image if any sectors are empty, i.e. all 0xff */
 	if (chunk_valid == G_MAXUINT) {
 		g_debug("all %u chunks are empty", blobs->len);
-		g_ptr_array_set_size(chunks, 0);
+		g_ptr_array_set_size(blobs, 0);
 	} else if (blobs->len != chunk_valid + 1) {
 		g_debug("truncating chunks from %u to %u", blobs->len, chunk_valid + 1);
 		g_ptr_array_set_size(blobs, chunk_valid + 1);
@@ -861,7 +877,7 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 {
 	FuDfuSector *sector;
 	g_autoptr(FuChunk) chk2 = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -897,11 +913,10 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 	address &= ~0x80000000;
 
 	/* chunk up the memory space into pages */
-	chunks = fu_chunk_array_new(NULL,
-				    maximum_size,
-				    address,
-				    ATMEL_64KB_PAGE,
-				    ATMEL_MAX_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_virtual(maximum_size,
+					    address,
+					    ATMEL_64KB_PAGE,
+					    ATMEL_MAX_TRANSFER_SIZE);
 	chk2 = fu_dfu_target_avr_upload_element_chunks(target,
 						       address,
 						       expected_size,

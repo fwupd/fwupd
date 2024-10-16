@@ -390,12 +390,16 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->fwstate.offset; i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		checksum_tmp += fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		checksum_tmp += fu_sum16_bytes(blob);
 	}
 
 	/* check current file is different with previous fw bin or not */
@@ -516,8 +520,13 @@ static gboolean
 fu_pxi_ble_device_write_payload(FuPxiBleDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	fu_byte_array_append_uint8(req, self->feature_report_id);
-	g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	fu_byte_array_append_bytes(req, blob);
 	return fu_pxi_ble_device_set_feature(self, req, error);
 }
 
@@ -528,13 +537,16 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	guint16 checksum;
 	guint16 checksum_device = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
+	g_autoptr(GBytes) chk_bytes = NULL;
 
 	/* send create fw object command */
 	if (!fu_pxi_ble_device_fw_object_create(self, chk, error))
 		return FALSE;
 
 	/* write payload */
+	chk_bytes = fu_chunk_get_bytes(chk, error);
+	if (chk_bytes == NULL)
+		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       fu_chunk_get_address(chk),
 					       FU_CHUNK_PAGESZ_NONE,
@@ -572,7 +584,7 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	}
 
 	/* the last chunk */
-	checksum = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	checksum = fu_sum16_bytes(chk_bytes);
 	self->fwstate.checksum += checksum;
 	if (checksum_device != self->fwstate.checksum) {
 		g_set_error(error,

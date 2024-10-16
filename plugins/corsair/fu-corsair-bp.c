@@ -152,12 +152,14 @@ fu_corsair_bp_flush_input_reports(FuCorsairBp *self)
 
 static gboolean
 fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
-				FuChunk *chunk,
+				FuChunk *chk,
 				guint32 firmware_size,
 				GError **error)
 {
 	guint8 init_cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x0d, 0x00, 0x03};
 	guint8 write_cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x06, 0x00};
+	g_autoptr(GBytes) blob = NULL;
+
 	if (!fu_corsair_bp_command(self, init_cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
 		g_prefix_error(error, "firmware init fail: ");
 		return FALSE;
@@ -172,13 +174,16 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 		g_prefix_error(error, "cannot serialize firmware size: ");
 		return FALSE;
 	}
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	if (!fu_memcpy_safe(write_cmd,
 			    sizeof(write_cmd),
 			    CORSAIR_FIRST_CHUNK_HEADER_SIZE,
-			    fu_chunk_get_data(chunk),
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0,
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_size(blob),
 			    error)) {
 		g_prefix_error(error, "cannot set data: ");
 		return FALSE;
@@ -191,16 +196,21 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 }
 
 static gboolean
-fu_corsair_bp_write_chunk(FuCorsairBp *self, FuChunk *chunk, GError **error)
+fu_corsair_bp_write_chunk(FuCorsairBp *self, FuChunk *chk, GError **error)
 {
 	guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x07};
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	if (!fu_memcpy_safe(cmd,
 			    sizeof(cmd),
 			    CORSAIR_NEXT_CHUNKS_HEADER_SIZE,
-			    fu_chunk_get_data(chunk),
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
 			    0,
-			    fu_chunk_get_data_sz(chunk),
+			    g_bytes_get_size(blob),
 			    error)) {
 		g_prefix_error(error, "cannot set data: ");
 		return FALSE;
@@ -326,8 +336,9 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	gsize firmware_size;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(FuChunk) firstChunk = NULL;
-	g_autoptr(GBytes) rest_of_firmware = NULL;
+	g_autoptr(FuChunk) chk0 = NULL;
+	g_autoptr(GBytes) chk0_bytes = NULL;
+	g_autoptr(GBytes) trailing_bytes = NULL;
 	FuCorsairBp *self = FU_CORSAIR_BP(device);
 	guint32 first_chunk_size = self->cmd_write_size - CORSAIR_FIRST_CHUNK_HEADER_SIZE;
 
@@ -351,21 +362,22 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	firstChunk = fu_chunk_new(0, 0, 0, g_bytes_get_data(blob, NULL), first_chunk_size);
-	rest_of_firmware =
+	chk0_bytes = g_bytes_new_from_bytes(blob, 0, first_chunk_size);
+	chk0 = fu_chunk_bytes_new(chk0_bytes);
+	trailing_bytes =
 	    fu_bytes_new_offset(blob, first_chunk_size, firmware_size - first_chunk_size, error);
-	if (rest_of_firmware == NULL) {
+	if (trailing_bytes == NULL) {
 		g_prefix_error(error, "cannot get firmware past first chunk: ");
 		return FALSE;
 	}
 	chunks =
-	    fu_chunk_array_new_from_bytes(rest_of_firmware,
+	    fu_chunk_array_new_from_bytes(trailing_bytes,
 					  first_chunk_size,
 					  FU_CHUNK_PAGESZ_NONE,
 					  self->cmd_write_size - CORSAIR_NEXT_CHUNKS_HEADER_SIZE);
 
 	if (!fu_corsair_bp_write_firmware_chunks(self,
-						 firstChunk,
+						 chk0,
 						 chunks,
 						 progress,
 						 g_bytes_get_size(blob),

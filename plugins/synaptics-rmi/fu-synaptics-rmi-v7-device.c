@@ -219,12 +219,16 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(req, blob);
 		if (!fu_synaptics_rmi_device_write(self,
 						   address,
 						   req,
@@ -325,7 +329,9 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 			g_prefix_error(error, "failed to write signature command: ");
 			return FALSE;
 		}
-		chk_blob = fu_chunk_get_bytes(chk);
+		chk_blob = fu_chunk_get_bytes(chk, error);
+		if (chk_blob == NULL)
+			return FALSE;
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
 							     chk_blob,
@@ -415,7 +421,9 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 			g_prefix_error(error, "failed to flash command: ");
 			return FALSE;
 		}
-		chk_blob = fu_chunk_get_bytes(chk);
+		chk_blob = fu_chunk_get_bytes(chk, error);
+		if (chk_blob == NULL)
+			return FALSE;
 		if (!fu_synaptics_rmi_v7_device_write_blocks(self,
 							     f34->data_base + 0x5,
 							     chk_blob,

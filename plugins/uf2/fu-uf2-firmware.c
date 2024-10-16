@@ -31,17 +31,13 @@ G_DEFINE_TYPE(FuUf2Firmware, fu_uf2_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, GError **error)
 {
-	gsize bufsz = fu_chunk_get_data_sz(chk);
-	const guint8 *buf = fu_chunk_get_data(chk);
 	guint32 flags = 0;
 	guint32 datasz = 0;
 	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(GInputStream) stream = fu_chunk_get_stream(chk);
 
 	/* parse */
-	st = fu_struct_uf2_parse(fu_chunk_get_data(chk),
-				 fu_chunk_get_data_sz(chk),
-				 0, /* offset */
-				 error);
+	st = fu_struct_uf2_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	flags = fu_struct_uf2_get_flags(st);
@@ -105,13 +101,16 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 		}
 	}
 	if (flags & FU_UF2_FIRMWARE_BLOCK_FLAG_HAS_EXTENSION_TAG) {
+		gsize bufsz = 0;
 		gsize offset = FU_STRUCT_UF2_OFFSET_DATA;
+		if (!fu_input_stream_size(stream, &bufsz, error))
+			return FALSE;
 		while (offset < bufsz) {
 			guint8 sz = 0;
 			guint32 tag = 0;
 
 			/* [SZ][TAG][TAG][TAG][TAG][DATA....] */
-			if (!fu_memread_uint8_safe(buf, bufsz, offset, &sz, error))
+			if (!fu_input_stream_read_u8(stream, offset, &sz, error))
 				return FALSE;
 			if (sz < 4) {
 				g_set_error_literal(error,
@@ -120,38 +119,27 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 						    "invalid extension tag size");
 				return FALSE;
 			}
-			if (!fu_memread_uint32_safe(buf,
-						    bufsz,
-						    offset,
-						    &tag,
-						    G_LITTLE_ENDIAN,
-						    error))
+			if (!fu_input_stream_read_u32(stream, offset, &tag, G_LITTLE_ENDIAN, error))
 				return FALSE;
 			tag &= 0xFFFFFF;
 			if (tag == FU_U2F_FIRMWARE_TAG_VERSION) {
-				g_autofree gchar *utf8buf = g_malloc0(sz);
-				if (!fu_memcpy_safe((guint8 *)utf8buf,
-						    sz,
-						    0x0, /* dst */
-						    buf,
-						    bufsz,
-						    offset + 0x4, /* src */
-						    sz - 4,
-						    error))
+				g_autofree gchar *str = NULL;
+				str = fu_input_stream_read_string(stream,
+								  offset + 0x4,
+								  sz - 4,
+								  error);
+				if (str == NULL)
 					return FALSE;
-				fu_firmware_set_version(FU_FIRMWARE(self), utf8buf);
+				fu_firmware_set_version(FU_FIRMWARE(self), str);
 			} else if (tag == FU_U2F_FIRMWARE_TAG_DESCRIPTION) {
-				g_autofree gchar *utf8buf = g_malloc0(sz);
-				if (!fu_memcpy_safe((guint8 *)utf8buf,
-						    sz,
-						    0x0, /* dst */
-						    buf,
-						    bufsz,
-						    offset + 0x4, /* src */
-						    sz - 4,
-						    error))
+				g_autofree gchar *str = NULL;
+				str = fu_input_stream_read_string(stream,
+								  offset + 0x4,
+								  sz - 4,
+								  error);
+				if (str == NULL)
 					return FALSE;
-				fu_firmware_set_id(FU_FIRMWARE(self), utf8buf);
+				fu_firmware_set_id(FU_FIRMWARE(self), str);
 			} else {
 				if (g_getenv("FWUPD_FUZZER_RUNNING") == NULL)
 					g_warning("unknown tag 0x%06x", tag);
@@ -208,6 +196,7 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
 	g_autoptr(GByteArray) st = fu_struct_uf2_new();
+	g_autoptr(GBytes) blob = NULL;
 
 	/* optional */
 	if (fu_firmware_get_idx(FU_FIRMWARE(self)) > 0)
@@ -217,13 +206,19 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	addr += fu_chunk_get_idx(chk) * fu_chunk_get_data_sz(chk);
 
 	/* build UF2 packet */
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return NULL;
 	fu_struct_uf2_set_flags(st, flags);
 	fu_struct_uf2_set_target_addr(st, addr);
-	fu_struct_uf2_set_payload_size(st, fu_chunk_get_data_sz(chk));
+	fu_struct_uf2_set_payload_size(st, g_bytes_get_size(blob));
 	fu_struct_uf2_set_block_no(st, fu_chunk_get_idx(chk));
 	fu_struct_uf2_set_num_blocks(st, chk_len);
 	fu_struct_uf2_set_family_id(st, fu_firmware_get_idx(FU_FIRMWARE(self)));
-	if (!fu_struct_uf2_set_data(st, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), error))
+	if (!fu_struct_uf2_set_data(st,
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    error))
 		return NULL;
 
 	/* success */

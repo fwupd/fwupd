@@ -12,6 +12,7 @@
 #include "fu-chunk-array.h"
 #include "fu-chunk-private.h"
 #include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
 
 /**
  * FuChunkArray:
@@ -30,7 +31,14 @@ struct _FuChunkArray {
 	gsize total_size;
 };
 
-G_DEFINE_TYPE(FuChunkArray, fu_chunk_array, G_TYPE_OBJECT)
+static void
+fu_chunk_array_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuChunkArray,
+		       fu_chunk_array,
+		       G_TYPE_OBJECT,
+		       0,
+		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_chunk_array_codec_iface_init))
 
 /**
  * fu_chunk_array_length:
@@ -121,16 +129,12 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 		g_autoptr(GBytes) blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
 		chk = fu_chunk_bytes_new(blob_chk);
 	} else if (self->stream != NULL) {
-		g_autoptr(GBytes) blob_chk =
-		    fu_input_stream_read_bytes(self->stream, offset, chunksz, NULL, error);
-		if (blob_chk == NULL) {
-			g_prefix_error(error,
-				       "failed to get stream at 0x%x for 0x%x: ",
-				       (guint)offset,
-				       (guint)chunksz);
+		g_autoptr(GInputStream) partial_stream =
+		    fu_partial_input_stream_new(self->stream, offset, chunksz, error);
+		if (partial_stream == NULL)
 			return NULL;
-		}
-		chk = fu_chunk_bytes_new(blob_chk);
+		chk = fu_chunk_stream_new(partial_stream);
+		fu_chunk_set_data_sz(chk, chunksz);
 	} else {
 		chk = fu_chunk_bytes_new(NULL);
 		fu_chunk_set_data_sz(chk, chunksz);
@@ -259,6 +263,26 @@ fu_chunk_array_new_from_stream(GInputStream *stream,
 	return g_steal_pointer(&self);
 }
 
+static gchar *
+fu_chunk_array_to_string(FwupdCodec *codec)
+{
+	FuChunkArray *self = FU_CHUNK_ARRAY(codec);
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("chunks");
+	for (guint i = 0; i < fu_chunk_array_length(self); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "chunk", NULL);
+		chk = fu_chunk_array_index(self, i, NULL);
+		if (chk == NULL)
+			return NULL;
+		fu_chunk_export(chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bc);
+	}
+	return xb_builder_node_export(bn,
+				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+					  XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+					  XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				      NULL);
+}
+
 static void
 fu_chunk_array_finalize(GObject *object)
 {
@@ -269,6 +293,12 @@ fu_chunk_array_finalize(GObject *object)
 	if (self->stream != NULL)
 		g_object_unref(self->stream);
 	G_OBJECT_CLASS(fu_chunk_array_parent_class)->finalize(object);
+}
+
+static void
+fu_chunk_array_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->to_string = fu_chunk_array_to_string;
 }
 
 static void

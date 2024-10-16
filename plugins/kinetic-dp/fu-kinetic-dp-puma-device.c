@@ -146,15 +146,19 @@ fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
 	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   PUMA_DPCD_DATA_ADDR + fu_chunk_get_address(chk),
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
+					   g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob),
 					   FU_KINETIC_DP_DEVICE_TIMEOUT,
 					   error)) {
 			g_prefix_error(error, "failed at 0x%x: ", (guint)fu_chunk_get_address(chk));
@@ -193,7 +197,9 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 			return FALSE;
 
 		/* send a maximum 32KB chunk of payload to AUX window */
-		chk_blob = fu_chunk_get_bytes(chk);
+		chk_blob = fu_chunk_get_bytes(chk, error);
+		if (chk_blob == NULL)
+			return FALSE;
 		if (!fu_kinetic_dp_puma_device_send_chunk(self, io_channel, chk_blob, error)) {
 			g_prefix_error(error,
 				       "failed to AUX write at 0x%x: ",

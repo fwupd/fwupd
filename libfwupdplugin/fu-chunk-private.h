@@ -11,6 +11,8 @@
 #include "fu-chunk.h"
 #include "fu-firmware.h"
 
+FuChunk *
+fu_chunk_stream_new(GInputStream *stream) G_GNUC_NON_NULL(1);
 void
 fu_chunk_set_data_sz(FuChunk *self, gsize data_sz) G_GNUC_NON_NULL(1);
 void

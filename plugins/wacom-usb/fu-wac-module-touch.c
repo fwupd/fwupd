@@ -70,10 +70,14 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf[128 + 7] = {0xff};
 		g_autoptr(GBytes) blob_chunk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* build G11T data packet */
@@ -85,10 +89,10 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
 				    0x07, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error)) {
 			g_prefix_error(error, "wacom touch module failed to memcpy: ");
 			return FALSE;

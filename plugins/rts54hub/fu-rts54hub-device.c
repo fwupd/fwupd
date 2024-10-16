@@ -469,17 +469,21 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* write chunk */
 		if (!fu_rts54hub_device_write_flash(self,
 						    fu_chunk_get_address(chk),
-						    fu_chunk_get_data(chk),
-						    fu_chunk_get_data_sz(chk),
+						    g_bytes_get_data(blob, NULL),
+						    g_bytes_get_size(blob),
 						    error))
 			return FALSE;
 

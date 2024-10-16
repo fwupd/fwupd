@@ -201,23 +201,35 @@ fu_genesys_hubhid_device_command_write(FuGenesysHubhidDevice *self,
 
 	/* send report */
 	if (setup->length > 0) {
-		g_autoptr(GPtrArray) chunks =
-		    fu_chunk_array_new(data, setup->length, 0, 0, buf_report->len);
+		g_autoptr(GBytes) fw = g_bytes_new(data, setup->length);
+		g_autoptr(FuChunkArray) chunks = NULL;
+
+		chunks = fu_chunk_array_new_from_bytes(fw,
+						       FU_CHUNK_ADDR_OFFSET_NONE,
+						       FU_CHUNK_PAGESZ_NONE,
+						       buf_report->len);
 		if (progress != NULL) {
 			fu_progress_set_id(progress, G_STRLOC);
-			fu_progress_set_steps(progress, chunks->len);
+			fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 		}
-		for (guint i = 0; i < chunks->len; i++) {
-			FuChunk *chk = g_ptr_array_index(chunks, i);
+		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+			g_autoptr(FuChunk) chk = NULL;
+			g_autoptr(GBytes) blob = NULL;
 
+			chk = fu_chunk_array_index(chunks, i, error);
+			if (chk == NULL)
+				return FALSE;
+			blob = fu_chunk_get_bytes(chk, error);
+			if (blob == NULL)
+				return FALSE;
 			memset(buf_report->data, 0, buf_report->len);
 			if (!fu_memcpy_safe(buf_report->data,
 					    buf_report->len,
 					    0, /* dst */
-					    fu_chunk_get_data(chk),
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_data(blob, NULL),
+					    g_bytes_get_size(blob),
 					    0x0, /* src */
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_size(blob),
 					    error)) {
 				g_prefix_error(error,
 					       "error setting report data at 0x%04x: ",

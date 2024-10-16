@@ -225,14 +225,19 @@ fu_steelseries_sonic_write_to_ram_chunk(FuSteelseriesSonic *self,
 {
 	g_autoptr(FuStructSteelseriesSonicWriteToRamReq) st_req =
 	    fu_struct_steelseries_sonic_write_to_ram_req_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
 	fu_struct_steelseries_sonic_write_to_ram_req_set_opcode(
 	    st_req,
 	    FU_STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[chip]);
 	fu_struct_steelseries_sonic_write_to_ram_req_set_offset(st_req, fu_chunk_get_address(chk));
 	fu_struct_steelseries_sonic_write_to_ram_req_set_size(st_req, fu_chunk_get_data_sz(chk));
 	if (!fu_struct_steelseries_sonic_write_to_ram_req_set_data(st_req,
-								   fu_chunk_get_data(chk),
-								   fu_chunk_get_data_sz(chk),
+								   g_bytes_get_data(blob, NULL),
+								   g_bytes_get_size(blob),
 								   error))
 		return FALSE;
 	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
@@ -288,7 +293,9 @@ fu_steelseries_sonic_write_to_flash_chunk(FuSteelseriesSonic *self,
 	g_autoptr(FuStructSteelseriesSonicWriteToFlashReq) st_req =
 	    fu_struct_steelseries_sonic_write_to_flash_req_new();
 
-	chk_blob = fu_chunk_get_bytes(chk);
+	chk_blob = fu_chunk_get_bytes(chk, error);
+	if (chk_blob == NULL)
+		return FALSE;
 	if (!fu_steelseries_sonic_write_to_ram(self,
 					       chip,
 					       fu_chunk_get_address(chk),

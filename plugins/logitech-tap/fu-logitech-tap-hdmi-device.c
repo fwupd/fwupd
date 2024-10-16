@@ -332,22 +332,26 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
 		/* if needed, pad the last block to kLogiDefaultImageBlockSize size,
 		 * so that device always gets each block of kLogiDefaultImageBlockSize */
 		g_autofree guint8 *data_pkt = g_malloc0(kLogiDefaultImageBlockSize);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_memcpy_safe(data_pkt,
 				    kLogiDefaultImageBlockSize,
 				    0x0,
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0,
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,

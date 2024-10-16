@@ -52,7 +52,7 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 gboolean
 fu_vli_device_spi_erase(FuVliDevice *self,
 			guint32 addr,
-			gsize sz,
+			GBytes *fw,
 			FuProgress *progress,
 			GError **error);
 gboolean
@@ -77,7 +77,6 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 gboolean
 fu_vli_device_spi_write(FuVliDevice *self,
 			guint32 address,
-			const guint8 *buf,
-			gsize bufsz,
+			GBytes *fw,
 			FuProgress *progress,
 			GError **error);

@@ -988,7 +988,9 @@ fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		chk_blob = fu_chunk_get_bytes(chk);
+		chk_blob = fu_chunk_get_bytes(chk, error);
+		if (chk_blob == NULL)
+			return FALSE;
 		if (!fu_logitech_bulkcontroller_device_upd_send_cmd(
 			self,
 			FU_LOGITECH_BULKCONTROLLER_CMD_DATA_TRANSFER,

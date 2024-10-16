@@ -467,6 +467,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) buf_verify = NULL;
+	g_autoptr(GBytes) blob0 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(FuChunk) chk0 = NULL;
@@ -528,12 +529,18 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 
 	/* write blocks */
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(blocks, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(blocks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		if (!fu_vli_pd_parade_device_block_write(self,
 							 fu_chunk_get_idx(chk),
-							 fu_chunk_get_data(chk),
+							 g_bytes_get_data(blob, NULL),
 							 error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
@@ -549,7 +556,10 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	chk0 = fu_chunk_array_index(blocks, 0, error);
 	if (chk0 == NULL)
 		return FALSE;
-	g_byte_array_append(buf_verify, fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0));
+	blob0 = fu_chunk_get_bytes(chk0, error);
+	if (blob0 == NULL)
+		return FALSE;
+	fu_byte_array_append_bytes(buf_verify, blob0);
 
 	/*  verify SPI ROM, ignoring the boot config */
 	for (guint i = 1; i < fu_chunk_array_length(blocks); i++) {

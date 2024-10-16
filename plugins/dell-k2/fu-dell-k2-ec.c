@@ -764,19 +764,23 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 		for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
 			guint8 page_aligned[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
 			g_autoptr(FuChunk) page = NULL;
+			g_autoptr(GBytes) blob = NULL;
 
 			page = fu_chunk_array_index(pages, j, error);
 			if (page == NULL)
+				return FALSE;
+			blob = fu_chunk_get_bytes(page, error);
+			if (blob == NULL)
 				return FALSE;
 
 			/* strictly align the page size with 0x00 as packet */
 			if (!fu_memcpy_safe(page_aligned,
 					    sizeof(page_aligned),
 					    0,
-					    fu_chunk_get_data(page),
-					    fu_chunk_get_data_sz(page),
+					    g_bytes_get_data(blob, NULL),
+					    g_bytes_get_size(blob),
 					    0,
-					    fu_chunk_get_data_sz(page),
+					    g_bytes_get_size(blob),
 					    error))
 				return FALSE;
 

@@ -160,10 +160,14 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
 		g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* copy in payload */
@@ -185,23 +189,22 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 		}
 
 		fu_struct_aver_safeisp_req_set_custom_parm0(req, fu_chunk_get_address(chk));
-		fu_struct_aver_safeisp_req_set_custom_parm1(req, fu_chunk_get_data_sz(chk));
+		fu_struct_aver_safeisp_req_set_custom_parm1(req, g_bytes_get_size(blob));
 
 		if (!fu_memcpy_safe(req->data,
 				    req->len,
 				    FU_STRUCT_AVER_SAFEISP_REQ_OFFSET_DATA, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 
 		/* resize the last packet */
-		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
-		    (fu_chunk_get_data_sz(chk) < 512)) {
-			fu_byte_array_set_size(req, 12 + fu_chunk_get_data_sz(chk), 0x0);
-			fu_struct_aver_safeisp_req_set_custom_parm1(req, fu_chunk_get_data_sz(chk));
+		if ((i == (fu_chunk_array_length(chunks) - 1)) && (g_bytes_get_size(blob) < 512)) {
+			fu_byte_array_set_size(req, 12 + g_bytes_get_size(blob), 0x0);
+			fu_struct_aver_safeisp_req_set_custom_parm1(req, g_bytes_get_size(blob));
 		}
 		if (!fu_aver_safeisp_device_transfer(self, req, res, error))
 			return FALSE;

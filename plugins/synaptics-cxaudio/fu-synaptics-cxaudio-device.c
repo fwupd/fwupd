@@ -149,6 +149,7 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 inbuf[FU_SYNAPTICS_CXAUDIO_INPUT_REPORT_SIZE] = {0};
 		guint8 outbuf[FU_SYNAPTICS_CXAUDIO_OUTPUT_REPORT_SIZE] = {0};
+		g_autoptr(GBytes) blob = NULL;
 
 		/* first byte is always report ID */
 		outbuf[0] = FU_SYNAPTICS_CXAUDIO_MEM_WRITEID;
@@ -156,7 +157,10 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		/* set memory address and payload length (if relevant) */
 		if (fu_chunk_get_address(chk) >= 64 * 1024)
 			FU_BIT_SET(outbuf[1], 4);
-		outbuf[2] = fu_chunk_get_data_sz(chk);
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		outbuf[2] = g_bytes_get_size(blob);
 		fu_memwrite_uint16(outbuf + 3, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 
 		/* set memtype */
@@ -169,10 +173,10 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 			if (!fu_memcpy_safe(outbuf,
 					    sizeof(outbuf),
 					    idx_write, /* dst */
-					    fu_chunk_get_data(chk),
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_data(blob, NULL),
+					    g_bytes_get_size(blob),
 					    0x0, /* src */
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_size(blob),
 					    error))
 				return FALSE;
 		}
@@ -218,12 +222,12 @@ fu_synaptics_cxaudio_device_operation(FuSynapticsCxaudioDevice *self,
 		}
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_READ) {
 			if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_size(blob),
 					    0x0, /* dst */
 					    inbuf,
 					    sizeof(inbuf),
 					    idx_read, /* src */
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_size(blob),
 					    error))
 				return FALSE;
 		}

@@ -169,15 +169,19 @@ fu_ch347_device_send_command(FuCh347Device *self,
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			guint8 buf[1] = {0x0};
 			g_autoptr(FuChunk) chk = NULL;
+			g_autoptr(GBytes) blob = NULL;
 
 			/* prepare chunk */
 			chk = fu_chunk_array_index(chunks, i, error);
 			if (chk == NULL)
 				return FALSE;
+			blob = fu_chunk_get_bytes(chk, error);
+			if (blob == NULL)
+				return FALSE;
 			if (!fu_ch347_device_write(self,
 						   FU_CH347_CMD_SPI_OUT,
-						   fu_chunk_get_data(chk),
-						   fu_chunk_get_data_sz(chk),
+						   g_bytes_get_data(blob, NULL),
+						   g_bytes_get_size(blob),
 						   error))
 				return FALSE;
 			if (!fu_ch347_device_read(self,

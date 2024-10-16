@@ -596,7 +596,8 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	const guint8 *buf;
 	guint8 csum_buf[2] = {0x0};
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) fw_noiap = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	guint total_pages;
 
 	/* progress */
@@ -625,6 +626,8 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 	    self->force_table_addr >=
 		fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware))) {
 		g_autofree guint8 *buf2 = g_malloc0(bufsz);
+		g_autoptr(GBytes) fw2 = NULL;
+
 		if (!fu_memcpy_safe(buf2,
 				    bufsz,
 				    0x0, /* dst */
@@ -647,13 +650,9 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 				    "filling forcetable failed");
 			return FALSE;
 		}
-		chunks = fu_chunk_array_new(buf2 + iap_addr,
-					    bufsz - iap_addr,
-					    0x0,
-					    0x0,
-					    self->fw_page_size);
+		fw_noiap = g_bytes_new(buf2 + iap_addr, bufsz - iap_addr);
 		total_pages = (self->force_table_addr - iap_addr - 1) / self->fw_page_size + 1;
-		if (total_pages > chunks->len) {
+		if (total_pages > fu_chunk_array_length(chunks)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -662,32 +661,43 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 	} else {
-		chunks = fu_chunk_array_new(buf + iap_addr,
-					    bufsz - iap_addr,
-					    0x0,
-					    0x0,
-					    self->fw_page_size);
-		total_pages = chunks->len;
+		fw_noiap = fu_bytes_new_offset(fw, iap_addr, bufsz - iap_addr, error);
+		if (fw_noiap == NULL)
+			return FALSE;
+		total_pages = fu_chunk_array_length(chunks);
 	}
+
+	chunks = fu_chunk_array_new_from_bytes(fw_noiap,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       self->fw_page_size);
 	for (guint i = 0; i < total_pages; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
-		guint16 csum_tmp =
-		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
+		guint16 csum_tmp;
 		gsize blksz = self->fw_page_size + 3;
 		g_autofree guint8 *blk = g_malloc0(blksz);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		csum_tmp = fu_sum16w_bytes(blob, G_LITTLE_ENDIAN);
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */
 		if (!fu_memcpy_safe(blk,
 				    blksz,
 				    0x1, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
-		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 1, csum_tmp, G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(blk + g_bytes_get_size(blob) + 1, csum_tmp, G_LITTLE_ENDIAN);
 		if (!fu_elantp_hid_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;
 		fu_device_sleep(device,
@@ -709,7 +719,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 		checksum += csum_tmp;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
-						(gsize)chunks->len);
+						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
 

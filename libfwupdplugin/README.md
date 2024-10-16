@@ -159,5 +159,9 @@ Remember: Plugins should be upstream!
 
 * `fu_chunk_array_new_from_bytes()`: Add a page size, typically `FU_CHUNK_PAGESZ_NONE`
 * `fu_chunk_array_new_from_stream()`: Add a page size, typically `FU_CHUNK_PAGESZ_NONE`
+* `fu_chunk_array_new()`: Use `fu_chunk_array_new_from_bytes()` instead
+* `fu_chunk_get_bytes()`: Add a `GError()`
+* `fu_chunk_get_data()`: Use `fu_chunk_get_bytes()` instead
+* `fu_chunk_new()`: Use `fu_chunk_bytes_new()` instead
 * `fu_udev_device_ioctl()`: Use `fu_udev_device_ioctl_new()` instead
 * `FuUdevDeviceIoctlFlags`: Use `FuIoctlFlags` instead

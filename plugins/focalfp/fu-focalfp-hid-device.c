@@ -410,10 +410,14 @@ fu_focalfp_hid_device_write_chunks(FuFocalfpHidDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 uc_packet_type = MID_PACKET;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 		if (i == 0)
 			uc_packet_type = FIRST_PACKET;
@@ -422,8 +426,8 @@ fu_focalfp_hid_device_write_chunks(FuFocalfpHidDevice *self,
 
 		if (!fu_focalfp_hid_device_send_data(self,
 						     uc_packet_type,
-						     fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
+						     g_bytes_get_data(blob, NULL),
+						     g_bytes_get_size(blob),
 						     error)) {
 			g_prefix_error(error, "failed to write chunk %u: ", i);
 			return FALSE;

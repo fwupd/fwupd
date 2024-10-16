@@ -46,14 +46,18 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(FuStructTelinkDfuBlePkt) pkt = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* send chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		pkt = fu_telink_dfu_ble_device_create_packet((guint16)i,
-							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk));
+							     g_bytes_get_data(blob, NULL),
+							     g_bytes_get_size(blob));
 		if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 					   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
 					   pkt,

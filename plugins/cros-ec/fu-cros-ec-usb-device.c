@@ -476,7 +476,8 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	guint32 reply = 0;
 	g_autoptr(FuStructCrosEcUpdateFrameHeader) ufh =
 	    fu_struct_cros_ec_update_frame_header_new();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GInputStream) block_stream = fu_chunk_get_stream(helper->block);
 
 	/* first send the header */
 	fu_struct_cros_ec_update_frame_header_set_block_size(
@@ -505,19 +506,28 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	fu_progress_reset(helper->progress);
 
 	/* send the block, chunk by chunk */
-	chunks = fu_chunk_array_new(fu_chunk_get_data(helper->block),
-				    fu_chunk_get_data_sz(helper->block),
-				    0x00,
-				    0x00,
-				    self->chunk_len);
+	chunks = fu_chunk_array_new_from_stream(block_stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						self->chunk_len,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(helper->progress, G_STRLOC);
-	fu_progress_set_steps(helper->progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(helper->progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_cros_ec_usb_device_do_xfer(self,
-						   fu_chunk_get_data(chk),
-						   fu_chunk_get_data_sz(chk),
+						   g_bytes_get_data(blob, NULL),
+						   g_bytes_get_size(blob),
 						   NULL,
 						   0,
 						   FALSE,
@@ -576,7 +586,8 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 	const guint8 *data_ptr = NULL;
 	gsize data_len = 0;
 	g_autoptr(GBytes) img_bytes = NULL;
-	g_autoptr(GPtrArray) blocks = NULL;
+	g_autoptr(GBytes) img_bytes_trimmed = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	g_return_val_if_fail(section != NULL, FALSE);
 
@@ -585,9 +596,8 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 		g_prefix_error(error, "failed to find section image: ");
 		return FALSE;
 	}
-
 	data_ptr = (const guint8 *)g_bytes_get_data(img_bytes, &data_len);
-	if (data_ptr == NULL || data_len != section->size) {
+	if (data_len != section->size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -603,17 +613,28 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 		data_len--;
 	g_debug("trimmed %" G_GSIZE_FORMAT " trailing bytes", section->size - data_len);
 	g_debug("sending 0x%x bytes to 0x%x", (guint)data_len, section->offset);
+	img_bytes_trimmed = fu_bytes_new_offset(img_bytes, 0x0, data_len, error);
+	if (img_bytes_trimmed == NULL)
+		return FALSE;
 
 	/* send in chunks of PDU size */
-	blocks =
-	    fu_chunk_array_new(data_ptr, data_len, section->offset, 0x0, self->maximum_pdu_size);
+	chunks = fu_chunk_array_new_from_bytes(img_bytes_trimmed,
+					       section->offset,
+					       FU_CHUNK_PAGESZ_NONE,
+					       self->maximum_pdu_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, blocks->len);
-	for (guint i = 0; i < blocks->len; i++) {
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		FuCrosEcUsbBlockHelper helper = {
-		    .block = g_ptr_array_index(blocks, i),
 		    .progress = fu_progress_get_child(progress),
 		};
+		g_autoptr(FuChunk) chk = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		helper.block = chk;
+
 		if (!fu_device_retry(FU_DEVICE(self),
 				     fu_cros_ec_usb_device_transfer_block_cb,
 				     FU_CROS_EC_MAX_BLOCK_XFER_RETRIES,

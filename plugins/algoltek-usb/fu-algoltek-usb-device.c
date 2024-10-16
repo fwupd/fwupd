@@ -235,18 +235,23 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) st = fu_struct_algoltek_cmd_transfer_pkt_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+
 		fu_struct_algoltek_cmd_transfer_pkt_set_len(st,
 							    basic_data_size +
-								fu_chunk_get_data_sz(chk));
+								g_bytes_get_size(blob));
 		fu_struct_algoltek_cmd_transfer_pkt_set_cmd(st, FU_ALGOLTEK_CMD_ISP);
 		fu_struct_algoltek_cmd_transfer_pkt_set_address(st, fu_chunk_get_address(chk));
 		if (!fu_struct_algoltek_cmd_transfer_pkt_set_data(st,
-								  fu_chunk_get_data(chk),
-								  fu_chunk_get_data_sz(chk),
+								  g_bytes_get_data(blob, NULL),
+								  g_bytes_get_size(blob),
 								  error)) {
 			g_prefix_error(error, "assign isp data failure: ");
 			return FALSE;
@@ -391,11 +396,15 @@ fu_algoltek_usb_device_wrf(FuAlgoltekUsbDevice *self,
 		guint16 index;
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(buf, blob);
 
 		fu_byte_array_set_size(buf_parameter, 4, 0);
 		if ((i + 1) % 4 == 0)

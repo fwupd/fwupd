@@ -702,19 +702,23 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return NULL;
-		fu_byte_array_set_size(chunk_zlib, fu_chunk_get_data_sz(chk) * 2, 0x0);
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return NULL;
+		fu_byte_array_set_size(chunk_zlib, g_bytes_get_size(blob) * 2, 0x0);
 		if (priv->compressed) {
 			int zret;
 			z_stream zstrm = {
 			    .zalloc = fu_cab_firmware_zalloc,
 			    .zfree = fu_cab_firmware_zfree,
 			    .opaque = Z_NULL,
-			    .next_in = (guint8 *)fu_chunk_get_data(chk),
-			    .avail_in = fu_chunk_get_data_sz(chk),
+			    .next_in = (guint8 *)g_bytes_get_data(blob, NULL),
+			    .avail_in = g_bytes_get_size(blob),
 			    .next_out = chunk_zlib->data,
 			    .avail_out = chunk_zlib->len,
 			};
@@ -746,7 +750,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 			fu_byte_array_append_uint8(buf, (guint8)'K');
 			g_byte_array_append(buf, chunk_zlib->data, zstrm.total_out);
 		} else {
-			g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+			fu_byte_array_append_bytes(buf, blob);
 		}
 		g_ptr_array_add(chunks_zlib, g_steal_pointer(&buf));
 	}
