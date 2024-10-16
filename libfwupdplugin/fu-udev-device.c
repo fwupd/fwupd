@@ -606,6 +606,15 @@ fu_udev_device_get_open_flags(FuUdevDevice *self)
 }
 
 static void
+fu_udev_device_invalidate(FuDevice *device)
+{
+	FuUdevDevice *self = FU_UDEV_DEVICE(device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	priv->properties_valid = FALSE;
+	g_hash_table_remove_all(priv->properties);
+}
+
+static void
 fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
 {
 	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
@@ -2204,6 +2213,7 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->probe = fu_udev_device_probe;
 	device_class->rescan = fu_udev_device_rescan;
 	device_class->incorporate = fu_udev_device_incorporate;
+	device_class->invalidate = fu_udev_device_invalidate;
 	device_class->open = fu_udev_device_open;
 	device_class->close = fu_udev_device_close;
 	device_class->to_string = fu_udev_device_to_string;
