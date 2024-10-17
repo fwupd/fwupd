@@ -158,6 +158,9 @@ fu_uf2_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
+	/* the device automatically reboots */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
 	/* success */
 	return TRUE;
 }
