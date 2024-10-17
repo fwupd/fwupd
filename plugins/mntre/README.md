@@ -12,6 +12,7 @@ They use a slightly modified reset protocol, and then boot into the normal Raspe
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_1209&PID_6D07`
+* `USB\VID_1209&PID_6D07&REV_0001`
 
 Note that the VID is the shared https://pid.codes/1209/ VID.
 
