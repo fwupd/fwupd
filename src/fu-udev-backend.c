@@ -584,6 +584,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 		return FALSE;
 	}
 	source = g_unix_fd_source_new(self->netlink_fd, G_IO_IN);
+	g_source_set_static_name(source, "netlink");
 	g_source_set_callback(source, (GSourceFunc)fu_udev_backend_netlink_cb, self, NULL);
 	g_source_attach(source, NULL);
 
