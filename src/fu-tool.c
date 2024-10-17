@@ -2094,6 +2094,46 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_vercmp(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FwupdVersionFormat verfmt = FWUPD_VERSION_FORMAT_UNKNOWN;
+	gint rc;
+
+	/* sanity check */
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected VER1 VER2");
+		return FALSE;
+	}
+
+	/* optional version format */
+	if (g_strv_length(values) > 2) {
+		verfmt = fwupd_version_format_from_string(values[2]);
+		if (verfmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Version format %s not supported",
+				    values[2]);
+			return FALSE;
+		}
+	}
+
+	/* compare */
+	rc = fu_version_compare(values[0], values[1], verfmt);
+	if (rc > 0) {
+		fu_console_print(priv->console, "%s > %s", values[0], values[1]);
+	} else if (rc < 0) {
+		fu_console_print(priv->console, "%s < %s", values[0], values[1]);
+	} else {
+		fu_console_print(priv->console, "%s == %s", values[0], values[1]);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FwupdRemote *remote = NULL;
@@ -4945,6 +4985,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Disables virtual testing devices"),
 			      fu_util_disable_test_devices);
+	fu_util_cmd_array_add(cmd_array,
+			      "vercmp",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("VERSION1 VERSION2 [FORMAT]"),
+			      /* TRANSLATORS: command description */
+			      _("Compares two versions for equality"),
+			      fu_util_vercmp);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
