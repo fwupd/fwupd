@@ -19,6 +19,8 @@ fu_udev_device_set_number(FuUdevDevice *self, guint64 number) G_GNUC_NON_NULL(1)
 void
 fu_udev_device_set_subsystem(FuUdevDevice *self, const gchar *subsystem) G_GNUC_NON_NULL(1);
 void
+fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype) G_GNUC_NON_NULL(1);
+void
 fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *value);
 gboolean
 fu_udev_device_parse_number(FuUdevDevice *self, GError **error) G_GNUC_NON_NULL(1);
