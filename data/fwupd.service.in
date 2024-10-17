@@ -18,6 +18,7 @@ DeviceAllow=char-drm rw
 DeviceAllow=char-gpiochip rw
 DeviceAllow=char-hidraw rw
 DeviceAllow=char-mei rw
+DeviceAllow=char-mem rw
 DeviceAllow=char-nvme rw
 DeviceAllow=char-tpm rw
 DeviceAllow=char-usb rw
