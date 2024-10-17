@@ -1933,6 +1933,13 @@ fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *v
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
 	g_return_if_fail(key != NULL);
+
+	/* this are explicit properties too */
+	if (g_strcmp0(key, "DEVNAME") == 0)
+		fu_udev_device_set_device_file(self, value);
+	if (g_strcmp0(key, "DEVTYPE") == 0)
+		fu_udev_device_set_devtype(self, value);
+
 	g_hash_table_insert(priv->properties, g_strdup(key), g_strdup(value));
 }
 
