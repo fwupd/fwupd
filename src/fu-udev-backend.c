@@ -500,7 +500,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		} else if (g_strcmp0(kv[0], "SUBSYSTEM") == 0 && device_donor != NULL) {
 			fu_udev_device_set_subsystem(device_donor, kv[1]);
 		} else if (g_strcmp0(kv[0], "DEVTYPE") == 0 && device_donor != NULL) {
-			g_object_set(device_donor, "devtype", kv[1], NULL);
+			fu_udev_device_set_devtype(device_donor, kv[1]);
 		} else if (device_donor != NULL) {
 			fu_udev_device_add_property(device_donor, kv[0], kv[1]);
 		}
