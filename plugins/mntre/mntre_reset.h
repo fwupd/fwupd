@@ -28,7 +28,5 @@
 #define MNTRE_RESET_INTERFACE_NAME_STR "Reset"
 
 struct __attribute__((packed)) mntre_reset_firmware_version {
-	uint32_t major;
-	uint32_t minor;
-	uint32_t patch;
+	uint32_t version;
 };
