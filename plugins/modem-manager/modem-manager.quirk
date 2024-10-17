@@ -74,9 +74,9 @@ CounterpartGuid = PCI\VID_105B&PID_E0F5
 Summary = Foxconn T99W373 5G modem without eSIM for DW5932e
 CounterpartGuid = PCI\VID_105B&PID_E0F9
 
-# Quectel EG25-G
+# Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
-Summary = Quectel EG25-G modem
+Summary = Quectel EG25-G/EC25 modem
 CounterpartGuid = USB\VID_18D1&PID_D00D
 Flags = detach-at-fastboot-has-no-response
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
