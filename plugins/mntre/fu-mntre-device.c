@@ -18,6 +18,45 @@ struct _FuMntreDevice {
 G_DEFINE_TYPE(FuMntreDevice, fu_mntre_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
+fu_mntre_device_get_firmware_version(FuMntreDevice *self,
+				     GError **error,
+				     struct mntre_reset_firmware_version *firmware_version)
+{
+	g_autoptr(GError) error_local = NULL;
+	gsize actual_len = 0;
+
+	guint16 reset_interface = 2; // TODO
+
+	FuUsbDeviceClaimFlags flags = 0;
+
+	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self), reset_interface, flags, error)) {
+		g_prefix_error(error, "failed to claim HID interface: ");
+		return FALSE;
+	}
+
+	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
+					    FU_USB_DIRECTION_DEVICE_TO_HOST,
+					    FU_USB_REQUEST_TYPE_CLASS,
+					    FU_USB_RECIPIENT_INTERFACE,
+					    MNTRE_RESET_GET_FIRMWARE_VERSION,
+					    0,
+					    reset_interface,
+					    (guint8 *)firmware_version,
+					    sizeof(*firmware_version),
+					    &actual_len,
+					    2000,
+					    NULL,
+					    &error_local)) {
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to read firmware version: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_mntre_device_reset_into_bootsel(FuMntreDevice *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -70,6 +109,23 @@ fu_mntre_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 }
 
 static gboolean
+fu_mntre_device_ensure_version(FuMntreDevice *self, GError **error)
+{
+	g_autofree gchar *version = NULL;
+	struct mntre_reset_firmware_version firmware_version = {};
+
+	if (!fu_mntre_device_get_firmware_version(self, error, &firmware_version))
+		return FALSE;
+
+	version = g_strdup_printf("%08u", firmware_version.patch);
+
+	fu_device_set_version(FU_DEVICE(self), version);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
+
+	return TRUE;
+}
+
+static gboolean
 fu_mntre_device_setup(FuDevice *device, GError **error)
 {
 	FuMntreDevice *self = FU_MNTRE_DEVICE(device);
@@ -79,8 +135,9 @@ fu_mntre_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* TODO: get the version and other properties from the hardware while open */
-	fu_device_set_version(device, "0");
+	if (!fu_mntre_device_ensure_version(self, error)) {
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -100,7 +157,6 @@ fu_mntre_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_mntre_device_init(FuMntreDevice *self)
 {
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.uf2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
