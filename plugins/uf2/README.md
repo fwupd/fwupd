@@ -16,6 +16,8 @@ Writing any file to the MSD will cause the firmware to be written.
 Sometimes the device will restart and the volume will be unmounted and then
 mounted again. In some cases the volume may not “come back” until the user
 manually puts the device back in programming mode.
+If the device automatically restarts and does not "come back" in UF2 mode,
+the flag "will-disappear" should be set.
 
 Match the block devices using the VID, PID and UUID, and then create a
 UF2 device which can be used to flash firmware.

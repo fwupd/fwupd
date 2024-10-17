@@ -157,6 +157,11 @@ fu_uf2_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_AUTOMATICALLY_RESTARTS)) {
+		/* the device automatically reboots */
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
 	/* success */
 	return TRUE;
 }

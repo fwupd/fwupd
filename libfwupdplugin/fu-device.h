@@ -781,6 +781,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_AUTOMATICALLY_RESTARTS:
+ *
+ * The device automatically restarts after firmware is written to it.
+ *
+ * Since: 2.0.2
+ */
+#define FU_DEVICE_PRIVATE_FLAG_AUTOMATICALLY_RESTARTS "automatically-restarts"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
