@@ -91,6 +91,7 @@ parts:
                        -Dpython=/usr/bin/python3,
                        -Dplugin_flashrom=disabled,
                        -Dplugin_powerd=disabled,
+                       -Dplugin_snapd=enabled,
                        -Defi_os_dir=fwupd,
                        "-Dlibxmlb:gtkdoc=false",
                        "-Dlibxmlb:introspection=false",
