@@ -165,6 +165,8 @@ fu_mntre_device_init(FuMntreDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
+	/* revisions indicate incompatible hardware */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_device_add_counterpart_guid(FU_DEVICE(self), "BLOCK\\VEN_2E8A&DEV_0003");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100);
 }
