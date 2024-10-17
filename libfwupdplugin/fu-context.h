@@ -56,6 +56,14 @@ typedef enum {
 	 * Since: 2.0.2
 	 **/
 	FU_CONTEXT_QUIRK_SOURCE_DB,
+	/**
+	 * FU_CONTEXT_QUIRK_SOURCE_FALLBACK:
+	 *
+	 * A good fallback, perhaps from the PCI class information.
+	 *
+	 * Since: 2.0.2
+	 **/
+	FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
 } FuContextQuirkSource;
 
 /**

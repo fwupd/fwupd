@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-device-private.h"
 #include "fu-pci-device.h"
+#include "fu-quirks.h"
 #include "fu-string.h"
 
 /**
@@ -265,7 +267,6 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 		if (version != NULL) {
 			fu_device_set_version(device, version);
 			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-			fu_device_add_icon(FU_DEVICE(self), "video-display");
 		}
 	}
 
@@ -375,6 +376,231 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_pci_device_set_quirks_fallback(FuPciDevice *self, guint16 base)
+{
+	if (base == FU_PCI_DEVICE_BASE_CLS_MASS_STORAGE) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Mass Storage Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "drive-harddisk-solidstate",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_NETWORK) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Network Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "network-wired",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_DISPLAY) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Display Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "video-display",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_MULTIMEDIA) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Multimedia Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "audio-card",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_MEMORY) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Memory Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "drive-harddisk-solidstate",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_BRIDGE) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Bridge Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "dock",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_SIMPLE_COMMUNICATION) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Simple Communication Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "network-wired",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_BASE) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Base Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_INPUT) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Input Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_DOCKING) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Docking Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "dock",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_PROCESSORS) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Processor Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_SERIAL_BUS) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Serial Bus Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_WIRELESS) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Wireless Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "network-wireless",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_INTELLIGENT_IO) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Intelligent I/O Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_SATELLITE) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Satellite Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_ENCRYPTION) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Encryption Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "auth-fingerprint",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_SIGNAL_PROCESSING) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Signal Processing Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_ACCELERATOR) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Accelerator Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_ICON,
+				       "gpu",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+	if (base == FU_PCI_DEVICE_BASE_CLS_NON_ESSENTIAL) {
+		fu_device_set_quirk_kv(FU_DEVICE(self),
+				       FU_QUIRKS_NAME,
+				       "Non-essential Device",
+				       FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				       NULL);
+		return;
+	}
+}
+
+static void
+fu_pci_device_probe_complete(FuDevice *device)
+{
+	FuPciDevice *self = FU_PCI_DEVICE(device);
+	FuPciDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* FuUdevDevice->probe_complete */
+	FU_DEVICE_CLASS(fu_pci_device_parent_class)->probe_complete(device);
+
+	/* "Display Adapter" is much better than "Unknown Device" */
+	fu_pci_device_set_quirks_fallback(self, priv->class >> 16);
+}
+
+static void
 fu_pci_device_init(FuPciDevice *self)
 {
 }
@@ -385,5 +611,6 @@ fu_pci_device_class_init(FuPciDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_pci_device_to_string;
 	device_class->probe = fu_pci_device_probe;
+	device_class->probe_complete = fu_pci_device_probe_complete;
 	device_class->incorporate = fu_pci_device_to_incorporate;
 }

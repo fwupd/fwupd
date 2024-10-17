@@ -1802,6 +1802,9 @@ fu_device_set_quirk_kv(FuDevice *self,
 	}
 	if (g_strcmp0(key, FU_QUIRKS_ICON) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		if (fu_device_get_icons(self)->len > 0 &&
+		    source >= FU_CONTEXT_QUIRK_SOURCE_FALLBACK)
+			return TRUE;
 		for (guint i = 0; sections[i] != NULL; i++)
 			fu_device_add_icon(self, sections[i]);
 		return TRUE;
