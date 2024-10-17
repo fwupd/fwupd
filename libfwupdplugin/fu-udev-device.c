@@ -274,7 +274,8 @@ fu_udev_device_set_number(FuUdevDevice *self, guint64 number)
 	priv->number = number;
 }
 
-static void
+/* private */
+void
 fu_udev_device_set_devtype(FuUdevDevice *self, const gchar *devtype)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
