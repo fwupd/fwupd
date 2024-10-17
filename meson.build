@@ -263,6 +263,10 @@ endif
 endif
 libjcat = dependency('jcat', version: '>= 0.2.0', fallback: ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
+libblkid = dependency('blkid', required: false)
+if libblkid.found()
+  conf.set('HAVE_BLKID', '1')
+endif
 valgrind = dependency('valgrind', required: false)
 libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl'))
 if libcurl.found()
@@ -722,6 +726,7 @@ summary({
   'elogind': elogind,
   'gnutls': gnutls,
   'introspection': introspection.allowed(),
+  'libblkid': libblkid,
   'libcurl': libcurl,
   'libdrm': libdrm,
   'lzma': lzma,

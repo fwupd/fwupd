@@ -203,6 +203,9 @@ fu_usb_device_invalidate(FuDevice *device)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 
+	/* FuUdevDevice->invalidate */
+	FU_DEVICE_CLASS(fu_usb_device_parent_class)->invalidate(device);
+
 	priv->interfaces_valid = FALSE;
 	priv->bos_descriptors_valid = FALSE;
 	priv->hid_descriptors_valid = FALSE;
