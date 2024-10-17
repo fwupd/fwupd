@@ -59,6 +59,7 @@ _fwupdtool_cmd_list=(
 	'bind-driver'
 	'export-hwids'
 	'reboot-cleanup'
+	'vercmp'
 )
 
 _fwupdtool_opts=(
