@@ -80,7 +80,7 @@ fu_coswid_read_byte_array(cbor_item_t *item, GError **error)
 				    "item is not a bytestring");
 		return NULL;
 	}
-	if (cbor_string_handle(item) == NULL) {
+	if (cbor_bytestring_handle(item) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,

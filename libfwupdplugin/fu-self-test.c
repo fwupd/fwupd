@@ -731,6 +731,39 @@ fu_context_flags_func(void)
 }
 
 static void
+fu_context_udev_subsystems_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) plugin_names1 = NULL;
+	g_autoptr(GPtrArray) plugin_names2 = NULL;
+	g_autoptr(GPtrArray) udev_subsystems = NULL;
+
+	/* ensure we add the base subsystem too */
+	fu_context_add_udev_subsystem(ctx, "usb", NULL);
+	fu_context_add_udev_subsystem(ctx, "block:partition", "uf2");
+	udev_subsystems = fu_context_get_udev_subsystems(ctx);
+	g_assert_nonnull(udev_subsystems);
+	g_assert_cmpint(udev_subsystems->len, ==, 3);
+
+	/* add another plugin that can handle *all* block devices */
+	fu_context_add_udev_subsystem(ctx, "block", "uf3");
+
+	/* both specified, so return uf2 and uf3 */
+	plugin_names1 =
+	    fu_context_get_plugin_names_for_udev_subsystem(ctx, "block:partition", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin_names1);
+	g_assert_cmpint(plugin_names1->len, ==, 2);
+
+	/* devtype unset, so just uf3 */
+	plugin_names2 = fu_context_get_plugin_names_for_udev_subsystem(ctx, "block", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(plugin_names2);
+	g_assert_cmpint(plugin_names2->len, ==, 1);
+}
+
+static void
 fu_context_state_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -6144,6 +6177,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
+	g_test_add_func("/fwupd/context{udev-subsystems}", fu_context_udev_subsystems_func);
 	g_test_add_func("/fwupd/string{utf16}", fu_string_utf16_func);
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);

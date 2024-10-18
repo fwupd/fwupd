@@ -24,7 +24,6 @@
 struct _FuUdevBackend {
 	FuBackend parent_instance;
 	gint netlink_fd;
-	GHashTable *changed_idle_ids; /* sysfs:FuUdevBackendHelper */
 	GHashTable *map_paths;	      /* of str:None */
 	GPtrArray *dpaux_devices;     /* of FuDpauxDevice */
 	guint dpaux_devices_rescan_id;
@@ -204,11 +203,12 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 
 	/* notify plugins using fu_plugin_add_udev_subsystem() */
 	if (fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)) != NULL) {
-		g_autoptr(GPtrArray) possible_plugins =
-		    fu_context_get_plugin_names_for_udev_subsystem(
-			ctx,
-			fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)),
-			NULL);
+		g_autoptr(GPtrArray) possible_plugins = NULL;
+		g_autofree gchar *subsystem =
+		    fu_udev_device_get_subsystem_devtype(FU_UDEV_DEVICE(device));
+
+		possible_plugins =
+		    fu_context_get_plugin_names_for_udev_subsystem(ctx, subsystem, NULL);
 		if (possible_plugins != NULL) {
 			for (guint i = 0; i < possible_plugins->len; i++) {
 				const gchar *plugin_name = g_ptr_array_index(possible_plugins, i);
@@ -290,66 +290,6 @@ fu_udev_backend_device_remove(FuUdevBackend *self, const gchar *sysfs_path)
 	}
 }
 
-typedef struct {
-	FuUdevBackend *self;
-	FuDevice *device;
-	guint idle_id;
-} FuUdevBackendHelper;
-
-static void
-fu_udev_backend_changed_helper_free(FuUdevBackendHelper *helper)
-{
-	if (helper->idle_id != 0)
-		g_source_remove(helper->idle_id);
-	g_object_unref(helper->self);
-	g_object_unref(helper->device);
-	g_free(helper);
-}
-
-static FuUdevBackendHelper *
-fu_udev_backend_changed_helper_new(FuUdevBackend *self, FuDevice *device)
-{
-	FuUdevBackendHelper *helper = g_new0(FuUdevBackendHelper, 1);
-	helper->self = g_object_ref(self);
-	helper->device = g_object_ref(device);
-	return helper;
-}
-
-static gboolean
-fu_udev_backend_device_changed_cb(gpointer user_data)
-{
-	FuUdevBackendHelper *helper = (FuUdevBackendHelper *)user_data;
-	fu_backend_device_changed(FU_BACKEND(helper->self), helper->device);
-	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(helper->device)), "drm") != 0)
-		fu_udev_backend_rescan_dpaux_devices(helper->self);
-	helper->idle_id = 0;
-	g_hash_table_remove(helper->self->changed_idle_ids,
-			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(helper->device)));
-	return FALSE;
-}
-
-static void
-fu_udev_backend_device_changed(FuUdevBackend *self, const gchar *sysfs_path)
-{
-	FuUdevBackendHelper *helper;
-	FuDevice *device_tmp;
-
-	/* not a device we enumerated */
-	device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), sysfs_path);
-	if (device_tmp == NULL)
-		return;
-
-	/* run all plugins, with per-device rate limiting */
-	if (g_hash_table_remove(self->changed_idle_ids, sysfs_path)) {
-		g_debug("re-adding rate-limited timeout for %s", sysfs_path);
-	} else {
-		g_debug("adding rate-limited timeout for %s", sysfs_path);
-	}
-	helper = fu_udev_backend_changed_helper_new(self, device_tmp);
-	helper->idle_id = g_timeout_add(500, fu_udev_backend_device_changed_cb, helper);
-	g_hash_table_insert(self->changed_idle_ids, g_strdup(sysfs_path), helper);
-}
-
 static gint
 fu_udev_backend_device_number_sort_cb(gconstpointer a, gconstpointer b)
 {
@@ -426,7 +366,6 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 	gsize bufsz = 0;
 	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autoptr(FuStructUdevMonitorNetlinkHeader) st_hdr = NULL;
-	g_autoptr(FuUdevDevice) device_actual = NULL;
 	g_autoptr(FuUdevDevice) device_donor = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
 
@@ -476,8 +415,15 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 
 			/* something changed */
 			if (action == FU_UDEV_ACTION_CHANGE) {
-				fu_udev_backend_device_changed(self, sysfspath);
-				return TRUE;
+				FuDevice *device_tmp =
+				    fu_backend_lookup_by_id(FU_BACKEND(self), sysfspath);
+				if (device_tmp == NULL)
+					return TRUE;
+				if (g_strcmp0(
+					fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device_tmp)),
+					"drm") != 0)
+					fu_udev_backend_rescan_dpaux_devices(self);
+				g_set_object(&device_donor, FU_UDEV_DEVICE(device_tmp));
 			}
 
 			/* something got removed */
@@ -500,7 +446,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		} else if (g_strcmp0(kv[0], "SUBSYSTEM") == 0 && device_donor != NULL) {
 			fu_udev_device_set_subsystem(device_donor, kv[1]);
 		} else if (g_strcmp0(kv[0], "DEVTYPE") == 0 && device_donor != NULL) {
-			g_object_set(device_donor, "devtype", kv[1], NULL);
+			fu_udev_device_set_devtype(device_donor, kv[1]);
 		} else if (device_donor != NULL) {
 			fu_udev_device_add_property(device_donor, kv[0], kv[1]);
 		}
@@ -509,25 +455,40 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		i += strlen(kvstr);
 	}
 
-	/* we never saw add */
-	if (device_donor == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no new device to add");
-		return FALSE;
+	/* notify the engine */
+	if (action == FU_UDEV_ACTION_CHANGE) {
+		if (device_donor == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "no device to change");
+			return FALSE;
+		}
+		fu_backend_device_changed(FU_BACKEND(self), FU_DEVICE(device_donor));
 	}
 
 	/* now create the actual device from the donor */
-	device_actual =
-	    FU_UDEV_DEVICE(fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
-								   FU_DEVICE(device_donor),
-								   error));
-	if (device_actual == NULL)
-		return FALSE;
+	if (action == FU_UDEV_ACTION_ADD) {
+		g_autoptr(FuUdevDevice) device_actual = NULL;
+		if (device_donor == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "no new device to add");
+			return FALSE;
+		}
+		device_actual =
+		    FU_UDEV_DEVICE(fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
+									   FU_DEVICE(device_donor),
+									   error));
+		if (device_actual == NULL)
+			return FALSE;
+
+		/* success */
+		fu_udev_backend_device_add_from_device(self, device_actual);
+	}
 
 	/* success */
-	fu_udev_backend_device_add_from_device(self, device_actual);
 	return TRUE;
 }
 
@@ -583,7 +544,9 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 		return FALSE;
 	}
 	source = g_unix_fd_source_new(self->netlink_fd, G_IO_IN);
+	g_source_set_static_name(source, "netlink");
 	g_source_set_callback(source, (GSourceFunc)fu_udev_backend_netlink_cb, self, NULL);
+	g_source_set_can_recurse(source, TRUE);
 	g_source_attach(source, NULL);
 
 	/* success */
@@ -605,6 +568,12 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 		const gchar *subsystem = g_ptr_array_index(udev_subsystems, i);
 		g_autofree gchar *class_fn = NULL;
 		g_autofree gchar *bus_fn = NULL;
+
+		/* we only care about subsystems, not subsystem:devtype matches */
+		if (g_strstr_len(subsystem, -1, ":") != NULL) {
+			fu_progress_step_done(progress);
+			continue;
+		}
 
 		class_fn = g_build_filename(sysfsdir, "class", subsystem, NULL);
 		if (g_file_test(class_fn, G_FILE_TEST_EXISTS)) {
@@ -757,7 +726,6 @@ fu_udev_backend_finalize(GObject *object)
 		g_source_remove(self->dpaux_devices_rescan_id);
 	if (self->netlink_fd > 0)
 		g_close(self->netlink_fd, NULL);
-	g_hash_table_unref(self->changed_idle_ids);
 	g_hash_table_unref(self->map_paths);
 	g_ptr_array_unref(self->dpaux_devices);
 	G_OBJECT_CLASS(fu_udev_backend_parent_class)->finalize(object);
@@ -768,11 +736,6 @@ fu_udev_backend_init(FuUdevBackend *self)
 {
 	self->map_paths = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	self->dpaux_devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	self->changed_idle_ids =
-	    g_hash_table_new_full(g_str_hash,
-				  g_str_equal,
-				  g_free,
-				  (GDestroyNotify)fu_udev_backend_changed_helper_free);
 }
 
 static void
