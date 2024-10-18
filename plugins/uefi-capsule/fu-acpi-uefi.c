@@ -41,7 +41,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 	g_autoptr(GByteArray) st_qrk = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	if (!fu_memmem_safe(g_bytes_get_data(fw, NULL),

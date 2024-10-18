@@ -628,7 +628,7 @@ fu_parade_lspcon_device_write_firmware(FuDevice *device,
 						fu_progress_get_child(progress),
 						error))
 		return FALSE;
-	buf = fu_input_stream_read_byte_array(stream, target_address, blocksz, error);
+	buf = fu_input_stream_read_byte_array(stream, target_address, blocksz, NULL, error);
 	if (buf == NULL)
 		return FALSE;
 	if (!fu_memcmp_safe(buf->data, buf->len, 0x0, readback_buf, blocksz, 0x0, blocksz, error)) {

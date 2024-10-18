@@ -87,7 +87,7 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 	if (self->blob != NULL) {
 		blob_chk = g_bytes_new_from_bytes(self->blob, offset, length);
 	} else if (self->stream != NULL) {
-		blob_chk = fu_input_stream_read_bytes(self->stream, offset, length, error);
+		blob_chk = fu_input_stream_read_bytes(self->stream, offset, length, NULL, error);
 		if (blob_chk == NULL) {
 			g_prefix_error(error,
 				       "failed to get stream at 0x%x for 0x%x: ",

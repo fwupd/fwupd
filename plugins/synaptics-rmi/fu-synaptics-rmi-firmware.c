@@ -127,7 +127,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
-	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
@@ -408,7 +408,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
-	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);

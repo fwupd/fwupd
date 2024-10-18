@@ -224,7 +224,7 @@ fu_efi_load_option_parse_optional(FuEfiLoadOption *self,
 	/* then UCS-2 path, and on ASCII failure just treat as a raw data blob */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	opt_blob = fu_input_stream_read_bytes(stream, offset, streamsz - offset, error);
+	opt_blob = fu_input_stream_read_bytes(stream, offset, streamsz - offset, NULL, error);
 	if (opt_blob == NULL)
 		return FALSE;
 	if (!fu_efi_load_option_parse_optional_path(self, opt_blob, &error_path)) {

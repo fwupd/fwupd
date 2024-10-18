@@ -159,7 +159,7 @@ fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) payload_fw = NULL;
 
 	/* convert to blob */
-	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return NULL;
 

@@ -124,7 +124,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 		guint8 hdr_checksum_verify;
 		g_autoptr(GBytes) hdr_blob = NULL;
 
-		hdr_blob = fu_input_stream_read_bytes(stream, 0x0, st->len, error);
+		hdr_blob = fu_input_stream_read_bytes(stream, 0x0, st->len, NULL, error);
 		if (hdr_blob == NULL)
 			return FALSE;
 		hdr_checksum_verify = fu_efi_file_hdr_checksum8(hdr_blob);

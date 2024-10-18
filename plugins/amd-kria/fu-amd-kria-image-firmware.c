@@ -33,7 +33,7 @@ fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *version = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, VERSION_OFFSET, VERSION_SIZE, error);
+	fw = fu_input_stream_read_bytes(stream, VERSION_OFFSET, VERSION_SIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 

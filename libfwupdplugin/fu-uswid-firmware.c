@@ -125,19 +125,19 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		if (!g_seekable_seek(G_SEEKABLE(istream1), 0, G_SEEK_SET, NULL, error))
 			return FALSE;
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, error);
+		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {
 		g_autoptr(GBytes) payload_tmp = NULL;
-		payload_tmp = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, error);
+		payload_tmp = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (payload_tmp == NULL)
 			return FALSE;
 		payload = fu_lzma_decompress_bytes(payload_tmp, error);
 		if (payload == NULL)
 			return FALSE;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_NONE) {
-		payload = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, error);
+		payload = fu_input_stream_read_bytes(stream, hdrsz, payloadsz, NULL, error);
 		if (payload == NULL)
 			return FALSE;
 	} else {
@@ -209,7 +209,7 @@ fu_uswid_firmware_write(FuFirmware *firmware, GError **error)
 		conv = G_CONVERTER(g_zlib_compressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB, -1));
 		istream1 = g_memory_input_stream_new_from_data(payload->data, payload->len, NULL);
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload_blob = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, error);
+		payload_blob = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload_blob == NULL)
 			return NULL;
 	} else if (priv->compression == FU_USWID_PAYLOAD_COMPRESSION_LZMA) {

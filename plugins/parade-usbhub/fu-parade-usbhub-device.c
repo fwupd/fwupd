@@ -1163,6 +1163,7 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 	blob = fu_input_stream_read_byte_array(stream,
 					       self->spi_address,
 					       FU_PARADE_USBHUB_SPI_ROM_BANK_SIZE,
+					       NULL,
 					       error);
 	if (blob == NULL)
 		return FALSE;

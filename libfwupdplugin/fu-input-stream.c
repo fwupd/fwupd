@@ -250,6 +250,7 @@ fu_input_stream_read_u64(GInputStream *stream,
  * @stream: a #GInputStream
  * @offset: offset in bytes into @stream to copy from
  * @count: maximum number of bytes to read
+ * @progress: (nullable): an optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Read a byte array from a stream in a safe way.
@@ -261,13 +262,18 @@ fu_input_stream_read_u64(GInputStream *stream,
  * Since: 2.0.0
  **/
 GByteArray *
-fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count, GError **error)
+fu_input_stream_read_byte_array(GInputStream *stream,
+				gsize offset,
+				gsize count,
+				FuProgress *progress,
+				GError **error)
 {
 	guint8 tmp[0x8000];
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* this is invalid */
@@ -319,6 +325,11 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
 					    error_local->message);
 			return NULL;
 		}
+
+		/* update progress */
+		if (progress != NULL)
+			fu_progress_set_percentage_full(progress, buf->len, count);
+
 		g_byte_array_append(buf, tmp, sz);
 		if (buf->len >= count)
 			break;
@@ -342,6 +353,7 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
  * @stream: a #GInputStream
  * @offset: offset in bytes into @stream to copy from
  * @count: maximum number of bytes to read
+ * @progress: (nullable): an optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Read a #GBytes from a stream in a safe way.
@@ -353,12 +365,17 @@ fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count,
  * Since: 2.0.0
  **/
 GBytes *
-fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
+fu_input_stream_read_bytes(GInputStream *stream,
+			   gsize offset,
+			   gsize count,
+			   FuProgress *progress,
+			   GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
-	buf = fu_input_stream_read_byte_array(stream, offset, count, error);
+	buf = fu_input_stream_read_byte_array(stream, offset, count, progress, error);
 	if (buf == NULL)
 		return NULL;
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
@@ -385,7 +402,7 @@ fu_input_stream_read_string(GInputStream *stream, gsize offset, gsize count, GEr
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	buf = fu_input_stream_read_byte_array(stream, offset, count, error);
+	buf = fu_input_stream_read_byte_array(stream, offset, count, NULL, error);
 	if (buf == NULL)
 		return NULL;
 	if (!g_utf8_validate_len((const gchar *)buf->data, buf->len, NULL)) {
@@ -737,8 +754,11 @@ fu_input_stream_find(GInputStream *stream,
 		g_autoptr(GError) error_local = NULL;
 
 		/* read more data */
-		buf_tmp =
-		    fu_input_stream_read_byte_array(stream, offset_cur, blocksz, &error_local);
+		buf_tmp = fu_input_stream_read_byte_array(stream,
+							  offset_cur,
+							  blocksz,
+							  NULL,
+							  &error_local);
 		if (buf_tmp == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
 				break;

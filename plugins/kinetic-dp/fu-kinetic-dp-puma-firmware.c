@@ -172,6 +172,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	cmdb_tmp = fu_input_stream_read_byte_array(stream,
 						   FU_KINETIC_DP_PUMA_REQUEST_FW_CMDB_START_ADDR,
 						   FU_KINETIC_DP_PUMA_REQUEST_CMDB_SIZE,
+						   NULL,
 						   error);
 	if (cmdb_tmp == NULL)
 		return FALSE;

@@ -2505,7 +2505,7 @@ fu_engine_install_release(FuEngine *self,
 	/* save to persistent storage so that the device can recover without a network */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE)) {
 		g_autoptr(GBytes) blob_cab =
-		    fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+		    fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 		if (blob_cab == NULL)
 			return FALSE;
 		if (!fu_engine_save_into_backup_remote(self, blob_cab, error))
@@ -4476,12 +4476,14 @@ fu_engine_update_metadata(FuEngine *self,
 	stream_sig = fu_unix_seekable_input_stream_new(fd_sig, TRUE);
 
 	/* read the entire file into memory */
-	bytes_raw = fu_input_stream_read_bytes(stream_fd, 0, FU_ENGINE_MAX_METADATA_SIZE, error);
+	bytes_raw =
+	    fu_input_stream_read_bytes(stream_fd, 0, FU_ENGINE_MAX_METADATA_SIZE, NULL, error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
 	/* read signature */
-	bytes_sig = fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, error);
+	bytes_sig =
+	    fu_input_stream_read_bytes(stream_sig, 0, FU_ENGINE_MAX_SIGNATURE_SIZE, NULL, error);
 	if (bytes_sig == NULL)
 		return FALSE;
 

@@ -87,7 +87,7 @@ fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 		}
 
 		/* align and convert */
-		ubuf = fu_input_stream_read_bytes(stream, 28, ubufsz, error);
+		ubuf = fu_input_stream_read_bytes(stream, 28, ubufsz, NULL, error);
 		if (ubuf == NULL)
 			return FALSE;
 		self->device_path = fu_utf16_to_utf8_bytes(ubuf, G_LITTLE_ENDIAN, error);

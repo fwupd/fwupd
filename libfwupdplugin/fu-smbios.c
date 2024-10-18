@@ -331,7 +331,7 @@ fu_smbios_parse(FuFirmware *firmware,
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
 	g_autoptr(GBytes) fw = NULL;
-	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	return fu_smbios_setup_from_data(self,

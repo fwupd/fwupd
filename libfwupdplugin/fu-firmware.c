@@ -674,7 +674,7 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 					    "stream size unknown");
 			return NULL;
 		}
-		return fu_input_stream_read_bytes(priv->stream, 0x0, priv->streamsz, error);
+		return fu_input_stream_read_bytes(priv->stream, 0x0, priv->streamsz, NULL, error);
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
@@ -2297,6 +2297,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 			g_autoptr(GByteArray) buf = fu_input_stream_read_byte_array(priv->stream,
 										    0x0,
 										    priv->streamsz,
+										    NULL,
 										    NULL);
 			if (buf != NULL) {
 				if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {

@@ -307,7 +307,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		/* this should not be required! */
 		if (!fu_input_stream_size(stream, &streamsz, error))
 			return FALSE;
-		blob_fw = fu_input_stream_read_bytes(stream, 0, streamsz, error);
+		blob_fw = fu_input_stream_read_bytes(stream, 0, streamsz, NULL, error);
 		if (blob_fw == NULL)
 			return FALSE;
 		ver = fu_test_plugin_get_version(blob_fw);

@@ -390,6 +390,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 		    fu_input_stream_read_byte_array(stream,
 						    fu_struct_fdt_get_off_dt_strings(st_hdr),
 						    fu_struct_fdt_get_size_dt_strings(st_hdr),
+						    NULL,
 						    error);
 		if (dt_strings == NULL)
 			return FALSE;
@@ -397,6 +398,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 		    fu_input_stream_read_byte_array(stream,
 						    fu_struct_fdt_get_off_dt_struct(st_hdr),
 						    fu_struct_fdt_get_size_dt_struct(st_hdr),
+						    NULL,
 						    error);
 		if (dt_struct == NULL)
 			return FALSE;

@@ -275,8 +275,11 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		g_autoptr(GBytes) bytes_uncomp = NULL;
 
 		/* check compressed header */
-		bytes_comp =
-		    fu_input_stream_read_bytes(helper->stream, *offset + hdr_sz, blob_comp, error);
+		bytes_comp = fu_input_stream_read_bytes(helper->stream,
+							*offset + hdr_sz,
+							blob_comp,
+							NULL,
+							error);
 		if (bytes_comp == NULL)
 			return FALSE;
 		kind = fu_memstrsafe(g_bytes_get_data(bytes_comp, NULL),

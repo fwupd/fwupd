@@ -328,7 +328,7 @@ fu_kernel_get_config(GError **error)
 			return NULL;
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_GZIP));
 		istream2 = g_converter_input_stream_new(istream1, conv);
-		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, error);
+		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return NULL;
 		return fu_kernel_parse_config(g_bytes_get_data(payload, NULL),

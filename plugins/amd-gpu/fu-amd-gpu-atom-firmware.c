@@ -292,7 +292,7 @@ fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 	if (atom_rom == NULL)
 		return FALSE;
 
-	blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
+	blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
 	if (!fu_amd_gpu_atom_firmware_parse_config_filename(self, blob, atom_rom, error))
