@@ -1084,6 +1084,24 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 FwupdSecurityAttr *
 fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id) G_GNUC_NON_NULL(1, 2);
 
+gboolean
+fu_device_set_contents(FuDevice *self,
+		       const gchar *filename,
+		       GInputStream *stream,
+		       FuProgress *progress,
+		       GError **error) G_GNUC_NON_NULL(1, 2, 3);
+gboolean
+fu_device_set_contents_bytes(FuDevice *self,
+			     const gchar *filename,
+			     GBytes *blob,
+			     FuProgress *progress,
+			     GError **error) G_GNUC_NON_NULL(1, 2, 3);
+GBytes *
+fu_device_get_contents_bytes(FuDevice *self,
+			     const gchar *filename,
+			     FuProgress *progress,
+			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+
 const gchar *
 fu_device_get_instance_str(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
 void
