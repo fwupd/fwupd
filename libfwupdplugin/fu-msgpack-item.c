@@ -652,14 +652,12 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 	/* float */
 	if (cmd == FU_MSGPACK_CMD_FLOAT64) {
 		gdouble v = 0.;
-		if (!fu_memcpy_safe((guint8 *)&v,
-				    sizeof(v),
-				    0x0,
-				    buf->data,
-				    buf->len,
-				    *offset,
-				    sizeof(v),
-				    error))
+		if (!fu_memread_uint64_safe(buf->data,
+					    buf->len,
+					    *offset,
+					    (guint64 *)&v,
+					    G_BIG_ENDIAN,
+					    error))
 			return NULL;
 		*offset += sizeof(v);
 		return fu_msgpack_item_new_float(v);
