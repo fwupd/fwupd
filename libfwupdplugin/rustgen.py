@@ -681,6 +681,8 @@ class Generator:
         # process the templates here
         subst = {
             "basename": self.basename,
+            "enum_objs": self.enum_objs,
+            "struct_objs": self.struct_objs,
         }
         template_h = self._env.get_template(os.path.basename("fu-rustgen.h.in"))
         template_c = self._env.get_template(os.path.basename("fu-rustgen.c.in"))
