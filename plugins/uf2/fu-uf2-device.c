@@ -120,45 +120,21 @@ fu_uf2_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
-	gssize wrote;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GOutputStream) ostr = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	/* get blob */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* open file for writing; no cleverness */
 	fn = fu_uf2_device_get_full_path(self, "FIRMWARE.UF2", error);
 	if (fn == NULL)
 		return FALSE;
-	file = g_file_new_for_path(fn);
-	ostr = G_OUTPUT_STREAM(g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
-	if (ostr == NULL)
-		return FALSE;
-
-	/* write in one chunk and let the kernel do the right thing :) */
-	wrote = g_output_stream_write(ostr,
-				      g_bytes_get_data(fw, NULL),
-				      g_bytes_get_size(fw),
-				      NULL,
-				      error);
-	if (wrote < 0)
-		return FALSE;
-	if ((gsize)wrote != g_bytes_get_size(fw)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "only wrote 0x%x bytes",
-			    (guint)wrote);
-		return FALSE;
-	}
 
 	/* success */
-	return TRUE;
+	return fu_device_set_contents(device, fn, stream, progress, error);
 }
 
 static GBytes *
@@ -166,18 +142,12 @@ fu_uf2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GInputStream) istr = NULL;
 
 	/* open for reading */
 	fn = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn == NULL)
 		return NULL;
-	istr = fu_input_stream_from_path(fn, error);
-	if (istr == NULL)
-		return NULL;
-
-	/* read all in one big chunk */
-	return fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, progress, error);
+	return fu_device_get_contents_bytes(device, fn, progress, error);
 }
 
 static FuFirmware *
@@ -277,20 +247,18 @@ static gboolean
 fu_uf2_device_setup(FuDevice *device, GError **error)
 {
 	FuUf2Device *self = FU_UF2_DEVICE(device);
-	gsize bufsz = 0;
-	g_autofree gchar *buf = NULL;
 	g_autofree gchar *fn1 = NULL;
 	g_autofree gchar *fn2 = NULL;
 	g_auto(GStrv) lines = NULL;
+	g_autoptr(GBytes) blob_txt = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* this has to exist */
 	fn1 = fu_uf2_device_get_full_path(self, "INFO_UF2.TXT", error);
 	if (fn1 == NULL)
 		return FALSE;
-	if (!g_file_get_contents(fn1, &buf, &bufsz, error))
-		return FALSE;
-	lines = fu_strsplit(buf, bufsz, "\n", -1);
+	blob_txt = fu_device_get_contents_bytes(device, fn1, NULL, error);
+	lines = fu_strsplit(g_bytes_get_data(blob_txt, NULL), g_bytes_get_size(blob_txt), "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		if (g_str_has_prefix(lines[i], "Model: ")) {
 			fu_device_set_name(device, lines[i] + 7);
@@ -304,7 +272,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 	fn2 = fu_uf2_device_get_full_path(self, "CURRENT.UF2", error);
 	if (fn2 == NULL)
 		return FALSE;
-	fw = fu_bytes_get_contents(fn2, NULL);
+	fw = fu_device_get_contents_bytes(device, fn2, NULL, NULL);
 	if (fw != NULL) {
 		if (!fu_uf2_device_probe_current_fw(device, fw, error))
 			return FALSE;
