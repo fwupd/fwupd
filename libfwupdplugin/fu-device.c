@@ -15,7 +15,9 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 
+#include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
@@ -744,6 +746,214 @@ fu_device_sleep_full(FuDevice *self, guint delay_ms, FuProgress *progress)
 		return;
 	if (delay_ms > 0)
 		fu_progress_sleep(progress, delay_ms);
+}
+
+/**
+ * fu_device_set_contents:
+ * @self: a #FuDevice
+ * @filename: full path to a file
+ * @stream: data to write
+ * @progress: a #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes @stream to @filename, emulating if required.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.2
+ **/
+gboolean
+fu_device_set_contents(FuDevice *self,
+		       const gchar *filename,
+		       GInputStream *stream,
+		       FuProgress *progress,
+		       GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GByteArray) buf_tagged = g_byte_array_new();
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GOutputStream) ostr = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("SetContents:Filename=%s", filename);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) blob1 = NULL;
+		g_autoptr(GBytes) blob2 = NULL;
+
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		blob1 = fu_device_event_get_bytes(event, "Data", error);
+		if (blob1 == NULL)
+			return FALSE;
+		blob2 = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, progress, error);
+		if (blob2 == NULL)
+			return FALSE;
+		return fu_bytes_compare(blob1, blob2, error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* open file */
+	file = g_file_new_for_path(filename);
+	ostr = G_OUTPUT_STREAM(g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
+	if (ostr == NULL)
+		return FALSE;
+
+	/* write in 32k chunks */
+	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x8000, error);
+	if (chunks == NULL)
+		return FALSE;
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		gssize wrote;
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk);
+
+		wrote = g_output_stream_write_bytes(ostr, blob, NULL, error);
+		if (wrote < 0)
+			return FALSE;
+		if ((gsize)wrote != g_bytes_get_size(blob)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "only wrote 0x%x bytes of 0x%x",
+				    (guint)wrote,
+				    (guint)g_bytes_get_size(blob));
+			return FALSE;
+		}
+
+		/* save */
+		if (event != NULL)
+			fu_byte_array_append_bytes(buf_tagged, blob);
+
+		/* progress */
+		fu_progress_step_done(progress);
+	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_data(event, "Data", buf_tagged->data, buf_tagged->len);
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_device_set_contents_bytes:
+ * @self: a #FuDevice
+ * @filename: full path to a file
+ * @blob: data to write
+ * @progress: (nullable): optional #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes @blob to @filename, emulating if required.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 2.0.2
+ **/
+gboolean
+fu_device_set_contents_bytes(FuDevice *self,
+			     const gchar *filename,
+			     GBytes *blob,
+			     FuProgress *progress,
+			     GError **error)
+{
+	g_autoptr(GInputStream) stream = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(blob != NULL, FALSE);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	stream = g_memory_input_stream_new_from_bytes(blob);
+	return fu_device_set_contents(self, filename, stream, progress, error);
+}
+
+/**
+ * fu_device_get_contents_bytes:
+ * @self: a #FuDevice
+ * @filename: full path to a file
+ * @progress: (nullable): optional #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes @blob to @filename, emulating if required.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL on error
+ *
+ * Since: 2.0.2
+ **/
+GBytes *
+fu_device_get_contents_bytes(FuDevice *self,
+			     const gchar *filename,
+			     FuProgress *progress,
+			     GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) istr = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetContents:Filename=%s", filename);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return fu_device_event_get_bytes(event, "Data", error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* open for reading */
+	istr = fu_input_stream_from_path(filename, error);
+	if (istr == NULL)
+		return NULL;
+	blob = fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, progress, error);
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_bytes(event, "Data", blob);
+
+	/* success */
+	return g_steal_pointer(&blob);
 }
 
 static gboolean
