@@ -22,7 +22,7 @@ struct _FuSteelseriesDeviceClass {
 };
 
 #define STEELSERIES_BUFFER_CONTROL_SIZE 64
-#define STEELSERIES_TRANSACTION_TIMEOUT 5000
+#define STEELSERIES_TRANSACTION_TIMEOUT 7000
 
 #define FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER "is-receiver"
 /* device needs bootloader mode for flashing */
