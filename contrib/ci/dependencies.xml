@@ -768,6 +768,29 @@
       <package variant="x86_64">libjcat-devel</package>
     </distro>
   </dependency>
+  <dependency id="libblkid-dev">
+    <distro id="arch">
+      <package variant="x86_64">util-linux-libs</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">libblkid-devel</package>
+      <package variant="aarch64">libblkid-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+    <distro id="void">
+      <package variant="x86_64">libblkid-devel</package>
+    </distro>
+  </dependency>
   <dependency id="liblzma-dev">
     <distro id="fedora">
       <package variant="x86_64">xz-devel</package>
