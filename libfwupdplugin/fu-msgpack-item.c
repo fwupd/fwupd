@@ -381,8 +381,18 @@ fu_msgpack_item_append_integer(GByteArray *buf, gint64 val, GError **error)
 static gboolean
 fu_msgpack_item_append_double(GByteArray *buf, gdouble val, GError **error)
 {
+	guint64 int_val = 0;
 	fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_FLOAT64);
-	fu_byte_array_append_uint64(buf, *(guint64 *)&val, G_BIG_ENDIAN);
+	if (!fu_memcpy_safe((guint8 *)&int_val,
+			    sizeof(int_val),
+			    0,
+			    (guint8 *)&val,
+			    sizeof(val),
+			    0,
+			    sizeof(val),
+			    error))
+		return FALSE;
+	fu_byte_array_append_uint64(buf, int_val, G_BIG_ENDIAN);
 	return TRUE;
 }
 
