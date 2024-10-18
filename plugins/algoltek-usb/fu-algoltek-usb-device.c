@@ -440,6 +440,7 @@ fu_algoltek_usb_device_setup(FuDevice *device, GError **error)
 	version_data = fu_algoltek_usb_device_rdv(self, error);
 	if (version_data == NULL)
 		return FALSE;
+
 	version_str = fu_strsafe((const gchar *)version_data->data, version_data->len);
 
 	fu_device_set_version(device, version_str);
@@ -458,6 +459,7 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 	FuAlgoltekUsbDevice *self = FU_ALGOLTEK_USB_DEVICE(device);
 	g_autoptr(GInputStream) stream_isp = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
+	guint16 pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -518,11 +520,15 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 
 	if (!fu_algoltek_usb_device_ers(self, 0x20, AG_IDENTIFICATION_128K_ADDR, error))
 		return FALSE;
-	if (!fu_algoltek_usb_device_ers(self, 0x20, AG_IDENTIFICATION_256K_ADDR, error))
-		return FALSE;
-	/* 1 sector = 4 kb, 256kb = 64 sector */
-	for (int i = 0; i < 64; i++) {
-		if (!fu_algoltek_usb_device_ers(self, 0x20, i, error))
+
+	if ((pid == 0x9421) || (pid == 0x9411)) {
+		/* 1 sector = 4 kb, 128kb = 32 sector */
+		for (int i = 1; i < 31; i++) {
+			if (!fu_algoltek_usb_device_ers(self, 0x20, i, error))
+				return FALSE;
+		}
+	} else {
+		if (!fu_algoltek_usb_device_ers(self, 0x60, 0, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);
