@@ -379,6 +379,24 @@ fu_msgpack_item_append_integer(GByteArray *buf, gint64 val, GError **error)
 }
 
 static gboolean
+fu_msgpack_item_append_double(GByteArray *buf, gdouble val, GError **error)
+{
+	guint64 int_val = 0;
+	fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_FLOAT64);
+	if (!fu_memcpy_safe((guint8 *)&int_val,
+			    sizeof(int_val),
+			    0,
+			    (guint8 *)&val,
+			    sizeof(val),
+			    0,
+			    sizeof(val),
+			    error))
+		return FALSE;
+	fu_byte_array_append_uint64(buf, int_val, G_BIG_ENDIAN);
+	return TRUE;
+}
+
+static gboolean
 fu_msgpack_item_append_array(GByteArray *buf, gint64 val, GError **error)
 {
 	if (val <= 15) {
@@ -536,11 +554,8 @@ fu_msgpack_item_append(FuMsgpackItem *self, GByteArray *buf, GError **error)
 							   : FU_MSGPACK_CMD_FALSE);
 		return TRUE;
 	}
-	if (self->kind == FU_MSGPACK_ITEM_KIND_FLOAT) {
-		fu_byte_array_append_uint8(buf, FU_MSGPACK_CMD_FLOAT64);
-		g_byte_array_append(buf, (const guint8 *)&self->value.f64, sizeof(self->value.f64));
-		return TRUE;
-	}
+	if (self->kind == FU_MSGPACK_ITEM_KIND_FLOAT)
+		return fu_msgpack_item_append_double(buf, self->value.f64, error);
 	if (self->kind == FU_MSGPACK_ITEM_KIND_INTEGER)
 		return fu_msgpack_item_append_integer(buf, self->value.i64, error);
 	if (self->kind == FU_MSGPACK_ITEM_KIND_STRING)
@@ -652,14 +667,12 @@ fu_msgpack_item_parse(GByteArray *buf, gsize *offset, GError **error)
 	/* float */
 	if (cmd == FU_MSGPACK_CMD_FLOAT64) {
 		gdouble v = 0.;
-		if (!fu_memcpy_safe((guint8 *)&v,
-				    sizeof(v),
-				    0x0,
-				    buf->data,
-				    buf->len,
-				    *offset,
-				    sizeof(v),
-				    error))
+		if (!fu_memread_uint64_safe(buf->data,
+					    buf->len,
+					    *offset,
+					    (guint64 *)&v,
+					    G_BIG_ENDIAN,
+					    error))
 			return NULL;
 		*offset += sizeof(v);
 		return fu_msgpack_item_new_float(v);

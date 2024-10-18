@@ -164,6 +164,26 @@ fu_msgpack_binary_stream_func(void)
 }
 
 static void
+fu_msgpack_parse_binary_func(void)
+{
+	// 64 bit float 100.0099
+	const guchar data[] = {0xCB, 0x40, 0x59, 0x00, 0xA2, 0x33, 0x9C, 0x0E, 0xBF};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	g_byte_array_append(buf, data, sizeof(data));
+
+	items = fu_msgpack_parse(buf, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(items);
+	g_assert_cmpint(items->len, ==, 1);
+
+	g_assert_cmpfloat_with_epsilon(fu_msgpack_item_get_float(g_ptr_array_index(items, 0)),
+				       100.0099,
+				       0.00001);
+}
+
+static void
 fu_msgpack_func(void)
 {
 	g_autoptr(GByteArray) buf1 = NULL;
@@ -221,6 +241,11 @@ fu_msgpack_func(void)
 		g_assert_cmpint(fu_msgpack_item_get_kind(item), ==, kinds[i]);
 	}
 	g_assert_cmpint(fu_msgpack_item_get_map(g_ptr_array_index(items_new, 0)), ==, 4);
+	g_assert_cmpint(fu_msgpack_item_get_integer(g_ptr_array_index(items_new, 2)), ==, 6);
+	g_assert_cmpint(fu_msgpack_item_get_integer(g_ptr_array_index(items_new, 4)), ==, 256);
+	g_assert_cmpfloat_with_epsilon(fu_msgpack_item_get_float(g_ptr_array_index(items_new, 6)),
+				       1.0,
+				       0.00001);
 	g_assert_cmpint(fu_msgpack_item_get_array(g_ptr_array_index(items_new, 8)), ==, 1);
 }
 
@@ -6162,6 +6187,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
 	g_test_add_func("/fwupd/msgpack{binary-stream}", fu_msgpack_binary_stream_func);
+	g_test_add_func("/fwupd/msgpack{parse-binary}", fu_msgpack_parse_binary_func);
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
