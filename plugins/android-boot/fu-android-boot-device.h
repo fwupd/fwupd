@@ -14,4 +14,4 @@ G_DECLARE_FINAL_TYPE(FuAndroidBootDevice,
 		     fu_android_boot_device,
 		     FU,
 		     ANDROID_BOOT_DEVICE,
-		     FuUdevDevice)
+		     FuBlockPartition)
