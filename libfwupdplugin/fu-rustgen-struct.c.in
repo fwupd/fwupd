@@ -315,7 +315,7 @@
     g_autoptr(GByteArray) st = NULL;
     g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);
     if (st == NULL) {
         g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return FALSE;
@@ -407,7 +407,7 @@
 {{obj.c_method('ParseStream')}}(GInputStream *stream, gsize offset, GError **error)
 {
     g_autoptr(GByteArray) st = NULL;
-    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, error);
+    st = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);
     if (st == NULL) {
         g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
         return NULL;

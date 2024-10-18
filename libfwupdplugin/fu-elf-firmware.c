@@ -99,8 +99,11 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 					fu_struct_elf_section_header64le_get_type(shstrndx_buf)));
 				return FALSE;
 			}
-			shstrndx_buf =
-			    fu_input_stream_read_byte_array(stream, sect_offset, sect_size, error);
+			shstrndx_buf = fu_input_stream_read_byte_array(stream,
+								       sect_offset,
+								       sect_size,
+								       NULL,
+								       error);
 			if (shstrndx_buf == NULL)
 				return FALSE;
 			continue;

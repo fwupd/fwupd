@@ -5368,7 +5368,7 @@ fu_partial_input_stream_func(void)
 	g_assert_cmpint(rc, ==, 0);
 
 	/* convert back to bytes */
-	blob2 = fu_input_stream_read_bytes(stream, 0x0, G_MAXUINT32, &error);
+	blob2 = fu_input_stream_read_bytes(stream, 0x0, G_MAXUINT32, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob2);
 	g_assert_cmpint(g_bytes_get_size(blob2), ==, 4);
@@ -5562,7 +5562,7 @@ fu_composite_input_stream_func(void)
 	g_assert_cmpint(buf[0], ==, 'g');
 
 	/* dump entire composite stream */
-	blob4 = fu_input_stream_read_bytes(composite_stream, 0x0, G_MAXUINT32, &error);
+	blob4 = fu_input_stream_read_bytes(composite_stream, 0x0, G_MAXUINT32, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob4);
 	g_assert_cmpint(g_bytes_get_size(blob4), ==, 7);

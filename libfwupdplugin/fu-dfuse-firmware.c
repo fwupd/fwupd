@@ -47,6 +47,7 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 	blob = fu_input_stream_read_bytes(stream,
 					  *offset,
 					  fu_struct_dfuse_element_get_size(st_ele),
+					  NULL,
 					  error);
 	if (blob == NULL)
 		return NULL;

@@ -177,7 +177,7 @@ fu_uf2_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 		return NULL;
 
 	/* read all in one big chunk */
-	return fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, error);
+	return fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, progress, error);
 }
 
 static FuFirmware *

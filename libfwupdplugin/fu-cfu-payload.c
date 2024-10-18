@@ -59,7 +59,7 @@ fu_cfu_payload_parse(FuFirmware *firmware,
 					    "payload size was invalid");
 			return FALSE;
 		}
-		blob = fu_input_stream_read_bytes(stream, offset, chunk_size, error);
+		blob = fu_input_stream_read_bytes(stream, offset, chunk_size, NULL, error);
 		if (blob == NULL)
 			return FALSE;
 		chk = fu_chunk_bytes_new(blob);

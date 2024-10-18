@@ -10,6 +10,7 @@
 
 #include "fu-crc.h"
 #include "fu-endian.h"
+#include "fu-progress.h"
 
 GInputStream *
 fu_input_stream_from_path(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -52,11 +53,17 @@ fu_input_stream_read_u64(GInputStream *stream,
 			 FuEndianType endian,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 3);
 GByteArray *
-fu_input_stream_read_byte_array(GInputStream *stream, gsize offset, gsize count, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+fu_input_stream_read_byte_array(GInputStream *stream,
+				gsize offset,
+				gsize count,
+				FuProgress *progress,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GBytes *
-fu_input_stream_read_bytes(GInputStream *stream, gsize offset, gsize count, GError **error)
-    G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+fu_input_stream_read_bytes(GInputStream *stream,
+			   gsize offset,
+			   gsize count,
+			   FuProgress *progress,
+			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gchar *
 fu_input_stream_read_string(GInputStream *stream, gsize offset, gsize count, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

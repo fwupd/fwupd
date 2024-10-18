@@ -225,7 +225,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	g_autoptr(GByteArray) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
@@ -287,7 +287,7 @@ fu_dfu_firmware_parse(FuFirmware *firmware,
 	/* trim footer off */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	contents = fu_input_stream_read_bytes(stream, 0, streamsz - priv->footer_len, error);
+	contents = fu_input_stream_read_bytes(stream, 0, streamsz - priv->footer_len, NULL, error);
 	if (contents == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, contents);

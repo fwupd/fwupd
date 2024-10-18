@@ -129,7 +129,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	istr = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
 	if (istr == NULL)
 		return FALSE;
-	blob = fu_input_stream_read_bytes(istr, 0x0, nr_chunks * FU_TBT_CHUNK_SZ, error);
+	blob = fu_input_stream_read_bytes(istr, 0x0, nr_chunks * FU_TBT_CHUNK_SZ, NULL, error);
 	if (blob == NULL)
 		return FALSE;
 	istr_partial = g_memory_input_stream_new_from_bytes(blob);

@@ -123,7 +123,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 		guint16 checksum_verify;
 		g_autoptr(GBytes) blob_hdr = NULL;
 
-		blob_hdr = fu_input_stream_read_bytes(stream, 0x0, hdr_length, error);
+		blob_hdr = fu_input_stream_read_bytes(stream, 0x0, hdr_length, NULL, error);
 		if (blob_hdr == NULL)
 			return FALSE;
 		checksum_verify = fu_sum16w_bytes(blob_hdr, G_LITTLE_ENDIAN);

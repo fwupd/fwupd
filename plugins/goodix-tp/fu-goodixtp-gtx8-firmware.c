@@ -51,7 +51,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	}
 
 	/* convert to blob */
-	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);

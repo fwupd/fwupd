@@ -565,7 +565,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	g_autoptr(cbor_item_t) item = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, error);
+	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	item = cbor_load(g_bytes_get_data(fw, NULL), g_bytes_get_size(fw), &result);

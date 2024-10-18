@@ -380,6 +380,7 @@ fu_usb_interface_parse(FuFirmware *firmware,
 		buf = fu_input_stream_read_byte_array(stream,
 						      st->len,
 						      self->iface.bLength - st->len,
+						      NULL,
 						      error);
 		if (buf == NULL)
 			return FALSE;

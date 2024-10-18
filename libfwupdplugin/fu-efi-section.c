@@ -86,7 +86,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 	g_autoptr(GInputStream) stream_uncomp = NULL;
 
 	/* parse all sections */
-	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
 	blob_uncomp = fu_lzma_decompress_bytes(blob, error);
@@ -119,7 +119,7 @@ fu_efi_section_parse_user_interface(FuEfiSection *self,
 			    priv->user_interface);
 		return FALSE;
 	}
-	buf = fu_input_stream_read_byte_array(stream, 0x0, G_MAXSIZE, error);
+	buf = fu_input_stream_read_byte_array(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (buf == NULL)
 		return FALSE;
 	priv->user_interface = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
@@ -143,7 +143,7 @@ fu_efi_section_parse_version(FuEfiSection *self,
 		return FALSE;
 	}
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
-	buf = fu_input_stream_read_byte_array(stream, sizeof(guint16), G_MAXSIZE, error);
+	buf = fu_input_stream_read_byte_array(stream, sizeof(guint16), G_MAXSIZE, NULL, error);
 	if (buf == NULL) {
 		g_prefix_error(error, "failed to read version buffer: ");
 		return FALSE;

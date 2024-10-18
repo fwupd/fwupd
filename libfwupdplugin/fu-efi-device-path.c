@@ -126,7 +126,7 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 			fu_struct_efi_device_path_get_length(st),
 			(guint)dp_length);
 	}
-	payload = fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, error);
+	payload = fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, NULL, error);
 	if (payload == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, payload);

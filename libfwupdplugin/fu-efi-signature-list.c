@@ -72,6 +72,7 @@ fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
 	data = fu_input_stream_read_bytes(stream,
 					  offset + sizeof(fwupd_guid_t),
 					  size - sizeof(fwupd_guid_t),
+					  NULL,
 					  error);
 	if (data == NULL) {
 		g_prefix_error(error, "failed to read signature data: ");

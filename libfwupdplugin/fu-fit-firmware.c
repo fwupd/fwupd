@@ -240,7 +240,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 					       &data_size,
 					       error))
 			return FALSE;
-		blob = fu_input_stream_read_bytes(stream, data_offset, data_size, error);
+		blob = fu_input_stream_read_bytes(stream, data_offset, data_size, NULL, error);
 		if (blob == NULL)
 			return FALSE;
 	}

@@ -475,6 +475,7 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 			buf_sec = fu_input_stream_read_byte_array(stream,
 								  offset,
 								  FPC_FF2_BLK_SEC_LINK_LEN,
+								  fu_progress_get_child(progress),
 								  error);
 			if (buf_sec == NULL)
 				return FALSE;

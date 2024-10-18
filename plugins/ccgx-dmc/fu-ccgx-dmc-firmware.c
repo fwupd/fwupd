@@ -129,8 +129,11 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 		for (int row = 0; row < seg_rcd->num_rows; row++) {
 			g_autoptr(GBytes) data_rcd = NULL;
 
-			data_rcd =
-			    fu_input_stream_read_bytes(stream, row_off, row_size_bytes, error);
+			data_rcd = fu_input_stream_read_bytes(stream,
+							      row_off,
+							      row_size_bytes,
+							      NULL,
+							      error);
 			if (data_rcd == NULL)
 				return FALSE;
 
@@ -292,7 +295,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_version_raw(firmware, hdr_composite_version);
 
 	/* read fwct data */
-	self->fwct_blob = fu_input_stream_read_bytes(stream, 0x0, hdr_size, error);
+	self->fwct_blob = fu_input_stream_read_bytes(stream, 0x0, hdr_size, NULL, error);
 	if (self->fwct_blob == NULL)
 		return FALSE;
 
@@ -303,7 +306,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	}
 	if (mdbufsz > 0) {
 		self->custom_meta_blob =
-		    fu_input_stream_read_bytes(stream, hdr_size + 2, mdbufsz, error);
+		    fu_input_stream_read_bytes(stream, hdr_size + 2, mdbufsz, NULL, error);
 		if (self->custom_meta_blob == NULL)
 			return FALSE;
 	}

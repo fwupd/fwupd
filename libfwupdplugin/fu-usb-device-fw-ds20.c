@@ -38,7 +38,7 @@ fu_usb_device_fw_ds20_parse(FuUsbDeviceDs20 *self,
 	g_autoptr(GBytes) blob = NULL;
 
 	/* convert to blob */
-	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, error);
+	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
 
