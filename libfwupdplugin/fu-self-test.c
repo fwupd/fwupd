@@ -221,6 +221,11 @@ fu_msgpack_func(void)
 		g_assert_cmpint(fu_msgpack_item_get_kind(item), ==, kinds[i]);
 	}
 	g_assert_cmpint(fu_msgpack_item_get_map(g_ptr_array_index(items_new, 0)), ==, 4);
+	g_assert_cmpint(fu_msgpack_item_get_integer(g_ptr_array_index(items_new, 2)), ==, 6);
+	g_assert_cmpint(fu_msgpack_item_get_integer(g_ptr_array_index(items_new, 4)), ==, 256);
+	g_assert_cmpfloat_with_epsilon(fu_msgpack_item_get_float(g_ptr_array_index(items_new, 6)),
+				       1.0,
+				       0.00001);
 	g_assert_cmpint(fu_msgpack_item_get_array(g_ptr_array_index(items_new, 8)), ==, 1);
 }
 
