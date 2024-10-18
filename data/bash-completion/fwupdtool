@@ -32,6 +32,7 @@ _fwupdtool_cmd_list=(
 	'get-remotes'
 	'get-report-metadata'
 	'get-topology'
+	'get-version-formats'
 	'hwids'
 	'update'
 	'upgrade'

@@ -445,6 +445,46 @@ fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gint
+fu_util_verfmt_sort_cb(gconstpointer a, gconstpointer b)
+{
+	return g_strcmp0(*(const gchar **)a, *(const gchar **)b);
+}
+
+static gboolean
+fu_util_get_verfmts(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) verfmts = g_ptr_array_new_with_free_func((GDestroyNotify)g_free);
+
+	for (guint i = FWUPD_VERSION_FORMAT_PLAIN; i < FWUPD_VERSION_FORMAT_LAST; i++) {
+		g_autofree gchar *format = g_strdup(fwupd_version_format_to_string(i));
+		if (format == NULL)
+			continue;
+		g_ptr_array_add(verfmts, g_steal_pointer(&format));
+	}
+	g_ptr_array_sort(verfmts, (GCompareFunc)fu_util_verfmt_sort_cb);
+
+	/* print */
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < verfmts->len; i++) {
+			const gchar *verfmt = g_ptr_array_index(verfmts, i);
+			json_builder_add_string_value(builder, verfmt);
+		}
+		json_builder_end_array(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
+
+	/* print */
+	for (guint i = 0; i < verfmts->len; i++) {
+		const gchar *verfmt = g_ptr_array_index(verfmts, i);
+		fu_console_print_literal(priv->console, verfmt);
+	}
+
+	return TRUE;
+}
+
 static gboolean
 fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -4985,6 +5025,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Disables virtual testing devices"),
 			      fu_util_disable_test_devices);
+	fu_util_cmd_array_add(cmd_array,
+			      "get-version-formats",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Get all known version formats"),
+			      fu_util_get_verfmts);
 	fu_util_cmd_array_add(cmd_array,
 			      "vercmp",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
