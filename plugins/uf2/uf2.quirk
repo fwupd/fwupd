@@ -1,7 +1,7 @@
 # Raspberry Pi RP2 [no CURRENT.UF2]
 [USB\VID_2E8A&PID_0003]
 Guid = UF2\FAMILY_E48BFF56
-Flags = updatable,will-disappear
+Flags = updatable
 
 # Adafruit Trinket
 [USB\VID_1781&PID_0C9F]
@@ -149,6 +149,7 @@ Name = ESP32C3
 [UF2\FAMILY_E48BFF56]
 Name = RP2040
 Vendor = Raspberry Pi
+Flags = automatically-restarts
 
 [UF2\FAMILY_00FF6919]
 Name = STM32L4
