@@ -57,6 +57,17 @@ typically be written as the file is copied.
 
 The vendor ID is set from the USB vendor.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=has-runtime`
+
+This is automatically set if the device is expected to go back to a runtime component, and it can
+also be set in the quirk file if the bootloader has a non-generic VID and PID.
+
+Since: 2.0.2
+
 ## External Interface Access
 
 This plugin requires permission to mount, write a file and unmount the mass
