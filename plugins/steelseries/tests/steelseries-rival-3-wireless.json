@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/0e227c83714c7c37ac8053164d420d1ca2b85d68b65ba60d51aa0a6b03ee4087-SteelSeries_Rival_3_Wireless_1.4.cab",
+      "emulation-url": "https://fwupd.org/downloads/5a2f36255139825c58aca8f09e183e6239f227a81626596518c139b6551112b1-SteelSeries_Rival_3_Wireless_1.4.emulation.zip",
       "components": [
         {
           "version": "1.4",

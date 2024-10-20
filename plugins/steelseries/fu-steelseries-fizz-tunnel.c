@@ -10,7 +10,7 @@
 #include "fu-steelseries-fizz-impl.h"
 #include "fu-steelseries-fizz-tunnel.h"
 
-#define STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL 20000 /* ms*/
+#define FU_STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL 20000 /* ms*/
 
 struct _FuSteelseriesFizzTunnel {
 	FuDevice parent_instance;
@@ -22,7 +22,7 @@ static gboolean
 fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	guint8 status;
+	FuSteelseriesFizzConnectionStatus status = FU_STEELSERIES_FIZZ_CONNECTION_STATUS_CONNECTED;
 	guint8 level;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *version = NULL;
@@ -38,8 +38,9 @@ fu_steelseries_fizz_tunnel_ping(FuDevice *device, gboolean *reached, GError **er
 		g_prefix_error(error, "failed to get connection status: ");
 		return FALSE;
 	}
-	g_debug("ConnectionStatus: %u", status);
-	*reached = status != STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
+	g_debug("FuSteelseriesFizzConnection: %s",
+		fu_steelseries_fizz_connection_status_to_string(status));
+	*reached = status != FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
 	if (!*reached) {
 		/* success */
 		return TRUE;
@@ -86,15 +87,18 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 						 GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	guint8 status;
+	FuSteelseriesFizzConnectionStatus status;
 	gboolean reached;
 
-	if (!fu_steelseries_fizz_get_connection_status(parent, &status, error)) {
+	if (!fu_steelseries_fizz_get_connection_status(FU_STEELSERIES_FIZZ(parent),
+						       &status,
+						       error)) {
 		g_prefix_error(error, "failed to get connection status: ");
 		return FALSE;
 	}
-	g_debug("ConnectionStatus: %u", status);
-	if (status == STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
+	g_debug("FuSteelseriesFizzConnection: %s",
+		fu_steelseries_fizz_connection_status_to_string(status));
+	if (status == FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
 		return FALSE;
 	}
@@ -136,9 +140,9 @@ fu_steelseries_fizz_tunnel_detach(FuDevice *device, FuProgress *progress, GError
 		return TRUE;
 
 	/* switch to bootloader mode only if device needs it */
-	if (!fu_steelseries_fizz_reset(device,
+	if (!fu_steelseries_fizz_reset(FU_STEELSERIES_FIZZ(device),
 				       FALSE,
-				       STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
+				       FU_STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
 				       error))
 		return FALSE;
 
@@ -161,9 +165,9 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 67, "sleep");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 33, NULL);
 
-	if (!fu_steelseries_fizz_reset(parent,
+	if (!fu_steelseries_fizz_reset(FU_STEELSERIES_FIZZ(parent),
 				       TRUE,
-				       STEELSERIES_FIZZ_RESET_MODE_NORMAL,
+				       FU_STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
 		g_warning("failed to reset: %s", error_local->message);
 	fu_progress_step_done(progress);
@@ -282,12 +286,18 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 	guint32 calculated_crc;
 	guint32 stored_crc;
 	gboolean reached;
-	guint8 fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
-	guint8 id =
-	    fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
+	guint8 fs = 0;
+	guint8 id = 0;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, &fs, error))
+		return FALSE;
+	if (!fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  FALSE,
+						  &id,
+						  error))
+		return FALSE;
 
 	/* open */
 	locker = fu_device_locker_new(parent, error);
@@ -309,7 +319,7 @@ fu_steelseries_fizz_tunnel_poll(FuDevice *device, GError **error)
 	/* set reachable here since we ignore crc error while polling device */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UNREACHABLE);
 
-	if (!fu_steelseries_fizz_get_crc32_fs(parent,
+	if (!fu_steelseries_fizz_get_crc32_fs(FU_STEELSERIES_FIZZ(parent),
 					      TRUE,
 					      fs,
 					      id,
@@ -344,15 +354,21 @@ fu_steelseries_fizz_tunnel_write_firmware(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
-	guint8 fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
-	guint8 id =
-	    fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
+	guint8 fs = 0;
+	guint8 id = 0;
+
+	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, &fs, error))
+		return FALSE;
+	if (!fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  FALSE,
+						  &id,
+						  error))
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL);
 
-	if (!fu_steelseries_fizz_write_firmware_fs(parent,
+	if (!fu_steelseries_fizz_write_firmware_fs(FU_STEELSERIES_FIZZ(parent),
 						   TRUE,
 						   fs,
 						   id,
@@ -372,16 +388,22 @@ fu_steelseries_fizz_tunnel_read_firmware(FuDevice *device, FuProgress *progress,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
-	guint8 fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
-	guint8 id =
-	    fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
+	guint8 fs = 0;
+	guint8 id = 0;
 	g_autoptr(FuFirmware) firmware = NULL;
+
+	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, &fs, error))
+		return NULL;
+	if (!fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						  FALSE,
+						  &id,
+						  error))
+		return NULL;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
-	firmware = fu_steelseries_fizz_read_firmware_fs(parent,
+	firmware = fu_steelseries_fizz_read_firmware_fs(FU_STEELSERIES_FIZZ(parent),
 							TRUE,
 							fs,
 							id,
@@ -445,7 +467,7 @@ fu_steelseries_fizz_tunnel_init(FuSteelseriesFizzTunnel *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");
 	fu_device_set_logical_id(FU_DEVICE(self), "tunnel");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE); /* 10 s */
-	fu_device_set_poll_interval(FU_DEVICE(self), STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL);
+	fu_device_set_poll_interval(FU_DEVICE(self), FU_STEELSERIES_FIZZ_TUNNEL_POLL_INTERVAL);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_STEELSERIES_FIRMWARE);
 }

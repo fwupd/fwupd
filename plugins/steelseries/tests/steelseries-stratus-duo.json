@@ -1,0 +1,19 @@
+{
+  "name": "Steelseries Stratus Duo Gamepad",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/ecc54ffe68eebb0e5d77604683df698e7c15911421eee960d2876c175a2aa164-steelseries-stratusduo-1.75.cab",
+      "emulation-url": "https://fwupd.org/downloads/4da8d30dfe2343273162121a99b5ce31039e0f9e0590e15582821d32f64cf7c5-steelseries-stratusduo-1.75.emulation.zip",
+      "components": [
+        {
+          "version": "1.75",
+          "guids": [
+            "3c432d75-7e6f-5a7c-8fc1-4d1490fc4cde",
+            "5bc1707d-5681-54f9-b4d7-8c4c53279db6"
+          ]
+        }
+      ]
+    }
+  ]
+}

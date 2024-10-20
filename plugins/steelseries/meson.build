@@ -3,6 +3,11 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('steelseries.quirk')
 plugin_builtins += static_library('fu_plugin_steelseries',
+  rustgen.process([
+    'fu-steelseries-fizz.rs',
+    'fu-steelseries-gamepad.rs',
+    'fu-steelseries-sonic.rs',
+  ]),
   sources: [
     'fu-steelseries-plugin.c',
     'fu-steelseries-device.c',
@@ -23,7 +28,10 @@ plugin_builtins += static_library('fu_plugin_steelseries',
   dependencies: plugin_deps,
 )
 
-device_tests += files('tests/steelseries-aerox-3-wireless.json',
-                      'tests/steelseries-nova5.json',
-                      'tests/steelseries-rival-3-wireless.json',
+device_tests += files(
+  'tests/steelseries-aerox-3-wireless.json',
+  'tests/steelseries-nova5.json',
+  'tests/steelseries-rival-3-wireless.json',
+  'tests/steelseries-stratus-duo.json',
+  'tests/steelseries-stratus-duo-rx.json',
 )
