@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-steelseries-device.h"
+#include "fu-steelseries-fizz-struct.h"
 
 #define FU_TYPE_STEELSERIES_FIZZ (fu_steelseries_fizz_get_type())
 G_DECLARE_FINAL_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU, STEELSERIES_FIZZ, FuUsbDevice)
@@ -16,19 +17,16 @@ G_DECLARE_FINAL_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU, STEELSERIES_FIZ
 FuSteelseriesFizz *
 fu_steelseries_fizz_new(FuDevice *self);
 
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED 0x00U
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_CONNECTED	 0x01U
-
-#define STEELSERIES_FIZZ_RESET_MODE_NORMAL     0x00U
-#define STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER 0x01U
-
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_CHARGING_BIT 0x80U
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS  0x7fU
+#define FU_STEELSERIES_FIZZ_BATTERY_LEVEL_CHARGING_BIT 0x80U
+#define FU_STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS  0x7fU
 
 gboolean
-fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error);
+fu_steelseries_fizz_reset(FuSteelseriesFizz *self,
+			  gboolean tunnel,
+			  FuSteelseriesFizzResetMode mode,
+			  GError **error);
 gboolean
-fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
+fu_steelseries_fizz_get_crc32_fs(FuSteelseriesFizz *self,
 				 gboolean tunnel,
 				 guint8 fs,
 				 guint8 id,
@@ -36,7 +34,7 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 				 guint32 *stored_crc,
 				 GError **error);
 FuFirmware *
-fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
+fu_steelseries_fizz_read_firmware_fs(FuSteelseriesFizz *self,
 				     gboolean tunnel,
 				     guint8 fs,
 				     guint8 id,
@@ -44,7 +42,7 @@ fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
 				     FuProgress *progress,
 				     GError **error);
 gboolean
-fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
+fu_steelseries_fizz_write_firmware_fs(FuSteelseriesFizz *self,
 				      gboolean tunnel,
 				      guint8 fs,
 				      guint8 id,
@@ -53,9 +51,11 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error);
 gboolean
-fu_steelseries_fizz_get_battery_level(FuDevice *device,
+fu_steelseries_fizz_get_battery_level(FuSteelseriesFizz *self,
 				      gboolean tunnel,
 				      guint8 *level,
 				      GError **error);
 gboolean
-fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error);
+fu_steelseries_fizz_get_connection_status(FuSteelseriesFizz *self,
+					  FuSteelseriesFizzConnectionStatus *status,
+					  GError **error);

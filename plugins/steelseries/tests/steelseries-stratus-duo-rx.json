@@ -1,0 +1,19 @@
+{
+  "name": "Steelseries Stratus Duo RX",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/10521cfeed9086a597892469fbff79ab5d9b83d3b062f606a8ab6bf34664f6dd-steelseries-stratusduorx-1.75.cab",
+      "emulation-url": "https://fwupd.org/downloads/bec561d97746ae0251fca3e26355423cd2771e4c3addecab04daee851d3d877d-steelseries-stratusduorx-1.75.emulation.zip",
+      "components": [
+        {
+          "version": "1.75",
+          "guids": [
+            "4806f086-94a5-5347-96b6-3379532dfe17",
+            "2a962d9a-89e2-5b8f-8cfb-cffca4876818"
+          ]
+        }
+      ]
+    }
+  ]
+}

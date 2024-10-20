@@ -6,77 +6,25 @@
 
 #include "config.h"
 
+#include "fu-steelseries-sonic-struct.h"
 #include "fu-steelseries-sonic.h"
 
-#define STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE 128
-#define STEELSERIES_BUFFER_RAM_TRANSFER_SIZE   48
+#define FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE 128
 
-#define STEELSERIES_SONIC_WIRELESS_STATUS_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_WIRELESS_STATUS_VALUE_OFFSET	0x0U
-
-#define STEELSERIES_SONIC_BATTERY_OPCODE_OFFSET	  0x0U
-#define STEELSERIES_SONIC_BATTERY_BAT_MODE_OFFSET 0x1U
-#define STEELSERIES_SONIC_BATTERY_VALUE_OFFSET	  0x0U
-
-#define STEELSERIES_SONIC_READ_FROM_RAM_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_READ_FROM_RAM_OFFSET_OFFSET 0x2U
-#define STEELSERIES_SONIC_READ_FROM_RAM_SIZE_OFFSET   0x4U
-#define STEELSERIES_SONIC_READ_FROM_RAM_DATA_OFFSET   0x0U
-
-#define STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_READ_FROM_FLASH_CHIPID_OFFSET 0x2U
-#define STEELSERIES_SONIC_READ_FROM_FLASH_OFFSET_OFFSET 0x4U
-#define STEELSERIES_SONIC_READ_FROM_FLASH_SIZE_OFFSET	0x8U
-
-#define STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_WRITE_TO_RAM_OFFSET_OFFSET 0x2U
-#define STEELSERIES_SONIC_WRITE_TO_RAM_SIZE_OFFSET   0x4U
-#define STEELSERIES_SONIC_WRITE_TO_RAM_DATA_OFFSET   0x6U
-
-#define STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_WRITE_TO_FLASH_CHIPID_OFFSET 0x2U
-#define STEELSERIES_SONIC_WRITE_TO_FLASH_OFFSET_OFFSET 0x4U
-#define STEELSERIES_SONIC_WRITE_TO_FLASH_SIZE_OFFSET   0x8U
-
-#define STEELSERIES_SONIC_ERASE_OPCODE_OFFSET 0x0U
-#define STEELSERIES_SONIC_ERASE_CHIPID_OFFSET 0x2U
-
-#define STEELSERIES_SONIC_RESTART_CHIPID_OFFSET 0x0U
-
-typedef enum {
-	STEELSERIES_SONIC_CHIP_NORDIC = 0,
-	STEELSERIES_SONIC_CHIP_HOLTEK,
-	STEELSERIES_SONIC_CHIP_MOUSE,
-	/*< private >*/
-	STEELSERIES_SONIC_CHIP_LAST,
-} SteelseriesSonicChip;
-
-typedef enum {
-	STEELSERIES_SONIC_WIRELESS_STATE_OFF,  /* WDS not initiated, radio is off */
-	STEELSERIES_SONIC_WIRELESS_STATE_IDLE, /* WDS initiated, USB receiver is transmitting beacon
-						* (mouse will not have this state) */
-	STEELSERIES_SONIC_WIRELESS_STATE_SEARCH, /* WDS initiated, mouse is trying to synchronize to
-						  * receiver (receiver will not have this state) */
-	STEELSERIES_SONIC_WIRELESS_STATE_LOCKED, /* USB receiver and mouse are synchronized, but not
-						  * necessarily connected. */
-	STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED,  /* USB receiver and mouse are connected. */
-	STEELSERIES_SONIC_WIRELESS_STATE_TERMINATED, /* Mouse has been disconnected from the USB
-						      * receiver.
-						      */
-} SteelseriesSonicWirelessStatus;
-
-const guint16 STEELSERIES_SONIC_READ_FROM_RAM_OPCODE[] = {0x00c3U, 0x00c3U, 0x0083U};
-const guint16 STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE[] = {0x00c5U, 0x00c5U, 0x0085U};
-const guint16 STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[] = {0x0043U, 0x0043U, 0x0003U};
-const guint16 STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE[] = {0x0045U, 0x0045U, 0x0005U};
-const guint16 STEELSERIES_SONIC_ERASE_OPCODE[] = {0x0048U, 0x0048U, 0x0008U};
-const guint16 STEELSERIES_SONIC_RESTART_OPCODE[] = {0x0041U, 0x0041U, 0x0001U};
-const guint16 STEELSERIES_SONIC_CHIP[] = {0x0002U, 0x0003U, 0x0002U};
-const guint32 STEELSERIES_SONIC_FIRMWARE_SIZE[] = {0x9000U, 0x4000U, 0x12000U};
-const gchar *STEELSERIES_SONIC_FIRMWARE_ID[] = {"app-nordic.bin",
-						"app-holtek.bin",
-						"mouse-app.bin"};
-const guint STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[][2] = {{5, 95}, {11, 89}, {3, 97}};
+const guint16 FU_STEELSERIES_SONIC_READ_FROM_RAM_OPCODE[] = {0x00c3U, 0x00c3U, 0x0083U};
+const guint16 FU_STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE[] = {0x00c5U, 0x00c5U, 0x0085U};
+const guint16 FU_STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[] = {0x0043U, 0x0043U, 0x0003U};
+const guint16 FU_STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE[] = {0x0045U, 0x0045U, 0x0005U};
+const guint16 FU_STEELSERIES_SONIC_ERASE_OPCODE[] = {0x0048U, 0x0048U, 0x0008U};
+const guint16 FU_STEELSERIES_SONIC_RESTART_OPCODE[] = {0x0041U, 0x0041U, 0x0001U};
+const guint16 FU_STEELSERIES_SONIC_CHIP[] = {0x0002U, 0x0003U, 0x0002U};
+const guint32 FU_STEELSERIES_SONIC_FIRMWARE_SIZE[] = {0x9000U, 0x4000U, 0x12000U};
+const gchar *FU_STEELSERIES_SONIC_FIRMWARE_ID[] = {
+    "app-nordic.bin",
+    "app-holtek.bin",
+    "mouse-app.bin",
+};
+const guint FU_STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[][2] = {{5, 95}, {11, 89}, {3, 97}};
 
 struct _FuSteelseriesSonic {
 	FuSteelseriesDevice parent_instance;
@@ -85,148 +33,118 @@ struct _FuSteelseriesSonic {
 G_DEFINE_TYPE(FuSteelseriesSonic, fu_steelseries_sonic, FU_TYPE_STEELSERIES_DEVICE)
 
 static gboolean
-fu_steelseries_sonic_wireless_status(FuDevice *device,
-				     SteelseriesSonicWirelessStatus *status,
+fu_steelseries_sonic_wireless_status(FuSteelseriesSonic *self,
+				     FuSteelseriesSonicWirelessStatus *status,
 				     GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 opcode = 0xE8U; /* USB receiver */
-	guint8 value;
+	g_autoptr(FuStructSteelseriesSonicWirelessStatusReq) st_req =
+	    fu_struct_steelseries_sonic_wireless_status_req_new();
+	g_autoptr(FuStructSteelseriesSonicWirelessStatusRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_WIRELESS_STATUS_OPCODE_OFFSET,
-				    opcode,
-				    error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "WirelessStatus", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "WirelessStatus", data, sizeof(data));
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_SONIC_WIRELESS_STATUS_VALUE_OFFSET,
-				   &value,
-				   error))
+	st_res = fu_struct_steelseries_sonic_wireless_status_res_parse(buf_res->data,
+								       buf_res->len,
+								       0x0,
+								       error);
+	if (st_res == NULL)
 		return FALSE;
-	*status = value;
+	*status = fu_struct_steelseries_sonic_wireless_status_res_get_status(st_res);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_steelseries_sonic_battery_state(FuDevice *device, guint16 *value, GError **error)
+fu_steelseries_sonic_ensure_battery_state(FuSteelseriesSonic *self, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 opcode = 0xAAU;
-	const guint8 bat_mode = 0x01U; /* percentage */
+	g_autoptr(FuStructSteelseriesSonicBatteryReq) st_req =
+	    fu_struct_steelseries_sonic_battery_req_new();
+	g_autoptr(FuStructSteelseriesSonicBatteryRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_BATTERY_OPCODE_OFFSET,
-				    opcode,
-				    error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_BATTERY_BAT_MODE_OFFSET,
-				    bat_mode,
-				    error))
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryState", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
+	st_res =
+	    fu_struct_steelseries_sonic_battery_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryState", data, sizeof(data));
-	if (!fu_memread_uint16_safe(data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_BATTERY_VALUE_OFFSET,
-				    value,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	fu_device_set_battery_level(FU_DEVICE(self),
+				    fu_struct_steelseries_sonic_battery_res_get_value(st_res));
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_steelseries_sonic_read_from_ram(FuDevice *device,
-				   SteelseriesSonicChip chip,
+fu_steelseries_sonic_read_from_ram_chunk(FuSteelseriesSonic *self,
+					 FuSteelseriesSonicChip chip,
+					 FuChunk *chk,
+					 GError **error)
+{
+	const guint8 *data;
+	gsize datasz = 0;
+	g_autoptr(FuStructSteelseriesSonicReadFromRamReq) st_req =
+	    fu_struct_steelseries_sonic_read_from_ram_req_new();
+	g_autoptr(FuStructSteelseriesSonicReadFromRamRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
+
+	fu_struct_steelseries_sonic_read_from_ram_req_set_opcode(
+	    st_req,
+	    FU_STEELSERIES_SONIC_READ_FROM_RAM_OPCODE[chip]);
+	fu_struct_steelseries_sonic_read_from_ram_req_set_offset(st_req, fu_chunk_get_address(chk));
+	fu_struct_steelseries_sonic_read_from_ram_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return FALSE;
+
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	st_res = fu_struct_steelseries_sonic_read_from_ram_res_parse(buf_res->data,
+								     buf_res->len,
+								     0x0,
+								     error);
+	if (st_res == NULL)
+		return FALSE;
+	data = fu_struct_steelseries_sonic_read_from_ram_res_get_data(st_res, &datasz);
+	return fu_memcpy_safe(fu_chunk_get_data_out(chk),
+			      fu_chunk_get_data_sz(chk),
+			      0x0,
+			      data,
+			      datasz,
+			      0x0,
+			      fu_chunk_get_data_sz(chk),
+			      error);
+}
+
+static gboolean
+fu_steelseries_sonic_read_from_ram(FuSteelseriesSonic *self,
+				   FuSteelseriesSonicChip chip,
 				   guint32 address,
 				   guint8 *buf,
 				   guint16 bufsz,
 				   FuProgress *progress,
 				   GError **error)
 {
-	const guint16 opcode = STEELSERIES_SONIC_READ_FROM_RAM_OPCODE[chip];
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	chunks =
-	    fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_RAM_TRANSFER_SIZE);
+	    fu_chunk_array_mutable_new(buf,
+				       bufsz,
+				       0x0,
+				       0x0,
+				       FU_STRUCT_STEELSERIES_SONIC_READ_FROM_RAM_RES_SIZE_DATA);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		const guint16 offset = fu_chunk_get_address(chk);
-		const guint16 size = fu_chunk_get_data_sz(chk);
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_RAM_OPCODE_OFFSET,
-					     opcode,
-					     G_LITTLE_ENDIAN,
-					     error))
+		if (!fu_steelseries_sonic_read_from_ram_chunk(self, chip, chk, error))
 			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_RAM_OFFSET_OFFSET,
-					     offset,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_RAM_SIZE_OFFSET,
-					     size,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-					       data,
-					       sizeof(data),
-					       TRUE,
-					       error))
-			return FALSE;
-		fu_dump_raw(G_LOG_DOMAIN, "ReadFromRAM", data, sizeof(data));
-
-		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
-				    fu_chunk_get_data_sz(chk),
-				    0x0,
-				    data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_READ_FROM_RAM_DATA_OFFSET,
-				    fu_chunk_get_data_sz(chk),
-				    error))
-			return FALSE;
-
 		fu_progress_step_done(progress);
 	}
 
@@ -235,81 +153,63 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_read_from_flash(FuDevice *device,
-				     SteelseriesSonicChip chip,
+fu_steelseries_sonic_read_from_flash_chunk(FuSteelseriesSonic *self,
+					   FuSteelseriesSonicChip chip,
+					   FuChunk *chk,
+					   FuProgress *progress,
+					   GError **error)
+{
+	g_autoptr(FuStructSteelseriesSonicReadFromFlashReq) st_req =
+	    fu_struct_steelseries_sonic_read_from_flash_req_new();
+
+	fu_struct_steelseries_sonic_read_from_flash_req_set_opcode(
+	    st_req,
+	    FU_STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE[chip]);
+	fu_struct_steelseries_sonic_read_from_flash_req_set_chipid(st_req,
+								   FU_STEELSERIES_SONIC_CHIP[chip]);
+	fu_struct_steelseries_sonic_read_from_flash_req_set_offset(st_req,
+								   fu_chunk_get_address(chk));
+	fu_struct_steelseries_sonic_read_from_flash_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return FALSE;
+
+	/* timeout to give some time to read from flash to ram */
+	fu_device_sleep(FU_DEVICE(self), 15); /* ms */
+
+	return fu_steelseries_sonic_read_from_ram(self,
+						  chip,
+						  fu_chunk_get_address(chk),
+						  fu_chunk_get_data_out(chk),
+						  fu_chunk_get_data_sz(chk),
+						  progress,
+						  error);
+}
+
+static gboolean
+fu_steelseries_sonic_read_from_flash(FuSteelseriesSonic *self,
+				     FuSteelseriesSonicChip chip,
 				     guint32 address,
 				     guint8 *buf,
 				     gsize bufsz,
 				     FuProgress *progress,
 				     GError **error)
 {
-	const guint16 opcode = STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE[chip];
-	const guint16 chipid = STEELSERIES_SONIC_CHIP[chip];
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	chunks = fu_chunk_array_mutable_new(buf,
 					    bufsz,
 					    address,
 					    0x0,
-					    STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
+					    FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		const guint32 offset = fu_chunk_get_address(chk);
-		const guint16 size = fu_chunk_get_data_sz(chk);
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_FLASH_OPCODE_OFFSET,
-					     opcode,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_FLASH_CHIPID_OFFSET,
-					     chipid,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint32_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_FLASH_OFFSET_OFFSET,
-					     offset,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_READ_FROM_FLASH_SIZE_OFFSET,
-					     size,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-					       data,
-					       sizeof(data),
-					       FALSE,
-					       error))
-			return FALSE;
-		fu_dump_raw(G_LOG_DOMAIN, "ReadFromFlash", data, sizeof(data));
-
-		/* timeout to give some time to read from flash to ram */
-		fu_device_sleep(device, 15); /* ms */
-
-		if (!fu_steelseries_sonic_read_from_ram(device,
-							chip,
-							offset,
-							fu_chunk_get_data_out(chk),
-							size,
-							fu_progress_get_child(progress),
-							error))
+		if (!fu_steelseries_sonic_read_from_flash_chunk(self,
+								chip,
+								chk,
+								fu_progress_get_child(progress),
+								error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -319,21 +219,46 @@ fu_steelseries_sonic_read_from_flash(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_write_to_ram(FuDevice *device,
-				  SteelseriesSonicChip chip,
+fu_steelseries_sonic_write_to_ram_chunk(FuSteelseriesSonic *self,
+					FuSteelseriesSonicChip chip,
+					FuChunk *chk,
+					GError **error)
+{
+	g_autoptr(FuStructSteelseriesSonicWriteToRamReq) st_req =
+	    fu_struct_steelseries_sonic_write_to_ram_req_new();
+	fu_struct_steelseries_sonic_write_to_ram_req_set_opcode(
+	    st_req,
+	    FU_STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[chip]);
+	fu_struct_steelseries_sonic_write_to_ram_req_set_offset(st_req, fu_chunk_get_address(chk));
+	fu_struct_steelseries_sonic_write_to_ram_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+	if (!fu_struct_steelseries_sonic_write_to_ram_req_set_data(st_req,
+								   fu_chunk_get_data(chk),
+								   fu_chunk_get_data_sz(chk),
+								   error))
+		return FALSE;
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return FALSE;
+
+	/* timeout to give some time to write to ram */
+	fu_device_sleep(FU_DEVICE(self), 15); /* ms */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_sonic_write_to_ram(FuSteelseriesSonic *self,
+				  FuSteelseriesSonicChip chip,
 				  guint16 address,
 				  GBytes *fw,
 				  FuProgress *progress,
 				  GError **error)
 {
-	const guint16 opcode = STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE[chip];
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       STEELSERIES_BUFFER_RAM_TRANSFER_SIZE);
+	chunks =
+	    fu_chunk_array_new_from_bytes(fw,
+					  FU_CHUNK_ADDR_OFFSET_NONE,
+					  FU_CHUNK_PAGESZ_NONE,
+					  FU_STRUCT_STEELSERIES_SONIC_WRITE_TO_RAM_REQ_SIZE_DATA);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
@@ -344,51 +269,8 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_RAM_OPCODE_OFFSET,
-					     opcode,
-					     G_LITTLE_ENDIAN,
-					     error))
+		if (!fu_steelseries_sonic_write_to_ram_chunk(self, chip, chk, error))
 			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_RAM_OFFSET_OFFSET,
-					     fu_chunk_get_address(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_RAM_SIZE_OFFSET,
-					     fu_chunk_get_data_sz(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memcpy_safe(data,
-				    sizeof(data),
-				    STEELSERIES_SONIC_WRITE_TO_RAM_DATA_OFFSET,
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    0x0,
-				    fu_chunk_get_data_sz(chk),
-				    error))
-			return FALSE;
-
-		fu_dump_raw(G_LOG_DOMAIN, "WriteToRAM", data, sizeof(data));
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-					       data,
-					       sizeof(data),
-					       FALSE,
-					       error))
-			return FALSE;
-
-		/* timeout to give some time to write to ram */
-		fu_device_sleep(device, 15); /* ms */
 		fu_progress_step_done(progress);
 	}
 
@@ -397,85 +279,71 @@ fu_steelseries_sonic_write_to_ram(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_write_to_flash(FuDevice *device,
-				    SteelseriesSonicChip chip,
+fu_steelseries_sonic_write_to_flash_chunk(FuSteelseriesSonic *self,
+					  FuSteelseriesSonicChip chip,
+					  FuChunk *chk,
+					  FuProgress *progress,
+					  GError **error)
+{
+	g_autoptr(GBytes) chk_blob = NULL;
+	g_autoptr(FuStructSteelseriesSonicWriteToFlashReq) st_req =
+	    fu_struct_steelseries_sonic_write_to_flash_req_new();
+
+	chk_blob = fu_chunk_get_bytes(chk);
+	if (!fu_steelseries_sonic_write_to_ram(self,
+					       chip,
+					       fu_chunk_get_address(chk),
+					       chk_blob,
+					       progress,
+					       error))
+		return FALSE;
+
+	fu_struct_steelseries_sonic_write_to_flash_req_set_opcode(
+	    st_req,
+	    FU_STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE[chip]);
+	fu_struct_steelseries_sonic_write_to_flash_req_set_chipid(st_req,
+								  FU_STEELSERIES_SONIC_CHIP[chip]);
+	fu_struct_steelseries_sonic_write_to_flash_req_set_offset(st_req,
+								  fu_chunk_get_address(chk));
+	fu_struct_steelseries_sonic_write_to_flash_req_set_size(st_req, fu_chunk_get_data_sz(chk));
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return FALSE;
+
+	/* timeout to give some time to write from ram to flash */
+	fu_device_sleep(FU_DEVICE(self), 15); /* ms */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_sonic_write_to_flash(FuSteelseriesSonic *self,
+				    FuSteelseriesSonicChip chip,
 				    guint32 address,
 				    GBytes *fw,
 				    FuProgress *progress,
 				    GError **error)
 {
-	const guint16 opcode = STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE[chip];
-	const guint16 chipid = STEELSERIES_SONIC_CHIP[chip];
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
+					       FU_STEELSERIES_BUFFER_FLASH_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GBytes) chk_blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-
-		chk_blob = fu_chunk_get_bytes(chk);
-		if (!fu_steelseries_sonic_write_to_ram(device,
-						       chip,
-						       fu_chunk_get_address(chk),
-						       chk_blob,
-						       fu_progress_get_child(progress),
-						       error))
+		if (!fu_steelseries_sonic_write_to_flash_chunk(self,
+							       chip,
+							       chk,
+							       fu_progress_get_child(progress),
+							       error))
 			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_FLASH_OPCODE_OFFSET,
-					     opcode,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_FLASH_CHIPID_OFFSET,
-					     chipid,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint32_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_FLASH_OFFSET_OFFSET,
-					     fu_chunk_get_address(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_SONIC_WRITE_TO_FLASH_SIZE_OFFSET,
-					     fu_chunk_get_data_sz(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		fu_dump_raw(G_LOG_DOMAIN, "WriteToFlash", data, sizeof(data));
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-					       data,
-					       sizeof(data),
-					       FALSE,
-					       error))
-			return FALSE;
-
-		/* timeout to give some time to write from ram to flash */
-		fu_device_sleep(device, 15); /* ms */
 		fu_progress_step_done(progress);
 	}
 
@@ -484,45 +352,26 @@ fu_steelseries_sonic_write_to_flash(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_erase(FuDevice *device,
-			   SteelseriesSonicChip chip,
+fu_steelseries_sonic_erase(FuSteelseriesSonic *self,
+			   FuSteelseriesSonicChip chip,
 			   FuProgress *progress,
 			   GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 opcode = STEELSERIES_SONIC_ERASE_OPCODE[chip];
-	const guint16 chipid = STEELSERIES_SONIC_CHIP[chip];
+	g_autoptr(FuStructSteelseriesSonicEraseReq) st_req =
+	    fu_struct_steelseries_sonic_erase_req_new();
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_memwrite_uint16_safe(data,
-				     sizeof(data),
-				     STEELSERIES_SONIC_ERASE_OPCODE_OFFSET,
-				     opcode,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return FALSE;
-
-	if (!fu_memwrite_uint16_safe(data,
-				     sizeof(data),
-				     STEELSERIES_SONIC_ERASE_CHIPID_OFFSET,
-				     chipid,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Erase", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       error))
+	fu_struct_steelseries_sonic_erase_req_set_opcode(st_req,
+							 FU_STEELSERIES_SONIC_ERASE_OPCODE[chip]);
+	fu_struct_steelseries_sonic_erase_req_set_chipid(st_req, FU_STEELSERIES_SONIC_CHIP[chip]);
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return FALSE;
 
 	/* timeout to give some time to erase flash */
-	fu_device_sleep_full(device, 1000, fu_progress_get_child(progress)); /* ms */
+	fu_device_sleep_full(FU_DEVICE(self), 1000, fu_progress_get_child(progress)); /* ms */
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -530,36 +379,26 @@ fu_steelseries_sonic_erase(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_restart(FuDevice *device,
-			     SteelseriesSonicChip chip,
+fu_steelseries_sonic_restart(FuSteelseriesSonic *self,
+			     FuSteelseriesSonicChip chip,
 			     FuProgress *progress,
 			     GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	const guint16 opcode = STEELSERIES_SONIC_RESTART_OPCODE[chip];
+	g_autoptr(FuStructSteelseriesSonicRestartReq) st_req =
+	    fu_struct_steelseries_sonic_restart_req_new();
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_memwrite_uint16_safe(data,
-				     sizeof(data),
-				     STEELSERIES_SONIC_RESTART_CHIPID_OFFSET,
-				     opcode,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Restart", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       error))
+	fu_struct_steelseries_sonic_restart_req_set_opcode(
+	    st_req,
+	    FU_STEELSERIES_SONIC_RESTART_OPCODE[chip]);
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return FALSE;
 
 	/* timeout to give some time to restart chip */
-	fu_device_sleep_full(device, 3000, progress); /* ms */
+	fu_device_sleep_full(FU_DEVICE(self), 3000, progress); /* ms */
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -569,14 +408,15 @@ fu_steelseries_sonic_restart(FuDevice *device,
 static gboolean
 fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	SteelseriesSonicWirelessStatus *wl_status = (SteelseriesSonicWirelessStatus *)user_data;
+	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
+	FuSteelseriesSonicWirelessStatus *wl_status = (FuSteelseriesSonicWirelessStatus *)user_data;
 
-	if (!fu_steelseries_sonic_wireless_status(device, wl_status, error)) {
+	if (!fu_steelseries_sonic_wireless_status(self, wl_status, error)) {
 		g_prefix_error(error, "failed to get wireless status: ");
 		return FALSE;
 	}
-	g_debug("WirelessStatus: %u", *wl_status);
-	if (*wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(*wl_status));
+	if (*wl_status != FU_STEELSERIES_SONIC_WIRELESS_STATUS_CONNECTED) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
 		return FALSE;
 	}
@@ -586,22 +426,22 @@ fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, G
 }
 
 static gboolean
-fu_steelseries_sonic_wait_for_connect(FuDevice *device,
+fu_steelseries_sonic_wait_for_connect(FuSteelseriesSonic *self,
 				      guint delay,
 				      FuProgress *progress,
 				      GError **error)
 {
-	SteelseriesSonicWirelessStatus wl_status;
+	FuSteelseriesSonicWirelessStatus wl_status;
 	g_autoptr(FwupdRequest) request = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *msg = NULL;
 
-	if (!fu_steelseries_sonic_wireless_status(device, &wl_status, error)) {
+	if (!fu_steelseries_sonic_wireless_status(self, &wl_status, error)) {
 		g_prefix_error(error, "failed to get wireless status: ");
 		return FALSE;
 	}
-	g_debug("WirelessStatus: %u", wl_status);
-	if (wl_status == STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(wl_status));
+	if (wl_status == FU_STEELSERIES_SONIC_WIRELESS_STATUS_CONNECTED) {
 		/* success */
 		return TRUE;
 	}
@@ -610,22 +450,22 @@ fu_steelseries_sonic_wait_for_connect(FuDevice *device,
 	msg = g_strdup_printf("%s needs to be connected to start the update. "
 			      "Please put the switch button underneath to 2.4G, or "
 			      "click on any button to reconnect it.",
-			      fu_device_get_name(device));
+			      fu_device_get_name(FU_DEVICE(self)));
 	request = fwupd_request_new();
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
 	fwupd_request_set_message(request, msg);
-	if (!fu_device_emit_request(device, request, progress, error))
+	if (!fu_device_emit_request(FU_DEVICE(self), request, progress, error))
 		return FALSE;
 
-	if (!fu_device_retry_full(device,
+	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_steelseries_sonic_wait_for_connect_cb,
 				  delay / 1000,
 				  1000,
 				  &wl_status,
 				  &error_local))
 		g_debug("%s", error_local->message);
-	if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
+	if (wl_status != FU_STEELSERIES_SONIC_WIRELESS_STATUS_CONNECTED) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
 		return FALSE;
 	}
@@ -637,7 +477,8 @@ fu_steelseries_sonic_wait_for_connect(FuDevice *device,
 static gboolean
 fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	SteelseriesSonicChip chip;
+	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
+	FuSteelseriesSonicChip chip;
 	g_autoptr(FwupdRequest) request = NULL;
 	g_autofree gchar *msg = NULL;
 
@@ -646,16 +487,16 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "holtek");
 
 	/* mouse */
-	chip = STEELSERIES_SONIC_CHIP_MOUSE;
-	if (!fu_steelseries_sonic_restart(device, chip, fu_progress_get_child(progress), error)) {
+	chip = FU_STEELSERIES_SONIC_CHIP_MOUSE;
+	if (!fu_steelseries_sonic_restart(self, chip, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to restart chip %u: ", chip);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
 
 	/* USB receiver (nordic, holtek; same command) */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
-	if (!fu_steelseries_sonic_restart(device, chip, fu_progress_get_child(progress), error)) {
+	chip = FU_STEELSERIES_SONIC_CHIP_HOLTEK;
+	if (!fu_steelseries_sonic_restart(self, chip, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to restart chip %u: ", chip);
 		return FALSE;
 	}
@@ -670,11 +511,11 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fwupd_request_set_message(request, msg);
-	if (!fu_device_emit_request(device, request, progress, error))
+	if (!fu_device_emit_request(FU_DEVICE(self), request, progress, error))
 		return FALSE;
 
 	/* success */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -684,28 +525,24 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	guint16 bat_state;
-
-	if (!fu_steelseries_sonic_wait_for_connect(device,
-						   fu_device_get_remove_delay(device),
+	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
+	if (!fu_steelseries_sonic_wait_for_connect(self,
+						   fu_device_get_remove_delay(FU_DEVICE(self)),
 						   progress,
 						   error))
 		return FALSE;
-
-	if (!fu_steelseries_sonic_battery_state(device, &bat_state, error)) {
+	if (!fu_steelseries_sonic_ensure_battery_state(self, error)) {
 		g_prefix_error(error, "failed to get battery state: ");
 		return FALSE;
 	}
-	g_debug("BatteryState: %u%%", bat_state);
-	fu_device_set_battery_level(device, bat_state);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_steelseries_sonic_write_chip(FuDevice *device,
-				SteelseriesSonicChip chip,
+fu_steelseries_sonic_write_chip(FuSteelseriesSonic *self,
+				FuSteelseriesSonicChip chip,
 				FuFirmware *firmware,
 				FuProgress *progress,
 				FwupdInstallFlags flags,
@@ -719,14 +556,14 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress,
 			     FWUPD_STATUS_DEVICE_ERASE,
-			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][0],
+			     FU_STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][0],
 			     NULL);
 	fu_progress_add_step(progress,
 			     FWUPD_STATUS_DEVICE_WRITE,
-			     STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][1],
+			     FU_STEELSERIES_SONIC_WRITE_PROGRESS_STEP_VALUE[chip][1],
 			     NULL);
 
-	fw = fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	fw = fu_firmware_get_image_by_id(firmware, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (fw == NULL)
 		return FALSE;
 	blob = fu_firmware_get_bytes(fw, error);
@@ -735,13 +572,12 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 	buf = fu_bytes_get_data_safe(blob, &bufsz, error);
 	if (buf == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, STEELSERIES_SONIC_FIRMWARE_ID[chip], buf, bufsz);
-	if (!fu_steelseries_sonic_erase(device, chip, fu_progress_get_child(progress), error)) {
+	if (!fu_steelseries_sonic_erase(self, chip, fu_progress_get_child(progress), error)) {
 		g_prefix_error(error, "failed to erase chip %u: ", chip);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_sonic_write_to_flash(device,
+	if (!fu_steelseries_sonic_write_to_flash(self,
 						 chip,
 						 0x0,
 						 blob,
@@ -757,8 +593,8 @@ fu_steelseries_sonic_write_chip(FuDevice *device,
 }
 
 static FuFirmware *
-fu_steelseries_sonic_read_chip(FuDevice *device,
-			       SteelseriesSonicChip chip,
+fu_steelseries_sonic_read_chip(FuSteelseriesSonic *self,
+			       FuSteelseriesSonicChip chip,
 			       FuProgress *progress,
 			       GError **error)
 {
@@ -769,9 +605,9 @@ fu_steelseries_sonic_read_chip(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, 1);
 
-	bufsz = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
+	bufsz = FU_STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
 	buf = g_malloc0(bufsz);
-	if (!fu_steelseries_sonic_read_from_flash(device,
+	if (!fu_steelseries_sonic_read_from_flash(self,
 						  chip,
 						  0x0,
 						  buf,
@@ -788,8 +624,8 @@ fu_steelseries_sonic_read_chip(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_sonic_verify_chip(FuDevice *device,
-				 SteelseriesSonicChip chip,
+fu_steelseries_sonic_verify_chip(FuSteelseriesSonic *self,
+				 FuSteelseriesSonicChip chip,
 				 FuFirmware *firmware,
 				 FuProgress *progress,
 				 GError **error)
@@ -802,14 +638,13 @@ fu_steelseries_sonic_verify_chip(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 100, NULL);
 
-	fw = fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	fw = fu_firmware_get_image_by_id(firmware, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (fw == NULL)
 		return FALSE;
 	blob = fu_firmware_get_bytes(fw, error);
 	if (blob == NULL)
 		return FALSE;
-	fw_tmp =
-	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	fw_tmp = fu_steelseries_sonic_read_chip(self, chip, fu_progress_get_child(progress), error);
 	if (fw_tmp == NULL) {
 		g_prefix_error(error, "failed to read from flash chip %u: ", chip);
 		return FALSE;
@@ -833,13 +668,14 @@ fu_steelseries_sonic_verify_chip(FuDevice *device,
 static FuFirmware *
 fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	SteelseriesSonicChip chip;
+	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
+	FuSteelseriesSonicChip chip;
 	g_autoptr(FuFirmware) firmware = fu_archive_firmware_new();
 	g_autoptr(FuFirmware) firmware_nordic = NULL;
 	g_autoptr(FuFirmware) firmware_holtek = NULL;
 	g_autoptr(FuFirmware) firmware_mouse = NULL;
 
-	if (!fu_steelseries_sonic_wait_for_connect(device,
+	if (!fu_steelseries_sonic_wait_for_connect(self,
 						   fu_device_get_remove_delay(device),
 						   progress,
 						   error))
@@ -855,32 +691,32 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 					    FU_ARCHIVE_COMPRESSION_NONE);
 
 	/* nordic */
-	chip = STEELSERIES_SONIC_CHIP_NORDIC;
+	chip = FU_STEELSERIES_SONIC_CHIP_NORDIC;
 	firmware_nordic =
-	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	    fu_steelseries_sonic_read_chip(self, chip, fu_progress_get_child(progress), error);
 	if (firmware_nordic == NULL)
 		return NULL;
-	fu_firmware_set_id(firmware_nordic, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_set_id(firmware_nordic, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
 	fu_firmware_add_image(firmware, firmware_nordic);
 	fu_progress_step_done(progress);
 
 	/* holtek */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
+	chip = FU_STEELSERIES_SONIC_CHIP_HOLTEK;
 	firmware_holtek =
-	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	    fu_steelseries_sonic_read_chip(self, chip, fu_progress_get_child(progress), error);
 	if (firmware_holtek == NULL)
 		return NULL;
-	fu_firmware_set_id(firmware_holtek, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_set_id(firmware_holtek, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
 	fu_firmware_add_image(firmware, firmware_holtek);
 	fu_progress_step_done(progress);
 
 	/* mouse */
-	chip = STEELSERIES_SONIC_CHIP_MOUSE;
+	chip = FU_STEELSERIES_SONIC_CHIP_MOUSE;
 	firmware_mouse =
-	    fu_steelseries_sonic_read_chip(device, chip, fu_progress_get_child(progress), error);
+	    fu_steelseries_sonic_read_chip(self, chip, fu_progress_get_child(progress), error);
 	if (firmware_mouse == NULL)
 		return NULL;
-	fu_firmware_set_id(firmware_mouse, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
+	fu_firmware_set_id(firmware_mouse, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
 	fu_firmware_add_image(firmware, firmware_mouse);
 	fu_progress_step_done(progress);
 
@@ -896,7 +732,8 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	SteelseriesSonicChip chip;
+	FuSteelseriesSonic *self = FU_STEELSERIES_SONIC(device);
+	FuSteelseriesSonicChip chip;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 34, "device-write-mouse");
@@ -907,8 +744,8 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 3, "device-verify-holtek");
 
 	/* mouse */
-	chip = STEELSERIES_SONIC_CHIP_MOUSE;
-	if (!fu_steelseries_sonic_write_chip(device,
+	chip = FU_STEELSERIES_SONIC_CHIP_MOUSE;
+	if (!fu_steelseries_sonic_write_chip(self,
 					     chip,
 					     firmware,
 					     fu_progress_get_child(progress),
@@ -916,7 +753,7 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_sonic_verify_chip(device,
+	if (!fu_steelseries_sonic_verify_chip(self,
 					      chip,
 					      firmware,
 					      fu_progress_get_child(progress),
@@ -925,8 +762,8 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* nordic */
-	chip = STEELSERIES_SONIC_CHIP_NORDIC;
-	if (!fu_steelseries_sonic_write_chip(device,
+	chip = FU_STEELSERIES_SONIC_CHIP_NORDIC;
+	if (!fu_steelseries_sonic_write_chip(self,
 					     chip,
 					     firmware,
 					     fu_progress_get_child(progress),
@@ -934,7 +771,7 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_sonic_verify_chip(device,
+	if (!fu_steelseries_sonic_verify_chip(self,
 					      chip,
 					      firmware,
 					      fu_progress_get_child(progress),
@@ -943,16 +780,16 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* holtek */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
-	if (!fu_steelseries_sonic_write_chip(device,
-					     STEELSERIES_SONIC_CHIP_HOLTEK,
+	chip = FU_STEELSERIES_SONIC_CHIP_HOLTEK;
+	if (!fu_steelseries_sonic_write_chip(self,
+					     FU_STEELSERIES_SONIC_CHIP_HOLTEK,
 					     firmware,
 					     fu_progress_get_child(progress),
 					     flags,
 					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_sonic_verify_chip(device,
+	if (!fu_steelseries_sonic_verify_chip(self,
 					      chip,
 					      firmware,
 					      fu_progress_get_child(progress),
@@ -1015,7 +852,6 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
-	SteelseriesSonicChip chip;
 	g_autoptr(FuFirmware) firmware_nordic = NULL;
 	g_autoptr(FuFirmware) firmware_holtek = NULL;
 	g_autoptr(FuFirmware) firmware_mouse = NULL;
@@ -1026,27 +862,30 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* mouse */
-	chip = STEELSERIES_SONIC_CHIP_MOUSE;
-	firmware_mouse =
-	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	firmware_mouse = fu_firmware_get_image_by_id(
+	    firmware,
+	    FU_STEELSERIES_SONIC_FIRMWARE_ID[FU_STEELSERIES_SONIC_CHIP_MOUSE],
+	    error);
 	if (firmware_mouse == NULL)
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_mouse, flags, error))
 		return NULL;
 
 	/* nordic */
-	chip = STEELSERIES_SONIC_CHIP_NORDIC;
-	firmware_nordic =
-	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	firmware_nordic = fu_firmware_get_image_by_id(
+	    firmware,
+	    FU_STEELSERIES_SONIC_FIRMWARE_ID[FU_STEELSERIES_SONIC_CHIP_NORDIC],
+	    error);
 	if (firmware_nordic == NULL)
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_nordic, flags, error))
 		return NULL;
 
 	/* holtek */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
-	firmware_holtek =
-	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	firmware_holtek = fu_firmware_get_image_by_id(
+	    firmware,
+	    FU_STEELSERIES_SONIC_FIRMWARE_ID[FU_STEELSERIES_SONIC_CHIP_HOLTEK],
+	    error);
 	if (firmware_holtek == NULL)
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_holtek, flags, error))
@@ -1089,7 +928,7 @@ fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.sonic");
 	fu_device_set_install_duration(FU_DEVICE(self), 120);				 /* 2 min */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 s */
