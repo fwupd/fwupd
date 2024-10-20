@@ -26,10 +26,6 @@ if __name__ == "__main__":
     parser.add_argument("filename", action="store", type=str, help="Quirk filename")
 
     args = parser.parse_args()
-    if not args.bufsz:
-        parser.print_help()
-        sys.exit(1)
-
     config = configparser.ConfigParser()
     config.optionxform = str
     try:
@@ -63,12 +59,13 @@ if __name__ == "__main__":
 
     # pad to the buffer size
     buf: bytes = "\n".join(lines).encode()
-    if len(buf) > args.bufsz:
-        print("Quirk data is larger than bufsz")
-        sys.exit(1)
-    buf = buf.ljust(args.bufsz, b"\0")
+    if args.bufsz:
+        if len(buf) > args.bufsz:
+            print("Quirk data is larger than bufsz")
+            sys.exit(1)
+        buf = buf.ljust(args.bufsz, b"\0")
 
     # success
     print("DS20 descriptor control transfer data:")
-    print(" ".join([f"{val:02x}" for val in list(buf)]))
+    print(", ".join([f"0x{val:02x}" for val in list(buf)]))
     print(base64.b64encode(buf).decode())
