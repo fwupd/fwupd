@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include "fu-steelseries-gamepad-struct.h"
 #include "fu-steelseries-gamepad.h"
-
-#define STEELSERIES_BUFFER_TRANSFER_SIZE 32
 
 struct _FuSteelseriesGamepad {
 	FuSteelseriesDevice parent_instance;
@@ -17,33 +16,29 @@ struct _FuSteelseriesGamepad {
 G_DEFINE_TYPE(FuSteelseriesGamepad, fu_steelseries_gamepad, FU_TYPE_STEELSERIES_DEVICE)
 
 static gboolean
-fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
+fu_steelseries_gamepad_cmd_erase(FuSteelseriesGamepad *self, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA1, 0xAA, 0x55};
+	g_autoptr(FuStructSteelseriesGamepadEraseReq) st_req =
+	    fu_struct_steelseries_gamepad_erase_req_new();
 
 	/* USB receiver for gamepad is using different options */
-	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
 		/* USB receiver */
-		data[8] = 0xD0;
-		data[9] = 0x01;
+		fu_struct_steelseries_gamepad_erase_req_set_unknown08(st_req, 0xD0);
+		fu_struct_steelseries_gamepad_erase_req_set_unknown09(st_req, 0x01);
 	} else {
 		/* gamepad */
-		data[9] = 0x02;
+		fu_struct_steelseries_gamepad_erase_req_set_unknown09(st_req, 0x02);
 		/* magic is needed for newer gamepad */
-		data[13] = 0x02;
+		fu_struct_steelseries_gamepad_erase_req_set_unknown13(st_req, 0x02);
 	}
-
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       error)) {
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error)) {
 		g_prefix_error(error, "unable erase flash block: ");
 		return FALSE;
 	}
 
 	/* timeout to give some time to erase */
-	fu_device_sleep(device, 20); /* ms */
+	fu_device_sleep(FU_DEVICE(self), 20); /* ms */
 
 	return TRUE;
 }
@@ -51,29 +46,34 @@ fu_steelseries_gamepad_cmd_erase(FuDevice *device, GError **error)
 static gboolean
 fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 {
+	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
 	g_autofree gchar *bootloader_version = NULL;
-	guint16 fw_ver;
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
+	g_autoptr(FuStructSteelseriesGamepadGetVersionsReq) st_req =
+	    fu_struct_steelseries_gamepad_get_versions_req_new();
+	g_autoptr(FuStructSteelseriesGamepadGetVersionsRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* get version of FW and bootloader */
-	data[0] = 0x12;
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return FALSE;
-
-	if (!fu_memread_uint16_safe(data, sizeof(data), 0x01, &fw_ver, G_LITTLE_ENDIAN, error))
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(device), fw_ver);
-
-	if (!fu_memread_uint16_safe(data, sizeof(data), 0x03, &fw_ver, G_LITTLE_ENDIAN, error))
+	st_res = fu_struct_steelseries_gamepad_get_versions_res_parse(buf_res->data,
+								      buf_res->len,
+								      0x0,
+								      error);
+	if (st_res == NULL)
 		return FALSE;
-	bootloader_version = fu_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
+	fu_device_set_version_raw(
+	    FU_DEVICE(device),
+	    fu_struct_steelseries_gamepad_get_versions_res_get_runtime_version(st_res));
+	bootloader_version = fu_version_from_uint16(
+	    fu_struct_steelseries_gamepad_get_versions_res_get_bootloader_version(st_res),
+	    FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader(device, bootloader_version);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -85,18 +85,16 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 static gboolean
 fu_steelseries_gamepad_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA6, 0xAA, 0x55};
+	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
+	g_autoptr(FuStructSteelseriesGamepadBootRuntimeReq) st_req =
+	    fu_struct_steelseries_gamepad_boot_runtime_req_new();
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* switch to runtime mode */
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       &error_local))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, &error_local))
 		g_debug("ignoring error on reset: %s", error_local->message);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -107,18 +105,16 @@ fu_steelseries_gamepad_attach(FuDevice *device, FuProgress *progress, GError **e
 static gboolean
 fu_steelseries_gamepad_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0x02, 0x08};
+	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuStructSteelseriesGamepadBootLoaderReq) st_req =
+	    fu_struct_steelseries_gamepad_boot_loader_req_new();
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* switch to bootloader mode */
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       FALSE,
-				       &error_local))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, &error_local))
 		g_debug("ignoring error on reset: %s", error_local->message);
 
 	/* controller will be renumbered after switching to bootloader mode */
@@ -128,7 +124,40 @@ fu_steelseries_gamepad_detach(FuDevice *device, FuProgress *progress, GError **e
 }
 
 static gboolean
-fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
+fu_steelseries_gamepad_write_firmware_chunk(FuSteelseriesGamepad *self,
+					    FuChunk *chunk,
+					    guint32 *checksum,
+					    GError **error)
+{
+	guint16 chunk_checksum;
+	g_autoptr(FuStructSteelseriesGamepadWriteChunkReq) st_req =
+	    fu_struct_steelseries_gamepad_write_chunk_req_new();
+
+	/* block ID, 32B of data then block checksum -- probably not necessary */
+	fu_struct_steelseries_gamepad_write_chunk_req_set_block_id(st_req, fu_chunk_get_idx(chunk));
+	if (!fu_struct_steelseries_gamepad_write_chunk_req_set_data(st_req,
+								    fu_chunk_get_data(chunk),
+								    fu_chunk_get_data_sz(chunk),
+								    error))
+		return FALSE;
+	chunk_checksum =
+	    fu_sum16(st_req->data + FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_OFFSET_DATA,
+		     FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA);
+	fu_struct_steelseries_gamepad_write_chunk_req_set_checksum(st_req, chunk_checksum);
+	*checksum += (guint32)chunk_checksum;
+
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error)) {
+		g_prefix_error(error, "unable to flash block %u: ", fu_chunk_get_idx(chunk));
+		return FALSE;
+	}
+
+	/* timeout to give some time to flash the block on device */
+	fu_device_sleep(FU_DEVICE(self), 10); /* ms */
+	return TRUE;
+}
+
+static gboolean
+fu_steelseries_gamepad_write_firmware_chunks(FuSteelseriesGamepad *self,
 					     FuChunkArray *chunks,
 					     FuProgress *progress,
 					     guint32 *checksum,
@@ -138,57 +167,13 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint16 chunk_checksum;
-		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
 		g_autoptr(FuChunk) chunk = NULL;
 
-		/* prepare chunk */
 		chunk = fu_chunk_array_index(chunks, i, error);
 		if (chunk == NULL)
 			return FALSE;
-
-		/* block ID */
-		if (!fu_memwrite_uint16_safe(data,
-					     STEELSERIES_BUFFER_CONTROL_SIZE,
-					     0x01,
-					     (guint16)i,
-					     G_LITTLE_ENDIAN,
-					     error))
+		if (!fu_steelseries_gamepad_write_firmware_chunk(self, chunk, checksum, error))
 			return FALSE;
-		/* 32B of data only */
-		if (!fu_memcpy_safe(data,
-				    STEELSERIES_BUFFER_CONTROL_SIZE,
-				    0x03,
-				    fu_chunk_get_data(chunk),
-				    STEELSERIES_BUFFER_TRANSFER_SIZE,
-				    0,
-				    fu_chunk_get_data_sz(chunk),
-				    error))
-			return FALSE;
-
-		/* block checksum */
-		/* probably not necessary */
-		chunk_checksum = fu_sum16(data + 3, STEELSERIES_BUFFER_TRANSFER_SIZE);
-		if (!fu_memwrite_uint16_safe(data,
-					     STEELSERIES_BUFFER_CONTROL_SIZE,
-					     0x03 + STEELSERIES_BUFFER_TRANSFER_SIZE,
-					     chunk_checksum,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		*checksum += (guint32)chunk_checksum;
-
-		if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-					       data,
-					       sizeof(data),
-					       FALSE,
-					       error)) {
-			g_prefix_error(error, "unable to flash block %u: ", i);
-			return FALSE;
-		}
-		/* timeout to give some time to flash the block on device */
-		fu_device_sleep(device, 10); /* ms */
 		fu_progress_step_done(progress);
 	}
 
@@ -196,34 +181,29 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_gamepad_write_checksum(FuDevice *device, guint32 checksum, GError **error)
+fu_steelseries_gamepad_write_checksum(FuSteelseriesGamepad *self, guint32 checksum, GError **error)
 {
-	/* write checksum */
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA5, 0xAA, 0x55};
+	g_autoptr(FuStructSteelseriesGamepadWriteChecksumReq) st_req =
+	    fu_struct_steelseries_gamepad_write_checksum_req_new();
+	g_autoptr(FuStructSteelseriesGamepadWriteChecksumRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint32_safe(data,
-				     STEELSERIES_BUFFER_CONTROL_SIZE,
-				     0x03,
-				     checksum,
-				     G_LITTLE_ENDIAN,
-				     error))
-		return FALSE;
-
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(device),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error)) {
+	fu_struct_steelseries_gamepad_write_checksum_req_set_checksum(st_req, checksum);
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error)) {
 		g_prefix_error(error, "unable to write checksum: ");
 		return FALSE;
 	}
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
+		return FALSE;
 
 	/* validate checksum */
-	if (data[0] != 0xA5 || data[1] != 0xAA || data[2] != 0x55 || data[3] != 0x01) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "Controller is unable to validate checksum");
+	st_res = fu_struct_steelseries_gamepad_write_checksum_res_parse(buf_res->data,
+									buf_res->len,
+									0x0,
+									error);
+	if (st_res == NULL) {
+		g_prefix_error(error, "controller is unable to validate checksum: ");
 		return FALSE;
 	}
 
@@ -237,6 +217,7 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
+	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
 	guint32 checksum = 0;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -244,11 +225,10 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
-
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       STEELSERIES_BUFFER_TRANSFER_SIZE);
+					       FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA);
 	if (fu_chunk_array_length(chunks) > (G_MAXUINT16 + 1)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -263,11 +243,11 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
 
 	/* erase all first */
-	if (!fu_steelseries_gamepad_cmd_erase(device, error))
+	if (!fu_steelseries_gamepad_cmd_erase(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_steelseries_gamepad_write_firmware_chunks(device,
+	if (!fu_steelseries_gamepad_write_firmware_chunks(self,
 							  chunks,
 							  fu_progress_get_child(progress),
 							  &checksum,
@@ -275,7 +255,7 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_steelseries_gamepad_write_checksum(device, checksum, error))
+	if (!fu_steelseries_gamepad_write_checksum(self, checksum, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -302,7 +282,6 @@ static void
 fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-
 	device_class->setup = fu_steelseries_gamepad_setup;
 	device_class->attach = fu_steelseries_gamepad_attach;
 	device_class->detach = fu_steelseries_gamepad_detach;
@@ -323,6 +302,7 @@ fu_steelseries_gamepad_init(FuSteelseriesGamepad *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.gamepad");
 
-	fu_device_set_firmware_size_max(FU_DEVICE(self),
-					(G_MAXUINT16 + 1) * STEELSERIES_BUFFER_TRANSFER_SIZE);
+	fu_device_set_firmware_size_max(
+	    FU_DEVICE(self),
+	    (G_MAXUINT16 + 1) * FU_STRUCT_STEELSERIES_GAMEPAD_WRITE_CHUNK_REQ_SIZE_DATA);
 }

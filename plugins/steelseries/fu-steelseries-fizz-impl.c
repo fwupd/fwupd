@@ -16,25 +16,39 @@ fu_steelseries_fizz_impl_default_init(FuSteelseriesFizzImplInterface *iface)
 }
 
 gboolean
-fu_steelseries_fizz_impl_cmd(FuSteelseriesFizzImpl *self,
-			     guint8 *data,
-			     gsize datasz,
-			     gboolean answer,
-			     GError **error)
+fu_steelseries_fizz_impl_request(FuSteelseriesFizzImpl *self, GByteArray *buf, GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;
 
 	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), FALSE);
 
 	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
-	if (iface->cmd == NULL) {
+	if (iface->request == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "iface->cmd not implemented");
+				    "iface->request not implemented");
 		return FALSE;
 	}
-	return (*iface->cmd)(self, data, datasz, answer, error);
+	return (*iface->request)(self, buf, error);
+}
+
+GByteArray *
+fu_steelseries_fizz_impl_response(FuSteelseriesFizzImpl *self, GError **error)
+{
+	FuSteelseriesFizzImplInterface *iface;
+
+	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), NULL);
+
+	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
+	if (iface->response == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "iface->response not implemented");
+		return NULL;
+	}
+	return (*iface->response)(self, error);
 }
 
 gchar *
@@ -76,14 +90,15 @@ fu_steelseries_fizz_impl_get_battery_level(FuSteelseriesFizzImpl *self,
 	return (*iface->get_battery_level)(self, tunnel, level, error);
 }
 
-guint8
+gboolean
 fu_steelseries_fizz_impl_get_fs_id(FuSteelseriesFizzImpl *self,
 				   gboolean is_receiver,
+				   guint8 *id,
 				   GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;
 
-	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), 0);
+	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), FALSE);
 
 	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
 	if (iface->get_fs_id == NULL) {
@@ -91,19 +106,21 @@ fu_steelseries_fizz_impl_get_fs_id(FuSteelseriesFizzImpl *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "iface->get_fs_id not implemented");
-		return 0;
+		return FALSE;
 	}
-	return (*iface->get_fs_id)(self, is_receiver, error);
+	*id = (*iface->get_fs_id)(self, is_receiver);
+	return TRUE;
 }
 
-guint8
+gboolean
 fu_steelseries_fizz_impl_get_file_id(FuSteelseriesFizzImpl *self,
 				     gboolean is_receiver,
+				     guint8 *id,
 				     GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;
 
-	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), 0);
+	g_return_val_if_fail(FU_IS_STEELSERIES_FIZZ_IMPL(self), FALSE);
 
 	iface = FU_STEELSERIES_FIZZ_IMPL_GET_IFACE(self);
 	if (iface->get_file_id == NULL) {
@@ -111,9 +128,10 @@ fu_steelseries_fizz_impl_get_file_id(FuSteelseriesFizzImpl *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "iface->get_file_id not implemented");
-		return 0;
+		return FALSE;
 	}
-	return (*iface->get_file_id)(self, is_receiver, error);
+	*id = (*iface->get_file_id)(self, is_receiver);
+	return TRUE;
 }
 
 gboolean
@@ -138,7 +156,7 @@ fu_steelseries_fizz_impl_get_paired_status(FuSteelseriesFizzImpl *self,
 
 gboolean
 fu_steelseries_fizz_impl_get_connection_status(FuSteelseriesFizzImpl *self,
-					       guint8 *status,
+					       FuSteelseriesFizzConnectionStatus *status,
 					       GError **error)
 {
 	FuSteelseriesFizzImplInterface *iface;

@@ -27,15 +27,18 @@ fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface
 }
 
 gboolean
-fu_steelseries_device_cmd(FuSteelseriesDevice *self,
-			  guint8 *data,
-			  gsize datasz,
-			  gboolean answer,
-			  GError **error)
+fu_steelseries_device_request(FuSteelseriesDevice *self, const GByteArray *buf, GError **error)
 {
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
 	gsize actual_len = 0;
+	g_autoptr(GByteArray) buf_padded = g_byte_array_new();
 
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	/* pad out */
+	g_byte_array_append(buf_padded, buf->data, buf->len);
+	fu_byte_array_set_size(buf_padded, FU_STEELSERIES_BUFFER_CONTROL_SIZE, 0x00);
+	fu_dump_raw(G_LOG_DOMAIN, "Request", buf_padded->data, buf_padded->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -43,16 +46,16 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 					    0x09,
 					    0x0200,
 					    priv->iface_idx,
-					    data,
-					    datasz,
+					    buf_padded->data,
+					    buf_padded->len,
 					    &actual_len,
-					    STEELSERIES_TRANSACTION_TIMEOUT,
+					    FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to do control transfer: ");
 		return FALSE;
 	}
-	if (actual_len != datasz) {
+	if (actual_len != buf_padded->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -61,36 +64,41 @@ fu_steelseries_device_cmd(FuSteelseriesDevice *self,
 		return FALSE;
 	}
 
-	/* cleanup the buffer before receiving any data */
-	memset(data, 0x00, datasz);
+	/* success */
+	return TRUE;
+}
 
-	/* do not expect the answer from device */
-	if (answer != TRUE)
-		return TRUE;
+GByteArray *
+fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
+{
+	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
+	gsize actual_len = 0;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
+	fu_byte_array_set_size(buf, FU_STEELSERIES_BUFFER_CONTROL_SIZE, 0x00);
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      priv->ep,
-					      data,
-					      priv->ep_in_size,
+					      buf->data,
+					      buf->len,
 					      &actual_len,
-					      STEELSERIES_TRANSACTION_TIMEOUT,
+					      FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
 					      error)) {
 		g_prefix_error(error, "failed to do EP transfer: ");
-		fu_error_convert(error);
-		return FALSE;
+		return NULL;
 	}
+	fu_dump_raw(G_LOG_DOMAIN, "Response", buf->data, actual_len);
 	if (actual_len != priv->ep_in_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "only read %" G_GSIZE_FORMAT "bytes",
 			    actual_len);
-		return FALSE;
+		return NULL;
 	}
 
 	/* success */
-	return TRUE;
+	return g_steal_pointer(&buf);
 }
 
 static gboolean

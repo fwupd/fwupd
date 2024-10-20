@@ -12,51 +12,7 @@
 #include "fu-steelseries-fizz-tunnel.h"
 #include "fu-steelseries-fizz.h"
 
-#define STEELSERIES_BUFFER_TRANSFER_SIZE 52
-
-#define STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS		      0
-#define STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND	      1
-#define STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT	      2
-#define STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED	      3
-#define STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED      4
-#define STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED 5
-
-#define STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT 1U << 6
-
-#define STEELSERIES_FIZZ_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_ERROR_OFFSET	0x01U
-
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND	     0x03U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET    0x00U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET	     0x02U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_SIZE_OFFSET	     0x03U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET     0x05U
-#define STEELSERIES_FIZZ_WRITE_ACCESS_FILE_DATA_OFFSET	     0x09U
-
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND	    0x83U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND_OFFSET    0x00U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_FILESYSTEM_OFFSET 0x01U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_ID_OFFSET	    0x02U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_SIZE_OFFSET	    0x03U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_OFFSET_OFFSET	    0x05U
-#define STEELSERIES_FIZZ_READ_ACCESS_FILE_DATA_OFFSET	    0x02U
-
-#define STEELSERIES_FIZZ_ERASE_FILE_COMMAND	      0x02U
-#define STEELSERIES_FIZZ_ERASE_FILE_COMMAND_OFFSET    0x0U
-#define STEELSERIES_FIZZ_ERASE_FILE_FILESYSTEM_OFFSET 0x1U
-#define STEELSERIES_FIZZ_ERASE_FILE_ID_OFFSET	      0x2U
-
-#define STEELSERIES_FIZZ_RESET_COMMAND	      0x01U
-#define STEELSERIES_FIZZ_RESET_COMMAND_OFFSET 0x0U
-#define STEELSERIES_FIZZ_RESET_MODE_OFFSET    0x1U
-
-#define STEELSERIES_FIZZ_FILE_CRC32_COMMAND		  0x84U
-#define STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET	  0x00U
-#define STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET	  0x01U
-#define STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET		  0x02U
-#define STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET 0x02U
-#define STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET	  0x06U
+#define FU_STEELSERIES_BUFFER_TRANSFER_SIZE 52
 
 struct _FuSteelseriesFizz {
 	FuUsbDevice parent_instance;
@@ -71,30 +27,30 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 
 	switch (err) {
 	/* success */
-	case STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_SUCCESS:
 		return TRUE;
 
-	case STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_FILE_NOT_FOUND:
 		err_code = FWUPD_ERROR_NOT_FOUND;
 		break;
 
 	/* targeted offset is past the file end */
-	case STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_FILE_TOO_SHORT:
 		err_code = FWUPD_ERROR_INVALID_DATA;
 		break;
 
 	/* when internal flash returns error */
-	case STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_FLASH_FAILED:
 		err_code = FWUPD_ERROR_INTERNAL;
 		break;
 
 	/* USB API doesn't have permission to access this file */
-	case STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_PERMISSION_DENIED:
 		err_code = FWUPD_ERROR_PERMISSION_DENIED;
 		break;
 
 	/* USB API doesn't have permission to access this file */
-	case STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED:
+	case FU_STEELSERIES_FIZZ_COMMAND_ERROR_OPERATION_NO_SUPPORTED:
 		err_code = FWUPD_ERROR_NOT_SUPPORTED;
 		break;
 
@@ -109,58 +65,67 @@ fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **erro
 }
 
 static gboolean
-fu_steelseries_fizz_cmd(FuDevice *device,
-			guint8 *data,
-			gsize datasz,
-			gboolean answer,
-			GError **error)
+fu_steelseries_fizz_request(FuSteelseriesFizz *self, GByteArray *buf, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	if (proxy == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
-	return fu_steelseries_fizz_impl_cmd(FU_STEELSERIES_FIZZ_IMPL(proxy),
-					    data,
-					    datasz,
-					    answer,
-					    error);
+	fu_dump_raw(G_LOG_DOMAIN,
+		    fu_steelseries_fizz_cmd_to_string(buf->data[0]),
+		    buf->data,
+		    buf->len);
+	return fu_steelseries_fizz_impl_request(FU_STEELSERIES_FIZZ_IMPL(proxy), buf, error);
 }
 
-static gboolean
-fu_steelseries_fizz_command_and_check_error(FuDevice *device,
-					    guint8 *data,
-					    gsize datasz,
-					    GError **error)
+static GByteArray *
+fu_steelseries_fizz_response(FuSteelseriesFizz *self, GError **error)
 {
-	const guint8 command = data[0];
-	guint8 err;
-	guint8 cmd;
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return NULL;
+	}
+	return fu_steelseries_fizz_impl_response(FU_STEELSERIES_FIZZ_IMPL(proxy), error);
+}
 
-	if (!fu_steelseries_fizz_cmd(device, data, datasz, TRUE, error))
-		return FALSE;
+static GByteArray *
+fu_steelseries_fizz_request_response(FuSteelseriesFizz *self, GByteArray *buf, GError **error)
+{
+	const FuSteelseriesFizzCmd cmd = buf->data[0];
+	g_autoptr(FuStructSteelseriesFizzGenericRes) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memread_uint8_safe(data, datasz, STEELSERIES_FIZZ_COMMAND_OFFSET, &cmd, error))
-		return FALSE;
-
-	if (cmd != command) {
+	if (!fu_steelseries_fizz_request(self, buf, error))
+		return NULL;
+	buf_res = fu_steelseries_fizz_response(self, error);
+	if (buf_res == NULL)
+		return NULL;
+	st_res =
+	    fu_struct_steelseries_fizz_generic_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
+		return NULL;
+	if (fu_struct_steelseries_fizz_generic_res_get_cmd(st_res) != cmd) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "command invalid, got 0x%02x, expected 0x%02x",
-			    cmd,
-			    command);
-		return FALSE;
+			    fu_struct_steelseries_fizz_generic_res_get_cmd(st_res),
+			    cmd);
+		return NULL;
 	}
+	if (!fu_steelseries_fizz_command_error_to_error(
+		cmd,
+		fu_struct_steelseries_fizz_generic_res_get_error(st_res),
+		error))
+		return NULL;
 
-	if (!fu_memread_uint8_safe(data, datasz, STEELSERIES_FIZZ_ERROR_OFFSET, &err, error))
-		return FALSE;
-
-	return fu_steelseries_fizz_command_error_to_error(cmd, err, error);
+	return g_steal_pointer(&buf_res);
 }
 
 static gboolean
-fu_steelseries_fizz_write_fs(FuDevice *device,
+fu_steelseries_fizz_write_fs(FuSteelseriesFizz *self,
 			     gboolean tunnel,
 			     guint8 fs,
 			     guint8 id,
@@ -168,79 +133,46 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 			     FuProgress *progress,
 			     GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND;
+	guint8 cmd = FU_STEELSERIES_FIZZ_CMD_WRITE_ACCESS_FILE;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
-					       STEELSERIES_BUFFER_TRANSFER_SIZE);
+					       FU_STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(FuStructSteelseriesFizzWriteAccessFileReq) st_req =
+		    fu_struct_steelseries_fizz_write_access_file_req_new();
+		g_autoptr(GByteArray) buf_res = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_COMMAND_OFFSET,
-					    cmd,
-					    error))
+		fu_struct_steelseries_fizz_write_access_file_req_set_cmd(st_req, cmd);
+		fu_struct_steelseries_fizz_write_access_file_req_set_filesystem(st_req, fs);
+		fu_struct_steelseries_fizz_write_access_file_req_set_id(st_req, id);
+		fu_struct_steelseries_fizz_write_access_file_req_set_size(
+		    st_req,
+		    fu_chunk_get_data_sz(chk));
+		fu_struct_steelseries_fizz_write_access_file_req_set_offset(
+		    st_req,
+		    fu_chunk_get_address(chk));
+		if (!fu_struct_steelseries_fizz_write_access_file_req_set_data(
+			st_req,
+			fu_chunk_get_data(chk),
+			fu_chunk_get_data_sz(chk),
+			error))
 			return FALSE;
-
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_FILESYSTEM_OFFSET,
-					    fs,
-					    error))
+		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		if (buf_res == NULL)
 			return FALSE;
-
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_ID_OFFSET,
-					    id,
-					    error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_SIZE_OFFSET,
-					     fu_chunk_get_data_sz(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint32_safe(data,
-					     sizeof(data),
-					     STEELSERIES_FIZZ_WRITE_ACCESS_FILE_OFFSET_OFFSET,
-					     fu_chunk_get_address(chk),
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memcpy_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_WRITE_ACCESS_FILE_DATA_OFFSET,
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
-				    0x0,
-				    fu_chunk_get_data_sz(chk),
-				    error))
-			return FALSE;
-
-		fu_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
-			return FALSE;
-		fu_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-
 		fu_progress_step_done(progress);
 	}
 
@@ -249,81 +181,47 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_fizz_erase_fs(FuDevice *device,
+fu_steelseries_fizz_erase_fs(FuSteelseriesFizz *self,
 			     gboolean tunnel,
 			     guint8 fs,
 			     guint8 id,
 			     GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_ERASE_FILE_COMMAND;
+	guint8 cmd = FU_STEELSERIES_FIZZ_CMD_ERASE_FILE;
+	g_autoptr(FuStructSteelseriesFizzEraseFileReq) st_req = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
 	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_ERASE_FILE_COMMAND_OFFSET,
-				    cmd,
-				    error))
-		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_ERASE_FILE_FILESYSTEM_OFFSET,
-				    fs,
-				    error))
-		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_ERASE_FILE_ID_OFFSET,
-				    id,
-				    error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
-	if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "EraseFile", data, sizeof(data));
-
-	/* success */
-	return TRUE;
+	st_req = fu_struct_steelseries_fizz_erase_file_req_new();
+	fu_struct_steelseries_fizz_erase_file_req_set_cmd(st_req, cmd);
+	fu_struct_steelseries_fizz_erase_file_req_set_filesystem(st_req, fs);
+	fu_struct_steelseries_fizz_erase_file_req_set_id(st_req, id);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	return buf_res != NULL;
 }
 
 gboolean
-fu_steelseries_fizz_reset(FuDevice *device, gboolean tunnel, guint8 mode, GError **error)
+fu_steelseries_fizz_reset(FuSteelseriesFizz *self,
+			  gboolean tunnel,
+			  FuSteelseriesFizzResetMode mode,
+			  GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_RESET_COMMAND;
+	guint8 cmd = FU_STEELSERIES_FIZZ_CMD_RESET;
+	g_autoptr(FuStructSteelseriesFizzResetReq) st_req = NULL;
 
 	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_RESET_COMMAND_OFFSET,
-				    cmd,
-				    error))
-		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_RESET_MODE_OFFSET,
-				    mode,
-				    error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Reset", data, sizeof(data));
-	if (!fu_steelseries_fizz_cmd(device, data, sizeof(data), FALSE, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	st_req = fu_struct_steelseries_fizz_reset_req_new();
+	fu_struct_steelseries_fizz_reset_req_set_cmd(st_req, cmd);
+	fu_struct_steelseries_fizz_reset_req_set_mode(st_req, mode);
+	return fu_steelseries_fizz_request(self, st_req, error);
 }
 
 gboolean
-fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
+fu_steelseries_fizz_get_crc32_fs(FuSteelseriesFizz *self,
 				 gboolean tunnel,
 				 guint8 fs,
 				 guint8 id,
@@ -331,61 +229,36 @@ fu_steelseries_fizz_get_crc32_fs(FuDevice *device,
 				 guint32 *stored_crc,
 				 GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_FILE_CRC32_COMMAND;
+	guint8 cmd = FU_STEELSERIES_FIZZ_CMD_FILE_CRC32;
+	g_autoptr(FuStructSteelseriesFizzFileCrc32Req) st_req = NULL;
+	g_autoptr(FuStructSteelseriesFizzFileCrc32Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
 	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_FILE_CRC32_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	st_req = fu_struct_steelseries_fizz_file_crc32_req_new();
+	fu_struct_steelseries_fizz_file_crc32_req_set_cmd(st_req, cmd);
+	fu_struct_steelseries_fizz_file_crc32_req_set_filesystem(st_req, fs);
+	fu_struct_steelseries_fizz_file_crc32_req_set_id(st_req, id);
+	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+	if (buf_res == NULL)
 		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_FILE_CRC32_FILESYSTEM_OFFSET,
-				    fs,
-				    error))
+	st_res = fu_struct_steelseries_fizz_file_crc32_res_parse(buf_res->data,
+								 buf_res->len,
+								 0x0,
+								 error);
+	if (st_res == NULL)
 		return FALSE;
-
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_FILE_CRC32_ID_OFFSET,
-				    id,
-				    error))
-
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
-	if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "FileCRC32", data, sizeof(data));
-
-	if (!fu_memread_uint32_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_FILE_CRC32_CALCULATED_CRC_OFFSET,
-				    calculated_crc,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-
-	if (!fu_memread_uint32_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET,
-				    stored_crc,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
+	*calculated_crc = fu_struct_steelseries_fizz_file_crc32_res_get_calculated(st_res);
+	*stored_crc = fu_struct_steelseries_fizz_file_crc32_res_get_stored(st_res);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_steelseries_fizz_read_fs(FuDevice *device,
+fu_steelseries_fizz_read_fs(FuSteelseriesFizz *self,
 			    gboolean tunnel,
 			    guint8 fs,
 			    guint8 id,
@@ -394,70 +267,50 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 			    FuProgress *progress,
 			    GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND;
+	guint8 cmd = FU_STEELSERIES_FIZZ_CMD_READ_ACCESS_FILE;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	if (tunnel)
-		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
+		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
-	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
+	chunks =
+	    fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, FU_STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		const guint16 size = fu_chunk_get_data_sz(chk);
-		const guint32 offset = fu_chunk_get_address(chk);
+		const guint8 *data;
+		gsize datasz = 0;
+		g_autoptr(FuStructSteelseriesFizzReadAccessFileReq) st_req = NULL;
+		g_autoptr(FuStructSteelseriesFizzReadAccessFileRes) st_res = NULL;
+		g_autoptr(GByteArray) buf_res = NULL;
 
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_READ_ACCESS_FILE_COMMAND_OFFSET,
-					    cmd,
-					    error))
+		st_req = fu_struct_steelseries_fizz_read_access_file_req_new();
+		fu_struct_steelseries_fizz_read_access_file_req_set_cmd(st_req, cmd);
+		fu_struct_steelseries_fizz_read_access_file_req_set_filesystem(st_req, fs);
+		fu_struct_steelseries_fizz_read_access_file_req_set_id(st_req, id);
+		fu_struct_steelseries_fizz_read_access_file_req_set_size(st_req,
+									 fu_chunk_get_data_sz(chk));
+		fu_struct_steelseries_fizz_read_access_file_req_set_offset(
+		    st_req,
+		    fu_chunk_get_address(chk));
+		buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
+		if (buf_res == NULL)
 			return FALSE;
-
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_READ_ACCESS_FILE_FILESYSTEM_OFFSET,
-					    fs,
-					    error))
+		st_res = fu_struct_steelseries_fizz_read_access_file_res_parse(buf_res->data,
+									       buf_res->len,
+									       0x0,
+									       error);
+		if (st_res == NULL)
 			return FALSE;
-
-		if (!fu_memwrite_uint8_safe(data,
-					    sizeof(data),
-					    STEELSERIES_FIZZ_READ_ACCESS_FILE_ID_OFFSET,
-					    id,
-					    error))
-			return FALSE;
-
-		if (!fu_memwrite_uint16_safe(data,
-					     sizeof(data),
-					     STEELSERIES_FIZZ_READ_ACCESS_FILE_SIZE_OFFSET,
-					     size,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		if (!fu_memwrite_uint32_safe(data,
-					     sizeof(data),
-					     STEELSERIES_FIZZ_READ_ACCESS_FILE_OFFSET_OFFSET,
-					     offset,
-					     G_LITTLE_ENDIAN,
-					     error))
-			return FALSE;
-
-		fu_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-		if (!fu_steelseries_fizz_command_and_check_error(device, data, sizeof(data), error))
-			return FALSE;
-		fu_dump_raw(G_LOG_DOMAIN, "AccessFile", data, sizeof(data));
-
+		data = fu_struct_steelseries_fizz_read_access_file_res_get_data(st_res, &datasz);
 		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
 				    fu_chunk_get_data_sz(chk),
-				    0x00,
+				    0x0,
 				    data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_READ_ACCESS_FILE_DATA_OFFSET,
+				    datasz,
+				    0x0,
 				    fu_chunk_get_data_sz(chk),
 				    error))
 			return FALSE;
@@ -470,9 +323,9 @@ fu_steelseries_fizz_read_fs(FuDevice *device,
 }
 
 static gboolean
-fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError **error)
+fu_steelseries_fizz_get_paired_status(FuSteelseriesFizz *self, guint8 *status, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	if (proxy == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
@@ -483,9 +336,11 @@ fu_steelseries_fizz_get_paired_status(FuDevice *device, guint8 *status, GError *
 }
 
 gboolean
-fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GError **error)
+fu_steelseries_fizz_get_connection_status(FuSteelseriesFizz *self,
+					  FuSteelseriesFizzConnectionStatus *status,
+					  GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	if (proxy == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
@@ -496,36 +351,36 @@ fu_steelseries_fizz_get_connection_status(FuDevice *device, guint8 *status, GErr
 }
 
 static gboolean
-fu_steelseries_fizz_ensure_children(FuDevice *device, GError **error)
+fu_steelseries_fizz_ensure_children(FuSteelseriesFizz *self, GError **error)
 {
 	guint8 status;
 	g_autofree gchar *version = NULL;
 
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	if (proxy == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
 
 	/* not a USB receiver */
-	if (!fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER))
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER))
 		return TRUE;
 
 	/* in bootloader mode */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
-	if (!fu_steelseries_fizz_get_paired_status(device, &status, error)) {
+	if (!fu_steelseries_fizz_get_paired_status(self, &status, error)) {
 		g_prefix_error(error, "failed to get paired status: ");
 		return FALSE;
 	}
 
 	if (status != 0) {
 		g_autoptr(FuSteelseriesFizzTunnel) paired_device =
-		    fu_steelseries_fizz_tunnel_new(FU_STEELSERIES_FIZZ(device));
+		    fu_steelseries_fizz_tunnel_new(self);
 
 		fu_device_set_proxy(FU_DEVICE(paired_device), FU_DEVICE(proxy));
-		fu_device_add_child(device, FU_DEVICE(paired_device));
+		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(paired_device));
 	}
 
 	/* success */
@@ -535,6 +390,7 @@ fu_steelseries_fizz_ensure_children(FuDevice *device, GError **error)
 static gboolean
 fu_steelseries_fizz_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	locker = fu_device_locker_new(device, error);
@@ -546,9 +402,9 @@ fu_steelseries_fizz_detach(FuDevice *device, FuProgress *progress, GError **erro
 		return TRUE;
 
 	/* switch to bootloader mode only if device needs it */
-	if (!fu_steelseries_fizz_reset(device,
+	if (!fu_steelseries_fizz_reset(self,
 				       FALSE,
-				       STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
+				       FU_STEELSERIES_FIZZ_RESET_MODE_BOOTLOADER,
 				       error))
 		return FALSE;
 
@@ -562,6 +418,7 @@ fu_steelseries_fizz_detach(FuDevice *device, FuProgress *progress, GError **erro
 static gboolean
 fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -569,9 +426,9 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 	if (locker == NULL)
 		return FALSE;
 
-	if (!fu_steelseries_fizz_reset(device,
+	if (!fu_steelseries_fizz_reset(self,
 				       FALSE,
-				       STEELSERIES_FIZZ_RESET_MODE_NORMAL,
+				       FU_STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
 		g_warning("failed to reset: %s", error_local->message);
 
@@ -585,6 +442,7 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 static gboolean
 fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 {
+	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *serial = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -600,7 +458,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		return TRUE;
 
 	if (fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
-		if (!fu_steelseries_fizz_ensure_children(device, error))
+		if (!fu_steelseries_fizz_ensure_children(self, error))
 			return FALSE;
 	}
 
@@ -626,7 +484,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 }
 
 gboolean
-fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
+fu_steelseries_fizz_write_firmware_fs(FuSteelseriesFizz *self,
 				      gboolean tunnel,
 				      guint8 fs,
 				      guint8 id,
@@ -658,12 +516,12 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 	buf = fu_bytes_get_data_safe(blob, &bufsz, error);
 	if (buf == NULL)
 		return FALSE;
-	if (!fu_steelseries_fizz_erase_fs(device, tunnel, fs, id, error)) {
+	if (!fu_steelseries_fizz_erase_fs(self, tunnel, fs, id, error)) {
 		g_prefix_error(error, "failed to erase FS 0x%02x ID 0x%02x: ", fs, id);
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
-	if (!fu_steelseries_fizz_write_fs(device,
+	if (!fu_steelseries_fizz_write_fs(self,
 					  tunnel,
 					  fs,
 					  id,
@@ -675,7 +533,7 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	if (!fu_steelseries_fizz_get_crc32_fs(device,
+	if (!fu_steelseries_fizz_get_crc32_fs(self,
 					      tunnel,
 					      fs,
 					      id,
@@ -687,7 +545,7 @@ fu_steelseries_fizz_write_firmware_fs(FuDevice *device,
 	}
 	if (calculated_crc != stored_crc) {
 		g_warning("%s: checksum mismatch, got 0x%08x, expected 0x%08x",
-			  fu_device_get_name(device),
+			  fu_device_get_name(FU_DEVICE(self)),
 			  calculated_crc,
 			  stored_crc);
 	}
@@ -704,10 +562,11 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
+	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
 	guint8 fs;
-	guint8 id;
 	gboolean is_receiver = FALSE;
 	FuDevice *proxy = fu_device_get_proxy(device);
+	guint8 id = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	locker = fu_device_locker_new(device, error);
@@ -720,16 +579,21 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 	}
 
 	is_receiver = fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
-	fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
-	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						is_receiver,
+						&fs,
+						error))
+		return FALSE;
+	if (!fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
 						  is_receiver,
-						  error);
+						  &id,
+						  error))
+		return FALSE;
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, 1);
 
-	if (!fu_steelseries_fizz_write_firmware_fs(device,
+	if (!fu_steelseries_fizz_write_firmware_fs(self,
 						   FALSE,
 						   fs,
 						   id,
@@ -745,7 +609,7 @@ fu_steelseries_fizz_write_firmware(FuDevice *device,
 }
 
 FuFirmware *
-fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
+fu_steelseries_fizz_read_firmware_fs(FuSteelseriesFizz *self,
 				     gboolean tunnel,
 				     guint8 fs,
 				     guint8 id,
@@ -761,7 +625,7 @@ fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	buf = g_malloc0(size);
-	if (!fu_steelseries_fizz_read_fs(device,
+	if (!fu_steelseries_fizz_read_fs(self,
 					 tunnel,
 					 fs,
 					 id,
@@ -786,8 +650,9 @@ fu_steelseries_fizz_read_firmware_fs(FuDevice *device,
 static FuFirmware *
 fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	guint8 fs;
-	guint8 id;
+	FuSteelseriesFizz *self = FU_STEELSERIES_FIZZ(device);
+	guint8 fs = 0;
+	guint8 id = 0;
 	gboolean is_receiver;
 	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -806,13 +671,18 @@ fu_steelseries_fizz_read_firmware(FuDevice *device, FuProgress *progress, GError
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 100, NULL);
 
 	is_receiver = fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
-	fs =
-	    fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy), is_receiver, error);
-	id = fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+	if (!fu_steelseries_fizz_impl_get_fs_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
+						is_receiver,
+						&fs,
+						error))
+		return NULL;
+	if (!fu_steelseries_fizz_impl_get_file_id(FU_STEELSERIES_FIZZ_IMPL(proxy),
 						  is_receiver,
-						  error);
+						  &id,
+						  error))
+		return NULL;
 
-	firmware = fu_steelseries_fizz_read_firmware_fs(device,
+	firmware = fu_steelseries_fizz_read_firmware_fs(self,
 							FALSE,
 							fs,
 							id,
