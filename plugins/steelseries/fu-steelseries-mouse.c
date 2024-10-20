@@ -10,7 +10,7 @@
 
 #include "fu-steelseries-mouse.h"
 
-#define STEELSERIES_TRANSACTION_TIMEOUT 1000 /* ms */
+#define FU_STEELSERIES_TRANSACTION_TIMEOUT 1000 /* ms */
 
 struct _FuSteelseriesMouse {
 	FuUsbDevice parent_instance;
@@ -41,7 +41,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 					    data,
 					    sizeof(data),
 					    &actual_len,
-					    STEELSERIES_TRANSACTION_TIMEOUT,
+					    FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to do control transfer: ");
@@ -60,7 +60,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 					      data,
 					      sizeof(data),
 					      &actual_len,
-					      STEELSERIES_TRANSACTION_TIMEOUT,
+					      FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
 					      error)) {
 		g_prefix_error(error, "failed to do EP1 transfer: ");
