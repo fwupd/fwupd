@@ -140,7 +140,8 @@ struct FuStructAsusFlashReset {
 struct FuStructAsusFlushPage {
     command: u8 == 0xc3,
     address: u32,
-    page_size: u16 == 0x400,
+    page_size: u16be == 0x400,
+    reserved: [u8; 56],
 }
 
 #[derive(New)]
@@ -158,7 +159,7 @@ struct FuStructAsusVerifyBuffer {
 #[derive(New, Getters)]
 struct FuStructAsusVerifyResult {
     command: u8 == 0xd0,
-    datasz: u8 == 0x6,
+    reserved: [u8; 62],
 }
 
 // Wire shark filter
