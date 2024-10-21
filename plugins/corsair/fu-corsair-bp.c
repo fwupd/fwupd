@@ -380,9 +380,6 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 gboolean
 fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError **error)
 {
-	guint32 crc;
-	gsize firmware_size;
-	const guint8 *firmware_raw;
 	g_autoptr(GBytes) blob = NULL;
 	guint8 cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x16, 0x00, 0x01, 0x03, 0x00, 0x01, 0x01};
 
@@ -391,15 +388,9 @@ fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError 
 		g_prefix_error(error, "cannot get firmware bytes: ");
 		return FALSE;
 	}
-
-	firmware_raw = fu_bytes_get_data_safe(blob, &firmware_size, error);
-	if (firmware_raw == NULL) {
-		g_prefix_error(error, "cannot get firmware data: ");
-		return FALSE;
-	}
-
-	crc = fu_crc32(FU_CRC_KIND_B32_MPEG2, firmware_raw, firmware_size);
-	fu_memwrite_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC], crc, G_LITTLE_ENDIAN);
+	fu_memwrite_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC],
+			   fu_crc32_bytes(FU_CRC_KIND_B32_MPEG2, blob),
+			   G_LITTLE_ENDIAN);
 
 	return fu_corsair_bp_command(self, cmd, CORSAIR_ACTIVATION_TIMEOUT, TRUE, error);
 }

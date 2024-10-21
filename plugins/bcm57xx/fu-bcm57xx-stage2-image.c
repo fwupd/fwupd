@@ -45,8 +45,6 @@ fu_bcm57xx_stage2_image_parse(FuFirmware *image,
 static GByteArray *
 fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 {
-	const guint8 *buf;
-	gsize bufsz = 0;
 	g_autoptr(GByteArray) blob = NULL;
 	g_autoptr(GBytes) fw_nocrc = NULL;
 
@@ -56,8 +54,7 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 		return NULL;
 
 	/* add to a mutable buffer */
-	buf = g_bytes_get_data(fw_nocrc, &bufsz);
-	blob = g_byte_array_sized_new(bufsz + (sizeof(guint32) * 3));
+	blob = g_byte_array_sized_new(g_bytes_get_size(fw_nocrc) + (sizeof(guint32) * 3));
 	fu_byte_array_append_uint32(blob, BCM_NVRAM_MAGIC, G_BIG_ENDIAN);
 	fu_byte_array_append_uint32(blob,
 				    g_bytes_get_size(fw_nocrc) + sizeof(guint32),
@@ -66,7 +63,7 @@ fu_bcm57xx_stage2_image_write(FuFirmware *image, GError **error)
 
 	/* add CRC */
 	fu_byte_array_append_uint32(blob,
-				    fu_crc32(FU_CRC_KIND_B32_STANDARD, buf, bufsz),
+				    fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, fw_nocrc),
 				    G_LITTLE_ENDIAN);
 	return g_steal_pointer(&blob);
 }
