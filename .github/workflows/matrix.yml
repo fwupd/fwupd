@@ -45,7 +45,7 @@ jobs:
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest contrib/ci/${{matrix.os}}-test.sh
       - name: Coveralls
         if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386'
-        uses: coverallsapp/github-action@1134c89e4bf10443bf8f0ec69640b667cfd91041 # v2.3.1
+        uses: coverallsapp/github-action@4cdef0b2dbe0c9aa26bed48edb868db738625e79 # v2.3.3
         with:
           flag-name: run-${{ join(matrix.*, '-') }}
           parallel: true
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Close parallel build
-        uses: coverallsapp/github-action@1134c89e4bf10443bf8f0ec69640b667cfd91041 # v2.3.1
+        uses: coverallsapp/github-action@4cdef0b2dbe0c9aa26bed48edb868db738625e79 # v2.3.3
         with:
           parallel-finished: true
           carryforward: "run-debian-i386,run-debian-x86_64"
