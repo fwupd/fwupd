@@ -411,6 +411,7 @@ fu_asus_hid_device_write_blocks(FuAsusHidDevice *self,
 {
 	FuDevice *device = FU_DEVICE(self);
 	guint count = fu_chunk_array_length(blocks);
+	guint offset = 0;
 
 	/* write 18 blocks into page transmit buffer ("C1") */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -423,10 +424,13 @@ fu_asus_hid_device_write_blocks(FuAsusHidDevice *self,
 		if (chk == NULL)
 			return FALSE;
 
-		g_debug("Block #%u/%u (data size %02x)",
+		g_debug("writing block #%u/%u to offset %u (data size 0x%02x)",
 			i,
 			count - 1,
+			offset,
 			(guint)fu_chunk_get_data_sz(chk));
+		fu_struct_asus_write_flash_command_set_datasz(c1, fu_chunk_get_data_sz(chk));
+		fu_struct_asus_write_flash_command_set_offset(c1, offset);
 		if (!fu_struct_asus_write_flash_command_set_data(c1,
 								 fu_chunk_get_data(chk),
 								 fu_chunk_get_data_sz(chk),
@@ -439,7 +443,7 @@ fu_asus_hid_device_write_blocks(FuAsusHidDevice *self,
 							 FU_ASUS_HID_REPORT_ID_FLASHING,
 							 error))
 			return FALSE;
-
+		offset += fu_chunk_get_data_sz(chk);
 		fu_progress_step_done(progress);
 	}
 
