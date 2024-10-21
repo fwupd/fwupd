@@ -58,8 +58,6 @@ fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
 static GByteArray *
 fu_bcm57xx_dict_image_write(FuFirmware *firmware, GError **error)
 {
-	const guint8 *buf;
-	gsize bufsz = 0;
 	guint32 crc;
 	g_autoptr(GByteArray) blob = NULL;
 	g_autoptr(GBytes) fw_nocrc = NULL;
@@ -70,12 +68,11 @@ fu_bcm57xx_dict_image_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* add to a mutable buffer */
-	buf = g_bytes_get_data(fw_nocrc, &bufsz);
-	blob = g_byte_array_sized_new(bufsz + sizeof(guint32));
+	blob = g_byte_array_sized_new(g_bytes_get_size(fw_nocrc) + sizeof(guint32));
 	fu_byte_array_append_bytes(blob, fw_nocrc);
 
 	/* add CRC */
-	crc = fu_crc32(FU_CRC_KIND_B32_STANDARD, buf, bufsz);
+	crc = fu_crc32_bytes(FU_CRC_KIND_B32_STANDARD, fw_nocrc);
 	fu_byte_array_append_uint32(blob, crc, G_LITTLE_ENDIAN);
 	return g_steal_pointer(&blob);
 }
