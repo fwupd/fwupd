@@ -17,6 +17,8 @@ struct _FuUf2Device {
 
 G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_BLOCK_PARTITION)
 
+#define FU_UF2_DEVICE_FLAG_HAS_RUNTIME "has-runtime"
+
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
@@ -135,7 +137,17 @@ fu_uf2_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* success */
-	return fu_device_set_contents(device, fn, stream, progress, error);
+	if (!fu_device_set_contents(device, fn, stream, progress, error))
+		return FALSE;
+
+	/* we saw the device *come* from a runtime VID/PID, lets assume it's going back there */
+	if (fu_device_has_private_flag(device, FU_UF2_DEVICE_FLAG_HAS_RUNTIME)) {
+		g_debug("expecting runtime");
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static GBytes *
@@ -376,6 +388,15 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_uf2_device_replace(FuDevice *device, FuDevice *donor)
+{
+	/* we saw the same device come from a different VID/PID */
+	if (fu_device_get_vid(device) != fu_device_get_vid(donor) ||
+	    fu_device_get_pid(device) != fu_device_get_pid(donor))
+		fu_device_add_private_flag(device, FU_UF2_DEVICE_FLAG_HAS_RUNTIME);
+}
+
+static void
 fu_uf2_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -412,6 +433,7 @@ fu_uf2_device_init(FuUf2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UF2_DEVICE_FLAG_HAS_RUNTIME);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_uf2_device_vid_notify_cb),
@@ -449,5 +471,6 @@ fu_uf2_device_class_init(FuUf2DeviceClass *klass)
 	device_class->set_progress = fu_uf2_device_set_progress;
 	device_class->read_firmware = fu_uf2_device_read_firmware;
 	device_class->write_firmware = fu_uf2_device_write_firmware;
+	device_class->replace = fu_uf2_device_replace;
 	device_class->dump_firmware = fu_uf2_device_dump_firmware;
 }
