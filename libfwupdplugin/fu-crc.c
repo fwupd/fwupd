@@ -158,6 +158,25 @@ fu_crc8(FuCrcKind kind, const guint8 *buf, gsize bufsz)
 }
 
 /**
+ * fu_crc8_bytes:
+ * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B8_MAXIM_DOW
+ * @blob: a #GBytes
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 2.0.2
+ **/
+guint8
+fu_crc8_bytes(FuCrcKind kind, GBytes *blob)
+{
+	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
+	g_return_val_if_fail(blob != NULL, 0x0);
+	return fu_crc8(kind, g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+}
+
+/**
  * fu_crc16_step:
  * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B16_XMODEM
  * @buf: memory buffer
@@ -235,6 +254,25 @@ fu_crc16(FuCrcKind kind, const guint8 *buf, gsize bufsz)
 }
 
 /**
+ * fu_crc16_bytes:
+ * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B16_XMODEM
+ * @blob: a #GBytes
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 2.0.2
+ **/
+guint16
+fu_crc16_bytes(FuCrcKind kind, GBytes *blob)
+{
+	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
+	g_return_val_if_fail(blob != NULL, 0x0);
+	return fu_crc16(kind, g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+}
+
+/**
  * fu_crc32_step:
  * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B32_STANDARD
  * @buf: memory buffer
@@ -309,6 +347,25 @@ fu_crc32(FuCrcKind kind, const guint8 *buf, gsize bufsz)
 	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
 	g_return_val_if_fail(crc_map[kind].bitwidth == 32, 0x0);
 	return fu_crc32_done(kind, fu_crc32_step(kind, buf, bufsz, crc_map[kind].init));
+}
+
+/**
+ * fu_crc32_bytes:
+ * @kind: a #FuCrcKind, typically %FU_CRC_KIND_B32_STANDARD
+ * @blob: a #GBytes
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 2.0.2
+ **/
+guint32
+fu_crc32_bytes(FuCrcKind kind, GBytes *blob)
+{
+	g_return_val_if_fail(kind < FU_CRC_KIND_LAST, 0x0);
+	g_return_val_if_fail(blob != NULL, 0x0);
+	return fu_crc32(kind, g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
 }
 
 /**
