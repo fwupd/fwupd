@@ -195,6 +195,14 @@ fu_chunk_get_data_sz(FuChunk *self)
 	return self->data_sz;
 }
 
+/* private */
+void
+fu_chunk_set_data_sz(FuChunk *self, gsize data_sz)
+{
+	g_return_if_fail(FU_IS_CHUNK(self));
+	self->data_sz = data_sz;
+}
+
 /**
  * fu_chunk_set_bytes:
  * @self: a #FuChunk
