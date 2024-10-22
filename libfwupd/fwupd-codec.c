@@ -128,7 +128,7 @@ fwupd_codec_to_string(FwupdCodec *self)
 
 	iface = FWUPD_CODEC_GET_IFACE(self);
 	if (iface->to_string != NULL)
-		iface->to_string(self);
+		return iface->to_string(self);
 	if (iface->add_string != NULL || iface->add_json != NULL) {
 		GString *str = g_string_new(NULL);
 		fwupd_codec_add_string(self, 0, str);
