@@ -99,7 +99,6 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	gsize dp_length;
 	gsize streamsz = 0;
 	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GBytes) payload = NULL;
 
 	/* parse */
 	st = fu_struct_efi_device_path_parse_stream(stream, 0x0, error);
@@ -126,10 +125,13 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 			fu_struct_efi_device_path_get_length(st),
 			(guint)dp_length);
 	}
-	payload = fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, NULL, error);
-	if (payload == NULL)
-		return FALSE;
-	fu_firmware_set_bytes(firmware, payload);
+	if (dp_length > st->len) {
+		g_autoptr(GBytes) payload =
+		    fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, NULL, error);
+		if (payload == NULL)
+			return FALSE;
+		fu_firmware_set_bytes(firmware, payload);
+	}
 	fu_firmware_set_size(firmware, dp_length);
 
 	/* success */
