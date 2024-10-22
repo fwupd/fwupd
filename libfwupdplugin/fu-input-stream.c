@@ -281,7 +281,7 @@ fu_input_stream_read_byte_array(GInputStream *stream,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "A maximum read size must be specified");
+				    "read size must be non-zero");
 		return NULL;
 	}
 
