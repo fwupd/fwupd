@@ -132,12 +132,12 @@ Flags = is-bootloader
 [WacomEMR_W9013]
 WacomI2cFlashBlockSize = 64
 WacomI2cFlashBaseAddr = 0x2000
-WacomI2cFlashSize = 0x1e000
+FirmwareSizeMax = 0x1e000
 
 [WacomEMR_W9021]
 WacomI2cFlashBlockSize = 256
 WacomI2cFlashBaseAddr = 0x3000
-WacomI2cFlashSize = 0x3c000
+FirmwareSizeMax = 0x3c000
 
 [WacomEMR]
 GType = FuWacomEmrDevice
@@ -146,4 +146,4 @@ GType = FuWacomEmrDevice
 GType = FuWacomAesDevice
 WacomI2cFlashBlockSize = 128
 WacomI2cFlashBaseAddr = 0x8000
-WacomI2cFlashSize = 0x28000
+FirmwareSizeMax = 0x28000
