@@ -564,8 +564,11 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0x0, FU_STRUCT_HID_PAYLOAD_SIZE_FIFO, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_STRUCT_HID_PAYLOAD_SIZE_FIFO,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_synaptics_vmm9_device_write_blocks(self,

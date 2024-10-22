@@ -389,7 +389,11 @@ fu_tpm_v2_device_upgrade_data(FuTpmV2Device *self,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, TPM2_MAX_DIGEST_BUFFER, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						TPM2_MAX_DIGEST_BUFFER,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

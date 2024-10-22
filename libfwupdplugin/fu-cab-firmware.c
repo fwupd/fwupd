@@ -694,7 +694,10 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	}
 	cfdata_linear_blob =
 	    g_byte_array_free_to_bytes(g_steal_pointer(&cfdata_linear)); /* nocheck:blocked */
-	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob, 0x0, 0x8000);
+	chunks = fu_chunk_array_new_from_bytes(cfdata_linear_blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       0x8000);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) chunk_zlib = g_byte_array_new();

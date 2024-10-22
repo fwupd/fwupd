@@ -712,7 +712,8 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 
 	chunks =
 	    fu_chunk_array_new_from_stream(stream,
-					   0x00,
+					   FU_CHUNK_ADDR_OFFSET_NONE,
+					   FU_CHUNK_PAGESZ_NONE,
 					   sizeof(guint32) * FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN,
 					   error);
 	if (chunks == NULL)

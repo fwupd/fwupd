@@ -478,7 +478,11 @@ fu_strsplit_stream(GInputStream *stream,
 	} else {
 		stream_partial = g_object_ref(stream);
 	}
-	chunks = fu_chunk_array_new_from_stream(stream_partial, 0x0, 0x8000, error);
+	chunks = fu_chunk_array_new_from_stream(stream_partial,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						0x8000,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {

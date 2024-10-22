@@ -154,3 +154,8 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_get_subsystem_model`: Use `fu_pci_device_get_subsystem_pid()` instead
 * `fu_udev_device_get_revision`: Use `fu_pci_device_get_revision()` instead
 * `fu_udev_device_set_revision`: Use `fu_pci_device_set_revision()` instead
+
+## 2.0.2
+
+* `fu_chunk_array_new_from_bytes()`: Add a page size, typically `FU_CHUNK_PAGESZ_NONE`
+* `fu_chunk_array_new_from_stream()`: Add a page size, typically `FU_CHUNK_PAGESZ_NONE`

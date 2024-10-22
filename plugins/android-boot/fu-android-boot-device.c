@@ -206,7 +206,10 @@ fu_android_boot_device_erase(FuAndroidBootDevice *self, FuProgress *progress, GE
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GBytes) fw = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 10 * 1024);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       10 * 1024);
 	return fu_android_boot_device_write(self, chunks, progress, error);
 }
 
@@ -271,7 +274,11 @@ fu_android_boot_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 10 * 1024, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						10 * 1024,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

@@ -232,8 +232,11 @@ fu_dell_k2_rtshub_write_firmware(FuDevice *device,
 	if (stream == NULL)
 		return FALSE;
 
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0x00, DELL_K2_RTSHUB_TRANSFER_BLOCK_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						DELL_K2_RTSHUB_TRANSFER_BLOCK_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

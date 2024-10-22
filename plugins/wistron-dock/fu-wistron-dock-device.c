@@ -439,7 +439,8 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 	if (stream_cbin == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_stream(stream_cbin,
-						0x0,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
 						FU_WISTRON_DOCK_TRANSFER_BLOCK_SIZE,
 						error);
 	if (chunks == NULL)

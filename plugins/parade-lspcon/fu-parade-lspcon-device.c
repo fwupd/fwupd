@@ -430,7 +430,8 @@ fu_parade_lspcon_device_flash_write(FuParadeLspconDevice *self,
 			return FALSE;
 	}
 
-	chunks = fu_chunk_array_new_from_stream(stream, base_address, 256, error);
+	chunks =
+	    fu_chunk_array_new_from_stream(stream, base_address, FU_CHUNK_PAGESZ_NONE, 256, error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

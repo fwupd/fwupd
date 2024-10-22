@@ -266,7 +266,11 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	blocks = fu_chunk_array_new_from_stream(stream, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE, error);
+	blocks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_EP963_TRANSFER_BLOCK_SIZE,
+						error);
 	if (blocks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(blocks); i++) {
@@ -297,6 +301,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 		chk_blob = fu_chunk_get_bytes(chk2);
 		chunks = fu_chunk_array_new_from_bytes(chk_blob,
 						       fu_chunk_get_address(chk2),
+						       FU_CHUNK_PAGESZ_NONE,
 						       FU_EP963_TRANSFER_CHUNK_SIZE);
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;

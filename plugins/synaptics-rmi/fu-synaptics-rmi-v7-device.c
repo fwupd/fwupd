@@ -212,7 +212,10 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* write FW blocks */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, flash->block_size);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
@@ -288,7 +291,8 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 
 	chunks =
 	    fu_chunk_array_new_from_bytes(bytes,
-					  0x00,
+					  FU_CHUNK_ADDR_OFFSET_NONE,
+					  FU_CHUNK_PAGESZ_NONE,
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
@@ -375,7 +379,8 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 	/* write partition */
 	chunks =
 	    fu_chunk_array_new_from_bytes(bytes,
-					  0x00,
+					  FU_CHUNK_ADDR_OFFSET_NONE,
+					  FU_CHUNK_PAGESZ_NONE,
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);

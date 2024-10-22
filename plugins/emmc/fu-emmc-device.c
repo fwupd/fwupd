@@ -426,7 +426,11 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, sector_size, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						sector_size,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	while (failure_cnt < 3) {

@@ -175,7 +175,10 @@ fu_steelseries_fizz_write_fs(FuDevice *device,
 	if (tunnel)
 		cmd |= STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT;
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, STEELSERIES_BUFFER_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       STEELSERIES_BUFFER_TRANSFER_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

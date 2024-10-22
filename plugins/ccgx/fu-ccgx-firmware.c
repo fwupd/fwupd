@@ -427,7 +427,10 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x100);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       0x100);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

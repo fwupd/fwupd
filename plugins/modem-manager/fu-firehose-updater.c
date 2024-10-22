@@ -542,8 +542,10 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				      GError **error)
 {
 	g_autoptr(FuChunk) chk_last = NULL;
-	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(program_file, 0, payload_size);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(program_file,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       payload_size);
 
 	/* last block needs to be padded to the next sector_size,
 	 * so that we always send full sectors */

@@ -245,7 +245,10 @@ fu_steelseries_gamepad_write_firmware(FuDevice *device,
 	if (blob == NULL)
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(blob, 0, STEELSERIES_BUFFER_TRANSFER_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       STEELSERIES_BUFFER_TRANSFER_SIZE);
 	if (fu_chunk_array_length(chunks) > (G_MAXUINT16 + 1)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -339,7 +339,11 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send data */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, ISP_DATA_BLOCKSIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						ISP_DATA_BLOCKSIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

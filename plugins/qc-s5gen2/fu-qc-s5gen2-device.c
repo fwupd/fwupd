@@ -489,7 +489,10 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 	if (!fu_qc_s5gen2_device_data_size(self, &data_sz, error))
 		return FALSE;
 
-	chunks = fu_chunk_array_new_from_bytes(data, 0, data_sz);
+	chunks = fu_chunk_array_new_from_bytes(data,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       data_sz);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(GByteArray) pkt = fu_struct_qc_data_new();

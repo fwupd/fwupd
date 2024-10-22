@@ -422,6 +422,7 @@ fu_goodixtp_brlb_device_write_image(FuGoodixtpBrlbDevice *self,
 		return FALSE;
 	chunks = fu_chunk_array_new_from_stream(stream,
 						fu_firmware_get_addr(img),
+						FU_CHUNK_PAGESZ_NONE,
 						RAM_BUFFER_SIZE,
 						error);
 	if (chunks == NULL)

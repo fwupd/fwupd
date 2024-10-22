@@ -44,7 +44,11 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		g_prefix_error(error, "wacom touch module failed to get stream: ");
 		return FALSE;
 	}
-	chunks = fu_chunk_array_new_from_stream(stream, fu_firmware_get_addr(firmware), 128, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						fu_firmware_get_addr(firmware),
+						FU_CHUNK_PAGESZ_NONE,
+						128,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

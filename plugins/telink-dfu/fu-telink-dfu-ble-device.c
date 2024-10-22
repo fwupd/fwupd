@@ -143,6 +143,7 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 	/* OTA firmware data */
 	chunks = fu_chunk_array_new_from_bytes(blob,
 					       FU_TELINK_DFU_HID_DEVICE_START_ADDR,
+					       FU_CHUNK_PAGESZ_NONE,
 					       FU_STRUCT_TELINK_DFU_BLE_PKT_SIZE_PAYLOAD);
 	if (!fu_telink_dfu_ble_device_write_blocks(self,
 						   chunks,

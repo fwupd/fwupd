@@ -990,7 +990,11 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write chunks */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunk_size, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						chunk_size,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_jabra_gnp_device_write_crc(self,

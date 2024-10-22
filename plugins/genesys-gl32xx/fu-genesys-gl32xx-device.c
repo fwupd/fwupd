@@ -707,7 +707,10 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw, FU_GENESYS_GL32XX_FW_START_ADDR, self->packetsz);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_GENESYS_GL32XX_FW_START_ADDR,
+					       FU_CHUNK_PAGESZ_NONE,
+					       self->packetsz);
 	if (!fu_genesys_gl32xx_device_write_blocks(self,
 						   chunks,
 						   fu_progress_get_child(progress),

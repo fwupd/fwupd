@@ -142,7 +142,8 @@ fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
 				     GBytes *fw,
 				     GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 16);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -174,8 +175,10 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 				       gboolean ignore_error,
 				       GError **error)
 {
-	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(fw, 0x0, PUMA_DPCD_DATA_SIZE);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       PUMA_DPCD_DATA_SIZE);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

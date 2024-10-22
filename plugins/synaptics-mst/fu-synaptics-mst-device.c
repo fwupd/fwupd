@@ -700,7 +700,10 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	g_debug("ESM checksum %x doesn't match expected %x", flash_checksum, helper->checksum);
 
 	helper->progress = g_object_ref(progress);
-	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, EEPROM_ESM_OFFSET, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
+						       EEPROM_ESM_OFFSET,
+						       FU_CHUNK_PAGESZ_NONE,
+						       BLOCK_UNIT);
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_esm_cb,
 			       MAX_RETRY_COUNTS,
@@ -789,7 +792,10 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 	helper->fw = g_bytes_ref(fw);
 	helper->checksum = fu_sum32_bytes(fw);
 	helper->progress = g_object_ref(progress);
-	helper->chunks = fu_chunk_array_new_from_bytes(fw, 0x0, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(fw,
+						       FU_CHUNK_ADDR_OFFSET_NONE,
+						       FU_CHUNK_PAGESZ_NONE,
+						       BLOCK_UNIT);
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_synaptics_mst_device_update_tesla_leaf_firmware_cb,
 			       MAX_RETRY_COUNTS,
@@ -1074,6 +1080,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 	helper->progress = g_object_ref(progress);
 	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
 						       EEPROM_BANK_OFFSET * helper->bank_to_update,
+						       FU_CHUNK_PAGESZ_NONE,
 						       BLOCK_UNIT);
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_synaptics_mst_device_update_panamera_firmware_cb,
@@ -1298,7 +1305,10 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 							    g_bytes_get_data(helper->fw, NULL),
 							    g_bytes_get_size(helper->fw));
 	helper->progress = g_object_ref(progress);
-	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, BLOCK_UNIT);
+	helper->chunks = fu_chunk_array_new_from_bytes(helper->fw,
+						       FU_CHUNK_ADDR_OFFSET_NONE,
+						       FU_CHUNK_PAGESZ_NONE,
+						       BLOCK_UNIT);
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_synaptics_mst_device_update_firmware_cb,
 			     MAX_RETRY_COUNTS,

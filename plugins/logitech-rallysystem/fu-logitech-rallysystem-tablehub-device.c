@@ -135,7 +135,11 @@ fu_logitech_rallysystem_tablehub_device_write_fw(FuLogitechRallysystemTablehubDe
 						 FuProgress *progress,
 						 GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x200, error);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_stream(stream,
+									FU_CHUNK_ADDR_OFFSET_NONE,
+									FU_CHUNK_PAGESZ_NONE,
+									0x200,
+									error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

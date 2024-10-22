@@ -236,7 +236,10 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 2048);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       2048);
 
 	/* intentionally corrupt first chunk so that CRC fails */
 	chk0 = fu_chunk_array_index(chunks, 0, error);

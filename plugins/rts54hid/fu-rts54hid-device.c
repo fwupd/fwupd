@@ -362,8 +362,11 @@ fu_rts54hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_RTS54HID_TRANSFER_BLOCK_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

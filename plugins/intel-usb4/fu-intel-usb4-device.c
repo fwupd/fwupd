@@ -370,7 +370,10 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 	}
 
 	/* write data in 64 byte blocks */
-	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 64);
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       64);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);

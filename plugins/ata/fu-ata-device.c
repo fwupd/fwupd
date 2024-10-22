@@ -790,7 +790,11 @@ fu_ata_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, chunksz, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						chunksz,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

@@ -434,6 +434,7 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 	bytes = fu_chunk_get_bytes(chk);
 	chunks = fu_chunk_array_new_from_bytes(bytes,
 					       fu_chunk_get_address(chk),
+					       FU_CHUNK_PAGESZ_NONE,
 					       fu_dfu_device_get_transfer_size(device));
 	if (!fu_dfu_target_stm_download_element1(target,
 						 chunks,

@@ -162,7 +162,10 @@ fu_ch347_device_send_command(FuCh347Device *self,
 	if (wbufsz > 0) {
 		g_autoptr(GBytes) wblob = g_bytes_new_static(wbuf, wbufsz);
 		g_autoptr(FuChunkArray) chunks =
-		    fu_chunk_array_new_from_bytes(wblob, 0x0, FU_CH347_PAYLOAD_SIZE);
+		    fu_chunk_array_new_from_bytes(wblob,
+						  FU_CHUNK_ADDR_OFFSET_NONE,
+						  FU_CHUNK_PAGESZ_NONE,
+						  FU_CH347_PAYLOAD_SIZE);
 		for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 			guint8 buf[1] = {0x0};
 			g_autoptr(FuChunk) chk = NULL;

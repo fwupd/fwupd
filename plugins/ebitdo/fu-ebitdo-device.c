@@ -510,7 +510,11 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* flash the firmware in 32 byte blocks */
-	chunks = fu_chunk_array_new_from_stream(stream_payload, 0x0, 32, error);
+	chunks = fu_chunk_array_new_from_stream(stream_payload,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						32,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

@@ -351,7 +351,10 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, GX_FLASH_TRANSFER_BLOCK_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       GX_FLASH_TRANSFER_BLOCK_SIZE);
 
 	/* don't auto-boot firmware */
 	if (!fu_goodixmoc_device_update_init(self, &error_local)) {

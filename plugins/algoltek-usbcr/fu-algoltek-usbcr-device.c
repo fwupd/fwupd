@@ -602,7 +602,11 @@ fu_algoltek_usbcr_device_write_firmware(FuDevice *device,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_stream(stream, 0, 32, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						32,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

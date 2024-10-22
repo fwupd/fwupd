@@ -970,7 +970,8 @@ fu_logitech_bulkcontroller_device_write_fw(FuLogitechBulkcontrollerDevice *self,
 
 	chunks = fu_chunk_array_new_from_stream(
 	    stream,
-	    0x0,
+	    FU_CHUNK_ADDR_OFFSET_NONE,
+	    FU_CHUNK_PAGESZ_NONE,
 	    self->transfer_bufsz - FU_STRUCT_LOGITECH_BULKCONTROLLER_UPDATE_REQ_SIZE,
 	    error);
 	if (chunks == NULL)

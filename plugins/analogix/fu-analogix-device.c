@@ -311,7 +311,11 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 	fu_progress_step_done(progress);
 
 	/* write data */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, BILLBOARD_MAX_PACKET_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						BILLBOARD_MAX_PACKET_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_analogix_device_write_chunks(self,

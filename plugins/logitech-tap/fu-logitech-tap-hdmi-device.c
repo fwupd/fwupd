@@ -366,7 +366,11 @@ fu_logitech_tap_hdmi_device_write_firmware(FuDevice *device,
 
 	/* write */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, kLogiDefaultImageBlockSize, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						kLogiDefaultImageBlockSize,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_logitech_tap_hdmi_device_write_fw(self,

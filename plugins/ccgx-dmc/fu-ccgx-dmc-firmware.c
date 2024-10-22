@@ -368,7 +368,10 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(GBytes) img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)
 			return NULL;
-		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 64);
+		chunks = fu_chunk_array_new_from_bytes(img_bytes,
+						       FU_CHUNK_ADDR_OFFSET_NONE,
+						       FU_CHUNK_PAGESZ_NONE,
+						       64);
 		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(
 		    st_info,
 		    MAX(fu_chunk_array_length(chunks), 1));
@@ -394,7 +397,10 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)
 			return NULL;
-		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 64);
+		chunks = fu_chunk_array_new_from_bytes(img_bytes,
+						       FU_CHUNK_ADDR_OFFSET_NONE,
+						       FU_CHUNK_PAGESZ_NONE,
+						       64);
 		img_padded = fu_bytes_pad(img_bytes, MAX(fu_chunk_array_length(chunks), 1) * 64);
 		fu_byte_array_append_bytes(buf, img_padded);
 		g_checksum_update(csum,

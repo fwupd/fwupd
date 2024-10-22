@@ -361,6 +361,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	chunks =
 	    fu_chunk_array_new_from_bytes(rest_of_firmware,
 					  first_chunk_size,
+					  FU_CHUNK_PAGESZ_NONE,
 					  self->cmd_write_size - CORSAIR_NEXT_CHUNKS_HEADER_SIZE);
 
 	if (!fu_corsair_bp_write_firmware_chunks(self,

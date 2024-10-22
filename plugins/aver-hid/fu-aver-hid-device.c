@@ -432,7 +432,8 @@ fu_aver_hid_device_write_firmware(FuDevice *device,
 
 	/* ISP_FILE_DNLOAD */
 	chunks = fu_chunk_array_new_from_bytes(aver_fw,
-					       0x00,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
 					       FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA);
 
 	if (!fu_aver_hid_device_isp_file_dnload(self,
