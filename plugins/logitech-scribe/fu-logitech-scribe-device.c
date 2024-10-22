@@ -371,7 +371,11 @@ fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, PAYLOAD_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						PAYLOAD_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

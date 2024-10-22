@@ -817,7 +817,11 @@ fu_device_set_contents(FuDevice *self,
 		return FALSE;
 
 	/* write in 32k chunks */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 0x8000, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						0x8000,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

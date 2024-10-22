@@ -2702,7 +2702,8 @@ fu_chunk_array_func(void)
 	g_autoptr(FuChunk) chk4 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static("hello world", 11);
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 100, 5);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, 100, FU_CHUNK_PAGESZ_NONE, 5);
 
 	g_assert_cmpint(fu_chunk_array_length(chunks), ==, 3);
 

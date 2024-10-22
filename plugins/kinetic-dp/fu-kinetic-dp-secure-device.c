@@ -348,7 +348,8 @@ fu_kinetic_dp_secure_device_send_chunk(FuKineticDpSecureDevice *self,
 				       FuProgress *progress,
 				       GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 16);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -384,8 +385,10 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 					 FuProgress *progress,
 					 GError **error)
 {
-	g_autoptr(FuChunkArray) chunks =
-	    fu_chunk_array_new_from_bytes(fw, 0x0, DPCD_SIZE_KT_AUX_WIN);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       DPCD_SIZE_KT_AUX_WIN);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

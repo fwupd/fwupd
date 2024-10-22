@@ -458,7 +458,8 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 					GError **error)
 {
 	gsize total_size = g_bytes_get_size(data);
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(data, address, 256);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(data, address, FU_CHUNK_PAGESZ_NONE, 256);
 
 	g_debug("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

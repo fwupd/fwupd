@@ -220,7 +220,11 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 	guint8 basic_data_size = 5;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, address, 64 - basic_data_size, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						address,
+						FU_CHUNK_PAGESZ_NONE,
+						64 - basic_data_size,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
@@ -371,7 +375,11 @@ fu_algoltek_usb_device_wrf(FuAlgoltekUsbDevice *self,
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GByteArray) buf_parameter = g_byte_array_new();
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 64, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						64,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

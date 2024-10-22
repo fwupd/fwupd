@@ -681,7 +681,11 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* data */
-	chunks = fu_chunk_array_new_from_stream(fw, 0x0, payloadsz, error);
+	chunks = fu_chunk_array_new_from_stream(fw,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						payloadsz,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_igsc_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))

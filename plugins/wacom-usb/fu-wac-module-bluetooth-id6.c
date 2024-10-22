@@ -67,7 +67,8 @@ fu_wac_module_bluetooth_id6_write_blob(FuWacModule *self,
 {
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_stream(stream,
-					   0x0,
+					   FU_CHUNK_ADDR_OFFSET_NONE,
+					   FU_CHUNK_PAGESZ_NONE,
 					   FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ,
 					   error);
 	if (chunks == NULL)

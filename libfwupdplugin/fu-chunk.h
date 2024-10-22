@@ -12,6 +12,24 @@
 
 G_DECLARE_FINAL_TYPE(FuChunk, fu_chunk, FU, CHUNK, GObject)
 
+/**
+ * FU_CHUNK_PAGESZ_NONE:
+ *
+ * No page size is used.
+ *
+ * Since: 2.0.2
+ **/
+#define FU_CHUNK_PAGESZ_NONE 0
+
+/**
+ * FU_CHUNK_ADDR_OFFSET_NONE:
+ *
+ * No address offset is used.
+ *
+ * Since: 2.0.2
+ **/
+#define FU_CHUNK_ADDR_OFFSET_NONE 0
+
 FuChunk *
 fu_chunk_bytes_new(GBytes *bytes);
 void
@@ -47,12 +65,12 @@ fu_chunk_array_to_string(GPtrArray *chunks) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_chunk_array_new(const guint8 *data,
 		   gsize data_sz,
-		   gsize addr_start,
+		   gsize addr_offset,
 		   gsize page_sz,
 		   gsize packet_sz);
 GPtrArray *
 fu_chunk_array_mutable_new(guint8 *data,
 			   gsize data_sz,
-			   gsize addr_start,
+			   gsize addr_offset,
 			   gsize page_sz,
 			   gsize packet_sz) G_GNUC_NON_NULL(1);

@@ -353,7 +353,10 @@ fu_mbim_qdu_updater_file_open_ready(MbimDevice *device, GAsyncResult *res, gpoin
 		return;
 	}
 
-	ctx->chunks = fu_chunk_array_new_from_bytes(ctx->blob, 0x00, out_max_transfer_size);
+	ctx->chunks = fu_chunk_array_new_from_bytes(ctx->blob,
+						    FU_CHUNK_ADDR_OFFSET_NONE,
+						    FU_CHUNK_PAGESZ_NONE,
+						    out_max_transfer_size);
 	chk = fu_chunk_array_index(ctx->chunks, 0, &ctx->error);
 	if (chk == NULL) {
 		g_main_loop_quit(ctx->mainloop);

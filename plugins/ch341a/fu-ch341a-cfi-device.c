@@ -219,7 +219,10 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 		return FALSE;
 
 	/* send data */
-	chunks = fu_chunk_array_new_from_bytes(page_blob, 0x0, CH341A_PAYLOAD_SIZE);
+	chunks = fu_chunk_array_new_from_bytes(page_blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       CH341A_PAYLOAD_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf2[CH341A_PAYLOAD_SIZE] = {0x0};
@@ -362,7 +365,8 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	pages = fu_chunk_array_new_from_bytes(fw,
-					      0x0,
+					      FU_CHUNK_ADDR_OFFSET_NONE,
+					      FU_CHUNK_PAGESZ_NONE,
 					      fu_cfi_device_get_page_size(FU_CFI_DEVICE(self)));
 	if (!fu_ch341a_cfi_device_write_pages(self,
 					      pages,

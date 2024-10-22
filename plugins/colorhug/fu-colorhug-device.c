@@ -550,6 +550,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 	/* write each block */
 	chunks = fu_chunk_array_new_from_stream(stream,
 						self->start_addr,
+						FU_CHUNK_PAGESZ_NONE,
 						CH_FLASH_TRANSFER_BLOCK_SIZE,
 						error);
 	if (chunks == NULL)

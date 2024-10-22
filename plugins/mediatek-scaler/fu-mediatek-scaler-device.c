@@ -489,7 +489,10 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
 	/* smaller slices to accodomate pch variants */
-	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes, 0x00, DDC_DATA_FRAGEMENT_SIZE);
+	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes,
+						   FU_CHUNK_ADDR_OFFSET_NONE,
+						   FU_CHUNK_PAGESZ_NONE,
+						   DDC_DATA_FRAGEMENT_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chk_slices); i++) {
 		g_autoptr(FuChunk) chk_slice = NULL;
 		g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
@@ -746,7 +749,11 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 	guint32 sent_sz = 0x0;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0x00, DDC_DATA_PAGE_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						DDC_DATA_PAGE_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

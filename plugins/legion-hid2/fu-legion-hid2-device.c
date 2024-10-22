@@ -341,8 +341,11 @@ fu_legion_hid2_device_write_data(FuLegionHid2Device *self,
 	if (stream == NULL)
 		return FALSE;
 
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0, FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_legion_hid2_device_write_data_chunks(self,
@@ -368,8 +371,11 @@ fu_legion_hid2_device_write_sig(FuLegionHid2Device *self,
 	if (stream == NULL)
 		return FALSE;
 
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0, FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_legion_hid2_device_write_data_chunks(self,

@@ -364,8 +364,14 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		address = f34->data_base + RMI_F34_BLOCK_DATA_V1_OFFSET;
 	else
 		address = f34->data_base + RMI_F34_BLOCK_DATA_OFFSET;
-	chunks_bin = fu_chunk_array_new_from_bytes(firmware_bin, 0x00, flash->block_size);
-	chunks_cfg = fu_chunk_array_new_from_bytes(bytes_cfg, 0x00, flash->block_size);
+	chunks_bin = fu_chunk_array_new_from_bytes(firmware_bin,
+						   FU_CHUNK_ADDR_OFFSET_NONE,
+						   FU_CHUNK_PAGESZ_NONE,
+						   flash->block_size);
+	chunks_cfg = fu_chunk_array_new_from_bytes(bytes_cfg,
+						   FU_CHUNK_ADDR_OFFSET_NONE,
+						   FU_CHUNK_PAGESZ_NONE,
+						   flash->block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks_bin); i++) {
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks_bin, i, error);
 		if (chk == NULL)
@@ -392,7 +398,8 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		FuProgress *progress_child = fu_progress_get_child(progress);
 		g_autoptr(FuChunkArray) chunks_sig = NULL;
 		chunks_sig = fu_chunk_array_new_from_bytes(signature_bin,
-							   0x00, /* start addr */
+							   FU_CHUNK_ADDR_OFFSET_NONE,
+							   FU_CHUNK_PAGESZ_NONE,
 							   flash->block_size);
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base,

@@ -656,7 +656,10 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 		return FALSE;
 
 	/* progress */
-	chunks = fu_chunk_array_new_from_bytes(helper->fw, 0x0, eeprom_fw_page_size);
+	chunks = fu_chunk_array_new_from_bytes(helper->fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       eeprom_fw_page_size);
 	fu_progress_set_id(helper->progress, G_STRLOC);
 	fu_progress_set_steps(helper->progress,
 			      fu_chunk_array_length(chunks) - helper->idx_page_start + 1);

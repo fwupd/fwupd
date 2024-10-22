@@ -291,7 +291,8 @@ fu_dfu_csr_device_download(FuDevice *device,
 
 	/* create chunks */
 	chunks = fu_chunk_array_new_from_stream(stream,
-						0x0,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
 						FU_DFU_CSR_PACKET_DATA_SIZE -
 						    FU_STRUCT_DFU_CSR_COMMAND_HEADER_SIZE,
 						error);

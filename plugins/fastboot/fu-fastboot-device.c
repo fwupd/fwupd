@@ -266,7 +266,10 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 
 	/* send the data in chunks */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, self->blocksz);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       self->blocksz);
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

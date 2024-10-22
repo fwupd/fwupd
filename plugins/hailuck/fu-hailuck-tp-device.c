@@ -114,7 +114,11 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, block_size, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						block_size,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

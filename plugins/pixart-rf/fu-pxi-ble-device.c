@@ -370,7 +370,10 @@ fu_pxi_ble_device_check_support_resume(FuPxiBleDevice *self,
 		return FALSE;
 
 	/* check offset is invalid or not */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	if (self->fwstate.offset > fu_chunk_array_length(chunks)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -532,6 +535,7 @@ fu_pxi_ble_device_write_chunk(FuPxiBleDevice *self, FuChunk *chk, GError **error
 	/* write payload */
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       fu_chunk_get_address(chk),
+					       FU_CHUNK_PAGESZ_NONE,
 					       self->fwstate.mtu_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk2 = NULL;
@@ -753,7 +757,10 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* prepare write fw into device */
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	if (!fu_pxi_ble_device_check_support_resume(self,
 						    firmware,
 						    fu_progress_get_child(progress),

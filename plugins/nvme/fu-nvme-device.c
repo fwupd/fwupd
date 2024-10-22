@@ -433,7 +433,10 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	}
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw2, 0x00, block_size);
+	chunks = fu_chunk_array_new_from_bytes(fw2,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       block_size);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 

@@ -601,7 +601,8 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 	if (stream == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_stream(stream,
-						0x0,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
 						FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE,
 						error);
 	if (chunks == NULL)

@@ -226,8 +226,11 @@ fu_rts54hid_module_write_firmware(FuDevice *module,
 		return FALSE;
 
 	/* build packets */
-	chunks =
-	    fu_chunk_array_new_from_stream(stream, 0x00, FU_RTS54HID_TRANSFER_BLOCK_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						FU_RTS54HID_TRANSFER_BLOCK_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (0) {

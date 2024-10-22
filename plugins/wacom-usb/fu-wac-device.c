@@ -542,8 +542,10 @@ fu_wac_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		/* write block in chunks */
-		chunks =
-		    fu_chunk_array_new_from_bytes(blob_block, fd->start_addr, self->write_block_sz);
+		chunks = fu_chunk_array_new_from_bytes(blob_block,
+						       fd->start_addr,
+						       FU_CHUNK_PAGESZ_NONE,
+						       self->write_block_sz);
 		for (guint j = 0; j < fu_chunk_array_length(chunks); j++) {
 			g_autoptr(FuChunk) chk = NULL;
 			g_autoptr(GBytes) blob_chunk = NULL;

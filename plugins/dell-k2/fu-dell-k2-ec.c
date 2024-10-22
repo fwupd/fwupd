@@ -706,7 +706,10 @@ fu_dell_k2_ec_write_firmware(FuDevice *device,
 	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, DELL_K2_EC_DEV_TYPE_MAIN_EC, 0);
 
 	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr, 0, DELL_K2_EC_HID_DATA_PAGE_SZ);
+	chunks = fu_chunk_array_new_from_bytes(fw_whdr,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       DELL_K2_EC_HID_DATA_PAGE_SZ);
 
 	/* erase */
 	if (!fu_dell_k2_ec_hid_erase_bank(device, 0xff, error))

@@ -79,7 +79,10 @@ fu_dell_k2_dpmux_write(FuDevice *device,
 	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, DELL_K2_EC_DEV_TYPE_DP_MUX, 0);
 
 	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr, 0, DELL_K2_EC_HID_DATA_PAGE_SZ);
+	chunks = fu_chunk_array_new_from_bytes(fw_whdr,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       DELL_K2_EC_HID_DATA_PAGE_SZ);
 
 	/* write to device */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

@@ -198,7 +198,11 @@ fu_algoltek_aux_device_isp(FuAlgoltekAuxDevice *self,
 	g_autoptr(FuChunkArray) chunks = NULL;
 	guint16 serialno = 0;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0, 8, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						8,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
@@ -311,7 +315,11 @@ fu_algoltek_aux_device_wrf(FuAlgoltekAuxDevice *self,
 	guint8 start_length = 0;
 	guint16 serialno = 1;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0, 8, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						8,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);

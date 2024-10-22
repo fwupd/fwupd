@@ -361,7 +361,7 @@ fu_chunk_array_to_string(GPtrArray *chunks)
  * fu_chunk_array_mutable_new:
  * @data: a mutable blob of memory
  * @data_sz: size of @data_sz
- * @addr_start: the hardware address offset, or 0
+ * @addr_offset: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
  * @packet_sz: the transfer size, or 0
  *
@@ -375,7 +375,7 @@ fu_chunk_array_to_string(GPtrArray *chunks)
 GPtrArray *
 fu_chunk_array_mutable_new(guint8 *data,
 			   gsize data_sz,
-			   gsize addr_start,
+			   gsize addr_offset,
 			   gsize page_sz,
 			   gsize packet_sz)
 {
@@ -384,7 +384,7 @@ fu_chunk_array_mutable_new(guint8 *data,
 	g_return_val_if_fail(data != NULL, NULL);
 	g_return_val_if_fail(data_sz > 0, NULL);
 
-	chunks = fu_chunk_array_new(data, data_sz, addr_start, page_sz, packet_sz);
+	chunks = fu_chunk_array_new(data, data_sz, addr_offset, page_sz, packet_sz);
 	if (chunks == NULL)
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
@@ -398,7 +398,7 @@ fu_chunk_array_mutable_new(guint8 *data,
  * fu_chunk_array_new:
  * @data: (nullable): an optional linear blob of memory
  * @data_sz: size of @data_sz
- * @addr_start: the hardware address offset, or 0
+ * @addr_offset: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
  * @packet_sz: the transfer size, or 0
  *
@@ -412,7 +412,7 @@ fu_chunk_array_mutable_new(guint8 *data,
 GPtrArray *
 fu_chunk_array_new(const guint8 *data,
 		   gsize data_sz,
-		   gsize addr_start,
+		   gsize addr_offset,
 		   gsize page_sz,
 		   gsize packet_sz)
 {
@@ -424,12 +424,12 @@ fu_chunk_array_new(const guint8 *data,
 	while (offset < data_sz) {
 		gsize chunksz = MIN(packet_sz, data_sz - offset);
 		gsize page = 0;
-		gsize address_offset = addr_start + offset;
+		gsize address_offset = addr_offset + offset;
 
 		/* if page_sz is not specified then all the pages are 0 */
 		if (page_sz > 0) {
 			address_offset %= page_sz;
-			page = (offset + addr_start) / page_sz;
+			page = (offset + addr_offset) / page_sz;
 		}
 
 		/* cut the packet so it does not straddle multiple blocks */

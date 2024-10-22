@@ -255,7 +255,7 @@ fu_{{vendor_example}}_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write each block */
-	chunks = fu_chunk_array_new_from_stream(stream, self->start_addr, 64 /* block_size */, error);
+	chunks = fu_chunk_array_new_from_stream(stream, self->start_addr, FU_CHUNK_PAGESZ_NONE, 64 /* block_size */, error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_{{vendor_example}}_device_write_blocks(self,

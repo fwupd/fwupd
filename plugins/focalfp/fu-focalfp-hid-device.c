@@ -488,7 +488,11 @@ fu_focalfp_hid_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send packet data */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, MAX_USB_PACKET_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						MAX_USB_PACKET_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_focalfp_hid_device_write_chunks(self,

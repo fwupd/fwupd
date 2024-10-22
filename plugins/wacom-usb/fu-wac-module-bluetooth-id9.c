@@ -119,7 +119,11 @@ fu_wac_module_bluetooth_id9_write_blocks(FuWacModule *self,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0, block_len, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						block_len,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

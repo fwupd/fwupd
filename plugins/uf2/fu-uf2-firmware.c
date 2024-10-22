@@ -178,7 +178,11 @@ fu_uf2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* read in fixed sized chunks */
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 512, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						512,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -240,7 +244,11 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* write in chunks */
-	chunks = fu_chunk_array_new_from_stream(stream, fu_firmware_get_addr(firmware), 256, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						fu_firmware_get_addr(firmware),
+						FU_CHUNK_PAGESZ_NONE,
+						256,
+						error);
 	if (chunks == NULL)
 		return NULL;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

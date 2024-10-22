@@ -287,7 +287,11 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 #ifdef HAVE_MTD_USER_H
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, self->erasesize, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						self->erasesize,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 
@@ -421,7 +425,11 @@ fu_mtd_device_write_verify(FuMtdDevice *self,
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, 10 * 1024, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						10 * 1024,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 

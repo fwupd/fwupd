@@ -340,6 +340,7 @@ fu_pxi_wireless_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 	/* write payload */
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       fu_chunk_get_address(chk),
+					       FU_CHUNK_PAGESZ_NONE,
 					       self->fwstate.mtu_size);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
@@ -694,7 +695,10 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	/* prepare write fw into device */
 	self->fwstate.offset = 0;
 	self->fwstate.checksum = 0;

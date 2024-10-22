@@ -428,7 +428,10 @@ fu_usi_dock_mcu_device_write_page(FuUsiDockMcuDevice *self, FuChunk *chk_page, G
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) chk_blob = fu_chunk_get_bytes(chk_page);
 
-	chunks = fu_chunk_array_new_from_bytes(chk_blob, 0x0, FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
+	chunks = fu_chunk_array_new_from_bytes(chk_blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       FU_STRUCT_USI_DOCK_HID_REQ_SIZE_BUF);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -608,7 +611,11 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_stream(stream, 0x0, W25Q16DV_PAGE_SIZE, error);
+	chunks = fu_chunk_array_new_from_stream(stream,
+						FU_CHUNK_ADDR_OFFSET_NONE,
+						FU_CHUNK_PAGESZ_NONE,
+						W25Q16DV_PAGE_SIZE,
+						error);
 	if (chunks == NULL)
 		return FALSE;
 	if (!fu_usi_dock_mcu_device_write_pages(self,
