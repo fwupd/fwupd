@@ -82,6 +82,7 @@ fu_chunk_array_calculate_chunk_for_offset(FuChunkArray *self,
  * fu_chunk_array_index:
  * @self: a #FuChunkArray
  * @idx: the chunk index
+ * @error: (nullable): optional return location for an error
  *
  * Gets the next chunk.
  *
@@ -100,6 +101,7 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 	g_autoptr(GBytes) blob_chk = NULL;
 
 	g_return_val_if_fail(FU_IS_CHUNK_ARRAY(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	if (idx >= self->offsets->len) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "idx %u invalid", idx);
