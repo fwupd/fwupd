@@ -1,4 +1,5 @@
 fwupdplugin_structs = [
+  'fu-progress.rs', # fuzzing
   'fu-common.rs', # fuzzing
   'fu-acpi-table.rs', # fuzzing
   'fu-archive.rs', # fuzzing
@@ -20,7 +21,6 @@ fwupdplugin_structs = [
   'fu-msgpack.rs', # fuzzing
   'fu-oprom.rs', # fuzzing
   'fu-pefile.rs', # fuzzing
-  'fu-progress.rs', # fuzzing
   'fu-sbatlevel-section.rs', # fuzzing
   'fu-smbios.rs', # fuzzing
   'fu-usb-device-ds20.rs', # fuzzing
