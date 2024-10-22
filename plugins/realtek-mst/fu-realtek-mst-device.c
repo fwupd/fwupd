@@ -594,11 +594,14 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 	guint32 flag_addr = self->active_bank == FU_REALTEK_MST_DEVICE_FLASH_BANK_USER1
 				? FLASH_FLAG2_ADDR
 				: FLASH_FLAG1_ADDR;
-	GBytes *firmware_bytes = fu_firmware_get_bytes(firmware, error);
 	const guint8 flag_data[] = {0xaa, 0xaa, 0xaa, 0xff, 0xff};
 	g_autofree guint8 *readback_buf = g_malloc0(FLASH_USER_SIZE);
+	g_autoptr(GBytes) firmware_bytes = NULL;
 
 	/* sanity check */
+	firmware_bytes = fu_firmware_get_bytes(firmware, error);
+	if (firmware_bytes == NULL)
+		return FALSE;
 	if (g_bytes_get_size(firmware_bytes) != FLASH_USER_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
