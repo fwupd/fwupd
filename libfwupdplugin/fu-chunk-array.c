@@ -10,6 +10,7 @@
 
 #include "fu-bytes.h"
 #include "fu-chunk-array.h"
+#include "fu-chunk-private.h"
 #include "fu-input-stream.h"
 
 /**
@@ -98,7 +99,6 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 	gsize offset;
 	gsize page = 0;
 	g_autoptr(FuChunk) chk = NULL;
-	g_autoptr(GBytes) blob_chk = NULL;
 
 	g_return_val_if_fail(FU_IS_CHUNK_ARRAY(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -118,9 +118,11 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 
 	/* create new chunk */
 	if (self->blob != NULL) {
-		blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		g_autoptr(GBytes) blob_chk = g_bytes_new_from_bytes(self->blob, offset, chunksz);
+		chk = fu_chunk_bytes_new(blob_chk);
 	} else if (self->stream != NULL) {
-		blob_chk = fu_input_stream_read_bytes(self->stream, offset, chunksz, NULL, error);
+		g_autoptr(GBytes) blob_chk =
+		    fu_input_stream_read_bytes(self->stream, offset, chunksz, NULL, error);
 		if (blob_chk == NULL) {
 			g_prefix_error(error,
 				       "failed to get stream at 0x%x for 0x%x: ",
@@ -128,10 +130,11 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 				       (guint)chunksz);
 			return NULL;
 		}
+		chk = fu_chunk_bytes_new(blob_chk);
 	} else {
-		blob_chk = g_bytes_new(NULL, 0);
+		chk = fu_chunk_bytes_new(NULL);
+		fu_chunk_set_data_sz(chk, chunksz);
 	}
-	chk = fu_chunk_bytes_new(blob_chk);
 	fu_chunk_set_idx(chk, idx);
 	fu_chunk_set_page(chk, page);
 	fu_chunk_set_address(chk, address);
@@ -177,6 +180,37 @@ fu_chunk_array_new_from_bytes(GBytes *blob, gsize addr_offset, gsize page_sz, gs
 	self->packet_sz = packet_sz;
 	self->blob = g_bytes_ref(blob);
 	self->total_size = g_bytes_get_size(self->blob);
+
+	/* success */
+	fu_chunk_array_ensure_offsets(self);
+	return g_steal_pointer(&self);
+}
+
+/**
+ * fu_chunk_array_new_virtual:
+ * @bufsz: size of the buffer
+ * @addr_offset: the hardware address offset, or %FU_CHUNK_ADDR_OFFSET_NONE
+ * @page_sz: the hardware page size, typically %FU_CHUNK_PAGESZ_NONE
+ * @packet_sz: the packet size, or 0x0
+ *
+ * Chunks a virtual buffer memory into packets, ensuring each packet is less that a specific
+ * transfer size.
+ *
+ * Returns: (transfer full): a #FuChunkArray
+ *
+ * Since: 2.0.2
+ **/
+FuChunkArray *
+fu_chunk_array_new_virtual(gsize bufsz, gsize addr_offset, gsize page_sz, gsize packet_sz)
+{
+	g_autoptr(FuChunkArray) self = g_object_new(FU_TYPE_CHUNK_ARRAY, NULL);
+
+	g_return_val_if_fail(page_sz == 0 || page_sz >= packet_sz, NULL);
+
+	self->addr_offset = addr_offset;
+	self->page_sz = page_sz;
+	self->packet_sz = packet_sz;
+	self->total_size = bufsz;
 
 	/* success */
 	fu_chunk_array_ensure_offsets(self);

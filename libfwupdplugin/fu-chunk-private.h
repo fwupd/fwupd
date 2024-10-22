@@ -12,6 +12,8 @@
 #include "fu-firmware.h"
 
 void
+fu_chunk_set_data_sz(FuChunk *self, gsize data_sz) G_GNUC_NON_NULL(1);
+void
 fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
     G_GNUC_NON_NULL(1, 3);
 gboolean
