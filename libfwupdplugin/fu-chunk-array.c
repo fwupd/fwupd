@@ -136,8 +136,8 @@ fu_chunk_array_index(FuChunkArray *self, guint idx, GError **error)
 		chk = fu_chunk_stream_new(partial_stream);
 		fu_chunk_set_data_sz(chk, chunksz);
 	} else {
-		g_autoptr(GBytes) blob_chk = g_bytes_new(NULL, 0);
-		chk = fu_chunk_bytes_new(blob_chk);
+		chk = fu_chunk_bytes_new(NULL);
+		fu_chunk_set_data_sz(chk, chunksz);
 	}
 	fu_chunk_set_idx(chk, idx);
 	fu_chunk_set_page(chk, page);
