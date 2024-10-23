@@ -4006,6 +4006,12 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+
+	/* two devices with the 'same' priority */
+	fu_device_set_priority(device2, 0);
+	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(device);
 }
 
 static void
