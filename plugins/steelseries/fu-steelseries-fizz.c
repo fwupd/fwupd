@@ -195,8 +195,7 @@ fu_steelseries_fizz_erase_fs(FuSteelseriesFizz *self,
 		cmd |= FU_STEELSERIES_FIZZ_CMD_TUNNEL_BIT;
 
 	st_req = fu_struct_steelseries_fizz_erase_file_req_new();
-	fu_struct_steelseries_fizz_erase_file_req_set_cmd(st_req,
-							  FU_STEELSERIES_FIZZ_CMD_ERASE_FILE);
+	fu_struct_steelseries_fizz_erase_file_req_set_cmd(st_req, cmd);
 	fu_struct_steelseries_fizz_erase_file_req_set_filesystem(st_req, fs);
 	fu_struct_steelseries_fizz_erase_file_req_set_id(st_req, id);
 	buf_res = fu_steelseries_fizz_request_response(self, st_req, error);
