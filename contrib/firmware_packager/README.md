@@ -45,7 +45,7 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 
 `--release-description` Description of the firmware release, again this can theoretically include HTML but I didn't try it.
 
-`--exe` Executable file to extract firmware from (e.g. `dell-thunderbolt-firmware.exe`) 
+`--exe` Executable file to extract firmware from (e.g. `dell-thunderbolt-firmware.exe`)
 
 `--bin` Path to the .bin file inside the executable to use as the firmware image', relative to the root of the archive (e.g. `Intel/tbt.bin`) **REQUIRED**
 
