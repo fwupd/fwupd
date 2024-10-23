@@ -40,7 +40,9 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 `--developer-name` Name of the firmware developer (e.g. Dell) **REQUIRED**
 
 `--release-version` Version number of the firmware package (e.g. 4.21.01.002) **REQUIRED**
+
 `--update-protocol` Protocol using (e.g. org.uefi.capsule) **REQUIRED**
+
 `--release-description` Description of the firmware release, again this can theoretically include HTML but I didn't try it.
 
 `--exe` Executable file to extract firmware from (e.g. `dell-thunderbolt-firmware.exe`) 
