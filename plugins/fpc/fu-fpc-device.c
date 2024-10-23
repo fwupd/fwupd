@@ -409,14 +409,21 @@ fu_fpc_device_write_ff2_blocks(FuFpcDevice *self, GInputStream *stream, GError *
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
+
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(buf, blob);
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_DNLOAD_FF2,
 					   0,
-					   (guint8 *)fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
+					   buf->data,
+					   buf->len,
 					   FALSE,
 					   FALSE,
 					   error)) {
@@ -586,12 +593,16 @@ fu_fpc_device_write_firmware(FuDevice *device,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_byte_array_append(req, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_byte_array_append_bytes(req, blob);
 
 		if (!fu_fpc_device_dfu_cmd(self,
 					   FPC_CMD_DFU_DNLOAD,

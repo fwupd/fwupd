@@ -264,6 +264,11 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 databuf[60] = {0};
 		guint8 recvbuf[17] = {0};
+		g_autoptr(GBytes) blob = NULL;
+
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* flags */
 		if (i == 0)
@@ -272,7 +277,7 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 			databuf[0] = FU_CFU_CONTENT_FLAG_LAST_BLOCK;
 
 		/* length */
-		databuf[1] = fu_chunk_get_data_sz(chk);
+		databuf[1] = g_bytes_get_size(blob);
 
 		/* sequence number */
 		if (!fu_memwrite_uint16_safe(databuf,
@@ -296,10 +301,10 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 		if (!fu_memcpy_safe(databuf,
 				    sizeof(databuf),
 				    0x8, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error)) {
 			g_prefix_error(error, "memory copy for payload fail: ");
 			return FALSE;

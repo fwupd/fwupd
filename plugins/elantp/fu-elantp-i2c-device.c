@@ -453,13 +453,16 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 		gsize blksz = self->fw_page_size + 4;
 		g_autofree guint8 *blk = g_malloc0(blksz);
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		csum_tmp =
-		    fu_sum16w(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		csum_tmp = fu_sum16w_bytes(blob, G_LITTLE_ENDIAN);
 
 		/* write block */
 		blk[0] = ETP_I2C_IAP_REG_L;
@@ -467,14 +470,14 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 		if (!fu_memcpy_safe(blk,
 				    blksz,
 				    0x2, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 
-		fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 2, csum_tmp, G_LITTLE_ENDIAN);
+		fu_memwrite_uint16(blk + g_bytes_get_size(blob) + 2, csum_tmp, G_LITTLE_ENDIAN);
 
 		if (!fu_elantp_i2c_device_send_cmd(self, blk, blksz, NULL, 0, error))
 			return FALSE;

@@ -195,11 +195,15 @@ fu_{{vendor_example}}_device_write_blocks(Fu{{VendorExample}}Device *self,
 		guint8 buf[64] = { 0x12, 0x24, 0x0 }; /* TODO: this is the preamble */
 
 		/* TODO: copy in payload */
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_memcpy_safe(buf, sizeof(buf), 0x2, /* TODO: copy to dst at offset */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),

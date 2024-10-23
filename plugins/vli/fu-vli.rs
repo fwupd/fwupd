@@ -8,7 +8,7 @@ struct FuStructVliPdHdr {
     pid: u16le,
 }
 
-#[derive(New, Parse, ParseStream, ToString)]
+#[derive(New, ParseBytes, ParseStream, ToString)]
 struct FuStructVliUsbhubHdr {
     dev_id: u16be,
     strapping1: u8,

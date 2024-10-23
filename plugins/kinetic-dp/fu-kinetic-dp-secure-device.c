@@ -356,15 +356,19 @@ fu_kinetic_dp_secure_device_send_chunk(FuKineticDpSecureDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   DPCD_ADDR_KT_AUX_WIN + fu_chunk_get_address(chk),
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
+					   g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob),
 					   FU_KINETIC_DP_DEVICE_TIMEOUT,
 					   error)) {
 			g_prefix_error(error, "failed at 0x%x: ", (guint)fu_chunk_get_address(chk));
@@ -398,14 +402,20 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 		g_autoptr(GBytes) fw_chk = NULL;
 		guint8 buf_crc16[0x4] = {0x0};
 		guint8 status = 0;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* send a maximum 32KB chunk of payload to AUX window */
-		fw_chk = fu_chunk_get_bytes(chk);
+		fw_chk = fu_chunk_get_bytes(chk, error);
+		if (fw_chk == NULL)
+			return FALSE;
 		if (!fu_kinetic_dp_secure_device_send_chunk(self,
 							    fw_chk,
 							    fu_progress_get_child(progress),
@@ -418,8 +428,8 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 
 		/* send the CRC16 of current 32KB chunk to DPCD_REPLY_DATA_REG */
 		fu_memwrite_uint32(buf_crc16,
-				   fu_kinetic_dp_secure_device_crc16(fu_chunk_get_data(chk),
-								     fu_chunk_get_data_sz(chk)),
+				   fu_kinetic_dp_secure_device_crc16(g_bytes_get_data(blob, NULL),
+								     g_bytes_get_size(blob)),
 				   G_LITTLE_ENDIAN);
 		if (!fu_kinetic_dp_secure_device_write_dpcd_reply_data_reg(self,
 									   buf_crc16,

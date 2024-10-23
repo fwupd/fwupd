@@ -567,14 +567,18 @@ fu_ti_tps6598x_device_write_chunks(FuTiTps6598xDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* align */
-		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_64, 0xFF);
 		if (!fu_ti_tps6598x_device_sfwd(self, buf, error)) {
 			g_prefix_error(error, "failed to write chunk %u: ", i);
@@ -601,14 +605,18 @@ fu_ti_tps6598x_device_write_sfws_chunks(FuTiTps6598xDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* align and pad low before sending */
-		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_bytes(buf, blob);
 		fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_64, 0x0);
 		if (!fu_ti_tps6598x_device_sfws(self, buf, error)) {
 			g_prefix_error(error, "failed to write chunk %u: ", i);

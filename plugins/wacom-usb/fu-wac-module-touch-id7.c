@@ -19,8 +19,7 @@ struct _FuWacModuleTouchId7 {
 
 typedef struct {
 	guint32 op_id;
-	const guint8 *buf;
-	gsize bufsz;
+	GInputStream *stream;
 	gsize offset;
 } WtaInfo;
 
@@ -57,21 +56,19 @@ fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info, G
 {
 	info->offset += 4;
 
-	if (!fu_memread_uint32_safe(info->buf,
-				    info->bufsz,
-				    info->offset,
-				    &header->header_size,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u32(info->stream,
+				      info->offset,
+				      &header->header_size,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	info->offset += header->header_size - 8;
 
-	if (!fu_memread_uint16_safe(info->buf,
-				    info->bufsz,
-				    info->offset,
-				    &header->firmware_number,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u16(info->stream,
+				      info->offset,
+				      &header->firmware_number,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	info->offset += 16;
 	return TRUE;
@@ -101,38 +98,35 @@ fu_wac_module_touch_id7_read_file_header(WtaFileHeader *header, WtaInfo *info, G
 static gboolean
 fu_wac_module_touch_id7_read_record_header(WtaRecordHeader *header, WtaInfo *info, GError **error)
 {
-	if (!fu_memread_uint32_safe(info->buf,
-				    info->bufsz,
-				    info->offset,
-				    &header->file_name_length,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u32(info->stream,
+				      info->offset,
+				      &header->file_name_length,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	info->offset += header->file_name_length + 8;
 
-	if (!fu_memread_uint32_safe(info->buf,
-				    info->bufsz,
-				    info->offset,
-				    &header->start_address,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u32(info->stream,
+				      info->offset,
+				      &header->start_address,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	info->offset += 8;
 
-	if (!fu_memread_uint8_safe(info->buf, info->bufsz, info->offset, &header->ic_id, error))
+	if (!fu_input_stream_read_u8(info->stream, info->offset, &header->ic_id, error))
 		return FALSE;
 	info->offset += 1;
 
-	if (!fu_memread_uint8_safe(info->buf, info->bufsz, info->offset, &header->ma_id, error))
+	if (!fu_input_stream_read_u8(info->stream, info->offset, &header->ma_id, error))
 		return FALSE;
 	info->offset += 3;
 
-	if (!fu_memread_uint32_safe(info->buf,
-				    info->bufsz,
-				    info->offset,
-				    &header->block_count,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_input_stream_read_u32(info->stream,
+				      info->offset,
+				      &header->block_count,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	info->offset += 4;
 
@@ -176,34 +170,50 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 				    WtaRecordHeader *record_hdr,
 				    GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
+	gsize streamsz = 0;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GByteArray) st_blk = NULL;
+	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* generate chunks off of the raw block data */
-	st_blk = fu_struct_wta_block_header_parse(info->buf, info->bufsz, info->offset, error);
+	st_blk = fu_struct_wta_block_header_parse_stream(info->stream, info->offset, error);
 	if (st_blk == NULL)
 		return FALSE;
 	info->offset += FU_STRUCT_WTA_BLOCK_HEADER_SIZE;
-	chunks = fu_chunk_array_new(info->buf + info->offset,
-				    fu_struct_wta_block_header_get_block_size(st_blk),
-				    fu_struct_wta_block_header_get_block_start(st_blk),
-				    0x0,		       /* page_sz */
-				    FU_WAC_MODULE_CHUNK_SIZE); /* packet_sz */
+	partial_stream = fu_partial_input_stream_new(info->stream, info->offset, G_MAXSIZE, error);
+	if (partial_stream == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_stream(partial_stream,
+						fu_struct_wta_block_header_get_block_size(st_blk),
+						fu_struct_wta_block_header_get_block_start(st_blk),
+						FU_WAC_MODULE_CHUNK_SIZE,
+						error);
+	if (chunks == NULL)
+		return FALSE;
 
 	/* write data */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	if (!fu_input_stream_size(info->stream, &streamsz, error))
+		return FALSE;
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf[11 + FU_WAC_MODULE_CHUNK_SIZE];
 		g_autoptr(GBytes) blob_chunk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		buf[0] = FU_WAC_MODULE_COMMAND_DATA;
 		buf[1] = record_hdr->ic_id;
 		buf[2] = record_hdr->ma_id;
 		fu_memwrite_uint32(&buf[3], info->op_id, G_LITTLE_ENDIAN);
 		fu_memwrite_uint32(&buf[7], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		memcpy(&buf[11], /* nocheck:blocked */
-		       fu_chunk_get_data(chk),
-		       FU_WAC_MODULE_CHUNK_SIZE);
+		       g_bytes_get_data(blob, NULL),
+		       g_bytes_get_size(blob));
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
 		if (!fu_wac_module_set_feature(self,
 					       FU_WAC_MODULE_COMMAND_DATA,
@@ -222,7 +232,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 		 * record start and end commands */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						info->op_id,
-						info->bufsz / FU_WAC_MODULE_CHUNK_SIZE + 10);
+						streamsz / FU_WAC_MODULE_CHUNK_SIZE + 10);
 	}
 
 	/* incrementing data to the next block */
@@ -315,7 +325,7 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 	WtaInfo info;
 	WtaFileHeader file_hdr;
 
@@ -328,8 +338,8 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 
 	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
 
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
 	/* start, which will erase the module */
@@ -345,7 +355,7 @@ fu_wac_module_touch_id7_write_firmware(FuDevice *device,
 
 	/* set basic info */
 	info.offset = 0x0;
-	info.buf = g_bytes_get_data(blob, &info.bufsz);
+	info.stream = stream;
 	info.op_id = 1;
 	if (!fu_wac_module_touch_id7_read_file_header(&file_hdr, &info, error))
 		return FALSE;

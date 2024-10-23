@@ -243,17 +243,21 @@ fu_analogix_device_write_chunks(FuAnalogixDevice *self,
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		FuAnalogixUpdateStatus status = FU_ANALOGIX_UPDATE_STATUS_INVALID;
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_analogix_device_send(self,
 					     ANX_BB_RQT_SEND_UPDATE_DATA,
 					     req_val,
 					     i + 1,
-					     fu_chunk_get_data(chk),
-					     fu_chunk_get_data_sz(chk),
+					     g_bytes_get_data(blob, NULL),
+					     g_bytes_get_size(blob),
 					     error)) {
 			g_prefix_error(error, "failed send on chk %u: ", i);
 			return FALSE;

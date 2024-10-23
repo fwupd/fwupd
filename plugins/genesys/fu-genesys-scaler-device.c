@@ -1191,18 +1191,20 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 static gboolean
 fu_genesys_scaler_device_erase_flash(FuGenesysScalerDevice *self,
 				     guint addr,
-				     guint bufsz,
+				     GBytes *fw,
 				     FuProgress *progress,
 				     GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	chunks = fu_chunk_array_new(NULL, bufsz, addr, 0, self->sector_size);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, addr, FU_CHUNK_PAGESZ_NONE, self->sector_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
 		if (!fu_genesys_scaler_device_flash_control_sector_erase(self,
 									 fu_chunk_get_address(chk),
 									 error)) {
@@ -1322,24 +1324,29 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 static gboolean
 fu_genesys_scaler_device_write_sector(FuGenesysScalerDevice *self,
 				      guint addr,
-				      const guint8 *buf,
-				      guint bufsz,
+				      GBytes *fw,
 				      FuProgress *progress,
 				      GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->page_size);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, addr, FU_CHUNK_PAGESZ_NONE, self->page_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_genesys_scaler_device_flash_control_page_program(
 			self,
 			fu_chunk_get_address(chk),
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			g_bytes_get_data(blob, NULL),
+			g_bytes_get_size(blob),
 			fu_progress_get_child(progress),
 			error))
 			return FALSE;
@@ -1353,23 +1360,27 @@ fu_genesys_scaler_device_write_sector(FuGenesysScalerDevice *self,
 static gboolean
 fu_genesys_scaler_device_write_flash(FuGenesysScalerDevice *self,
 				     guint addr,
-				     const guint8 *buf,
-				     guint bufsz,
+				     GBytes *fw,
 				     FuProgress *progress,
 				     GError **error)
 {
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	chunks = fu_chunk_array_new(buf, bufsz, addr, 0, self->sector_size);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, addr, FU_CHUNK_PAGESZ_NONE, self->sector_size);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_genesys_scaler_device_write_sector(self,
 							   fu_chunk_get_address(chk),
-							   fu_chunk_get_data(chk),
-							   fu_chunk_get_data_sz(chk),
+							   blob,
 							   fu_progress_get_child(progress),
 							   error))
 			return FALSE;
@@ -1744,7 +1755,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 
 	if (!fu_genesys_scaler_device_erase_flash(self,
 						  addr,
-						  size,
+						  fw_payload,
 						  fu_progress_get_child(progress),
 						  error))
 		return FALSE;
@@ -1752,8 +1763,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 
 	if (!fu_genesys_scaler_device_write_flash(self,
 						  addr,
-						  data,
-						  size,
+						  fw_payload,
 						  fu_progress_get_child(progress),
 						  error))
 		return FALSE;

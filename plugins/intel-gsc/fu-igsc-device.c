@@ -522,15 +522,15 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 }
 
 static gboolean
-fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, gsize length, GError **error)
+fu_igsc_device_update_data(FuIgscDevice *self, GBytes *blob, GError **error)
 {
 	struct gsc_fwu_heci_data_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_DATA,
-					    .data_length = length};
+					    .data_length = g_bytes_get_size(blob)};
 	struct gsc_fwu_heci_data_resp res = {0x0};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	g_byte_array_append(buf, (const guint8 *)&req, sizeof(req));
-	g_byte_array_append(buf, data, length);
+	fu_byte_array_append_bytes(buf, blob);
 	if (!fu_igsc_device_command(self, buf->data, buf->len, (guint8 *)&res, sizeof(res), error))
 		return FALSE;
 	return fu_igsc_device_heci_validate_response_header(self,
@@ -590,15 +590,16 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_igsc_device_update_data(self,
-						fu_chunk_get_data(chk),
-						fu_chunk_get_data_sz(chk),
-						error)) {
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_igsc_device_update_data(self, blob, error)) {
 			g_prefix_error(error,
 				       "failed on chunk %u (@0x%x): ",
 				       i,

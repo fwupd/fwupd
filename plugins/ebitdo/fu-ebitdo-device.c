@@ -519,21 +519,24 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		g_debug("writing %u bytes to 0x%04x of 0x%04x",
-			(guint)fu_chunk_get_data_sz(chk),
-			(guint)fu_chunk_get_address(chk),
-			(guint)fu_chunk_get_data_sz(chk));
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		g_debug("writing %u bytes to 0x%04x",
+			(guint)g_bytes_get_size(blob),
+			(guint)fu_chunk_get_address(chk));
 		if (!fu_ebitdo_device_send(self,
 					   FU_EBITDO_PKT_TYPE_USER_CMD,
 					   FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					   FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
+					   g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob),
 					   error)) {
 			g_prefix_error(error,
 				       "failed to write firmware @0x%04x: ",

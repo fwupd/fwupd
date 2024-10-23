@@ -153,10 +153,14 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_dnload_new();
 		g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* copy in payload */
@@ -172,17 +176,17 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		if (!fu_memcpy_safe(req->data,
 				    req->len,
 				    FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_OFFSET_DATA, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 
 		/* resize the last packet */
 		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
-		    (fu_chunk_get_data_sz(chk) < FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA))
-			fu_byte_array_set_size(req, 3 + fu_chunk_get_data_sz(chk), 0x0);
+		    (g_bytes_get_size(blob) < FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA))
+			fu_byte_array_set_size(req, 3 + g_bytes_get_size(blob), 0x0);
 		if (!fu_aver_hid_device_transfer(self, req, res, error))
 			return FALSE;
 		if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))

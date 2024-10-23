@@ -251,37 +251,34 @@ fu_synaptics_mst_device_rc_send_command_and_wait(FuSynapticsMstDevice *self,
 }
 
 static gboolean
-fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
-				       FuSynapticsMstUpdcCmd rc_cmd,
-				       guint32 offset,
-				       const guint8 *buf,
-				       gsize bufsz,
-				       GError **error)
+fu_synaptics_mst_device_rc_set_command_bytes(FuSynapticsMstDevice *self,
+					     FuSynapticsMstUpdcCmd rc_cmd,
+					     guint32 offset,
+					     GBytes *fw,
+					     GError **error)
 {
-	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(buf, bufsz, offset, 0x0, UNIT_SIZE);
-
-	/* just sent command */
-	if (chunks->len == 0) {
-		g_debug("no data, just sending command %s [0x%x]",
-			fu_synaptics_mst_updc_cmd_to_string(rc_cmd),
-			rc_cmd);
-		return fu_synaptics_mst_device_rc_send_command_and_wait(self, rc_cmd, error);
-	}
-
-	/* read each chunk */
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	g_autoptr(FuChunkArray) chunks =
+	    fu_chunk_array_new_from_bytes(fw, offset, FU_CHUNK_PAGESZ_NONE, UNIT_SIZE);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf2[4] = {0};
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		g_debug("writing chunk of 0x%x bytes at offset 0x%x",
-			(guint)fu_chunk_get_data_sz(chk),
-			(guint)fu_chunk_get_address(chk));
+			(guint)g_bytes_get_size(blob),
+			(guint)offset);
 
 		/* write data */
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   FU_SYNAPTICS_MST_REG_RC_DATA,
-					   fu_chunk_get_data(chk),
-					   fu_chunk_get_data_sz(chk),
+					   g_bytes_get_data(blob, NULL),
+					   g_bytes_get_size(blob),
 					   FU_SYNAPTICS_MST_DEVICE_READ_TIMEOUT,
 					   error)) {
 			g_prefix_error(error, "failure writing data register: ");
@@ -301,7 +298,7 @@ fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
 		}
 
 		/* write length */
-		fu_memwrite_uint32(buf2, fu_chunk_get_data_sz(chk), G_LITTLE_ENDIAN);
+		fu_memwrite_uint32(buf2, g_bytes_get_size(blob), G_LITTLE_ENDIAN);
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   FU_SYNAPTICS_MST_REG_RC_LEN,
 					   buf2,
@@ -322,6 +319,28 @@ fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_synaptics_mst_device_rc_set_command(FuSynapticsMstDevice *self,
+				       FuSynapticsMstUpdcCmd rc_cmd,
+				       guint32 offset,
+				       const guint8 *buf,
+				       gsize bufsz,
+				       GError **error)
+{
+	g_autoptr(GBytes) fw = NULL;
+
+	/* just sent command */
+	if (buf == 0) {
+		g_debug("no data, just sending command %s [0x%x]",
+			fu_synaptics_mst_updc_cmd_to_string(rc_cmd),
+			rc_cmd);
+		return fu_synaptics_mst_device_rc_send_command_and_wait(self, rc_cmd, error);
+	}
+
+	fw = g_bytes_new(buf, bufsz);
+	return fu_synaptics_mst_device_rc_set_command_bytes(self, rc_cmd, offset, fw, error);
 }
 
 static gboolean
@@ -630,18 +649,21 @@ fu_synaptics_mst_device_update_esm_cb(FuDevice *device, gpointer user_data, GErr
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(helper->chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_synaptics_mst_device_rc_set_command(
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_synaptics_mst_device_rc_set_command_bytes(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 			fu_chunk_get_address(chk),
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			blob,
 			&error_local)) {
 			g_warning("failed to write ESM: %s", error_local->message);
 			break;
@@ -728,29 +750,31 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware_cb(FuDevice *device,
 	fu_progress_set_steps(helper->progress, fu_chunk_array_length(helper->chunks));
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(helper->chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_synaptics_mst_device_rc_set_command(
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_synaptics_mst_device_rc_set_command_bytes(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 			fu_chunk_get_address(chk),
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			blob,
 			&error_local)) {
 			g_warning("failed to write flash offset 0x%04x: %s, retrying",
 				  (guint)fu_chunk_get_address(chk),
 				  error_local->message);
 			/* repeat once */
-			if (!fu_synaptics_mst_device_rc_set_command(
+			if (!fu_synaptics_mst_device_rc_set_command_bytes(
 				self,
 				FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 				fu_chunk_get_address(chk),
-				fu_chunk_get_data(chk),
-				fu_chunk_get_data_sz(chk),
+				blob,
 				error)) {
 				g_prefix_error(error,
 					       "can't write flash offset 0x%04x: ",
@@ -854,26 +878,28 @@ fu_synaptics_mst_device_update_panamera_firmware_cb(FuDevice *device,
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(helper->chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_synaptics_mst_device_rc_set_command(
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_synaptics_mst_device_rc_set_command_bytes(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 			fu_chunk_get_address(chk),
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			blob,
 			&error_local)) {
 			g_warning("write failed: %s, retrying", error_local->message);
 			/* repeat once */
-			if (!fu_synaptics_mst_device_rc_set_command(
+			if (!fu_synaptics_mst_device_rc_set_command_bytes(
 				self,
 				FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 				fu_chunk_get_address(chk),
-				fu_chunk_get_data(chk),
-				fu_chunk_get_data_sz(chk),
+				blob,
 				error)) {
 				g_prefix_error(error, "firmware write failed: ");
 				return FALSE;
@@ -1204,28 +1230,30 @@ fu_synaptics_mst_device_update_firmware_cb(FuDevice *device, gpointer user_data,
 	for (guint i = 0; i < fu_chunk_array_length(helper->chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(helper->chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_synaptics_mst_device_rc_set_command(
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		if (!fu_synaptics_mst_device_rc_set_command_bytes(
 			self,
 			FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 			fu_chunk_get_address(chk),
-			fu_chunk_get_data(chk),
-			fu_chunk_get_data_sz(chk),
+			blob,
 			&error_local)) {
 			g_warning("failed to write flash offset 0x%04x: %s, retrying",
 				  (guint)fu_chunk_get_address(chk),
 				  error_local->message);
 			/* repeat once */
-			if (!fu_synaptics_mst_device_rc_set_command(
+			if (!fu_synaptics_mst_device_rc_set_command_bytes(
 				self,
 				FU_SYNAPTICS_MST_UPDC_CMD_WRITE_TO_EEPROM,
 				fu_chunk_get_address(chk),
-				fu_chunk_get_data(chk),
-				fu_chunk_get_data_sz(chk),
+				blob,
 				error)) {
 				g_prefix_error(error,
 					       "can't write flash offset 0x%04x: ",

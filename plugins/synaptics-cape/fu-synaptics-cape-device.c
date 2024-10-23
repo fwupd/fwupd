@@ -725,22 +725,26 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 		gsize bufsz;
 		g_autofree guint32 *buf32 = NULL;
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* 32 bit align */
-		bufsz = fu_chunk_get_data_sz(chk);
+		bufsz = g_bytes_get_size(blob);
 		buf32 = g_new0(guint32, bufsz / sizeof(guint32));
 		if (!fu_memcpy_safe((guint8 *)buf32,
 				    bufsz,
 				    0x0, /* dst */
-				    fu_chunk_get_data(chk),
-				    bufsz,
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    bufsz,
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 

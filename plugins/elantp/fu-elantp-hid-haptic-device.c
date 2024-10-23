@@ -668,6 +668,7 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 		gsize blksz = self->fw_page_size + 3;
 		g_autofree guint8 *blk = g_malloc0(blksz);
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_iapctrl = NULL;
 
 		if (i == fu_chunk_array_length(chunks))
@@ -675,6 +676,9 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 		else
 			chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* write block */
@@ -700,18 +704,18 @@ fu_elantp_hid_haptic_device_write_chunks_cb(FuDevice *device, gpointer user_data
 			fu_memwrite_uint16(blk + eeprom_fw_page_size + 5, csum_tmp, G_BIG_ENDIAN);
 			csum_tmp = 0;
 		} else {
-			csum_tmp = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+			csum_tmp = fu_sum16_bytes(blob);
 			if (!fu_memcpy_safe(blk,
 					    blksz,
 					    0x5, /* dst */
-					    fu_chunk_get_data(chk),
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_data(blob, NULL),
+					    g_bytes_get_size(blob),
 					    0x0, /* src */
-					    fu_chunk_get_data_sz(chk),
+					    g_bytes_get_size(blob),
 					    error))
 				return FALSE;
 
-			fu_memwrite_uint16(blk + fu_chunk_get_data_sz(chk) + 5,
+			fu_memwrite_uint16(blk + g_bytes_get_size(blob) + 5,
 					   csum_tmp,
 					   G_BIG_ENDIAN);
 		}

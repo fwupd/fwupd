@@ -630,11 +630,18 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 		g_autoptr(FuStructLogitechTapTouchHidReq) st =
 		    fu_struct_logitech_tap_touch_hid_req_new();
 		g_autoptr(GByteArray) chunk_buf = g_byte_array_new();
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
+
+		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+
 		/* ensure each packet is FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE bytes */
-		g_byte_array_append(chunk_buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_bytes(chunk_buf, blob);
 
 		/* write packet */
 		fu_struct_logitech_tap_touch_hid_req_set_payload_len(st, 1 + chunk_buf->len);
@@ -645,7 +652,7 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 		g_byte_array_append(st, chunk_buf->data, chunk_buf->len);
 		/* resize the last packet */
 		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
-		    (fu_chunk_get_data_sz(chk) < FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE))
+		    (g_bytes_get_size(blob) < FU_LOGITECH_TAP_TOUCH_TRANSFER_BLOCK_SIZE))
 			fu_byte_array_set_size(st, 37, in_ap ? 0xFF : 0x0);
 		if (!fu_logitech_tap_touch_device_hid_transfer(self, st, 0, NULL, error))
 			return FALSE;

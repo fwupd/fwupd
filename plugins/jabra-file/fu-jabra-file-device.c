@@ -446,15 +446,19 @@ fu_jabra_file_device_write_blocks(FuJabraFileDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (gint i = 0; (guint)i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_jabra_file_device_write_next_block(self,
 							   i,
-							   fu_chunk_get_data(chk),
-							   fu_chunk_get_data_sz(chk),
+							   g_bytes_get_data(blob, NULL),
+							   g_bytes_get_size(blob),
 							   error))
 			return FALSE;
 		fu_progress_step_done(progress);

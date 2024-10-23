@@ -7,16 +7,11 @@
 #include "config.h"
 
 #include "fu-steelseries-fizz-hid.h"
+#include "fu-steelseries-fizz-struct.h"
 
-#define STEELSERIES_BUFFER_REPORT_SIZE 64 + 1
+#define FU_STEELSERIES_BUFFER_REPORT_SIZE 64 + 1
 
-#define STEELSERIES_HID_GET_REPORT  0x04U
-#define STEELSERIES_HID_MAX_RETRIES 100
-
-#define STEELSERIES_HID_VERSION_COMMAND		 0x90U
-#define STEELSERIES_HID_VERSION_REPORT_ID_OFFSET 0x00U
-#define STEELSERIES_HID_VERSION_COMMAND_OFFSET	 0x01U
-#define STEELSERIES_HID_VERSION_MODE_OFFSET	 0x02U
+#define FU_STEELSERIES_HID_MAX_RETRIES 100
 
 struct _FuSteelseriesFizzHid {
 	FuUdevDevice parent_instance;
@@ -25,8 +20,8 @@ struct _FuSteelseriesFizzHid {
 G_DEFINE_TYPE(FuSteelseriesFizzHid, fu_steelseries_fizz_hid, FU_TYPE_UDEV_DEVICE)
 
 typedef struct {
-	guint8 *buf;
-	gsize bufsz;
+	GByteArray *buf_in;
+	GByteArray *buf_out;
 } FuSteelseriesFizzHidCommandHelper;
 
 static gboolean
@@ -34,126 +29,102 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 {
 	FuSteelseriesFizzHidCommandHelper *helper = (FuSteelseriesFizzHidCommandHelper *)user_data;
 	gboolean ret;
-	guint8 rdata[STEELSERIES_BUFFER_REPORT_SIZE] = {0};
-	guint8 report_id = 0;
+	guint8 buf[FU_STEELSERIES_BUFFER_REPORT_SIZE] = {0};
+	g_autoptr(FuStructSteelseriesFizzHidResponse) st = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* force the request for each iteration to avoid a loop due the lost single packet --
 	 * this is safe since the device doesn't support update over bluetooth */
-	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0, helper->buf, helper->bufsz, error)) {
+	if (!fu_memcpy_safe(buf,
+			    sizeof(buf),
+			    0, /* dst */
+			    helper->buf_in->data,
+			    helper->buf_in->len,
+			    0, /* src */
+			    helper->buf_in->len,
+			    error))
+		return FALSE;
+	fu_dump_raw(G_LOG_DOMAIN, "write", buf, sizeof(buf));
+	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to write report: ");
 		return FALSE;
 	}
 
-	ret = fu_udev_device_pread(FU_UDEV_DEVICE(device), 0, rdata, sizeof(rdata), &error_local);
-
-	if (!fu_memread_uint8_safe(rdata,
-				   sizeof(rdata),
-				   STEELSERIES_HID_VERSION_REPORT_ID_OFFSET,
-				   &report_id,
-				   error))
+	memset(buf, 0x0, sizeof(buf));
+	ret = fu_udev_device_pread(FU_UDEV_DEVICE(device), 0, buf, sizeof(buf), &error_local);
+	st = fu_struct_steelseries_fizz_hid_response_parse(buf, sizeof(buf), 0x0, error);
+	if (st == NULL)
 		return FALSE;
-
 	if (!ret) {
 		/* since fu_udev_device_pread() treats unexpected data size as error
 		 * we have to check the output additionally since the size of
 		 * unexpected data size from mouse input data is only 16b */
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
-		    report_id != 0x01) {
+		    fu_struct_steelseries_fizz_hid_response_get_report_id(st) != 0x01) {
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "failed to read report: ");
 			return FALSE;
 		}
 	}
+	fu_dump_raw(G_LOG_DOMAIN, "read", buf, sizeof(buf));
 
-	fu_dump_raw(G_LOG_DOMAIN, "got report", rdata, sizeof(rdata));
-
-	if (report_id != STEELSERIES_HID_GET_REPORT) {
+	if (fu_struct_steelseries_fizz_hid_response_get_report_id(st) !=
+	    FU_STRUCT_STEELSERIES_FIZZ_HID_GET_VERSION_REQ_DEFAULT_REPORT_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "data with unexpected Report ID (%u)",
-			    report_id);
+			    fu_struct_steelseries_fizz_hid_response_get_report_id(st));
 		return FALSE;
 	}
-
-	if (!fu_memcpy_safe(helper->buf,
-			    helper->bufsz,
-			    0,
-			    rdata,
-			    sizeof(rdata),
-			    0,
-			    helper->bufsz,
-			    error)) {
-		g_prefix_error(error, "failed to return data: ");
-		return FALSE;
-	}
+	helper->buf_out = g_byte_array_new();
+	g_byte_array_append(helper->buf_out, buf + 1, sizeof(buf) - 1);
 
 	/* success */
 	return TRUE;
 }
 
-static gboolean
-fu_steelseries_fizz_hid_command(FuDevice *device, guint8 *data, gsize datasz, GError **error)
+static GByteArray *
+fu_steelseries_fizz_hid_command(FuSteelseriesFizzHid *self, GByteArray *buf_in, GError **error)
 {
+	g_autoptr(GByteArray) buf_out = NULL;
 	FuSteelseriesFizzHidCommandHelper helper = {
-	    .buf = data,
-	    .bufsz = datasz,
+	    .buf_in = buf_in,
+	    .buf_out = buf_out,
 	};
 	/* In BT mode the sync and data channels are sharing the device descriptor with the
 	 * management channel.
 	 * This is the reason why we receive "unexpected" packets with 0x01 or 0x05 Report IDs over
 	 * the same descriptor on mouse connecting, waking up or just moving the mouse -- hence
 	 * trying to repeat the query/response cycle lot of times */
-	return fu_device_retry_full(device,
-				    fu_steelseries_fizz_hid_command_cb,
-				    STEELSERIES_HID_MAX_RETRIES,
-				    0, /* ms */
-				    &helper,
-				    error);
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_steelseries_fizz_hid_command_cb,
+				  FU_STEELSERIES_HID_MAX_RETRIES,
+				  0, /* ms */
+				  &helper,
+				  error))
+		return NULL;
+	return g_steal_pointer(&buf_out);
 }
 
 static gboolean
-fu_steelseries_fizz_hid_ensure_version(FuDevice *device, GError **error)
+fu_steelseries_fizz_hid_ensure_version(FuSteelseriesFizzHid *self, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_REPORT_SIZE] = {0};
-	const guint8 report_id = STEELSERIES_HID_GET_REPORT;
-	const guint8 cmd = STEELSERIES_HID_VERSION_COMMAND;
-	const guint8 mode = 0U; /* string */
 	g_autofree gchar *version = NULL;
+	g_autoptr(GByteArray) st_buf = NULL;
+	g_autoptr(FuStructSteelseriesFizzHidGetVersionReq) st =
+	    fu_struct_steelseries_fizz_hid_get_version_req_new();
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_HID_VERSION_REPORT_ID_OFFSET,
-				    report_id,
-				    error))
+	st_buf = fu_steelseries_fizz_hid_command(self, st, error);
+	if (st_buf == NULL)
 		return FALSE;
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_HID_VERSION_COMMAND_OFFSET,
-				    cmd,
-				    error))
-		return FALSE;
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_HID_VERSION_MODE_OFFSET,
-				    mode,
-				    error))
-		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-	if (!fu_steelseries_fizz_hid_command(device, data, sizeof(data), error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-
-	/* success */
-	version = fu_memstrsafe(data, sizeof(data), 0x1, sizeof(data) - 1, error);
+	version = fu_strsafe((const gchar *)st_buf->data, st_buf->len);
 	if (version == NULL) {
-		g_prefix_error(error, "unable to read version: ");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "unable to read version");
 		return FALSE;
 	}
-	fu_device_set_version(device, version);
+	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
 
@@ -185,7 +156,9 @@ fu_steelseries_fizz_hid_detach(FuDevice *device, FuProgress *progress, GError **
 static gboolean
 fu_steelseries_fizz_hid_setup(FuDevice *device, GError **error)
 {
-	if (!fu_steelseries_fizz_hid_ensure_version(device, error))
+	FuSteelseriesFizzHid *self = FU_STEELSERIES_FIZZ_HID(device);
+
+	if (!fu_steelseries_fizz_hid_ensure_version(self, error))
 		return FALSE;
 
 	/* success */

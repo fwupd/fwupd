@@ -1469,8 +1469,12 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 	guint32 offset = 0;
 	guint8 sync_state = DFU_STATE_ACTIVE;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);
+	g_autoptr(GBytes) blob = NULL;
 
-	chunk_len = fu_chunk_get_data_sz(chk);
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
+	chunk_len = g_bytes_get_size(blob);
 	while (offset < chunk_len) {
 		guint8 data_len;
 		guint8 data[REPORT_DATA_MAX_LEN] = {0};
@@ -1483,7 +1487,7 @@ fu_nordic_hid_cfg_channel_write_firmware_chunk(FuNordicHidCfgChannel *self,
 		if (!fu_memcpy_safe(data,
 				    REPORT_DATA_MAX_LEN,
 				    0,
-				    fu_chunk_get_data(chk),
+				    g_bytes_get_data(blob, NULL),
 				    chunk_len,
 				    offset,
 				    data_len,

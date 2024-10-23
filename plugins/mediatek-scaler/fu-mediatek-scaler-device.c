@@ -486,7 +486,11 @@ static gboolean
 fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(FuChunkArray) chk_slices = NULL;
-	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
+	g_autoptr(GBytes) chk_bytes = NULL;
+
+	chk_bytes = fu_chunk_get_bytes(chk, error);
+	if (chk_bytes == NULL)
+		return FALSE;
 
 	/* smaller slices to accodomate pch variants */
 	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes,
@@ -496,14 +500,16 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 	for (guint i = 0; i < fu_chunk_array_length(chk_slices); i++) {
 		g_autoptr(FuChunk) chk_slice = NULL;
 		g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		chk_slice = fu_chunk_array_index(chk_slices, i, error);
 		if (chk_slice == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk_slice, error);
+		if (blob == NULL)
+			return FALSE;
 		fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_SET_DATA);
-		g_byte_array_append(st_req,
-				    fu_chunk_get_data(chk_slice),
-				    (guint)fu_chunk_get_data_sz(chk_slice));
+		fu_byte_array_append_bytes(st_req, blob);
 		if (!fu_mediatek_scaler_device_ddc_write(self, st_req, error)) {
 			g_prefix_error(error, "failed to send firmware to device: ");
 			return FALSE;
@@ -542,6 +548,7 @@ fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
 	guint16 chksum = 0;
 	guint16 sum16 = 0;
 	guint32 pktcnt = 0;
+	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_mediatek_scaler_device_get_staged_data(self, &chksum, &pktcnt, error)) {
 		g_prefix_error(error, "failed to get the staged data: ");
@@ -560,7 +567,10 @@ fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
 	}
 
 	/* verify the checksum on chip */
-	sum16 = fu_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
+	sum16 = fu_sum16_bytes(blob);
 	if (sum16 != chksum) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -691,10 +701,14 @@ fu_mediatek_scaler_device_verify(FuDevice *device, GError **error)
 static gboolean
 fu_mediatek_scaler_device_chunk_data_is_blank(FuChunk *chk)
 {
-	const guint8 *data = fu_chunk_get_data(chk);
-	for (gsize idx = 0; idx < fu_chunk_get_data_sz(chk); idx++)
+	g_autoptr(GBytes) blob = fu_chunk_get_bytes(chk, NULL);
+	if (blob == NULL)
+		return FALSE;
+	for (gsize idx = 0; idx < g_bytes_get_size(blob); idx++) {
+		const guint8 *data = g_bytes_get_data(blob, NULL);
 		if (data[idx] != 0xFF)
 			return FALSE;
+	}
 	return TRUE;
 }
 
