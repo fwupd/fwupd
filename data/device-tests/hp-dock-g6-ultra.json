@@ -1,0 +1,30 @@
+{
+  "name": "HP TBT4 Ultra 180W/280W G6 Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/30adee4fdd507f00bce9c884718321cbe95b5fb2fca93f330d32b49d9ed10a87-HPTBT4UltraG6_HDX_00.21.22.00.cab",
+      "emulation-url": "https://fwupd.org/downloads/140f40be8950b95dd2b1132c432f0b762272e1176816f40fd6edf02a92b587e2-HPTBT4UltraG6_HDX_00.21.22.00.zip",
+      "components": [
+        {
+          "version": "00.21.22.00",
+          "guids": [
+            "539fad43-dd80-56cd-b684-dfc3f9ce2546"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/2eaf001e5b8b44ee363dc9d1e58a3608b3adcf1fe3e6ffb5a40cfcebb90253f9-HPTBT4UltraG6_HDX_00.21.28.00.cab",
+      "emulation-url": "https://fwupd.org/downloads/bc92e78d8bc95ad69ce8d7a41bfff41ae23d0153234b7fd1dd9e8c069dd2fbd1-HPTBT4UltraG6_HDX_00.21.28.00.zip",
+      "components": [
+        {
+          "version": "00.21.28.00",
+          "guids": [
+            "539fad43-dd80-56cd-b684-dfc3f9ce2546"
+          ]
+        }
+      ]
+    }
+  ]
+}
