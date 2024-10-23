@@ -35,14 +35,15 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 
 `--firmware-homepage` Website for the firmware provider (e.g. <http://www.dell.com>)
 
-`-contact-info` Email address of the firmware developer (e.g. <someone@something.net>)
+`--contact-info` Email address of the firmware developer (e.g. <someone@something.net>)
 
 `--developer-name` Name of the firmware developer (e.g. Dell) **REQUIRED**
 
 `--release-version` Version number of the firmware package (e.g. 4.21.01.002) **REQUIRED**
+`--update-protocol` Protocol using (e.g. org.uefi.capsule) **REQUIRED**
 `--release-description` Description of the firmware release, again this can theoretically include HTML but I didn't try it.
 
-`--exe` Executable file to extract firmware from (e.g. `dell-thunderbolt-firmware.exe`) **REQUIRED**
+`--exe` Executable file to extract firmware from (e.g. `dell-thunderbolt-firmware.exe`) 
 
 `--bin` Path to the .bin file inside the executable to use as the firmware image', relative to the root of the archive (e.g. `Intel/tbt.bin`) **REQUIRED**
 
