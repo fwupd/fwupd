@@ -112,6 +112,7 @@ struct FuStructFlashIdentifyResponse {
     command: u32,
     datasz: u8,
     part: u16,
+    data: [u8; 56],
 }
 
 #[derive(New, Getters, Setters)]
