@@ -437,6 +437,8 @@ fu_chunk_finalize(GObject *object)
 	FuChunk *self = FU_CHUNK(object);
 	if (self->bytes != NULL)
 		g_bytes_unref(self->bytes);
+	if (self->stream != NULL)
+		g_object_unref(self->stream);
 	G_OBJECT_CLASS(fu_chunk_parent_class)->finalize(object);
 }
 
