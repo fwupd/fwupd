@@ -730,7 +730,8 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 						    FU_VLI_DEVICE_TIMEOUT,
 						    NULL,
 						    &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_debug("ignoring %s", error_local->message);
 			} else {
 				g_propagate_prefixed_error(error,
