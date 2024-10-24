@@ -8,42 +8,14 @@
 
 #include "fu-steelseries-fizz-gen2.h"
 #include "fu-steelseries-fizz-impl.h"
+#include "fu-steelseries-fizz-struct.h"
 
-#define STEELSERIES_FIZZ_VERSION_COMMAND	0x10U
-#define STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_VERSION_MODE_OFFSET	0x01U
+#define FU_STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER 0x01U
+#define FU_STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET  0x01U
+#define FU_STEELSERIES_FIZZ_GEN2_APP_ID		     0x01U
 
-#define STEELSERIES_FIZZ_VERSION_SIZE		 0x0CU
-#define STEELSERIES_FIZZ_VERSION_RECEIVER_OFFSET 0x01U
-#define STEELSERIES_FIZZ_VERSION_DEVICE_OFFSET	 0x19U
-
-#define STEELSERIES_FIZZ_SERIAL_COMMAND	       0x12U
-#define STEELSERIES_FIZZ_SERIAL_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_SERIAL_DATA_OFFSET    0x01U
-#define STEELSERIES_FIZZ_SERIAL_DATA_SIZE      0x12U
-
-#define STEELSERIES_FIZZ_COMMAND_TUNNEL_BIT 1U << 6
-
-#define STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER 0x01U
-#define STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET  0x01U
-#define STEELSERIES_FIZZ_GEN2_APP_ID		  0x01U
-
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND	  0xB0U
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET  0x01U
-
-#define STEELSERIES_FIZZ_GEN2_NOT_PAIRED 0x00U;
-#define STEELSERIES_FIZZ_GEN2_PAIRED	 0x01U;
-
-typedef enum {
-	STEELSERIES_FIZZ_GEN2_CONNECTION_UNEXPECTED = 0,
-	STEELSERIES_FIZZ_GEN2_CONNECTION_PAIRING,
-	STEELSERIES_FIZZ_GEN2_CONNECTION_DISCONNECTED,
-	STEELSERIES_FIZZ_GEN2_CONNECTION_CONNECTED,
-} ConnectionStatus;
-
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_COMMAND_OFFSET 0x00U
-#define STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET   0x03U
+#define FU_STEELSERIES_FIZZ_GEN2_NOT_PAIRED 0x00;
+#define FU_STEELSERIES_FIZZ_GEN2_PAIRED	    0x01;
 
 struct _FuSteelseriesFizzGen2 {
 	FuSteelseriesDevice parent_instance;
@@ -59,47 +31,55 @@ G_DEFINE_TYPE_WITH_CODE(FuSteelseriesFizzGen2,
 					      fu_steelseries_fizz_gen2_impl_iface_init))
 
 static gboolean
-fu_steelseries_fizz_gen2_cmd(FuSteelseriesFizzImpl *self,
-			     guint8 *data,
-			     gsize datasz,
-			     gboolean answer,
-			     GError **error)
+fu_steelseries_fizz_gen2_request(FuSteelseriesFizzImpl *self, const GByteArray *buf, GError **error)
 {
-	return fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(self), data, datasz, answer, error);
+	return fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), buf, error);
+}
+
+static GByteArray *
+fu_steelseries_fizz_gen2_response(FuSteelseriesFizzImpl *self, GError **error)
+{
+	return fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
 }
 
 static gchar *
 fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_VERSION_COMMAND;
-	gsize offset = STEELSERIES_FIZZ_VERSION_RECEIVER_OFFSET;
 	guint64 version[3] = {0};
 	g_autofree gchar *version_raw = NULL;
+	g_autoptr(FuStructSteelseriesFizzVersion2Req) st_req =
+	    fu_struct_steelseries_fizz_version2_req_new();
+	g_autoptr(FuStructSteelseriesVersion2Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_VERSION_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return NULL;
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
 		return NULL;
 
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(self),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
+	st_res = fu_struct_steelseries_version2_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
 		return NULL;
-	fu_dump_raw(G_LOG_DOMAIN, "Version", data, sizeof(data));
-
 	if (tunnel)
-		offset = STEELSERIES_FIZZ_VERSION_DEVICE_OFFSET;
-
-	version_raw =
-	    fu_memstrsafe(data, sizeof(data), offset, STEELSERIES_FIZZ_VERSION_SIZE, error);
-	if (version_raw == NULL)
+		version_raw = fu_struct_steelseries_version2_res_get_version_device(st_res);
+	else
+		version_raw = fu_struct_steelseries_version2_res_get_version_receiver(st_res);
+	if (version_raw == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "version number provided");
 		return NULL;
+	}
+	if (strlen(version_raw) != FU_STRUCT_STEELSERIES_VERSION2_RES_SIZE_VERSION_RECEIVER) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "invalid version number: %s",
+			    version_raw);
+		return NULL;
+	}
 
 	/* very interesting version format */
 	if (version_raw[1] == 0x2E && version_raw[4] == 0x2E && version_raw[8] == 0x2E) {
@@ -128,49 +108,38 @@ fu_steelseries_fizz_gen2_get_battery_level(FuSteelseriesFizzImpl *self,
 					   guint8 *level,
 					   GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
+	g_autoptr(FuStructSteelseriesBatteryLevel2Req) st_req =
+	    fu_struct_steelseries_battery_level2_req_new();
+	g_autoptr(FuStructSteelseriesBatteryLevel2Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
-	if (!fu_steelseries_fizz_gen2_cmd(self, data, sizeof(data), TRUE, error))
+	buf_res = fu_steelseries_fizz_gen2_response(self, error);
+	if (buf_res == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "BatteryLevel", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_BATTERY_LEVEL_LEVEL_OFFSET,
-				   level,
-				   error))
+	st_res =
+	    fu_struct_steelseries_battery_level2_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
 		return FALSE;
+	*level = fu_struct_steelseries_battery_level2_res_get_level(st_res);
 
 	/* success */
 	return TRUE;
 }
 
 static guint8
-fu_steelseries_fizz_gen2_get_fs_id(FuSteelseriesFizzImpl *self,
-				   gboolean is_receiver,
-				   GError **error)
+fu_steelseries_fizz_gen2_get_fs_id(FuSteelseriesFizzImpl *self, gboolean is_receiver)
 {
 	if (is_receiver)
-		return STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER;
-
-	return STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET;
+		return FU_STEELSERIES_FIZZ_GEN2_FILESYSTEM_RECEIVER;
+	return FU_STEELSERIES_FIZZ_GEN2_FILESYSTEM_HEADSET;
 }
 
 static guint8
-fu_steelseries_fizz_gen2_get_file_id(FuSteelseriesFizzImpl *self,
-				     gboolean is_receiver,
-				     GError **error)
+fu_steelseries_fizz_gen2_get_file_id(FuSteelseriesFizzImpl *self, gboolean is_receiver)
 {
-	return STEELSERIES_FIZZ_GEN2_APP_ID;
+	return FU_STEELSERIES_FIZZ_GEN2_APP_ID;
 }
 
 static gboolean
@@ -178,74 +147,62 @@ fu_steelseries_fizz_gen2_get_paired_status(FuSteelseriesFizzImpl *self,
 					   guint8 *status,
 					   GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 tmp_status = STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
-	guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
+	g_autoptr(FuStructSteelseriesConnectionStatus2Req) st_req =
+	    fu_struct_steelseries_connection_status2_req_new();
+	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
-	if (!fu_steelseries_fizz_gen2_cmd(self, data, sizeof(data), TRUE, error))
+	buf_res = fu_steelseries_fizz_gen2_response(self, error);
+	if (buf_res == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "PairedStatus", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
-				   &tmp_status,
-				   error))
+	st_res = fu_struct_steelseries_connection_status2_res_parse(buf_res->data,
+								    buf_res->len,
+								    0x0,
+								    error);
+	if (st_res == NULL)
 		return FALSE;
 
 	/* treat CONNECTED and DISCONNECTED as paired */
-	switch (tmp_status) {
-	case STEELSERIES_FIZZ_GEN2_CONNECTION_CONNECTED:
-	case STEELSERIES_FIZZ_GEN2_CONNECTION_DISCONNECTED:
-		*status = STEELSERIES_FIZZ_GEN2_PAIRED;
+	switch (fu_struct_steelseries_connection_status2_res_get_status(st_res)) {
+	case FU_STEELSERIES_FIZZ_CONNECTION_CONNECTED:
+	case FU_STEELSERIES_FIZZ_CONNECTION_DISCONNECTED:
+		*status = FU_STEELSERIES_FIZZ_GEN2_PAIRED;
 		break;
 	default:
-		*status = STEELSERIES_FIZZ_GEN2_NOT_PAIRED;
+		*status = FU_STEELSERIES_FIZZ_GEN2_NOT_PAIRED;
 	}
+
 	/* success */
 	return TRUE;
 }
 
 static gboolean
 fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
-					       guint8 *status,
+					       FuSteelseriesFizzConnectionStatus *status,
 					       GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 tmp_status = STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
-	guint8 cmd = STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND;
+	g_autoptr(FuStructSteelseriesConnectionStatus2Req) st_req =
+	    fu_struct_steelseries_connection_status2_req_new();
+	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_CONNECTION_STATUS_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
 		return FALSE;
-
-	fu_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
-	if (!fu_steelseries_fizz_gen2_cmd(self, data, sizeof(data), TRUE, error))
+	buf_res = fu_steelseries_fizz_gen2_response(self, error);
+	if (buf_res == NULL)
 		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "ConnectionStatus", data, sizeof(data));
-
-	if (!fu_memread_uint8_safe(data,
-				   sizeof(data),
-				   STEELSERIES_FIZZ_CONNECTION_STATUS_STATUS_OFFSET,
-				   &tmp_status,
-				   error))
+	st_res = fu_struct_steelseries_connection_status2_res_parse(buf_res->data,
+								    buf_res->len,
+								    0x0,
+								    error);
+	if (st_res == NULL)
 		return FALSE;
-
-	if (tmp_status == STEELSERIES_FIZZ_GEN2_CONNECTION_CONNECTED)
-		*status = STEELSERIES_FIZZ_CONNECTION_STATUS_CONNECTED;
+	if (fu_struct_steelseries_connection_status2_res_get_status(st_res))
+		*status = FU_STEELSERIES_FIZZ_CONNECTION_STATUS_CONNECTED;
 	else
-		*status = STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
+		*status = FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
 
 	/* success */
 	return TRUE;
@@ -254,30 +211,28 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 static gchar *
 fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
 {
-	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
-	guint8 cmd = STEELSERIES_FIZZ_SERIAL_COMMAND;
+	g_autofree gchar *serial = NULL;
+	g_autoptr(FuStructSteelseriesSerial2Req) st_req = fu_struct_steelseries_serial2_req_new();
+	g_autoptr(FuStructSteelseriesSerial2Res) st_res = NULL;
+	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_memwrite_uint8_safe(data,
-				    sizeof(data),
-				    STEELSERIES_FIZZ_SERIAL_COMMAND_OFFSET,
-				    cmd,
-				    error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
 		return NULL;
-
-	fu_dump_raw(G_LOG_DOMAIN, "Serial", data, sizeof(data));
-	if (!fu_steelseries_device_cmd(FU_STEELSERIES_DEVICE(self),
-				       data,
-				       sizeof(data),
-				       TRUE,
-				       error))
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
 		return NULL;
-	fu_dump_raw(G_LOG_DOMAIN, "Serial", data, sizeof(data));
-
-	return fu_memstrsafe(data,
-			     sizeof(data),
-			     STEELSERIES_FIZZ_SERIAL_DATA_OFFSET,
-			     STEELSERIES_FIZZ_SERIAL_DATA_SIZE,
-			     error);
+	st_res = fu_struct_steelseries_serial2_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
+		return NULL;
+	serial = fu_struct_steelseries_serial2_res_get_serial(st_res);
+	if (serial == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no serial number provided");
+		return NULL;
+	}
+	return g_steal_pointer(&serial);
 }
 
 static gboolean
@@ -333,7 +288,8 @@ fu_steelseries_fizz_gen2_probe(FuDevice *device, GError **error)
 static void
 fu_steelseries_fizz_gen2_impl_iface_init(FuSteelseriesFizzImplInterface *iface)
 {
-	iface->cmd = fu_steelseries_fizz_gen2_cmd;
+	iface->request = fu_steelseries_fizz_gen2_request;
+	iface->response = fu_steelseries_fizz_gen2_response;
 	iface->get_version = fu_steelseries_fizz_gen2_get_version;
 	iface->get_fs_id = fu_steelseries_fizz_gen2_get_fs_id;
 	iface->get_file_id = fu_steelseries_fizz_gen2_get_file_id;
