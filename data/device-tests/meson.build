@@ -51,6 +51,7 @@ install_data([
     'logitech-rqr12-signed.json',
     'logitech-rqr24.json',
     'logitech-rqr24-signed.json',
+    'microsoft-usbc-travel-hub.json',
     'nordic-hid-nrf52840-mcuboot.json',
     'nordic-hid-nrf52840-b0.json',
     'parade-ps5512evb.json',

@@ -1,0 +1,17 @@
+{
+  "name": "Microsoft USB-C Travel Hub",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/microsoft-usbc-travel-hub-emulation.zip",
+      "components": [
+        {
+          "version": "2.2319.3",
+          "guids": [
+            "0ea2a144-c192-5d42-8b4d-8036392acfac"
+          ]
+        }
+      ]
+    }
+  ]
+}
