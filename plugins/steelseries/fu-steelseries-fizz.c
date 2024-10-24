@@ -59,10 +59,10 @@
 #define STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET	  0x06U
 
 struct _FuSteelseriesFizz {
-	FuDevice parent_instance;
+	FuUsbDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_USB_DEVICE)
 
 static gboolean
 fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **error)
