@@ -1,0 +1,17 @@
+{
+  "name": "WinChipHead CH341a",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/winchiphead-ch341a-emulation.zip",
+      "components": [
+        {
+          "version": "3.4",
+          "guids": [
+            "e06cabdb-2908-5d74-a63f-0daa8a1be58a"
+          ]
+        }
+      ]
+    }
+  ]
+}

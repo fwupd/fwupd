@@ -250,11 +250,16 @@ fu_cfi_device_wait_for_status(FuCfiDevice *self,
 static gboolean
 fu_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 {
+	FuCfiDeviceClass *klass = FU_CFI_DEVICE_GET_CLASS(self);
 	guint8 buf_res[] = {0x9F};
 	guint8 buf_req[3] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GString) flash_id = g_string_new(NULL);
+
+	/* has to be handled by the baseclass */
+	if (klass->read_jedec != NULL)
+		return klass->read_jedec(self, error);
 
 	/* enable chip */
 	cslocker = fu_cfi_device_chip_select_locker_new(self, error);
