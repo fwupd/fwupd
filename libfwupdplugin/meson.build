@@ -164,6 +164,7 @@ fwupdplugin_src = [
   'fu-usb-device-fw-ds20.c',
   'fu-usb-device-ms-ds20.c',
   'fu-usb-endpoint.c',
+  'fu-usb-hid-descriptor.c',
   'fu-usb-interface.c',
   'fu-uswid-firmware.c', # fuzzing
   'fu-version-common.c', # fuzzing
@@ -307,6 +308,8 @@ fwupdplugin_headers = [
   'fu-usb-interface-private.h',
   'fu-usb-device-ms-ds20.h',
   'fu-usb-device-private.h',
+  'fu-usb-hid-descriptor.h',
+  'fu-usb-hid-descriptor-private.h',
   'fu-uswid-firmware.h',
   'fu-v4l-device.h',
   'fu-version-common.h',

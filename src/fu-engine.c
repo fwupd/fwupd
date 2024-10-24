@@ -1020,7 +1020,6 @@ fu_engine_remove_device_flag(FuEngine *self,
 			     FwupdDeviceFlags flag,
 			     GError **error)
 {
-	FuDevice *proxy;
 	g_autoptr(FuDevice) device = NULL;
 
 	if (flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
@@ -1063,16 +1062,6 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device %s is not tagged for emulation",
 				    fu_device_get_id(device));
-			return FALSE;
-		}
-		proxy = fu_device_get_proxy(device);
-		if (proxy != NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device %s uses a proxy, remove the flag on %s instead",
-				    fu_device_get_id(device),
-				    fu_device_get_id(proxy));
 			return FALSE;
 		}
 		fu_device_remove_flag(device, flag);
@@ -1123,7 +1112,6 @@ fu_engine_add_device_flag(FuEngine *self,
 			  FwupdDeviceFlags flag,
 			  GError **error)
 {
-	FuDevice *proxy;
 	g_autoptr(FuDevice) device = NULL;
 
 	if (flag == FWUPD_DEVICE_FLAG_REPORTED || flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
@@ -1151,16 +1139,6 @@ fu_engine_add_device_flag(FuEngine *self,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "device %s is already tagged for emulation",
 				    fu_device_get_id(device));
-			return FALSE;
-		}
-		proxy = fu_device_get_proxy(device);
-		if (proxy != NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device %s uses a proxy, set the flag on %s instead",
-				    fu_device_get_id(device),
-				    fu_device_get_id(proxy));
 			return FALSE;
 		}
 		fu_device_add_flag(device, flag);

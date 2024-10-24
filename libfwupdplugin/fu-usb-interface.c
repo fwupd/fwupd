@@ -20,6 +20,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-mem-private.h"
 #include "fu-usb-endpoint-private.h"
@@ -39,6 +40,18 @@ G_DEFINE_TYPE_EXTENDED(FuUsbInterface,
 		       FU_TYPE_USB_DESCRIPTOR,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_interface_codec_iface_init));
+
+static void
+fu_usb_interface_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuUsbInterface *self = FU_USB_INTERFACE(firmware);
+	fu_xmlb_builder_insert_kx(bn, "number", self->iface.bInterfaceNumber);
+	fu_xmlb_builder_insert_kx(bn, "alternate", self->iface.bAlternateSetting);
+	fu_xmlb_builder_insert_kx(bn, "class", self->iface.bInterfaceClass);
+	fu_xmlb_builder_insert_kx(bn, "subclass", self->iface.bInterfaceSubClass);
+	fu_xmlb_builder_insert_kx(bn, "protocol", self->iface.bInterfaceProtocol);
+	fu_xmlb_builder_insert_kx(bn, "interface", self->iface.iInterface);
+}
 
 static gboolean
 fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufsz, GError **error)
@@ -420,4 +433,5 @@ fu_usb_interface_class_init(FuUsbInterfaceClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_usb_interface_finalize;
 	firmware_class->parse = fu_usb_interface_parse;
+	firmware_class->export = fu_usb_interface_export;
 }

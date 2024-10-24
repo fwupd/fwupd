@@ -83,7 +83,7 @@ fu_ch341a_cfi_device_wait_for_status(FuCh341aCfiDevice *self,
 }
 
 static gboolean
-fu_ch341a_cfi_device_read_jedec(FuCh341aCfiDevice *self, GError **error)
+fu_ch341a_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 {
 	FuCh341aDevice *proxy = FU_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	guint8 buf[CH341A_PAYLOAD_SIZE] = {0x9F};
@@ -108,14 +108,8 @@ fu_ch341a_cfi_device_read_jedec(FuCh341aCfiDevice *self, GError **error)
 		return FALSE;
 	}
 	if (buf[1] == 0xFF && buf[2] == 0xFF && buf[3] == 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device not detected, flash ID 0x%02X%02X%02X",
-			    buf[1],
-			    buf[2],
-			    buf[3]);
-		return FALSE;
+		fu_cfi_device_set_flash_id(FU_CFI_DEVICE(self), NULL);
+		return TRUE;
 	}
 	g_string_append_printf(flash_id, "%02X", buf[1]);
 	g_string_append_printf(flash_id, "%02X", buf[2]);
@@ -124,23 +118,6 @@ fu_ch341a_cfi_device_read_jedec(FuCh341aCfiDevice *self, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_ch341a_cfi_device_setup(FuDevice *device, GError **error)
-{
-	FuCh341aCfiDevice *self = FU_CH341A_CFI_DEVICE(device);
-
-	/* setup SPI chip */
-	if (!fu_ch341a_cfi_device_read_jedec(self, error))
-		return FALSE;
-
-	/* this is a generic SPI chip */
-	fu_device_add_instance_id(device, "SPI");
-	fu_device_build_vendor_id(device, "SPI", "*");
-
-	/* FuCfiDevice->setup */
-	return FU_DEVICE_CLASS(fu_ch341a_cfi_device_parent_class)->setup(device, error);
 }
 
 static gboolean
@@ -432,7 +409,6 @@ static void
 fu_ch341a_cfi_device_init(FuCh341aCfiDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.cfi");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 }
@@ -444,8 +420,8 @@ fu_ch341a_cfi_device_class_init(FuCh341aCfiDeviceClass *klass)
 	FuCfiDeviceClass *cfi_class = FU_CFI_DEVICE_CLASS(klass);
 
 	cfi_class->chip_select = fu_ch341a_cfi_device_chip_select;
+	cfi_class->read_jedec = fu_ch341a_cfi_device_read_jedec;
 
-	device_class->setup = fu_ch341a_cfi_device_setup;
 	device_class->write_firmware = fu_ch341a_cfi_device_write_firmware;
 	device_class->dump_firmware = fu_ch341a_cfi_device_dump_firmware;
 	device_class->set_progress = fu_ch341a_cfi_device_set_progress;

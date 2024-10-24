@@ -59,10 +59,10 @@
 #define STEELSERIES_FIZZ_FILE_CRC32_STORED_CRC_OFFSET	  0x06U
 
 struct _FuSteelseriesFizz {
-	FuDevice parent_instance;
+	FuUsbDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU_TYPE_USB_DEVICE)
 
 static gboolean
 fu_steelseries_fizz_command_error_to_error(guint8 cmd, guint8 err, GError **error)
@@ -617,11 +617,8 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 		serial = fu_steelseries_fizz_impl_get_serial(FU_STEELSERIES_FIZZ_IMPL(proxy),
 							     FALSE,
 							     &error_local);
-		if (serial != NULL) {
+		if (serial != NULL)
 			fu_device_set_serial(device, serial);
-			fu_device_set_equivalent_id(device, serial);
-		}
-
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	}
 	/* success */
