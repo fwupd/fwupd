@@ -69,6 +69,7 @@ install_data([
     'wacom-g14t.json',
     'wacom-intuos-bt-m.json',
     'wacom-intuos-bt-s.json',
+    'winchiphead-ch347.json',
     'wistron-dock-40b7.json',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'device-tests'),
