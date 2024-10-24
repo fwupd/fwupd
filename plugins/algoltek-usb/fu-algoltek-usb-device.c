@@ -528,7 +528,17 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 
 	if (!fu_algoltek_usb_device_ers(self, 0x20, AG_IDENTIFICATION_128K_ADDR, error))
 		return FALSE;
-	if (fu_device_has_private_flag(device, FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR)) {
+
+	/* preserves compatibility with existing emulation data */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		if (!fu_algoltek_usb_device_ers(self, 0x20, 63, error))
+			return FALSE;
+		for (guint i = 0; i < 64; i++) {
+			if (!fu_algoltek_usb_device_ers(self, 0x20, i, error))
+				return FALSE;
+		}
+	} else if (fu_device_has_private_flag(device,
+					      FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR)) {
 		/* 1 sector = 4 kb, 128kb = 32 sector */
 		for (int i = 1; i < 31; i++) {
 			if (!fu_algoltek_usb_device_ers(self, 0x20, i, error))
