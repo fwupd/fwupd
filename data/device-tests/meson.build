@@ -62,6 +62,7 @@ install_data([
     'realtek-rts5423.json',
     'realtek-rts5855.json',
     'steelseries-aerox-3-wireless.json',
+    'steelseries-nova5.json',
     'steelseries-rival-3-wireless.json',
     'synaptics-prometheus.json',
     'synaptics-vmm9430evb.json',
