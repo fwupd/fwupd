@@ -14,10 +14,6 @@ Plugin = algoltek_usb
 [USB\VID_25A4&PID_9411]
 Plugin = algoltek_usb
 
-# AG9412
-[USB\VID_25A4&PID_9412]
-Plugin = algoltek_usb
-
 # AG9421
 [USB\VID_25A4&PID_9421]
 Plugin = algoltek_usb
