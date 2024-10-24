@@ -239,10 +239,25 @@ fu_ch341a_device_chip_select(FuCh341aDevice *self, gboolean val, GError **error)
 }
 
 static gboolean
+fu_ch341a_device_probe(FuDevice *device, GError **error)
+{
+	g_autoptr(FuCh341aCfiDevice) cfi_device = NULL;
+	cfi_device = g_object_new(FU_TYPE_CH341A_CFI_DEVICE,
+				  "context",
+				  fu_device_get_context(device),
+				  "proxy",
+				  device,
+				  "logical-id",
+				  "SPI",
+				  NULL);
+	fu_device_add_child(device, FU_DEVICE(cfi_device));
+	return TRUE;
+}
+
+static gboolean
 fu_ch341a_device_setup(FuDevice *device, GError **error)
 {
 	FuCh341aDevice *self = FU_CH341A_DEVICE(device);
-	g_autoptr(FuCh341aCfiDevice) cfi_device = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_ch341a_device_parent_class)->setup(device, error))
@@ -251,19 +266,6 @@ fu_ch341a_device_setup(FuDevice *device, GError **error)
 	/* set speed */
 	if (!fu_ch341a_device_configure_stream(self, error))
 		return FALSE;
-
-	/* setup SPI chip */
-	cfi_device = g_object_new(FU_TYPE_CH341A_CFI_DEVICE,
-				  "context",
-				  fu_device_get_context(FU_DEVICE(self)),
-				  "proxy",
-				  FU_DEVICE(self),
-				  "logical-id",
-				  "SPI",
-				  NULL);
-	if (!fu_device_setup(FU_DEVICE(cfi_device), error))
-		return FALSE;
-	fu_device_add_child(device, FU_DEVICE(cfi_device));
 
 	/* success */
 	return TRUE;
@@ -282,6 +284,7 @@ static void
 fu_ch341a_device_class_init(FuCh341aDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->probe = fu_ch341a_device_probe;
 	device_class->setup = fu_ch341a_device_setup;
 	device_class->to_string = fu_ch341a_device_to_string;
 }
