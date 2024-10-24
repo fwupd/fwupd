@@ -127,7 +127,7 @@ FirmwareSize = 0x14B000
 SteelSeriesFizzInterface = 0
 Flags = ~usable-during-update,detach-bootloader
 InstallDuration = 87
-CounterpartGuid = USB\VID_1038&PID_2231,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNE
+CounterpartGuid = USB\VID_1038&PID_2231,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNEL
 
 [USB\VID_1038&PID_2231]
 Plugin = steelseries
@@ -136,7 +136,7 @@ ProxyGType = FuSteelseriesFizzGen2
 Name = Arctis Nova 5 Headset bootloader
 Icon = usb-headset
 FirmwareSize = 0x14B000
-CounterpartGuid = USB\VID_1038&PID_2230,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNE
+CounterpartGuid = USB\VID_1038&PID_2230,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNEL
 Flags = is-bootloader,~usable-during-update
 InstallDuration = 87
 
