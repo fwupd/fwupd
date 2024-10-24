@@ -1,0 +1,17 @@
+{
+  "name": "Framework HDMI Expansion Card",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/framework-hdmi-emulation.zip",
+      "components": [
+        {
+          "version": "3.0.16.105",
+          "guids": [
+            "64e95475-00c5-583a-a4f4-bc212aa51504"
+          ]
+        }
+      ]
+    }
+  ]
+}

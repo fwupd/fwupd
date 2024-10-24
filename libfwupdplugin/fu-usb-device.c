@@ -934,15 +934,8 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 	/* already set */
 	if (priv->bos_descriptors_valid)
 		return TRUE;
-
-	/* sanity check */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not supported for emulated device");
-		return FALSE;
-	}
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* libusb or kernel */
 	if (priv->usb_device != NULL) {
