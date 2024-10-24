@@ -274,14 +274,8 @@ fu_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 	}
 	if ((buf_req[0] == 0x0 && buf_req[1] == 0x0 && buf_req[2] == 0x0) ||
 	    (buf_req[0] == 0xFF && buf_req[1] == 0xFF && buf_req[2] == 0xFF)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device not detected, flash ID 0x%02X%02X%02X",
-			    buf_req[0],
-			    buf_req[1],
-			    buf_req[2]);
-		return FALSE;
+		fu_cfi_device_set_flash_id(self, NULL);
+		return TRUE;
 	}
 	g_string_append_printf(flash_id, "%02X", buf_req[0]);
 	g_string_append_printf(flash_id, "%02X", buf_req[1]);
@@ -304,6 +298,8 @@ fu_cfi_device_setup(FuDevice *device, GError **error)
 		if (!fu_cfi_device_read_jedec(self, error))
 			return FALSE;
 	}
+	if (priv->flash_id == NULL)
+		return TRUE;
 
 	/* sanity check */
 	if (priv->flash_id != NULL)
@@ -331,6 +327,7 @@ fu_cfi_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* success */
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	return TRUE;
 }
 
@@ -969,7 +966,6 @@ fu_cfi_device_init(FuCfiDevice *self)
 	priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = 0x60;
 	priv->cmds[FU_CFI_DEVICE_CMD_READ_ID] = 0x9f;
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.cfi");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
