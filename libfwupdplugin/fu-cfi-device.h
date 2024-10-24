@@ -21,6 +21,7 @@ struct _FuCfiDeviceClass {
 				 gsize rbufsz,
 				 FuProgress *progress,
 				 GError **error);
+	gboolean (*read_jedec)(FuCfiDevice *self, GError **error);
 };
 
 /**
