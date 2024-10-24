@@ -29,6 +29,16 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 The firmware is deployed when the device is in normal runtime mode, and the device will reset when the new firmware has been programmed.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### `Flags=ers-skip-first-sector`
+
+Skip erasing the first sector, needed for AG9411 and AG9421 products.
+
+Since: 2.0.2
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x25A4`.
