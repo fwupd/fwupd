@@ -1,0 +1,17 @@
+{
+  "name": "GigaDevice GD32VF103",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/dfu-gd32-emulation.zip",
+      "components": [
+        {
+          "version": "1.0",
+          "guids": [
+            "f40ef7cf-e4f6-5708-b274-13edfb04646e"
+          ]
+        }
+      ]
+    }
+  ]
+}
