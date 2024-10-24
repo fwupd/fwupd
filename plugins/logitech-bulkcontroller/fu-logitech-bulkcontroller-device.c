@@ -296,7 +296,9 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	g_byte_array_append(response->data,
 			    buf + st->len,
 			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
-	if (response->data->len == 0) {
+	/* no payload for UninitBuffer, skip check */
+	if ((response->cmd != FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER) &&
+	    (response->data->len == 0)) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_FAILED,
