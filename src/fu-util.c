@@ -792,6 +792,21 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 		}
 	}
 
+	/* verify the bootloader version matches what we expected */
+	if (json_object_has_member(json_obj, "version-bootloader")) {
+		const gchar *version =
+		    json_object_get_string_member(json_obj, "version-bootloader");
+		if (g_strcmp0(version, fwupd_device_get_version_bootloader(device)) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "bootloader version did not match: got %s, expected %s",
+				    fwupd_device_get_version_bootloader(device),
+				    version);
+			return FALSE;
+		}
+	}
+
 	/* success */
 	if (!priv->as_json) {
 		g_autofree gchar *msg = NULL;

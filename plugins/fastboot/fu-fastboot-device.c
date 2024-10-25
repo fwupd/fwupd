@@ -19,7 +19,6 @@
 
 struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
-	gboolean secure;
 	guint blocksz;
 	guint operation_delay;
 };
@@ -31,7 +30,6 @@ fu_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "BlockSize", self->blocksz);
-	fwupd_codec_string_append_bool(str, idt, "Secure", self->secure);
 }
 
 static gboolean
@@ -301,7 +299,6 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	g_autofree gchar *product = NULL;
 	g_autofree gchar *serialno = NULL;
-	g_autofree gchar *version = NULL;
 	g_autofree gchar *secure = NULL;
 	g_autofree gchar *version_bootloader = NULL;
 
@@ -316,12 +313,6 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 		g_autofree gchar *tmp = g_strdup_printf("Fastboot %s", product);
 		fu_device_set_name(device, tmp);
 	}
-
-	/* fastboot API version */
-	if (!fu_fastboot_device_getvar(device, "version", &version, error))
-		return FALSE;
-	if (version != NULL && version[0] != '\0')
-		g_info("fastboot version %s", version);
 
 	/* bootloader version */
 	if (!fu_fastboot_device_getvar(device, "version-bootloader", &version_bootloader, error))
@@ -340,8 +331,11 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	/* secure */
 	if (!fu_fastboot_device_getvar(device, "secure", &secure, error))
 		return FALSE;
-	if (secure != NULL && secure[0] != '\0')
-		self->secure = TRUE;
+	if (secure != NULL && secure[0] != '\0') {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	} else {
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	}
 
 	/* success */
 	return TRUE;
@@ -710,6 +704,7 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_remove_delay(FU_DEVICE(self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 }
