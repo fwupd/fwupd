@@ -47,7 +47,7 @@ fu_dell_k2_package_setup(FuDevice *device, GError **error)
 
 	/* setup version */
 	pkg_version_raw = fu_dell_k2_ec_get_package_version(proxy);
-	fu_device_set_version_raw(device, GUINT32_FROM_BE(pkg_version_raw));
+	fu_device_set_version_raw(device, pkg_version_raw);
 
 	return TRUE;
 }

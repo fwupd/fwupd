@@ -58,47 +58,11 @@ fu_dell_k2_wtpd_write(FuDevice *device,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) fw_whdr = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	/* basic tests */
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-
-	/* get default firmware image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* construct writing buffer */
-	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, DELL_K2_EC_DEV_TYPE_WTPD, 0);
-
-	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       DELL_K2_EC_HID_DATA_PAGE_SZ);
-
-	/* write to device */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-
-		if (!fu_dell_k2_ec_hid_write(proxy, fu_chunk_get_bytes(chk), error))
-			return FALSE;
-	}
-
-	/* check version is not required */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-
-	/* success */
-	g_debug("pd firmware written successfully");
-	return TRUE;
+	return fu_dell_k2_ec_write_firmware_helper(fu_device_get_proxy(device),
+						   firmware,
+						   DELL_K2_EC_DEV_TYPE_WTPD,
+						   0,
+						   error);
 }
 
 static void
@@ -118,6 +82,7 @@ fu_dell_k2_wtpd_init(FuDellK2Wtpd *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);

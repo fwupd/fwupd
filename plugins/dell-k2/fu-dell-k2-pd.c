@@ -64,7 +64,7 @@ fu_dell_k2_pd_setup(FuDevice *device, GError **error)
 
 	/* version */
 	raw_version = fu_dell_k2_ec_get_pd_version(proxy, self->pd_subtype, self->pd_instance);
-	fu_device_set_version_raw(device, GUINT32_FROM_BE(raw_version));
+	fu_device_set_version_raw(device, raw_version);
 
 	return TRUE;
 }
@@ -76,62 +76,13 @@ fu_dell_k2_pd_write(FuDevice *device,
 		    FwupdInstallFlags flags,
 		    GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
 	FuDellK2Pd *self = FU_DELL_K2_PD(device);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) fw_whdr = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-
-	/* basic tests */
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-
-	/* get default firmware image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* version message */
-	g_debug("%s firmware version, old: %s, new: %s.",
-		fu_device_get_name(device),
-		fu_device_get_version(device),
-		fu_firmware_get_version(firmware));
-
-	/* construct writing buffer */
-	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, DELL_K2_EC_DEV_TYPE_PD, self->pd_identifier);
-
-	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       DELL_K2_EC_HID_DATA_PAGE_SZ);
-
-	/* write to device */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-
-		if (!fu_dell_k2_ec_hid_write(proxy, fu_chunk_get_bytes(chk), error))
-			return FALSE;
-
-		/* update progress */
-		fu_progress_set_percentage_full(progress,
-						(gsize)i + 1,
-						(gsize)fu_chunk_array_length(chunks));
-	}
-
-	/* check version is not required */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-
-	/* success */
-	g_debug("%s firmware written successfully.", fu_device_get_name(device));
-	return TRUE;
+	return fu_dell_k2_ec_write_firmware_helper(fu_device_get_proxy(device),
+						   firmware,
+						   DELL_K2_EC_DEV_TYPE_PD,
+						   self->pd_identifier,
+						   error);
 }
 
 static void
@@ -151,6 +102,7 @@ fu_dell_k2_pd_init(FuDellK2Pd *self)
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
