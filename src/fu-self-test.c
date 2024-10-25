@@ -1094,9 +1094,21 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		for (guint j = 0; device_gtypes != NULL && j < device_gtypes->len; j++) {
 			GType gtype = g_array_index(device_gtypes, GType, j);
 			g_autoptr(FuDevice) device = NULL;
+			const gchar *nolocker[] = {
+			    "FuPciPspDevice",
+			    "FuSynapticsRmiPs2Device",
+			    "FuUefiSbatDevice",
+			    NULL,
+			};
 			g_debug("loading %s", g_type_name(gtype));
-			device = g_object_new(gtype, "context", self->ctx, NULL);
+			device =
+			    g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
 			g_assert_nonnull(device);
+			if (!g_strv_contains(nolocker, g_type_name(gtype))) {
+				g_autoptr(FuDeviceLocker) locker =
+				    fu_device_locker_new(device, NULL);
+				g_assert_null(locker);
+			}
 		}
 	}
 
