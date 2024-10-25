@@ -15,6 +15,7 @@ jobs:
 
   matrix:
     uses: ./.github/workflows/matrix.yml
+    secrets: inherit
 
   fuzzing:
     permissions:

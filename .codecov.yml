@@ -1,0 +1,17 @@
+comment: off
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        target: 80
+        threshold: null
+        base: auto
+    patch:
+      default:
+        target: 20
+        threshold: null
+        base: auto
