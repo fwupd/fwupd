@@ -13,6 +13,9 @@
 #define DELL_K2_EC_HID_CMD_FWUPDATE    0xAB
 #define DELL_K2_EC_HID_EXT_FWUPDATE    0x80
 #define DELL_K2_EC_HID_SUBCMD_FWUPDATE 0x00
+#define DELL_K2_EC_DEV_EC_CHUNK_SZ     160000
+#define DELL_K2_EC_DEV_ANY_CHUNK_SZ    180000
+#define DELL_K2_EC_DEV_NO_CHUNK_SZ     G_MAXSIZE
 #define DELL_K2_EC_HID_DATA_PAGE_SZ    192
 #define DELL_K2_EC_HID_RESPONSE_LENGTH 0x03
 #define DELL_K2_EC_HID_I2C_ADDRESS     0xec
@@ -37,7 +40,7 @@ gboolean
 fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, GError **error);
 
 GBytes *
-fu_dell_k2_ec_hid_fwup_pkg_new(GBytes *fw, guint8 dev_type, guint8 dev_identifier);
+fu_dell_k2_ec_hid_fwup_pkg_new(FuChunk *chk, gsize fw_sz, guint8 dev_type, guint8 dev_identifier);
 
 gboolean
 fu_dell_k2_ec_hid_i2c_write(FuDevice *self, const guint8 *input, gsize write_size, GError **error);

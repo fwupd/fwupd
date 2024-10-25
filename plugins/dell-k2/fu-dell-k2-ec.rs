@@ -93,6 +93,13 @@ enum K2DockSku {
     Tbt5,
 }
 
+#[repr(u8)] // dock resp to chunk write
+enum DellK2EcRespToChunk {
+    UpdateComplete = 1,
+    SendNextChunk,
+    UpdateFailed,
+}
+
 #[repr(C, packed)]
 #[derive(New, Getters, Parse)]
 struct FuStructDellK2DockData {
