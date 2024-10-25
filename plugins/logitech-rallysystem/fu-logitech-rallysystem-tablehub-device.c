@@ -390,7 +390,7 @@ fu_logitech_rallysystem_tablehub_device_init(FuLogitechRallysystemTablehubDevice
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_install_duration(FU_DEVICE(self), 5 * 60);
-	fu_device_set_remove_delay(FU_DEVICE(self), 60 * 1000); /* wait for subcomponent */
+	fu_device_set_remove_delay(FU_DEVICE(self), 5 * 60 * 1000); /* wait for subcomponent */
 }
 
 static void
