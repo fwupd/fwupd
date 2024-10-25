@@ -1118,6 +1118,14 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		GType gtype = g_array_index(firmware_gtypes, GType, j);
 		g_autoptr(FuFirmware) firmware = NULL;
 		g_autoptr(GBytes) blob = NULL;
+		const gchar *noxml[] = {
+		    "FuArchiveFirmware",
+		    "FuGenesysUsbhubFirmware",
+		    "FuIntelThunderboltFirmware",
+		    "FuIntelThunderboltNvm",
+		    "FuUefiUpdateInfo",
+		    NULL,
+		};
 		g_debug("loading %s", g_type_name(gtype));
 		firmware = g_object_new(gtype, NULL);
 		g_assert_nonnull(firmware);
@@ -1134,6 +1142,18 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		blob = fu_firmware_write(firmware, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0)
 			g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
+		if (!g_strv_contains(noxml, g_type_name(gtype))) {
+			g_autofree gchar *xml =
+			    fu_firmware_export_to_xml(firmware,
+						      FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG |
+							  FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
+						      NULL);
+			if (xml != NULL) {
+				ret = fu_firmware_build_from_xml(firmware, xml, &error);
+				g_assert_no_error(error);
+				g_assert_true(ret);
+			}
+		}
 	}
 }
 
