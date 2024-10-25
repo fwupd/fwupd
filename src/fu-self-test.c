@@ -1071,6 +1071,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GArray) firmware_gtypes = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -1096,6 +1097,26 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			g_debug("loading %s", g_type_name(gtype));
 			device = g_object_new(gtype, "context", self->ctx, NULL);
 			g_assert_nonnull(device);
+		}
+	}
+
+	/* create each firmware */
+	firmware_gtypes = fu_context_get_firmware_gtypes(self->ctx);
+	for (guint j = 0; j < firmware_gtypes->len; j++) {
+		GType gtype = g_array_index(firmware_gtypes, GType, j);
+		g_autoptr(FuFirmware) firmware = NULL;
+		g_debug("loading %s", g_type_name(gtype));
+		firmware = g_object_new(gtype, NULL);
+		g_assert_nonnull(firmware);
+		if (gtype != FU_TYPE_FIRMWARE &&
+		    !fu_firmware_has_flag(FU_FIRMWARE(firmware),
+					  FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
+			ret = fu_firmware_parse_bytes(firmware,
+						      fw,
+						      0x0,
+						      FWUPD_INSTALL_FLAG_NO_SEARCH,
+						      NULL);
+			g_assert_false(ret);
 		}
 	}
 }

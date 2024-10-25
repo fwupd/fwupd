@@ -847,7 +847,7 @@ fu_context_get_firmware_gtype_ids(FuContext *self)
  *
  * Returns all the firmware #GType's.
  *
- * Returns: (transfer none) (element-type GType): Firmware types
+ * Returns: (transfer container) (element-type GType): Firmware types
  *
  * Since: 1.9.1
  **/
