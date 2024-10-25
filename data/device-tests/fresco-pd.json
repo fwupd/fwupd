@@ -1,0 +1,17 @@
+{
+  "name": "Fresco PD",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/fresco-pd-emulation.zip",
+      "components": [
+        {
+          "version": "7.99.18.0",
+          "guids": [
+            "790a1b00-9cf9-5220-af78-ef690d303fa8"
+          ]
+        }
+      ]
+    }
+  ]
+}
