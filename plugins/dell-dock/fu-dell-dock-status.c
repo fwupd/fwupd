@@ -100,15 +100,23 @@ fu_dell_dock_status_write(FuDevice *device,
 static gboolean
 fu_dell_dock_status_open(FuDevice *device, GError **error)
 {
-	if (fu_device_get_proxy(device) == NULL)
+	if (fu_device_get_proxy(device) == NULL) {
+		if (fu_device_get_parent(device) == NULL) {
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+			return FALSE;
+		}
 		fu_device_set_proxy(device, fu_device_get_parent(device));
-
+	}
 	return fu_device_open(fu_device_get_proxy(device), error);
 }
 
 static gboolean
 fu_dell_dock_status_close(FuDevice *device, GError **error)
 {
+	if (fu_device_get_proxy(device) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no proxy");
+		return FALSE;
+	}
 	return fu_device_close(fu_device_get_proxy(device), error);
 }
 

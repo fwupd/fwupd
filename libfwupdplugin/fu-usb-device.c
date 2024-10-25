@@ -478,8 +478,16 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 	if (priv->usb_device != NULL) {
 		rc = libusb_open(priv->usb_device, &priv->handle);
 	} else {
-		gint fd =
-		    fu_io_channel_unix_get_fd(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)));
+		gint fd;
+		FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
+		if (io_channel == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "no io channel");
+			return FALSE;
+		}
+		fd = fu_io_channel_unix_get_fd(io_channel);
 		rc = libusb_wrap_sys_device(usb_ctx, fd, &priv->handle);
 	}
 	if (!fu_usb_device_libusb_error_to_gerror(rc, error)) {
