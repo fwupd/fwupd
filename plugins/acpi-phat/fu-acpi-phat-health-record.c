@@ -160,15 +160,17 @@ fu_acpi_phat_health_record_build(FuFirmware *firmware, XbNode *n, GError **error
 	if (tmp != NULL)
 		fu_acpi_phat_health_record_set_guid(self, tmp);
 	tmp64 = xb_node_query_text_as_uint(n, "am_healthy", NULL);
-	if (tmp64 > G_MAXUINT8) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "am_healthy value invalid, got 0x%x",
-			    (guint)tmp64);
-		return FALSE;
+	if (tmp64 != G_MAXUINT64) {
+		if (tmp64 > G_MAXUINT8) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "am_healthy value invalid, got 0x%x",
+				    (guint)tmp64);
+			return FALSE;
+		}
+		self->am_healthy = (guint8)tmp64;
 	}
-	self->am_healthy = (guint8)tmp64;
 
 	/* success */
 	return TRUE;
