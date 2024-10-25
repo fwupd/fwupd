@@ -88,7 +88,6 @@ plugins = {
   'modem-manager': false,
   'msr': false,
   'mtd': false,
-  'nitrokey': false,
   'nordic-hid': false,
   'nvme': false,
   'optionrom': false,
