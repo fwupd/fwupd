@@ -26,7 +26,7 @@ fu_dell_k2_ec_new(FuDevice *proxy);
 void
 fu_dell_k2_ec_enable_tbt_passive(FuDevice *device);
 gboolean
-fu_dell_k2_ec_modify_lock(FuDevice *device, gboolean lock, GError **error);
+fu_dell_k2_ec_own_dock(FuDevice *device, gboolean lock, GError **error);
 gboolean
 fu_dell_k2_ec_run_passive_update(FuDevice *device, GError **error);
 guint32
@@ -53,3 +53,9 @@ gboolean
 fu_dell_k2_ec_is_dock_ready4update(FuDevice *device, GError **error);
 gboolean
 fu_dell_k2_ec_is_dev_present(FuDevice *device, guint8 dev_type, guint8 sub_type, guint8 instance);
+gboolean
+fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
+				    FuFirmware *firmware,
+				    guint8 dev_type,
+				    guint8 dev_identifier,
+				    GError **error);

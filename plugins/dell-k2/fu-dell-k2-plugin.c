@@ -69,6 +69,30 @@ fu_dell_k2_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* Remote Management */
+	if (pid == DELL_K2_USB_RMM_PID) {
+		g_autoptr(FuDellK2Rmm) rmm_device = NULL;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		rmm_device = fu_dell_k2_rmm_new(FU_USB_DEVICE(device));
+		if (rmm_device == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "failed to create rmm device");
+			return FALSE;
+		}
+
+		locker = fu_device_locker_new(FU_DEVICE(rmm_device), error);
+		if (locker == NULL)
+			return FALSE;
+
+		fu_device_add_child(ec_device, FU_DEVICE(rmm_device));
+		fu_dell_k2_rmm_fix_version(FU_DEVICE(rmm_device));
+
+		return TRUE;
+	}
+
 	/* RTS usb hub devices */
 	if (pid == DELL_K2_USB_RTS5480_GEN1_PID || pid == DELL_K2_USB_RTS5480_GEN2_PID ||
 	    pid == DELL_K2_USB_RTS5485_GEN2_PID) {
@@ -286,6 +310,80 @@ fu_dell_k2_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	fu_dell_k2_plugin_config_parentship(plugin);
 }
 
+static FuDevice *
+fu_dell_k2_plugin_get_ec_from_devices(GPtrArray *devices)
+{
+	for (guint i = 0; i <= devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index(devices, i);
+		FuDevice *parent = fu_device_get_parent(dev);
+
+		if (parent == NULL)
+			parent = dev;
+
+		if (FU_IS_DELL_K2_EC(parent))
+			return parent;
+
+		break;
+	}
+	return NULL;
+}
+
+static gboolean
+fu_dell_k2_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	FuDevice *ec_dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* locate the ec device */
+	ec_dev = fu_dell_k2_plugin_get_ec_from_devices(devices);
+	if (ec_dev == NULL)
+		return TRUE;
+
+	/* open ec device */
+	locker = fu_device_locker_new(ec_dev, error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* own the dock */
+	if (!fu_dell_k2_ec_own_dock(ec_dev, FALSE, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_dell_k2_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	FuDevice *ec_dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* locate the ec device */
+	ec_dev = fu_dell_k2_plugin_get_ec_from_devices(devices);
+	if (ec_dev == NULL)
+		return TRUE;
+
+	/* open ec device */
+	locker = fu_device_locker_new(ec_dev, error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* check if dock is ready to process updates */
+	if (!fu_dell_k2_ec_is_dock_ready4update(ec_dev, error))
+		return FALSE;
+
+	/* own the dock */
+	if (!fu_dell_k2_ec_own_dock(ec_dev, TRUE, error))
+		return FALSE;
+
+	/* conditionally enable passive flow */
+	if (!fu_device_has_private_flag(ec_dev, FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF)) {
+		if (!fu_dell_k2_ec_run_passive_update(ec_dev, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
 static gboolean
 fu_dell_k2_plugin_prepare(FuPlugin *plugin,
 			  FuDevice *device,
@@ -293,42 +391,11 @@ fu_dell_k2_plugin_prepare(FuPlugin *plugin,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* maybe device is the parent */
-	if (parent == NULL)
-		parent = device;
-
-	/* ensure parent is dock ec */
-	if (!FU_IS_DELL_K2_EC(parent))
-		return TRUE;
-
-	/* open ec device */
-	locker = fu_device_locker_new(parent, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* check if dock is ready to process updates */
-	if (!fu_dell_k2_ec_is_dock_ready4update(parent, error))
-		return FALSE;
-
-	/* own the dock */
-	if (!fu_dell_k2_ec_modify_lock(parent, TRUE, error))
-		return FALSE;
-
-	/* conditionally enable passive flow */
-	if (!fu_device_has_private_flag(parent, FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF)) {
-		if (!fu_dell_k2_ec_run_passive_update(parent, error))
-			return FALSE;
-	}
-
 	/* usb4 device reboot is suppressed, let ec handle it in passive update */
 	if (fu_device_has_guid(device, DELL_K2_TBT4) || fu_device_has_guid(device, DELL_K2_TBT5)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	}
 
-	g_debug("plugin prepared for (%s) successfully", fu_device_get_name(device));
 	return TRUE;
 }
 
@@ -348,7 +415,6 @@ fu_dell_k2_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_K2_DPMUX);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_K2_WTPD);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_K2_ILAN);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_K2_RMM);
 
 	/* register firmware parser */
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_K2_PD_FIRMWARE);
@@ -364,5 +430,7 @@ fu_dell_k2_plugin_class_init(FuDellK2PluginClass *klass)
 	plugin_class->constructed = fu_dell_k2_plugin_constructed;
 	plugin_class->device_registered = fu_dell_k2_plugin_device_registered;
 	plugin_class->backend_device_added = fu_dell_k2_plugin_backend_device_added;
+	plugin_class->composite_prepare = fu_dell_k2_plugin_composite_prepare;
+	plugin_class->composite_cleanup = fu_dell_k2_plugin_composite_cleanup;
 	plugin_class->prepare = fu_dell_k2_plugin_prepare;
 }

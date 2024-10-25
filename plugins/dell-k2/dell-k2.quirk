@@ -21,18 +21,20 @@ Plugin = dell_k2
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_k2
 
+[USB\VID_413C&PID_B0A4]
+Name = Remote Management in Dell dock
+Plugin = dell_k2
+
 [USB\VID_413C&PID_B0A5]
 Name = Unprobed Dell accessory endpoint
 Plugin = synaptics_vmm9
 
-# K2 TBT5 controller
 [TBT-00d4b0a2]
 Name = USB4v2 controller in Dell dock
 Summary = USB4v2 controller
 Vendor = Dell Inc.
 VendorId = TBT:0x00D4
 
-# K2 TBT4 controller
 [TBT-00d4b0a1]
 Name = USB4 controller in Dell dock
 Summary = USB4 controller

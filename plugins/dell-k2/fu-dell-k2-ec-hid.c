@@ -65,15 +65,15 @@ fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, GError **error)
 }
 
 GBytes *
-fu_dell_k2_ec_hid_fwup_pkg_new(GBytes *fw, guint8 dev_type, guint8 dev_identifier)
+fu_dell_k2_ec_hid_fwup_pkg_new(FuChunk *chk, gsize fw_size, guint8 dev_type, guint8 dev_identifier)
 {
 	g_autoptr(GByteArray) fwbuf = g_byte_array_new();
-	gsize fw_size = g_bytes_get_size(fw);
+	gsize chk_datasz = fu_chunk_get_data_sz(chk);
 
 	/* header */
 	fu_byte_array_append_uint8(fwbuf, FU_DELL_K2_EC_HID_CMD_FWUPDATE);
 	fu_byte_array_append_uint8(fwbuf, FU_DELL_K2_EC_HID_EXT_FWUPDATE);
-	fu_byte_array_append_uint32(fwbuf, 7 + fw_size, G_BIG_ENDIAN); // 7 = sizeof(command)
+	fu_byte_array_append_uint32(fwbuf, 7 + chk_datasz, (G_BIG_ENDIAN)); // 7 = sizeof(command)
 
 	/* command */
 	fu_byte_array_append_uint8(fwbuf, FU_DELL_K2_EC_HID_SUBCMD_FWUPDATE);
@@ -82,7 +82,7 @@ fu_dell_k2_ec_hid_fwup_pkg_new(GBytes *fw, guint8 dev_type, guint8 dev_identifie
 	fu_byte_array_append_uint32(fwbuf, fw_size, G_BIG_ENDIAN);
 
 	/* data */
-	fu_byte_array_append_bytes(fwbuf, fw);
+	fu_byte_array_append_bytes(fwbuf, fu_chunk_get_bytes(chk));
 
 	return g_bytes_new(fwbuf->data, fwbuf->len);
 }
@@ -131,52 +131,6 @@ fu_dell_k2_ec_hid_get_report(FuDevice *self, guint8 *inbuffer, GError **error)
 			       FU_DELL_K2_EC_HID_MAX_RETRIES,
 			       inbuffer,
 			       error);
-}
-
-gboolean
-fu_dell_k2_ec_hid_raise_mcu_clock(FuDevice *self, gboolean enable, GError **error)
-{
-	FuEcHIDCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_WRITE_DATA,
-	    .ext = HUB_EXT_MCUMODIFYCLOCK,
-	    .cmd_data0 = (guint8)enable,
-	    .cmd_data1 = 0,
-	    .cmd_data2 = 0,
-	    .cmd_data3 = 0,
-	    .bufferlen = 0,
-	    .parameters = {0},
-	    .extended_cmdarea[0 ... 52] = 0,
-	};
-
-	if (!fu_dell_k2_ec_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to set mcu clock to %d: ", enable);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_dell_k2_ec_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
-{
-	FuEcHIDCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_WRITE_DATA,
-	    .ext = HUB_EXT_ERASEBANK,
-	    .cmd_data0 = 0,
-	    .cmd_data1 = idx,
-	    .cmd_data2 = 0,
-	    .cmd_data3 = 0,
-	    .bufferlen = 0,
-	    .parameters = {0},
-	    .extended_cmdarea[0 ... 52] = 0,
-	};
-
-	if (!fu_dell_k2_ec_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to erase bank: ");
-		return FALSE;
-	}
-
-	return TRUE;
 }
 
 gboolean
