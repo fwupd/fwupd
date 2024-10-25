@@ -48,7 +48,7 @@ const fwupd_guid_t *{{item.c_getter}}(const {{obj.name}} *st);
 gboolean {{item.c_setter}}({{obj.name}} *st, const gchar *value, GError **error);
 {%- elif item.struct_obj %}
 gboolean
-{{item.c_setter}}({{obj.name}} *st, {{item.struct_obj.name}} *st_donor, GError **error);
+{{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error);
 {%- elif item.type == Type.U8 and item.multiplier %}
 gboolean {{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}

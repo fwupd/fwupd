@@ -95,7 +95,7 @@
 }
 {%- elif item.struct_obj %}
 {{export.value}}gboolean
-{{item.c_setter}}({{obj.name}} *st, {{item.struct_obj.name}} *st_donor, GError **error)
+{{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error)
 {
     g_return_val_if_fail(st != NULL, FALSE);
     g_return_val_if_fail(st_donor != NULL, FALSE);
