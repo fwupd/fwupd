@@ -524,7 +524,8 @@ fu_corsair_device_finalize(GObject *object)
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(object);
 
 	g_free(self->subdevice_id);
-	g_object_unref(self->bp);
+	if (self->bp != NULL)
+		g_object_unref(self->bp);
 
 	G_OBJECT_CLASS(fu_corsair_device_parent_class)->finalize(object);
 }

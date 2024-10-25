@@ -1064,6 +1064,43 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_plugin_gtypes_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *plugins;
+	gboolean ret;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo(engine, silo_empty);
+
+	/* load all internal plugins */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	plugins = fu_engine_get_plugins(engine);
+	g_assert_nonnull(plugins);
+	g_assert_cmpint(plugins->len, >, 5);
+
+	/* create each custom device with a context only */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		GArray *device_gtypes = fu_plugin_get_device_gtypes(plugin);
+		for (guint j = 0; device_gtypes != NULL && j < device_gtypes->len; j++) {
+			GType gtype = g_array_index(device_gtypes, GType, j);
+			g_autoptr(FuDevice) device = NULL;
+			g_debug("loading %s", g_type_name(gtype));
+			device = g_object_new(gtype, "context", self->ctx, NULL);
+			g_assert_nonnull(device);
+		}
+	}
+}
+
+static void
 fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -7132,6 +7169,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{fu_engine_requirements_sibling_device_func}",
 			     self,
 			     fu_engine_requirements_sibling_device_func);
+	g_test_add_data_func("/fwupd/engine{plugin-gtypes}", self, fu_engine_plugin_gtypes_func);
 	g_test_add_data_func("/fwupd/plugin{composite}", self, fu_plugin_composite_func);
 	g_test_add_data_func("/fwupd/history", self, fu_history_func);
 	g_test_add_data_func("/fwupd/history{migrate-v1}", self, fu_history_migrate_v1_func);

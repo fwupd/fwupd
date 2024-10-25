@@ -26,6 +26,8 @@ guint
 fu_plugin_get_priority(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
 fu_plugin_set_priority(FuPlugin *self, guint priority) G_GNUC_NON_NULL(1);
+GArray *
+fu_plugin_get_device_gtypes(FuPlugin *self) G_GNUC_NON_NULL(1);
 gchar *
 fu_plugin_to_string(FuPlugin *self) G_GNUC_NON_NULL(1);
 void
