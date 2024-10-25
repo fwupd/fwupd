@@ -604,7 +604,8 @@ static void
 fu_qc_s5gen2_ble_device_finalize(GObject *object)
 {
 	FuQcS5gen2BleDevice *self = FU_QC_S5GEN2_BLE_DEVICE(object);
-	g_object_unref(self->io_cmd);
+	if (self->io_cmd != NULL)
+		g_object_unref(self->io_cmd);
 	G_OBJECT_CLASS(fu_qc_s5gen2_ble_device_parent_class)->finalize(object);
 }
 

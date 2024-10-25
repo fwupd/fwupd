@@ -1450,6 +1450,24 @@ fu_plugin_add_device_gtype(FuPlugin *self, GType device_gtype)
 }
 
 /**
+ * fu_plugin_get_device_gtypes:
+ * @self: a #FuPlugin
+ *
+ * Gets all device #GTypes.
+ *
+ * Returns: (element-type GType) (transfer none) (nullable): registered types, or %NULL
+ *
+ * Since: 2.0.2
+ **/
+GArray *
+fu_plugin_get_device_gtypes(FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_PLUGIN(self), NULL);
+	return priv->device_gtypes;
+}
+
+/**
  * fu_plugin_get_device_gtype_default:
  * @self: a #FuPlugin
  *
