@@ -41,17 +41,24 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 	}
 
 	/* is in recovery mode if has no ethtool interface */
-	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "net", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
-		g_debug("waiting for net devices to appear");
-		fu_device_sleep(device, 50); /* ms */
-	}
-	ifaces = fu_path_glob(fn, "en*", NULL);
-	if (ifaces == NULL || ifaces->len == 0) {
-		dev = g_object_new(FU_TYPE_BCM57XX_RECOVERY_DEVICE, NULL);
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", "enp81s0f0", NULL);
 	} else {
-		g_autofree gchar *ethtool_iface = g_path_get_basename(g_ptr_array_index(ifaces, 0));
-		dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", ethtool_iface, NULL);
+		fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
+				      "net",
+				      NULL);
+		if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			g_debug("waiting for net devices to appear");
+			fu_device_sleep(device, 50); /* ms */
+		}
+		ifaces = fu_path_glob(fn, "en*", NULL);
+		if (ifaces == NULL || ifaces->len == 0) {
+			dev = g_object_new(FU_TYPE_BCM57XX_RECOVERY_DEVICE, NULL);
+		} else {
+			g_autofree gchar *ethtool_iface =
+			    g_path_get_basename(g_ptr_array_index(ifaces, 0));
+			dev = g_object_new(FU_TYPE_BCM57XX_DEVICE, "iface", ethtool_iface, NULL);
+		}
 	}
 	fu_device_incorporate(dev, device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	locker = fu_device_locker_new(dev, error);
