@@ -44,7 +44,6 @@ plugins = {
   'dell-dock': false,
   'dell-k2': false,
   'dfu': false,
-  'dfu-csr': false,
   'ebitdo': false,
   'elantp': false,
   'elanfp': false,
