@@ -241,11 +241,13 @@ fu_efi_file_write(FuFirmware *firmware, GError **error)
 	blob = fu_efi_file_write_sections(firmware, error);
 	if (blob == NULL)
 		return NULL;
-	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
-				    &guid,
-				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
-				    error))
-		return NULL;
+	if (fu_firmware_get_id(firmware) != NULL) {
+		if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
+					    &guid,
+					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
+					    error))
+			return NULL;
+	}
 	fu_struct_efi_file_set_name(st, &guid);
 	fu_struct_efi_file_set_hdr_checksum(st, 0x0);
 	fu_struct_efi_file_set_data_checksum(st, 0x100 - fu_sum8_bytes(blob));

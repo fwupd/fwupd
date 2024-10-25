@@ -116,8 +116,10 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 	fwupd_guid_t guid = {0};
 	g_autoptr(FuStructEfiUpdateInfo) st = fu_struct_efi_update_info_new();
 
-	if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
-		return NULL;
+	if (self->guid != NULL) {
+		if (!fwupd_guid_from_string(self->guid, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
+			return NULL;
+	}
 	fu_struct_efi_update_info_set_guid(st, &guid);
 	fu_struct_efi_update_info_set_flags(st, self->capsule_flags);
 	fu_struct_efi_update_info_set_hw_inst(st, self->hw_inst);

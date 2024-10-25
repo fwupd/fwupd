@@ -1117,6 +1117,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	for (guint j = 0; j < firmware_gtypes->len; j++) {
 		GType gtype = g_array_index(firmware_gtypes, GType, j);
 		g_autoptr(FuFirmware) firmware = NULL;
+		g_autoptr(GBytes) blob = NULL;
 		g_debug("loading %s", g_type_name(gtype));
 		firmware = g_object_new(gtype, NULL);
 		g_assert_nonnull(firmware);
@@ -1130,6 +1131,9 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 						      NULL);
 			g_assert_false(ret);
 		}
+		blob = fu_firmware_write(firmware, NULL);
+		if (blob != NULL && g_bytes_get_size(blob) > 0)
+			g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
 	}
 }
 
