@@ -32,7 +32,6 @@
 struct _FuBcm57xxDevice {
 	FuPciDevice parent_instance;
 	gchar *ethtool_iface;
-	int ethtool_fd;
 };
 
 G_DEFINE_TYPE(FuBcm57xxDevice, fu_bcm57xx_device, FU_TYPE_PCI_DEVICE)
@@ -538,8 +537,11 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 {
 #ifdef HAVE_SOCKET_H
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	self->ethtool_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (self->ethtool_fd < 0) {
+	gint fd;
+	g_autoptr(FuIOChannel) io_channel = NULL;
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -551,6 +553,8 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 #endif
 		return FALSE;
 	}
+	io_channel = fu_io_channel_unix_new(fd);
+	fu_udev_device_set_io_channel(FU_UDEV_DEVICE(self), io_channel);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -559,13 +563,6 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 			    "socket() not supported as sys/socket.h not available");
 	return FALSE;
 #endif
-}
-
-static gboolean
-fu_bcm57xx_device_close(FuDevice *device, GError **error)
-{
-	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
-	return g_close(self->ethtool_fd, error);
 }
 
 static void
@@ -652,7 +649,6 @@ fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 	device_class->setup = fu_bcm57xx_device_setup;
 	device_class->reload = fu_bcm57xx_device_setup;
 	device_class->open = fu_bcm57xx_device_open;
-	device_class->close = fu_bcm57xx_device_close;
 	device_class->write_firmware = fu_bcm57xx_device_write_firmware;
 	device_class->attach = fu_bcm57xx_device_attach;
 	device_class->read_firmware = fu_bcm57xx_device_read_firmware;
