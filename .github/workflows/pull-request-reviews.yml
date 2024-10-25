@@ -29,3 +29,4 @@ jobs:
   matrix:
     needs: pre-commit
     uses: ./.github/workflows/matrix.yml
+    secrets: inherit

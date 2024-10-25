@@ -49,6 +49,13 @@ jobs:
         with:
           flag-name: run-${{ join(matrix.*, '-') }}
           parallel: true
+      - name: Save any coverage data
+        if: matrix.os == 'debian-x86_64'
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: coverage
+          path: ${{ github.workspace }}/coverage.xml
+          if-no-files-found: ignore
 
   finish:
     needs: build
@@ -59,6 +66,20 @@ jobs:
         with:
           parallel-finished: true
           carryforward: "run-debian-i386,run-debian-x86_64"
+
+  codecov:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download coverage data
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        id: download
+        with:
+          name: coverage
+      - name: Upload to codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   openbmc:
     runs-on: ubuntu-22.04
