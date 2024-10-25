@@ -297,15 +297,6 @@ fu_dell_k2_ec_probe_subcomponents(FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	/* Remote Management */
-	if (fu_dell_k2_ec_dev_entry(device, FU_DELL_K2_EC_DEV_TYPE_RMM, 0, 0) != NULL) {
-		g_autoptr(FuDellK2Rmm) rmm_device = NULL;
-
-		rmm_device = fu_dell_k2_rmm_new(device);
-		if (!fu_dell_k2_ec_create_node(device, FU_DEVICE(rmm_device), error))
-			return FALSE;
-	}
-
 	/* Intel i266-LM */
 	if (fu_dell_k2_ec_dev_entry(device, FU_DELL_K2_EC_DEV_TYPE_LAN, 0, 0) != NULL) {
 		g_autoptr(FuDellK2Ilan) ilan_device = NULL;
@@ -591,7 +582,7 @@ fu_dell_k2_ec_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 gboolean
-fu_dell_k2_ec_modify_lock(FuDevice *device, gboolean lock, GError **error)
+fu_dell_k2_ec_own_dock(FuDevice *device, gboolean lock, GError **error)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
 	g_autoptr(GByteArray) req = g_byte_array_new();
@@ -673,7 +664,7 @@ fu_dell_k2_ec_get_pd_version(FuDevice *device, guint8 sub_type, guint8 instance)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_PD;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, sub_type, instance);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 guint32
@@ -683,7 +674,7 @@ fu_dell_k2_ec_get_ilan_version(FuDevice *device)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_LAN;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, 0, 0);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 guint32
@@ -693,7 +684,7 @@ fu_dell_k2_ec_get_wtpd_version(FuDevice *device)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_WTPD;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, 0, 0);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 guint32
@@ -703,7 +694,7 @@ fu_dell_k2_ec_get_dpmux_version(FuDevice *device)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_DP_MUX;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, 0, 0);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 guint32
@@ -713,7 +704,7 @@ fu_dell_k2_ec_get_rmm_version(FuDevice *device)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_RMM;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, 0, 0);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 static guint32
@@ -723,14 +714,14 @@ fu_dell_k2_ec_get_ec_version(FuDevice *device)
 	FuDellK2EcDevType dev_type = FU_DELL_K2_EC_DEV_TYPE_MAIN_EC;
 
 	dev_entry = fu_dell_k2_ec_dev_entry(device, dev_type, 0, 0);
-	return (dev_entry == NULL) ? 0 : dev_entry->version.version_32;
+	return (dev_entry == NULL) ? 0 : GUINT32_FROM_BE(dev_entry->version.version_32);
 }
 
 guint32
 fu_dell_k2_ec_get_package_version(FuDevice *device)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
-	return self->dock_data->dock_firmware_pkg_ver;
+	return GUINT32_FROM_BE(self->dock_data->dock_firmware_pkg_ver);
 }
 
 gboolean
@@ -764,6 +755,175 @@ fu_dell_k2_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error)
 	return TRUE;
 }
 
+static guint
+fu_dell_k2_ec_get_chunk_delaytime(guint8 dev_type)
+{
+	switch (dev_type) {
+	case FU_DELL_K2_EC_DEV_TYPE_MAIN_EC:
+		return 3 * 1000;
+	case FU_DELL_K2_EC_DEV_TYPE_RMM:
+		return 60 * 1000;
+	case FU_DELL_K2_EC_DEV_TYPE_PD:
+		return 15 * 1000;
+	case FU_DELL_K2_EC_DEV_TYPE_LAN:
+		return 70 * 1000;
+	default:
+		return 30 * 1000;
+	}
+}
+
+static gsize
+fu_dell_k2_ec_get_chunk_size(guint8 dev_type)
+{
+	/* return the max chunk size in bytes */
+	switch (dev_type) {
+	case FU_DELL_K2_EC_DEV_TYPE_MAIN_EC:
+		return FU_DELL_K2_EC_DEV_EC_CHUNK_SZ;
+	case FU_DELL_K2_EC_DEV_TYPE_RMM:
+		return FU_DELL_K2_EC_DEV_NO_CHUNK_SZ;
+	default:
+		return FU_DELL_K2_EC_DEV_ANY_CHUNK_SZ;
+	}
+}
+
+static guint
+fu_dell_k2_ec_get_page_delaytime(guint8 dev_type)
+{
+	return (dev_type == FU_DELL_K2_EC_DEV_TYPE_LAN) ? 700 : 25;
+}
+
+static guint
+fu_dell_k2_ec_get_first_page_delaytime(guint8 dev_type)
+{
+	return (dev_type == FU_DELL_K2_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
+}
+
+gboolean
+fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
+				    FuFirmware *firmware,
+				    guint8 dev_type,
+				    guint8 dev_identifier,
+				    GError **error)
+{
+	gsize fw_sz = 0;
+	gsize chunk_sz = fu_dell_k2_ec_get_chunk_size(dev_type);
+	guint first_page_delay = fu_dell_k2_ec_get_first_page_delaytime(dev_type);
+	guint chunk_delay = fu_dell_k2_ec_get_chunk_delaytime(dev_type);
+	guint page_delay = fu_dell_k2_ec_get_page_delaytime(dev_type);
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
+
+	/* basic test */
+	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+
+	/* get default image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* payload size */
+	fw_sz = g_bytes_get_size(fw);
+
+	/* maximum buffer size */
+	chunks = fu_chunk_array_new_from_bytes(fw, 0, chunk_sz);
+
+	/* iterate the chunks */
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		guint8 res[FU_DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(FuChunkArray) pages = NULL;
+		g_autoptr(GBytes) buf = NULL;
+
+		chk = fu_chunk_array_index(chunks, i);
+		if (chk == NULL)
+			return FALSE;
+
+		/* prepend header and command to the chunk data */
+		buf = fu_dell_k2_ec_hid_fwup_pkg_new(chk, fw_sz, dev_type, dev_identifier);
+
+		/* slice the chunk into pages */
+		pages = fu_chunk_array_new_from_bytes(buf, 0, FU_DELL_K2_EC_HID_DATA_PAGE_SZ);
+
+		/* iterate the pages */
+		for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
+			guint8 page_aligned[FU_DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
+			g_autoptr(FuChunk) page = NULL;
+
+			page = fu_chunk_array_index(pages, j);
+			if (page == NULL)
+				return FALSE;
+
+			/* strictly align the page size with 0x00 as packet */
+			if (!fu_memcpy_safe(page_aligned,
+					    sizeof(page_aligned),
+					    0,
+					    fu_chunk_get_data(page),
+					    fu_chunk_get_data_sz(page),
+					    0,
+					    fu_chunk_get_data_sz(page),
+					    error))
+				return FALSE;
+
+			/* send to ec */
+			g_debug("sending chunk: %u, page: %u.", i, j);
+			if (!fu_dell_k2_ec_hid_write(
+				device,
+				g_bytes_new(page_aligned, sizeof(page_aligned)),
+				error))
+				return FALSE;
+
+			/* device needs time to process incoming pages */
+			if (j == 0) {
+				g_debug("wait %u ms before the next page", first_page_delay);
+
+				fu_device_sleep(device, first_page_delay);
+			}
+
+			fu_device_sleep(device, page_delay);
+		}
+
+		/* delay time */
+		g_debug("wait %u ms for dock to finish the chunk", chunk_delay);
+		fu_device_sleep(device, chunk_delay);
+
+		/* ensure the chunk has been acknowledged */
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
+					      0x0,
+					      res,
+					      sizeof(res),
+					      FU_DELL_K2_EC_HID_TIMEOUT,
+					      FU_HID_DEVICE_FLAG_NONE,
+					      error))
+			return FALSE;
+
+		switch (res[1]) {
+		case FU_DELL_K2_EC_RESP_TO_CHUNK_UPDATE_COMPLETE:
+			g_debug("dock response '%u' to chunk[%u]: firmware updated successfully.",
+				res[1],
+				i);
+			break;
+		case FU_DELL_K2_EC_RESP_TO_CHUNK_SEND_NEXT_CHUNK:
+			g_debug("dock response '%u' to chunk[%u]: send next chunk.", res[1], i);
+			break;
+		case FU_DELL_K2_EC_RESP_TO_CHUNK_UPDATE_FAILED:
+		default:
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "dock response '%u' to chunk[%u]: failed to write firmware.",
+				    res[1],
+				    i);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	g_debug("firmware written successfully");
+
+	return TRUE;
+}
+
 static gboolean
 fu_dell_k2_ec_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
@@ -771,62 +931,11 @@ fu_dell_k2_ec_write_firmware(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) fw_whdr = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 1, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 12, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 85, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1, NULL);
-
-	if (!fu_dell_k2_ec_hid_raise_mcu_clock(device, TRUE, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* construct writing buffer */
-	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, FU_DELL_K2_EC_DEV_TYPE_MAIN_EC, 0);
-
-	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr, 0, FU_DELL_K2_EC_HID_DATA_PAGE_SZ);
-
-	/* erase */
-	if (!fu_dell_k2_ec_hid_erase_bank(device, 0xff, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* write to device */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-
-		if (chk == NULL)
-			return FALSE;
-
-		if (!fu_dell_k2_ec_hid_write(device, fu_chunk_get_bytes(chk), error))
-			return FALSE;
-	}
-	fu_progress_step_done(progress);
-
-	if (!fu_dell_k2_ec_hid_raise_mcu_clock(device, FALSE, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* check version is not required */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-
-	/* success */
-	g_debug("ec firmware written successfully");
-	return TRUE;
+	return fu_dell_k2_ec_write_firmware_helper(device,
+						   firmware,
+						   FU_DELL_K2_EC_DEV_TYPE_MAIN_EC,
+						   0,
+						   error);
 }
 
 static gboolean
@@ -878,7 +987,7 @@ fu_dell_k2_ec_setup(FuDevice *device, GError **error)
 	}
 
 	/* setup version */
-	ec_version = GUINT32_FROM_BE(fu_dell_k2_ec_get_ec_version(device));
+	ec_version = fu_dell_k2_ec_get_ec_version(device);
 	fu_device_set_version_raw(device, ec_version);
 
 	/* create the subcomponents */
@@ -938,6 +1047,7 @@ fu_dell_k2_ec_init(FuDellK2Ec *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN);

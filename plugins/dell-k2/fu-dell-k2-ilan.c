@@ -44,7 +44,7 @@ fu_dell_k2_ilan_setup(FuDevice *device, GError **error)
 
 	/* version */
 	version_raw = fu_dell_k2_ec_get_ilan_version(proxy);
-	fu_device_set_version_raw(device, GUINT32_FROM_BE(version_raw));
+	fu_device_set_version_raw(device, version_raw);
 	return TRUE;
 }
 
@@ -55,51 +55,11 @@ fu_dell_k2_ilan_write(FuDevice *device,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GBytes) fw_whdr = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-
-	/* basic tests */
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-
-	/* get default firmware image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* construct writing buffer */
-	fw_whdr = fu_dell_k2_ec_hid_fwup_pkg_new(fw, FU_DELL_K2_EC_DEV_TYPE_LAN, 0);
-
-	/* prepare the chunks */
-	chunks = fu_chunk_array_new_from_bytes(fw_whdr, 0, FU_DELL_K2_EC_HID_DATA_PAGE_SZ);
-
-	/* write to device */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i);
-
-		if (chk == NULL)
-			return FALSE;
-
-		if (!fu_dell_k2_ec_hid_write(proxy, fu_chunk_get_bytes(chk), error))
-			return FALSE;
-
-		/* update progress */
-		fu_progress_set_percentage_full(progress,
-						(gsize)i + 1,
-						(gsize)fu_chunk_array_length(chunks));
-	}
-
-	/* check version is not required */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-
-	/* success */
-	g_debug("Intel LAN firmware written successfully");
-	return TRUE;
+	return fu_dell_k2_ec_write_firmware_helper(fu_device_get_proxy(device),
+						   firmware,
+						   FU_DELL_K2_EC_DEV_TYPE_LAN,
+						   0,
+						   error);
 }
 
 static void
@@ -120,6 +80,7 @@ fu_dell_k2_ilan_init(FuDellK2Ilan *self)
 	fu_device_add_icon(FU_DEVICE(self), "network-wired");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);

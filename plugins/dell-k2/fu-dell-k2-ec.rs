@@ -92,3 +92,10 @@ enum K2DockSku {
     Tbt4,
     Tbt5,
 }
+
+#[repr(u8)] // dock resp to chunk write
+enum DellK2EcRespToChunk {
+    UpdateComplete = 1,
+    SendNextChunk,
+    UpdateFailed,
+}
