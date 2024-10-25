@@ -68,6 +68,8 @@ fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag) G_
 
 FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,
