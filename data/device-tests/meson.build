@@ -22,6 +22,7 @@ install_data([
     'fwupd-a3bu-xplained.json',
     'fwupd-at90usbkey.json',
     'gigadevice-gd32vf103.json',
+    'google-sargo-fastboot.json',
     'google-servo-micro.json',
     'hp-910-bt-keyboard.json',
     'hp-910-bt-mouse.json',

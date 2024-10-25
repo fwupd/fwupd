@@ -1,0 +1,18 @@
+{
+  "name": "Google Sargo Fastboot",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/google-sargo-fastboot-emulation.zip",
+      "components": [
+        {
+          "version": "1.0",
+          "version-bootloader": "b4s4-0.4-8048689",
+          "guids": [
+            "4980b2e3-f8f0-5434-8a41-031e35500953"
+          ]
+        }
+      ]
+    }
+  ]
+}
