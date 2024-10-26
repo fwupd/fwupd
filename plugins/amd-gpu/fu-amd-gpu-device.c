@@ -135,30 +135,81 @@ fu_amd_gpu_device_set_marketing_name(FuDevice *device)
 }
 
 static gboolean
+fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz, GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	struct drm_amdgpu_info request = {
+	    .query = AMDGPU_INFO_VBIOS,
+	    .return_pointer = GPOINTER_TO_SIZE(buf),
+	    .return_size = bufsz,
+	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
+	};
+
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("DrmAmdgpuInfoIoctl:"
+					   "Data=%s,"
+					   "Length=0x%x",
+					   buf_base64,
+					   (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
+
+	/* we can't use the emulation support in fu_udev_device_ioctl() as
+	 * the buffer is specified indirectly using return_pointer */
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  DRM_IOCTL_AMDGPU_INFO,
+				  (guint8 *)&request,
+				  sizeof(request),
+				  NULL,
+				  1000, /* ms */
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				  error)) {
+		g_prefix_error(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
+		return FALSE;
+	}
+	if (event != NULL)
+		fu_device_event_set_data(event, "DataOut", buf, bufsz);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 {
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
-	struct drm_amdgpu_info_vbios vbios_info;
-	struct drm_amdgpu_info request = {
-	    .query = AMDGPU_INFO_VBIOS,
-	    .return_pointer = GPOINTER_TO_SIZE(&vbios_info),
-	    .return_size = sizeof(struct drm_amdgpu_info_vbios),
-	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
-	};
+	struct drm_amdgpu_info_vbios vbios_info = {0};
 	g_autofree gchar *part = NULL;
 	g_autofree gchar *ver = NULL;
 	g_autofree gchar *model = NULL;
 
 	fu_amd_gpu_device_set_marketing_name(device);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				  DRM_IOCTL_AMDGPU_INFO,
-				  (void *)&request,
-				  sizeof(request),
-				  NULL,
-				  1000,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	if (!fu_amd_gpu_device_ioctl_drm_info(self,
+					      (guint8 *)&vbios_info,
+					      sizeof(vbios_info),
+					      error))
 		return FALSE;
 	self->vbios_pn = fu_strsafe((const gchar *)vbios_info.vbios_pn, PART_NUM_STR_SIZE);
 	part = g_strdup_printf("AMD\\%s", self->vbios_pn);
