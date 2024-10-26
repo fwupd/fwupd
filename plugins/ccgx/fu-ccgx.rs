@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ParseBytes)]
+#[derive(New, ParseBytes, Default)]
 struct FuStructCcgxMetadataHdr {
     fw_checksum: u8,
     fw_entry: u32le,

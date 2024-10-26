@@ -30,7 +30,7 @@ struct FuStructIgscOpromSubsystemDevice4Id {
     subsys_device_id: u16le,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructIgscFwuGwsImageInfo {
     format_version: u32le == 0x1,
     instance_id: u32le,
@@ -60,12 +60,12 @@ struct FuStructIgscFwuIupData {
     vcn: u32le,
 }
 
-#[derive(Getters)]
+#[derive(Getters, Default)]
 struct FuStructIgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructIgscFwuImageMetadataV1 {
     version_format: u32le = 0x1,  // struct IgscFwuHeciImageMetadata
     project: [char; 4],

@@ -49,7 +49,7 @@ enum FuCfuOfferStatus {
     CmdNotSupported = 0xFF,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructCfuOfferInfoReq {
     code: FuCfuOfferInfoCode,
     _reserved1: u8,

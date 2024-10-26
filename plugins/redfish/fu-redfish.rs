@@ -55,7 +55,7 @@ enum FuRedfishSmbiosInterfaceType {
     Oem = 0xF0,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructRedfishSmbiosType42 {
     type: u8 == 42,
     length: u8,

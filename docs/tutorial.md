@@ -884,7 +884,7 @@ highlighting support work correctly.
 Although these files *look like* Rust files they're *not actually compiled by
 rustc*, so small differences may be noticeable.
 
-    #[derive(New, Validate, Parse)]
+    #[derive(New, Validate, Parse, Default)]
     struct FuExampleHdr {
         magic: Guid,
         hdrver: u8,
@@ -926,7 +926,7 @@ Arrays of types are also allowed, with the format `[type; multiple]`, for exampl
 - `str: [char; 4] = "ABCD"` for a C array of `gchar buf[4] = {'A','B','C','D'};`
   -- NOTE: `fu_struct_example_get_str()` would return a `NUL`-terminated string of `ABCD\0`.
 
-Additionally, default or constant values can be auto-populated:
+Additionally, default or constant values can be auto-populated with the `Default` trait:
 
 - `$struct_size`: the total struct size
 - `$struct_offset`: the internal offset in the struct

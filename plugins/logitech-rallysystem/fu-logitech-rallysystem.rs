@@ -25,21 +25,21 @@ enum FuUsbCmdStatus {
     InitReqAck = 0x0999,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructUsbInitRequest {
     id: FuUsbCmdId == Init,
     status: FuUsbCmdStatus == InitReq,
     len: u32le == 0,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructUsbInitResponse {
     id: FuUsbCmdId == Init,
     status: FuUsbCmdStatus == InitReqAck,
     len: u32le == 0, // inferred
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructUsbFirmwareDownloadRequest {
     id: FuUsbCmdId == FirmwareDownload,
     status: FuUsbCmdStatus == Req,
@@ -47,14 +47,14 @@ struct FuStructUsbFirmwareDownloadRequest {
     fw_version: [char; 16],
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructUsbFirmwareDownloadResponse {
     id: FuUsbCmdId == FirmwareDownload,
     status: FuUsbCmdStatus == Ok,
     len: u32le,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructUsbReadVersionRequest {
     id: FuUsbCmdId == ReadVersion,
     status: FuUsbCmdStatus == Req,

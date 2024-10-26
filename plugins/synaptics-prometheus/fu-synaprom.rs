@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, Default)]
 struct FuStructSynapromMfwHdr {
     product: u32le,
     id: u32le = 0xFF,		// MFW unique id used for compat verification
@@ -27,7 +27,7 @@ struct FuStructSynapromHdr {
     bufsz: u32le,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructSynapromCfgHdr {
     product: u32le = 65, // Prometheus (b1422)
     id1: u32le,

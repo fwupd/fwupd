@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructIfwiCpd {
     header_marker: u32le == 0x44504324,
     num_of_entries: u32le,
@@ -42,7 +42,7 @@ struct FuStructIfwiCpdManifestExt {
     extension_length: u32le,
 }
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructIfwiFpt {
     header_marker: u32le == 0x54504624,
     num_of_entries: u32le,

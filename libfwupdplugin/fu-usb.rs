@@ -76,7 +76,7 @@ struct FuUsbBaseHdr {
     descriptor_type: FuUsbDescriptorKind,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuUsbDeviceHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Device,
@@ -94,7 +94,7 @@ struct FuUsbDeviceHdr {
     num_configurations: u8,
 };
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuUsbDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Config,
@@ -106,7 +106,7 @@ struct FuUsbDescriptorHdr {
     max_power: u8,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuUsbHidDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Hid,
@@ -117,7 +117,7 @@ struct FuUsbHidDescriptorHdr {
     class_descriptor_length: u16le,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseBytes, Default)]
 struct FuUsbDfuDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Hid,
@@ -127,7 +127,7 @@ struct FuUsbDfuDescriptorHdr {
     dfu_version: u16le,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuUsbInterfaceHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Interface,

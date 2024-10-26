@@ -1,7 +1,7 @@
 // Copyright 2023 Advanced Micro Devices Inc.
 // SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructEfs {
     signature: u32le = 0x55aa55aa,
     reserved: [u32le; 4],
@@ -14,7 +14,7 @@ struct FuStructEfs {
     _rom_strap_b_loc: u32le,
 }
 
-#[derive(ParseStream, ValidateStream, Getters)]
+#[derive(ParseStream, ValidateStream, Getters, Default)]
 struct FuStructPspDir {
     cookie: [char; 4] == "$PSP",
     checksum: u32le,

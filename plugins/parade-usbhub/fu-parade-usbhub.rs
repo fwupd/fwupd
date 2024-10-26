@@ -1,7 +1,7 @@
 // Copyright 2024 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructParadeUsbhubHdr {
     signature: u16be == 0x55AA,
 }

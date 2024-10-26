@@ -16,7 +16,7 @@ enum FuIfdRegion {
     Max = 0x0F,
 }
 
-#[derive(ParseStream, New, ValidateStream)]
+#[derive(ParseStream, New, ValidateStream, Default)]
 struct FuStructIfdFdbar {
     reserved: [u8; 16] = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
     signature: u32le == 0x0FF0A55A,

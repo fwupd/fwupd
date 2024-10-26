@@ -47,7 +47,7 @@ enum FuClientFlag {
     Active = 1 << 0,
 }
 
-#[derive(ParseBytes)]
+#[derive(ParseBytes, Default)]
 struct FuStructUdevMonitorNetlinkHeader {
     prefix: [char; 8] == "libudev",
     magic: u32be == 0xFEEDCAFE,

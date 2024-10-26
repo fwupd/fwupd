@@ -1,7 +1,7 @@
 // Copyright 2024 Advanced Micro Devices Inc.
 // SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructAmdKriaPersistReg {
     id_sig: [char; 4] == "ABUM",
     ver: u32le,

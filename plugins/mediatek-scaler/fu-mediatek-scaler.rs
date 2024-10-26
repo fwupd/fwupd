@@ -27,7 +27,7 @@ enum FuDdcVcpCode {
     Version = 0xFF,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructDdcCmd {
     opcode: FuDdcOpcode = Req,
     vcp_code: FuDdcVcpCode,

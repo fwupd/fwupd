@@ -1,12 +1,12 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructAcpiPhatHdr {
     magic: [char; 4] == "PHAT",
 }
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, Default)]
 struct FuStructAcpiPhatHealthRecord {
     signature: u16le = 0x1,
     rcdlen: u16le,
@@ -24,7 +24,7 @@ struct FuStructAcpiPhatVersionElement {
     producer_id: [char; 4],
 }
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, Default)]
 struct FuStructAcpiPhatVersionRecord {
     signature: u16le = 0x0,
     rcdlen: u16le,

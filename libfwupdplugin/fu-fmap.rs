@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructFmap {
     signature: [char; 8] == "__FMAP__",
     ver_major: u8 = 0x1,

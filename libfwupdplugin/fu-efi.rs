@@ -40,7 +40,7 @@ enum FuEfiFileType {
     FfsPad = 0xF0,
 }
 
-#[derive(New, Validate, ParseStream)]
+#[derive(New, Validate, ParseStream, Default)]
 struct FuStructEfiFile {
     name: Guid,
     hdr_checksum: u8,
@@ -131,7 +131,7 @@ struct FuStructEfiSectionGuidDefined {
     attr: u16le,
 }
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructEfiVolume {
     zero_vector: Guid,
     guid: Guid,
@@ -205,7 +205,7 @@ enum FuEfiDevicePathType {
     End = 0x7F,
 }
 
-#[derive(ParseStream, New)]
+#[derive(ParseStream, New, Default)]
 struct FuStructEfiDevicePath {
     type: FuEfiDevicePathType,
     subtype: u8 = 0xFF,
@@ -240,7 +240,7 @@ enum FuEfiHardDriveDevicePathSignatureType {
     Guid,
 }
 
-#[derive(ParseStream, New)]
+#[derive(ParseStream, New, Default)]
 struct FuStructEfiHardDriveDevicePath {
     type: FuEfiDevicePathType == Media,
     subtype: FuEfiHardDriveDevicePathSubtype = HardDrive,
@@ -253,7 +253,7 @@ struct FuStructEfiHardDriveDevicePath {
     signature_type: FuEfiHardDriveDevicePathSignatureType = Guid,
 }
 
-#[derive(ParseStream, New)]
+#[derive(ParseStream, New, Default)]
 struct FuStructShimHive {
     magic: [char; 4] == "HIVE",
     header_version: u8 = 0x1,

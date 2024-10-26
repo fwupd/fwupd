@@ -160,6 +160,7 @@ class StructObj:
             "ParseInternal": Export.NONE,
             "New": Export.NONE,
             "ToString": Export.NONE,
+            "Default": Export.NONE,
         }
 
     def c_method(self, suffix: str):
@@ -670,6 +671,11 @@ class Generator:
                     )
                 except ValueError as e:
                     raise ValueError(f"{str(e)} on line {line_num}: {line}")
+                if len(type_parts) > 1:
+                    if "Default" not in derives:
+                        raise ValueError(
+                            f"struct requires #[derive(Default)] for line {line_num}: {line}"
+                        )
                 if len(type_parts) == 3:
                     item.parse_constant(type_parts[2])
                 elif len(type_parts) == 2:

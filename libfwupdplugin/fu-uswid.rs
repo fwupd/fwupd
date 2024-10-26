@@ -13,7 +13,7 @@ enum FuUswidPayloadCompression {
     Lzma = 0x02,
 }
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructUswid {
     magic: Guid == 0x53424F4DD6BA2EACA3E67A52AAEE3BAF,
     hdrver: u8,

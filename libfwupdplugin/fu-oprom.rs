@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructOprom {
     signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
@@ -15,7 +15,7 @@ struct FuStructOprom {
     expansion_header_offset: u16le,
 }
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, Default)]
 struct FuStructOpromPci {
     signature: u32le == 0x52494350,
     vendor_id: u16le,

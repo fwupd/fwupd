@@ -24,7 +24,7 @@ struct FuStructEdidDescriptor {
     data: [u8; 13],
 }
 
-#[derive(New, ParseStream)]
+#[derive(New, ParseStream, Default)]
 struct FuStructEdid {
     header: [u8; 8] == 0x00FFFFFFFFFFFF00,
     manufacturer_name: [u8; 2],

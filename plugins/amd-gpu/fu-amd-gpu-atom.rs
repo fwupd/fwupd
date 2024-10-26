@@ -17,7 +17,7 @@ struct FuStructVbiosDate {
     _nullchar: u8,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructAtomImage {
     signature: u16be = 0x55aa,
     size: u16le,
@@ -46,7 +46,7 @@ struct FuStructAtomHeaderCommon {
     content_rev: u8,
 }
 
-#[derive(ParseStream, ValidateStream)]
+#[derive(ParseStream, ValidateStream, Default)]
 struct FuStructAtomRom21Header {
     header: FuStructAtomHeaderCommon,
     signature: [char; 4] == "ATOM" ,
