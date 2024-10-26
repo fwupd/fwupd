@@ -123,12 +123,15 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_amd_gpu_device_set_marketing_name(FuDevice *device)
+fu_amd_gpu_device_set_marketing_name(FuAmdGpuDevice *self)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(device));
-	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
+	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	amdgpu_device_handle device_handle = {0};
 	gint r;
+
+	/* ignore */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+		return;
 
 	r = amdgpu_device_initialize(fu_io_channel_unix_get_fd(io_channel),
 				     &self->drm_major,
@@ -137,7 +140,7 @@ fu_amd_gpu_device_set_marketing_name(FuDevice *device)
 	if (r == 0) {
 		const gchar *marketing_name = amdgpu_get_marketing_name(device_handle);
 		if (marketing_name != NULL)
-			fu_device_set_name(device, marketing_name);
+			fu_device_set_name(FU_DEVICE(self), marketing_name);
 	} else
 		g_warning("unable to set marketing name: %s", g_strerror(r));
 }
@@ -193,7 +196,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *ver = NULL;
 	g_autofree gchar *model = NULL;
 
-	fu_amd_gpu_device_set_marketing_name(device);
+	fu_amd_gpu_device_set_marketing_name(self);
 
 	if (!fu_amd_gpu_device_ioctl_drm_info(self,
 					      (guint8 *)&vbios_info,
