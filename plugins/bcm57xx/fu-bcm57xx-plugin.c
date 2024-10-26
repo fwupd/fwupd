@@ -26,6 +26,7 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 				       FuProgress *progress,
 				       GError **error)
 {
+	gboolean exists_net = FALSE;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -47,7 +48,9 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 		fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)),
 				      "net",
 				      NULL);
-		if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		if (!fu_device_query_file_exists(device, fn, &exists_net, error))
+			return FALSE;
+		if (!exists_net) {
 			g_debug("waiting for net devices to appear");
 			fu_device_sleep(device, 50); /* ms */
 		}

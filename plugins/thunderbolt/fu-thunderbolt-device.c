@@ -67,13 +67,16 @@ fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GEr
 gboolean
 fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error)
 {
+	gboolean exists_authorized = FALSE;
 	guint64 status = 0;
-	g_autofree gchar *attribute = NULL;
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
-	/* read directly from file to prevent udev caching */
+	g_autofree gchar *attribute = NULL;
 	g_autofree gchar *safe_path = g_build_path("/", devpath, "authorized", NULL);
 
-	if (!g_file_test(safe_path, G_FILE_TEST_EXISTS)) {
+	/* read directly from file to prevent udev caching */
+	if (!fu_device_query_file_exists(FU_DEVICE(self), safe_path, &exists_authorized, error))
+		return FALSE;
+	if (!exists_authorized) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

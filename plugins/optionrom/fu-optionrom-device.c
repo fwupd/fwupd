@@ -17,11 +17,14 @@ G_DEFINE_TYPE(FuOptionromDevice, fu_optionrom_device, FU_TYPE_PCI_DEVICE)
 static gboolean
 fu_optionrom_device_probe(FuDevice *device, GError **error)
 {
+	gboolean exists_fn = FALSE;
 	g_autofree gchar *fn = NULL;
 
 	/* does the device even have ROM? */
 	fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)), "rom", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(device, fn, &exists_fn, error))
+		return FALSE;
+	if (!exists_fn) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
