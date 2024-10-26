@@ -1,19 +1,19 @@
 // Copyright 2023 Adam.Chen <Adam.Chen@genesyslogic.com.tw>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructGenesysFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "XROM",
 }
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructGenesysDevFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "HOST",
 }
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructGenesysPdFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "PRDY",
@@ -212,7 +212,7 @@ enum FuGenesysFwCodesign {
     Ecdsa,
 }
 
-#[derive(ParseStream, ValidateStream)]
+#[derive(ParseStream, ValidateStream, Default)]
 struct FuStructGenesysFwCodesignInfoRsa {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -223,7 +223,7 @@ struct FuStructGenesysFwCodesignInfoRsa {
     signature: [u8; 256],
 }
 
-#[derive(Parse, Validate)]
+#[derive(Parse, Validate, Default)]
 struct FuStructGenesysFwRsaPublicKeyText {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],

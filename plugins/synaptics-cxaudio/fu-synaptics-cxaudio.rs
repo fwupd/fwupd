@@ -50,13 +50,13 @@ struct FuStructSynapticsCxaudioCustomInfo {
     serial_number_string_address: u16le,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructSynapticsCxaudioStringHeader {
     length: u8,
     type: u8 == 0x03,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructSynapticsCxaudioValiditySignature {
     magic_byte: u8 = 0x4C,    // 'L'
     eeprom_size_code: u8,

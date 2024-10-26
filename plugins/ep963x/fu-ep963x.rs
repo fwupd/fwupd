@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructEp963xFirmwareHdr {
     reserved: [u8; 16],
     magic: [char; 5] == "EP963",

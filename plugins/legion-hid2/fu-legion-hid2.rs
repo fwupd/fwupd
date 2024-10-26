@@ -16,7 +16,7 @@ enum FuLegionHid2ReportId {
     Communication = 0x4,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructLegionGetVersion {
     cmd: u8 == 0x01,
 }
@@ -28,7 +28,7 @@ struct FuStructLegionVersion {
     reserved: [u8; 59],
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructLegionGetMcuId {
     cmd: u8 == 0x02,
 }
@@ -39,7 +39,7 @@ struct FuStructLegionMcuId {
     reserved: [u8; 52],
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructLegionStartIap {
     cmd: u8 == 0xE1,
     data: [char; 7] == "UPGRADE",
@@ -90,7 +90,7 @@ struct FuStructLegionIapTlv {
 }
 
 // Parsing firmware update header
-#[derive(Getters, ParseStream)]
+#[derive(Getters, ParseStream, Default)]
 struct FuStructLegionHid2Header {
     magic: [char; 7] == "#Legion",
     reserved: [u8; 7],
@@ -100,7 +100,7 @@ struct FuStructLegionHid2Header {
     data_len: u32,
 }
 
-#[derive(Getters, ParseStream)]
+#[derive(Getters, ParseStream, Default)]
 struct FuStructLegionHid2Version {
     signature: [char; 7] == "VERSION",
     reserved: u8,

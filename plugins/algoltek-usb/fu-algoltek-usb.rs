@@ -13,7 +13,7 @@ enum FuAlgoltekCmd {
     Rst = 0x20,
 }
 
-#[derive(ParseStream, ValidateStream)]
+#[derive(ParseStream, ValidateStream, Default)]
 struct FuStructAlgoltekProductIdentity {
     header_len: u8,
     header: u64le == 0x4B45544C4F474C41, // 'A' 'L' 'G' 'O' 'L' 'T' 'E' 'K'

@@ -71,7 +71,7 @@ enum FuUsiDockSpiCmd {
     ErrorEnd = 0x09,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructUsiDockHidReq {
     id: u8 == 2,
     length: u8,
@@ -79,7 +79,7 @@ struct FuStructUsiDockHidReq {
     tag3: FuUsiDockTag2,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructUsiDockMcuCmdReq {
     id: u8 == 2,
     length: u8,
@@ -89,7 +89,7 @@ struct FuStructUsiDockMcuCmdReq {
     tag3: FuUsiDockTag2,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructUsiDockMcuCmdRes {
     id: u8 == 2,
     cmd1: FuUsiDockMcuCmd,

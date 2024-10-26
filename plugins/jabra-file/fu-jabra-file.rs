@@ -10,7 +10,7 @@ enum FuJabraFilePacketCmd {
     Video = 0x26,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuJabraFilePacket {
     iface: u8 == 0x05,
     dst: u8,

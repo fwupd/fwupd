@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(ValidateStream)]
+#[derive(ValidateStream, Default)]
 struct FuStructWacFirmwareHdr {
     magic: [char; 5] == "WACOM",
 }
@@ -85,14 +85,14 @@ enum FuWacDeviceStatus {
     WriteProtected = 1 << 4,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructId9UnknownCmd {
     unknown1: u16be == 0x7050,
     unknown2: u32be == 0,
     size: u16be,                  // Size of payload to be transferred
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructId9SpiCmd {
     command: u8 == 0x91,
     start_addr: u32be == 0,

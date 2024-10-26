@@ -1,7 +1,7 @@
 // Copyright {{Year}} {{Author}} <{{Email}}>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStruct{{VendorExample}} {
     signature: u8 == 0xDE,
     address: u16le,

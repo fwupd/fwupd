@@ -84,14 +84,14 @@ enum FuWacomRawFwCmd {
     Detach = 0x02,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructWacomRawFwStatusRequest {
     report_id: FuWacomRawFwReportId == Status,
     _reserved2: [u8; 15],
 }
 
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructWacomRawFwStatusResponse {
     report_id: FuWacomRawFwReportId == Status,
     _reserved1: [u8; 10],
@@ -100,19 +100,19 @@ struct FuStructWacomRawFwStatusResponse {
     _reserved2: [u8; 2],
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructWacomRawFwDetachRequest {
     report_id: FuWacomRawFwReportId == General,
     cmd: FuWacomRawFwCmd == Detach,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructWacomRawFwQueryModeRequest {
     report_id: FuWacomRawFwReportId == General,
     cmd: FuWacomRawFwCmd == QueryMode,
 }
 
-#[derive(Parse)]
+#[derive(Parse, Default)]
 struct FuStructWacomRawFwQueryModeResponse {
     report_id: FuWacomRawFwReportId == General,
     mode: FuWacomRawOperationMode,

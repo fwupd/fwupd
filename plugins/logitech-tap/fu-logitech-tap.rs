@@ -22,7 +22,7 @@ enum FuStructLogitechTapTouchHidCmd {
     SetTdeTestMode = 0xF2,
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructLogitechTapTouchHidReq {
     report_id: u8 == 0x03,
     // response buffer is always going to be less than 64 bytes for this hardware/plugin
@@ -80,7 +80,7 @@ enum FuLogitechTapSensorHidGetCmd {
      SerialNumber = 0x1D,
 }
  
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructLogitechTapSensorHidReq {
      cmd: FuLogitechTapSensorHidSetCmd,
       //payload goes here

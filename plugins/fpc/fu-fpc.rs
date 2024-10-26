@@ -15,7 +15,7 @@ struct FuStructFpcDfu {
     _reserved2: u8,
 }
 
-#[derive(ValidateStream, ParseStream)]
+#[derive(ValidateStream, ParseStream, Default)]
 struct FuStructFpcFf2Hdr {
     compat_sig: [char; 7] == "FPC0001",
     reserved: [u8; 20],
@@ -30,7 +30,7 @@ enum FuFpcFf2BlockDir {
 }
 
 // dfu_meta_content_hdr_t
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructFpcFf2BlockHdr {
     meta_type: u8 == 0xCD,
     meta_id: u8,
@@ -38,7 +38,7 @@ struct FuStructFpcFf2BlockHdr {
 }
 
 // dfu_sec_link_t
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructFpcFf2BlockSec {
     header: u8 == 0xEE,
     type: u8,

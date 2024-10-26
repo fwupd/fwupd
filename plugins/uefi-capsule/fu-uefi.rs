@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, Getters)]
+#[derive(New, Getters, Default)]
 struct FuStructEfiUxCapsuleHeader {
     version: u8 == 0x01,
     checksum: u8,
@@ -12,7 +12,7 @@ struct FuStructEfiUxCapsuleHeader {
     y_offset: u32le,
 }
 
-#[derive(New, Getters)]
+#[derive(New, Getters, Default)]
 struct FuStructEfiCapsuleHeader {
     guid: Guid,
     header_size: u32le = $struct_size,
@@ -28,7 +28,7 @@ enum FuUefiUpdateInfoStatus {
     Attempted,
 }
 
-#[derive(New, Parse, ParseStream)]
+#[derive(New, Parse, ParseStream, Default)]
 struct FuStructEfiUpdateInfo {
     version: u32le = 0x7,
     guid: Guid,
@@ -68,7 +68,7 @@ enum FuUefiDeviceStatus {
     ErrorPwrEvtBatt,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructBitmapFileHeader {
     signature: [char; 2] == "BM",
     size: u32le,

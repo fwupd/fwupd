@@ -41,7 +41,7 @@ struct FuStructCrosEcUpdateFrameHeader {
     // payload goes here
 }
 
-#[derive(New)]
+#[derive(New, Default)]
 struct FuStructCrosEcUpdateDone {
     value: u32be == 0xB007AB1E,
 }

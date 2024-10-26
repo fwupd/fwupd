@@ -45,7 +45,7 @@ struct FuStructCabFolder {
     compression: FuCabCompression,
 }
 
-#[derive(ParseStream, ValidateStream, New)]
+#[derive(ParseStream, ValidateStream, New, Default)]
 struct FuStructCabHeader {
     signature: [char; 4] == "MSCF",
     _reserved1: [u8; 4],

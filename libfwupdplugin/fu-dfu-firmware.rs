@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructDfuFtr {
     release: u16le,
     pid: u16le,
@@ -12,7 +12,7 @@ struct FuStructDfuFtr {
     crc: u32le,
 }
 
-#[derive(New, ValidateStream, ParseStream)]
+#[derive(New, ValidateStream, ParseStream, Default)]
 struct FuStructDfuseHdr {
     sig: [char; 5] == "DfuSe",
     ver: u8 == 0x01,
@@ -20,7 +20,7 @@ struct FuStructDfuseHdr {
     targets: u8,
 }
 
-#[derive(New, Validate, ParseStream)]
+#[derive(New, Validate, ParseStream, Default)]
 struct FuStructDfuseImage {
     sig: [char; 6] == "Target",
     alt_setting: u8,

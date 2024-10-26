@@ -51,7 +51,7 @@ enum FuKineticDpFwState {
     App = 3,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 struct FuStructKineticDpPumaHeader {
     _unknown: u8,
     object_count: u8 == 8,

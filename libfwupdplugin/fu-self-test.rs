@@ -7,7 +7,7 @@ enum FuSelfTestRevision {
     All	= 0xF_F,
 }
 
-#[derive(New, Validate, Parse, ToString)]
+#[derive(New, Validate, Parse, ToString, Default)]
 struct FuStructSelfTest {
     signature: u32be == 0x1234_5678,
     length: u32le = $struct_size, // bytes
@@ -34,7 +34,7 @@ enum FuStructSelfTestLower {
     Two = 0x2,
 }
 
-#[derive(New, Parse, ToString)]
+#[derive(New, Parse, ToString, Default)]
 struct FuStructSelfTestBits {
     lower: FuStructSelfTestLower = Two,
     middle: u1 = 0b1,

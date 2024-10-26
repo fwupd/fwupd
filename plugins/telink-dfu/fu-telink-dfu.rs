@@ -19,7 +19,7 @@ enum FuTelinkDfuCmd {
     OtaError        = 0xff07,
 }
 
-#[derive(New, Getters)]
+#[derive(New, Getters, Default)]
 struct FuStructTelinkDfuBlePkt {
     preamble: u16,
     payload: [u8; 16] = 0xFF,

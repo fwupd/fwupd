@@ -10,7 +10,7 @@ enum FuElfFileHeaderType {
     Core = 0x04,
 }
 
-#[derive(ParseStream, ValidateStream, New)]
+#[derive(ParseStream, ValidateStream, New, Default)]
 struct FuStructElfFileHeader64le {
     ei_magic: [char; 4] == "\x7F\x45\x4C\x46",
     ei_class: u8 == 0x2, // 64-bit format
