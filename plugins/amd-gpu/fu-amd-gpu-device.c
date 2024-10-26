@@ -46,35 +46,74 @@ fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_amd_gpu_device_set_device_file(FuDevice *device, const gchar *base, GError **error)
+fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GError **error)
 {
+	FuDeviceEvent *event = NULL;
 	const gchar *f;
 	g_autofree gchar *ddir = NULL;
+	g_autofree gchar *device_file = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autoptr(GDir) dir = NULL;
 
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("DrmAmdgpuSetDeviceFile:Base=%s", base);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		f = fu_device_event_get_str(event, "Filename", error);
+		if (f == NULL)
+			return FALSE;
+		fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), f);
+		return TRUE;
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+	}
+
+	/* find card path */
 	ddir = g_build_filename(base, "drm", NULL);
 	dir = g_dir_open(ddir, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((f = g_dir_read_name(dir))) {
 		if (g_str_has_prefix(f, "card")) {
-			g_autofree gchar *devbase = NULL;
-			g_autofree gchar *device_file = NULL;
-
-			devbase = fu_path_from_kind(FU_PATH_KIND_DEVFS);
+			g_autofree gchar *devbase = fu_path_from_kind(FU_PATH_KIND_DEVFS);
 			device_file = g_build_filename(devbase, "dri", f, NULL);
-			fu_udev_device_set_device_file(FU_UDEV_DEVICE(device), device_file);
-			return TRUE;
+			break;
 		}
 	}
 
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no DRM device file found");
-	return FALSE;
+	/* nothing found */
+	if (device_file == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no DRM device file found");
+		return FALSE;
+	}
+
+	if (event != NULL)
+		fu_device_event_set_str(event, "Filename", device_file);
+
+	/* success */
+	fu_udev_device_set_device_file(FU_UDEV_DEVICE(self), device_file);
+	return TRUE;
 }
 
 static gboolean
 fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 {
+	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
 	const gchar *base;
 	gboolean exists_rom = FALSE;
 	gboolean exists_vbflash = FALSE;
@@ -84,7 +123,7 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *psp_vbflash_status = NULL;
 
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	if (!fu_amd_gpu_device_set_device_file(device, base, error))
+	if (!fu_amd_gpu_device_set_device_file(self, base, error))
 		return FALSE;
 
 	/* APUs don't have 'rom' sysfs file */
