@@ -472,7 +472,10 @@ fu_ipmi_device_probe(FuDevice *device, GError **error)
 
 	/* look for the IPMI device */
 	for (guint i = 0; physical_ids[i] != NULL; i++) {
-		if (g_file_test(physical_ids[i], G_FILE_TEST_EXISTS)) {
+		gboolean exists_fn = FALSE;
+		if (!fu_device_query_file_exists(device, physical_ids[i], &exists_fn, error))
+			return FALSE;
+		if (exists_fn) {
 			fu_device_set_physical_id(FU_DEVICE(self), physical_ids[i]);
 			return TRUE;
 		}

@@ -960,6 +960,63 @@ fu_device_get_contents_bytes(FuDevice *self,
 	return g_steal_pointer(&blob);
 }
 
+/**
+ * fu_device_query_file_exists:
+ * @self: a #FuDevice
+ * @filename: filename
+ * @exists: (out): if @filename exists
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks if a file exists.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.2
+ **/
+gboolean
+fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exists, GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	gint64 value;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(filename != NULL, FALSE);
+	g_return_val_if_fail(exists != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("FileExists:Filename=%s", filename);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		value = fu_device_event_get_i64(event, "Exists", error);
+		if (value == G_MAXINT64)
+			return FALSE;
+		*exists = value == 1;
+		return TRUE;
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* check, and save result */
+	*exists = g_file_test(filename, G_FILE_TEST_EXISTS);
+	if (event != NULL)
+		fu_device_event_set_i64(event, "Exists", *exists ? 1 : 0);
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_device_poll_locker_open_cb(GObject *device, GError **error)
 {

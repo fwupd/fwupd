@@ -157,10 +157,16 @@ fu_uefi_cod_device_get_indexed_filename(FuUefiDevice *self, GError **error)
 {
 	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
 	for (guint i = 0; i < 0xFFFF; i++) {
+		gboolean exists_cod_path = FALSE;
 		g_autofree gchar *basename = g_strdup_printf("CapsuleUpdateFile%04X.bin", i);
 		g_autofree gchar *cod_path =
 		    g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
-		if (!g_file_test(cod_path, G_FILE_TEST_EXISTS))
+		if (!fu_device_query_file_exists(FU_DEVICE(self),
+						 cod_path,
+						 &exists_cod_path,
+						 error))
+			return NULL;
+		if (!exists_cod_path)
 			return g_steal_pointer(&cod_path);
 	}
 	g_set_error_literal(error,

@@ -667,15 +667,6 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* check the kernel has CONFIG_HIDRAW */
-	if (!g_file_test("/sys/class/hidraw", G_FILE_TEST_IS_DIR)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no kernel support for CONFIG_HIDRAW");
-		return FALSE;
-	}
-
 	/* nearly... */
 	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
 

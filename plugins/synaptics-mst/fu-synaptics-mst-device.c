@@ -1520,12 +1520,15 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 				       FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED)) {
 		g_autofree gchar *filename = NULL;
 		g_autofree gchar *dirname = NULL;
+		gboolean exists_eeprom = FALSE;
 		gint fd;
 		dirname = g_path_get_dirname(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
 		filename = g_strdup_printf("%s/remote/%s_eeprom",
 					   dirname,
 					   fu_device_get_logical_id(FU_DEVICE(self)));
-		if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+		if (!fu_device_query_file_exists(FU_DEVICE(self), filename, &exists_eeprom, error))
+			return FALSE;
+		if (!exists_eeprom) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,

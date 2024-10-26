@@ -24,6 +24,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 {
 	const gchar *argv_mkconfig[] = {"", "-o", "/boot/grub/grub.cfg", NULL};
 	const gchar *argv_reboot[] = {"", "fwupd", NULL};
+	gboolean exists_mkconfig = FALSE;
 	g_autofree gchar *grub_mkconfig = NULL;
 	g_autofree gchar *grub_reboot = NULL;
 	g_autofree gchar *grub_target = NULL;
@@ -32,9 +33,16 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* find grub.conf */
-	if (!g_file_test(argv_mkconfig[2], G_FILE_TEST_EXISTS))
+	if (!fu_device_query_file_exists(FU_DEVICE(device),
+					 argv_mkconfig[2],
+					 &exists_mkconfig,
+					 error))
+		return FALSE;
+	if (!exists_mkconfig)
 		argv_mkconfig[2] = "/boot/grub2/grub.cfg";
-	if (!g_file_test(argv_mkconfig[2], G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(device, argv_mkconfig[2], &exists_mkconfig, error))
+		return FALSE;
+	if (!exists_mkconfig) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,

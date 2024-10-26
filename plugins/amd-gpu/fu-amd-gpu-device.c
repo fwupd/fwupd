@@ -76,6 +76,9 @@ static gboolean
 fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *base;
+	gboolean exists_rom = FALSE;
+	gboolean exists_vbflash = FALSE;
+	gboolean exists_vbflash_status = FALSE;
 	g_autofree gchar *rom = NULL;
 	g_autofree gchar *psp_vbflash = NULL;
 	g_autofree gchar *psp_vbflash_status = NULL;
@@ -86,7 +89,9 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 
 	/* APUs don't have 'rom' sysfs file */
 	rom = g_build_filename(base, "rom", NULL);
-	if (!g_file_test(rom, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(FU_DEVICE(device), rom, &exists_rom, error))
+		return FALSE;
+	if (!exists_rom) {
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD);
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(device), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
@@ -98,9 +103,12 @@ fu_amd_gpu_device_probe(FuDevice *device, GError **error)
 
 	/* firmware upgrade support */
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
+	if (!fu_device_query_file_exists(device, psp_vbflash, &exists_vbflash, error))
+		return FALSE;
 	psp_vbflash_status = g_build_filename(base, "psp_vbflash_status", NULL);
-	if (g_file_test(psp_vbflash, G_FILE_TEST_EXISTS) &&
-	    g_file_test(psp_vbflash_status, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(device, psp_vbflash_status, &exists_vbflash_status, error))
+		return FALSE;
+	if (exists_vbflash && exists_vbflash_status) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);

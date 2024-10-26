@@ -49,11 +49,17 @@ fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_i2c_device_writeln(const gchar *fn, const gchar *buf, GError **error)
+fu_elantp_i2c_device_writeln(FuElantpI2cDevice *self,
+			     const gchar *fn,
+			     const gchar *buf,
+			     GError **error)
 {
+	gboolean exists_fn = FALSE;
 	g_autoptr(FuIOChannel) io = NULL;
 
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(FU_DEVICE(self), fn, &exists_fn, error))
+		return FALSE;
+	if (!exists_fn) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "%s does not exist", fn);
 		return FALSE;
 	}
@@ -71,6 +77,9 @@ fu_elantp_i2c_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 static gboolean
 fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
 {
+	g_autofree gchar *unbind_fn = g_build_filename(self->bind_path, "unbind", NULL);
+	g_autofree gchar *bind_fn = g_build_filename(self->bind_path, "bind", NULL);
+
 	if (self->bind_path == NULL || self->bind_id == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -79,13 +88,9 @@ fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_elantp_i2c_device_writeln(g_build_filename(self->bind_path, "unbind", NULL),
-					  self->bind_id,
-					  error))
+	if (!fu_elantp_i2c_device_writeln(self, unbind_fn, self->bind_id, error))
 		return FALSE;
-	if (!fu_elantp_i2c_device_writeln(g_build_filename(self->bind_path, "bind", NULL),
-					  self->bind_id,
-					  error))
+	if (!fu_elantp_i2c_device_writeln(self, bind_fn, self->bind_id, error))
 		return FALSE;
 
 	g_debug("rebind driver of %s", self->bind_id);

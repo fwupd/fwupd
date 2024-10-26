@@ -148,6 +148,7 @@ fu_flashrom_device_prepare(FuDevice *device,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
+	gboolean exists_orig = FALSE;
 	g_autofree gchar *firmware_orig = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
@@ -158,7 +159,9 @@ fu_flashrom_device_prepare(FuDevice *device,
 	firmware_orig = g_build_filename(localstatedir, "builder", basename, NULL);
 	if (!fu_path_mkdir_parent(firmware_orig, error))
 		return FALSE;
-	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(device, firmware_orig, &exists_orig, error))
+		return FALSE;
+	if (!exists_orig) {
 		g_autoptr(GBytes) buf = NULL;
 		buf = fu_flashrom_device_dump_firmware(device, progress, error);
 		if (buf == NULL) {
