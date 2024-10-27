@@ -71,6 +71,7 @@ typedef struct {
 	GPtrArray *counterpart_guids;	/* (nullable) */
 	GPtrArray *events;		/* (nullable) (element-type FuDeviceEvent) */
 	guint event_idx;
+	guint event_skipcnt;
 	guint remove_delay;    /* ms */
 	guint acquiesce_delay; /* ms */
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -7197,8 +7198,15 @@ fu_device_save_event(FuDevice *self, const gchar *id)
 
 	/* success */
 	event = fu_device_event_new(id);
-	fu_device_add_event(self, event);
-	g_debug("saved event %s", id);
+
+	/* skip? */
+	if (priv->event_skipcnt > 0) {
+		priv->event_skipcnt--;
+		g_debug("skipping event %s", id);
+	} else {
+		fu_device_add_event(self, event);
+		g_debug("saved event %s", id);
+	}
 	return event;
 }
 
@@ -7262,6 +7270,22 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	/* nothing found */
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no event with ID %s", id);
 	return NULL;
+}
+
+/**
+ * fu_device_skip_event:
+ * @self: a #FuDevice
+ *
+ * Skips the next event, possibly because the emulation was handled at a higher level.
+ *
+ * Since: 2.0.2
+ **/
+void
+fu_device_skip_event(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->event_skipcnt++;
 }
 
 /**

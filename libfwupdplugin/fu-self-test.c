@@ -1962,6 +1962,34 @@ fu_device_func(void)
 }
 
 static void
+fu_device_event_skip_func(void)
+{
+	FuDeviceEvent *event;
+	FuDeviceEvent *event1;
+	FuDeviceEvent *event2;
+	FuDeviceEvent *event3;
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(GError) error = NULL;
+
+	event1 = fu_device_save_event(device, "id1");
+	g_assert_nonnull(event1);
+	fu_device_skip_event(device);
+	event2 = fu_device_save_event(device, "id2");
+	g_assert_nonnull(event2);
+	fu_device_skip_event(device);
+	event3 = fu_device_save_event(device, "id3");
+	g_assert_nonnull(event3);
+
+	event = fu_device_load_event(device, "id2", NULL);
+	g_assert_null(event);
+	event = fu_device_load_event(device, "id3", NULL);
+	g_assert_null(event);
+	event = fu_device_load_event(device, "id1", &error);
+	g_assert_nonnull(event);
+	g_assert_no_error(error);
+}
+
+static void
 fu_device_event_donor_func(void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
@@ -6236,6 +6264,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
+	g_test_add_func("/fwupd/device{event-skip}", fu_device_event_skip_func);
 	g_test_add_func("/fwupd/device{event-donor}", fu_device_event_donor_func);
 	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);

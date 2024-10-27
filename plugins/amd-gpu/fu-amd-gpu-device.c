@@ -175,6 +175,9 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 		fu_device_event_set_data(event, "Data", buf, bufsz);
 	}
 
+	/* ignore the Ioctl: device event */
+	fu_device_skip_event(FU_DEVICE(self));
+
 	/* we can't use the emulation support in fu_udev_device_ioctl() as
 	 * the buffer is specified indirectly using return_pointer */
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),

@@ -120,6 +120,9 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 		fu_device_event_set_data(event, "Data", buf, bufsz);
 	}
 
+	/* ignore the Ioctl: device event */
+	fu_device_skip_event(FU_DEVICE(self));
+
 	/* submit admin command -- we can't use the emulation support in fu_udev_device_ioctl() as
 	 * the buffer is specified indirectly using the cmd.addr field */
 	if (buf != NULL)

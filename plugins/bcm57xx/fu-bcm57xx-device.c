@@ -88,6 +88,9 @@ fu_bcm57xx_device_submit_ifreq(FuBcm57xxDevice *self, guint8 *buf, gsize bufsz, 
 		fu_device_event_set_data(event, "Data", buf, bufsz);
 	}
 
+	/* ignore the Ioctl: device event */
+	fu_device_skip_event(FU_DEVICE(self));
+
 	/* we can't use the emulation support in fu_udev_device_ioctl() as
 	 * the buffer is specified indirectly using ifr_data */
 	strncpy(ifr.ifr_name, self->ethtool_iface, IFNAMSIZ - 1);

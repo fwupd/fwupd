@@ -1137,7 +1137,11 @@ fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value
 FuDeviceLocker *
 fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 
+void
+fu_device_skip_event(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDeviceEvent *
-fu_device_save_event(FuDevice *self, const gchar *id);
+fu_device_save_event(FuDevice *self, const gchar *id) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
 FuDeviceEvent *
-fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
+fu_device_load_event(FuDevice *self, const gchar *id, GError **error) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1, 2);
