@@ -4,25 +4,22 @@ title: Plugin: Nordic HID
 
 ## Introduction
 
-This plugin is able flash the firmware for the hardware supported by `nRF52-Desktop`.
+This plugin is able to update the firmware for the hardware supported by [nRF Desktop](https://www.nordicsemi.com/Products/Reference-designs/nRF-Desktop) application reference design developed as part of the [nRF Connect SDK](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/applications/nrf_desktop/README.html).
 Tested with the following devices:
 
-* [nrf52840dk development kit](https://www.nordicsemi.com/Products/nRF52840)
-* [nRF52840 Dongle](https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dongle)
-* nRF52840 Gaming Mouse
-* nRF52832 Desktop Keyboard
+* [nRF52840 Development Kit](https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/boards/nordic/nrf52840dk/doc/index.html)
+* [nRF52840 Dongle](https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/boards/nordic/nrf52840dongle/doc/index.html)
+* Boards specific to the nRF Desktop reference design:
+  * nRF52840 Gaming Mouse
+  * nRF52832 Desktop Keyboard
 
-The plugin is using Nordic Semiconductor
-[HID config channel](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/applications/nrf_desktop/doc/config_channel.html)
-to perform devices update.
+The plugin is using Nordic Semiconductor [HID configuration channel](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/applications/nrf_desktop/doc/config_channel.html) to perform devices update.
 
 ## Firmware Format
 
 The cabinet file contains ZIP archive prepared by Nordic Semiconductor.
-This ZIP archive includes 2 signed image blobs for the target
-device, one firmware blob per application slot, and the `manifest.json` file with the metadata description.
-At the moment only [nRF Secure Immutable Bootloader](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/samples/bootloader/README.html#bootloader)
-aka "B0" is supported and tested.
+This ZIP archive includes either 1 or 2 signed image blobs for the target device (one firmware blob per application update slot) and the `manifest.json` file with the metadata description.
+At the moment only [nRF Secure Immutable Bootloader](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/samples/bootloader/README.html) ("B0") is supported and tested.
 
 This plugin supports the following protocol ID:
 
@@ -85,7 +82,6 @@ This plugin has been available since fwupd version `1.7.3`.
 
 ## Owners
 
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
+Anyone can submit a pull request to modify this plugin, but the following people should be consulted before making major or functional changes:
 
 * Marek Pieta: @MarekPieta
