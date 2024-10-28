@@ -121,6 +121,14 @@ typedef enum {
 	 **/
 	FU_CONTEXT_FLAG_LOADED_HWINFO = 1u << 2,
 	/**
+	 * FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT:
+	 *
+	 * Do not allow mounting volumes, usually set in self tests.
+	 *
+	 * Since: 2.0.2
+	 **/
+	FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT = 1u << 3,
+	/**
 	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:
 	 *
 	 * Unknown flag value.
@@ -212,7 +220,7 @@ GPtrArray *
 fu_context_get_esp_volumes(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FuVolume *
-fu_context_get_default_esp(FuContext *ctx, GError **error) G_GNUC_WARN_UNUSED_RESULT
+fu_context_get_default_esp(FuContext *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FuVolume *
 fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,

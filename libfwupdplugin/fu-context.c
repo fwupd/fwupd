@@ -1620,7 +1620,7 @@ fu_context_sort_esp_score_cb(gconstpointer a, gconstpointer b, gpointer user_dat
 
 /**
  * fu_context_get_default_esp:
- * @ctx: a #FuContext
+ * @self: a #FuContext
  * @error: (nullable): optional return location for an error
  *
  * Finds the volume that represents the ESP that plugins should nominally
@@ -1631,15 +1631,25 @@ fu_context_sort_esp_score_cb(gconstpointer a, gconstpointer b, gpointer user_dat
  * Since: 2.0.0
  **/
 FuVolume *
-fu_context_get_default_esp(FuContext *ctx, GError **error)
+fu_context_get_default_esp(FuContext *self, GError **error)
 {
+	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GPtrArray) esp_volumes = NULL;
-	const gchar *user_esp_location = fu_context_get_esp_location(ctx);
+	const gchar *user_esp_location = fu_context_get_esp_location(self);
 
 	/* show which volumes we're choosing from */
-	esp_volumes = fu_context_get_esp_volumes(ctx, error);
+	esp_volumes = fu_context_get_esp_volumes(self, error);
 	if (esp_volumes == NULL)
 		return NULL;
+
+	/* no mounting */
+	if (priv->flags & FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot mount volume by policy");
+		return NULL;
+	}
 
 	/* we found more than one: lets look for the best one */
 	if (esp_volumes->len > 1) {
@@ -1822,6 +1832,7 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 				   FuContextEspFileFlags flags,
 				   GError **error)
 {
+	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *dp_filename = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *mount_point = NULL;
@@ -1858,6 +1869,13 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	volume = fu_context_get_esp_volume_by_hard_drive_device_path(self, dp_hdd, error);
 	if (volume == NULL)
 		return FALSE;
+	if (priv->flags & FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "cannot mount volume by policy");
+		return FALSE;
+	}
 	volume_locker = fu_volume_locker(volume, error);
 	if (volume_locker == NULL)
 		return FALSE;

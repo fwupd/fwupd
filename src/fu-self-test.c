@@ -7050,6 +7050,9 @@ main(int argc, char **argv)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* do not allow mounting disks in the self tests */
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
+
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(self->ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
