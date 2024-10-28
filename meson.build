@@ -262,7 +262,7 @@ if libarchive.found()
 endif
 endif
 libjcat = dependency('jcat', version: '>= 0.2.0', fallback: ['libjcat', 'libjcat_dep'])
-libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0')
+libjsonglib = dependency('json-glib-1.0', version: '>= 1.6.0', fallback: ['libjsonglib', 'libjsonglib_dep'])
 libblkid = dependency('blkid', required: false)
 if libblkid.found()
   conf.set('HAVE_BLKID', '1')
