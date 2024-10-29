@@ -6823,6 +6823,12 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* no -Dplugin_nvme=enabled */
+	if (fu_engine_get_plugin_by_name(engine, "nvme", &error) == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+
 	/* NVMe -> nvme */
 	device = fu_engine_get_device(engine, "4c263c95f596030b430d65dc934f6722bcee5720", &error);
 	g_assert_no_error(error);
