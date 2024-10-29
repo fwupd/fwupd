@@ -1,0 +1,17 @@
+{
+  "name": "Hailuck Keyboard (PineBook Pro)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/hailuck-keyboard-emulation.zip",
+      "components": [
+        {
+          "version": "1.0",
+          "guids": [
+            "e997e24f-850a-51ba-b2be-b7c9e07b794b"
+          ]
+        }
+      ]
+    }
+  ]
+}
