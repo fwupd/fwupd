@@ -208,7 +208,7 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-enable_udev = get_option('udev').disable_auto_if(host_machine.system() != 'linux').allowed()
+enable_udev = get_option('udev').disable_auto_if(host_machine.system() not in ['linux', 'android']).allowed()
 if enable_udev
   conf.set('HAVE_UDEV', '1')
 endif
