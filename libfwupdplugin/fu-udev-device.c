@@ -319,6 +319,30 @@ fu_udev_device_parse_number(FuUdevDevice *self, GError **error)
 }
 
 static gboolean
+fu_udev_device_ensure_devtype_from_modalias(FuUdevDevice *self, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *devtype_modalias[] = {"mmc", "platform", NULL};
+	g_autofree gchar *prop_modalias = NULL;
+	g_auto(GStrv) split_modalias = NULL;
+
+	/* only some subsystems forget to set the DEVTYPE property */
+	if (!g_strv_contains(devtype_modalias, priv->subsystem))
+		return TRUE;
+
+	/* parse out subsystem:devtype */
+	prop_modalias = fu_udev_device_read_property(self, "MODALIAS", error);
+	if (prop_modalias == NULL)
+		return FALSE;
+	split_modalias = g_strsplit(prop_modalias, ":", 2);
+	if (g_strv_length(split_modalias) >= 2)
+		priv->devtype = g_strdup(split_modalias[1]);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_udev_device_probe(FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
@@ -339,8 +363,13 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 	if (priv->driver == NULL)
 		priv->driver = fu_udev_device_get_symlink_target(self, "driver", NULL);
-	if (priv->devtype == NULL)
+	if (priv->devtype == NULL) {
 		priv->devtype = fu_udev_device_read_property(self, "DEVTYPE", NULL);
+		if (priv->devtype == NULL) {
+			if (!fu_udev_device_ensure_devtype_from_modalias(self, error))
+				return FALSE;
+		}
+	}
 	if (priv->device_file == NULL) {
 		g_autofree gchar *prop_devname =
 		    fu_udev_device_read_property(self, "DEVNAME", NULL);

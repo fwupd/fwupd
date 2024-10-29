@@ -134,32 +134,35 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *attr_fwrev = NULL;
 	g_autofree gchar *attr_manfid = NULL;
 	g_autofree gchar *attr_name = NULL;
+	g_autofree gchar *dev_basename = NULL;
 	g_autofree gchar *man_oem_name = NULL;
 	g_autoptr(FuUdevDevice) udev_parent = NULL;
-	g_autoptr(GRegex) dev_regex = NULL;
 
 	udev_parent =
-	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "mmc:disk", NULL));
+	    FU_UDEV_DEVICE(fu_device_get_backend_parent_with_subsystem(device, "mmc:block", NULL));
 	if (udev_parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no MMC parent");
 		return FALSE;
 	}
 
 	/* ignore *rpmb and *boot* mmc block devices */
-	dev_regex = g_regex_new("mmcblk\\d$", 0, 0, NULL);
-	if (fu_device_get_name(device) == NULL) {
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device has no name");
+				    "device has no device-file");
 		return FALSE;
 	}
-	if (!g_regex_match(dev_regex, fu_device_get_name(device), 0, NULL)) {
+	dev_basename = g_path_get_basename(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)));
+	if (!g_regex_match_simple("mmcblk\\d$",
+				  dev_basename,
+				  0,	/* G_REGEX_DEFAULT */
+				  0)) { /* G_REGEX_MATCH_DEFAULT */
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "is not raw mmc block device, devname=%s",
-			    fu_device_get_name(device));
+			    dev_basename);
 		return FALSE;
 	}
 
