@@ -20,6 +20,13 @@ The plugin is using Nordic Semiconductor [HID configuration channel](https://dev
 The cabinet file contains ZIP archive prepared by Nordic Semiconductor.
 This ZIP archive includes either 1 or 2 signed image blobs for the target device (one firmware blob per application update slot) and the `manifest.json` file with the metadata description.
 At the moment only [nRF Secure Immutable Bootloader](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/samples/bootloader/README.html) ("B0") is supported and tested.
+The [MCUboot bootloader](https://docs.nordicsemi.com/bundle/ncs-latest/page/mcuboot/wrapper.html) support is experimental.
+When a device uses MCUboot bootloader, the plugin supports application update in one of the following modes:
+
+* Swap mode - MCUboot bootloader swaps the application images located on the secondary and primary slots before booting the new image from the primary slot.
+* Direct-xip mode - MCUboot bootloader boots a new application image directly from either primary or secondary image slot (the bootloader boots application image with higher version).
+
+The used application update mode depends on configuration of the MCUboot bootloader.
 
 This plugin supports the following protocol ID:
 
