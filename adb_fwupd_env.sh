@@ -20,6 +20,7 @@ FWUPD_DIST_PATH="/data/fwupd"
 
 adb -e shell -t \
  FWUPD_POLKIT_NOCHECK=1 \
+ FWUPD_LOCKDIR="${FWUPD_DIST_PATH}/var/run" \
  LD_LIBRARY_PATH="${FWUPD_DIST_PATH}/lib/fwupd-2.0.2:${FWUPD_DIST_PATH}/lib64:${FWUPD_DIST_PATH}/lib" \
  PATH="\${PATH}:${FWUPD_DIST_PATH}/bin:${FWUPD_DIST_PATH}/libexec/fwupd" \
  "${*}"
