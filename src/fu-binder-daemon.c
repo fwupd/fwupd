@@ -148,7 +148,11 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 
 	/* load engine */
 	if (!fu_engine_load(engine,
-			    FU_ENGINE_LOAD_FLAG_NONE,
+			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
+				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				FU_ENGINE_LOAD_FLAG_ENSURE_CLIENT_CERT |
+				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG,
 			    fu_progress_get_child(progress),
 			    error)) {
 		g_prefix_error(error, "failed to load engine: ");
