@@ -115,7 +115,7 @@ fu_pxi_wireless_device_get_cmd_response(FuPxiWirelessDevice *device,
 		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(parent),
 						  buf,
 						  bufsz,
-						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  FU_IOCTL_FLAG_NONE,
 						  error))
 			return FALSE;
 		if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &sn, error))
@@ -181,7 +181,7 @@ fu_pxi_wireless_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 	if (!fu_pxi_wireless_device_get_cmd_response(self, buf, sizeof(buf), error))
@@ -256,7 +256,7 @@ fu_pxi_wireless_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -314,7 +314,7 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -403,7 +403,7 @@ fu_pxi_wireless_device_fw_ota_preceding(FuDevice *device, GError **error)
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					    receiver_cmd->data,
 					    receiver_cmd->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 
@@ -443,7 +443,7 @@ fu_pxi_wireless_device_fw_ota_init_new(FuDevice *device, gsize bufsz, GError **e
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -502,7 +502,7 @@ fu_pxi_wireless_device_fw_ota_ini_new_check(FuDevice *device, GError **error)
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -599,7 +599,7 @@ fu_pxi_wireless_device_fw_upgrade(FuDevice *device,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					  receiver_cmd->data,
 					  receiver_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -658,7 +658,7 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					    receiver_cmd->data,
 					    receiver_cmd->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 

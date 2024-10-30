@@ -249,40 +249,59 @@ fu_logitech_scribe_device_compute_hash(GInputStream *stream, GError **error)
 }
 
 static gboolean
+fu_logitech_scribe_device_ioctl_buffer_cb(FuIoctl *self,
+					  gpointer ptr,
+					  guint8 *buf,
+					  gsize bufsz,
+					  GError **error)
+{
+	struct uvc_xu_control_query *query = (struct uvc_xu_control_query *)ptr;
+	query->data = buf;
+	query->size = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 					  guchar unit_id,
 					  guchar control_selector,
 					  guint16 *data_size,
 					  GError **error)
 {
-	guint8 size_data[kDefaultUvcGetLenQueryControlSize] = {0x0};
-	struct uvc_xu_control_query size_query;
-	size_query.unit = unit_id;
-	size_query.selector = control_selector;
-	size_query.query = UVC_GET_LEN;
-	size_query.size = kDefaultUvcGetLenQueryControlSize;
-	size_query.data = size_data;
+	guint8 buf[kDefaultUvcGetLenQueryControlSize] = {0x0};
+	struct uvc_xu_control_query query = {
+	    .unit = unit_id,
+	    .selector = control_selector,
+	    .query = UVC_GET_LEN,
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
-	g_debug("data size query request, unit: 0x%x selector: 0x%x",
-		(guchar)unit_id,
-		(guchar)control_selector);
-
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&size_query,
-				  sizeof(size_query),
-				  NULL,
-				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
+	fu_ioctl_add_key_as_u8(ioctl, "Unit", query.unit);
+	fu_ioctl_add_key_as_u8(ioctl, "Selector", query.selector);
+	fu_ioctl_add_key_as_u8(ioctl, "Query", query.query);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    sizeof(buf),
+				    fu_logitech_scribe_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      UVCIOC_CTRL_QUERY,
+			      (guint8 *)&query,
+			      sizeof(query),
+			      NULL,
+			      FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 	/* convert the data byte to int */
-	*data_size = size_data[1] << 8 | size_data[0];
+	*data_size = buf[1] << 8 | buf[0];
 	g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
 		*data_size,
 		(guchar)unit_id,
 		(guchar)control_selector);
-	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", size_data, kDefaultUvcGetLenQueryControlSize);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LEN", buf, kDefaultUvcGetLenQueryControlSize);
 
 	/* success */
 	return TRUE;
@@ -292,35 +311,41 @@ static gboolean
 fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 					 guchar unit_id,
 					 guchar control_selector,
-					 guint16 data_size,
-					 guchar *data,
+					 guint8 *buf,
+					 guint16 bufsz,
 					 GError **error)
 {
-	struct uvc_xu_control_query control_query;
+	struct uvc_xu_control_query query = {
+	    .unit = unit_id,
+	    .selector = control_selector,
+	    .query = UVC_GET_CUR,
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
-	g_debug("get xu control request, size: %" G_GUINT16_FORMAT " unit: 0x%x selector: 0x%x",
-		data_size,
-		(guchar)unit_id,
-		(guchar)control_selector);
-	control_query.unit = unit_id;
-	control_query.selector = control_selector;
-	control_query.query = UVC_GET_CUR;
-	control_query.size = data_size;
-	control_query.data = data;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&control_query,
-				  sizeof(control_query),
-				  NULL,
-				  FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
+	fu_ioctl_add_key_as_u8(ioctl, "Unit", query.unit);
+	fu_ioctl_add_key_as_u8(ioctl, "Selector", query.selector);
+	fu_ioctl_add_key_as_u8(ioctl, "Query", query.query);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    bufsz,
+				    fu_logitech_scribe_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      UVCIOC_CTRL_QUERY,
+			      (guint8 *)&query,
+			      sizeof(query),
+			      NULL,
+			      FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
-		data_size,
+		bufsz,
 		(guchar)unit_id,
 		(guchar)control_selector);
-	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CUR", data, data_size);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CUR", buf, bufsz);
 
 	/* success */
 	return TRUE;
@@ -573,8 +598,8 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 	if (!fu_logitech_scribe_device_get_xu_control(self,
 						      kLogiUnitIdCameraVersion,
 						      kLogiCameraVersionSelector,
+						      query_data,
 						      data_len,
-						      (guchar *)query_data,
 						      error))
 		return FALSE;
 

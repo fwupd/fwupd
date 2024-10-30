@@ -303,6 +303,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		struct erase_info_user erase = {0x0};
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
@@ -310,14 +311,14 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 			return FALSE;
 		erase.start = fu_chunk_get_address(chk);
 		erase.length = fu_chunk_get_data_sz(chk);
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  2,
-					  (guint8 *)&erase,
-					  sizeof(erase),
-					  NULL,
-					  FU_MTD_DEVICE_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-					  error)) {
+		if (!fu_ioctl_execute(ioctl,
+				      2,
+				      (guint8 *)&erase,
+				      sizeof(erase),
+				      NULL,
+				      FU_MTD_DEVICE_IOCTL_TIMEOUT,
+				      FU_IOCTL_FLAG_NONE,
+				      error)) {
 			g_prefix_error(error, "failed to erase @0x%x: ", (guint)erase.start);
 			return FALSE;
 		}

@@ -168,15 +168,16 @@ fu_v4l_device_setup(FuDevice *device, GError **error)
 	FuV4lDevice *self = FU_V4L_DEVICE(device);
 	FuV4lDevicePrivate *priv = GET_PRIVATE(self);
 	struct v4l2_capability v2cap = {0};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  VIDIOC_QUERYCAP,
-				  (guint8 *)&v2cap,
-				  sizeof(v2cap),
-				  NULL,
-				  50, /* ms */
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	if (!fu_ioctl_execute(ioctl,
+			      VIDIOC_QUERYCAP,
+			      (guint8 *)&v2cap,
+			      sizeof(v2cap),
+			      NULL,
+			      50, /* ms */
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 	if (v2cap.capabilities & V4L2_CAP_DEVICE_CAPS)
 		priv->caps = v2cap.device_caps;

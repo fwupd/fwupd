@@ -89,7 +89,7 @@ fu_pxi_receiver_device_fw_ota_init_new(FuPxiReceiverDevice *device, gsize bufsz,
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    receiver_device_cmd->data,
 					    receiver_device_cmd->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 
@@ -119,7 +119,7 @@ fu_pxi_receiver_device_fw_ota_ini_new_check(FuPxiReceiverDevice *device, GError 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -129,7 +129,7 @@ fu_pxi_receiver_device_fw_ota_ini_new_check(FuPxiReceiverDevice *device, GError 
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  sizeof(buf),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -154,7 +154,7 @@ fu_pxi_receiver_device_get_cmd_response(FuPxiReceiverDevice *self,
 		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 						  buf,
 						  bufsz,
-						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  FU_IOCTL_FLAG_NONE,
 						  error))
 			return FALSE;
 
@@ -209,7 +209,7 @@ fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -261,7 +261,7 @@ fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -313,7 +313,7 @@ fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    receiver_device_cmd->data,
 					    receiver_device_cmd->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 
@@ -430,7 +430,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -485,7 +485,7 @@ fu_pxi_receiver_device_reset(FuDevice *device, GError **error)
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    receiver_device_cmd->data,
 					    receiver_device_cmd->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 
@@ -593,7 +593,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *self,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -603,7 +603,7 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *self,
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  sizeof(buf),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -681,7 +681,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  receiver_device_cmd->data,
 					  receiver_device_cmd->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 
@@ -691,7 +691,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  sizeof(buf),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "buf from get model num", buf, sizeof(buf));

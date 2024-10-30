@@ -131,6 +131,7 @@ fwupdplugin_src = [
   'fu-intel-thunderbolt-firmware.c', # fuzzing
   'fu-intel-thunderbolt-nvm.c', # fuzzing
   'fu-io-channel.c', # fuzzing
+  'fu-ioctl.c', # fuzzing
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-linear-firmware.c',
@@ -155,7 +156,7 @@ fwupdplugin_src = [
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
-  'fu-udev-device.c',
+  'fu-udev-device.c', # fuzzing
   'fu-usb-bos-descriptor.c',
   'fu-usb-config-descriptor.c',
   'fu-usb-descriptor.c',
@@ -266,6 +267,7 @@ fwupdplugin_headers = [
   'fu-intel-thunderbolt-firmware.h',
   'fu-intel-thunderbolt-nvm.h',
   'fu-io-channel.h',
+  'fu-ioctl.h',
   'fu-kenv.h',
   'fu-kernel.h',
   'fu-linear-firmware.h',

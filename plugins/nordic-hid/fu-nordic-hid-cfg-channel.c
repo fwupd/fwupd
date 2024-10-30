@@ -163,7 +163,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(udev_device),
 					    buf,
 					    bufsz,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 #else
 	g_set_error_literal(error,
@@ -191,7 +191,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(udev_device),
 						  (guint8 *)recv_msg,
 						  sizeof(*recv_msg),
-						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  FU_IOCTL_FLAG_NONE,
 						  error))
 			return FALSE;
 		/* if the device is busy it return 06 00 00 00 00 response */

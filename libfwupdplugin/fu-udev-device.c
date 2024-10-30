@@ -24,6 +24,7 @@
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
+#include "fu-ioctl-private.h"
 #include "fu-path.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
@@ -1146,25 +1147,24 @@ fu_udev_device_close(FuDevice *device, GError **error)
 }
 
 /**
- * fu_udev_device_ioctl:
+ * fu_udev_device_ioctl_new:
  * @self: a #FuUdevDevice
- * @request: request number
- * @buf: a buffer to use, which *must* be large enough for the request
- * @bufsz: the size of @buf
- * @rc: (out) (nullable): the raw return value from the ioctl
- * @timeout: timeout in ms for the retry action, see %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
- * @flags: some #FuUdevDeviceIoctlFlags, e.g. %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
- * @error: (nullable): optional return location for an error
+ * @name: (nullable): an optional name
  *
- * Control a device using a low-level request.
+ * Build a helper to control a device using a low-level request.
  *
- * NOTE: In version 2.0.0 the @bufsz parameter was added -- which isn't required to perform the
- * ioctl, but *is* required to accurately track and emulate the device buffer.
+ * Returns: (transfer full): a #FuIoctl, or %NULL on error
  *
- * Returns: %TRUE for success
- *
- * Since: 2.0.0
+ * Since: 2.0.2
  **/
+FuIoctl *
+fu_udev_device_ioctl_new(FuUdevDevice *self, const gchar *name)
+{
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	return fu_ioctl_new(self, name);
+}
+
+/* private */
 gboolean
 fu_udev_device_ioctl(FuUdevDevice *self,
 		     gulong request,
@@ -1172,49 +1172,18 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 		     gsize bufsz,
 		     gint *rc,
 		     guint timeout,
-		     FuUdevDeviceIoctlFlags flags,
+		     FuIoctlFlags flags,
 		     GError **error)
 {
 #ifdef HAVE_IOCTL_H
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	gint rc_tmp;
 	g_autoptr(GTimer) timer = g_timer_new();
-	FuDeviceEvent *event = NULL;
-	g_autofree gchar *event_id = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(request != 0x0, FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
-		event_id = g_strdup_printf("Ioctl:"
-					   "Request=0x%04x,"
-					   "Data=%s,"
-					   "Length=0x%x",
-					   (guint)request,
-					   buf_base64,
-					   (guint)bufsz);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return FALSE;
-		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
-	}
-
-	/* save */
-	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-		fu_device_event_set_data(event, "Data", buf, bufsz);
-	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1234,7 +1203,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 			       buf);
 		if (rc_tmp >= 0)
 			break;
-	} while ((flags & FU_UDEV_DEVICE_IOCTL_FLAG_RETRY) && (errno == EINTR || errno == EAGAIN) &&
+	} while ((flags & FU_IOCTL_FLAG_RETRY) && (errno == EINTR || errno == EAGAIN) &&
 		 g_timer_elapsed(timer, NULL) < timeout * 1000.f);
 	if (rc != NULL)
 		*rc = rc_tmp;
@@ -1265,10 +1234,6 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 #endif
 		return FALSE;
 	}
-
-	/* save response */
-	if (event != NULL)
-		fu_device_event_set_data(event, "DataOut", buf, bufsz);
 
 	/* success */
 	return TRUE;

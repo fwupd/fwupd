@@ -32,7 +32,7 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  sizeof(buf),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		return FALSE;
 	}
@@ -64,7 +64,7 @@ fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  buf_req,
 					  sizeof(buf_req),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 
@@ -75,7 +75,7 @@ fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf_res,
 					  sizeof(buf_res),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		return FALSE;
 	}

@@ -76,62 +76,47 @@ fu_nvme_device_get_guid_safe(const guint8 *buf, guint16 addr_start)
 }
 
 static gboolean
+fu_nvme_device_ioctl_buffer_cb(FuIoctl *self,
+			       gpointer ptr,
+			       guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	struct nvme_admin_cmd *cmd = (struct nvme_admin_cmd *)ptr;
+	return fu_memcpy_safe((guint8 *)&cmd->addr,
+			      sizeof(cmd->addr),
+			      0x0,
+			      (guint8 *)&buf,
+			      sizeof(buf),
+			      0x0,
+			      sizeof(buf),
+			      error);
+}
+
+static gboolean
 fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 				     struct nvme_admin_cmd *cmd,
 				     guint8 *buf,
 				     gsize bufsz,
 				     GError **error)
 {
-	gint rc = 0;
 	guint32 err;
-	FuDeviceEvent *event = NULL;
-	g_autofree gchar *event_id = NULL;
+	gint rc = 0;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "Nvme");
 
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
-		event_id = g_strdup_printf("NvmeIoctl:"
-					   "Opcode=0x%02x,"
-					   "Cdw10=0x%02x,"
-					   "Cdw11=0x%02x,"
-					   "Data=%s,"
-					   "Length=0x%x",
-					   cmd->opcode,
-					   cmd->cdw10,
-					   cmd->cdw11,
-					   buf_base64,
-					   (guint)bufsz);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return FALSE;
-		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
-	}
-
-	/* save */
-	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-		fu_device_event_set_data(event, "Data", buf, bufsz);
-	}
-
-	/* submit admin command -- we can't use the emulation support in fu_udev_device_ioctl() as
-	 * the buffer is specified indirectly using the cmd.addr field */
-	if (buf != NULL)
-		memcpy(&cmd->addr, &buf, sizeof(gpointer)); /* nocheck:blocked */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  NVME_IOCTL_ADMIN_CMD,
-				  (guint8 *)cmd,
-				  sizeof(*cmd),
-				  &rc,
-				  FU_NVME_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u8(ioctl, "Opcode", cmd->opcode);
+	fu_ioctl_add_key_as_u8(ioctl, "Cdw10", cmd->cdw10);
+	fu_ioctl_add_key_as_u8(ioctl, "Cdw11", cmd->cdw11);
+	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_nvme_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      NVME_IOCTL_ADMIN_CMD,
+			      cmd,
+			      sizeof(*cmd),
+			      &rc,
+			      FU_NVME_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
 		g_prefix_error(error, "failed to issue admin command 0x%02x: ", cmd->opcode);
 		return FALSE;
 	}
@@ -144,9 +129,6 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 	case NVME_SC_FW_NEEDS_CONV_RESET:
 	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
 	case NVME_SC_FW_NEEDS_RESET:
-		/* save response */
-		if (event != NULL && buf != NULL)
-			fu_device_event_set_data(event, "DataOut", buf, bufsz);
 		return TRUE;
 	default:
 		break;

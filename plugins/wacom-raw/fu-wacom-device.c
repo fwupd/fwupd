@@ -227,7 +227,7 @@ fu_wacom_device_get_feature(FuWacomDevice *self, guint8 *data, guint datasz, GEr
 	return fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					    data,
 					    datasz,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 
@@ -237,7 +237,7 @@ fu_wacom_device_set_feature(FuWacomDevice *self, const guint8 *data, guint datas
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    data,
 					    datasz,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
 

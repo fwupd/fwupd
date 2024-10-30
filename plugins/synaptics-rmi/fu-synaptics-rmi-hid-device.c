@@ -293,15 +293,17 @@ fu_synaptics_rmi_hid_device_set_mode(FuSynapticsRmiHidDevice *self,
 				     GError **error)
 {
 	const guint8 data[] = {0x0f, mode};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+
 	fu_dump_raw(G_LOG_DOMAIN, "SetMode", data, sizeof(data));
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(sizeof(data)), /* nocheck:blocked */
-				    (guint8 *)data,
-				    sizeof(data),
-				    NULL,
-				    FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
+	return fu_ioctl_execute(ioctl,
+				HIDIOCSFEATURE(sizeof(data)), /* nocheck:blocked */
+				(guint8 *)data,
+				sizeof(data),
+				NULL,
+				FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT,
+				FU_IOCTL_FLAG_NONE,
+				error);
 }
 
 static gboolean
