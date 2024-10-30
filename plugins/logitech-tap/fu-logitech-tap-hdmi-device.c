@@ -9,9 +9,6 @@
 #include <linux/types.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-#ifdef HAVE_IOCTL_H
-#include <sys/ioctl.h>
-#endif
 
 #include <string.h>
 

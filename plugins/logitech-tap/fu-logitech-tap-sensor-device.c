@@ -11,7 +11,6 @@
 #include <linux/uvcvideo.h>
 #ifdef HAVE_IOCTL_H
 #include <linux/hidraw.h>
-#include <sys/ioctl.h>
 #endif
 
 #include <string.h>
