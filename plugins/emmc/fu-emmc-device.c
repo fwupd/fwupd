@@ -254,8 +254,10 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_emmc_device_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GError **error)
+fu_emmc_device_read_extcsd(FuEmmcDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	struct mmc_ioc_cmd idata = {
 	    .write_flag = 0,
 	    .opcode = MMC_SEND_EXT_CSD,
@@ -264,15 +266,55 @@ fu_emmc_device_read_extcsd(FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz
 	    .blksz = 512,
 	    .blocks = 1,
 	};
-	mmc_ioc_cmd_set_data(idata, ext_csd);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    MMC_IOC_CMD,
-				    (guint8 *)&idata,
-				    sizeof(idata),
-				    NULL,
-				    FU_EMMC_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
+
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("MmcIocCmdIoctl:"
+					   "Data=%s,"
+					   "Length=0x%x",
+					   buf_base64,
+					   (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
+
+	/* we can't use the emulation support in fu_udev_device_ioctl() as
+	 * the buffer is specified indirectly */
+	mmc_ioc_cmd_set_data(idata, buf);
+	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
+				  MMC_IOC_CMD,
+				  (guint8 *)&idata,
+				  sizeof(idata),
+				  NULL,
+				  FU_EMMC_DEVICE_IOCTL_TIMEOUT,
+				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+				  error)) {
+		g_prefix_error(error, "failed to MMC_IOC_CMD: ");
+		return FALSE;
+	}
+	if (event != NULL)
+		fu_device_event_set_data(event, "DataOut", buf, bufsz);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
