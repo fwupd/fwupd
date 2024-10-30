@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <sys/ioctl.h>
 
 #include "fu-firehose-updater.h"
 
