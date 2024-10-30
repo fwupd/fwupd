@@ -2494,6 +2494,7 @@ fu_backend_emulate_func(void)
 	g_autofree gchar *json3 = NULL;
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *json1 = "{"
 			     "  \"UsbDevices\" : ["
@@ -2573,42 +2574,23 @@ fu_backend_emulate_func(void)
 #endif
 
 	/* in-order */
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				   123,
-				   buf,
-				   sizeof(buf),
-				   NULL,
-				   0,
-				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				   &error);
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device), NULL);
+	g_assert_nonnull(ioctl);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* in-order, repeat */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				   123,
-				   buf,
-				   sizeof(buf),
-				   NULL,
-				   0,
-				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				   &error);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* out-of-order */
 	buf[0] = 0x00;
 	buf[1] = 0x00;
-	ret = fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
-				   123,
-				   buf,
-				   sizeof(buf),
-				   NULL,
-				   0,
-				   FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				   &error);
+	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

@@ -44,17 +44,18 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  data,
 					  datasz,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  &error_local)) {
+		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 		g_debug("failed to send get request, retrying: %s", error_local->message);
-		if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-					  HIDIOCGINPUT(datasz),
-					  data,
-					  datasz,
-					  NULL,
-					  FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-					  error))
+		if (!fu_ioctl_execute(ioctl,
+				      HIDIOCGINPUT(datasz),
+				      data,
+				      datasz,
+				      NULL,
+				      FU_LOGITECH_TAP_SENSOR_DEVICE_IOCTL_TIMEOUT,
+				      FU_IOCTL_FLAG_RETRY,
+				      error))
 			return FALSE;
 	}
 
@@ -79,7 +80,7 @@ fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    st->data,
 					    st->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					    FU_IOCTL_FLAG_RETRY,
 					    error);
 }
 
@@ -100,7 +101,7 @@ fu_logitech_tap_sensor_device_disable_tde(FuDevice *device, GError **error)
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					    st->data,
 					    st->len,
-					    FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					    FU_IOCTL_FLAG_RETRY,
 					    error);
 }
 
@@ -141,7 +142,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st->data,
 					  st->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 
@@ -151,7 +152,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st->data,
 					  st->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 
@@ -166,7 +167,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st->data,
 					  st->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 
@@ -178,7 +179,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st->data,
 					  st->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 
@@ -208,7 +209,7 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st_req->data,
 					  st_req->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 	if (!fu_logitech_tap_sensor_device_get_feature(self,
@@ -268,7 +269,7 @@ fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  st_req->data,
 					  st_req->len,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
+					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), kLogiDefaultSensorSleepIntervalMs); /* 50 ms */

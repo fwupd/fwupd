@@ -135,61 +135,41 @@ fu_amd_gpu_device_set_marketing_name(FuDevice *device)
 }
 
 static gboolean
+fu_amd_gpu_device_ioctl_buffer_cb(FuIoctl *self,
+				  gpointer ptr,
+				  guint8 *buf,
+				  gsize bufsz,
+				  GError **error)
+{
+	struct drm_amdgpu_info *request = (struct drm_amdgpu_info *)ptr;
+	request->return_pointer = GPOINTER_TO_SIZE(buf);
+	request->return_size = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	FuDeviceEvent *event = NULL;
-	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "DrmAmdgpuInfo");
 	struct drm_amdgpu_info request = {
 	    .query = AMDGPU_INFO_VBIOS,
-	    .return_pointer = GPOINTER_TO_SIZE(buf),
-	    .return_size = bufsz,
 	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
 	};
 
-	g_return_val_if_fail(buf != NULL, FALSE);
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
-		event_id = g_strdup_printf("DrmAmdgpuInfoIoctl:"
-					   "Data=%s,"
-					   "Length=0x%x",
-					   buf_base64,
-					   (guint)bufsz);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return FALSE;
-		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
-	}
-
-	/* save */
-	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-		fu_device_event_set_data(event, "Data", buf, bufsz);
-	}
-
-	/* we can't use the emulation support in fu_udev_device_ioctl() as
-	 * the buffer is specified indirectly using return_pointer */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  DRM_IOCTL_AMDGPU_INFO,
-				  (guint8 *)&request,
-				  sizeof(request),
-				  NULL,
-				  1000, /* ms */
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u8(ioctl, "Query", request.query);
+	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_amd_gpu_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      DRM_IOCTL_AMDGPU_INFO,
+			      &request,
+			      sizeof(request),
+			      NULL,
+			      1000, /* ms */
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
 		g_prefix_error(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
 		return FALSE;
 	}
-	if (event != NULL)
-		fu_device_event_set_data(event, "DataOut", buf, bufsz);
 
 	/* success */
 	return TRUE;

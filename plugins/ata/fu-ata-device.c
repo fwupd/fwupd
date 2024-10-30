@@ -485,6 +485,33 @@ fu_ata_device_tf_to_pack_id(struct ata_tf *tf)
 }
 
 static gboolean
+fu_ata_device_ioctl_buf_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->dxferp = buf;
+	io_hdr->dxfer_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
+fu_ata_device_ioctl_cdb_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->cmdp = buf;
+	io_hdr->cmd_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
+fu_ata_device_ioctl_sense_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->sbp = buf;
+	io_hdr->mx_sb_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_ata_device_command(FuAtaDevice *self,
 		      struct ata_tf *tf,
 		      gint dxfer_direction,
@@ -496,6 +523,7 @@ fu_ata_device_command(FuAtaDevice *self,
 	guint8 cdb[SG_ATA_12_LEN] = {0x0};
 	guint8 sb[32] = {0x0};
 	sg_io_hdr_t io_hdr = {0x0};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
 	/* map _TO_DEV to PIO mode */
 	if (dxfer_direction == SG_DXFER_TO_DEV)
@@ -529,23 +557,25 @@ fu_ata_device_command(FuAtaDevice *self,
 
 	/* hit hardware */
 	io_hdr.interface_id = 'S';
-	io_hdr.mx_sb_len = sizeof(sb);
 	io_hdr.dxfer_direction = dxfer_direction;
-	io_hdr.dxfer_len = dxfer_len;
-	io_hdr.dxferp = dxferp;
-	io_hdr.cmdp = cdb;
-	io_hdr.cmd_len = SG_ATA_12_LEN;
-	io_hdr.sbp = sb;
 	io_hdr.pack_id = fu_ata_device_tf_to_pack_id(tf);
 	io_hdr.timeout = timeout_ms;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  NULL,
-				  FU_ATA_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", SG_IO);
+	fu_ioctl_add_key_as_u8(ioctl, "DxferDirection", io_hdr.dxfer_direction);
+	fu_ioctl_add_key_as_u8(ioctl, "PackId", io_hdr.pack_id);
+	fu_ioctl_add_mutable_buffer(ioctl, NULL, dxferp, dxfer_len, fu_ata_device_ioctl_buf_cb);
+	fu_ioctl_add_const_buffer(ioctl, "Cdb", cdb, sizeof(cdb), fu_ata_device_ioctl_cdb_cb);
+	fu_ioctl_add_mutable_buffer(ioctl, "Sense", sb, sizeof(sb), fu_ata_device_ioctl_sense_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      SG_IO,
+			      (guint8 *)&io_hdr,
+			      sizeof(io_hdr),
+			      NULL,
+			      FU_ATA_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 	g_debug("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
 		io_hdr.cmd_len,

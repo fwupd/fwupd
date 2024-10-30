@@ -48,47 +48,63 @@ struct _FuLogitechTapHdmiDevice {
 G_DEFINE_TYPE(FuLogitechTapHdmiDevice, fu_logitech_tap_hdmi_device, FU_TYPE_V4L_DEVICE)
 
 static gboolean
+fu_logitech_tap_hdmi_device_ioctl_buffer_cb(FuIoctl *self,
+					    gpointer ptr,
+					    guint8 *buf,
+					    gsize bufsz,
+					    GError **error)
+{
+	struct uvc_xu_control_query *query = (struct uvc_xu_control_query *)ptr;
+	query->data = buf;
+	query->size = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_tap_hdmi_device_query_data_size(FuLogitechTapHdmiDevice *self,
 					    guint8 unit_id,
 					    guint8 control_selector,
 					    guint16 *data_size,
 					    GError **error)
 {
-	guint8 size_data[kDefaultUvcGetLenQueryControlSize] = {0x0};
-	struct uvc_xu_control_query size_query = {.unit = unit_id,
-						  .selector = control_selector,
-						  .query = UVC_GET_LEN,
-						  .size = kDefaultUvcGetLenQueryControlSize,
-						  .data = size_data};
+	guint8 buf[kDefaultUvcGetLenQueryControlSize] = {0x0};
+	struct uvc_xu_control_query query = {
+	    .unit = unit_id,
+	    .selector = control_selector,
+	    .query = UVC_GET_LEN,
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
 	g_debug("data size query request, unit: 0x%x selector: 0x%x", unit_id, control_selector);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&size_query,
-				  sizeof(size_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
+	fu_ioctl_add_key_as_u8(ioctl, "Unit", query.unit);
+	fu_ioctl_add_key_as_u8(ioctl, "Selector", query.selector);
+	fu_ioctl_add_key_as_u8(ioctl, "Query", query.query);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    sizeof(buf),
+				    fu_logitech_tap_hdmi_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      UVCIOC_CTRL_QUERY,
+			      (guint8 *)&query,
+			      sizeof(query),
+			      NULL,
+			      FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_RETRY,
+			      error))
 		return FALSE;
 
 	/* convert the data byte to int */
-	if (!fu_memread_uint16_safe(size_data,
-				    sizeof(size_data),
-				    0x0,
-				    data_size,
-				    G_LITTLE_ENDIAN,
-				    error))
+	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, data_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
 	g_debug("data size query response, size: %u unit: 0x%x selector: 0x%x",
 		*data_size,
 		unit_id,
 		control_selector);
-	fu_dump_raw(G_LOG_DOMAIN,
-		    "UVC_GET_LENRes",
-		    size_query.data,
-		    kDefaultUvcGetLenQueryControlSize);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_LENRes", query.data, kDefaultUvcGetLenQueryControlSize);
 
 	/* success */
 	return TRUE;
@@ -98,35 +114,42 @@ static gboolean
 fu_logitech_tap_hdmi_device_get_xu_control(FuLogitechTapHdmiDevice *self,
 					   guint8 unit_id,
 					   guint8 control_selector,
-					   guint16 data_size,
-					   guint8 *data,
+					   guint8 *buf,
+					   gsize bufsz,
 					   GError **error)
 {
-	struct uvc_xu_control_query control_query = {.unit = unit_id,
-						     .selector = control_selector,
-						     .query = UVC_GET_CUR,
-						     .size = data_size,
-						     .data = data};
-	g_debug("get xu control request, size: %" G_GUINT16_FORMAT " unit: 0x%x selector: 0x%x",
-		data_size,
-		unit_id,
-		control_selector);
+	struct uvc_xu_control_query query = {
+	    .unit = unit_id,
+	    .selector = control_selector,
+	    .query = UVC_GET_CUR,
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&control_query,
-				  sizeof(control_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
+	fu_ioctl_add_key_as_u8(ioctl, "Unit", query.unit);
+	fu_ioctl_add_key_as_u8(ioctl, "Selector", query.selector);
+	fu_ioctl_add_key_as_u8(ioctl, "Query", query.query);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    bufsz,
+				    fu_logitech_tap_hdmi_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      UVCIOC_CTRL_QUERY,
+			      (guint8 *)&query,
+			      sizeof(query),
+			      NULL,
+			      FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_RETRY,
+			      error))
 		return FALSE;
 
 	g_debug("received get xu control response, size: %u unit: 0x%x selector: 0x%x",
-		control_query.size,
+		query.size,
 		unit_id,
 		control_selector);
-	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CURRes", control_query.data, control_query.size);
+	fu_dump_raw(G_LOG_DOMAIN, "UVC_GET_CURRes", query.data, query.size);
 
 	/* success */
 	return TRUE;
@@ -136,28 +159,39 @@ static gboolean
 fu_logitech_tap_hdmi_device_set_xu_control(FuLogitechTapHdmiDevice *self,
 					   guint8 unit_id,
 					   guint8 control_selector,
-					   guint16 data_size,
-					   guint8 *data,
+					   guint8 *buf,
+					   gsize bufsz,
 					   GError **error)
 {
-	struct uvc_xu_control_query control_query = {.unit = unit_id,
-						     .selector = control_selector,
-						     .query = UVC_SET_CUR,
-						     .size = data_size,
-						     .data = data};
+	struct uvc_xu_control_query query = {
+	    .unit = unit_id,
+	    .selector = control_selector,
+	    .query = UVC_SET_CUR,
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  UVCIOC_CTRL_QUERY,
-				  (guint8 *)&control_query,
-				  sizeof(control_query),
-				  NULL,
-				  FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
+	fu_ioctl_add_key_as_u8(ioctl, "Unit", query.unit);
+	fu_ioctl_add_key_as_u8(ioctl, "Selector", query.selector);
+	fu_ioctl_add_key_as_u8(ioctl, "Query", query.query);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    NULL,
+				    buf,
+				    bufsz,
+				    fu_logitech_tap_hdmi_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      UVCIOC_CTRL_QUERY,
+			      (guint8 *)&query,
+			      sizeof(query),
+			      NULL,
+			      FU_LOGITECH_TAP_HDMI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_RETRY,
+			      error))
 		return FALSE;
 
 	g_debug("received set xu control response, size: %u unit: 0x%x selector: 0x%x",
-		data_size,
+		(guint)bufsz,
 		unit_id,
 		control_selector);
 
@@ -176,8 +210,8 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsSetMmp,
-							XU_INPUT_DATA_LEN,
-							(guint8 *)&ait_initiate_update,
+							ait_initiate_update,
+							sizeof(ait_initiate_update),
 							error))
 		return FALSE;
 
@@ -200,8 +234,8 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 	if (!fu_logitech_tap_hdmi_device_get_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsGetMmpResult,
-							data_len,
 							(guint8 *)mmp_get_data,
+							data_len,
 							error))
 		return FALSE;
 	if (mmp_get_data[0] != kLogiDefaultAitSuccessValue) {
@@ -228,8 +262,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapUvcXuAitCustomCsSetMmp,
-							XU_INPUT_DATA_LEN,
-							(guint8 *)&ait_finalize_update,
+							ait_finalize_update,
+							sizeof(ait_finalize_update),
 							error))
 		return FALSE;
 
@@ -253,8 +287,8 @@ fu_logitech_tap_hdmi_device_ait_finalize_update(FuLogitechTapHdmiDevice *self, G
 			self,
 			kLogiUnitIdVidCapExtension,
 			kLogiTapUvcXuAitCustomCsGetMmpResult,
-			data_len,
 			(guint8 *)mmp_get_data,
+			data_len,
 			error))
 			return FALSE;
 		if (mmp_get_data[0] == kLogiDefaultAitSuccessValue) {
@@ -319,8 +353,8 @@ fu_logitech_tap_hdmi_device_write_fw(FuLogitechTapHdmiDevice *self,
 		if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 								kLogiUnitIdVidCapExtension,
 								kLogiUvcXuAitCustomCsSetFwData,
-								kLogiDefaultImageBlockSize,
 								(guint8 *)data_pkt,
+								kLogiDefaultImageBlockSize,
 								error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -394,8 +428,8 @@ fu_logitech_tap_hdmi_device_ensure_version(FuLogitechTapHdmiDevice *self, GError
 	if (!fu_logitech_tap_hdmi_device_set_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiTapCameraVersionSelector,
-							XU_INPUT_DATA_LEN,
-							(guint8 *)set_data,
+							set_data,
+							sizeof(set_data),
 							error))
 		return FALSE;
 
@@ -419,8 +453,8 @@ fu_logitech_tap_hdmi_device_ensure_version(FuLogitechTapHdmiDevice *self, GError
 	if (!fu_logitech_tap_hdmi_device_get_xu_control(self,
 							kLogiUnitIdVidCapExtension,
 							kLogiHdmiVerGetSelector,
+							buf,
 							bufsz,
-							(guint8 *)buf,
 							error))
 		return FALSE;
 

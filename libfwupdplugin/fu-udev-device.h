@@ -8,6 +8,7 @@
 
 #include "fu-device.h"
 #include "fu-io-channel.h"
+#include "fu-ioctl.h"
 
 #define FU_TYPE_UDEV_DEVICE (fu_udev_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice)
@@ -15,20 +16,6 @@ G_DECLARE_DERIVABLE_TYPE(FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice
 struct _FuUdevDeviceClass {
 	FuDeviceClass parent_class;
 };
-
-/**
- * FuUdevDeviceIoctlFlags:
- * @FU_UDEV_DEVICE_IOCTL_FLAG:			No flags set
- * @FU_UDEV_DEVICE_IOCTL_FLAG_RETRY:		Retry the call on failure
- *
- * Flags used when calling fu_udev_device_ioctl().
- **/
-typedef enum {
-	FU_UDEV_DEVICE_IOCTL_FLAG_NONE = 0,
-	FU_UDEV_DEVICE_IOCTL_FLAG_RETRY = 1 << 0,
-	/*< private >*/
-	FU_UDEV_DEVICE_IOCTL_FLAG_LAST
-} FuUdevDeviceIoctlFlags;
 
 /**
  * FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT:
@@ -70,15 +57,9 @@ FuIOChannel *
 fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
-gboolean
-fu_udev_device_ioctl(FuUdevDevice *self,
-		     gulong request,
-		     guint8 *buf,
-		     gsize bufsz,
-		     gint *rc,
-		     guint timeout,
-		     FuUdevDeviceIoctlFlags flags,
-		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+FuIoctl *
+fu_udev_device_ioctl_new(FuUdevDevice *self, const gchar *name) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,
 		      goffset port,

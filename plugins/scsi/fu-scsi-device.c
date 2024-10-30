@@ -186,6 +186,33 @@ fu_scsi_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_scsi_device_ioctl_buf_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->dxferp = buf;
+	io_hdr->dxfer_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
+fu_scsi_device_ioctl_cdb_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->cmdp = buf;
+	io_hdr->cmd_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
+fu_scsi_device_ioctl_sense_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct sg_io_hdr *io_hdr = (struct sg_io_hdr *)ptr;
+	io_hdr->sbp = buf;
+	io_hdr->mx_sb_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				const guint8 *cdb,
 				gsize cdbsz,
@@ -195,27 +222,33 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				GError **error)
 {
 	guint8 sense_buffer[SENSE_BUFF_LEN] = {0};
-	struct sg_io_hdr io_hdr = {.interface_id = 'S'};
-
-	io_hdr.cmd_len = cdbsz;
-	io_hdr.mx_sb_len = sizeof(sense_buffer);
-	io_hdr.dxfer_direction = dir;
-	io_hdr.dxfer_len = bufsz;
-	io_hdr.dxferp = (guint8 *)buf;
-	/* pointer to command buf */
-	io_hdr.cmdp = (guint8 *)cdb;
-	io_hdr.sbp = sense_buffer;
-	io_hdr.timeout = 60000; /* ms */
+	struct sg_io_hdr io_hdr = {
+	    .interface_id = 'S',
+	    .dxfer_direction = dir,
+	    .timeout = 60000, /* ms */
+	};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
 	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SG_IO,
-				  (guint8 *)&io_hdr,
-				  sizeof(io_hdr),
-				  NULL,
-				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
+
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", SG_IO);
+	fu_ioctl_add_key_as_u8(ioctl, "DxferDirection", io_hdr.dxfer_direction);
+	fu_ioctl_add_const_buffer(ioctl, NULL, buf, bufsz, fu_scsi_device_ioctl_buf_cb);
+	fu_ioctl_add_const_buffer(ioctl, "Cdb", cdb, cdbsz, fu_scsi_device_ioctl_cdb_cb);
+	fu_ioctl_add_mutable_buffer(ioctl,
+				    "Sense",
+				    sense_buffer,
+				    sizeof(sense_buffer),
+				    fu_scsi_device_ioctl_sense_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      SG_IO,
+			      (guint8 *)&io_hdr,
+			      sizeof(io_hdr),
+			      NULL,
+			      FU_SCSI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_RETRY,
+			      error))
 		return FALSE;
 
 	if (io_hdr.status) {

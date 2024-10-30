@@ -53,58 +53,39 @@ fu_bcm57xx_device_probe(FuDevice *device, GError **error)
 
 #ifdef HAVE_ETHTOOL_H
 static gboolean
+fu_bcm57xx_device_ioctl_buffer_cb(FuIoctl *self,
+				  gpointer ptr,
+				  guint8 *buf,
+				  gsize bufsz,
+				  GError **error)
+{
+	struct ifreq *ifr = (struct ifreq *)ptr;
+	ifr->ifr_data = (char *)buf;
+	return TRUE;
+}
+
+static gboolean
 fu_bcm57xx_device_submit_ifreq(FuBcm57xxDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	FuDeviceEvent *event = NULL;
 	struct ifreq ifr = {0};
-	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "Siocethtool");
 
 	g_return_val_if_fail(buf != NULL, FALSE);
 
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
-	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
-		event_id = g_strdup_printf("SiocethtoolIoctl:"
-					   "Data=%s,"
-					   "Length=0x%x",
-					   buf_base64,
-					   (guint)bufsz);
-	}
-
-	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		if (event == NULL)
-			return FALSE;
-		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
-	}
-
-	/* save */
-	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
-				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event = fu_device_save_event(FU_DEVICE(self), event_id);
-		fu_device_event_set_data(event, "Data", buf, bufsz);
-	}
-
-	/* we can't use the emulation support in fu_udev_device_ioctl() as
-	 * the buffer is specified indirectly using ifr_data */
+	/* include these when generating the emulation event */
 	strncpy(ifr.ifr_name, self->ethtool_iface, IFNAMSIZ - 1);
-	ifr.ifr_data = (char *)buf;
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  SIOCETHTOOL,
-				  (guint8 *)&ifr,
-				  sizeof(ifr),
-				  NULL,
-				  500, /* ms */
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_bcm57xx_device_ioctl_buffer_cb);
+	if (!fu_ioctl_execute(ioctl,
+			      SIOCETHTOOL,
+			      (guint8 *)&ifr,
+			      sizeof(ifr),
+			      NULL,
+			      500, /* ms */
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
 		g_prefix_error(error, "failed to SIOCETHTOOL: ");
 		return FALSE;
 	}
-	if (event != NULL)
-		fu_device_event_set_data(event, "DataOut", buf, bufsz);
 
 	/* success */
 	return TRUE;

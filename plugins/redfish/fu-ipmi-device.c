@@ -79,6 +79,28 @@ fu_ipmi_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
+fu_ipmi_device_ioctl_buffer_cb(FuIoctl *self,
+			       gpointer ptr,
+			       guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	struct ipmi_req *req = (struct ipmi_req *)ptr;
+	req->msg.data = buf;
+	req->msg.data_len = (guint16)bufsz;
+	return TRUE;
+}
+
+static gboolean
+fu_ipmi_device_ioctl_addr_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize bufsz, GError **error)
+{
+	struct ipmi_req *req = (struct ipmi_req *)ptr;
+	req->addr = buf;
+	req->addr_len = bufsz;
+	return TRUE;
+}
+
+static gboolean
 fu_ipmi_device_send(FuIpmiDevice *self,
 		    guint8 netfn,
 		    guint8 cmd,
@@ -86,33 +108,45 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 		    gsize bufsz,
 		    GError **error)
 {
-	struct ipmi_system_interface_addr addr = {.addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE,
-						  .channel = IPMI_BMC_CHANNEL};
+	struct ipmi_system_interface_addr addr = {
+	    .addr_type = IPMI_SYSTEM_INTERFACE_ADDR_TYPE,
+	    .channel = IPMI_BMC_CHANNEL,
+	};
 	struct ipmi_req req = {
-	    .addr = (guint8 *)&addr,
-	    .addr_len = sizeof(addr),
 	    .msgid = self->seq++,
-	    .msg.data_len = (guint16)bufsz,
 	    .msg.netfn = netfn,
 	    .msg.cmd = cmd,
 	};
 	g_autofree guint8 *buf2 = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+
 	if (buf != NULL) {
 		buf2 = fu_memdup_safe(buf, bufsz, error);
 		if (buf2 == NULL)
 			return FALSE;
-		req.msg.data = buf2;
 	}
 	if (buf2 != NULL)
 		fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    IPMICTL_SEND_COMMAND,
-				    (guint8 *)&req,
-				    sizeof(req),
-				    NULL,
-				    FU_IPMI_DEVICE_IOCTL_TIMEOUT,
-				    FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				    error);
+
+	/* include these when generating the emulation event */
+	fu_ioctl_add_key_as_u16(ioctl, "Request", IPMICTL_SEND_COMMAND);
+	fu_ioctl_add_key_as_u8(ioctl, "Msgid", req.msgid);
+	fu_ioctl_add_key_as_u8(ioctl, "MsgNetfn", req.msg.netfn);
+	fu_ioctl_add_key_as_u8(ioctl, "MsgCmd", req.msg.cmd);
+	fu_ioctl_add_const_buffer(ioctl, NULL, buf2, bufsz, fu_ipmi_device_ioctl_buffer_cb);
+	fu_ioctl_add_const_buffer(ioctl,
+				  NULL,
+				  (const guint8 *)&addr,
+				  sizeof(addr),
+				  fu_ipmi_device_ioctl_addr_cb);
+	return fu_ioctl_execute(ioctl,
+				IPMICTL_SEND_COMMAND,
+				(guint8 *)&req,
+				sizeof(req),
+				NULL,
+				FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+				FU_IOCTL_FLAG_NONE,
+				error);
 }
 
 static gboolean
@@ -132,14 +166,17 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 	    .msg.data = buf,
 	    .msg.data_len = bufsz,
 	};
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  IPMICTL_RECEIVE_MSG_TRUNC,
-				  (guint8 *)&recv,
-				  sizeof(recv),
-				  NULL,
-				  FU_IPMI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+
+	fu_ioctl_add_key_as_u16(ioctl, "Request", IPMICTL_RECEIVE_MSG_TRUNC);
+	if (!fu_ioctl_execute(ioctl,
+			      IPMICTL_RECEIVE_MSG_TRUNC,
+			      (guint8 *)&recv,
+			      sizeof(recv),
+			      NULL,
+			      FU_IPMI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, bufsz);
 	if (netfn != NULL)

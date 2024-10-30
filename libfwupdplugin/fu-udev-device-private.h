@@ -28,3 +28,12 @@ gchar *
 fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
 					      const gchar *subsystem,
 					      GError **error) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_udev_device_ioctl(FuUdevDevice *self,
+		     gulong request,
+		     guint8 *buf,
+		     gsize bufsz,
+		     gint *rc,
+		     guint timeout,
+		     FuIoctlFlags flags,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

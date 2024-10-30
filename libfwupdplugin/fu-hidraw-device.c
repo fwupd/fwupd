@@ -148,7 +148,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
  * @self: a #FuHidrawDevice
  * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
  * @bufsz: the size of @buf
- * @flags: some #FuUdevDeviceIoctlFlags, e.g. %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
+ * @flags: some #FuIoctlFlags, e.g. %FU_IOCTL_FLAG_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Do a HID SetFeature request.
@@ -161,11 +161,12 @@ gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,
 			     const guint8 *buf,
 			     gsize bufsz,
-			     FuUdevDeviceIoctlFlags flags,
+			     FuIoctlFlags flags,
 			     GError **error)
 {
 #ifdef HAVE_HIDRAW_H
 	g_autofree guint8 *buf_mut = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 #endif
 
 	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
@@ -177,14 +178,14 @@ fu_hidraw_device_set_feature(FuHidrawDevice *self,
 	buf_mut = fu_memdup_safe(buf, bufsz, error);
 	if (buf_mut == NULL)
 		return FALSE;
-	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				    HIDIOCSFEATURE(bufsz), /* nocheck:blocked */
-				    buf_mut,
-				    bufsz,
-				    NULL,
-				    FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
-				    flags,
-				    error);
+	return fu_ioctl_execute(ioctl,
+				HIDIOCSFEATURE(bufsz), /* nocheck:blocked */
+				buf_mut,
+				bufsz,
+				NULL,
+				FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+				flags,
+				error);
 #else
 	/* failed */
 	g_set_error_literal(error,
@@ -200,7 +201,7 @@ fu_hidraw_device_set_feature(FuHidrawDevice *self,
  * @self: a #FuHidrawDevice
  * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
  * @bufsz: the size of @buf
- * @flags: some #FuUdevDeviceIoctlFlags, e.g. %FU_UDEV_DEVICE_IOCTL_FLAG_RETRY
+ * @flags: some #FuIoctlFlags, e.g. %FU_IOCTL_FLAG_RETRY
  * @error: (nullable): optional return location for an error
  *
  * Do a HID GetFeature request.
@@ -213,23 +214,27 @@ gboolean
 fu_hidraw_device_get_feature(FuHidrawDevice *self,
 			     guint8 *buf,
 			     gsize bufsz,
-			     FuUdevDeviceIoctlFlags flags,
+			     FuIoctlFlags flags,
 			     GError **error)
 {
+#ifdef HAVE_HIDRAW_H
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+#endif
+
 	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 #ifdef HAVE_HIDRAW_H
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature[req]", buf, bufsz);
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  HIDIOCGFEATURE(bufsz), /* nocheck:blocked */
-				  buf,
-				  bufsz,
-				  NULL,
-				  FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
-				  flags,
-				  error))
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGFEATURE(bufsz), /* nocheck:blocked */
+			      buf,
+			      bufsz,
+			      NULL,
+			      FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+			      flags,
+			      error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "GetFeature[res]", buf, bufsz);
 

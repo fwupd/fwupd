@@ -78,7 +78,7 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  rcv_buf,
 					  sizeof(rcv_buf),
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error)) {
 		g_prefix_error(error, "failed get report: ");
 		return FALSE;
@@ -106,7 +106,7 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  bufsz,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error)) {
 		g_prefix_error(error, "failed set report: ");
 		return FALSE;

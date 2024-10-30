@@ -319,6 +319,7 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 	fwupd_guid_t guid_le = {0x0};
 	struct mei_client *cl;
 	struct mei_connect_client_data data = {0x0};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -327,14 +328,14 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "guid_le", (guint8 *)&guid_le, sizeof(guid_le));
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le)); /* nocheck:blocked */
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  IOCTL_MEI_CONNECT_CLIENT,
-				  (guint8 *)&data,
-				  sizeof(data),
-				  NULL, /* rc */
-				  FU_MEI_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error))
+	if (!fu_ioctl_execute(ioctl,
+			      IOCTL_MEI_CONNECT_CLIENT,
+			      (guint8 *)&data,
+			      sizeof(data),
+			      NULL, /* rc */
+			      FU_MEI_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 
 	cl = &data.out_client_properties;

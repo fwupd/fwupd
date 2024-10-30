@@ -85,7 +85,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 					  tx,
 					  txsz,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 	if (rxsz == 0)
@@ -97,7 +97,7 @@ fu_elantp_hid_device_send_cmd(FuElantpHidDevice *self,
 	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 					  buf,
 					  bufsz,
-					  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+					  FU_IOCTL_FLAG_NONE,
 					  error))
 		return FALSE;
 

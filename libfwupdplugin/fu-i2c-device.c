@@ -150,14 +150,16 @@ gboolean
 fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)
 {
 #ifdef HAVE_I2C_DEV_H
-	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
-				  force ? I2C_SLAVE_FORCE : I2C_SLAVE,
-				  (guint8 *)(guintptr)address,
-				  sizeof(guintptr),
-				  NULL,
-				  FU_I2C_DEVICE_IOCTL_TIMEOUT,
-				  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
-				  error)) {
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+
+	if (!fu_ioctl_execute(ioctl,
+			      force ? I2C_SLAVE_FORCE : I2C_SLAVE,
+			      (guint8 *)(guintptr)address,
+			      sizeof(guintptr),
+			      NULL,
+			      FU_I2C_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
 		g_prefix_error(error, "failed to set address 0x%02x: ", address);
 		return FALSE;
 	}

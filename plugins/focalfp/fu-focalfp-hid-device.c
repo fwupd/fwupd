@@ -94,7 +94,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 						  buf,
 						  sizeof(buf),
-						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  FU_IOCTL_FLAG_NONE,
 						  error)) {
 			return FALSE;
 		}
@@ -106,7 +106,7 @@ fu_focalfp_hid_device_io(FuFocalfpHidDevice *self,
 		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
 						  buf,
 						  sizeof(buf),
-						  FU_UDEV_DEVICE_IOCTL_FLAG_NONE,
+						  FU_IOCTL_FLAG_NONE,
 						  error)) {
 			return FALSE;
 		}
