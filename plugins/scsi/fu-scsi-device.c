@@ -189,25 +189,64 @@ static gboolean
 fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				const guint8 *cdb,
 				gsize cdbsz,
-				const guint8 *buf,
+				guint8 *buf,
 				gsize bufsz,
 				gint dir,
 				GError **error)
 {
+	FuDeviceEvent *event = NULL;
 	guint8 sense_buffer[SENSE_BUFF_LEN] = {0};
-	struct sg_io_hdr io_hdr = {.interface_id = 'S'};
+	g_autofree gchar *event_id = NULL;
+	struct sg_io_hdr io_hdr = {
+	    .interface_id = 'S',
+	    .cmd_len = cdbsz,
+	    .mx_sb_len = sizeof(sense_buffer),
+	    .dxfer_direction = dir,
+	    .dxfer_len = bufsz,
+	    .sbp = sense_buffer,
+	    .timeout = 60000,
+	};
 
-	io_hdr.cmd_len = cdbsz;
-	io_hdr.mx_sb_len = sizeof(sense_buffer);
-	io_hdr.dxfer_direction = dir;
-	io_hdr.dxfer_len = bufsz;
+	g_return_val_if_fail(buf != NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *buf_base64 = g_base64_encode(buf, bufsz);
+		g_autofree gchar *cdb_base64 = g_base64_encode(cdb, cdbsz);
+		event_id = g_strdup_printf("SgIoIoctl:"
+					   "CdbData=%s,"
+					   "CdbLength=0x%x,"
+					   "Data=%s,"
+					   "Length=0x%x,"
+					   "Dir=%i",
+					   cdb_base64,
+					   (guint)cdbsz,
+					   buf_base64,
+					   (guint)bufsz,
+					   dir);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
+
+	/* we can't use the emulation support in fu_udev_device_ioctl() as
+	 * the buffers are specified indirectly */
 	io_hdr.dxferp = (guint8 *)buf;
-	/* pointer to command buf */
 	io_hdr.cmdp = (guint8 *)cdb;
-	io_hdr.sbp = sense_buffer;
-	io_hdr.timeout = 60000; /* ms */
-
-	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				  SG_IO,
 				  (guint8 *)&io_hdr,
@@ -215,9 +254,10 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 				  NULL,
 				  FU_SCSI_DEVICE_IOCTL_TIMEOUT,
 				  FU_UDEV_DEVICE_IOCTL_FLAG_RETRY,
-				  error))
+				  error)) {
+		g_prefix_error(error, "failed to SG_IO: ");
 		return FALSE;
-
+	}
 	if (io_hdr.status) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -229,6 +269,8 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 			    sense_buffer[13]);
 		return FALSE;
 	}
+	if (event != NULL)
+		fu_device_event_set_data(event, "DataOut", buf, bufsz);
 
 	/* success */
 	return TRUE;
@@ -338,6 +380,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
 		guint8 cdb[WRITE_BUF_CMDLEN] = {WRITE_BUFFER_CMD,
 						BUFFER_FFU_MODE,
 						0x0 /* buf_id */};
@@ -348,11 +391,14 @@ fu_scsi_device_write_firmware(FuDevice *device,
 			return FALSE;
 		fu_memwrite_uint24(cdb + 3, offset, G_BIG_ENDIAN);
 		fu_memwrite_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_BIG_ENDIAN);
+
+		/* make mutable */
+		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 		if (!fu_scsi_device_send_scsi_cmd_v3(self,
 						     cdb,
 						     sizeof(cdb),
-						     fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
+						     buf->data,
+						     buf->len,
 						     SG_DXFER_TO_DEV,
 						     error)) {
 			g_prefix_error(error,
