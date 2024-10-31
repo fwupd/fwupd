@@ -104,7 +104,7 @@ fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *valu
  * fu_device_event_set_i64:
  * @self: a #FuDeviceEvent
  * @key: (not nullable): a unique key, e.g. `Name`
- * @value: a string
+ * @value: integer
  *
  * Sets an integer value on the string.
  *
