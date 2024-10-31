@@ -134,7 +134,10 @@ fu_qsi_dock_mcu_device_enumerate_children(FuQsiDockMcuDevice *self, GError **err
 				continue;
 			}
 
-			version = g_strdup_printf("%x.%x.%02x", val[0] & 0xFu, val[0] >> 4, val[1]);
+			version = g_strdup_printf("%x.%x.%02x",
+						  val[0] & 0xFu,
+						  (guint)(val[0] >> 4),
+						  val[1]);
 			g_debug("ignoring %s --> %s", components[i].name, version);
 
 			continue;

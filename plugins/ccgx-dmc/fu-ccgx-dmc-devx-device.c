@@ -36,7 +36,7 @@ fu_ccgx_dmc_devx_device_version_dmc_bfw(FuCcgxDmcDevxDevice *self, gsize offset)
 {
 	const guint8 *fw_version = fu_ccgx_dmc_devx_device_get_fw_version(self);
 	return g_strdup_printf("%u.%u.%u.%u",
-			       fw_version[offset + 3] >> 4,
+			       (guint)(fw_version[offset + 3] >> 4),
 			       fw_version[offset + 3] & 0xFu,
 			       fw_version[offset + 2],
 			       fu_memread_uint16(fw_version + offset, G_LITTLE_ENDIAN));
@@ -47,7 +47,7 @@ fu_ccgx_dmc_devx_device_version_dmc_app(FuCcgxDmcDevxDevice *self, gsize offset)
 {
 	const guint8 *fw_version = fu_ccgx_dmc_devx_device_get_fw_version(self);
 	return g_strdup_printf("%u.%u.%u",
-			       fw_version[offset + 4 + 3] >> 4,
+			       (guint)(fw_version[offset + 4 + 3] >> 4),
 			       fw_version[offset + 4 + 3] & 0xFu,
 			       fw_version[offset + 4 + 2]);
 }

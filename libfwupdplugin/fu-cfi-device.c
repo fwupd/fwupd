@@ -222,7 +222,7 @@ fu_cfi_device_wait_for_status_cb(FuDevice *device, gpointer user_data, GError **
 			    FWUPD_ERROR_INTERNAL,
 			    "wanted 0x%x, got 0x%x",
 			    helper->value,
-			    buf[0x1] & helper->mask);
+			    (guint)(buf[0x1] & helper->mask));
 		return FALSE;
 	}
 
