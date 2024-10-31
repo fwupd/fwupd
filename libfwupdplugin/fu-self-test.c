@@ -6250,7 +6250,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{incorporate-flag}", fu_device_incorporate_flag_func);
 	g_test_add_func("/fwupd/device{incorporate-descendant}",
 			fu_device_incorporate_descendant_func);
-	g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
+	if (g_test_slow())
+		g_test_add_func("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func("/fwupd/device{name}", fu_device_name_func);
