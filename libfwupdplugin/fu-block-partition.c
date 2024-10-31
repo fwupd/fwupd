@@ -13,6 +13,8 @@
 #endif
 
 #include "fu-block-partition.h"
+#include "fu-device-event-private.h"
+#include "fu-device-private.h"
 #include "fu-string.h"
 
 /**
