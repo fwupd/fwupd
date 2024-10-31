@@ -199,9 +199,9 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			if (fu_device_has_private_flag(FU_DEVICE(self),
 						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
 				version = g_strdup_printf("%x.%x.%x.%x",
-							  val[0] >> 4,
+							  (guint)(val[0] >> 4),
 							  val[0] & 0xFu,
-							  val[1] >> 4,
+							  (guint)(val[1] >> 4),
 							  val[1] & 0xFu);
 				fu_device_set_version_format(FU_DEVICE(self),
 							     FWUPD_VERSION_FORMAT_QUAD);
@@ -209,7 +209,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			} else {
 				version = g_strdup_printf("%x.%x.%02x",
 							  val[0] & 0xFu,
-							  val[0] >> 4,
+							  (guint)(val[0] >> 4),
 							  val[1]);
 				g_debug("ignoring %s --> %s", components[i].name, version);
 			}
@@ -325,7 +325,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			version = g_strdup_printf("%x.%x.%x", val[2] >> 4, val[3], val[4]);
+			version = g_strdup_printf("%x.%x.%x", (guint)(val[2] >> 4), val[3], val[4]);
 			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 			fu_device_set_version(child, version);
 			fu_device_add_icon(child, "network-wired");
@@ -339,9 +339,9 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			if (fu_device_has_private_flag(FU_DEVICE(self),
 						       FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP)) {
 				version = g_strdup_printf("%x.%x.%x.%x",
-							  val[0] >> 4,
+							  (guint)(val[0] >> 4),
 							  val[0] & 0xFu,
-							  val[1] >> 4,
+							  (guint)(val[1] >> 4),
 							  val[1] & 0xFu);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
 			} else {
