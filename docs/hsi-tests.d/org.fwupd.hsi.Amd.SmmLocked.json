@@ -1,0 +1,19 @@
+{
+  "id": "org.fwupd.hsi.Amd.SmmLocked",
+  "name": "SMM locked down",
+  "description": [
+    "Disable SMM_BASE from being saved to and restored from the SMM save state area.",
+    "Code in the ASeg and TSeg range and the SMM registers are Read-only and SMI interrupts are not intercepted in SVM."
+  ],
+  "failure-impact": [
+    "An attacker with an existing unrelated vulnerability can the SMM save state area to exfiltrate data."
+  ],
+  "failure-results": {
+    "not-locked": "SMM is not locked down"
+  },
+  "success-results": {
+    "locked": "SMM is locked down"
+  },
+  "hsi-level": 1,
+  "fwupd-version": "2.0.2"
+}

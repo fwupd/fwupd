@@ -74,6 +74,17 @@ typedef union {
 	} __attribute__((packed)) fields; /* nocheck:blocked */
 } FuMsrAMD64Sev;
 
+typedef union {
+	guint64 data;
+	struct {
+		guint64 smm_locked : 1;
+		guint64 unknown0 : 30;
+		guint64 smm_base_lock : 1;
+		guint64 unknown1 : 1;
+		guint64 smm_pg_cfg_lock : 1;
+	} __attribute__((packed)) fields; /* nocheck:blocked */
+} FuMsrAMD64HwCR;
+
 struct _FuMsrPlugin {
 	FuPlugin parent_instance;
 	gboolean ia32_debug_supported;
@@ -86,8 +97,10 @@ struct _FuMsrPlugin {
 	FuMsrIa32McuOptCtrl ia32_mcu_opt_ctrl;
 	gboolean amd64_syscfg_supported;
 	gboolean amd64_sev_supported;
+	gboolean amd64_hwcfg_supported;
 	FuMsrAMD64Syscfg amd64_syscfg;
 	FuMsrAMD64Sev amd64_sev;
+	FuMsrAMD64HwCR amd64_hwcfg;
 };
 
 G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
@@ -99,6 +112,7 @@ G_DEFINE_TYPE(FuMsrPlugin, fu_msr_plugin, FU_TYPE_PLUGIN)
 #define PCI_MSR_IA32_MCU_OPT_CTRL      0x123
 #define PCI_MSR_AMD64_SYSCFG	       0xC0010010
 #define PCI_MSR_AMD64_SEV	       0xC0010131
+#define PCI_MSR_AMD64_HWCFG	       0xc0010015
 
 static void
 fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
@@ -154,6 +168,20 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 					       "Amd64SevIsEnabled",
 					       self->amd64_sev.fields.sev_is_enabled);
 	}
+	if (self->amd64_hwcfg_supported) {
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Amd64SmmLock",
+					       self->amd64_hwcfg.fields.smm_locked);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Amd64SmmPgCfgLock",
+					       self->amd64_hwcfg.fields.smm_pg_cfg_lock);
+		fwupd_codec_string_append_bool(str,
+					       idt,
+					       "Amd64SmmBaseLock",
+					       self->amd64_hwcfg.fields.smm_base_lock);
+	}
 }
 
 static gboolean
@@ -192,6 +220,7 @@ fu_msr_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
 		self->amd64_syscfg_supported = ((eax >> 0) & 0x1) > 0;
 		self->amd64_sev_supported = ((eax >> 1) & 0x1) > 0;
+		self->amd64_hwcfg_supported = TRUE;
 	}
 
 	return TRUE;
@@ -327,6 +356,23 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					    sizeof(buf),
 					    0x0,
 					    &self->amd64_sev.data,
+					    G_LITTLE_ENDIAN,
+					    error))
+			return FALSE;
+	}
+	if (self->amd64_hwcfg_supported) {
+		if (!fu_udev_device_pread(FU_UDEV_DEVICE(device),
+					  PCI_MSR_AMD64_HWCFG,
+					  buf,
+					  sizeof(buf),
+					  error)) {
+			g_prefix_error(error, "could not read PCI_MSR_AMD66_HWCFG: ");
+			return FALSE;
+		}
+		if (!fu_memread_uint64_safe(buf,
+					    sizeof(buf),
+					    0x0,
+					    &self->amd64_hwcfg.data,
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
@@ -621,6 +667,35 @@ fu_msr_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttr
 }
 
 static void
+fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
+	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
+	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
+
+	/* this MSR is only valid for a subset of AMD CPUs */
+	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
+		return;
+
+	/* check fields */
+	if (!self->amd64_hwcfg_supported)
+		return;
+
+	/* create attr */
+	attr1 = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED);
+	if (device != NULL)
+		fwupd_security_attr_add_guids(attr1, fu_device_get_guids(device));
+	fwupd_security_attr_set_result_success(attr1, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr1);
+
+	if (!self->amd64_hwcfg.fields.smm_locked || !self->amd64_hwcfg.fields.smm_base_lock) {
+		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
+	} else
+		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+static void
 fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	fu_msr_plugin_add_security_attr_dci_enabled(plugin, attrs);
@@ -628,6 +703,7 @@ fu_msr_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_msr_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
 	fu_msr_plugin_add_security_attr_intel_tme_enabled(plugin, attrs);
 	fu_msr_plugin_add_security_attr_intel_gds(plugin, attrs);
+	fu_msr_plugin_add_security_attr_amd_hwcr(plugin, attrs);
 }
 
 static gboolean

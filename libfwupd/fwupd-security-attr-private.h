@@ -380,6 +380,14 @@ G_BEGIN_DECLS
  * Since: 2.0.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_CET_ACTIVE "org.fwupd.hsi.Cet.Active"
+/**
+ * FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED:
+ *
+ * Host Security ID attribute for AMD SMM locked
+ *
+ * Since: 2.0.2
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED "org.fwupd.hsi.Amd.SmmLocked"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
