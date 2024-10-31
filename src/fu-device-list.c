@@ -850,6 +850,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			       fu_device_get_id(device),
 			       fu_device_get_plugin(device),
 			       fu_device_get_plugin(item->device));
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG);
 			return;
 		}
 
