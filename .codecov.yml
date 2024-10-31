@@ -7,3 +7,5 @@ coverage:
         target: auto
         threshold: 1
         informational: true
+ignore:
+  - "**/*.h"
