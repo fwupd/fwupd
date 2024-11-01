@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include "fu-device-event-private.h"
-#include "fu-device-private.h"
 #include "fu-ioctl-private.h"
 #include "fu-udev-device-private.h"
 

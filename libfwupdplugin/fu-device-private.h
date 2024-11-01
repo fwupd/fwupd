@@ -9,7 +9,6 @@
 #include <xmlb.h>
 
 #include "fu-backend.h"
-#include "fu-device-event.h"
 #include "fu-device.h"
 
 #define fu_device_set_plugin(d, v) fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
@@ -85,10 +84,6 @@ void
 fu_device_clear_events(FuDevice *self);
 GPtrArray *
 fu_device_get_events(FuDevice *self);
-FuDeviceEvent *
-fu_device_save_event(FuDevice *self, const gchar *id);
-FuDeviceEvent *
-fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
 void
 fu_device_set_target(FuDevice *self, FuDevice *target);
 
