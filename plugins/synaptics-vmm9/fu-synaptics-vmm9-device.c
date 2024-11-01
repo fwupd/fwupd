@@ -584,6 +584,13 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
+	/* if device reboot is not required */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
+		g_debug("skipped device reboot intentionally.");
+		return TRUE;
+	}
+
 	/* generic request */
 	if (fu_device_has_private_flag(device,
 				       FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED)) {

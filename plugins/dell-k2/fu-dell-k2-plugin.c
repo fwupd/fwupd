@@ -248,6 +248,7 @@ fu_dell_k2_plugin_config_mst_dev(FuPlugin *plugin)
 
 	/* flags */
 	fu_device_add_internal_flag(device_mst, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+	fu_device_add_flag(device_mst, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	return;
 }
 
