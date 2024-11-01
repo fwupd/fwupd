@@ -33,6 +33,8 @@ typedef gboolean (*FuIoctlFixupFunc)(FuIoctl *self,
 				     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 void
+fu_ioctl_set_name(FuIoctl *self, const gchar *name) G_GNUC_NON_NULL(1);
+void
 fu_ioctl_add_key_as_u8(FuIoctl *self, const gchar *key, gsize value) G_GNUC_NON_NULL(1, 2);
 void
 fu_ioctl_add_key_as_u16(FuIoctl *self, const gchar *key, gsize value) G_GNUC_NON_NULL(1, 2);

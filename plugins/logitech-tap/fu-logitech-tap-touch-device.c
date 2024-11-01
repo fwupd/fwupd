@@ -449,7 +449,7 @@ fu_logitech_tap_touch_device_setup(FuDevice *device, GError **error)
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
 	struct hidraw_devinfo hid_raw_info = {0x0};
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		g_debug("entering in BL MODE");

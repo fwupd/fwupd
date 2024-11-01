@@ -2574,7 +2574,7 @@ fu_backend_emulate_func(void)
 #endif
 
 	/* in-order */
-	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device), NULL);
+	ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device));
 	g_assert_nonnull(ioctl);
 	ret = fu_ioctl_execute(ioctl, 123, buf, sizeof(buf), NULL, 0, FU_IOCTL_FLAG_NONE, &error);
 	g_assert_no_error(error);

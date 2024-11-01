@@ -130,7 +130,7 @@ fu_block_device_sg_io_cmd_none(FuBlockDevice *self, const guint8 *cdb, guint8 cd
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
@@ -207,7 +207,7 @@ fu_block_device_sg_io_cmd_read(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 
@@ -288,7 +288,7 @@ fu_block_device_sg_io_cmd_write(FuBlockDevice *self,
 	    .flags = SG_FLAG_DIRECT_IO,
 	};
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	fu_dump_raw(G_LOG_DOMAIN, "cmd", cdb, cdbsz);
 

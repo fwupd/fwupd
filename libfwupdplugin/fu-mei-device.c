@@ -319,7 +319,7 @@ fu_mei_device_connect(FuMeiDevice *self, guchar req_protocol_version, GError **e
 	fwupd_guid_t guid_le = {0x0};
 	struct mei_client *cl;
 	struct mei_connect_client_data data = {0x0};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);

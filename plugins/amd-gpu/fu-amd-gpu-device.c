@@ -150,13 +150,14 @@ fu_amd_gpu_device_ioctl_buffer_cb(FuIoctl *self,
 static gboolean
 fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "DrmAmdgpuInfo");
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	struct drm_amdgpu_info request = {
 	    .query = AMDGPU_INFO_VBIOS,
 	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
 	};
 
 	/* include these when generating the emulation event */
+	fu_ioctl_set_name(ioctl, "DrmAmdgpuInfo");
 	fu_ioctl_add_key_as_u8(ioctl, "Query", request.query);
 	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_amd_gpu_device_ioctl_buffer_cb);
 	if (!fu_ioctl_execute(ioctl,

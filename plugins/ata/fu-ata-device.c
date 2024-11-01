@@ -523,7 +523,7 @@ fu_ata_device_command(FuAtaDevice *self,
 	guint8 cdb[SG_ATA_12_LEN] = {0x0};
 	guint8 sb[32] = {0x0};
 	sg_io_hdr_t io_hdr = {0x0};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	/* map _TO_DEV to PIO mode */
 	if (dxfer_direction == SG_DXFER_TO_DEV)

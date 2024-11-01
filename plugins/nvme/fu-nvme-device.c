@@ -102,9 +102,10 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 {
 	guint32 err;
 	gint rc = 0;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "Nvme");
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	/* include these when generating the emulation event */
+	fu_ioctl_set_name(ioctl, "Nvme");
 	fu_ioctl_add_key_as_u8(ioctl, "Opcode", cmd->opcode);
 	fu_ioctl_add_key_as_u8(ioctl, "Cdw10", cmd->cdw10);
 	fu_ioctl_add_key_as_u8(ioctl, "Cdw11", cmd->cdw11);

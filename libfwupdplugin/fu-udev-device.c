@@ -1149,7 +1149,6 @@ fu_udev_device_close(FuDevice *device, GError **error)
 /**
  * fu_udev_device_ioctl_new:
  * @self: a #FuUdevDevice
- * @name: (nullable): an optional name
  *
  * Build a helper to control a device using a low-level request.
  *
@@ -1158,10 +1157,10 @@ fu_udev_device_close(FuDevice *device, GError **error)
  * Since: 2.0.2
  **/
 FuIoctl *
-fu_udev_device_ioctl_new(FuUdevDevice *self, const gchar *name)
+fu_udev_device_ioctl_new(FuUdevDevice *self)
 {
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
-	return fu_ioctl_new(self, name);
+	return fu_ioctl_new(self);
 }
 
 /* private */

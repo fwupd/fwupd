@@ -46,7 +46,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 					  datasz,
 					  FU_IOCTL_FLAG_RETRY,
 					  &error_local)) {
-		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 		g_debug("failed to send get request, retrying: %s", error_local->message);
 		if (!fu_ioctl_execute(ioctl,
 				      HIDIOCGINPUT(datasz),

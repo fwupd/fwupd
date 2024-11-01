@@ -271,7 +271,7 @@ fu_emmc_device_ioctl_buffer_cb(FuIoctl *self,
 static gboolean
 fu_emmc_device_read_extcsd(FuEmmcDevice *self, guint8 *buf, gsize bufsz, GError **error)
 {
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), "MmcIocCmd");
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 	struct mmc_ioc_cmd idata = {
 	    .write_flag = 0,
 	    .opcode = MMC_SEND_EXT_CSD,
@@ -394,7 +394,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

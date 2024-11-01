@@ -168,7 +168,7 @@ fu_v4l_device_setup(FuDevice *device, GError **error)
 	FuV4lDevice *self = FU_V4L_DEVICE(device);
 	FuV4lDevicePrivate *priv = GET_PRIVATE(self);
 	struct v4l2_capability v2cap = {0};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	if (!fu_ioctl_execute(ioctl,
 			      VIDIOC_QUERYCAP,
