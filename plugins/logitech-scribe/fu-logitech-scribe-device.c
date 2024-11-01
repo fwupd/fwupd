@@ -274,7 +274,7 @@ fu_logitech_scribe_device_query_data_size(FuLogitechScribeDevice *self,
 	    .selector = control_selector,
 	    .query = UVC_GET_LEN,
 	};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	/* include these when generating the emulation event */
 	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);
@@ -320,7 +320,7 @@ fu_logitech_scribe_device_get_xu_control(FuLogitechScribeDevice *self,
 	    .selector = control_selector,
 	    .query = UVC_GET_CUR,
 	};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	/* include these when generating the emulation event */
 	fu_ioctl_add_key_as_u16(ioctl, "Request", UVCIOC_CTRL_QUERY);

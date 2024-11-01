@@ -118,7 +118,7 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 	    .msg.cmd = cmd,
 	};
 	g_autofree guint8 *buf2 = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	if (buf != NULL) {
 		buf2 = fu_memdup_safe(buf, bufsz, error);
@@ -166,7 +166,7 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 	    .msg.data = buf,
 	    .msg.data_len = bufsz,
 	};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	fu_ioctl_add_key_as_u16(ioctl, "Request", IPMICTL_RECEIVE_MSG_TRUNC);
 	if (!fu_ioctl_execute(ioctl,

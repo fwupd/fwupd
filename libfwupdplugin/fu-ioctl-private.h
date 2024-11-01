@@ -10,4 +10,4 @@
 #include "fu-udev-device.h"
 
 FuIoctl *
-fu_ioctl_new(FuUdevDevice *udev_device, const gchar *name) G_GNUC_NON_NULL(1);
+fu_ioctl_new(FuUdevDevice *udev_device) G_GNUC_NON_NULL(1);

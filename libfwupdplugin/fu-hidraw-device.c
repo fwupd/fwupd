@@ -166,7 +166,7 @@ fu_hidraw_device_set_feature(FuHidrawDevice *self,
 {
 #ifdef HAVE_HIDRAW_H
 	g_autofree guint8 *buf_mut = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 #endif
 
 	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
@@ -218,7 +218,7 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 			     GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 #endif
 
 	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);

@@ -303,7 +303,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		struct erase_info_user erase = {0x0};
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+		g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);

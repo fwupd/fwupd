@@ -227,7 +227,7 @@ fu_scsi_device_send_scsi_cmd_v3(FuScsiDevice *self,
 	    .dxfer_direction = dir,
 	    .timeout = 60000, /* ms */
 	};
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self), NULL);
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	g_debug("cmd=0x%x len=0x%x", cdb[0], (guint)bufsz);
 

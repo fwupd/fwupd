@@ -41,16 +41,34 @@ fu_ioctl_fixup_build_key(FuIoctlFixup *fixup, const gchar *suffix)
 	return g_strdup_printf("%s%s", fixup->key != NULL ? fixup->key : "", suffix);
 }
 
+/**
+ * fu_ioctl_set_name:
+ * @self: a #FuIoctl
+ * @name: (nullable): a string, e.g. `Nvme`
+ *
+ * Adds a name for the ioctl, preserving compatibility with existing emulation data.
+ *
+ * NOTE: For new devices this is not required.
+ *
+ * Since: 2.0.2
+ **/
+void
+fu_ioctl_set_name(FuIoctl *self, const gchar *name)
+{
+	g_return_if_fail(FU_IS_IOCTL(self));
+	g_string_truncate(self->event_id, 0);
+	g_string_append_printf(self->event_id, "%sIoctl:", name != NULL ? name : "");
+}
+
 /* private */
 FuIoctl *
-fu_ioctl_new(FuUdevDevice *udev_device, const gchar *name)
+fu_ioctl_new(FuUdevDevice *udev_device)
 {
 	g_autoptr(FuIoctl) self = g_object_new(FU_TYPE_IOCTL, NULL);
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(udev_device), NULL);
 
 	self->udev_device = g_object_ref(udev_device);
-	g_string_append_printf(self->event_id, "%sIoctl:", name != NULL ? name : "");
 	return g_steal_pointer(&self);
 }
 
@@ -311,7 +329,7 @@ fu_ioctl_execute(FuIoctl *self,
 static void
 fu_ioctl_init(FuIoctl *self)
 {
-	self->event_id = g_string_new(NULL);
+	self->event_id = g_string_new("Ioctl:");
 	self->fixups = g_ptr_array_new_with_free_func((GDestroyNotify)fu_ioctl_fixup_free);
 }
 

@@ -58,8 +58,7 @@ fu_udev_device_get_io_channel(FuUdevDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel) G_GNUC_NON_NULL(1, 2);
 FuIoctl *
-fu_udev_device_ioctl_new(FuUdevDevice *self, const gchar *name) G_GNUC_WARN_UNUSED_RESULT
-    G_GNUC_NON_NULL(1);
+fu_udev_device_ioctl_new(FuUdevDevice *self) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_pwrite(FuUdevDevice *self,
 		      goffset port,
