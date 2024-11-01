@@ -270,8 +270,9 @@ fu_engine_modify_bios_settings(FuEngine *self,
 			       gboolean force_ro,
 			       GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
-    G_GNUC_NON_NULL(1, 2);
+fu_engine_emulation_load(FuEngine *self,
+			 GInputStream *stream,
+			 GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
