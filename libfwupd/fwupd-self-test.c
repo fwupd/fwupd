@@ -93,43 +93,31 @@ fwupd_enums_func(void)
 	/* bitfield */
 	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_IN_USE; i *= 2) {
 		const gchar *tmp = fwupd_device_problem_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing device problem 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_problem_from_string(tmp), ==, i);
 	}
 	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY; i *= 2) {
 		const gchar *tmp = fwupd_plugin_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing plugin flag 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_plugin_flag_from_string(tmp), ==, i);
 	}
 	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_SHOW_PROBLEMS; i *= 2) {
 		const gchar *tmp = fwupd_feature_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing feature flag 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
 	}
 	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION; i *= 2) {
 		const gchar *tmp = fwupd_feature_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing feature flag 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
 	}
 	for (guint64 i = 1; i <= FWUPD_RELEASE_FLAG_TRUSTED_REPORT; i *= 2) {
 		const gchar *tmp = fwupd_release_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing release flag 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
 	}
 	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE; i *= 2) {
 		const gchar *tmp = fwupd_request_flag_to_string(i);
-		if (tmp == NULL)
-			g_warning("missing request flag 0x%x", (guint)i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_request_flag_from_string(tmp), ==, i);
 	}
