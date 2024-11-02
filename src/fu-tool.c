@@ -2084,7 +2084,10 @@ fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, priv->progress, error))
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  priv->progress,
+				  error))
 		return FALSE;
 
 	remote = fu_engine_get_remote_by_id(priv->engine, values[0], error);
