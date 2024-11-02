@@ -43,12 +43,6 @@ jobs:
           CI: true
         run: |
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest contrib/ci/${{matrix.os}}-test.sh
-      - name: Coveralls
-        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386'
-        uses: coverallsapp/github-action@cfd0633edbd2411b532b808ba7a8b5e04f76d2c8 # v2.3.4
-        with:
-          flag-name: run-${{ join(matrix.*, '-') }}
-          parallel: true
       - name: Save any coverage data
         if: matrix.os == 'debian-x86_64'
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
@@ -56,16 +50,6 @@ jobs:
           name: coverage
           path: ${{ github.workspace }}/coverage.xml
           if-no-files-found: ignore
-
-  finish:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Close parallel build
-        uses: coverallsapp/github-action@cfd0633edbd2411b532b808ba7a8b5e04f76d2c8 # v2.3.4
-        with:
-          parallel-finished: true
-          carryforward: "run-debian-i386,run-debian-x86_64"
 
   codecov:
     needs: build
