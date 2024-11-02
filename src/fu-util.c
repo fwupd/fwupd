@@ -880,15 +880,20 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		g_autofree gchar *emulation_filename = NULL;
 
 		/* just ignore anything without emulation data */
-		if (!json_object_has_member(json_obj, "emulation-url"))
+		if (json_object_has_member(json_obj, "emulation-url")) {
+			emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+			emulation_filename =
+			    fu_util_download_if_required(priv, emulation_url, error);
+			if (emulation_filename == NULL) {
+				g_prefix_error(error, "failed to download %s: ", emulation_url);
+				return FALSE;
+			}
+		} else if (json_object_has_member(json_obj, "emulation-file"))
+			emulation_filename =
+			    g_strdup(json_object_get_string_member(json_obj, "emulation-file"));
+		else
 			return TRUE;
 
-		emulation_url = json_object_get_string_member(json_obj, "emulation-url");
-		emulation_filename = fu_util_download_if_required(priv, emulation_url, error);
-		if (emulation_filename == NULL) {
-			g_prefix_error(error, "failed to download %s: ", emulation_url);
-			return FALSE;
-		}
 		if (!fwupd_client_emulation_load(priv->client,
 						 emulation_filename,
 						 priv->cancellable,
