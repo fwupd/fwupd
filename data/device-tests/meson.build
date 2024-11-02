@@ -78,5 +78,25 @@ install_data([
     'winchiphead-ch347.json',
     'wistron-dock-40b7.json',
   ],
-  install_dir: join_paths(datadir, 'fwupd', 'device-tests'),
+  install_dir: join_paths(installed_test_datadir, 'device-tests'),
 )
+
+con = configuration_data()
+enumeration_datadir = join_paths(installed_test_datadir, 'enumeration-data')
+con.set('enumeration_datadir', enumeration_datadir)
+
+foreach test: enumeration_tests
+  configure_file(
+    input: join_paths(meson.project_source_root(),'@0@'.format(test)),
+    output: '@BASENAME@.json',
+    configuration: con,
+    install: true,
+    install_dir: join_paths(installed_test_datadir, 'device-tests'),
+  )
+endforeach
+
+foreach data: enumeration_data
+    install_data(data,
+      install_dir: enumeration_datadir,
+    )
+endforeach

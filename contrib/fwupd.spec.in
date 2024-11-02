@@ -415,9 +415,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %if 0%{?have_uefi}
 %{_datadir}/installed-tests/fwupd/efi
 %endif
-%if 0%{?fedora} >= 37
-%{_datadir}/fwupd/device-tests/*.json
-%endif
 %{_libexecdir}/installed-tests/fwupd/*
 %{_datadir}/fwupd/remotes.d/fwupd-tests.conf
 %endif

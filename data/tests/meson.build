@@ -2,7 +2,7 @@ con2 = configuration_data()
 con2.set('installedtestsdir', installed_test_datadir)
 con2.set('installedtestsbindir', installed_test_bindir)
 con2.set('installedtestsdatadir', installed_test_datadir)
-con2.set('devicetestdir', join_paths(datadir, 'fwupd', 'device-tests'))
+con2.set('devicetestdir', join_paths(installed_test_datadir, 'device-tests'))
 con2.set('bindir', bindir)
 con2.set('libexecdir', libexecdir)
 

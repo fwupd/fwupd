@@ -13,7 +13,7 @@ run_test()
 run_device_tests()
 {
 	if [ -n "$CI_NETWORK" ] && [ -d @devicetestdir@ ]; then
-		for f in `grep --files-with-matches -r emulation-url @devicetestdir@`; do
+		for f in `grep --files-with-matches -r emulation- @devicetestdir@`; do
 		        echo "Emulating for $f"
 		        fwupdmgr device-emulate \
 				--download-retries=5 \
