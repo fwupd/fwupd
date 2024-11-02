@@ -218,21 +218,25 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 		g_autoptr(GByteArray) buf_out = g_byte_array_new();
 		g_autoptr(GByteArray) st_req = fu_struct_cfu_content_req_new();
 		g_autoptr(GByteArray) st_rsp = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* build */
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (i == 0) {
 			fu_struct_cfu_content_req_set_flags(st_req,
 							    FU_CFU_CONTENT_FLAG_FIRST_BLOCK);
 		} else if (i == chunks->len - 1) {
 			fu_struct_cfu_content_req_set_flags(st_req, FU_CFU_CONTENT_FLAG_LAST_BLOCK);
 		}
-		fu_struct_cfu_content_req_set_data_length(st_req, fu_chunk_get_data_sz(chk));
+		fu_struct_cfu_content_req_set_data_length(st_req, g_bytes_get_size(blob));
 		fu_struct_cfu_content_req_set_seq_number(st_req, i);
 		fu_struct_cfu_content_req_set_address(st_req, fu_chunk_get_address(chk));
 
 		fu_byte_array_append_uint8(buf_out, self->content_set_report.id);
 		g_byte_array_append(buf_out, st_req->data, st_req->len);
-		g_byte_array_append(buf_out, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		fu_byte_array_append_bytes(buf_out, blob);
 		fu_byte_array_set_size(buf_out, self->content_set_report.ct + 1, 0x0);
 
 		/* SetReport */

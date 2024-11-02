@@ -834,7 +834,9 @@ fu_device_set_contents(FuDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		blob = fu_chunk_get_bytes(chk);
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
 		wrote = g_output_stream_write_bytes(ostr, blob, NULL, error);
 		if (wrote < 0)

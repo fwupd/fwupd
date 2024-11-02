@@ -72,15 +72,14 @@ fu_logitech_rallysystem_tablehub_device_probe(FuDevice *device, GError **error)
 
 static gboolean
 fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice *self,
-					     guint8 *buf,
-					     gsize bufsz,
+					     GByteArray *buf,
 					     GError **error)
 {
 	gsize actual_length = 0;
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 self->bulk_ep[EP_OUT],
-					 buf,
-					 bufsz,
+					 buf->data,
+					 buf->len,
 					 &actual_length,
 					 FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 					 NULL,
@@ -88,14 +87,14 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 		g_prefix_error(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
-	if (bufsz != actual_length) {
+	if (buf->len != actual_length) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "failed to send full packet using bulk transfer");
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "RallysystemBulkTx", buf, bufsz);
+	fu_dump_raw(G_LOG_DOMAIN, "RallysystemBulkTx", buf->data, buf->len);
 	return TRUE;
 }
 
@@ -146,19 +145,18 @@ fu_logitech_rallysystem_tablehub_device_write_fw(FuLogitechRallysystemTablehubDe
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autofree guint8 *data_mut = NULL;
+		g_autoptr(GByteArray) buf = g_byte_array_new();
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		data_mut = fu_memdup_safe(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk), error);
-		if (data_mut == NULL)
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
 			return FALSE;
-		if (!fu_logitech_rallysystem_tablehub_device_send(self,
-								  data_mut,
-								  fu_chunk_get_data_sz(chk),
-								  error)) {
+		fu_byte_array_append_bytes(buf, blob);
+		if (!fu_logitech_rallysystem_tablehub_device_send(self, buf, error)) {
 			g_prefix_error(error, "failed to send data packet 0x%x: ", i);
 			return FALSE;
 		}
@@ -236,7 +234,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to copy download mode payload: ");
 		return FALSE;
 	}
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req, error)) {
 		g_prefix_error(error, "failed to set download mode: ");
 		return FALSE;
 	}
@@ -297,7 +295,7 @@ fu_logitech_rallysystem_tablehub_device_send_init_cmd_cb(FuDevice *device,
 	g_autoptr(GByteArray) st_req = fu_struct_usb_init_request_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req, error)) {
 		g_prefix_error(error, "failed to send init packet: ");
 		return FALSE;
 	}
@@ -345,7 +343,7 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* query tablehub firmware version */
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req, error)) {
 		g_prefix_error(error,
 			       "failed to send tablehub firmware version request: "
 			       "please reboot the device: ");

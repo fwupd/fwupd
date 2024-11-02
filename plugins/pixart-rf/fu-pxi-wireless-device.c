@@ -288,6 +288,7 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
 
 	/* proxy */
 	parent = fu_pxi_wireless_device_get_parent(device, error);
@@ -295,10 +296,11 @@ fu_pxi_wireless_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 		return FALSE;
 
 	/* ota write payload command */
-	fu_byte_array_append_uint8(ota_cmd, fu_chunk_get_data_sz(chk)); /* ota command length */
-	g_byte_array_append(ota_cmd,
-			    fu_chunk_get_data(chk),
-			    fu_chunk_get_data_sz(chk)); /* payload content */
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
+		return FALSE;
+	fu_byte_array_append_uint8(ota_cmd, g_bytes_get_size(blob)); /* ota command length */
+	fu_byte_array_append_bytes(ota_cmd, blob);		     /* payload content */
 
 	/* increase the serial number */
 	self->sn++;
@@ -331,13 +333,16 @@ fu_pxi_wireless_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	guint32 prn = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
+	g_autoptr(GBytes) chk_bytes = NULL;
 
 	/* send create fw object command */
 	if (!fu_pxi_wireless_device_fw_object_create(device, chk, error))
 		return FALSE;
 
 	/* write payload */
+	chk_bytes = fu_chunk_get_bytes(chk, error);
+	if (chk_bytes == NULL)
+		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
 					       fu_chunk_get_address(chk),
 					       FU_CHUNK_PAGESZ_NONE,
@@ -345,15 +350,18 @@ fu_pxi_wireless_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk2 = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk2 = fu_chunk_array_index(chunks, i, error);
 		if (chk2 == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk2, error);
+		if (blob == NULL)
+			return FALSE;
 
 		/* calculate checksum of each payload packet */
-		self->fwstate.checksum +=
-		    fu_sum16(fu_chunk_get_data(chk2), fu_chunk_get_data_sz(chk2));
+		self->fwstate.checksum += fu_sum16_bytes(blob);
 		if (!fu_pxi_wireless_device_write_payload(device, chk2, error))
 			return FALSE;
 		prn++;

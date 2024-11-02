@@ -370,22 +370,26 @@ fu_scsi_device_write_firmware(FuDevice *device,
 
 	/* write each block */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
 		guint8 cdb[WRITE_BUF_CMDLEN] = {WRITE_BUFFER_CMD,
 						BUFFER_FFU_MODE,
 						0x0 /* buf_id */};
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		fu_memwrite_uint24(cdb + 3, offset, G_BIG_ENDIAN);
-		fu_memwrite_uint24(cdb + 6, fu_chunk_get_data_sz(chk), G_BIG_ENDIAN);
+		fu_memwrite_uint24(cdb + 6, g_bytes_get_size(blob), G_BIG_ENDIAN);
 		if (!fu_scsi_device_send_scsi_cmd_v3(self,
 						     cdb,
 						     sizeof(cdb),
-						     fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
+						     g_bytes_get_data(blob, NULL),
+						     g_bytes_get_size(blob),
 						     SG_DXFER_TO_DEV,
 						     error)) {
 			g_prefix_error(error,
@@ -397,7 +401,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 
 		/* chunk done */
 		fu_progress_step_done(progress);
-		offset += fu_chunk_get_data_sz(chk);
+		offset += g_bytes_get_size(blob);
 	}
 
 	/* success! */

@@ -2683,6 +2683,9 @@ fu_chunk_array_func(void)
 	g_autoptr(FuChunk) chk3 = NULL;
 	g_autoptr(FuChunk) chk4 = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob3 = NULL;
 	g_autoptr(GBytes) fw = g_bytes_new_static("hello world", 11);
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_bytes(fw, 100, FU_CHUNK_PAGESZ_NONE, 5);
@@ -2694,24 +2697,33 @@ fu_chunk_array_func(void)
 	g_assert_nonnull(chk1);
 	g_assert_cmpint(fu_chunk_get_idx(chk1), ==, 0x0);
 	g_assert_cmpint(fu_chunk_get_address(chk1), ==, 100);
-	g_assert_cmpint(fu_chunk_get_data_sz(chk1), ==, 0x5);
-	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk1), "hello", 5), ==, 0);
+	blob1 = fu_chunk_get_bytes(chk1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob1);
+	g_assert_cmpint(g_bytes_get_size(blob1), ==, 0x5);
+	g_assert_cmpint(strncmp((const gchar *)g_bytes_get_data(blob1, NULL), "hello", 5), ==, 0);
 
 	chk2 = fu_chunk_array_index(chunks, 1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(chk2);
 	g_assert_cmpint(fu_chunk_get_idx(chk2), ==, 0x1);
 	g_assert_cmpint(fu_chunk_get_address(chk2), ==, 105);
-	g_assert_cmpint(fu_chunk_get_data_sz(chk2), ==, 0x5);
-	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk2), " world", 6), ==, 0);
+	blob2 = fu_chunk_get_bytes(chk2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob2);
+	g_assert_cmpint(g_bytes_get_size(blob2), ==, 0x5);
+	g_assert_cmpint(strncmp((const gchar *)g_bytes_get_data(blob2, NULL), " world", 6), ==, 0);
 
 	chk3 = fu_chunk_array_index(chunks, 2, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(chk3);
 	g_assert_cmpint(fu_chunk_get_idx(chk3), ==, 0x2);
 	g_assert_cmpint(fu_chunk_get_address(chk3), ==, 110);
-	g_assert_cmpint(fu_chunk_get_data_sz(chk3), ==, 0x1);
-	g_assert_cmpint(strncmp((const gchar *)fu_chunk_get_data(chk3), "d", 1), ==, 0);
+	blob3 = fu_chunk_get_bytes(chk3, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob3);
+	g_assert_cmpint(g_bytes_get_size(blob3), ==, 0x1);
+	g_assert_cmpint(strncmp((const gchar *)g_bytes_get_data(blob3, NULL), "d", 1), ==, 0);
 
 	chk4 = fu_chunk_array_index(chunks, 3, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
@@ -2728,14 +2740,21 @@ fu_chunk_func(void)
 	g_autofree gchar *chunked3_str = NULL;
 	g_autofree gchar *chunked4_str = NULL;
 	g_autofree gchar *chunked5_str = NULL;
-	g_autoptr(GPtrArray) chunked1 = NULL;
-	g_autoptr(GPtrArray) chunked2 = NULL;
-	g_autoptr(GPtrArray) chunked3 = NULL;
-	g_autoptr(GPtrArray) chunked4 = NULL;
-	g_autoptr(GPtrArray) chunked5 = NULL;
+	g_autoptr(FuChunkArray) chunked1 = NULL;
+	g_autoptr(FuChunkArray) chunked2 = NULL;
+	g_autoptr(FuChunkArray) chunked3 = NULL;
+	g_autoptr(FuChunkArray) chunked4 = NULL;
+	g_autoptr(FuChunkArray) chunked5 = NULL;
+	g_autoptr(GBytes) chunked1_fw = NULL;
+	g_autoptr(GBytes) chunked2_fw = NULL;
+	g_autoptr(GBytes) chunked3_fw = NULL;
+	g_autoptr(GBytes) chunked4_fw = NULL;
+	g_autoptr(GBytes) chunked5_fw = NULL;
 
-	chunked3 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x0, 3, 3);
-	chunked3_str = fu_chunk_array_to_string(chunked3);
+	chunked3_fw = g_bytes_new((const guint8 *)"123456", 6);
+	chunked3 = fu_chunk_array_new_from_bytes(chunked3_fw, 0x0, 3, 3);
+	chunked3_str = fwupd_codec_to_string(FWUPD_CODEC(chunked3));
+	g_print("%s", chunked3_str);
 	g_assert_cmpstr(chunked3_str,
 			==,
 			"<chunks>\n"
@@ -2749,8 +2768,9 @@ fu_chunk_func(void)
 			"  </chunk>\n"
 			"</chunks>\n");
 
-	chunked4 = fu_chunk_array_new((const guint8 *)"123456", 6, 0x4, 4, 4);
-	chunked4_str = fu_chunk_array_to_string(chunked4);
+	chunked4_fw = g_bytes_new((const guint8 *)"123456", 6);
+	chunked4 = fu_chunk_array_new_from_bytes(chunked4_fw, 0x4, 4, 4);
+	chunked4_str = fwupd_codec_to_string(FWUPD_CODEC(chunked4));
 	g_assert_cmpstr(chunked4_str,
 			==,
 			"<chunks>\n"
@@ -2764,13 +2784,15 @@ fu_chunk_func(void)
 			"    <data size=\"0x2\">56</data>\n"
 			"  </chunk>\n"
 			"</chunks>\n");
-	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4);
-	g_assert_cmpint(chunked5->len, ==, 0);
-	chunked5_str = fu_chunk_array_to_string(chunked5);
+
+	chunked5 = fu_chunk_array_new_virtual(0, 0x0, 0x0, 4);
+	g_assert_cmpint(fu_chunk_array_length(chunked5), ==, 0);
+	chunked5_str = fwupd_codec_to_string(FWUPD_CODEC(chunked5));
 	g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
 
-	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4);
-	chunked1_str = fu_chunk_array_to_string(chunked1);
+	chunked1_fw = g_bytes_new((const guint8 *)"0123456789abcdef", 16);
+	chunked1 = fu_chunk_array_new_from_bytes(chunked1_fw, 0x0, 10, 4);
+	chunked1_str = fwupd_codec_to_string(FWUPD_CODEC(chunked1));
 	g_assert_cmpstr(chunked1_str,
 			==,
 			"<chunks>\n"
@@ -2799,8 +2821,10 @@ fu_chunk_func(void)
 			"    <data size=\"0x2\">ef</data>\n"
 			"  </chunk>\n"
 			"</chunks>\n");
-	chunked2 = fu_chunk_array_new((const guint8 *)"XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
-	chunked2_str = fu_chunk_array_to_string(chunked2);
+
+	chunked2_fw = g_bytes_new((const guint8 *)"XXXXXXYYYYYYZZZZZZ", 18);
+	chunked2 = fu_chunk_array_new_from_bytes(chunked2_fw, 0x0, 6, 4);
+	chunked2_str = fwupd_codec_to_string(FWUPD_CODEC(chunked2));
 	g_print("\n%s", chunked2_str);
 	g_assert_cmpstr(chunked2_str,
 			==,

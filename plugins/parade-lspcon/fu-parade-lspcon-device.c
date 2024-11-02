@@ -439,13 +439,16 @@ fu_parade_lspcon_device_flash_write(FuParadeLspconDevice *self,
 	for (gsize i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chunk = NULL;
 		guint32 address;
-		guint32 chunk_size;
 		guint8 write_data[257] = {0x0};
 		g_autoptr(FuParadeLspconI2cAddressGuard) guard = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chunk = fu_chunk_array_index(chunks, i, error);
 		if (chunk == NULL)
+			return FALSE;
+		blob = fu_chunk_get_bytes(chunk, error);
+		if (blob == NULL)
 			return FALSE;
 
 		/* map target address range in page 7 */
@@ -463,18 +466,17 @@ fu_parade_lspcon_device_flash_write(FuParadeLspconDevice *self,
 
 		/* page write is prefixed with an offset:
 		 * we always start from offset 0 */
-		chunk_size = fu_chunk_get_data_sz(chunk);
 		if (!fu_memcpy_safe(write_data,
 				    sizeof(write_data),
 				    1,
-				    fu_chunk_get_data(chunk),
-				    chunk_size,
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0,
-				    chunk_size,
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 
-		if (!fu_i2c_device_write(i2c_device, write_data, chunk_size + 1, error))
+		if (!fu_i2c_device_write(i2c_device, write_data, g_bytes_get_size(blob) + 1, error))
 			return FALSE;
 
 		/* update progress */

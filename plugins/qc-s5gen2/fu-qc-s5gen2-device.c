@@ -496,25 +496,27 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(GByteArray) pkt = fu_struct_qc_data_new();
-		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
+		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 
-		fu_struct_qc_data_set_data_len(pkt, fu_chunk_get_data_sz(chk) + 1);
+		fu_struct_qc_data_set_data_len(pkt, g_bytes_get_size(blob) + 1);
 		/* only the last block of the last bucket should have flag LAST */
 		if ((i + 1) == fu_chunk_array_length(chunks))
 			fu_struct_qc_data_set_last_packet(pkt, last);
 		else
 			fu_struct_qc_data_set_last_packet(pkt, FU_QC_MORE_DATA_MORE);
 
-		pkt = g_byte_array_append(pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (pkt == NULL)
-			return FALSE;
-
+		fu_byte_array_append_bytes(pkt, blob);
 		if (!fu_qc_s5gen2_device_msg_out(self,
 						 pkt->data,
-						 FU_STRUCT_QC_DATA_SIZE + fu_chunk_get_data_sz(chk),
+						 FU_STRUCT_QC_DATA_SIZE + g_bytes_get_size(blob),
 						 error))
 			return FALSE;
 

@@ -68,6 +68,7 @@ GBytes *
 fu_dell_k2_ec_hid_fwup_pkg_new(FuChunk *chk, gsize fw_size, guint8 dev_type, guint8 dev_identifier)
 {
 	g_autoptr(GByteArray) fwbuf = g_byte_array_new();
+	g_autoptr(GBytes) blob = NULL;
 	gsize chk_datasz = fu_chunk_get_data_sz(chk);
 
 	/* header */
@@ -82,7 +83,10 @@ fu_dell_k2_ec_hid_fwup_pkg_new(FuChunk *chk, gsize fw_size, guint8 dev_type, gui
 	fu_byte_array_append_uint32(fwbuf, fw_size, G_BIG_ENDIAN);
 
 	/* data */
-	fu_byte_array_append_bytes(fwbuf, fu_chunk_get_bytes(chk));
+	blob = fu_chunk_get_bytes(chk, NULL);
+	if (blob == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(fwbuf, blob);
 
 	return g_bytes_new(fwbuf->data, fwbuf->len);
 }

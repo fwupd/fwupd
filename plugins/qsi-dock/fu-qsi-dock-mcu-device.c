@@ -270,36 +270,43 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 				   GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk_page);
+	g_autoptr(GInputStream) chk_stream = fu_chunk_get_stream(chk_page);
 
-	chunks = fu_chunk_array_new_from_bytes(chk_bytes,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       FU_QSI_DOCK_TX_ISP_LENGTH_MCU);
+	chunks = fu_chunk_array_new_from_stream(chk_stream,
+					        FU_CHUNK_ADDR_OFFSET_NONE,
+					        FU_CHUNK_PAGESZ_NONE,
+					        FU_QSI_DOCK_TX_ISP_LENGTH_MCU,
+					        error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
 		guint8 checksum_buf[FU_QSI_DOCK_TX_ISP_LENGTH_MCU] = {0x0};
 		guint8 buf[64] = {
 		    FU_QSI_DOCK_REPORT_ID,
 		    FU_QSI_DOCK_CMD1_MASS_SPI,
 		};
+		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		buf[2] = fu_chunk_get_data_sz(chk);
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
+		buf[2] = g_bytes_get_size(blob);
 
 		/* SetReport */
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
 				    0x04, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -315,10 +322,10 @@ fu_qsi_dock_mcu_device_write_chunk(FuQsiDockMcuDevice *self,
 		if (!fu_memcpy_safe(checksum_buf,
 				    sizeof(checksum_buf),
 				    0x0, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
 		*checksum_tmp += fu_sum32(checksum_buf, sizeof(checksum_buf));

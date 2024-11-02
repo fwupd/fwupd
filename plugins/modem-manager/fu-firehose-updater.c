@@ -552,16 +552,21 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 	if (chk_last == NULL)
 		return FALSE;
 	if ((fu_chunk_get_data_sz(chk_last) % sector_size) != 0) {
+		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) padded_bytes = NULL;
 		gsize padded_sz = sector_size * (fu_chunk_get_data_sz(chk_last) / sector_size + 1);
 
-		padded_bytes = fu_bytes_pad(fu_chunk_get_bytes(chk_last), padded_sz);
+		bytes = fu_chunk_get_bytes(chk_last, error);
+		if (bytes == NULL)
+			return FALSE;
+		padded_bytes = fu_bytes_pad(bytes, padded_sz);
 		fu_chunk_set_bytes(chk_last, padded_bytes);
 
 		g_return_val_if_fail(fu_chunk_get_data_sz(chk_last) == padded_sz, FALSE);
 	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
@@ -576,8 +581,11 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				fu_chunk_array_length(chunks),
 				program_filename);
 
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_firehose_updater_write_internal(self,
-							fu_chunk_get_bytes(chk),
+							blob,
 							1500,
 							FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
 							error)) {

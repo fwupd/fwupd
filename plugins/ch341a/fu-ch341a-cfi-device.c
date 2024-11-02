@@ -176,7 +176,7 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 	guint8 buf[4] = {0x0};
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
-	g_autoptr(GBytes) page_blob = fu_chunk_get_bytes(page);
+	g_autoptr(GInputStream) page_stream = fu_chunk_get_stream(page);
 
 	if (!fu_ch341a_cfi_device_write_enable(self, error))
 		return FALSE;
@@ -196,28 +196,32 @@ fu_ch341a_cfi_device_write_page(FuCh341aCfiDevice *self, FuChunk *page, GError *
 		return FALSE;
 
 	/* send data */
-	chunks = fu_chunk_array_new_from_bytes(page_blob,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       CH341A_PAYLOAD_SIZE);
+	chunks = fu_chunk_array_new_from_stream(page_stream, FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE, CH341A_PAYLOAD_SIZE, error);
+	if (chunks == NULL)
+		return FALSE;
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
 		guint8 buf2[CH341A_PAYLOAD_SIZE] = {0x0};
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chk, error);
+		if (blob == NULL)
+			return FALSE;
 		if (!fu_memcpy_safe(buf2,
 				    sizeof(buf2),
 				    0x0, /* dst */
-				    fu_chunk_get_data(chk),
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
 				    0x0, /* src */
-				    fu_chunk_get_data_sz(chk),
+				    g_bytes_get_size(blob),
 				    error))
 			return FALSE;
-		if (!fu_ch341a_device_spi_transfer(proxy, buf2, fu_chunk_get_data_sz(chk), error))
+		if (!fu_ch341a_device_spi_transfer(proxy, buf2, g_bytes_get_size(blob), error))
 			return FALSE;
 	}
 	if (!fu_device_locker_close(cslocker, error))
@@ -258,7 +262,7 @@ fu_ch341a_cfi_device_read_firmware(FuCh341aCfiDevice *self,
 	guint8 buf[CH341A_PAYLOAD_SIZE] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(GByteArray) blob = g_byte_array_new();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* enable chip */
 	cslocker = fu_cfi_device_chip_select_locker_new(FU_CFI_DEVICE(self), error);
@@ -266,9 +270,12 @@ fu_ch341a_cfi_device_read_firmware(FuCh341aCfiDevice *self,
 		return NULL;
 
 	/* read each block */
-	chunks = fu_chunk_array_new(NULL, bufsz + 0x4, 0x0, 0x0, CH341A_PAYLOAD_SIZE);
+	chunks = fu_chunk_array_new_virtual(bufsz + 0x4,
+					    FU_CHUNK_ADDR_OFFSET_NONE,
+					    FU_CHUNK_PAGESZ_NONE,
+					    CH341A_PAYLOAD_SIZE);
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, chunks->len);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* cmd, then 24 bit starting address */
@@ -278,11 +285,14 @@ fu_ch341a_cfi_device_read_firmware(FuCh341aCfiDevice *self,
 				   &buf[0],
 				   error))
 		return NULL;
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index(chunks, i);
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
 
 		/* the first package has cmd and address info */
 		if (!fu_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error))
+			return NULL;
+		chk = fu_chunk_array_index(chunks, i, error);
+		if (chk == NULL)
 			return NULL;
 		if (i == 0) {
 			g_byte_array_append(blob, buf + 0x4, fu_chunk_get_data_sz(chk) - 0x4);

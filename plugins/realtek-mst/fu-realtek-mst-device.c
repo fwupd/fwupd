@@ -463,16 +463,18 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 
 	g_debug("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chunk = NULL;
 		guint32 chunk_address;
-		guint32 chunk_size;
+		g_autoptr(FuChunk) chunk = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* prepare chunk */
 		chunk = fu_chunk_array_index(chunks, i, error);
 		if (chunk == NULL)
 			return FALSE;
+		blob = fu_chunk_get_bytes(chunk, error);
+		if (blob == NULL)
+			return FALSE;
 		chunk_address = fu_chunk_get_address(chunk);
-		chunk_size = fu_chunk_get_data_sz(chunk);
 
 		/* write opcode */
 		if (!fu_realtek_mst_device_write_register(self,
@@ -483,7 +485,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 		/* write length */
 		if (!fu_realtek_mst_device_write_register(self,
 							  FU_REALTEK_MST_REG_WRITE_LEN,
-							  chunk_size - 1,
+							  g_bytes_get_size(blob) - 1,
 							  error))
 			return FALSE;
 		/* target address */
@@ -515,8 +517,8 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 		/* write data into FIFO */
 		if (!fu_realtek_mst_device_write_register_multi(self,
 								FU_REALTEK_MST_REG_WRITE_FIFO,
-								fu_chunk_get_data(chunk),
-								chunk_size,
+								g_bytes_get_data(blob, NULL),
+								g_bytes_get_size(blob),
 								error))
 			return FALSE;
 		/* begin operation and wait for completion */

@@ -624,23 +624,34 @@ fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk, GError **error)
+fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chk, GError **error)
 {
-	gsize addr = fu_chunk_get_address(chunk);
-	gsize datasz = fu_chunk_get_data_sz(chunk);
-	const guint8 *data = fu_chunk_get_data(chunk);
 	guint8 cmd[] = {0xE5, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+	g_autoptr(GBytes) blob = NULL;
 
 	/* build command */
-	if (!fu_memwrite_uint32_safe(cmd, sizeof(cmd), 2, addr, G_BIG_ENDIAN, error))
+	blob = fu_chunk_get_bytes(chk, error);
+	if (blob == NULL)
 		return FALSE;
-	if (!fu_memwrite_uint16_safe(cmd, sizeof(cmd), 6, (guint16)datasz, G_BIG_ENDIAN, error))
+	if (!fu_memwrite_uint32_safe(cmd,
+				     sizeof(cmd),
+				     2,
+				     fu_chunk_get_address(chk),
+				     G_BIG_ENDIAN,
+				     error))
+		return FALSE;
+	if (!fu_memwrite_uint16_safe(cmd,
+				     sizeof(cmd),
+				     6,
+				     (guint16)g_bytes_get_size(blob),
+				     G_BIG_ENDIAN,
+				     error))
 		return FALSE;
 	if (!fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
 					     cmd,
 					     sizeof(cmd),
-					     data,
-					     datasz,
+					     g_bytes_get_data(blob, NULL),
+					     g_bytes_get_size(blob),
 					     error)) {
 		g_prefix_error(error, "failed to write flash data: ");
 		return FALSE;
