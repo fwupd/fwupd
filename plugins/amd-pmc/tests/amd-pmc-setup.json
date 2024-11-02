@@ -1,0 +1,55 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/platform/AMDI0009:00",
+      "Subsystem": "platform",
+      "Driver": "amd_pmc",
+      "Created": "2024-11-02T01:12:31.404404Z",
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "platform"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "amd_pmc"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=amd_pmc\nMODALIAS=acpi:AMDI0009:PNP0D80:"
+        },
+        {
+          "Id": "ReadProp:Key=MODALIAS",
+          "Data": "acpi:AMDI0009:PNP0D80:"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=smu_fw_version",
+          "Data": "76.87.0"
+        },
+        {
+          "Id": "ReadAttr:Attr=smu_program",
+          "Data": "0"
+        }
+      ]
+    }
+  ]
+}

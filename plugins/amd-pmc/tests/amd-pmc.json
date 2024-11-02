@@ -1,0 +1,17 @@
+{
+  "name": "AMD PMC",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/amd-pmc-setup.json",
+      "components": [
+        {
+          "version": "76.87.0",
+          "guids": [
+            "3ac3159e-6eef-5f6b-bc8d-67686b238747"
+          ]
+        }
+      ]
+    }
+  ]
+}

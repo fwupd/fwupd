@@ -13,5 +13,6 @@ plugin_builtins += static_library('fu_plugin_amd_pmc',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-umockdev_tests += files('amd_pmc_test.py')
+enumeration_data += files('tests/amd-pmc-setup.json')
+enumeration_tests += files('tests/amd-pmc.json')
 endif
