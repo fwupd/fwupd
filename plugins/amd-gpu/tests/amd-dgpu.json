@@ -1,0 +1,17 @@
+{
+  "name": "AMD Polaris",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/amd-dgpu-setup.json",
+      "components": [
+        {
+          "version": "015.050.003.000.012636",
+          "guids": [
+            "fec45400-2aa5-51b9-9bba-091bfb972433"
+          ]
+        }
+      ]
+    }
+  ]
+}
