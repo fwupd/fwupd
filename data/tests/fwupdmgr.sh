@@ -11,6 +11,21 @@ error()
 }
 
 # ---
+echo "Enable test devices"
+fwupdtool enable-test-devices
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Show help output"
+fwupdmgr --help
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Show version output"
+fwupdmgr --version
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Getting the list of remotes..."
 fwupdmgr get-remotes
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
@@ -49,6 +64,11 @@ rc=$?; if [ $rc != 2 ]; then error $rc; fi
 echo "Testing the verification of firmware (again)..."
 fwupdmgr verify $device
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting history (should be none)..."
+fwupdmgr get-history
+rc=$?; if [ $rc != 2 ]; then exit $rc; fi
 
 if [ -z "$CI_NETWORK" ]; then
         echo "Skipping remaining tests due to CI_NETWORK not being set"
