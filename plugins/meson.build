@@ -139,6 +139,8 @@ endif
 
 umockdev_tests = []
 umockdev_ioctls = []
+enumeration_tests = []
+enumeration_data = []
 foreach plugin, enabled: plugins
   subdir(plugin)
 endforeach

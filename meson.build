@@ -669,7 +669,6 @@ if build_standalone
   md_targets = []
   plugin_quirks = []
   subdir('libfwupdplugin')
-  subdir('data')
   subdir('po')
   subdir('contrib')
 
@@ -687,6 +686,7 @@ if build_standalone
   subdir('plugins')
   subdir('src')
   subdir('docs')
+  subdir('data')
 
   # append all the quirks into one big file and gzip it
   custom_target('builtin-quirk-gz',
