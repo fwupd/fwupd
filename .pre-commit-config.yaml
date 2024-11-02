@@ -13,7 +13,7 @@ repos:
         exclude: '.clang-format'
     -   id: check-json
     -   id: pretty-format-json
-        args: ['--no-sort-keys']
+        args: ['--no-sort-keys', '--autofix']
     -   id: check-symlinks
     -   id: check-xml
     -   id: end-of-file-fixer
