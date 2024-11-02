@@ -2,6 +2,8 @@
 
 exec 2>&1
 
+export NO_COLOR=1
+export FWUPD_VERBOSE=1
 CAB=fakedevice124.cab
 INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.jcat \
