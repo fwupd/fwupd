@@ -111,35 +111,6 @@ fu_test_copy_file(const gchar *source, const gchar *target)
 	g_assert_true(ret);
 }
 
-static gboolean
-fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
-{
-	g_autofree gchar *output = NULL;
-	g_autofree gchar *diff = g_find_program_in_path("diff");
-	g_autofree gchar *cmd = g_strdup_printf("%s -urNp /tmp/b /tmp/a", diff);
-	if (g_strcmp0(txt1, txt2) == 0)
-		return TRUE;
-	if (g_pattern_match_simple(txt2, txt1))
-		return TRUE;
-	if (diff == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "does not match: %s vs %s",
-			    txt1,
-			    txt2);
-		return FALSE;
-	}
-	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
-		return FALSE;
-	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
-		return FALSE;
-	if (!g_spawn_command_line_sync(cmd, &output, NULL, NULL, error))
-		return FALSE;
-	g_set_error_literal(error, 1, 0, output);
-	return FALSE;
-}
-
 static void
 fu_test_free(FuTest *self)
 {
@@ -2769,8 +2740,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "    Flags:              trusted-payload|trusted-metadata\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
-	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
-	g_assert_no_error(error);
+	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 
 	/* GetResults() */
@@ -3434,8 +3404,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "    Flags:              trusted-payload|trusted-metadata\n"
 	    "  AcquiesceDelay:       50\n",
 	    checksum);
-	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
-	g_assert_no_error(error);
+	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 }
 
@@ -4977,28 +4946,25 @@ fu_security_attr_func(gconstpointer user_data)
 	json1 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs1), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json1);
-	ret = fu_test_compare_lines(
-	    json1,
-	    "{\n"
-	    "  \"SecurityAttributes\" : [\n"
-	    "    {\n"
-	    "      \"AppstreamId\" : \"org.fwupd.hsi.foo\",\n"
-	    "      \"HsiLevel\" : 0,\n"
-	    "      \"Plugin\" : \"foo\",\n"
-	    "      \"Uri\" : "
-	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
-	    "    },\n"
-	    "    {\n"
-	    "      \"AppstreamId\" : \"org.fwupd.hsi.bar\",\n"
-	    "      \"HsiLevel\" : 0,\n"
-	    "      \"Plugin\" : \"bar\",\n"
-	    "      \"Uri\" : "
-	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
-	    "    }\n"
-	    "  ]\n"
-	    "}",
-	    &error);
-	g_assert_no_error(error);
+	ret = g_strcmp0(json1,
+			"{\n"
+			"  \"SecurityAttributes\" : [\n"
+			"    {\n"
+			"      \"AppstreamId\" : \"org.fwupd.hsi.foo\",\n"
+			"      \"HsiLevel\" : 0,\n"
+			"      \"Plugin\" : \"foo\",\n"
+			"      \"Uri\" : "
+			"\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
+			"    },\n"
+			"    {\n"
+			"      \"AppstreamId\" : \"org.fwupd.hsi.bar\",\n"
+			"      \"HsiLevel\" : 0,\n"
+			"      \"Plugin\" : \"bar\",\n"
+			"      \"Uri\" : "
+			"\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
+			"    }\n"
+			"  ]\n"
+			"}") == 0;
 	g_assert_true(ret);
 
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(attrs2), json1, &error);
@@ -5012,8 +4978,7 @@ fu_security_attr_func(gconstpointer user_data)
 	json2 = fwupd_codec_to_json_string(FWUPD_CODEC(attrs2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json2);
-	ret = fu_test_compare_lines(json2, json1, &error);
-	g_assert_no_error(error);
+	ret = g_strcmp0(json2, json1) == 0;
 	g_assert_true(ret);
 }
 
@@ -6275,31 +6240,30 @@ fu_remote_auth_func(void)
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	ret = fu_test_compare_lines(
-	    json,
-	    "{\n"
-	    "  \"Id\" : \"auth\",\n"
-	    "  \"Kind\" : \"download\",\n"
-	    "  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
-	    "  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
-	    "  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
-	    "  \"Username\" : \"user\",\n"
-	    "  \"Password\" : \"pass\",\n"
-	    "  \"ChecksumSig\" : "
-	    "\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
-	    "  \"FilenameCache\" : \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
-	    "  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
-	    "  \"Flags\" : 9,\n"
-	    "  \"Enabled\" : true,\n"
-	    "  \"ApprovalRequired\" : false,\n"
-	    "  \"AutomaticReports\" : false,\n"
-	    "  \"AutomaticSecurityReports\" : true,\n"
-	    "  \"Priority\" : 999,\n"
-	    "  \"Mtime\" : 0,\n"
-	    "  \"RefreshInterval\" : 86400\n"
-	    "}",
-	    &error);
-	g_assert_no_error(error);
+	ret =
+	    g_strcmp0(
+		json,
+		"{\n"
+		"  \"Id\" : \"auth\",\n"
+		"  \"Kind\" : \"download\",\n"
+		"  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
+		"  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
+		"  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+		"  \"Username\" : \"user\",\n"
+		"  \"Password\" : \"pass\",\n"
+		"  \"ChecksumSig\" : "
+		"\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
+		"  \"FilenameCache\" : \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
+		"  \"FilenameCacheSig\" : \"./libfwupd/tests/auth/firmware.xml.gz.jcat\",\n"
+		"  \"Flags\" : 9,\n"
+		"  \"Enabled\" : true,\n"
+		"  \"ApprovalRequired\" : false,\n"
+		"  \"AutomaticReports\" : false,\n"
+		"  \"AutomaticSecurityReports\" : true,\n"
+		"  \"Priority\" : 999,\n"
+		"  \"Mtime\" : 0,\n"
+		"  \"RefreshInterval\" : 86400\n"
+		"}") == 0;
 	g_assert_true(ret);
 }
 
@@ -6411,24 +6375,22 @@ fu_remote_local_func(void)
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	ret = fu_test_compare_lines(
-	    json,
-	    "{\n"
-	    "  \"Id\" : \"dell-esrt\",\n"
-	    "  \"Kind\" : \"local\",\n"
-	    "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
-	    "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml\",\n"
-	    "  \"Flags\" : 1,\n"
-	    "  \"Enabled\" : true,\n"
-	    "  \"ApprovalRequired\" : false,\n"
-	    "  \"AutomaticReports\" : false,\n"
-	    "  \"AutomaticSecurityReports\" : false,\n"
-	    "  \"Priority\" : 0,\n"
-	    "  \"Mtime\" : 0,\n"
-	    "  \"RefreshInterval\" : 0\n"
-	    "}",
-	    &error);
-	g_assert_no_error(error);
+	ret = g_strcmp0(
+		  json,
+		  "{\n"
+		  "  \"Id\" : \"dell-esrt\",\n"
+		  "  \"Kind\" : \"local\",\n"
+		  "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
+		  "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml\",\n"
+		  "  \"Flags\" : 1,\n"
+		  "  \"Enabled\" : true,\n"
+		  "  \"ApprovalRequired\" : false,\n"
+		  "  \"AutomaticReports\" : false,\n"
+		  "  \"AutomaticSecurityReports\" : false,\n"
+		  "  \"Priority\" : 0,\n"
+		  "  \"Mtime\" : 0,\n"
+		  "  \"RefreshInterval\" : 0\n"
+		  "}") == 0;
 	g_assert_true(ret);
 }
 
