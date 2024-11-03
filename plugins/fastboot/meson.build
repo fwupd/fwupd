@@ -13,4 +13,7 @@ plugin_builtins += static_library('fu_plugin_fastboot',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/fastboot-google-sargo-setup.json')
+enumeration_tests += files('tests/fastboot-google-sargo.json')
 endif
