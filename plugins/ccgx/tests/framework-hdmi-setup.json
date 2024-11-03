@@ -1,0 +1,119 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-5",
+      "Created": "2024-10-24T17:00:14.631829Z",
+      "IdVendor": 12972,
+      "IdProduct": 2,
+      "USB": 513,
+      "Manufacturer": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbBosDescriptors": [
+        {
+          "DevCapabilityType": 80,
+          "ExtraData": "AAM="
+        },
+        {
+          "DevCapabilityType": 2,
+          "ExtraData": "AAAAAA=="
+        },
+        {
+          "DevCapabilityType": 4,
+          "ExtraData": "AAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "DevCapabilityType": 13,
+          "ExtraData": "BwEAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAB/wAI"
+        }
+      ],
+      "UsbConfigDescriptors": [
+        {
+          "Configuration": 4,
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbHidDescriptors": [
+        "Bu7/CQGhAYXgCQIVACb/AHUIlT+xAoXhCQIVACb/AHUIlQeRAoXiCQIVACb/AHUIlYORAoXjCQIVACb/AHUIlYOxAoXkCQIVACb/AHUIlQexAsA="
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 17,
+          "Interface": 5
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceNumber": 1,
+          "InterfaceClass": 3,
+          "Interface": 6,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 255,
+              "MaxPacketSize": 64
+            }
+          ]
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=64\nDEVNAME=bus/usb/001/065\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=32ac/2/0\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=065"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "065"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=64\nDEVNAME=bus/usb/001/065\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=32ac/2/0\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=065"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "065"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x01",
+          "Data": "RnJhbWV3b3JrAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "SERNSSBFeHBhbnNpb24gQ2FyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Data": "MTFBRDFEMDAwMURCM0UxOTQyMTkwQjAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x03e4,Idx=0x0001,Data=5EJDWQAAAAs=,Length=0x8",
+          "Data": "5EJDWQAAAAs="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x02e1,Idx=0x0001,Data=4QZCAMzMzMw=,Length=0x8",
+          "Error": -9
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x03e0,Idx=0x0001,Data=4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "4ABDWQEAAAAAHQAAhAMCMGFhAgBpABAwYWECAGkAEDBhYQIAABgAAAAAAQAB2z4ZQhkLAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x00,Recipient=0x01,Request=0x06,Value=0x2200,Idx=0x0001,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x53",
+          "Data": "Bu7/CQGhAYXgCQIVACb/AHUIlT+xAoXhCQIVACb/AHUIlQeRAoXiCQIVACb/AHUIlYORAoXjCQIVACb/AHUIlYOxAoXkCQIVACb/AHUIlQexAsA="
+        }
+      ]
+    }
+  ]
+}

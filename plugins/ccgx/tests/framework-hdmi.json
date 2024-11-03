@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/framework-hdmi-emulation.zip",
+      "emulation-file": "@enumeration_datadir@/framework-hdmi-setup.json",
       "components": [
         {
           "version": "3.0.16.105",
