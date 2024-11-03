@@ -1,0 +1,81 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-6",
+      "Created": "2024-10-24T17:46:38.660081Z",
+      "IdVendor": 6790,
+      "IdProduct": 21778,
+      "Device": 772,
+      "USB": 272,
+      "DeviceClass": 255,
+      "DeviceProtocol": 2,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 255,
+          "InterfaceSubClass": 1,
+          "InterfaceProtocol": 2,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 130,
+              "MaxPacketSize": 32
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 2,
+              "MaxPacketSize": 32
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 1,
+              "MaxPacketSize": 8
+            }
+          ]
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=76\nDEVNAME=bus/usb/001/077\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1a86/5512/304\nTYPE=255/0/2\nBUSNUM=001\nDEVNUM=077"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "077"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x02,Data=qmEA,Length=0x3",
+          "Data": "qmEA"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x02,Data=q7Z/IA==,Length=0x4",
+          "Data": "q7Z/IA=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x02,Data=qPkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Length=0x1b",
+          "Data": "qPkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x82,Data=nwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x1a",
+          "Data": "//////////////////////////////////8="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x02,Data=q7dAIA==,Length=0x4",
+          "Data": "q7dAIA=="
+        }
+      ]
+    }
+  ]
+}
