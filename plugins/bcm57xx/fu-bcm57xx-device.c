@@ -74,7 +74,7 @@ fu_bcm57xx_device_submit_ifreq(FuBcm57xxDevice *self, guint8 *buf, gsize bufsz, 
 
 	/* include these when generating the emulation event */
 	strncpy(ifr.ifr_name, self->ethtool_iface, IFNAMSIZ - 1);
-	fu_ioctl_set_name(ioctl, "Siocethtool");
+	fu_ioctl_add_key_as_u16(ioctl, "Request", SIOCETHTOOL);
 	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_bcm57xx_device_ioctl_buffer_cb);
 	if (!fu_ioctl_execute(ioctl,
 			      SIOCETHTOOL,
