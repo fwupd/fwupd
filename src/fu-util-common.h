@@ -104,7 +104,7 @@ gchar *
 fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_util_plugin_to_string(FwupdPlugin *plugin, guint idt) G_GNUC_NON_NULL(1);
-const gchar *
+gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 gint
 fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);

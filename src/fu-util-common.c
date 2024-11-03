@@ -1564,7 +1564,7 @@ fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2)
 	return g_strcmp0(fwupd_plugin_get_name(*item1), fwupd_plugin_get_name(*item2));
 }
 
-const gchar *
+gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 {
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNKNOWN)
@@ -1577,27 +1577,28 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return NULL;
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_REQUIRE_HWID) {
 		/* TRANSLATORS: Plugin is active only if hardware is found */
-		return _("Enabled if hardware matches");
+		return g_strdup(_("Enabled if hardware matches"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_READY) {
 		/* TRANSLATORS: Plugin is active and in use */
-		return _("Ready");
+		return g_strdup(_("Ready"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED) {
 		/* TRANSLATORS: Plugin is inactive and not used */
-		return _("Disabled");
+		return g_strdup(_("Disabled"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE) {
 		/* TRANSLATORS: not required for this system */
-		return _("Required hardware was not found");
+		return g_strdup(_("Required hardware was not found"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS) {
 		/* TRANSLATORS: system is not booted in UEFI mode */
-		return _("UEFI firmware can not be updated in legacy BIOS mode");
+		return g_strdup(_("UEFI firmware can not be updated in legacy BIOS mode"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
-		/* TRANSLATORS: capsule updates are an optional BIOS feature */
-		return _("UEFI capsule updates not available or enabled in firmware setup");
+		return g_strdup(
+		    /* TRANSLATORS: capsule updates are an optional BIOS feature */
+		    _("UEFI capsule updates not available or enabled in firmware setup"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED) {
 		/* TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock' */
@@ -1606,52 +1607,53 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_AUTH_REQUIRED) {
 		/* TRANSLATORS: user needs to run a command */
-		return _("Authentication details are required");
+		return g_strdup(_("Authentication details are required"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_SECURE_CONFIG) {
 		/* TRANSLATORS: no peeking */
-		return _("Configuration is only readable by the system administrator");
+		return g_strdup(_("Configuration is only readable by the system administrator"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_MODULAR) {
 		/* TRANSLATORS: the plugin was created from a .so object, and was not built-in */
-		return _("Loaded from an external module");
+		return g_strdup(_("Loaded from an external module"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY) {
 		/* TRANSLATORS: check various UEFI and ACPI tables are unchanged after the update */
-		return _("Will measure elements of system integrity around an update");
+		return g_strdup(_("Will measure elements of system integrity around an update"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
 		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
-		return _("Required efivarfs filesystem was not found");
+		return g_strdup(_("Required efivarfs filesystem was not found"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND) {
 		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
-		return _("UEFI ESP partition not detected or configured");
+		return g_strdup(_("UEFI ESP partition not detected or configured"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_VALID) {
 		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
-		return _("UEFI ESP partition may not be set up correctly");
+		return g_strdup(_("UEFI ESP partition may not be set up correctly"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
-		return _("Plugin dependencies missing");
+		return g_strdup(_("Plugin dependencies missing"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD) {
 		/* TRANSLATORS: The kernel does not support this plugin */
-		return _("Running kernel is too old");
+		return g_strdup(_("Running kernel is too old"));
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_TEST_ONLY) {
 		/* TRANSLATORS: The plugin is only for testing */
-		return _("Plugin is only for testing");
+		return g_strdup(_("Plugin is only for testing"));
 	}
 
 	/* fall back for unknown types */
-	return fwupd_plugin_flag_to_string(plugin_flag);
+	return g_strdup(fwupd_plugin_flag_to_string(plugin_flag));
 }
 
 static gchar *
 fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 {
+	g_autofree gchar *plugin_flag_str = fu_util_plugin_flag_to_string(plugin_flag);
 	switch (plugin_flag) {
 	case FWUPD_PLUGIN_FLAG_UNKNOWN:
 	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
@@ -1663,13 +1665,11 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_MODULAR:
 	case FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY:
 	case FWUPD_PLUGIN_FLAG_SECURE_CONFIG:
-		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
-					       FU_CONSOLE_COLOR_GREEN);
+		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 	case FWUPD_PLUGIN_FLAG_TEST_ONLY:
-		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
-					       FU_CONSOLE_COLOR_BLACK);
+		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
@@ -1678,14 +1678,13 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_VALID:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
-		return fu_console_color_format(fu_util_plugin_flag_to_string(plugin_flag),
-					       FU_CONSOLE_COLOR_RED);
+		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_RED);
 	default:
 		break;
 	}
 
 	/* fall back for unknown types */
-	return g_strdup(fwupd_plugin_flag_to_string(plugin_flag));
+	return g_steal_pointer(&plugin_flag_str);
 }
 
 gchar *
