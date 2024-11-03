@@ -8,7 +8,6 @@ install_data([
     'analogix-anx7518.json',
     'aver-fone540.json',
     'bizlink-no-sku-vli.json',
-    'broadcom-bcm5719.json',
     'caldigit-element.json',
     'caldigit-ts4.json',
     'caldigit-ts4-tbt.json',

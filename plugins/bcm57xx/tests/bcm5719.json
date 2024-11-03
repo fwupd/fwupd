@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/broadcom-bcm5719-emulation.zip",
+      "emulation-file": "@enumeration_datadir@/bcm5719-setup.json",
       "components": [
         {
           "version": "0.4.44",
