@@ -1125,6 +1125,14 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	if (st_hd == NULL)
 		return FALSE;
 	hd2_fw_sz = fu_struct_vli_usbhub_hdr_get_usb3_fw_sz(st_hd);
+	if (hd2_fw_sz == 0 || hd1_fw_sz > 0xF000) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "FW2 size abnormal 0x%x",
+			    (guint)hd2_fw_sz);
+		return FALSE;
+	}
 	hd2_fw_offset = fu_struct_vli_usbhub_hdr_get_usb3_fw_addr(st_hd);
 	g_debug("FW2 @0x%x (length 0x%x, offset 0x%x)", hd2_fw_addr, hd2_fw_sz, hd2_fw_offset);
 
