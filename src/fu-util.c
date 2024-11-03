@@ -4401,7 +4401,7 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	/* print */
 	for (guint i = 0; i < 64; i++) {
 		FwupdPluginFlags flag = (guint64)1 << i;
-		const gchar *tmp;
+		g_autofree gchar *tmp = NULL;
 		g_autofree gchar *url = NULL;
 		g_autoptr(GString) str = g_string_new(NULL);
 		if ((flags & flag) == 0)
