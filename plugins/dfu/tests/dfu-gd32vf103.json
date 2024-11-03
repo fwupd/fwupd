@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/dfu-gd32-emulation.zip",
+      "emulation-file": "@enumeration_datadir@/dfu-gd32vf103-setup.json",
       "components": [
         {
           "version": "1.0",

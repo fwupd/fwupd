@@ -34,6 +34,9 @@ plugin_builtin_dfu = static_library('fu_plugin_dfu',
 )
 plugin_builtins += plugin_builtin_dfu
 
+enumeration_data += files('tests/dfu-gd32vf103-setup.json')
+enumeration_tests += files('tests/dfu-gd32vf103.json')
+
 if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())

@@ -1,0 +1,50 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "5-1.3",
+      "Created": "2024-10-24T10:24:54.143375Z",
+      "IdVendor": 10473,
+      "IdProduct": 393,
+      "Device": 256,
+      "USB": 512,
+      "Manufacturer": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbConfigDescriptors": [
+        {
+          "Configuration": 4,
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 254,
+          "InterfaceSubClass": 1,
+          "InterfaceProtocol": 2,
+          "Interface": 5
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "005"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=532\nDEVNAME=bus/usb/005/021\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=28e9/189/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=021"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "021"
+        },
+        {
+          "Id": "GetStringDescriptorBytes:DescIndex=0x03,Langid=0x0409,Length=0x80",
+          "Data": "BgMzQ0JK"
+        }
+      ]
+    }
+  ]
+}
