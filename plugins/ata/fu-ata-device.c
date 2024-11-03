@@ -650,7 +650,7 @@ fu_ata_device_setup(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
 	struct ata_tf tf = {0x0};
-	guint8 id[FU_ATA_IDENTIFY_SIZE];
+	guint8 id[FU_ATA_IDENTIFY_SIZE] = {0x0};
 
 	/* get ID block */
 	tf.dev = ATA_USING_LBA;
