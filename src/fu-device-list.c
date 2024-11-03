@@ -1066,16 +1066,6 @@ fu_device_list_get_by_id(FuDeviceList *self, const gchar *device_id, GError **er
 	if (item == NULL)
 		return NULL;
 
-	/* nothing at all matched */
-	if (item == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "device ID %s was not found",
-			    device_id);
-		return NULL;
-	}
-
 	/* something found */
 	return g_object_ref(item->device);
 }
