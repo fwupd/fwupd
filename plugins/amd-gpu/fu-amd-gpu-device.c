@@ -207,7 +207,7 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 	};
 
 	/* include these when generating the emulation event */
-	fu_ioctl_set_name(ioctl, "DrmAmdgpuInfo");
+	fu_ioctl_add_key_as_u16(ioctl, "Request", DRM_IOCTL_AMDGPU_INFO);
 	fu_ioctl_add_key_as_u8(ioctl, "Query", request.query);
 	fu_ioctl_add_mutable_buffer(ioctl, NULL, buf, bufsz, fu_amd_gpu_device_ioctl_buffer_cb);
 	if (!fu_ioctl_execute(ioctl,
