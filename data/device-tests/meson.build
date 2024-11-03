@@ -17,7 +17,6 @@ install_data([
     'dell-kh08p.json',
     'dell-wd19tb.json',
     'fpc-lenfy-moh.json',
-    'framework-hdmi.json',
     'fwupd-a3bu-xplained.json',
     'fwupd-at90usbkey.json',
     'google-servo-micro.json',
