@@ -27,3 +27,6 @@ plugin_builtin_cfu = static_library('fu_plugin_cfu',
 )
 plugin_builtins += plugin_builtin_cfu
 plugincfu_incdir = include_directories('.')
+
+enumeration_data += files('tests/microsoft-usbc-travel-hub-setup.json')
+enumeration_tests += files('tests/microsoft-usbc-travel-hub.json')
