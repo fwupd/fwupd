@@ -124,9 +124,8 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 		buf2 = fu_memdup_safe(buf, bufsz, error);
 		if (buf2 == NULL)
 			return FALSE;
-	}
-	if (buf2 != NULL)
 		fu_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
+	}
 
 	/* include these when generating the emulation event */
 	fu_ioctl_add_key_as_u16(ioctl, "Request", IPMICTL_SEND_COMMAND);
