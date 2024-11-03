@@ -25,6 +25,9 @@ plugin_builtin_bcm57xx = static_library('fu_plugin_bcm57xx',
 )
 plugin_builtins += plugin_builtin_bcm57xx
 
+enumeration_data += files('tests/bcm5719-setup.json')
+enumeration_tests += files('tests/bcm5719.json')
+
 if get_option('tests')
   install_data(['tests/bcm57xx.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))

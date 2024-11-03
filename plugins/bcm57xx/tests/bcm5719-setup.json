@@ -1,0 +1,122 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:04:00.0/0000:05:04.0/0000:2d:00.0/0000:2e:04.0/0000:51:00.0",
+      "Subsystem": "pci",
+      "Driver": "tg3",
+      "BindId": "0000:51:00.0",
+      "Vendor": 5348,
+      "Model": 5719,
+      "Created": "2024-10-25T11:38:39.920300Z",
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "tg3"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=tg3\nPCI_CLASS=20000\nPCI_ID=14E4:1657\nPCI_SUBSYS_ID=14E4:1904\nPCI_SLOT_NAME=0000:51:00.0\nMODALIAS=pci:v000014E4d00001657sv000014E4sd00001904bc02sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x14e4"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x1657"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x020000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=tg3\nPCI_CLASS=20000\nPCI_ID=14E4:1657\nPCI_SUBSYS_ID=14E4:1904\nPCI_SLOT_NAME=0000:51:00.0\nMODALIAS=pci:v000014E4d00001657sv000014E4sd00001904bc02sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x14e4"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x1657"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x020000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x020000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x00"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x14e4"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x1904"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:51:00.0"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:51:00.0"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=tg3\nPCI_CLASS=20000\nPCI_ID=14E4:1657\nPCI_SUBSYS_ID=14E4:1904\nPCI_SLOT_NAME=0000:51:00.0\nMODALIAS=pci:v000014E4d00001657sv000014E4sd00001904bc02sc00i00"
+        },
+        {
+          "Id": "SiocethtoolIoctl:Data=AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0xc4",
+          "Data": "AwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "DataOut": "AwAAAHRnMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANi4xMS4zLTIwMC5mYzQwLng4Nl82NAAAAAAAAAAAAABGRlY3LjYuMTQgYmMgc3RhZ2UxLTAuNC40NAAAAAAAADAwMDA6NTE6MDAuMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASAAAAAgAAAAAAAgAAIAAAA=="
+        },
+        {
+          "Id": "Ioctl:Request=0x8946,Data=ZW5wODFzMGYwAAAAAAAAAFAdOAX9fwAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x28",
+          "Data": "ZW5wODFzMGYwAAAAAAAAAFAdOAX9fwAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "DataOut": "ZW5wODFzMGYwAAAAAAAAAFAdOAX9fwAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "SiocethtoolIoctl:Data=CwAAAAAAAACYAgAABAAAAAAAAAA=,Length=0x14",
+          "Data": "CwAAAAAAAACYAgAABAAAAAAAAAA=",
+          "DataOut": "CwAAAKpVmWaYAgAABAAAAAAEACw="
+        },
+        {
+          "Id": "Ioctl:Request=0x8946,Data=ZW5wODFzMGYwAAAAAAAAAPClsiMAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x28",
+          "Data": "ZW5wODFzMGYwAAAAAAAAAPClsiMAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "DataOut": "ZW5wODFzMGYwAAAAAAAAAPClsiMAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        }
+      ]
+    }
+  ]
+}
