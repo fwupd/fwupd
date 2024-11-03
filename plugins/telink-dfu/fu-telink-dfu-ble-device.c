@@ -22,16 +22,21 @@ G_DEFINE_TYPE(FuTelinkDfuBleDevice, fu_telink_dfu_ble_device, FU_TYPE_BLUEZ_DEVI
 #define FU_TELINK_DFU_BLE_DEVICE_UUID_OTA "00010203-0405-0607-0809-0a0b0c0d2b12"
 
 static FuStructTelinkDfuBlePkt *
-fu_telink_dfu_ble_device_create_packet(guint16 preamble, const guint8 *buf, gsize bufsz)
+fu_telink_dfu_ble_device_create_packet(guint16 preamble,
+				       const guint8 *buf,
+				       gsize bufsz,
+				       GError **error)
 {
-	FuStructTelinkDfuBlePkt *pkt = fu_struct_telink_dfu_ble_pkt_new();
+	g_autoptr(FuStructTelinkDfuBlePkt) pkt = fu_struct_telink_dfu_ble_pkt_new();
 	fu_struct_telink_dfu_ble_pkt_set_preamble(pkt, preamble);
-	if (buf != NULL)
-		fu_struct_telink_dfu_ble_pkt_set_payload(pkt, buf, bufsz, NULL);
+	if (buf != NULL) {
+		if (!fu_struct_telink_dfu_ble_pkt_set_payload(pkt, buf, bufsz, error))
+			return NULL;
+	}
 	fu_struct_telink_dfu_ble_pkt_set_crc(
 	    pkt,
 	    ~fu_crc16(FU_CRC_KIND_B16_USB, pkt->data, pkt->len - 2));
-	return pkt;
+	return g_steal_pointer(&pkt);
 }
 
 static gboolean
@@ -53,7 +58,10 @@ fu_telink_dfu_ble_device_write_blocks(FuTelinkDfuBleDevice *self,
 			return FALSE;
 		pkt = fu_telink_dfu_ble_device_create_packet((guint16)i,
 							     fu_chunk_get_data(chk),
-							     fu_chunk_get_data_sz(chk));
+							     fu_chunk_get_data_sz(chk),
+							     error);
+		if (pkt == NULL)
+			return FALSE;
 		if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 					   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
 					   pkt,
@@ -75,7 +83,9 @@ fu_telink_dfu_ble_device_ota_start(FuTelinkDfuBleDevice *self, GError **error)
 {
 	g_autoptr(FuStructTelinkDfuBlePkt) pkt = NULL;
 
-	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_START, NULL, 0);
+	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_START, NULL, 0, error);
+	if (pkt == NULL)
+		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
 				   pkt,
@@ -99,7 +109,10 @@ fu_telink_dfu_ble_device_ota_stop(FuTelinkDfuBleDevice *self, guint number_chunk
 	pkt_stop_data[3] = ~pkt_stop_data[1];
 	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_END,
 						     pkt_stop_data,
-						     sizeof(pkt_stop_data));
+						     sizeof(pkt_stop_data),
+						     error);
+	if (pkt == NULL)
+		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
 				   pkt,
@@ -127,7 +140,12 @@ fu_telink_dfu_ble_device_write_blob(FuTelinkDfuBleDevice *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 29, "ota-stop");
 
 	/* ensure we can get the current version */
-	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_FW_VERSION, NULL, 0);
+	pkt = fu_telink_dfu_ble_device_create_packet(FU_TELINK_DFU_CMD_OTA_FW_VERSION,
+						     NULL,
+						     0,
+						     error);
+	if (pkt == NULL)
+		return FALSE;
 	if (!fu_bluez_device_write(FU_BLUEZ_DEVICE(self),
 				   FU_TELINK_DFU_BLE_DEVICE_UUID_OTA,
 				   pkt,
