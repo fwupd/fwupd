@@ -806,7 +806,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_get_active_bank_panamera(FuSynapticsMstDevice *self, GError **error)
 {
-	guint32 buf[16];
+	guint32 buf[16] = {0};
 
 	/* get used bank */
 	if (!fu_synaptics_mst_device_rc_get_command(self,
