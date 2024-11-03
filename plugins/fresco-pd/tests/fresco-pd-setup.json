@@ -1,0 +1,92 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-5.2",
+      "Created": "2024-10-25T09:33:39.966550Z",
+      "IdVendor": 7516,
+      "IdProduct": 28930,
+      "Device": 256,
+      "USB": 513,
+      "Manufacturer": 1,
+      "DeviceClass": 17,
+      "Product": 2,
+      "UsbBosDescriptors": [
+        {
+          "DevCapabilityType": 80,
+          "ExtraData": "AAM="
+        },
+        {
+          "DevCapabilityType": 2,
+          "ExtraData": "BgAAAA=="
+        },
+        {
+          "DevCapabilityType": 4,
+          "ExtraData": "AAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "DevCapabilityType": 13,
+          "ExtraData": "BAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAAAAAA"
+        }
+      ],
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 17
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=92\nDEVNAME=bus/usb/001/093\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1d5c/7102/100\nTYPE=17/0/0\nBUSNUM=001\nDEVNUM=093"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "093"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=92\nDEVNAME=bus/usb/001/093\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1d5c/7102/100\nTYPE=17/0/0\nBUSNUM=001\nDEVNUM=093"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "093"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "R2VuZXJpYyBCaWxsYm9hcmQgRGV2aWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3000,Data=AA==,Length=0x1",
+          "Data": "AA=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3001,Data=AA==,Length=0x1",
+          "Data": "Yw=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3002,Data=AA==,Length=0x1",
+          "Data": "Eg=="
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3003,Data=AA==,Length=0x1",
+          "Data": "Bw=="
+        }
+      ]
+    }
+  ]
+}
