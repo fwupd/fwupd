@@ -1,0 +1,124 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-1",
+      "Created": "2024-10-24T17:45:42.490939Z",
+      "IdVendor": 6790,
+      "IdProduct": 21979,
+      "Device": 320,
+      "USB": 512,
+      "Manufacturer": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 2,
+          "InterfaceSubClass": 2,
+          "InterfaceProtocol": 1,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 131,
+              "Interval": 1,
+              "MaxPacketSize": 64
+            }
+          ]
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceNumber": 1,
+          "InterfaceClass": 10,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 4,
+              "MaxPacketSize": 512
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 132,
+              "MaxPacketSize": 512
+            }
+          ]
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceNumber": 2,
+          "InterfaceClass": 255,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 6,
+              "MaxPacketSize": 512
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 134,
+              "MaxPacketSize": 512
+            }
+          ]
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=75\nDEVNAME=bus/usb/001/076\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1a86/55db/140\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=076"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "076"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Data": "MDEyMzQ1Njc4OQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x06,Data=wBoAAAAEAQAAAAAAAAACEAAAAAcAAAAAAAAAAAA=,Length=0x1d",
+          "Data": "wBoAAAAEAQAAAAAAAAACEAAAAAcAAAAAAAAAAAA="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x86,Data=wAQAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Length=0x1fe",
+          "Data": "wAEAAA=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x06,Data=wQoAgAAAAAAAAAAAAA==,Length=0xd",
+          "Data": "wQoAgAAAAAAAAAAAAA=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x06,Data=xAEAnw==,Length=0x4",
+          "Data": "xAEAnw=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x86,Data=xAQAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Length=0x1fe",
+          "Data": "xAEAAA=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x06,Data=wwQAAwAAAA==,Length=0x7",
+          "Data": "wwQAAwAAAA=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x86,Data=wwQAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Length=0x1fe",
+          "Data": "wwMAAAAA"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x06,Data=wQoAwAAAAAAAAAAAAA==,Length=0xd",
+          "Data": "wQoAwAAAAAAAAAAAAA=="
+        }
+      ]
+    }
+  ]
+}

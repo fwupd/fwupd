@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-url": "https://github.com/fwupd/fwupd-test-firmware/raw/refs/heads/main/device-tests/winchiphead-ch347-emulation.zip",
+      "emulation-file": "@enumeration_datadir@/ch347-setup.json",
       "components": [
         {
           "version": "1.40",
