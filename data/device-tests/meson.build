@@ -21,7 +21,6 @@ install_data([
     'fresco-pd.json',
     'fwupd-a3bu-xplained.json',
     'fwupd-at90usbkey.json',
-    'google-sargo-fastboot.json',
     'google-servo-micro.json',
     'hp-910-bt-keyboard.json',
     'hp-910-bt-mouse.json',

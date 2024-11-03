@@ -1,0 +1,127 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "5-1.3",
+      "Created": "2024-10-25T10:44:56.796837Z",
+      "IdVendor": 6353,
+      "IdProduct": 20192,
+      "Device": 256,
+      "USB": 512,
+      "Manufacturer": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 255,
+          "InterfaceSubClass": 66,
+          "InterfaceProtocol": 3,
+          "Interface": 4,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "MaxPacketSize": 512
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 1,
+              "Interval": 1,
+              "MaxPacketSize": 512
+            }
+          ]
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=534\nDEVNAME=bus/usb/005/023\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=18d1/4ee0/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=023"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/005/023"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "005"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=534\nDEVNAME=bus/usb/005/023\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=18d1/4ee0/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=023"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "023"
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Data": "OTdYQVkxMkJHTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnByb2R1Y3Q=,Length=0xe",
+          "Data": "Z2V0dmFyOnByb2R1Y3Q="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "T0tBWXNhcmdv"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnZlcnNpb24tYm9vdGxvYWRlcg==,Length=0x19",
+          "Data": "Z2V0dmFyOnZlcnNpb24tYm9vdGxvYWRlcg=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "T0tBWWI0czQtMC40LTgwNDg2ODk="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnNlcmlhbG5v,Length=0xf",
+          "Data": "Z2V0dmFyOnNlcmlhbG5v"
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "T0tBWTk3WEFZMTJCR00="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnNlY3VyZQ==,Length=0xd",
+          "Data": "Z2V0dmFyOnNlY3VyZQ=="
+        },
+        {
+          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Data": "T0tBWXllcw=="
+        }
+      ]
+    }
+  ]
+}
