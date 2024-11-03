@@ -551,9 +551,6 @@ fu_ata_device_command(FuAtaDevice *self,
 	cdb[7] = tf->lbah;
 	cdb[8] = tf->dev;
 	cdb[9] = tf->command;
-	fu_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
-	if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL)
-		fu_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
 
 	/* hit hardware */
 	io_hdr.interface_id = 'S';
