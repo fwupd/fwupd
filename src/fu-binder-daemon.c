@@ -54,7 +54,8 @@ fu_binder_daemon_app_reply(GBinderLocalObject *obj,
 
 			g_debug("%s %u", iface, code);
 			g_debug("%s", str);
-			*status = 0;
+			*status = GBINDER_STATUS_OK;
+			gbinder_local_reply_append_int32(reply, GBINDER_STATUS_OK);
 			gbinder_local_reply_append_string16(reply, str2);
 			return reply;
 		}
