@@ -2,7 +2,8 @@
 gcc=$(gcc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
-POLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
+DBUSPOLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
+PKPOLICY="/usr/share/polkit-1/actions/org.freedesktop.fwupd.policy"
 export FWUPD_LOCALSTATEDIR=${DIST}
 export FWUPD_SYSCONFDIR=${DIST}/etc
 export LD_LIBRARY_PATH=${DIST}/lib/${gcc}:${DIST}/lib64:${DIST}/lib
@@ -32,14 +33,25 @@ for var in $(env | grep FWUPD | cut -d= -f1); do
 done
 SUDO=$(which sudo)
 if [ "${BIN}" = "fwupd" ] && \
-   [ -d "$(dirname ${POLICY})" ] && \
-   [ ! -f ${POLICY} ]; then
-        echo "Missing D-Bus policy in ${POLICY}"
+   [ -d "$(dirname ${DBUSPOLICY})" ] && \
+   [ ! -f ${DBUSPOLICY} ]; then
+        echo "Missing D-Bus policy in ${DBUSPOLICY}"
         echo "Copy into filesystem? [y/N]"
         read -r answer
         if [ "${answer}" != "y" ]; then
                 exit 1
         fi
-        ${SUDO} cp ${DIST}/share/dbus-1/system.d/org.freedesktop.fwupd.conf ${POLICY}
+        ${SUDO} cp ${DIST}/share/dbus-1/system.d/org.freedesktop.fwupd.conf ${DBUSPOLICY}
+fi
+if [ "${BIN}" = "fwupdmgr" ] &&
+   [ -d "$(dirname ${PKPOLICY})" ] && \
+   ! grep "org.freedesktop.fwupd.emulation-save" $PKPOLICY 1>/dev/null 2>&1; then
+        echo "Missing or outdated PolicyKit policy in ${PKPOLICY}"
+        echo "Copy into filesystem? [y/N]"
+        read -r answer
+        if [ "${answer}" != "y" ]; then
+                exit 1
+        fi
+        ${SUDO} cp ${DIST}/share/polkit-1/actions/org.freedesktop.fwupd.policy ${PKPOLICY}
 fi
 ${SUDO} ${ENV} ${DEBUG} ${EXE} "$@"
