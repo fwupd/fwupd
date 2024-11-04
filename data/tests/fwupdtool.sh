@@ -105,6 +105,11 @@ fwupdtool modify-remote foo Enabled true
 rc=$?; if [ $rc != 1 ]; then error $rc; fi
 
 # ---
+echo "Modify known remote but unknown key (should fail)..."
+fwupdtool modify-remote lvfs bar true
+rc=$?; if [ $rc != 1 ]; then error $rc; fi
+
+# ---
 echo "Getting devices (should be one)..."
 fwupdtool get-devices --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
