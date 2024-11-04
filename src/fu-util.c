@@ -551,6 +551,12 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* filter */
+		if (!fwupd_device_match_flags(dev,
+					      priv->filter_device_include,
+					      priv->filter_device_exclude))
+			continue;
+
 		/* add all releases that could be applied */
 		rels = fwupd_client_get_releases(priv->client,
 						 fwupd_device_get_id(dev),
