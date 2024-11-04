@@ -19,6 +19,8 @@ typedef enum {
 gchar *
 fu_strsafe(const gchar *str, gsize maxsz);
 gchar *
+fu_strsafe_bytes(GBytes *blob, gsize maxsz);
+gchar *
 fu_strpassmask(const gchar *str) G_GNUC_NON_NULL(1);
 gboolean
 fu_strtoull(const gchar *str,

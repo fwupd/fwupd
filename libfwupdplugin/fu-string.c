@@ -604,6 +604,25 @@ fu_strsafe(const gchar *str, gsize maxsz)
 }
 
 /**
+ * fu_strsafe_bytes:
+ * @blob: (not nullable): a #GBytes
+ * @maxsz: maximum size of returned string
+ *
+ * Converts a #GBytes into something that can be safely printed.
+ *
+ * Returns: (transfer full): safe string, or %NULL if there was nothing valid
+ *
+ * Since: 2.0.2
+ **/
+gchar *
+fu_strsafe_bytes(GBytes *blob, gsize maxsz)
+{
+	g_return_val_if_fail(blob != NULL, NULL);
+	return fu_strsafe((const gchar *)g_bytes_get_data(blob, NULL),
+			  MIN(g_bytes_get_size(blob), maxsz));
+}
+
+/**
  * fu_strjoin:
  * @separator: (nullable): string to insert between each of the strings
  * @array: (element-type utf8): a #GPtrArray
