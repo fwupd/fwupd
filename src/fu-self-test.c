@@ -1075,6 +1075,8 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			device =
 			    g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
 			g_assert_nonnull(device);
+			if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
+				fu_device_set_version_raw(device, 0);
 			if (!g_strv_contains(nolocker, g_type_name(gtype))) {
 				g_autoptr(FuDeviceLocker) locker =
 				    fu_device_locker_new(device, NULL);
