@@ -1287,6 +1287,7 @@
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
+      <package variant="mingw64" />
     </distro>
     <distro id="void">
       <package variant="x86_64" />

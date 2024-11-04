@@ -9,18 +9,8 @@ fi
 
 # install deps
 if [ "$(id -u)" -eq 0 ]; then
+    dnf install -y python3
     ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
-fi
-
-# update to latest version of meson
-if [ "$(id -u)" -eq 0 ]; then
-    dnf install -y python-pip
-    pip install meson --force-reinstall
-fi
-
-# get a libxmlb with the workaround for the GLib regression
-if [ "$(id -u)" -eq 0 ]; then
-    dnf upgrade --enablerepo=updates-testing --refresh --advisory=FEDORA-2024-584ab295c8 -y
 fi
 
 #prep
@@ -56,6 +46,7 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
+    -Dpassim=disabled \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:tests=false \
