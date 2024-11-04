@@ -9,6 +9,8 @@ _fwupdtool_cmd_list=(
 	'efivar-files'
 	'enable-remote'
 	'enable-test-devices'
+	'emulation-tag'
+	'emulation-untag'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'

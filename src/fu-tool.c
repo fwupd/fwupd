@@ -3761,6 +3761,45 @@ fu_util_esp_list(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_modify_tag(FuUtilPrivate *priv, gchar **values, gboolean enable, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	const gchar *tag = enable ? "emulation-tag" : "~emulation-tag";
+
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  priv->progress,
+				  error))
+		return FALSE;
+
+	/* set the flag */
+	priv->filter_device_include |= FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG;
+	if (g_strv_length(values) >= 1) {
+		dev = fu_util_get_device(priv, values[0], error);
+		if (dev == NULL)
+			return FALSE;
+	} else {
+		dev = fu_util_prompt_for_device(priv, NULL, error);
+		if (dev == NULL)
+			return FALSE;
+	}
+
+	return fu_engine_modify_device(priv->engine, fu_device_get_id(dev), "Flags", tag, error);
+}
+
+static gboolean
+fu_util_emulation_tag(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	return fu_util_modify_tag(priv, values, TRUE, error);
+}
+
+static gboolean
+fu_util_emulation_untag(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	return fu_util_modify_tag(priv, values, FALSE, error);
+}
+
+static gboolean
 _g_str_equal0(gconstpointer str1, gconstpointer str2)
 {
 	return g_strcmp0(str1, str2) == 0;
@@ -4886,6 +4925,20 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Gets the host security attributes"),
 			      fu_util_security);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-tag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Adds devices to watch for future emulation"),
+			      fu_util_emulation_tag);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-untag",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Removes devices to watch for future emulation"),
+			      fu_util_emulation_untag);
 	fu_util_cmd_array_add(cmd_array,
 			      "esp-mount",
 			      NULL,
