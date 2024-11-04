@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/mer-hybris/libgbinder.git
+revision = 624bfa843d7ab971ee65ddf26a48629795ce49b4
+patch_directory = libgbinder
+diff_files = libgbinder/001_android12_aidl3.diff, libgbinder/002_bionic_pthread_join.diff, libgbinder/003_config_file_env.diff
+
+[provide]
+libgbinder = libgbinder_dep

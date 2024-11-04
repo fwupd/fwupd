@@ -3,7 +3,7 @@
 VENV=$(dirname $0)/..
 BUILD=${VENV}/build
 DIST=${VENV}/dist
-EXTRA_ARGS="-Dlibxmlb:gtkdoc=false -Dsystemd=disabled -Dlaunchd=disabled"
+EXTRA_ARGS="-Dlibxmlb:gtkdoc=false -Dsystemd=disabled -Dlaunchd=disabled -Dbinder=enabled"
 
 #build and install
 if [ -d /opt/homebrew/opt/libarchive/lib/pkgconfig ]; then
