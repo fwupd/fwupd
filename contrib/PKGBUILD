@@ -70,7 +70,7 @@ pkgver() {
 build() {
   cd ${pkgname}
   if [ -n "$CI" ]; then
-    export CI="--wrap-mode=default"
+    export CI="--wrap-mode=default -Db_coverage=true"
   fi
   arch-meson -D b_lto=false $CI ../build \
     -Dplugin_powerd=disabled \
