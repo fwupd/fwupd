@@ -1,0 +1,9 @@
+{
+  "UsbDevices": [
+    {
+      "NOTE1": "This file is created using the instructions in https://fwupd.github.io/libfwupdplugin/device-emulation.html",
+      "NOTE2": "Then do 'unzip emulation.zip' and rename setup.json to this filename",
+      "NOTE3": "You can delete this file if you have a emulation-url specified in the {{vendor}}-{{example}}.json file!"
+    }
+  ]
+}
