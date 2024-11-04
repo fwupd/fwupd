@@ -1,0 +1,18 @@
+{
+  "name": "AMD Navi31",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/732d1df025e809ee620fd411c9e8dcc488a492cf2bec3d0ea3ba5f43f7d91461-D704_XT_A0_20GB_MBA_NAVI31_Baseline_PRD004B_69818.cab",
+      "emulation-url": "https://fwupd.org/downloads/808f6a085f8a59a8db62d08921e786e15d252eb3cf5069ee4c0b991e4a250cf1-navi31.zip",
+      "components": [
+        {
+          "version": "022.001.002.030.000001",
+          "guids": [
+            "8ed32270-e736-52e2-87d8-acef1dd2a946"
+          ]
+        }
+      ]
+    }
+  ]
+}
