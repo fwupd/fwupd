@@ -82,6 +82,28 @@ data.  You should be able to see the emulated device as well as interact with it
 Test data can be added to LVFS by visiting the `Assets` tab of the firmware release on LVFS.
 There is an upload button, and once uploaded a URL will be available that can be used for device tests.
 
+## Add emulation-only data to the plugin
+
+Rather than simulating a complete firmware update, we can also simulate just enumerating the device.
+Normally this provides a decent amount of test coverage for the plugin, but is inferior to providing
+emulation of the entire firmware update process from one version to another.
+
+The advantage that the emulation-only test is that it can run as part of a quick *installed-test* on
+user systems without any internet access required.
+Creating the enumeration-only data also does not need redistributable firmware files uploaded to the
+LVFS.
+
+To create emulation-only data, mark the device for emulation using `fwupdmgr emulation-tag` as above,
+then replug the device or restart the daemon as required.
+
+Then the enumeration can be extracted into the plugin directory using:
+
+    fwupdmgr emulation-save emulation.zip
+    unzip emulation.zip
+    mv setup.json tests/plugin-setup.json
+
+The enumeration-only emulation can be added to the device-test `.json` in an `emulation-file` section.
+
 ## Device Tests
 
 Device tests are utilized as part of continuous integration to ensure that all device updates
