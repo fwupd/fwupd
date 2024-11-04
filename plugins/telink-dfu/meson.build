@@ -8,6 +8,7 @@ plugin_builtins += static_library('fu_plugin_telink_dfu',
     'fu-telink-dfu-archive.c',
     'fu-telink-dfu-common.c',
     'fu-telink-dfu-ble-device.c',
+    'fu-telink-dfu-hid-device.c',
     'fu-telink-dfu-plugin.c',
   ],
   include_directories: plugin_incdirs,
@@ -15,3 +16,8 @@ plugin_builtins += static_library('fu_plugin_telink_dfu',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/telink-ryder-dongle.json',
+)
+

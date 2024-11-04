@@ -9,4 +9,4 @@
 #include <fwupdplugin.h>
 
 guint32
-fu_telink_dfu_parse_image_version(const gchar *version);
+fu_telink_dfu_parse_image_version(const gchar *version, FwupdVersionFormat ver_format);
