@@ -1,6 +1,7 @@
 #!/bin/sh -e
 #install RPM packages
 dnf install -y dist/*.rpm
+dnf install -y gcovr
 
 fwupdtool enable-test-devices
 
@@ -19,3 +20,14 @@ sleep 5
 /usr/libexec/fwupd/fwupd --verbose &
 sleep 10
 gnome-desktop-testing-runner fwupd
+
+# generate coverage report
+if [ "$CI" = "true" ]; then
+	gcovr -x \
+		--filter build/libfwupd \
+		--filter build/libfwupdplugin \
+		--filter build/plugins \
+		--filter build/src \
+		-o coverage.xml
+	sed "s,build/,,g" coverage.xml -i
+fi
