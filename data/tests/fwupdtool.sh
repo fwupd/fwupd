@@ -110,6 +110,16 @@ fwupdtool get-devices --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Changing VALID config on test device..."
+fwupdtool modify-config test AnotherWriteRequired true
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Changing INVALID config on test device...(should fail)"
+fwupdtool modify-config test Foo true
+rc=$?; if [ $rc != 1 ]; then error $rc; fi
+
+# ---
 echo "Disabling test device..."
 fwupdtool disable-test-devices
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
