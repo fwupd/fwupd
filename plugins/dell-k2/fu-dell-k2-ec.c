@@ -60,7 +60,10 @@ struct _FuDellK2Ec {
 G_DEFINE_TYPE(FuDellK2Ec, fu_dell_k2_ec, FU_TYPE_HID_DEVICE)
 
 static struct FuDellK2EcQueryEntry *
-fu_dell_k2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type, guint8 instance)
+fu_dell_k2_ec_dev_entry(FuDevice *device,
+			DellK2EcDevType device_type,
+			guint8 sub_type,
+			guint8 instance)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
 
@@ -81,13 +84,16 @@ fu_dell_k2_ec_dev_entry(FuDevice *device, guint8 device_type, guint8 sub_type, g
 }
 
 gboolean
-fu_dell_k2_ec_is_dev_present(FuDevice *device, guint8 dev_type, guint8 sub_type, guint8 instance)
+fu_dell_k2_ec_is_dev_present(FuDevice *device,
+			     DellK2EcDevType dev_type,
+			     guint8 sub_type,
+			     guint8 instance)
 {
 	return fu_dell_k2_ec_dev_entry(device, dev_type, sub_type, instance) != NULL;
 }
 
 const gchar *
-fu_dell_k2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 instance)
+fu_dell_k2_ec_devicetype_to_str(DellK2EcDevType device_type, guint8 sub_type, guint8 instance)
 {
 	switch (device_type) {
 	case DELL_K2_EC_DEV_TYPE_MAIN_EC:
@@ -283,7 +289,7 @@ static gboolean
 fu_dell_k2_ec_dock_type_extract(FuDevice *device, GError **error)
 {
 	FuDellK2BaseType dock_type = fu_dell_k2_ec_get_dock_type(device);
-	guint8 dev_type = DELL_K2_EC_DEV_TYPE_MAIN_EC;
+	DellK2EcDevType dev_type = DELL_K2_EC_DEV_TYPE_MAIN_EC;
 
 	/* don't change error type, the plugin ignores it */
 	if (dock_type != FU_DELL_K2_BASE_TYPE_K2) {
@@ -665,7 +671,7 @@ fu_dell_k2_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error)
 }
 
 static guint
-fu_dell_k2_ec_get_chunk_delaytime(guint8 dev_type)
+fu_dell_k2_ec_get_chunk_delaytime(DellK2EcDevType dev_type)
 {
 	switch (dev_type) {
 	case DELL_K2_EC_DEV_TYPE_MAIN_EC:
@@ -682,7 +688,7 @@ fu_dell_k2_ec_get_chunk_delaytime(guint8 dev_type)
 }
 
 static gsize
-fu_dell_k2_ec_get_chunk_size(guint8 dev_type)
+fu_dell_k2_ec_get_chunk_size(DellK2EcDevType dev_type)
 {
 	/* return the max chunk size in bytes */
 	switch (dev_type) {
@@ -696,7 +702,7 @@ fu_dell_k2_ec_get_chunk_size(guint8 dev_type)
 }
 
 static guint
-fu_dell_k2_ec_get_first_page_delaytime(guint8 dev_type)
+fu_dell_k2_ec_get_first_page_delaytime(DellK2EcDevType dev_type)
 {
 	return (dev_type == DELL_K2_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
 }
@@ -704,7 +710,7 @@ fu_dell_k2_ec_get_first_page_delaytime(guint8 dev_type)
 gboolean
 fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 				    FuFirmware *firmware,
-				    guint8 dev_type,
+				    DellK2EcDevType dev_type,
 				    guint8 dev_identifier,
 				    GError **error)
 {

@@ -44,14 +44,17 @@ fu_dell_k2_ec_get_dock_type(FuDevice *device);
 guint8
 fu_dell_k2_ec_get_dock_sku(FuDevice *device);
 const gchar *
-fu_dell_k2_ec_devicetype_to_str(guint8 device_type, guint8 sub_type, guint8 instance);
+fu_dell_k2_ec_devicetype_to_str(DellK2EcDevType device_type, guint8 sub_type, guint8 instance);
 gboolean
 fu_dell_k2_ec_is_dock_ready4update(FuDevice *device, GError **error);
 gboolean
-fu_dell_k2_ec_is_dev_present(FuDevice *device, guint8 dev_type, guint8 sub_type, guint8 instance);
+fu_dell_k2_ec_is_dev_present(FuDevice *device,
+			     DellK2EcDevType dev_type,
+			     guint8 sub_type,
+			     guint8 instance);
 gboolean
 fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 				    FuFirmware *firmware,
-				    guint8 dev_type,
+				    DellK2EcDevType dev_type,
 				    guint8 dev_identifier,
 				    GError **error);
