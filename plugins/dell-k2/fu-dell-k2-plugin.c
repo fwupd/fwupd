@@ -314,7 +314,7 @@ fu_dell_k2_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static FuDevice *
 fu_dell_k2_plugin_get_ec_from_devices(GPtrArray *devices)
 {
-	for (guint i = 0; i <= devices->len; i++) {
+	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		FuDevice *parent = fu_device_get_parent(dev);
 
@@ -323,8 +323,6 @@ fu_dell_k2_plugin_get_ec_from_devices(GPtrArray *devices)
 
 		if (FU_IS_DELL_K2_EC(parent))
 			return parent;
-
-		break;
 	}
 	return NULL;
 }
