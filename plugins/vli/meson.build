@@ -36,6 +36,16 @@ plugin_builtin_vli = static_library('fu_plugin_vli',
 )
 plugin_builtins += plugin_builtin_vli
 
+device_tests += files(
+  'tests/bizlink-no-sku-vli.json',
+  'tests/hyper-no-sku-vli.json',
+  'tests/lenovo-03x7168.json',
+  'tests/lenovo-03x7605.json',
+  'tests/lenovo-03x7608-vli.json',
+  'tests/lenovo-40au0065-vli.json',
+  'tests/lenovo-GX90T33021-vli.json',
+)
+
 if get_option('tests')
   e = executable(
     'vli-self-test',

@@ -17,4 +17,8 @@ plugin_builtins += static_library('fu_plugin_wacom_raw',
   dependencies: plugin_deps,
   link_with: plugin_libs,
 )
+
+device_tests += files(
+  'tests/wacom-g14t.json',
+)
 endif

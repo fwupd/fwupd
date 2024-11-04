@@ -22,3 +22,8 @@ plugin_builtins += static_library('fu_plugin_steelseries',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files('tests/steelseries-aerox-3-wireless.json',
+                      'tests/steelseries-nova5.json',
+                      'tests/steelseries-rival-3-wireless.json',
+)

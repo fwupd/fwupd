@@ -17,3 +17,8 @@ plugin_builtins += static_library('fu_plugin_cros_ec',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/acer-d501.json',
+  'tests/google-servo-micro.json',
+)

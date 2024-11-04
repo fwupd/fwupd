@@ -35,7 +35,12 @@ plugin_builtin_dfu = static_library('fu_plugin_dfu',
 plugin_builtins += plugin_builtin_dfu
 
 enumeration_data += files('tests/dfu-gd32vf103-setup.json')
-device_tests += files('tests/dfu-gd32vf103.json')
+device_tests += files(
+  'tests/dfu-gd32vf103.json',
+  'tests/fwupd-a3bu-xplained.json',
+  'tests/fwupd-at90usbkey.json',
+  'tests/realtek-rts5855.json',
+)
 
 if get_option('tests')
   env = environment()

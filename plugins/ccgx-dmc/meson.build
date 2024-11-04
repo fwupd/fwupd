@@ -19,6 +19,10 @@ plugin_builtin_ccgx_dmc = static_library('fu_plugin_ccgx_dmc',
 )
 plugin_builtins += plugin_builtin_ccgx_dmc
 
+device_tests += files(
+  'tests/hp-dock-g5.json',
+)
+
 if get_option('tests')
   install_data(['tests/ccgx-dmc.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))

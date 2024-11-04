@@ -15,4 +15,8 @@ plugin_builtins += static_library('fu_plugin_parade_usbhub',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/parade-ps5512evb.json',
+)
 endif

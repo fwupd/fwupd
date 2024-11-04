@@ -28,6 +28,11 @@ plugin_builtin_wac = static_library('fu_plugin_wac',
 )
 plugin_builtins += plugin_builtin_wac
 
+device_tests += files(
+  'tests/wacom-intuos-bt-m.json',
+  'tests/wacom-intuos-bt-s.json',
+)
+
 if get_option('tests')
   install_data(['tests/wacom-usb.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))

@@ -15,3 +15,9 @@ plugin_builtins += static_library('fu_plugin_corsair',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/corsair-katar-pro-xt.json',
+  'tests/corsair-sabre-pro.json',
+  'tests/corsair-sabre-rgb-pro.json',
+)

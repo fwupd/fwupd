@@ -15,3 +15,7 @@ plugin_builtins += static_library('fu_plugin_rts54hub',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/realtek-rts5423.json',
+)
