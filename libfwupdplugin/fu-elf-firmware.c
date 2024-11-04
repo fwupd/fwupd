@@ -71,7 +71,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	offset_secthdr += fu_struct_elf_file_header64le_get_shoff(st_fhdr);
 	shnum = fu_struct_elf_file_header64le_get_shnum(st_fhdr);
 	for (guint i = 0; i < shnum; i++) {
-		g_autoptr(GByteArray) st_shdr =
+		g_autoptr(FuStructElfSectionHeader64le) st_shdr =
 		    fu_struct_elf_section_header64le_parse_stream(stream, offset_secthdr, error);
 		if (st_shdr == NULL)
 			return FALSE;
@@ -81,7 +81,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 
 	/* add sections as images */
 	for (guint i = 0; i < sections->len; i++) {
-		GByteArray *st_shdr = g_ptr_array_index(sections, i);
+		FuStructElfSectionHeader64le *st_shdr = g_ptr_array_index(sections, i);
 		guint64 sect_offset = fu_struct_elf_section_header64le_get_offset(st_shdr);
 		guint64 sect_size = fu_struct_elf_section_header64le_get_size(st_shdr);
 		g_autoptr(FuFirmware) img = fu_firmware_new();
@@ -96,7 +96,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "shstrndx section type was not strtab, was %s",
 				    fu_elf_section_header_type_to_string(
-					fu_struct_elf_section_header64le_get_type(shstrndx_buf)));
+					fu_struct_elf_section_header64le_get_type(st_shdr)));
 				return FALSE;
 			}
 			shstrndx_buf = fu_input_stream_read_byte_array(stream,
@@ -138,7 +138,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 
 	/* fix up the section names */
 	for (guint i = 0; i < sections->len; i++) {
-		GByteArray *st_shdr = g_ptr_array_index(sections, i);
+		FuStructElfSectionHeader64le *st_shdr = g_ptr_array_index(sections, i);
 		guint32 sh_name = fu_struct_elf_section_header64le_get_name(st_shdr);
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuFirmware) img = NULL;
