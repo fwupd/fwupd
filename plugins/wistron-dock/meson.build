@@ -13,3 +13,4 @@ plugin_builtins += static_library('fu_plugin_wistron_dock',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+device_tests += files('tests/wistron-dock-40b7.json')

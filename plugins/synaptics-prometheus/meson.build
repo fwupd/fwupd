@@ -47,3 +47,5 @@ if get_option('tests')
   )
   test('synaptics-prometheus-self-test', e, env: env)  # added to installed-tests
 endif
+
+device_tests += files('tests/synaptics-prometheus.json')

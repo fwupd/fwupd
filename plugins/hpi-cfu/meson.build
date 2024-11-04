@@ -19,3 +19,7 @@ plugin_builtins += static_library('fu_plugin_hpi_cfu',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/hp-dock-g6-ultra.json',
+)

@@ -22,6 +22,13 @@ plugin_builtin_pxi = static_library('fu_plugin_pxi',
 )
 plugin_builtins += plugin_builtin_pxi
 
+device_tests += files(
+  'tests/hp-910-bt-keyboard.json',
+  'tests/hp-910-bt-mouse.json',
+  'tests/pixart-rf-2862-dongle.json',
+  'tests/pixart-rf-GCBBTM25.json',
+)
+
 if get_option('tests')
   install_data(['tests/pixart.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))

@@ -16,3 +16,7 @@ plugin_builtins += static_library('fu_plugin_ebitdo',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+device_tests += files('tests/8bitdo-nes30pro.json',
+                      'tests/8bitdo-sf30pro.json',
+                      'tests/8bitdo-sfc30.json',
+)

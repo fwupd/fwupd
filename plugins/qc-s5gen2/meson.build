@@ -20,3 +20,5 @@ plugin_builtins += static_library('fu_plugin_qc_s5gen2',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files('tests/qualcomm-qcc5171.json')

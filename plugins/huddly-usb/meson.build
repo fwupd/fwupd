@@ -14,3 +14,7 @@ plugin_builtins += static_library('fu_plugin_huddly_usb',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/huddly-s1.json',
+)

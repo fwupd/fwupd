@@ -15,3 +15,7 @@ plugin_builtins += static_library('fu_plugin_aver_hid',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/aver-fone540.json',
+)

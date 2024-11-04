@@ -12,3 +12,9 @@ plugin_builtins += static_library('fu_plugin_jabra',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/jabra-speak-410.json',
+  'tests/jabra-speak-510.json',
+  'tests/jabra-speak-710.json',
+)

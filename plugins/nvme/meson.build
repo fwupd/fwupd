@@ -23,6 +23,10 @@ plugin_builtin_nvme = static_library('fu_plugin_nvme',
 )
 plugin_builtins += plugin_builtin_nvme
 
+device_tests += files(
+  'tests/lenovo-pcsn720.json',
+)
+
 if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())

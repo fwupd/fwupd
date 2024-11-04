@@ -13,3 +13,8 @@ plugin_builtins += static_library('fu_plugin_colorhug',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files('tests/hughski-colorhug.json',
+                      'tests/hughski-colorhug2.json',
+                      'tests/hughski-colorhug-plus.json',
+)

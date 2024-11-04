@@ -18,4 +18,8 @@ plugin_builtin_thunderbolt = static_library('fu_plugin_thunderbolt',
   dependencies: plugin_deps,
 )
 plugin_builtins += plugin_builtin_thunderbolt
+
+device_tests += files(
+  'tests/caldigit-ts4-tbt.json',
+)
 endif

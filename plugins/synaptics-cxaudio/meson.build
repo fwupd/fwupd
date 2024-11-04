@@ -14,3 +14,7 @@ plugin_builtins += static_library('fu_plugin_synaptics_cxaudio',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/lenovo-03x7609-cxaudio.json',
+)
