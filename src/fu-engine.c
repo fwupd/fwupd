@@ -2737,17 +2737,12 @@ fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
 	/* sanity check */
 	for (guint phase = FU_ENGINE_INSTALL_PHASE_SETUP; phase < FU_ENGINE_INSTALL_PHASE_LAST;
 	     phase++) {
-		const gchar *json =
-		    g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(phase));
+		GBytes *blob = g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(phase));
 		g_autofree gchar *fn =
 		    g_strdup_printf("%s.json", fu_engine_install_phase_to_string(phase));
-		g_autoptr(GBytes) blob = NULL;
-
-		/* nothing set */
-		if (json == NULL)
+		if (blob == NULL)
 			continue;
 		got_json = TRUE;
-		blob = g_bytes_new_static(json, strlen(json));
 		fu_archive_add_entry(archive, fn, blob);
 	}
 	if (!got_json) {
@@ -2810,9 +2805,10 @@ fu_engine_backends_to_json(FuEngine *self, JsonBuilder *json_builder)
 static gboolean
 fu_engine_backends_save_phase(FuEngine *self, GError **error)
 {
-	const gchar *data_old;
-	g_autofree gchar *data_new = NULL;
-	g_autofree gchar *data_new_safe = NULL;
+	GBytes *blob_old;
+	g_autofree gchar *blob_new_safe = NULL;
+	g_autoptr(GBytes) blob_new = NULL;
+	g_autoptr(GOutputStream) ostream = g_memory_output_stream_new_resizable();
 	g_autoptr(JsonBuilder) json_builder = json_builder_new();
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonNode) json_root = NULL;
@@ -2825,27 +2821,32 @@ fu_engine_backends_save_phase(FuEngine *self, GError **error)
 	json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 
-	data_old =
+	blob_old =
 	    g_hash_table_lookup(self->emulation_phases, GINT_TO_POINTER(self->install_phase));
-	data_new = json_generator_to_data(json_generator, NULL);
-	if (g_strcmp0(data_new, "") == 0) {
+	if (!json_generator_to_stream(json_generator, ostream, NULL, error))
+		return FALSE;
+	if (!g_output_stream_close(ostream, NULL, error))
+		return FALSE;
+	blob_new = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(ostream));
+
+	if (g_bytes_get_size(blob_new) == 0) {
 		g_info("no data for phase %s",
 		       fu_engine_install_phase_to_string(self->install_phase));
 		return TRUE;
 	}
-	if (g_strcmp0(data_old, data_new) == 0) {
+	if (blob_old != NULL && g_bytes_compare(blob_old, blob_new) == 0) {
 		g_info("JSON unchanged for phase %s",
 		       fu_engine_install_phase_to_string(self->install_phase));
 		return TRUE;
 	}
-	data_new_safe = g_strndup(data_new, 8000);
+	blob_new_safe = fu_strsafe_bytes(blob_new, 8000);
 	g_info("JSON %s for phase %s: %s...",
-	       data_old == NULL ? "added" : "changed",
+	       blob_old == NULL ? "added" : "changed",
 	       fu_engine_install_phase_to_string(self->install_phase),
-	       data_new_safe);
+	       blob_new_safe);
 	g_hash_table_insert(self->emulation_phases,
 			    GINT_TO_POINTER(self->install_phase),
-			    g_steal_pointer(&data_new));
+			    g_steal_pointer(&blob_new));
 
 	/* success */
 	return TRUE;
