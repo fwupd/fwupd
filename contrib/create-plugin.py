@@ -85,7 +85,11 @@ if __name__ == "__main__":
         autoescape=select_autoescape(),
         keep_trailing_newline=True,
     )
-    for fn in glob.iglob(f"{srcdir}/plugins/{template_src}/*"):
+    for fn in glob.iglob(f"{srcdir}/plugins/{template_src}/**", recursive=True):
+        if os.path.isdir(fn):
+            fn_rel: str = os.path.relpath(fn, srcdir)
+            os.makedirs(_subst_replace(fn_rel), exist_ok=True)
+            continue
         fn_rel: str = os.path.relpath(fn, srcdir)
         template = env.get_template(fn_rel)
         filename: str = _subst_replace(fn_rel.replace(".in", ""))

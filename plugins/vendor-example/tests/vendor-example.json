@@ -1,0 +1,31 @@
+{
+  "name": "{{Vendor}} {{Example}}",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.3.cab",
+      "emulation-file": "@enumeration_datadir@/{{vendor}}-{{example}}-setup.json",
+      "emulation-url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.3.zip",
+      "components": [
+        {
+          "version": "1.2.3",
+          "guids": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.4.cab",
+      "emulation-url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.4.zip",
+      "components": [
+        {
+          "version": "1.2.4",
+          "guids": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      ]
+    }
+  ]
+}

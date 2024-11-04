@@ -18,6 +18,11 @@ plugin_builtins += static_library('fu_plugin_{{vendor_example}}',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/vendor-example.json',
+  'tests/vendor-example-setup.json',
+)
 {%- if Parent == 'Udev' %}
 endif
 {%- endif %}
