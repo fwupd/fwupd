@@ -11,9 +11,13 @@ error()
 }
 
 # ---
-echo "Enable test devices"
-fwupdtool enable-test-devices
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+echo "Verify test device is present"
+fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
+rc=$?; if [ $rc != 0 ]; then
+    echo "Enable test device"
+    fwupdtool enable-test-devices
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+fi
 
 # ---
 echo "Show help output"
@@ -54,6 +58,18 @@ rc=$?; if [ $rc != 0 ]; then error $rc; fi
 echo "Installing test firmware..."
 fwupdmgr update $device -y
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Check if anything was tagged for emulation"
+fwupdmgr get-devices --json --filter emulation-tag | jq -e '(.Devices | length) > 0'
+rc=$?; if [ $rc = 0 ]; then
+    echo "Save device emulation"
+    fwupdmgr emulation-save /dev/null
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+    echo "Save device emulation (bad args)"
+    fwupdmgr emulation-save
+    rc=$?; if [ $rc != 1 ]; then error $rc; fi
+fi
 
 # ---
 echo "Verifying results (str)..."

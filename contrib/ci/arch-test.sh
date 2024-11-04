@@ -18,6 +18,8 @@ export G_TEST_SRCDIR=/usr/share/installed-tests/fwupd G_TEST_BUILDDIR=/usr/share
 sleep 5
 
 fwupdtool enable-test-devices
+# tag test device for emulation before starting daemon
+fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 /usr/lib/fwupd/fwupd --verbose &
 sleep 10
 /usr/share/installed-tests/fwupd/fwupdmgr.sh

@@ -13,6 +13,10 @@ dbus-daemon --system --fork
 /usr/lib/polkit-1/polkitd &
 sleep 5
 
+# Avoid this in Fedora right now; there appears to be a memory leak
+# found by asan that needs to be fixed first.
+# fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
+
 # run the daemon startup to check it can start
 /usr/libexec/fwupd/fwupd --immediate-exit --verbose
 
