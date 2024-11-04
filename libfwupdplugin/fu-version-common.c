@@ -287,6 +287,13 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
 		return g_strdup_printf("%u.%u", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
+		return g_strdup_printf("%u.%u.%u.%u",
+				       (guint)(val >> 12) & 0xF,
+				       (guint)(val >> 8) & 0xF,
+				       (guint)(val >> 4) & 0xF,
+				       (guint)val & 0xF);
+	}
 	if (kind == FWUPD_VERSION_FORMAT_TRIPLET) {
 		return g_strdup_printf("%u.%u.%u",
 				       (guint)(val >> 12) & 0xF,
