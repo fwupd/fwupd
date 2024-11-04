@@ -133,6 +133,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency id="gcc-multilib-s390x-linux-gnu">
     <distro id="debian">
