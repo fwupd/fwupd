@@ -61,7 +61,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GBinderLocalRequest, gbinder_local_request_unref)
 static void
 fu_binder_client_app_call(FuUtil *self, const gchar *str)
 {
-	int status;
+	int status = -1;
 	g_autoptr(GBinderLocalRequest) req = gbinder_client_new_request(self->client);
 	g_autoptr(GBinderRemoteReply) reply = NULL;
 
@@ -72,6 +72,12 @@ fu_binder_client_app_call(FuUtil *self, const gchar *str)
 		g_autofree gchar *ret = NULL;
 
 		gbinder_remote_reply_init_reader(reply, &reader);
+		status = -1;
+		gbinder_reader_read_int32(&reader, &status);
+		if (status != GBINDER_STATUS_OK) {
+			g_warning("reply status %d", status);
+			return;
+		}
 		ret = gbinder_reader_read_string16(&reader);
 		g_debug("Reply: %s", ret);
 	} else {
