@@ -56,6 +56,16 @@ fwupdmgr update $device -y
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Verifying results (str)..."
+fwupdmgr get-results $device -y
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Verifying results (json)..."
+fwupdmgr get-results $device -y --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Getting updates (should be none)..."
 fwupdmgr --no-unreported-check --no-metadata-check get-updates
 rc=$?; if [ $rc != 2 ]; then error $rc; fi
