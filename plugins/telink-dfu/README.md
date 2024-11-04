@@ -37,6 +37,16 @@ Read the [handbook on Telink Wiki site](https://wiki.telink-semi.cn/wiki/index.h
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x248A`.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### TelinkHidToolVer
+
+The BCD tool version.
+
+Since: 2.0.2
+
 ## External Interface Access
 
 This plugin requires access to bluetooth GATT characteristics.

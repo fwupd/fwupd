@@ -1,0 +1,18 @@
+{
+  "name": "Telink Ryder Dongle",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/35ee97796aae0990cb403ffb0d6bf123e75c67ed9a3d096045580d1f69197271-primax-ryder_dongle-v1.25.cab",
+      "emulation-url": "https://fwupd.org/downloads/5e9f7e8686c1a9bd7735745daf2c9d0fd1413cd1e7d3ccb651487218be77cf18-ryder-dongle-v1.25-emulation.zip",
+      "components": [
+        {
+          "version": "1.25",
+          "guids": [
+            "3db7a7d4-b24f-52e0-ab17-a5b56d5afc7f"
+          ]
+        }
+      ]
+    }
+  ]
+}
