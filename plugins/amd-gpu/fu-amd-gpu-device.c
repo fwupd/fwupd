@@ -341,6 +341,10 @@ fu_amd_gpu_device_write_firmware(FuDevice *device,
 	g_autoptr(GError) error_read = NULL;
 	const gchar *base;
 
+	/* emulation doesn't currently cover IO channel use */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	base = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	psp_vbflash = g_build_filename(base, "psp_vbflash", NULL);
 
