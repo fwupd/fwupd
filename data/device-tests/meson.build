@@ -76,7 +76,7 @@ con = configuration_data()
 enumeration_datadir = join_paths(installed_test_datadir, 'enumeration-data')
 con.set('enumeration_datadir', enumeration_datadir)
 
-foreach test: enumeration_tests
+foreach test: device_tests
   configure_file(
     input: join_paths(meson.project_source_root(),'@0@'.format(test)),
     output: '@BASENAME@.json',

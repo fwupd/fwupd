@@ -18,4 +18,4 @@ plugin_builtins += static_library('fu_plugin_hailuck',
 )
 
 enumeration_data += files('tests/hailuck-setup.json')
-enumeration_tests += files('tests/hailuck.json')
+device_tests += files('tests/hailuck.json')

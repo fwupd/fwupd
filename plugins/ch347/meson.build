@@ -16,4 +16,4 @@ plugin_builtins += static_library('fu_plugin_ch347',
 )
 
 enumeration_data += files('tests/ch347-setup.json')
-enumeration_tests += files('tests/ch347.json')
+device_tests += files('tests/ch347.json')

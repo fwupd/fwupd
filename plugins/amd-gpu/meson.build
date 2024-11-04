@@ -20,5 +20,5 @@ plugin_builtins += static_library('fu_plugin_amd_gpu',
   dependencies: plugin_deps,
 )
 enumeration_data += files('tests/amd-apu-setup.json', 'tests/amd-dgpu-setup.json')
-enumeration_tests += files('tests/amd-apu.json', 'tests/amd-dgpu.json')
+device_tests += files('tests/amd-apu.json', 'tests/amd-dgpu.json')
 endif

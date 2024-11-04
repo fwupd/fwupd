@@ -26,7 +26,7 @@ plugin_builtin_ccgx = static_library('fu_plugin_ccgx',
 plugin_builtins += plugin_builtin_ccgx
 
 enumeration_data += files('tests/framework-hdmi-setup.json')
-enumeration_tests += files('tests/framework-hdmi.json')
+device_tests += files('tests/framework-hdmi.json')
 
 if get_option('tests')
   install_data(['tests/ccgx.builder.xml'],
