@@ -696,12 +696,6 @@ fu_dell_k2_ec_get_chunk_size(guint8 dev_type)
 }
 
 static guint
-fu_dell_k2_ec_get_page_delaytime(guint8 dev_type)
-{
-	return (dev_type == DELL_K2_EC_DEV_TYPE_LAN) ? 700 : 25;
-}
-
-static guint
 fu_dell_k2_ec_get_first_page_delaytime(guint8 dev_type)
 {
 	return (dev_type == DELL_K2_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
@@ -718,7 +712,6 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 	gsize chunk_sz = fu_dell_k2_ec_get_chunk_size(dev_type);
 	guint first_page_delay = fu_dell_k2_ec_get_first_page_delaytime(dev_type);
 	guint chunk_delay = fu_dell_k2_ec_get_chunk_delaytime(dev_type);
-	guint page_delay = fu_dell_k2_ec_get_page_delaytime(dev_type);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -794,8 +787,6 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 
 				fu_device_sleep(device, first_page_delay);
 			}
-
-			fu_device_sleep(device, page_delay);
 		}
 
 		/* delay time */
