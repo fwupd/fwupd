@@ -140,8 +140,13 @@ if [ -d $BASEDIR ]; then
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
-       echo "Get BIOS setting..."
+       echo "Get BIOS setting as json..."
        fwupdtool get-bios-settings WlanAutoSense --json
+       rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+       # ---
+       echo "Get BIOS setting as a string..."
+       fwupdtool get-bios-settings WlanAutoSense
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
