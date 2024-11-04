@@ -16,4 +16,4 @@ plugin_builtins += static_library('fu_plugin_fresco_pd',
 )
 
 enumeration_data += files('tests/fresco-pd-setup.json')
-enumeration_tests += files('tests/fresco-pd.json')
+device_tests += files('tests/fresco-pd.json')

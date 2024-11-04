@@ -15,4 +15,4 @@ plugin_builtins += static_library('fu_plugin_ch341a',
 )
 
 enumeration_data += files('tests/ch341a-setup.json')
-enumeration_tests += files('tests/ch341a.json')
+device_tests += files('tests/ch341a.json')

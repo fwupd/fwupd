@@ -14,5 +14,5 @@ plugin_builtins += static_library('fu_plugin_amd_pmc',
   dependencies: plugin_deps,
 )
 enumeration_data += files('tests/amd-pmc-setup.json')
-enumeration_tests += files('tests/amd-pmc.json')
+device_tests += files('tests/amd-pmc.json')
 endif
