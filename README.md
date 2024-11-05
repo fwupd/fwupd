@@ -4,7 +4,6 @@
 [![CodeQL](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
-[![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
 [![Codecov Coverage Status](https://codecov.io/gh/fwupd/fwupd/graph/badge.svg?token=vykt2ROfu9)](https://codecov.io/gh/fwupd/fwupd)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fwupd/fwupd/badge)](https://securityscorecards.dev/viewer/?uri=github.com/fwupd/fwupd)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8751/badge)](https://www.bestpractices.dev/projects/8751)

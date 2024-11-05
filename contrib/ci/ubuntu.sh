@@ -34,10 +34,11 @@ export BUILD=${root}/build
 rm -rf ${BUILD}
 chown -R nobody ${root}
 sudo -u nobody meson ${BUILD}               \
+                    -Db_coverage=true       \
                     -Dman=false             \
                     -Ddocs=enabled          \
                     -Dlibxmlb:gtkdoc=false  \
-                    --prefix=${root}/dist
+                    --prefix=${root}/target
 #build with clang
 sudo -u nobody ninja -C ${BUILD} test -v
 
@@ -54,3 +55,8 @@ fi
 
 #make docs available outside of docker
 ninja -C ${BUILD} install -v
+mkdir -p ${root}/dist/share
+mv ${root}/target/share/doc ${root}/dist/share
+
+# generate coverage report
+./contrib/ci/coverage.sh
