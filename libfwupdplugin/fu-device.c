@@ -951,6 +951,8 @@ fu_device_get_contents_bytes(FuDevice *self,
 	if (istr == NULL)
 		return NULL;
 	blob = fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, progress, error);
+	if (blob == NULL)
+		return NULL;
 
 	/* save response */
 	if (event != NULL)
