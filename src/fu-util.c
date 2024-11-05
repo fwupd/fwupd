@@ -903,8 +903,10 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		if (!fwupd_client_emulation_load(priv->client,
 						 emulation_filename,
 						 priv->cancellable,
-						 error))
+						 error)) {
+			g_prefix_error(error, "failed to load %s: ", emulation_filename);
 			return FALSE;
+		}
 	}
 
 	/* download file if required */
