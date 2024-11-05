@@ -11,6 +11,6 @@ gcovr -x \
 	--filter build/libfwupdplugin \
 	--filter build/plugins \
 	--filter build/src \
-	--exclude-lines-by-pattern '(g_return_val_if_fail|g_return_if_fail)' \
+	--exclude-lines-by-pattern '^.*(g_return_val_if_fail|g_return_if_fail).*$' \
 	-o coverage.xml
 sed "s,build/,,g" coverage.xml -i
