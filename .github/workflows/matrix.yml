@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [fedora, debian-x86_64, arch, debian-i386]
+        os: [fedora, debian-x86_64, arch, debian-i386, ubuntu-x86_64]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Docker login
@@ -49,7 +49,7 @@ jobs:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
-        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386' || matrix.os == 'arch'
+        if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386' || matrix.os == 'arch' || matrix.os == 'ubuntu-x86_64'
         uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

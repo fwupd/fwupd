@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [precommit, fedora, debian-x86_64, arch, debian-i386, void]
+        os: [precommit, fedora, debian-x86_64, arch, debian-i386, void, ubuntu-x86_64]
 
     steps:
       - name: Check out the repo
