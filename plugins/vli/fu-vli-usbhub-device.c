@@ -1125,7 +1125,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	if (st_hd == NULL)
 		return FALSE;
 	hd2_fw_sz = fu_struct_vli_usbhub_hdr_get_usb3_fw_sz(st_hd);
-	if (hd2_fw_sz == 0 || hd1_fw_sz > 0xF000) {
+	if (hd2_fw_sz == 0 || hd2_fw_sz > 0xF000) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
