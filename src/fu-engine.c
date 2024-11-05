@@ -2674,14 +2674,20 @@ fu_engine_emulation_load(FuEngine *self,
 	/* unload any existing devices */
 	if (!fu_engine_emulation_load_json_blob(self, json_blob, error))
 		return FALSE;
+	g_hash_table_remove_all(self->emulation_phases);
 
 	/* load archive */
 	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_NONE, &error_archive);
-	if (archive == NULL)
-		g_debug("no archive found: %s", error_archive->message);
+	if (archive == NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		g_debug("no archive found, using JSON as phase setup: %s", error_archive->message);
+		blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+		if (blob == NULL)
+			return FALSE;
+		return fu_engine_emulation_load_json_blob(self, blob, error);
+	}
 
 	/* load JSON files from archive */
-	g_hash_table_remove_all(self->emulation_phases);
 	for (guint phase = FU_ENGINE_INSTALL_PHASE_SETUP; phase < FU_ENGINE_INSTALL_PHASE_LAST;
 	     phase++) {
 		g_autofree gchar *fn =
@@ -2689,15 +2695,9 @@ fu_engine_emulation_load(FuEngine *self,
 		g_autoptr(GBytes) blob = NULL;
 
 		/* not found */
-		if (archive != NULL) {
-			blob = fu_archive_lookup_by_fn(archive, fn, NULL);
-			if (blob == NULL)
-				continue;
-		} else {
-			blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
-			if (blob == NULL)
-				return FALSE;
-		}
+		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+		if (blob == NULL || g_bytes_get_size(blob) == 0)
+			continue;
 		got_json = TRUE;
 		g_info("emulation for phase %s", fu_engine_install_phase_to_string(phase));
 		if (phase == FU_ENGINE_INSTALL_PHASE_SETUP) {
@@ -2708,9 +2708,6 @@ fu_engine_emulation_load(FuEngine *self,
 					    GINT_TO_POINTER(phase),
 					    g_steal_pointer(&blob));
 		}
-		/* direct json is only used for setup phase */
-		if (archive == NULL)
-			break;
 	}
 	if (!got_json) {
 		g_set_error_literal(error,
