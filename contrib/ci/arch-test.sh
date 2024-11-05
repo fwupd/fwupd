@@ -26,12 +26,4 @@ sleep 10
 /usr/share/installed-tests/fwupd/fwupdtool.sh
 
 # generate coverage report
-if [ "$CI" = "true" ]; then
-	gcovr -x \
-		--filter build/libfwupd \
-		--filter build/libfwupdplugin \
-		--filter build/plugins \
-		--filter build/src \
-		-o coverage.xml
-	sed "s,build/,,g" coverage.xml -i
-fi
+./contrib/ci/coverage.sh
