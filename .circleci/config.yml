@@ -16,23 +16,6 @@ jobs:
           paths:
             - "dist/share/doc"
 
-  build-windows:
-    docker:
-      - image: fedora:41
-    steps:
-      - checkout
-      - run:
-          name: "Build Win32"
-          command: ./contrib/ci/build_windows.sh
-      - persist_to_workspace:
-          root: .
-          paths:
-            - "dist/setup/*.msi"
-            - "dist/VERSION"
-            - "dist/news.txt"
-      - store_artifacts:
-          path: dist/setup
-
   publish-docs:
     machine:
       image: ubuntu-2204:edge
@@ -60,42 +43,14 @@ jobs:
             git commit -a --allow-empty -m "Trigger deployment"
             git push git@github.com:fwupd/fwupd.github.io.git
 
-  publish-github-exe-release:
-    docker:
-      - image: circleci/golang:1.17.5
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: "Publish Release on GitHub"
-          command: |
-            go get github.com/tcnksm/ghr
-            VERSION=$(cat dist/VERSION)
-            BODY=$(cat dist/news.txt)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b "${BODY}" ${VERSION} ./dist/setup/
 workflows:
   version: 2
   main:
     jobs:
-      - build-windows
       - build-ubuntu-x86_64
   deploy:
     jobs:
       - build-ubuntu-x86_64:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
-      - build-windows:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^\d+\.\d+\.\d+$/
-      - publish-github-exe-release:
-          requires:
-            - build-windows
           filters:
             branches:
               ignore: /.*/
