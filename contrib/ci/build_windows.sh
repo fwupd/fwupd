@@ -10,6 +10,7 @@ fi
 # install deps
 if [ "$(id -u)" -eq 0 ]; then
     dnf install -y python3
+    dnf install -y xvfb-run
     ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
 fi
 
@@ -20,6 +21,10 @@ export DESTDIR=${root}/dist
 build=$root/build-win32
 
 rm -rf $DESTDIR $build
+mkdir -p $build $DESTDIR && cd $build
+
+# run before using meson
+export WINEPREFIX=$build/.wine
 
 # For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=disabled):
 # See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
@@ -29,8 +34,7 @@ rm -rf $DESTDIR $build
 # 3. Only enable when not a tagged release (Unsupported by Logitech)
 
 # try to keep this and ../contrib/build-windows.sh in sync as much as makes sense
-mkdir -p $build $DESTDIR && cd $build
-meson setup .. \
+xvfb-run meson setup .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -158,10 +162,9 @@ wixl -v \
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
-ls -R ~/.wine/drive_c/Program\ Files/fwupd/
-wine ~/.wine/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
+ls -R ${WINEPREFIX}/drive_c/Program\ Files/fwupd/
+wine ${WINEPREFIX}/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
 wine msiexec /x "${MSI_FILENAME}"
 
 #generate news release
 contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
-echo $VERSION > $DESTDIR/VERSION

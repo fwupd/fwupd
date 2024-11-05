@@ -115,3 +115,19 @@ jobs:
       run: ./contrib/ci/build_macos.sh
     - name: build
       run: ninja -C build-macos
+
+  build-windows:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: configure
+      run: ./contrib/ci/build_windows.sh
+    - name: upload-artifact
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: windows
+        path: |
+          ${{ github.workspace }}/dist/setup/*.msi
+          ${{ github.workspace }}/dist/news.txt
