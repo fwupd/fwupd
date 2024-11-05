@@ -762,6 +762,7 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 		/* iterate the pages */
 		for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
 			guint8 page_aligned[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
+			gboolean skip_dev_ack = FALSE;
 			g_autoptr(FuChunk) page = NULL;
 
 			page = fu_chunk_array_index(pages, j, error);
@@ -779,11 +780,16 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 					    error))
 				return FALSE;
 
+			/* a buggy device may not send the acknowledgment receipt */
+			skip_dev_ack = ((dev_type == DELL_K2_EC_DEV_TYPE_LAN) &&
+					(j == (fu_chunk_array_length(pages) - 1)));
+
 			/* send to ec */
 			g_debug("sending chunk: %u, page: %u.", i, j);
 			if (!fu_dell_k2_ec_hid_write(
 				device,
 				g_bytes_new(page_aligned, sizeof(page_aligned)),
+				skip_dev_ack,
 				error))
 				return FALSE;
 
