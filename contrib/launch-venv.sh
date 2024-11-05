@@ -2,6 +2,8 @@
 gcc=$(gcc -dumpmachine)
 DIST="$(dirname $0)/../dist"
 BIN="$(basename $0)"
+COMMAND="$1"
+ARGUMENT="$2"
 DBUSPOLICY="/usr/share/dbus-1/system.d/org.freedesktop.fwupd.conf"
 PKPOLICY="/usr/share/polkit-1/actions/org.freedesktop.fwupd.policy"
 export FWUPD_LOCALSTATEDIR=${DIST}
@@ -55,3 +57,7 @@ if [ "${BIN}" = "fwupdmgr" ] &&
         ${SUDO} cp ${DIST}/share/polkit-1/actions/org.freedesktop.fwupd.policy ${PKPOLICY}
 fi
 ${SUDO} ${ENV} ${DEBUG} ${EXE} "$@"
+
+if [ "${BIN}" = "fwupdmgr" ] && [ "${COMMAND}" = "emulation-save" ]; then
+        ${SUDO} chown "$(id -u)":"$(id -g)" ${ARGUMENT}
+fi
