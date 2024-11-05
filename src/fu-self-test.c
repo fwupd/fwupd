@@ -1066,6 +1066,8 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			GType gtype = g_array_index(device_gtypes, GType, j);
 			g_autoptr(FuDevice) device = NULL;
 			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
+			g_autoptr(GHashTable) metadata_pre = NULL;
+			g_autoptr(GHashTable) metadata_post = NULL;
 			const gchar *nolocker[] = {
 			    "FuPciPspDevice",
 			    "FuSynapticsRmiPs2Device",
@@ -1079,6 +1081,12 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
 				fu_device_set_version_raw(device, 0);
 			fu_device_set_progress(device, progress_tmp);
+			metadata_pre = fu_device_report_metadata_pre(device);
+			if (metadata_pre != NULL)
+				g_debug("got %u metadata items", g_hash_table_size(metadata_pre));
+			metadata_post = fu_device_report_metadata_post(device);
+			if (metadata_post != NULL)
+				g_debug("got %u metadata items", g_hash_table_size(metadata_post));
 			if (!g_strv_contains(nolocker, g_type_name(gtype))) {
 				g_autoptr(FuDeviceLocker) locker =
 				    fu_device_locker_new(device, NULL);
