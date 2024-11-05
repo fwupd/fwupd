@@ -119,6 +119,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuFirmware) kek = fu_efi_signature_list_new();
 	g_autoptr(GBytes) kek_blob = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
+	g_autoptr(GError) error_fde = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
 	kek_blob = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "KEK", NULL, error);
@@ -145,6 +146,14 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 						 NULL);
 		fu_device_build_instance_id(device, NULL, "UEFI", "CRT", "ARCH", NULL);
 	}
+
+	/* dbx changes are expected to change PCR7, warn the user that BitLocker might ask for
+	recovery key after fw update */
+	if (!fu_common_check_full_disk_encryption(&error_fde)) {
+		g_debug("FDE in use, set flag: %s", error_fde->message);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	}
+
 	return fu_uefi_dbx_device_set_version_number(device, error);
 }
 
