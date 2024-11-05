@@ -1,0 +1,139 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:15.0/i2c_designware.0/i2c-0/i2c-ELAN0670:00/0018:04F3:314F.0001/hidraw/hidraw0",
+      "DeviceFile": "/dev/hidraw0",
+      "Subsystem": "hidraw",
+      "Vendor": 1267,
+      "Model": 12623,
+      "Created": "2024-11-05T14:38:45.042871Z",
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "hidraw"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=241\nMINOR=0\nDEVNAME=hidraw0"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "hidraw0"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "hid"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "hid-multitouch"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=hid-multitouch\nHID_ID=0018:000004F3:0000314F\nHID_NAME=ELAN0670:00 04F3:314F\nHID_PHYS=i2c-ELAN0670:00\nHID_UNIQ=\nMODALIAS=hid:b0018g0004v000004F3p0000314F"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=HID_ID",
+          "Data": "0018:000004F3:0000314F"
+        },
+        {
+          "Id": "ReadProp:Key=HID_NAME",
+          "Data": "ELAN0670:00 04F3:314F"
+        },
+        {
+          "Id": "ReadProp:Key=HID_UNIQ",
+          "Data": ""
+        },
+        {
+          "Id": "ReadProp:Key=HID_PHYS",
+          "Data": "i2c-ELAN0670:00"
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDAAE=,Length=0x5",
+          "DataOut": "DQUDAAE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DQABAAE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDAgE=,Length=0x5",
+          "DataOut": "DQUDAgE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DQIBAwA="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDEAE=,Length=0x5",
+          "DataOut": "DQUDEAE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DRABBAE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDAQE=,Length=0x5",
+          "DataOut": "DQUDAQE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DQEBDAA="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDAwE=,Length=0x5",
+          "DataOut": "DQUDAwE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DQMBABE="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054806,Data=DQUDEAM=,Length=0x5",
+          "DataOut": "DQUDEAM="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0054807,Data=DQAAAAA=,Length=0x5",
+          "DataOut": "DRADAAI="
+        }
+      ]
+    }
+  ]
+}
