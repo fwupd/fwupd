@@ -108,8 +108,11 @@ fu_amd_kria_device_set_quirk_kv(FuDevice *device,
 		priv->eeprom_address = g_strdup(value);
 		return TRUE;
 	}
-
-	return TRUE;
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
 }
 
 static gboolean

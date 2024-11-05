@@ -1035,6 +1035,99 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) metadata_post = NULL;
+	g_autoptr(GHashTable) metadata_pre = NULL;
+	const gchar *nolocker[] = {
+	    "FuPciPspDevice",
+	    "FuSynapticsRmiPs2Device",
+	    "FuUefiSbatDevice",
+	    NULL,
+	};
+
+	g_debug("loading %s", g_type_name(gtype));
+	device = g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
+	g_assert_nonnull(device);
+
+	/* version convert */
+	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
+		fu_device_set_version_raw(device, 0);
+
+	/* progress steps */
+	fu_device_set_progress(device, progress_tmp);
+
+	/* report metadata */
+	metadata_pre = fu_device_report_metadata_pre(device);
+	if (metadata_pre != NULL)
+		g_debug("got %u metadata items", g_hash_table_size(metadata_pre));
+	metadata_post = fu_device_report_metadata_post(device);
+	if (metadata_post != NULL)
+		g_debug("got %u metadata items", g_hash_table_size(metadata_post));
+
+	/* quirk kvs */
+	ret = fu_device_set_quirk_kv(device,
+				     "NoGoingTo",
+				     "Exist",
+				     FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
+				     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+
+	/* ->probe() and ->setup */
+	if (!g_strv_contains(nolocker, g_type_name(gtype))) {
+		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
+		g_assert_null(locker);
+	}
+}
+
+static void
+fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
+{
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
+	g_autoptr(GError) error = NULL;
+	const gchar *noxml[] = {
+	    "FuArchiveFirmware",
+	    "FuGenesysUsbhubFirmware",
+	    "FuIntelThunderboltFirmware",
+	    "FuIntelThunderboltNvm",
+	    "FuUefiUpdateInfo",
+	    NULL,
+	};
+
+	g_debug("loading %s", g_type_name(gtype));
+	firmware = g_object_new(gtype, NULL);
+	g_assert_nonnull(firmware);
+	if (gtype != FU_TYPE_FIRMWARE &&
+	    !fu_firmware_has_flag(FU_FIRMWARE(firmware), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
+		ret =
+		    fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, NULL);
+		g_assert_false(ret);
+	}
+	blob = fu_firmware_write(firmware, NULL);
+	if (blob != NULL && g_bytes_get_size(blob) > 0)
+		g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
+	if (!g_strv_contains(noxml, g_type_name(gtype))) {
+		g_autofree gchar *xml = fu_firmware_export_to_xml(
+		    firmware,
+		    FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG | FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
+		    NULL);
+		if (xml != NULL) {
+			ret = fu_firmware_build_from_xml(firmware, xml, &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+		}
+	}
+}
+
+static void
 fu_engine_plugin_gtypes_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -1043,7 +1136,6 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GArray) firmware_gtypes = NULL;
-	g_autoptr(GBytes) fw = g_bytes_new_static((const guint8 *)"x", 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
@@ -1064,34 +1156,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		GArray *device_gtypes = fu_plugin_get_device_gtypes(plugin);
 		for (guint j = 0; device_gtypes != NULL && j < device_gtypes->len; j++) {
 			GType gtype = g_array_index(device_gtypes, GType, j);
-			g_autoptr(FuDevice) device = NULL;
-			g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
-			g_autoptr(GHashTable) metadata_pre = NULL;
-			g_autoptr(GHashTable) metadata_post = NULL;
-			const gchar *nolocker[] = {
-			    "FuPciPspDevice",
-			    "FuSynapticsRmiPs2Device",
-			    "FuUefiSbatDevice",
-			    NULL,
-			};
-			g_debug("loading %s", g_type_name(gtype));
-			device =
-			    g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
-			g_assert_nonnull(device);
-			if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
-				fu_device_set_version_raw(device, 0);
-			fu_device_set_progress(device, progress_tmp);
-			metadata_pre = fu_device_report_metadata_pre(device);
-			if (metadata_pre != NULL)
-				g_debug("got %u metadata items", g_hash_table_size(metadata_pre));
-			metadata_post = fu_device_report_metadata_post(device);
-			if (metadata_post != NULL)
-				g_debug("got %u metadata items", g_hash_table_size(metadata_post));
-			if (!g_strv_contains(nolocker, g_type_name(gtype))) {
-				g_autoptr(FuDeviceLocker) locker =
-				    fu_device_locker_new(device, NULL);
-				g_assert_null(locker);
-			}
+			fu_engine_plugin_device_gtype(self, gtype);
 		}
 	}
 
@@ -1099,44 +1164,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	firmware_gtypes = fu_context_get_firmware_gtypes(self->ctx);
 	for (guint j = 0; j < firmware_gtypes->len; j++) {
 		GType gtype = g_array_index(firmware_gtypes, GType, j);
-		g_autoptr(FuFirmware) firmware = NULL;
-		g_autoptr(GBytes) blob = NULL;
-		const gchar *noxml[] = {
-		    "FuArchiveFirmware",
-		    "FuGenesysUsbhubFirmware",
-		    "FuIntelThunderboltFirmware",
-		    "FuIntelThunderboltNvm",
-		    "FuUefiUpdateInfo",
-		    NULL,
-		};
-		g_debug("loading %s", g_type_name(gtype));
-		firmware = g_object_new(gtype, NULL);
-		g_assert_nonnull(firmware);
-		if (gtype != FU_TYPE_FIRMWARE &&
-		    !fu_firmware_has_flag(FU_FIRMWARE(firmware),
-					  FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
-			ret = fu_firmware_parse_bytes(firmware,
-						      fw,
-						      0x0,
-						      FWUPD_INSTALL_FLAG_NO_SEARCH,
-						      NULL);
-			g_assert_false(ret);
-		}
-		blob = fu_firmware_write(firmware, NULL);
-		if (blob != NULL && g_bytes_get_size(blob) > 0)
-			g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
-		if (!g_strv_contains(noxml, g_type_name(gtype))) {
-			g_autofree gchar *xml =
-			    fu_firmware_export_to_xml(firmware,
-						      FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG |
-							  FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
-						      NULL);
-			if (xml != NULL) {
-				ret = fu_firmware_build_from_xml(firmware, xml, &error);
-				g_assert_no_error(error);
-				g_assert_true(ret);
-			}
-		}
+		fu_engine_plugin_firmware_gtype(self, gtype);
 	}
 }
 
