@@ -288,6 +288,14 @@ fu_archive_read(FuArchive *self, _archive_read_ctx *arch, FuArchiveFlags flags, 
 		fn = archive_entry_pathname(entry);
 		if (fn == NULL)
 			continue;
+		if (!archive_entry_size_is_set(entry)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "%s entry does not have size set",
+				    fn);
+			return FALSE;
+		}
 		bufsz = archive_entry_size(entry);
 		if (bufsz > 1024 * 1024 * 1024) {
 			g_set_error_literal(error,
@@ -430,6 +438,35 @@ fu_archive_read_cb(struct archive *arch, void *client_data, const void **buffer)
 		*buffer = helper->buf;
 	return cnt;
 }
+
+static GSeekType
+fu_archive_whence_to_seek_type(gint whence)
+{
+	if (whence == SEEK_SET)
+		return G_SEEK_SET;
+	if (whence == SEEK_END)
+		return G_SEEK_END;
+	return G_SEEK_CUR;
+}
+
+static gint64
+fu_archive_seek_cb(struct archive *arch, void *client_data, gint64 offset, gint whence)
+{
+	FuArchiveStreamHelper *helper = (FuArchiveStreamHelper *)client_data;
+	g_autoptr(GError) error_local = NULL;
+	if (!g_seekable_seek(G_SEEKABLE(helper->stream),
+			     offset,
+			     fu_archive_whence_to_seek_type(whence),
+			     NULL,
+			     &error_local)) {
+		archive_set_error(arch,
+				  ARCHIVE_FAILED,
+				  "failed to read from stream: %s",
+				  error_local->message);
+		return -1;
+	}
+	return g_seekable_tell(G_SEEKABLE(helper->stream));
+}
 #endif
 
 /**
@@ -462,7 +499,11 @@ fu_archive_new_stream(GInputStream *stream, FuArchiveFlags flags, GError **error
 	arch = fu_archive_read_new(error);
 	if (arch == NULL)
 		return NULL;
-	r = archive_read_open2(arch, &helper, NULL, fu_archive_read_cb, fu_archive_skip_cb, NULL);
+	archive_read_set_seek_callback(arch, fu_archive_seek_cb);
+	archive_read_set_read_callback(arch, fu_archive_read_cb);
+	archive_read_set_skip_callback(arch, fu_archive_skip_cb);
+	archive_read_set_callback_data(arch, &helper);
+	r = archive_read_open1(arch);
 	if (r != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
