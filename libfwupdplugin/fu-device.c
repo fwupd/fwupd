@@ -7319,7 +7319,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* nothing found */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no event with ID %s", id);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event with ID %s", id);
 	return NULL;
 }
 
