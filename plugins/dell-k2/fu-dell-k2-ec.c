@@ -1019,7 +1019,6 @@ fu_dell_k2_ec_init(FuDellK2Ec *self)
 	fu_device_set_summary(FU_DEVICE(self), "Dell Dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
@@ -1045,7 +1044,7 @@ fu_dell_k2_ec_class_init(FuDellK2EcClass *klass)
 }
 
 FuDellK2Ec *
-fu_dell_k2_ec_new(FuDevice *device)
+fu_dell_k2_ec_new(FuDevice *device, gboolean uod)
 {
 	FuDellK2Ec *self = NULL;
 	FuContext *ctx = fu_device_get_context(device);
@@ -1053,5 +1052,7 @@ fu_dell_k2_ec_new(FuDevice *device)
 	self = g_object_new(FU_TYPE_DELL_K2_EC, "context", ctx, NULL);
 	fu_device_incorporate(FU_DEVICE(self), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	fu_device_set_logical_id(FU_DEVICE(self), "ec");
+	if (uod)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	return self;
 }

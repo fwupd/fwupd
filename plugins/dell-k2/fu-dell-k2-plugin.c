@@ -179,10 +179,12 @@ fu_dell_k2_plugin_backend_device_added(FuPlugin *plugin,
 
 	/* USB HUB HID bridge device */
 	if ((vid == DELL_VID && pid == DELL_K2_HID_PID)) {
+		gboolean uod;
 		g_autoptr(FuDellK2Ec) ec_dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		ec_dev = fu_dell_k2_ec_new(device);
+		uod = fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_K2_PLUGIN_CONFIG_UOD);
+		ec_dev = fu_dell_k2_ec_new(device, uod);
 		if (ec_dev == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -374,8 +376,10 @@ fu_dell_k2_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError
 
 	/* conditionally enable passive flow */
 	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_K2_PLUGIN_CONFIG_UOD)) {
-		if (!fu_dell_k2_ec_run_passive_update(ec_dev, error))
-			return FALSE;
+		if (fu_device_has_flag(ec_dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+			if (!fu_dell_k2_ec_run_passive_update(ec_dev, error))
+				return FALSE;
+		}
 	}
 
 	return TRUE;

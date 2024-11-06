@@ -15,7 +15,7 @@
 G_DECLARE_FINAL_TYPE(FuDellK2Ec, fu_dell_k2_ec, FU, DELL_K2_EC, FuHidDevice)
 
 FuDellK2Ec *
-fu_dell_k2_ec_new(FuDevice *proxy);
+fu_dell_k2_ec_new(FuDevice *device, gboolean uod);
 void
 fu_dell_k2_ec_enable_tbt_passive(FuDevice *device);
 gboolean
