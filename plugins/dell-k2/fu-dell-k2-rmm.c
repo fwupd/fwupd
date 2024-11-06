@@ -60,6 +60,7 @@ fu_dell_k2_rmm_write(FuDevice *device,
 {
 	return fu_dell_k2_ec_write_firmware_helper(device,
 						   firmware,
+						   progress,
 						   DELL_K2_EC_DEV_TYPE_RMM,
 						   0,
 						   error);

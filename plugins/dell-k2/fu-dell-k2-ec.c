@@ -61,20 +61,20 @@ G_DEFINE_TYPE(FuDellK2Ec, fu_dell_k2_ec, FU_TYPE_HID_DEVICE)
 
 static struct FuDellK2EcQueryEntry *
 fu_dell_k2_ec_dev_entry(FuDevice *device,
-			DellK2EcDevType device_type,
+			DellK2EcDevType dev_type,
 			guint8 sub_type,
 			guint8 instance)
 {
 	FuDellK2Ec *self = FU_DELL_K2_EC(device);
 
 	for (guint i = 0; i < self->dock_info->header.total_devices; i++) {
-		if (self->dock_info->devices[i].ec_addr_map.device_type != device_type)
+		if (self->dock_info->devices[i].ec_addr_map.device_type != dev_type)
 			continue;
 		if (sub_type != 0 && self->dock_info->devices[i].ec_addr_map.sub_type != sub_type)
 			continue;
 
 		/* vary by instance index */
-		if (device_type == DELL_K2_EC_DEV_TYPE_PD &&
+		if (dev_type == DELL_K2_EC_DEV_TYPE_PD &&
 		    self->dock_info->devices[i].ec_addr_map.instance != instance)
 			continue;
 
@@ -93,9 +93,9 @@ fu_dell_k2_ec_is_dev_present(FuDevice *device,
 }
 
 const gchar *
-fu_dell_k2_ec_devicetype_to_str(DellK2EcDevType device_type, guint8 sub_type, guint8 instance)
+fu_dell_k2_ec_devicetype_to_str(DellK2EcDevType dev_type, guint8 sub_type, guint8 instance)
 {
-	switch (device_type) {
+	switch (dev_type) {
 	case DELL_K2_EC_DEV_TYPE_MAIN_EC:
 		return "EC";
 	case DELL_K2_EC_DEV_TYPE_PD:
@@ -707,16 +707,121 @@ fu_dell_k2_ec_get_first_page_delaytime(DellK2EcDevType dev_type)
 	return (dev_type == DELL_K2_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
 }
 
+static gboolean
+fu_dell_k2_ec_write_firmware_pages(FuDevice *device,
+				   FuChunkArray *pages,
+				   FuProgress *progress,
+				   DellK2EcDevType dev_type,
+				   guint chunk_idx,
+				   GError **error)
+{
+	guint first_page_delay = fu_dell_k2_ec_get_first_page_delaytime(dev_type);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
+
+	for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
+		guint8 page_aligned[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
+		g_autoptr(FuChunk) page = NULL;
+		g_autoptr(GBytes) page_bytes = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		page = fu_chunk_array_index(pages, j, error);
+		if (page == NULL)
+			return FALSE;
+
+		/* strictly align the page size with 0x00 as packet */
+		if (!fu_memcpy_safe(page_aligned,
+				    sizeof(page_aligned),
+				    0,
+				    fu_chunk_get_data(page),
+				    fu_chunk_get_data_sz(page),
+				    0,
+				    fu_chunk_get_data_sz(page),
+				    error))
+			return FALSE;
+		page_bytes = g_bytes_new(page_aligned, sizeof(page_aligned));
+
+		g_debug("sending chunk: %u, page: %u/%u.",
+			chunk_idx,
+			j,
+			fu_chunk_array_length(pages) - 1);
+
+		/* send to ec */
+		if (!fu_dell_k2_ec_hid_write(device, page_bytes, &error_local)) {
+			/* A buggy device may fail to send an acknowledgment receipt
+			   after the last page write, resulting in a timeout error.
+
+			   This is a known issue so waive it for now.
+			*/
+			if (dev_type == DELL_K2_EC_DEV_TYPE_LAN &&
+			    j == fu_chunk_array_length(pages) - 1 &&
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+				g_debug("ignored error: %s", error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+
+		/* device needs time to process incoming pages */
+		if (j == 0) {
+			g_debug("wait %u ms before the next page", first_page_delay);
+			fu_device_sleep(device, first_page_delay);
+		}
+		fu_progress_step_done(progress);
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_dell_k2_ec_verify_chunk_result(FuDevice *device, guint chunk_idx, GError **error)
+{
+	guint8 res[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
+
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
+				      0x0,
+				      res,
+				      sizeof(res),
+				      DELL_K2_EC_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_NONE,
+				      error))
+		return FALSE;
+
+	switch (res[1]) {
+	case DELL_K2_EC_RESP_TO_CHUNK_UPDATE_COMPLETE:
+		g_debug("dock response '%u' to chunk[%u]: firmware updated successfully.",
+			res[1],
+			chunk_idx);
+		break;
+	case DELL_K2_EC_RESP_TO_CHUNK_SEND_NEXT_CHUNK:
+		g_debug("dock response '%u' to chunk[%u]: send next chunk.", res[1], chunk_idx);
+		break;
+	case DELL_K2_EC_RESP_TO_CHUNK_UPDATE_FAILED:
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "dock response '%u' to chunk[%u]: failed to write firmware.",
+			    res[1],
+			    chunk_idx);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 				    FuFirmware *firmware,
+				    FuProgress *progress,
 				    DellK2EcDevType dev_type,
 				    guint8 dev_identifier,
 				    GError **error)
 {
 	gsize fw_sz = 0;
 	gsize chunk_sz = fu_dell_k2_ec_get_chunk_size(dev_type);
-	guint first_page_delay = fu_dell_k2_ec_get_first_page_delaytime(dev_type);
 	guint chunk_delay = fu_dell_k2_ec_get_chunk_delaytime(dev_type);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -733,15 +838,23 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 	/* payload size */
 	fw_sz = g_bytes_get_size(fw);
 
+	g_info("writing %s firmware %s -> %s",
+	       fu_device_get_name(device),
+	       fu_device_get_version(device),
+	       fu_firmware_get_version(firmware));
+
 	/* maximum buffer size */
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
 					       chunk_sz);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+
 	/* iterate the chunks */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint8 res[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(FuChunkArray) pages = NULL;
 		g_autoptr(GBytes) buf = NULL;
@@ -759,81 +872,24 @@ fu_dell_k2_ec_write_firmware_helper(FuDevice *device,
 						      FU_CHUNK_PAGESZ_NONE,
 						      DELL_K2_EC_HID_DATA_PAGE_SZ);
 
-		/* iterate the pages */
-		for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
-			guint8 page_aligned[DELL_K2_EC_HID_DATA_PAGE_SZ] = {0xff};
-			gboolean skip_dev_ack = FALSE;
-			g_autoptr(FuChunk) page = NULL;
-
-			page = fu_chunk_array_index(pages, j, error);
-			if (page == NULL)
-				return FALSE;
-
-			/* strictly align the page size with 0x00 as packet */
-			if (!fu_memcpy_safe(page_aligned,
-					    sizeof(page_aligned),
-					    0,
-					    fu_chunk_get_data(page),
-					    fu_chunk_get_data_sz(page),
-					    0,
-					    fu_chunk_get_data_sz(page),
-					    error))
-				return FALSE;
-
-			/* a buggy device may not send the acknowledgment receipt */
-			skip_dev_ack = ((dev_type == DELL_K2_EC_DEV_TYPE_LAN) &&
-					(j == (fu_chunk_array_length(pages) - 1)));
-
-			/* send to ec */
-			g_debug("sending chunk: %u, page: %u.", i, j);
-			if (!fu_dell_k2_ec_hid_write(
-				device,
-				g_bytes_new(page_aligned, sizeof(page_aligned)),
-				skip_dev_ack,
-				error))
-				return FALSE;
-
-			/* device needs time to process incoming pages */
-			if (j == 0) {
-				g_debug("wait %u ms before the next page", first_page_delay);
-
-				fu_device_sleep(device, first_page_delay);
-			}
-		}
+		/* write pages */
+		if (!fu_dell_k2_ec_write_firmware_pages(device,
+							pages,
+							fu_progress_get_child(progress),
+							dev_type,
+							i,
+							error))
+			return FALSE;
 
 		/* delay time */
 		g_debug("wait %u ms for dock to finish the chunk", chunk_delay);
 		fu_device_sleep(device, chunk_delay);
 
 		/* ensure the chunk has been acknowledged */
-		if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
-					      0x0,
-					      res,
-					      sizeof(res),
-					      DELL_K2_EC_HID_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_NONE,
-					      error))
+		if (!fu_dell_k2_ec_verify_chunk_result(device, i, error))
 			return FALSE;
 
-		switch (res[1]) {
-		case DELL_K2_EC_RESP_TO_CHUNK_UPDATE_COMPLETE:
-			g_debug("dock response '%u' to chunk[%u]: firmware updated successfully.",
-				res[1],
-				i);
-			break;
-		case DELL_K2_EC_RESP_TO_CHUNK_SEND_NEXT_CHUNK:
-			g_debug("dock response '%u' to chunk[%u]: send next chunk.", res[1], i);
-			break;
-		case DELL_K2_EC_RESP_TO_CHUNK_UPDATE_FAILED:
-		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "dock response '%u' to chunk[%u]: failed to write firmware.",
-				    res[1],
-				    i);
-			return FALSE;
-		}
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -851,6 +907,7 @@ fu_dell_k2_ec_write_firmware(FuDevice *device,
 {
 	return fu_dell_k2_ec_write_firmware_helper(device,
 						   firmware,
+						   progress,
 						   DELL_K2_EC_DEV_TYPE_MAIN_EC,
 						   0,
 						   error);

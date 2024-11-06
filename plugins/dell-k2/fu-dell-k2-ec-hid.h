@@ -37,7 +37,7 @@
 #define HIDI2C_MAX_WRITE    128
 
 gboolean
-fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, gboolean skip_dev_ack, GError **error);
+fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, GError **error);
 
 GBytes *
 fu_dell_k2_ec_hid_fwup_pkg_new(FuChunk *chk, gsize fw_sz, guint8 dev_type, guint8 dev_identifier);

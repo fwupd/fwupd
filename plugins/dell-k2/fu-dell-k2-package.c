@@ -83,9 +83,15 @@ fu_dell_k2_package_write(FuDevice *device,
 			    sizeof(status_version),
 			    error))
 		return FALSE;
+
+	/* new version */
 	dynamic_version =
 	    fu_version_from_uint32_hex(status_version, fu_device_get_version_format(device));
-	g_info("writing package status version %s", dynamic_version);
+
+	g_info("writing firmware: %s, %s -> %s",
+	       fu_device_get_name(device),
+	       fu_device_get_version(device),
+	       dynamic_version);
 
 	if (!fu_dell_k2_ec_commit_package(proxy, fw, error))
 		return FALSE;

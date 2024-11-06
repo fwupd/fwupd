@@ -60,6 +60,7 @@ fu_dell_k2_dpmux_write(FuDevice *device,
 {
 	return fu_dell_k2_ec_write_firmware_helper(fu_device_get_proxy(device),
 						   firmware,
+						   progress,
 						   DELL_K2_EC_DEV_TYPE_DP_MUX,
 						   0,
 						   error);

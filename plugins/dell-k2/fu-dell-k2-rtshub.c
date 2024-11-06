@@ -232,6 +232,11 @@ fu_dell_k2_rtshub_write_firmware(FuDevice *device,
 	if (stream == NULL)
 		return FALSE;
 
+	g_info("writing firmware: %s, %s -> %s",
+	       fu_device_get_name(device),
+	       fu_device_get_version(device),
+	       fu_firmware_get_version(firmware));
+
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,

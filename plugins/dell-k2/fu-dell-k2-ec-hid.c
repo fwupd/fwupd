@@ -50,28 +50,18 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 } FuEcHIDCmdBuffer;
 
 gboolean
-fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, gboolean skip_dev_ack, GError **error)
+fu_dell_k2_ec_hid_write(FuDevice *device, GBytes *buf, GError **error)
 {
 	guint8 *data = (guint8 *)g_bytes_get_data(buf, NULL);
 	gsize data_sz = g_bytes_get_size(buf);
-	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
-				      0x0,
-				      data,
-				      data_sz,
-				      DELL_K2_EC_HID_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_RETRY_FAILURE,
-				      &error_local)) {
-		if (skip_dev_ack &&
-		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-			g_debug("ignored error: %s", error_local->message);
-			return TRUE;
-		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
-	}
-	return TRUE;
+	return fu_hid_device_set_report(FU_HID_DEVICE(device),
+					0x0,
+					data,
+					data_sz,
+					DELL_K2_EC_HID_TIMEOUT,
+					FU_HID_DEVICE_FLAG_RETRY_FAILURE,
+					error);
 }
 
 GBytes *
