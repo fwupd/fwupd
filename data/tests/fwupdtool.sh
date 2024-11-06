@@ -102,42 +102,42 @@ rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 # ---
 echo "Getting the list of remotes"
 fwupdtool get-remotes --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Disabling LVFS remote..."
 fwupdtool modify-remote lvfs Enabled false
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Enabling LVFS remote..."
 fwupdtool modify-remote lvfs Enabled true
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Modify unknown remote (should fail)..."
 fwupdtool modify-remote foo Enabled true
-rc=$?; if [ $rc != 1 ]; then error $rc; fi
+rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Modify known remote but unknown key (should fail)..."
 fwupdtool modify-remote lvfs bar true
-rc=$?; if [ $rc != 1 ]; then error $rc; fi
+rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Getting devices (should be one)..."
 fwupdtool get-devices --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Changing VALID config on test device..."
 fwupdtool modify-config test AnotherWriteRequired true
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Changing INVALID config on test device...(should fail)"
 fwupdtool modify-config test Foo true
-rc=$?; if [ $rc != 1 ]; then error $rc; fi
+rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Disabling test device..."
@@ -193,4 +193,4 @@ fi
 # ---
 echo "Refresh remotes"
 fwupdtool refresh --json
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
