@@ -102,6 +102,11 @@
       <package variant="mingw64">mingw64-gcc</package>
     </distro>
   </dependency>
+  <dependency id="gdb">
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="gcc-multilib-s390x-linux-gnu">
     <distro id="debian">
       <package variant="s390x" />
