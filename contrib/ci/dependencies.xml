@@ -125,6 +125,11 @@
       <package variant="mingw64">mingw64-gcc</package>
     </distro>
   </dependency>
+  <dependency id="gdb">
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="gcovr">
     <distro id="debian">
       <package variant="x86_64" />
