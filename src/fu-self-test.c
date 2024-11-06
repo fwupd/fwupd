@@ -1110,15 +1110,25 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	g_debug("loading %s", g_type_name(gtype));
 	firmware = g_object_new(gtype, NULL);
 	g_assert_nonnull(firmware);
+
+	/* version convert */
+	if (fu_firmware_get_version_format(firmware) != FWUPD_VERSION_FORMAT_UNKNOWN)
+		fu_firmware_set_version_raw(firmware, 0);
+
+	/* parse nonsense */
 	if (gtype != FU_TYPE_FIRMWARE &&
 	    !fu_firmware_has_flag(FU_FIRMWARE(firmware), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
 		ret =
 		    fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, NULL);
 		g_assert_false(ret);
 	}
+
+	/* write */
 	blob = fu_firmware_write(firmware, NULL);
 	if (blob != NULL && g_bytes_get_size(blob) > 0)
 		g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
+
+	/* export -> build */
 	if (!g_strv_contains(noxml, g_type_name(gtype))) {
 		g_autofree gchar *xml = fu_firmware_export_to_xml(
 		    firmware,
