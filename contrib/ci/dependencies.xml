@@ -44,8 +44,8 @@
       <package variant="i386" />
     </distro>
     <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
+      <package variant="x86_64">bash-completion-devel</package>
+      <package variant="aarch64">bash-completion-devel</package>
     </distro>
     <distro id="ubuntu">
       <package variant="x86_64" />
