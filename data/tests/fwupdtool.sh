@@ -13,12 +13,27 @@ DEVICE=08d460be0f1f9f128413f816022a6439e0078018
 # ---
 echo "Show help output"
 fwupdtool --help
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Show version output"
 fwupdtool --version
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Showing hwids"
+fwupdtool hwids
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Showing plugins"
+fwupdtool get-plugins
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Showing plugins (json)"
+fwupdtool get-plugins --json
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Enabling test device..."
