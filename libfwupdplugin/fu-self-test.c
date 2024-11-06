@@ -4494,9 +4494,8 @@ fu_bios_settings_load_func(void)
 		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 		ret = fu_context_reload_bios_settings(ctx, &error);
-		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-		g_assert_false(ret);
-		g_clear_error(&error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 	}
 	g_free(test_dir);
 
@@ -4575,8 +4574,8 @@ fu_bios_settings_load_func(void)
 	if (g_file_test(test_dir, G_FILE_TEST_EXISTS)) {
 		(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 		ret = fu_context_reload_bios_settings(ctx, &error);
-		g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-		g_assert_false(ret);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 		g_clear_error(&error);
 	}
 	g_free(test_dir);

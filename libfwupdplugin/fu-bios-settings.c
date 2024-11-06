@@ -417,14 +417,8 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 								 full_path,
 								 name,
 								 &error_local)) {
-				if (g_error_matches(error_local,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_SUPPORTED)) {
-					g_debug("%s is not supported", name);
-					continue;
-				}
-				g_propagate_error(error, g_steal_pointer(&error_local));
-				return FALSE;
+				g_debug("%s is not supported: %s", name, error_local->message);
+				continue;
 			}
 		} while (++count);
 	} while (TRUE);
