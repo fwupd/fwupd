@@ -122,7 +122,7 @@ rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 # ---
 echo "Modify known remote but unknown key (should fail)..."
 fwupdtool modify-remote lvfs bar true
-rc=$?; if [ $rc != 1 ]; then exit $rc; fi
+rc=$?; if [ $rc != 3 ]; then exit $rc; fi
 
 # ---
 echo "Getting devices (should be one)..."
