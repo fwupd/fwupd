@@ -430,8 +430,8 @@ fu_corsair_device_to_string(FuDevice *device, guint idt, GString *str)
 				  idt,
 				  "DeviceKind",
 				  fu_corsair_device_kind_to_string(self->device_kind));
-
-	fu_device_add_string(FU_DEVICE(self->bp), idt, str);
+	if (self->bp != NULL)
+		fu_device_add_string(FU_DEVICE(self->bp), idt, str);
 }
 
 static void

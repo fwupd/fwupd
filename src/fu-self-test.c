@@ -1038,6 +1038,7 @@ static void
 fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 {
 	gboolean ret;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1077,6 +1078,10 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 				     &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
+
+	/* to string */
+	str = fu_device_to_string(device);
+	g_assert_nonnull(str);
 
 	/* ->probe() and ->setup */
 	if (!g_strv_contains(nolocker, g_type_name(gtype))) {

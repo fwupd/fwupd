@@ -1752,7 +1752,12 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	guint idt_detail = idt + 1;
 	guint idt_bank_detail = idt_detail + 1;
 
-	fwupd_codec_string_append(str, idt, "CFI", fu_device_get_name(FU_DEVICE(self->cfi_device)));
+	if (self->cfi_device != NULL) {
+		fwupd_codec_string_append(str,
+					  idt,
+					  "CFI",
+					  fu_device_get_name(FU_DEVICE(self->cfi_device)));
+	}
 	fwupd_codec_string_append_int(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
 	fwupd_codec_string_append_int(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
 	fwupd_codec_string_append_hex(str, idt_detail, "FlashBlockSize", self->flash_block_size);
