@@ -1,0 +1,17 @@
+{
+  "name": "Samsung SSD 870 EVO 2TB",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/samsung-ssd-870-evo-setup.json",
+      "components": [
+        {
+          "version": "SVT02B6Q",
+          "guids": [
+            "e0518d76-10bc-5c2d-9693-ee18a7e91881"
+          ]
+        }
+      ]
+    }
+  ]
+}

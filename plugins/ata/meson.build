@@ -18,6 +18,9 @@ plugin_builtin_ata = static_library('fu_plugin_ata',
 )
 plugin_builtins += plugin_builtin_ata
 
+enumeration_data += files('tests/samsung-ssd-870-evo-setup.json')
+device_tests += files('tests/samsung-ssd-870-evo.json')
+
 if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
