@@ -15,6 +15,9 @@
 #include "fu-dell-k2-pd-firmware.h"
 #include "fu-dell-k2-rtshub-firmware.h"
 
+/* plugin config */
+#define FWUPD_DELL_K2_PLUGIN_CONFIG_UOD "UpdateOnDisconnect"
+
 struct _FuDellK2Plugin {
 	FuPlugin parent_instance;
 };
@@ -370,12 +373,30 @@ fu_dell_k2_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError
 		return FALSE;
 
 	/* conditionally enable passive flow */
-	if (!fu_device_has_private_flag(ec_dev, FWUPD_DELL_K2_DEVICE_PRIVATE_FLAG_UOD_OFF)) {
+	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_K2_PLUGIN_CONFIG_UOD)) {
 		if (!fu_dell_k2_ec_run_passive_update(ec_dev, error))
 			return FALSE;
 	}
 
 	return TRUE;
+}
+
+static gboolean
+fu_dell_k2_plugin_modify_config(FuPlugin *plugin,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	const gchar *keys[] = {FWUPD_DELL_K2_PLUGIN_CONFIG_UOD, NULL};
+	if (!g_strv_contains(keys, key)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "config key %s not supported",
+			    key);
+		return FALSE;
+	}
+	return fu_plugin_set_config_value(plugin, key, value, error);
 }
 
 static gboolean
@@ -415,6 +436,9 @@ fu_dell_k2_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_K2_RTSHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_K2_DPMUX_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_K2_ILAN_FIRMWARE);
+
+	/* defaults changed here will also be reflected in the fwupd.conf man page */
+	fu_plugin_set_config_default(plugin, FWUPD_DELL_K2_PLUGIN_CONFIG_UOD, "true");
 }
 
 static void
@@ -426,5 +450,6 @@ fu_dell_k2_plugin_class_init(FuDellK2PluginClass *klass)
 	plugin_class->backend_device_added = fu_dell_k2_plugin_backend_device_added;
 	plugin_class->composite_prepare = fu_dell_k2_plugin_composite_prepare;
 	plugin_class->composite_cleanup = fu_dell_k2_plugin_composite_cleanup;
+	plugin_class->modify_config = fu_dell_k2_plugin_modify_config;
 	plugin_class->prepare = fu_dell_k2_plugin_prepare;
 }

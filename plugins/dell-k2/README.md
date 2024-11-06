@@ -92,19 +92,19 @@ update takes particular order to completion.
 All updates will be staged on the device until the user manually disconnects
 the dock's Type-C cable from the host, at which point they will take effect.
 
+## Plugin Configuration
+
+This plugin supports the following parameters by modifying `dell_k2` section
+of `/etc/fwupd/fwupd.conf`.
+
+### UpdateOnDisconnect
+
+The firmware updates are staged to the devices in the dell dock and activated
+when the user manually unplugs the dock cable. Default: true.
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
-
-## Quirk Use
-
-This plugin uses the following plugin-specific quirks:
-
-### `uod-off`
-
-Disable update on disconnect feature, default unset.
-
-Since 2.0.2
 
 ## Owners
 
