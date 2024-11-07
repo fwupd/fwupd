@@ -68,11 +68,11 @@ fu_tpm_plugin_device_added(FuPlugin *plugin, FuDevice *dev)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	g_autoptr(GPtrArray) pcr0s = NULL;
+	const gchar *family = fu_tpm_device_get_family(FU_TPM_DEVICE(dev));
 
 	g_set_object(&self->tpm_device, FU_TPM_DEVICE(dev));
-	fu_plugin_add_report_metadata(plugin,
-				      "TpmFamily",
-				      fu_tpm_device_get_family(FU_TPM_DEVICE(dev)));
+	if (family != NULL)
+		fu_plugin_add_report_metadata(plugin, "TpmFamily", family);
 
 	/* ensure */
 	fu_tpm_plugin_set_bios_pcr0s(plugin);
