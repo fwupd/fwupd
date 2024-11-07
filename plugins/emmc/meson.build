@@ -15,4 +15,7 @@ plugin_builtins += static_library('fu_plugin_emmc',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/sandisk-da4064-setup.json')
+device_tests += files('tests/sandisk-da4064.json')
 endif

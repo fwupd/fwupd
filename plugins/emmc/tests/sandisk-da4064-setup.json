@@ -1,0 +1,158 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/platform/fe330000.mmc/mmc_host/mmc2/mmc2:0001/block/mmcblk2",
+      "DeviceFile": "/dev/mmcblk2",
+      "Subsystem": "block",
+      "Created": "2024-11-07T13:44:05.189919Z",
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "block"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "disk"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=179\nMINOR=0\nDEVNAME=mmcblk2\nDEVTYPE=disk\nDISKSEQ=1"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "mmcblk2"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "disk"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=mmc:block",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/platform/fe330000.mmc/mmc_host/mmc2/mmc2:0001/block/mmcblk2"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "mmc"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mmcblk"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mmcblk\nMMC_TYPE=MMC\nMMC_NAME=DA4064\nMODALIAS=mmc:block"
+        },
+        {
+          "Id": "ReadProp:Key=MODALIAS",
+          "Data": "mmc:block"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=ffu_capable",
+          "Data": "1"
+        },
+        {
+          "Id": "ReadAttr:Attr=name",
+          "Data": "DA4064"
+        },
+        {
+          "Id": "ReadAttr:Attr=fwrev",
+          "Data": "0x3536323330613137"
+        },
+        {
+          "Id": "ReadAttr:Attr=manfid",
+          "Data": "0x000045"
+        },
+        {
+          "Id": "ReadAttr:Attr=oemid",
+          "Data": "0x0100"
+        },
+        {
+          "Id": "ReadAttr:Attr=manfid",
+          "Data": "0x000045"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=mmc",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/platform/fe330000.mmc/mmc_host/mmc2/mmc2:0001/block/mmcblk2"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "mmc"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mmcblk"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mmcblk\nMMC_TYPE=MMC\nMMC_NAME=DA4064\nMODALIAS=mmc:block"
+        },
+        {
+          "Id": "ReadProp:Key=MODALIAS",
+          "Data": "mmc:block"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=removable",
+          "Data": "0"
+        },
+        {
+          "Id": "Ioctl:Request=0xc048b300,Opcode=0x08,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x200",
+          "DataOut": "AAAAAAAAAAAAAAAAAAAAAAgDmAlnAgAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACUJAAcBAAIAABUfgAAAAAAAAAEAAAAAAAAAAAECAA0AAAAACAACAFcfCgPd3QAAAAoKCgoKCgEAwEcHFxMXBwgQAQMBCCAAB6amVQMAAAAA3d0AAf8QAAAAABkZABAAAN01NjIzMGExN1FQCAgIAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAQAAMDAAUDAwE/PwEBAQAAAAAAAAA="
+        }
+      ]
+    }
+  ]
+}
