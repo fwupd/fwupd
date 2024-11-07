@@ -41,6 +41,7 @@ plugins = {
   'cros-ec': false,
   'dell': false,
   'dell-dock': false,
+  'dell-kestrel': false,
   'dfu': false,
   'dfu-csr': false,
   'ebitdo': false,
