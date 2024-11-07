@@ -1,0 +1,59 @@
+{
+  "name": "dell kestrel (enumerate only) ec",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/dell-kestrel-enumerate-ec.json",
+      "components": [
+        {
+          "version": "0.0.14.0",
+          "guids": [
+            "68486488-92bb-5509-9a4c-801c93331416"
+          ]
+        },
+        {
+          "version": "83.0.0.2",
+          "guids": [
+            "e9d7e527-79bc-5752-9fe3-7347df1dea31"
+          ]
+        },
+        {
+          "version": "2.25",
+          "guids": [
+            "ded18075-2dc8-5de0-aea5-575300b1b661"
+          ]
+        },
+        {
+          "version": "0.5.2.15",
+          "guids": [
+            "64f56a0a-57ab-596d-ad19-b6ee0e8e8339"
+          ]
+        },
+        {
+          "version": "0.5.1.15",
+          "guids": [
+            "7058008e-18d9-55c6-9ec1-e326df92bd94"
+          ]
+        },
+        {
+          "version": "0.5.0.15",
+          "guids": [
+            "fe3f6be7-825b-5f56-a59e-d91f79eb02d0"
+          ]
+        },
+        {
+          "version": "0.0.10.0",
+          "guids": [
+            "f8511274-2f3c-567c-8fb1-2ff95da4ae14"
+          ]
+        },
+        {
+          "version": "0.0.1.2",
+          "guids": [
+            "5ed55572-7312-538c-b062-3bb82b21a4ef"
+          ]
+        }
+      ]
+    }
+  ]
+}
