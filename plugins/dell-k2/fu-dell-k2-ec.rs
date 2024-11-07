@@ -131,3 +131,21 @@ struct FuStructDellK2DockData {
     eppid: u8,
     reserved: [u8; 74],
 }
+
+#[repr(C, packed)]
+struct DellK2DockPackageFwVersions {
+	pkg_ver: u32,
+	ec_ver: u32,
+	mst_ver: u32,
+	rts5480_gen2_ver: u32,
+	rts5485_gen2_ver: u32,
+	rts5480_gen1_ver: u32,
+	tbt_ver: u32,
+	pd_up5_ver: u32,
+	pd_up15_ver: u32,
+	pd_up17_ver: u32,
+	dpmux_ver: u32,
+	rmm_ver: u32,
+	intel_lan_ver: u32,
+	reserved: [u32; 3],
+}

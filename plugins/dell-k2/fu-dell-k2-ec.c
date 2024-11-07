@@ -11,20 +11,6 @@
 #include "fu-dell-k2-common.h"
 
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint32 ec_version;
-	guint32 mst_version;
-	guint32 hub1_version;
-	guint32 hub2_version;
-	guint32 tbt_version;
-	guint32 pkg_version;
-	guint32 pd_version;
-	guint32 epr_version;
-	guint32 dpmux_version;
-	guint32 rmm_version;
-	guint32 reserved[6];
-} FuDellK2DockFWVersion;
-
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	struct FuDellK2V2DockInfoHeader {
 		guint8 total_devices;
 		guint8 first_index;
@@ -50,7 +36,6 @@ struct _FuDellK2Ec {
 	FuDevice parent_instance;
 	FuStructDellK2DockData *dock_data;
 	FuDellK2DockInfoStructure *dock_info;
-	FuDellK2DockFWVersion *raw_versions;
 	FuDellK2BaseType base_type;
 	guint8 base_sku;
 	guint64 blob_version_offset;
@@ -649,7 +634,7 @@ fu_dell_k2_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error)
 	g_return_val_if_fail(blob_fw != NULL, FALSE);
 
 	/* verify package length */
-	if (length != sizeof(FuDellK2DockFWVersion)) {
+	if (length != DELL_K2_DOCK_PACKAGE_FW_VERSIONS_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -992,7 +977,6 @@ fu_dell_k2_ec_finalize(GObject *object)
 	FuDellK2Ec *self = FU_DELL_K2_EC(object);
 	g_free(self->dock_data);
 	g_free(self->dock_info);
-	g_free(self->raw_versions);
 	G_OBJECT_CLASS(fu_dell_k2_ec_parent_class)->finalize(object);
 }
 
@@ -1010,7 +994,6 @@ static void
 fu_dell_k2_ec_init(FuDellK2Ec *self)
 {
 	self->dock_data = g_new0(FuStructDellK2DockData, 1);
-	self->raw_versions = g_new0(FuDellK2DockFWVersion, 1);
 	self->dock_info = g_new0(FuDellK2DockInfoStructure, 1);
 
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
