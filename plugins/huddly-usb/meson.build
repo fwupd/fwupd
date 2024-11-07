@@ -15,6 +15,8 @@ plugin_builtins += static_library('fu_plugin_huddly_usb',
   dependencies: plugin_deps,
 )
 
+enumeration_data += files('tests/huddly-s1-basic-setup.json')
 device_tests += files(
   'tests/huddly-s1.json',
+  'tests/huddly-s1-basic.json',
 )
