@@ -7,3 +7,27 @@ EmmcBlockSize = 0x1000
 EmmcBlockSize = 0x1000
 [EMMC\NAME_DJ4016]
 EmmcBlockSize = 0x1000
+
+# vendor names
+[EMMC\MAN_0000]
+Vendor = SanDisk
+[EMMC\MAN_0002]
+Vendor = Kingston/SanDisk
+[EMMC\MAN_0003]
+Vendor = Toshiba
+[EMMC\MAN_0011]
+Vendor = Toshiba
+[EMMC\MAN_0013]
+Vendor = Micron
+[EMMC\MAN_0015]
+Vendor = Samsung/SanDisk/LG
+[EMMC\MAN_002c]
+Vendor = Kingston
+[EMMC\MAN_0037]
+Vendor = Kingmax
+[EMMC\MAN_0044]
+Vendor = SanDisk
+[EMMC\MAN_0045]
+Vendor = SanDisk
+[EMMC\MAN_0070]
+Vendor = Kingston
