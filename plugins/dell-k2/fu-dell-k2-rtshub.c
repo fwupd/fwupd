@@ -434,7 +434,6 @@ static void
 fu_dell_k2_rtshub_init(FuDellK2RtsHub *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
-	fu_device_add_icon(FU_DEVICE(self), "dock-usb");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);

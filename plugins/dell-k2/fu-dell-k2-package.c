@@ -102,6 +102,24 @@ fu_dell_k2_package_write(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_dell_k2_package_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuDevice *proxy = fu_device_get_proxy(device);
+
+	/* register post message */
+	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
+
+		fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_POST);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_USB_CABLE);
+		fwupd_request_add_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+		return fu_device_emit_request(device, request, progress, error);
+	}
+	return TRUE;
+}
+
 static void
 fu_dell_k2_package_finalize(GObject *object)
 {
@@ -123,8 +141,8 @@ fu_dell_k2_package_init(FuDellK2Package *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
-	fu_device_set_name(FU_DEVICE(self), "Package level of Dell dock");
-	fu_device_set_summary(FU_DEVICE(self), "A representation of dock update status");
+	fu_device_set_name(FU_DEVICE(self), "Package Version of Dell dock");
+	fu_device_set_summary(FU_DEVICE(self), "Dell Dock Package");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -142,6 +160,7 @@ fu_dell_k2_package_class_init(FuDellK2PackageClass *klass)
 	device_class->setup = fu_dell_k2_package_setup;
 	device_class->set_progress = fu_dell_k2_package_set_progress;
 	device_class->convert_version = fu_dell_k2_package_convert_version;
+	device_class->attach = fu_dell_k2_package_attach;
 }
 
 FuDellK2Package *

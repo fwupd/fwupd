@@ -343,7 +343,7 @@ fu_dell_k2_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError
 	if (locker == NULL)
 		return FALSE;
 
-	/* own the dock */
+	/* release the dock */
 	if (!fu_dell_k2_ec_own_dock(ec_dev, FALSE, error))
 		return FALSE;
 

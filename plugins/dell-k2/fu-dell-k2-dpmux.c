@@ -81,6 +81,8 @@ fu_dell_k2_dpmux_init(FuDellK2Dpmux *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
+	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
+	fu_device_set_summary(FU_DEVICE(self), "Dell Dock Retimer");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);

@@ -51,7 +51,7 @@ These devices use several different generation schemes, e.g.
 * RTS5480 usb 3 gen 1 hub: `USB\VID_413C&PID_B0A1&DOCKTYPE_07`
 * RTS5480 usb 3 gen 2 hub: `USB\VID_413C&PID_B0A2&DOCKTYPE_07`
 * RTS5485 usb 3 gen 2 hub: `USB\VID_413C&PID_B0A3&DOCKTYPE_07`
-* Remote Management Controller: `EC\DOCKTYPE_07&DEVTYPE_09`
+* Remote Management Controller: `USB\VID_413C&PID_B0A4`
 * MST 8430/9430: `USB\VID_413C&PID_B0A5`
 * Ethernet: `EC\DOCKTYPE_07&DEVTYPE_07`
 
@@ -81,10 +81,13 @@ These devices use several different generation schemes, e.g.
 
 ## Update Behavior
 
-The `rtsusb` hub, `mst` and `ec` use `hid` over usb interface for device
-communication while the `thunderbolt` controller use `usb`.  The `ethernet`,
-`retimer/dpmux`, `package`, various `pd` and the `remote management` controller
-will be updated through `ec` device over internal `i2c` interface.
+The `rtsusb` hub, `mst`, `remote management` controller, and `ec` use `hid`
+over usb interface for device communication.
+
+The `thunderbolt` controller use `usb`.
+
+The `ethernet`, `retimer/dpmux`, `package`, and various `pd` devices will be
+updated through the `ec` device over internal `i2c` interface.
 
 As this dock is a composite device with inclusion of various components, the
 update takes particular order to completion.

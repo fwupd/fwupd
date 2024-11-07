@@ -1015,8 +1015,6 @@ fu_dell_k2_ec_init(FuDellK2Ec *self)
 
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
-	fu_device_add_icon(FU_DEVICE(self), "dock-usb");
-	fu_device_set_summary(FU_DEVICE(self), "Dell Dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);

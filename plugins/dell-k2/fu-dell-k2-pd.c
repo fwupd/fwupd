@@ -101,6 +101,7 @@ fu_dell_k2_pd_init(FuDellK2Pd *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.k2");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
+	fu_device_set_summary(FU_DEVICE(self), "Dell Dock PD");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
