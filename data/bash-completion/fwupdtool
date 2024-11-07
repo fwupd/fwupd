@@ -96,6 +96,7 @@ fwupd_modify_config_sections=(
 	'test'
 	'thunderbolt'
 	'uefi_capsule'
+	'dell_kestrel'
 )
 
 fwupd_modify_config_opts=(
@@ -158,6 +159,10 @@ uefi_capsule_modify_config_opts=(
 	'ScreenHeight'
 )
 
+dell_kestrel_modify_config_opts=(
+	'UpdateOnDisconnect'
+)
+
 reset_config_opts=(
 	'fwupd'
 	'msr'
@@ -190,6 +195,11 @@ _show_redfish_modify_config()
 _show_uefi_capsule_modify_config()
 {
 	COMPREPLY+=( $(compgen -W '${uefi_capsule_modify_config_opts[@]}' -- "$cur") )
+}
+
+_show_dell_kestrel_modify_config()
+{
+	COMPREPLY+=( $(compgen -W '${dell_kestrel_modify_config_opts[@]}' -- "$cur") )
 }
 
 _show_reset_config()
@@ -348,6 +358,9 @@ _fwupdtool()
 				;;
 			uefi_capsule)
 				_show_uefi_capsule_modify_config
+				;;
+			dell_kestrel)
+				_show_dell_kestrel_modify_config
 				;;
 			esac
 			return 0

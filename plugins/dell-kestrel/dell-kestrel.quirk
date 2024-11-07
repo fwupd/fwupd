@@ -1,0 +1,56 @@
+#
+# Copyright 2024 Dell Technologies
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
+#
+
+# Used to make plugin probe the devices
+[USB\VID_413C&PID_B06E]
+Name = Unprobed Dell accessory endpoint
+Summary = Dell Dock EC
+Icon = dock
+Plugin = dell_kestrel
+
+[USB\VID_413C&PID_B0A1]
+Name = Unprobed Dell accessory endpoint
+Summary = Dell Dock USB Hub
+Icon = usb-hub
+Plugin = dell_kestrel
+
+[USB\VID_413C&PID_B0A2]
+Name = Unprobed Dell accessory endpoint
+Summary = Dell Dock USB Hub
+Icon = usb-hub
+Plugin = dell_kestrel
+
+[USB\VID_413C&PID_B0A3]
+Name = Unprobed Dell accessory endpoint
+Summary = Dell Dock USB Hub
+Icon = usb-hub
+Plugin = dell_kestrel
+
+[USB\VID_413C&PID_B0A4]
+Name = Remote Management
+Summary = Dell Dock Remote Management
+Icon = usb-hub
+Plugin = dell_kestrel
+
+[USB\VID_413C&PID_B0A5]
+Name = Unprobed Dell accessory endpoint
+Summary = Dell Dock MST
+Icon = video-display
+Plugin = synaptics_vmm9
+
+[TBT-00d4b0a2]
+Name = USB4v2 controller
+Summary = Dell Dock USB4v2 Controller
+Icon = thunderbolt
+Vendor = Dell Computer Corp.
+VendorId = TBT:0x00D4
+
+[TBT-00d4b0a1]
+Name = USB4 controller
+Summary = Dell Dock USB4 Controller
+Icon = thunderbolt
+Vendor = Dell Computer Corp.
+VendorId = TBT:0x00D4

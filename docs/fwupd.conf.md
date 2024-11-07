@@ -329,6 +329,14 @@ The `[thunderbolt]` section can contain the following parameters:
 
   Forces delaying activation until shutdown/logout/reboot.
 
+## DELL_KESTREL PARAMETERS
+
+The `[dell_kestrel]` section can contain the following parameters:
+
+**UpdateOnDisconnect={{dell_kestrel_UpdateOnDisconnect}}**
+
+  Delaying firmware activation until the dock cable is unplugged.
+
 ## TEST PARAMETERS
 
 The `[test]` section can contain the following parameters:
