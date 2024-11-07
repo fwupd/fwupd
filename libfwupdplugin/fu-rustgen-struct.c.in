@@ -100,9 +100,19 @@
     g_return_val_if_fail(st != NULL, FALSE);
     g_return_val_if_fail(st_donor != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-    return fu_memcpy_safe(st->data, st->len, {{item.c_define('OFFSET')}}, /* dst */
-                          st_donor->data, st_donor->len, 0x0, /* src */
-                          {{item.size}}, error);
+
+    if (st_donor->len > {{item.c_define('SIZE')}}) {
+        g_set_error(error,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
+                    "donor '{{item.struct_obj.name}}' (0x%x bytes) does not fit in "
+                    "{{obj.name}}.{{item.element_id}} (0x%x bytes)",
+                    (guint) st_donor->len,
+                    (guint) {{item.c_define('SIZE')}});
+        return FALSE;
+    }
+    memcpy(st->data + {{item.c_define('OFFSET')}}, st_donor->data, st_donor->len);
+    return TRUE;
 }
 {%- elif item.type == Type.U8 and item.multiplier %}
 {{export.value}}gboolean
