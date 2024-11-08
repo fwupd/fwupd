@@ -95,7 +95,7 @@ static void
 fu_uefi_sbat_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_SBAT_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_UEFI_SBAT_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_UEFI_SBAT_FIRMWARE);
 }
 

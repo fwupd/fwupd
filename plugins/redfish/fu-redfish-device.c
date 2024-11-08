@@ -396,6 +396,12 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	const gchar *guid = NULL;
 	g_autofree gchar *guid_lower = NULL;
 
+	/* sanity check */
+	if (priv->member == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no member");
+		return FALSE;
+	}
+
 	/* required to POST later */
 	if (!json_object_has_member(member, "@odata.id")) {
 		g_set_error_literal(error,
@@ -841,6 +847,18 @@ fu_redfish_device_get_property(GObject *object, guint prop_id, GValue *value, GP
 }
 
 static void
+fu_redfish_device_set_member(FuRedfishDevice *self, JsonObject *member)
+{
+	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->member != NULL) {
+		json_object_unref(priv->member);
+		priv->member = NULL;
+	}
+	if (member != NULL)
+		priv->member = json_object_ref(member);
+}
+
+static void
 fu_redfish_device_set_property(GObject *object,
 			       guint prop_id,
 			       const GValue *value,
@@ -853,7 +871,7 @@ fu_redfish_device_set_property(GObject *object,
 		g_set_object(&priv->backend, g_value_get_object(value));
 		break;
 	case PROP_MEMBER:
-		priv->member = json_object_ref(g_value_get_pointer(value));
+		fu_redfish_device_set_member(self, g_value_get_pointer(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);

@@ -68,6 +68,15 @@ fu_tpm_v1_device_probe(FuDevice *device, GError **error)
 	g_auto(GStrv) lines = NULL;
 	g_autofree gchar *buf_pcrs = NULL;
 
+	/* sanity check */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no device file");
+		return FALSE;
+	}
+
 	/* get entire contents */
 	if (!g_file_get_contents(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)),
 				 &buf_pcrs,

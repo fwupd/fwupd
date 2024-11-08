@@ -8,9 +8,13 @@
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
+#include "fu-vli-pd-parade-device.h"
 #include "fu-vli-plugin.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
+#include "fu-vli-usbhub-msp430-device.h"
+#include "fu-vli-usbhub-pd-device.h"
+#include "fu-vli-usbhub-rtd21xx-device.h"
 
 struct _FuVliPlugin {
 	FuPlugin parent_instance;
@@ -34,6 +38,10 @@ fu_vli_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_VLI_PD_FIRMWARE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_PARADE_DEVICE);      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_MSP430_DEVICE);  /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_PD_DEVICE);      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_RTD21XX_DEVICE); /* coverage */
 }
 
 static void

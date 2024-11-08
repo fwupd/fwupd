@@ -276,21 +276,30 @@ fu_wac_module_constructed(GObject *object)
 	FuWacModule *self = FU_WAC_MODULE(object);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	g_autofree gchar *devid = NULL;
 
-	/* set vendor ID */
-	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", fu_device_get_vid(FU_DEVICE(proxy)));
+	/* not set in tests */
+	if (proxy != NULL) {
+		g_autofree gchar *devid = NULL;
 
-	/* set USB physical and logical IDs */
-	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	fu_device_set_logical_id(FU_DEVICE(self), fu_wac_module_fw_type_to_string(priv->fw_type));
+		/* set vendor ID */
+		fu_device_build_vendor_id_u16(FU_DEVICE(self),
+					      "USB",
+					      fu_device_get_vid(FU_DEVICE(proxy)));
 
-	/* append the firmware kind to the generated GUID */
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-%s",
-				fu_device_get_vid(proxy),
-				fu_device_get_pid(proxy),
-				fu_wac_module_fw_type_to_string(priv->fw_type));
-	fu_device_add_instance_id(FU_DEVICE(self), devid);
+		/* set USB physical and logical IDs */
+		fu_device_incorporate(FU_DEVICE(self),
+				      proxy,
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+		fu_device_set_logical_id(FU_DEVICE(self),
+					 fu_wac_module_fw_type_to_string(priv->fw_type));
+
+		/* append the firmware kind to the generated GUID */
+		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X-%s",
+					fu_device_get_vid(proxy),
+					fu_device_get_pid(proxy),
+					fu_wac_module_fw_type_to_string(priv->fw_type));
+		fu_device_add_instance_id(FU_DEVICE(self), devid);
+	}
 
 	G_OBJECT_CLASS(fu_wac_module_parent_class)->constructed(object);
 }

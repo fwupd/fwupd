@@ -229,6 +229,13 @@ static gboolean
 fu_dell_dock_tbt_probe(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
+
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+		return FALSE;
+	}
+
 	fu_device_incorporate(device, parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(device), "tbt");
 	fu_device_add_instance_id(device, DELL_DOCK_TBT_INSTANCE_ID);

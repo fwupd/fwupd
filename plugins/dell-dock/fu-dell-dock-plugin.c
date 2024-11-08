@@ -16,7 +16,11 @@
 #include "config.h"
 
 #include "fu-dell-dock-common.h"
+#include "fu-dell-dock-ec.h"
+#include "fu-dell-dock-mst.h"
 #include "fu-dell-dock-plugin.h"
+#include "fu-dell-dock-status.h"
+#include "fu-dell-dock-tbt.h"
 
 struct _FuDellDockPlugin {
 	FuPlugin parent_instance;
@@ -340,6 +344,10 @@ fu_dell_dock_plugin_constructed(GObject *obj)
 	/* allow these to be built by quirks */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_STATUS);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_MST);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_EC);     /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_MST);    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_STATUS); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_TBT);    /* coverage */
 
 #ifndef _WIN32
 	/* currently slower performance, but more reliable in corner cases */
