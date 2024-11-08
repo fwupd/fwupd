@@ -460,10 +460,13 @@ static gboolean
 fu_ata_device_probe(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
+	g_autoptr(FuDevice) scsi_parent = NULL;
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "scsi", error))
+	/* set the SCSI physical ID for compat */
+	scsi_parent = fu_device_get_backend_parent_with_subsystem(device, "scsi", error);
+	if (scsi_parent == NULL)
 		return FALSE;
+	fu_device_set_physical_id(device, fu_device_get_backend_id(scsi_parent));
 
 	/* look at the PCI and USB depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_subsystem_depth(FU_UDEV_DEVICE(device), "pci");

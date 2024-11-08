@@ -81,33 +81,6 @@ fu_emmc_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_int(str, idt, "SectorSize", self->sect_size);
 }
 
-static const gchar *
-fu_emmc_device_get_manufacturer(guint64 mmc_id)
-{
-	switch (mmc_id) {
-	case 0x00:
-	case 0x44:
-		return "SanDisk";
-	case 0x02:
-		return "Kingston/Sandisk";
-	case 0x03:
-	case 0x11:
-		return "Toshiba";
-	case 0x13:
-		return "Micron";
-	case 0x15:
-		return "Samsung/Sandisk/LG";
-	case 0x37:
-		return "Kingmax";
-	case 0x70:
-	case 0x2c:
-		return "Kingston";
-	default:
-		return NULL;
-	}
-	return NULL;
-}
-
 static gboolean
 fu_emmc_device_get_sysattr_guint64(FuUdevDevice *device,
 				   const gchar *name,
@@ -214,6 +187,12 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "oemid", &oemid, error))
 		return FALSE;
 	fu_device_add_instance_u16(device, "MAN", manfid);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "EMMC",
+					 "MAN",
+					 NULL);
 	fu_device_add_instance_u16(device, "OEM", oemid);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -241,11 +220,9 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	if (attr_manfid == NULL)
 		return FALSE;
 	fu_device_build_vendor_id(device, "EMMC", attr_manfid);
-	fu_device_set_vendor(device, fu_emmc_device_get_manufacturer(manfid));
 
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "mmc", error))
-		return FALSE;
+	/* set the physical ID from the mmc parent */
+	fu_device_set_physical_id(device, fu_device_get_backend_id(FU_DEVICE(udev_parent)));
 
 	/* internal */
 	if (!fu_emmc_device_get_sysattr_guint64(FU_UDEV_DEVICE(device), "removable", &flag, error))

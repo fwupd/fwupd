@@ -1,0 +1,17 @@
+{
+  "name": "SanDisk DA4064 (PineBook Pro)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/sandisk-da4064-setup.json",
+      "components": [
+        {
+          "version": "0x3536323330613137",
+          "guids": [
+            "1d13840a-391c-5f1e-9c98-21814fbb0503"
+          ]
+        }
+      ]
+    }
+  ]
+}

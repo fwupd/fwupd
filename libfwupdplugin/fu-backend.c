@@ -457,9 +457,16 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	for (guint i = 0; i < devices_added->len; i++) {
 		FuDevice *donor = g_ptr_array_index(devices_added, i);
 		g_autoptr(FuDevice) device = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* convert from FuUdevDevice to the superclass, e.g. FuHidrawDevice */
 		fu_device_add_flag(donor, FWUPD_DEVICE_FLAG_EMULATED);
+		if (!fu_device_probe(donor, &error_local)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
 		device = fu_backend_create_device_for_donor(self, donor, error);
 		if (device == NULL)
 			return FALSE;

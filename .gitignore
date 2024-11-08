@@ -26,7 +26,6 @@
 __pycache__
 plugins/acpi-dmar/tests/
 plugins/acpi-facp/tests/
-plugins/ata/tests/
 plugins/nvme/tests/
 plugins/synaptics-prometheus/tests/
 plugins/tpm-eventlog/tests/

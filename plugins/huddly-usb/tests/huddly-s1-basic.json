@@ -1,0 +1,17 @@
+{
+  "name": "Huddly S1 (enumerate only)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/huddly-s1-basic-setup.json",
+      "components": [
+        {
+          "version": "1.8.4",
+          "guids": [
+            "a56643db-6cf8-5fa0-95f3-c3d91cc645e3"
+          ]
+        }
+      ]
+    }
+  ]
+}

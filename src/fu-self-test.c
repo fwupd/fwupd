@@ -1038,6 +1038,7 @@ static void
 fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 {
 	gboolean ret;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1078,6 +1079,10 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 
+	/* to string */
+	str = fu_device_to_string(device);
+	g_assert_nonnull(str);
+
 	/* ->probe() and ->setup */
 	if (!g_strv_contains(nolocker, g_type_name(gtype))) {
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
@@ -1105,15 +1110,25 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	g_debug("loading %s", g_type_name(gtype));
 	firmware = g_object_new(gtype, NULL);
 	g_assert_nonnull(firmware);
+
+	/* version convert */
+	if (fu_firmware_get_version_format(firmware) != FWUPD_VERSION_FORMAT_UNKNOWN)
+		fu_firmware_set_version_raw(firmware, 0);
+
+	/* parse nonsense */
 	if (gtype != FU_TYPE_FIRMWARE &&
 	    !fu_firmware_has_flag(FU_FIRMWARE(firmware), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
 		ret =
 		    fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, NULL);
 		g_assert_false(ret);
 	}
+
+	/* write */
 	blob = fu_firmware_write(firmware, NULL);
 	if (blob != NULL && g_bytes_get_size(blob) > 0)
 		g_debug("saved 0x%x bytes", (guint)g_bytes_get_size(blob));
+
+	/* export -> build */
 	if (!g_strv_contains(noxml, g_type_name(gtype))) {
 		g_autofree gchar *xml = fu_firmware_export_to_xml(
 		    firmware,
@@ -4454,6 +4469,15 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 
+#ifndef SUPPORTED_BUILD
+	g_test_expect_message("FuUsbDevice",
+			      G_LOG_LEVEL_WARNING,
+			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
+	g_test_expect_message("FuUsbDevice",
+			      G_LOG_LEVEL_WARNING,
+			      "failed to parse * BOS descriptor: *did not find magic*");
+#endif
+
 	/* load the JSON into the backend */
 	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	usb_emulate_fn =
@@ -4474,15 +4498,6 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	device_tmp = g_ptr_array_index(devices, 0);
 	fu_device_set_context(device_tmp, self->ctx);
-
-#ifndef SUPPORTED_BUILD
-	g_test_expect_message("FuUsbDevice",
-			      G_LOG_LEVEL_WARNING,
-			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
-	g_test_expect_message("FuUsbDevice",
-			      G_LOG_LEVEL_WARNING,
-			      "failed to parse * BOS descriptor: *did not find magic*");
-#endif
 
 	locker = fu_device_locker_new(device_tmp, &error);
 	g_assert_no_error(error);

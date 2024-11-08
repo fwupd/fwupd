@@ -3825,11 +3825,14 @@ FuDevice *
 fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsystem, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autoptr(FuDevice) parent = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* sanity check */
 	if (priv->backend == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -3837,9 +3840,88 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 				    "no backend set for device");
 		return NULL;
 	}
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetBackendParent:Subsystem=%s", subsystem);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		GType gtype;
+		const gchar *gtype_str;
+		const gchar *id;
+
+		/* we have to propagate this to preserve compat with older emulation files */
+		event = fu_device_load_event(FU_DEVICE(self), event_id, NULL);
+		if (event == NULL) {
+			g_debug("falling back to simulated device for old emulation");
+			parent =
+			    fu_backend_get_device_parent(priv->backend, self, subsystem, error);
+			if (parent != self)
+				fu_device_set_target(parent, self);
+			return g_steal_pointer(&parent);
+		}
+
+		/* missing GType is 'no parent found' */
+		gtype_str = fu_device_event_get_str(event, "GType", NULL);
+		if (gtype_str == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no parent with subsystem %s",
+				    subsystem);
+			return NULL;
+		}
+		gtype = g_type_from_name(gtype_str);
+		if (gtype == G_TYPE_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no GType %s",
+				    gtype_str);
+			return NULL;
+		}
+		parent = g_object_new(gtype, NULL);
+		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_EMULATED);
+		id = fu_device_event_get_str(event, "DeviceId", NULL);
+		if (id != NULL)
+			fu_device_set_id(parent, id);
+		id = fu_device_event_get_str(event, "BackendId", NULL);
+		if (id != NULL)
+			fu_device_set_backend_id(parent, id);
+		id = fu_device_event_get_str(event, "PhysicalId", NULL);
+		if (id != NULL)
+			fu_device_set_physical_id(parent, id);
+		if (parent != self)
+			fu_device_set_target(parent, self);
+		return g_steal_pointer(&parent);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* call into the backend */
 	parent = fu_backend_get_device_parent(priv->backend, self, subsystem, error);
 	if (parent == NULL)
 		return NULL;
+	if (!fu_device_probe(parent, error))
+		return NULL;
+
+	/* save response */
+	if (event != NULL) {
+		fu_device_event_set_str(event, "GType", G_OBJECT_TYPE_NAME(parent));
+		if (fu_device_get_id(self) != NULL)
+			fu_device_event_set_str(event, "DeviceId", fu_device_get_id(self));
+		if (priv->backend_id != NULL)
+			fu_device_event_set_str(event, "BackendId", priv->backend_id);
+		if (priv->physical_id != NULL)
+			fu_device_event_set_str(event, "PhysicalId", priv->physical_id);
+	}
+
 	if (parent != self)
 		fu_device_set_target(parent, self);
 	return g_steal_pointer(&parent);
@@ -7319,7 +7401,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* nothing found */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no event with ID %s", id);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event with ID %s", id);
 	return NULL;
 }
 
