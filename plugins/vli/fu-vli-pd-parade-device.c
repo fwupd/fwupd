@@ -12,13 +12,13 @@
 #include "fu-vli-struct.h"
 
 struct _FuVliPdParadeDevice {
-	FuDevice parent_instance;
+	FuUsbDevice parent_instance;
 	FuVliDeviceKind device_kind;
 	guint8 page2; /* base address */
 	guint8 page7; /* base address */
 };
 
-G_DEFINE_TYPE(FuVliPdParadeDevice, fu_vli_pd_parade_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuVliPdParadeDevice, fu_vli_pd_parade_device, FU_TYPE_USB_DEVICE)
 
 #define FU_VLI_PD_PARADE_I2C_CMD_WRITE 0xa6
 #define FU_VLI_PD_PARADE_I2C_CMD_READ  0xa5

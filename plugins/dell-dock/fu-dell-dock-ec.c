@@ -944,6 +944,12 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 
+	/* sanity check */
+	if (fu_device_get_proxy(device) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
+
 	if (!fu_device_open(fu_device_get_proxy(device), error))
 		return FALSE;
 	if (!self->data->dock_type)
@@ -954,6 +960,11 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_close(FuDevice *device, GError **error)
 {
+	/* sanity check */
+	if (fu_device_get_proxy(device) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
 	return fu_device_close(fu_device_get_proxy(device), error);
 }
 

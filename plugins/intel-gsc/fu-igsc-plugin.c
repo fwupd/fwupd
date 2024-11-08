@@ -6,9 +6,11 @@
 
 #include "config.h"
 
+#include "fu-igsc-aux-device.h"
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-code-firmware.h"
 #include "fu-igsc-device.h"
+#include "fu-igsc-oprom-device.h"
 #include "fu-igsc-oprom-firmware.h"
 #include "fu-igsc-plugin.h"
 
@@ -28,7 +30,9 @@ fu_igsc_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "mei");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_IGSC_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_IGSC_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_IGSC_OPROM_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_IGSC_AUX_DEVICE);   /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_IGSC_CODE_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_IGSC_AUX_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_IGSC_OPROM_FIRMWARE);

@@ -10,6 +10,7 @@
 #include "fu-pxi-firmware.h"
 #include "fu-pxi-plugin.h"
 #include "fu-pxi-receiver-device.h"
+#include "fu-pxi-wireless-device.h"
 
 struct _FuPxiPlugin {
 	FuPlugin parent_instance;
@@ -36,6 +37,7 @@ fu_pxi_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PXI_BLE_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PXI_RECEIVER_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_PXI_WIRELESS_DEVICE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, "pixart", FU_TYPE_PXI_FIRMWARE);
 }
 

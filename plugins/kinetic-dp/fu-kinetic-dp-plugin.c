@@ -124,6 +124,8 @@ fu_kinetic_dp_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_udev_subsystem(plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_KINETIC_DP_PUMA_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_KINETIC_DP_SECURE_FIRMWARE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_KINETIC_DP_PUMA_DEVICE);   /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_KINETIC_DP_SECURE_DEVICE); /* coverage */
 }
 
 static void

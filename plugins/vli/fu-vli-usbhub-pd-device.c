@@ -51,6 +51,12 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GByteArray) st = NULL;
 
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+		return FALSE;
+	}
+
 	/* legacy location */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
 					  VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
@@ -265,7 +271,11 @@ static gboolean
 fu_vli_usbhub_pd_device_probe(FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
-	fu_device_incorporate(device, FU_DEVICE(parent), FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	if (parent != NULL) {
+		fu_device_incorporate(device,
+				      FU_DEVICE(parent),
+				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	}
 	return TRUE;
 }
 

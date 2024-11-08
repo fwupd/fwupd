@@ -9,6 +9,13 @@
 #include "fu-wac-android-device.h"
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
+#include "fu-wac-module-bluetooth-id6.h"
+#include "fu-wac-module-bluetooth-id9.h"
+#include "fu-wac-module-bluetooth.h"
+#include "fu-wac-module-scaler.h"
+#include "fu-wac-module-sub-cpu.h"
+#include "fu-wac-module-touch-id7.h"
+#include "fu-wac-module-touch.h"
 #include "fu-wac-plugin.h"
 
 struct _FuWacPlugin {
@@ -86,6 +93,13 @@ fu_wac_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_WAC_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_ANDROID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_BLUETOOTH);     /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_BLUETOOTH_ID6); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_BLUETOOTH_ID9); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_SCALER);	      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_SUB_CPU);	      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_TOUCH);	      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WAC_MODULE_TOUCH_ID7);     /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, "wacom", FU_TYPE_WAC_FIRMWARE);
 }
 

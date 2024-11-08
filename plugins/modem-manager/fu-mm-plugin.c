@@ -517,6 +517,7 @@ fu_mm_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "tty");
 	fu_plugin_add_udev_subsystem(plugin, "usbmisc");
 	fu_plugin_add_udev_subsystem(plugin, "wwan");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MM_DEVICE); /* coverage */
 }
 
 static void

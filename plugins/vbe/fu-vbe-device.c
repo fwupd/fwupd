@@ -76,6 +76,12 @@ fu_vbe_device_probe(FuDevice *device, GError **error)
 
 	g_return_val_if_fail(FU_IS_VBE_DEVICE(device), FALSE);
 
+	/* sanity check */
+	if (priv->fdt_root == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no FDT root");
+		return FALSE;
+	}
+
 	/* get a list of compatible strings */
 	if (!fu_fdt_image_get_attr_strlist(priv->fdt_root,
 					   FU_FIT_FIRMWARE_ATTR_COMPATIBLE,

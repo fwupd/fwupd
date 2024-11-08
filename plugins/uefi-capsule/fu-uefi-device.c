@@ -97,8 +97,6 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
-	g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
 
 	/* record if we had an invalid header during update */
 	g_hash_table_insert(metadata,
@@ -106,9 +104,12 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 			    g_strdup(priv->missing_header ? "True" : "False"));
 
 	/* where and how the ESP was mounted during installation */
-	g_hash_table_insert(metadata, g_strdup("EspPath"), g_steal_pointer(&mount_point));
-	if (kind != NULL) {
-		g_hash_table_insert(metadata, g_strdup("EspKind"), g_steal_pointer(&kind));
+	if (priv->esp != NULL) {
+		g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
+		g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
+		g_hash_table_insert(metadata, g_strdup("EspPath"), g_steal_pointer(&mount_point));
+		if (kind != NULL)
+			g_hash_table_insert(metadata, g_strdup("EspKind"), g_steal_pointer(&kind));
 	}
 }
 
