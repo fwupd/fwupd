@@ -239,6 +239,8 @@ class StructObj:
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.multiplier):
                     item.add_private_export("Setters")
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("New")
 
     def add_public_export(self, derive: str) -> None:
 
