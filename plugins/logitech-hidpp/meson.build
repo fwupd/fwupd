@@ -5,6 +5,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('logitech-hidpp.quirk')
 plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
   rustgen.process('fu-logitech-hidpp.rs'),
+  rustgen.process('fu-logitech-hidpp-rdfu.rs'),
   sources: [
     'fu-logitech-hidpp-plugin.c',
     'fu-logitech-hidpp-bootloader.c',
@@ -18,6 +19,7 @@ plugin_builtin_logitech_hidpp = static_library('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
     'fu-logitech-hidpp-radio.c',
+    'fu-logitech-rdfu-firmware.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
