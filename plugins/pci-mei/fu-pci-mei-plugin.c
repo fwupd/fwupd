@@ -600,12 +600,6 @@ fu_plugin_add_security_attrs_csme18_bootguard_otp(FuPlugin *plugin,
 		return;
 	}
 
-	/* actively disabled */
-	if (fu_mei_csme11_hfsts6_get_boot_guard_disable(hfsts6)) {
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
-		return;
-	}
-
 	/* ensure vendor set the FPF configuration fuse */
 	if (!fu_mei_csme18_hfsts6_get_fpf_soc_configuration_lock(hfsts6)) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
