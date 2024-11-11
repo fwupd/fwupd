@@ -130,6 +130,21 @@ fu_uefi_nvram_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("nvram"));
 }
 
+static gboolean
+fu_uefi_nvram_device_prepare(FuDevice *device,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
+{
+	/* FuUefiDevice->prepare */
+	if (!FU_DEVICE_CLASS(fu_uefi_nvram_device_parent_class)
+		 ->prepare(device, progress, flags, error))
+		return FALSE;
+
+	/* sanity checks */
+	return fu_uefi_device_check_asset(FU_UEFI_DEVICE(device), error);
+}
+
 static void
 fu_uefi_nvram_device_init(FuUefiNvramDevice *self)
 {
@@ -144,4 +159,5 @@ fu_uefi_nvram_device_class_init(FuUefiNvramDeviceClass *klass)
 	klass_device->get_results = fu_uefi_nvram_device_get_results;
 	klass_device->write_firmware = fu_uefi_nvram_device_write_firmware;
 	klass_device->report_metadata_pre = fu_uefi_nvram_device_report_metadata_pre;
+	klass_device->prepare = fu_uefi_nvram_device_prepare;
 }

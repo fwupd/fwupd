@@ -426,8 +426,8 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	return TRUE;
 }
 
-static gboolean
-fu_uefi_check_asset(FuDevice *device, GError **error)
+gboolean
+fu_uefi_device_check_asset(FuUefiDevice *self, GError **error)
 {
 	g_autofree gchar *source_app = fu_uefi_get_built_app_path("fwupd", error);
 	if (source_app == NULL) {
@@ -435,7 +435,6 @@ fu_uefi_check_asset(FuDevice *device, GError **error)
 			g_prefix_error(error, "missing signed bootloader for secure boot: ");
 		return FALSE;
 	}
-
 	return TRUE;
 }
 
@@ -451,10 +450,6 @@ fu_uefi_device_prepare(FuDevice *device,
 	/* mount if required */
 	priv->esp_locker = fu_volume_locker(priv->esp, error);
 	if (priv->esp_locker == NULL)
-		return FALSE;
-
-	/* sanity checks */
-	if (!fu_uefi_check_asset(device, error))
 		return FALSE;
 
 	return TRUE;
