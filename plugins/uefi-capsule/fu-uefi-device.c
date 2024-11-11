@@ -447,7 +447,7 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_uefi_device_check_asset(FuUefiDevice *self, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
@@ -478,10 +478,6 @@ fu_uefi_device_prepare(FuDevice *device,
 	/* mount if required */
 	priv->esp_locker = fu_volume_locker(priv->esp, error);
 	if (priv->esp_locker == NULL)
-		return FALSE;
-
-	/* sanity checks */
-	if (!fu_uefi_device_check_asset(self, error))
 		return FALSE;
 
 	return TRUE;

@@ -208,6 +208,21 @@ fu_uefi_grub_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("grub"));
 }
 
+static gboolean
+fu_uefi_grub_device_prepare(FuDevice *device,
+			    FuProgress *progress,
+			    FwupdInstallFlags flags,
+			    GError **error)
+{
+	/* FuUefiDevice->prepare */
+	if (!FU_DEVICE_CLASS(fu_uefi_grub_device_parent_class)
+		 ->prepare(device, progress, flags, error))
+		return FALSE;
+
+	/* sanity checks */
+	return fu_uefi_device_check_asset(FU_UEFI_DEVICE(device), error);
+}
+
 static void
 fu_uefi_grub_device_init(FuUefiGrubDevice *self)
 {
@@ -221,4 +236,5 @@ fu_uefi_grub_device_class_init(FuUefiGrubDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->write_firmware = fu_uefi_grub_device_write_firmware;
 	device_class->report_metadata_pre = fu_uefi_grub_device_report_metadata_pre;
+	device_class->prepare = fu_uefi_grub_device_prepare;
 }
