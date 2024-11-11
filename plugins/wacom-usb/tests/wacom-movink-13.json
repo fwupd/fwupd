@@ -1,0 +1,32 @@
+{
+  "name": "Wacom Movink 13",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/wacom-movink-13-setup.json",
+      "components": [
+        {
+          "version": "1.2",
+          "version-bootloader": "1.48",
+          "guids": [
+            "8be194af-06c7-5f53-8441-2d0b01b045ee"
+          ]
+        },
+        {
+          "name": "scaler",
+          "version": "1.0.2.0",
+          "guids": [
+            "d68637e9-ac2d-5128-8515-08a8d28295aa"
+          ]
+        },
+        {
+          "name": "touch",
+          "version": "0.7",
+          "guids": [
+            "87a37392-f3be-5ff3-bd58-86f7238f6456"
+          ]
+        }
+      ]
+    }
+  ]
+}
