@@ -65,6 +65,7 @@ enum FuPeCoffMagic {
 }
 
 #[repr(u16le)]
+#[derive(ToString)]
 enum FuCoffSubsystem {
     Unknown,
     Native = 1,
