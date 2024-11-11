@@ -34,6 +34,7 @@
 
 typedef struct {
 	gchar *authenticode_hash;
+	guint16 subsystem_id;
 } FuPefileFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuPefileFirmware, fu_pefile_firmware, FU_TYPE_FIRMWARE)
@@ -47,6 +48,7 @@ fu_pefile_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);
 	FuPefileFirmwarePrivate *priv = GET_PRIVATE(self);
 	fu_xmlb_builder_insert_kv(bn, "authenticode_hash", priv->authenticode_hash);
+	fu_xmlb_builder_insert_kv(bn, "subsystem", fu_coff_subsystem_to_string(priv->subsystem_id));
 }
 
 static gboolean
@@ -241,6 +243,16 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 				      "pre-cksum",
 				      0x0,
 				      offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CHECKSUM);
+
+	if (!fu_input_stream_read_safe(
+		stream,
+		(guint8 *)&priv->subsystem_id,
+		sizeof(priv->subsystem_id),
+		0x0,
+		offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM, /* seek */
+		sizeof(priv->subsystem_id),
+		error))
+		return FALSE;
 
 	/* 2nd Authenticode region */
 	fu_pefile_firmware_add_region(
