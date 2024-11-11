@@ -1,13 +1,6 @@
 // Copyright 2024 Mike Chang <Mike.chang@telink-semi.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#[derive(Getters)]
-struct FuStructTelinkDfuHidReport {
-    report_id: u8,
-    _reserved: [u8; 4],
-    perhaps_data: [u8; 25],
-}
-
 enum FuTelinkDfuCmd {
     OtaFwVersion    = 0xff00,
     OtaStart        = 0xff01,
@@ -20,8 +13,37 @@ enum FuTelinkDfuCmd {
 }
 
 #[derive(New, Getters, Default)]
+struct FuStructTelinkDfuEndCheck {
+    pkt_index: u16,
+    inverted_pkt_index: u16,
+}
+
+#[derive(New, Getters, Default)]
 struct FuStructTelinkDfuBlePkt {
     preamble: u16,
     payload: [u8; 16] = 0xFF,
     crc: u16,
+}
+
+#[derive(New, Getters, Default)]
+struct FuStructTelinkDfuHidPktPayload {
+    ota_cmd: u16 = 0xFFFF,
+    ota_data: [u8; 16] = 0xFF,
+    crc: u16 = 0xFFFF,
+}
+
+#[derive(New, Getters, Default)]
+struct FuStructTelinkDfuHidPkt {
+    op_code: u8 = 0x02,
+    ota_data_len: u16 = 0x0000,
+    payload: FuStructTelinkDfuHidPktPayload,
+}
+
+#[derive(New, Getters, Default)]
+struct FuStructTelinkDfuHidLongPkt {
+    op_code: u8 = 0x02,
+    ota_data_len: u16 = 0x0000,
+    payload_1: FuStructTelinkDfuHidPktPayload,
+    payload_2: FuStructTelinkDfuHidPktPayload,
+    payload_3: FuStructTelinkDfuHidPktPayload,
 }

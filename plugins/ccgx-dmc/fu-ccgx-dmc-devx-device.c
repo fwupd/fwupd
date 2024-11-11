@@ -106,7 +106,10 @@ fu_ccgx_dmc_devx_device_dmcver_to_string(FuCcgxDmcDevxDevice *self,
 static FuCcgxDmcDevxDeviceType
 fu_ccgx_dmc_devx_device_version_type(FuCcgxDmcDevxDevice *self)
 {
-	guint8 device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
+	guint8 device_type;
+	if (self->status == NULL)
+		return FU_CCGX_DMC_DEVX_DEVICE_TYPE_INVALID;
+	device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC ||
 	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG3 ||
 	    device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_CCG4 ||
@@ -122,17 +125,23 @@ fu_ccgx_dmc_devx_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxDmcDevxDevice *self = FU_CCGX_DMC_DEVX_DEVICE(device);
 	FuCcgxDmcDevxDeviceType device_version_type = fu_ccgx_dmc_devx_device_version_type(self);
-	guint8 device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
-	guint8 image_mode = fu_struct_ccgx_dmc_devx_status_get_image_mode(self->status);
-	guint8 img_status = fu_struct_ccgx_dmc_devx_status_get_img_status(self->status);
-	const gchar *device_type_str = fu_ccgx_dmc_devx_device_type_to_string(device_type);
+	guint8 device_type;
+	guint8 image_mode;
+	guint8 img_status;
+	const gchar *device_type_str;
 
+	if (self->status == NULL)
+		return;
+
+	device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
+	device_type_str = fu_ccgx_dmc_devx_device_type_to_string(device_type);
 	if (device_type_str != NULL) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%x [%s]", device_type, device_type_str);
 		fwupd_codec_string_append(str, idt, "DeviceType", tmp);
 	} else {
 		fwupd_codec_string_append_hex(str, idt, "DeviceType", device_type);
 	}
+	image_mode = fu_struct_ccgx_dmc_devx_status_get_image_mode(self->status);
 	if (image_mode < FU_CCGX_DMC_IMG_MODE_LAST) {
 		g_autofree gchar *tmp = g_strdup_printf("0x%x [%s]",
 							image_mode,
@@ -147,6 +156,7 @@ fu_ccgx_dmc_devx_device_to_string(FuDevice *device, guint idt, GString *str)
 	    idt,
 	    "CurrentImage",
 	    fu_struct_ccgx_dmc_devx_status_get_current_image(self->status));
+	img_status = fu_struct_ccgx_dmc_devx_status_get_img_status(self->status);
 	fwupd_codec_string_append(str,
 				  idt,
 				  "ImgStatus1",
@@ -246,13 +256,20 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	FuDevice *proxy = fu_device_get_proxy(device);
 	FuCcgxDmcDevxDeviceType device_version_type = fu_ccgx_dmc_devx_device_version_type(self);
 	gsize offset = 0;
-	guint8 device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
-	g_autofree gchar *logical_id =
-	    g_strdup_printf("0x%02x",
-			    fu_struct_ccgx_dmc_devx_status_get_component_id(self->status));
+	guint8 device_type;
+	g_autofree gchar *logical_id = NULL;
 	g_autofree gchar *version = NULL;
 
+	/* sanity check */
+	if (self->status == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no status");
+		return FALSE;
+	}
+
+	device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
 	fu_device_set_name(device, fu_ccgx_dmc_devx_device_type_to_name(device_type));
+	logical_id = g_strdup_printf("0x%02x",
+				     fu_struct_ccgx_dmc_devx_status_get_component_id(self->status));
 	fu_device_set_logical_id(device, logical_id);
 
 	/* for the version number */

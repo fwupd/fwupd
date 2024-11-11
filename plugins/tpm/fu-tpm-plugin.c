@@ -379,7 +379,8 @@ fu_tpm_plugin_constructed(GObject *obj)
 	/* old name */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "tpm_eventlog");
 	fu_plugin_add_device_udev_subsystem(plugin, "tpm");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_TPM_V2_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_TPM_V2_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_TPM_V1_DEVICE); /* coverage */
 }
 
 static void

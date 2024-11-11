@@ -18,6 +18,7 @@
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
+#include "fu-uefi-nvram-device.h"
 #include "fu-uefi-struct.h"
 #include "fu-uefi-update-info.h"
 
@@ -1243,6 +1244,9 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_ACPI_UEFI);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_UEFI_UPDATE_INFO);
 	fu_plugin_add_firmware_gtype(FU_PLUGIN(self), NULL, FU_TYPE_BITMAP_IMAGE);
+	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_COD_DEVICE);	/* coverage */
+	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_GRUB_DEVICE);	/* coverage */
+	fu_plugin_add_device_gtype(FU_PLUGIN(self), FU_TYPE_UEFI_NVRAM_DEVICE); /* coverage */
 	fu_plugin_add_udev_subsystem(plugin, "drm");
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */

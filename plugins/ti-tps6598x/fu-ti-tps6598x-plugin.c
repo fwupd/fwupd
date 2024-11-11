@@ -9,6 +9,7 @@
 
 #include "fu-ti-tps6598x-device.h"
 #include "fu-ti-tps6598x-firmware.h"
+#include "fu-ti-tps6598x-pd-device.h"
 #include "fu-ti-tps6598x-plugin.h"
 
 struct _FuTiTps6598xPlugin {
@@ -26,7 +27,8 @@ static void
 fu_ti_tps6598x_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_TI_TPS6598X_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_TI_TPS6598X_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_TI_TPS6598X_PD_DEVICE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, "ti-tps6598x", FU_TYPE_TI_TPS6598X_FIRMWARE);
 }
 

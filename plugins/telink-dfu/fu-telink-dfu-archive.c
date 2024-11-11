@@ -25,7 +25,14 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	const gchar *bl_type_keys[] = {"beta", "ota-v1"};
+	struct {
+		const gchar *name;
+		FwupdVersionFormat ver_format;
+	} bl_type_keys[] = {
+	    {"beta", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"ota-v1", FWUPD_VERSION_FORMAT_TRIPLET},
+	    {"usb-dongle-simple", FWUPD_VERSION_FORMAT_PAIR},
+	};
 	const gchar *board_name;
 	const gchar *bootloader_name;
 	const gchar *filename;
@@ -34,6 +41,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 	g_autofree gchar *image_id = NULL;
 	g_autoptr(FuFirmware) image = fu_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
+	guint bl_type_idx;
 
 	if (!json_object_has_member(obj, "file")) {
 		g_set_error_literal(error,
@@ -55,8 +63,9 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 		return FALSE;
 	}
 	bootloader_name = json_object_get_string_member(obj, "bootloader_type");
-	for (guint idx = 0; idx < sizeof(bl_type_keys) / sizeof(bl_type_keys[0]); idx++) {
-		if (g_strcmp0(bootloader_name, bl_type_keys[idx])) {
+	for (bl_type_idx = 0; bl_type_idx < sizeof(bl_type_keys) / sizeof(bl_type_keys[0]);
+	     bl_type_idx++) {
+		if (g_strcmp0(bootloader_name, bl_type_keys[bl_type_idx].name) == 0) {
 			supported_bootloader = TRUE;
 			break;
 		}
@@ -102,7 +111,9 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 		return FALSE;
 	}
 	version = json_object_get_string_member(obj, "image_version");
-	fu_firmware_set_version_raw(FU_FIRMWARE(self), fu_telink_dfu_parse_image_version(version));
+	fu_firmware_set_version_raw(
+	    FU_FIRMWARE(self),
+	    fu_telink_dfu_parse_image_version(version, bl_type_keys[bl_type_idx].ver_format));
 	fu_firmware_set_version(FU_FIRMWARE(self), version); /* nocheck:set-version */
 
 	/* success */

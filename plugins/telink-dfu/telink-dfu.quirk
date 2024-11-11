@@ -1,7 +1,25 @@
 # 8266 mouse beta test
 [BLUETOOTH\VID_248A&PID_8266]
 Plugin = telink_dfu
+GType = FuTelinkDfuBleDevice
+Name = BT Mouse Prototype
 
 # 8208 Dual Keyboard
 [BLUETOOTH\VID_248A&PID_8208]
 Plugin = telink_dfu
+GType = FuTelinkDfuBleDevice
+Name = BT Keyboard Prototype
+
+# 8272 2.4g Dongle
+[USB\VID_248A&PID_881C]
+Plugin = telink_dfu
+GType = FuTelinkDfuHidDevice
+Name = Dongle Prototype
+TelinkHidToolVer = 1.0
+
+# Ryder dongle
+[USB\VID_0461&PID_4F27]
+Plugin = telink_dfu
+GType = FuTelinkDfuHidDevice
+Name = Ryder dongle
+TelinkHidToolVer = 5.02

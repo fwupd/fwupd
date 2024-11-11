@@ -240,6 +240,8 @@ class StructObj:
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.multiplier):
                     item.add_private_export("Setters")
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("New")
 
     def add_public_export(self, derive: str) -> None:
         # Getters and Setters are special as we do not want public exports of const
@@ -565,6 +567,7 @@ class Generator:
         repr_type: Optional[str] = None
         derives: List[str] = []
         offset: int = 0
+        struct_seen_b32: bool = False
         bits_offset: int = 0
         struct_cur: Optional[StructObj] = None
         enum_cur: Optional[EnumObj] = None
@@ -631,6 +634,7 @@ class Generator:
                 derives.clear()
                 offset = 0
                 bits_offset = 0
+                struct_seen_b32 = False
                 continue
 
             # check for trailing comma
@@ -680,7 +684,10 @@ class Generator:
                     item.parse_constant(type_parts[2])
                 elif len(type_parts) == 2:
                     item.parse_default(type_parts[1])
-                offset += item.size
+                if item.size == 0:
+                    struct_seen_b32 = True
+                if not struct_seen_b32:
+                    offset += item.size
                 bits_offset += item.bits_size
                 struct_cur.items.append(item)
 

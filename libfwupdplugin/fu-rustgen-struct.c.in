@@ -57,6 +57,7 @@
 {
     guint32 val;
     g_return_val_if_fail(st != NULL, 0x0);
+    g_return_val_if_fail(st->len >= sizeof({{item.type_glib}}), 0x0);
     val = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
     return (val >> {{item.bits_offset}}) & {{item.bits_mask}};
 }
@@ -144,6 +145,7 @@
 {
     guint32 tmp;
     g_return_if_fail(st != NULL);
+    g_return_if_fail(st->len >= sizeof({{item.type_glib}}));
     tmp = fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
     tmp &= ~({{item.bits_mask}} << {{item.bits_offset}});
     tmp |= (value & {{item.bits_mask}}) << {{item.bits_offset}};

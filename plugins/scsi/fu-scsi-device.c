@@ -14,6 +14,7 @@
 struct _FuScsiDevice {
 	FuUdevDevice parent_instance;
 	guint64 ffu_timeout;
+	guint32 write_buffer_size;
 };
 
 G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
@@ -34,12 +35,14 @@ G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
 #define READ_BUFFER_CMD	 0x3C
 
 #define FU_SCSI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_SCSI_DEFAULT_WRITE_BUFFER_SIZE 4096 /* byte */
 
 static void
 fu_scsi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "FfuTimeout", self->ffu_timeout);
+	fwupd_codec_string_append_hex(str, idt, "WriteBufferSize", self->write_buffer_size);
 }
 
 static gboolean
@@ -346,7 +349,7 @@ fu_scsi_device_write_firmware(FuDevice *device,
 			      GError **error)
 {
 	FuScsiDevice *self = FU_SCSI_DEVICE(device);
-	guint32 chunksz = 0x1000;
+	guint32 chunksz = self->write_buffer_size;
 	guint32 offset = 0;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -406,6 +409,25 @@ fu_scsi_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_scsi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuScsiDevice *self = FU_SCSI_DEVICE(device);
+	if (g_strcmp0(key, "ScsiWriteBufferSize") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->write_buffer_size = tmp;
+		return TRUE;
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_scsi_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -425,6 +447,7 @@ fu_scsi_device_init(FuScsiDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
+	self->write_buffer_size = FU_SCSI_DEFAULT_WRITE_BUFFER_SIZE;
 }
 
 static void
@@ -437,4 +460,5 @@ fu_scsi_device_class_init(FuScsiDeviceClass *klass)
 	device_class->prepare_firmware = fu_scsi_device_prepare_firmware;
 	device_class->write_firmware = fu_scsi_device_write_firmware;
 	device_class->set_progress = fu_scsi_device_set_progress;
+	device_class->set_quirk_kv = fu_scsi_device_set_quirk_kv;
 }

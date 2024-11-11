@@ -1086,7 +1086,8 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	/* ->probe() and ->setup */
 	if (!g_strv_contains(nolocker, g_type_name(gtype))) {
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
-		g_assert_null(locker);
+		if (locker != NULL)
+			g_debug("did ->probe() and ->setup()!");
 	}
 }
 

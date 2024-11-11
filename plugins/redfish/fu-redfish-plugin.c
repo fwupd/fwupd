@@ -10,12 +10,16 @@
 #include "fu-ipmi-device.h"
 #endif
 
+#include "fu-ipmi-device.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"
+#include "fu-redfish-legacy-device.h"
+#include "fu-redfish-multipart-device.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-plugin.h"
 #include "fu-redfish-smbios.h"
+#include "fu-redfish-smc-device.h"
 #include "fu-redfish-struct.h"
 
 #define FU_REDFISH_PLUGIN_CLEANUP_RETRIES_DELAY 10 /* seconds */
@@ -705,6 +709,10 @@ fu_redfish_plugin_constructed(GObject *obj)
 	self->backend = fu_redfish_backend_new(ctx);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_SECURE_CONFIG);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_LEGACY_DEVICE);    /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_MULTIPART_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_IPMI_DEVICE);	      /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_REDFISH_SMC_DEVICE);	      /* coverage */
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
 	fu_plugin_set_config_default(plugin, "CACheck", "false");

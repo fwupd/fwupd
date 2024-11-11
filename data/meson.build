@@ -89,6 +89,32 @@ if build_daemon
       dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
     endif
 
+    device_allows = [
+      'block-sd',
+      'char-aux',
+      'char-cpu/*',
+      'char-drm',
+      'char-gpiochip',
+      'char-hidraw',
+      'char-usb',
+      'char-usb_device',
+    ]
+    if allow_flashrom
+      device_allows += ['char-mem']
+    endif
+    if get_option('plugin_nvme').allowed()
+      device_allows += ['char-nvme']
+    endif
+    if get_option('plugin_tpm').allowed()
+      device_allows += ['char-tpm']
+    endif
+    if get_option('plugin_intel_me').allowed()
+      device_allows += ['char-mei']
+    endif
+    foreach device_allow: device_allows
+      dynamic_options += ['DeviceAllow=' + device_allow + ' rw']
+    endforeach
+
     # allow-list, see `systemd-analyze syscall-filter` for what each group adds
     syscall_filter = [
       '@basic-io',

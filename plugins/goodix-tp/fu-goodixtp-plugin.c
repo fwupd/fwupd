@@ -7,9 +7,11 @@
 #include "config.h"
 
 #include "fu-goodixtp-brlb-device.h"
+#include "fu-goodixtp-brlb-firmware.h"
 #include "fu-goodixtp-common.h"
 #include "fu-goodixtp-firmware.h"
 #include "fu-goodixtp-gtx8-device.h"
+#include "fu-goodixtp-gtx8-firmware.h"
 #include "fu-goodixtp-plugin.h"
 #include "fu-goodixtp-struct.h"
 
@@ -29,8 +31,12 @@ fu_goodixtp_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_GOODIXTP_HID_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_GOODIXTP_HID_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_GOODIXTP_GTX8_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_GOODIXTP_BRLB_DEVICE); /* coverage */
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_GTX8_FIRMWARE); /* coverage */
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_GOODIXTP_BRLB_FIRMWARE); /* coverage */
 }
 
 static FuGoodixtpIcType
