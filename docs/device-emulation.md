@@ -77,10 +77,19 @@ data.  You should be able to see the emulated device as well as interact with it
     fwupdmgr get-devices --filter emulated
     fwupdmgr install 17*.cab --allow-reinstall
 
+## Using GNOME Firmware
+
+For supported devices, tagging, installing, emulation file loading and saving can be automated
+using GNOME Firmware 48 and newer, for example:
+
+![GNOME Firmware emulation recording](device-emulation-gnome-firmware-record.png)
+
 ## Upload test data to LVFS
 
 Test data can be added to LVFS by visiting the `Assets` tab of the firmware release on LVFS.
 There is an upload button, and once uploaded a URL will be available that can be used for device tests.
+
+![lvfs device page](device-emulation-assets.png)
 
 ## Add emulation-only data to the plugin
 
