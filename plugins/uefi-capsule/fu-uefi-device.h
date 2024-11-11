@@ -73,3 +73,5 @@ gboolean
 fu_uefi_device_perhaps_enable_debugging(FuUefiDevice *self, GError **error);
 FuEfiDevicePathList *
 fu_uefi_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GError **error);
+gboolean
+fu_uefi_device_check_asset(FuUefiDevice *self, GError **error);
