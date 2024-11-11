@@ -12,6 +12,19 @@ configure_file(
   configuration: con2,
 )
 
+uswid = find_program('uswid', required: false)
+if uswid.found()
+  custom_target('gen-sbom',
+    input: 'sbom.cdx.json',
+    output: 'sbom.cdx.json',
+    command: [
+      uswid,
+      '--load', '@INPUT@',
+      '--save', '@OUTPUT@',
+    ],
+  )
+endif
+
 if host_machine.system() == 'windows'
   configure_file(
     input: 'fwupd.wxs.in',
