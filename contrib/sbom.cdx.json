@@ -1,0 +1,45 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "authors": [
+      {
+        "name": "@VCS_SBOM_AUTHORS@"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:github/fwupd/fwupd@@VCS_TAG@",
+      "cpe": "cpe:2.3:a:fwupd:fwupd:@VCS_TAG@:*:*:*:*:*:*:*",
+      "name": "fwupd",
+      "version": "@VCS_VERSION@",
+      "description": "Firmware update daemon",
+      "supplier": {
+        "name": "fwupd developers",
+        "url": [
+          "https://github.com/fwupd/fwupd/blob/main/MAINTAINERS"
+        ]
+      },
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://fwupd.org/"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/fwupd/fwupd"
+        }
+      ]
+    }
+  ]
+}
