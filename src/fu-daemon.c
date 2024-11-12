@@ -97,13 +97,15 @@ void
 fu_daemon_schedule_housekeeping(FuDaemon *self)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
+	guint delay = FU_DAEMON_HOUSEKEEPING_DELAY;
 	if (priv->update_in_progress)
 		return;
 	if (priv->housekeeping_id != 0)
 		g_source_remove(priv->housekeeping_id);
-	priv->housekeeping_id = g_timeout_add_seconds(FU_DAEMON_HOUSEKEEPING_DELAY,
-						      fu_daemon_schedule_housekeeping_cb,
-						      self);
+	if (g_getenv("CI") != NULL)
+		delay = 1;
+	priv->housekeeping_id =
+	    g_timeout_add_seconds(delay, fu_daemon_schedule_housekeeping_cb, self);
 }
 
 static gboolean
