@@ -214,6 +214,10 @@ fu_uf2_device_open(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_uf2_device_parent_class)->open(device, error))
 		return FALSE;
 
+	/* skip */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+
 	/* wait for the user session to auto-mount the volume -- ideally we want to avoid using
 	 * fu_volume_mount() which would make the volume only accessible by the fwupd user */
 	if (!fu_device_retry_full(device,
