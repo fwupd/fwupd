@@ -1,0 +1,17 @@
+{
+  "name": "MNT Pocket Reform System Controller",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/mnt-pocket-reform-sysctl-setup.json",
+      "components": [
+        {
+          "version": "1111",
+          "guids": [
+            "df0c9fc8-88d6-5100-ba66-0f5c436fc522"
+          ]
+        }
+      ]
+    }
+  ]
+}

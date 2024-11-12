@@ -1,0 +1,136 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-6",
+      "Created": "2024-11-12T10:07:39.666088Z",
+      "IdVendor": 4617,
+      "IdProduct": 27911,
+      "Device": 1,
+      "USB": 528,
+      "Manufacturer": 1,
+      "DeviceClass": 239,
+      "DeviceSubClass": 2,
+      "DeviceProtocol": 1,
+      "Product": 2,
+      "SerialNumber": 3,
+      "UsbBosDescriptors": [
+        {
+          "DevCapabilityType": 33,
+          "ExtraData": "AAE="
+        },
+        {
+          "DevCapabilityType": 5,
+          "ExtraData": "AGPsCgF09c1SndooUlUNlPAOCQEAiQBCAA=="
+        }
+      ],
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 2,
+          "InterfaceSubClass": 2,
+          "Interface": 4,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "Interval": 16,
+              "MaxPacketSize": 8
+            }
+          ]
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceNumber": 1,
+          "InterfaceClass": 10,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 2,
+              "MaxPacketSize": 64
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 130,
+              "MaxPacketSize": 64
+            }
+          ]
+        },
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceNumber": 2,
+          "InterfaceClass": 255,
+          "InterfaceProtocol": 1,
+          "Interface": 5
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=25\nDEVNAME=bus/usb/001/026\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1209/6d07/1\nTYPE=239/2/1\nBUSNUM=001\nDEVNUM=026"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/026"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=25\nDEVNAME=bus/usb/001/026\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1209/6d07/1\nTYPE=239/2/1\nBUSNUM=001\nDEVNUM=026"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "026"
+        },
+        {
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x42,Value=0x0000,Idx=0x0007,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x89",
+          "Data": "VmVuZG9yPU1OVCBSZXNlYXJjaApQbHVnaW49cnBfcGljbwpGbGFncz1pbnRlcm5hbApWZXJzaW9uRm9ybWF0PW51bWJlcgpWZXJzaW9uPTExMTEKSWNvbj1jb21wdXRlcgpDb3VudGVycGFydEd1aWQ9QkxPQ0tcVkVOXzJFOEEmREVWXzAwMDM="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Data": "UG9ja2V0IFJlZm9ybSBTeXN0ZW0gQ29udHJvbGxlciAxLjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Data": "RTY2MEMwNjIxMzk2ODgzNgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        }
+      ]
+    }
+  ]
+}
