@@ -463,6 +463,14 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
 
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "upgrades have not yet been validated");
+		return FALSE;
+	}
+
 	/* TODO: why isn't this applying from probe() to bootloader in emulation case? */
 	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
