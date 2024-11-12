@@ -13,7 +13,9 @@
 #endif
 
 #include "fu-block-partition.h"
+#include "fu-device-event.h"
 #include "fu-string.h"
+#include "fu-volume.h"
 
 /**
  * FuBlockPartition
@@ -156,6 +158,79 @@ fu_block_partition_get_fs_label(FuBlockPartition *self)
 	FuBlockPartitionPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_BLOCK_PARTITION(self), NULL);
 	return priv->fs_label;
+}
+
+/**
+ * fu_block_partition_get_mount_point:
+ * @self: a #FuBlockPartition
+ * @error: (nullable): optional return location for an error
+ *
+ * Returns the filesystem label.
+ *
+ * Returns: string, or %NULL for unset
+ *
+ * Since: 2.0.2
+ **/
+gchar *
+fu_block_partition_get_mount_point(FuBlockPartition *self, GError **error)
+{
+	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *mount_point = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+
+	g_return_val_if_fail(FU_IS_BLOCK_PARTITION(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (devfile == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "invalid path: no devfile");
+		return NULL;
+	}
+
+	/* build event key either for load or save */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetMountPoint:Devfile=%s", devfile);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		const gchar *tmp;
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		tmp = fu_device_event_get_str(event, "Data", error);
+		if (tmp == NULL)
+			return NULL;
+		return g_strdup(tmp);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+	}
+
+	/* find volume */
+	volume = fu_volume_new_by_device(devfile, error);
+	if (volume == NULL)
+		return NULL;
+
+	/* success */
+	mount_point = fu_volume_get_mount_point(volume);
+
+	/* save */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", mount_point);
+
+	/* success */
+	return g_steal_pointer(&mount_point);
 }
 
 static gboolean
