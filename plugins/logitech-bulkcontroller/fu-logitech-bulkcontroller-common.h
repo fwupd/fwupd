@@ -24,13 +24,17 @@ typedef enum {
 } FuLogitechBulkcontrollerProtoId;
 
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(void);
+fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(FuDevice *device)
+    G_GNUC_NON_NULL(1);
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(void);
+fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
+    FuDevice *device) G_GNUC_NON_NULL(1);
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(GError **error);
+fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(FuDevice *device,
+									  GError **error)
+    G_GNUC_NON_NULL(1);
 GByteArray *
 fu_logitech_bulkcontroller_proto_manager_decode_message(const guint8 *data,
 							guint32 len,
 							FuLogitechBulkcontrollerProtoId *proto_id,
-							GError **error);
+							GError **error) G_GNUC_NON_NULL(1, 3);
