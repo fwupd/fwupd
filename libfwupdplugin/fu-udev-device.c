@@ -2033,6 +2033,8 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 		fwupd_codec_json_append(builder, "DeviceFile", priv->device_file);
 	if (priv->subsystem != NULL)
 		fwupd_codec_json_append(builder, "Subsystem", priv->subsystem);
+	if (priv->devtype != NULL)
+		fwupd_codec_json_append(builder, "Devtype", priv->devtype);
 	if (priv->driver != NULL)
 		fwupd_codec_json_append(builder, "Driver", priv->driver);
 	if (priv->bind_id != NULL)
@@ -2081,6 +2083,9 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp = json_object_get_string_member_with_default(json_object, "Subsystem", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_subsystem(self, tmp);
+	tmp = json_object_get_string_member_with_default(json_object, "Devtype", NULL);
+	if (tmp != NULL)
+		fu_udev_device_set_devtype(self, tmp);
 	tmp = json_object_get_string_member_with_default(json_object, "Driver", NULL);
 	if (tmp != NULL)
 		fu_udev_device_set_driver(self, tmp);
