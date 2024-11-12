@@ -1,0 +1,17 @@
+{
+  "name": "Intel Gatkex",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/intel-gatkex-setup.json",
+      "components": [
+        {
+          "version": "38.0",
+          "guids": [
+            "2590556b-dcca-595c-8c71-c9c2247556b3"
+          ]
+        }
+      ]
+    }
+  ]
+}
