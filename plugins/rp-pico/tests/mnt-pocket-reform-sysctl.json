@@ -3,10 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/mnt-pocket-reform-sysctl-setup.json",
+      "url": "https://fwupd.org/downloads/607566d4cf837c8e6607339bf8e81d29f8cc6ad24d529eb93b66d6c34feb4a23-sysctl_3_.cab",
+      "emulation-url": "https://fwupd.org/downloads/e4f34b9dc6f546011f1db264d40a54db07aa542eb5d1a1715fbe5942d92d498e-sysctl_2_.zip",
       "components": [
         {
-          "version": "1111",
+          "version": "1112",
           "guids": [
             "df0c9fc8-88d6-5100-ba66-0f5c436fc522"
           ]
