@@ -12,3 +12,6 @@ plugin_builtins += static_library('fu_plugin_rp_pico',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/mnt-pocket-reform-sysctl-setup.json')
+device_tests += files('tests/mnt-pocket-reform-sysctl.json')
