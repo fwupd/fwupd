@@ -286,6 +286,7 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *model = NULL;
 	g_autofree gchar *revision = NULL;
 	g_autofree gchar *vendor = NULL;
+	g_autoptr(FuStructScsiInquiry) st = NULL;
 
 	/* prepare chunk */
 	if (!fu_scsi_device_send_scsi_cmd_v3(self,
@@ -298,16 +299,18 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "SG_IO INQUIRY_CMD data error: ");
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "INQUIRY", buf, sizeof(buf));
 
 	/* parse */
-	vendor = fu_strsafe((const gchar *)buf + 8, 8);
+	st = fu_struct_scsi_inquiry_parse(buf, sizeof(buf), 0x0, error);
+	if (st == NULL)
+		return FALSE;
+	vendor = fu_struct_scsi_inquiry_get_vendor_id(st);
 	if (vendor != NULL)
 		fu_device_set_vendor(device, vendor);
-	model = fu_strsafe((const gchar *)buf + 16, 16);
+	model = fu_struct_scsi_inquiry_get_product_id(st);
 	if (model != NULL)
 		fu_device_set_name(device, model);
-	revision = fu_strsafe((const gchar *)buf + 32, 4);
+	revision = fu_struct_scsi_inquiry_get_product_rev(st);
 	if (revision != NULL)
 		fu_device_set_version(device, revision);
 
