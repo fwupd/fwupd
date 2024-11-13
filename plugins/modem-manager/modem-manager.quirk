@@ -122,3 +122,13 @@ CounterpartGuid = USB\VID_2CB7&PID_D00D
 [USB\VID_1e2d&PID_0061]
 Summary = Cinterion PLS8 AT^SFDL update
 Plugin = modem_manager
+
+# Netprisma LCUR57 firehose prog file
+[PCI\VID_203E&PID_1000]
+Summary = Netprisma LCUR57 firehose prog file
+ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
+
+# Netprisma FCUN69 firehose prog file
+[PCI\VID_203E&PID_1001]
+Summary = Netprisma FCUN69 firehose prog file
+ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
