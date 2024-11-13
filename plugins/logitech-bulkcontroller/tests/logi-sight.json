@@ -1,0 +1,17 @@
+{
+  "name": "Logi Sight (standalone)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/logi-sight-setup.json",
+      "components": [
+        {
+          "version": "0.5.0",
+          "guids": [
+            "8064915d-8c91-5f1e-a7a9-cd95f6538bfe"
+          ]
+        }
+      ]
+    }
+  ]
+}
