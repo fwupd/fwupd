@@ -304,7 +304,7 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 	vendor = fu_strsafe((const gchar *)buf + 8, 8);
 	if (vendor != NULL)
 		fu_device_set_vendor(device, vendor);
-	model = fu_strsafe((const gchar *)buf + 16, 8);
+	model = fu_strsafe((const gchar *)buf + 16, 16);
 	if (model != NULL)
 		fu_device_set_name(device, model);
 	revision = fu_strsafe((const gchar *)buf + 32, 4);
