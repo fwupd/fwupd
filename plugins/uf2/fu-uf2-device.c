@@ -92,26 +92,10 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 static gchar *
 fu_uf2_device_get_full_path(FuUf2Device *self, const gchar *filename, GError **error)
 {
-	const gchar *devfile = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
-	g_autoptr(FuVolume) volume = NULL;
 	g_autofree gchar *mount_point = NULL;
-
-	/* sanity check */
-	if (devfile == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "invalid path: no devfile");
+	mount_point = fu_block_partition_get_mount_point(FU_BLOCK_PARTITION(self), error);
+	if (mount_point == NULL)
 		return NULL;
-	}
-
-	/* find volume */
-	volume = fu_volume_new_by_device(devfile, error);
-	if (volume == NULL)
-		return NULL;
-
-	/* success */
-	mount_point = fu_volume_get_mount_point(volume);
 	return g_build_filename(mount_point, filename, NULL);
 }
 
@@ -229,6 +213,10 @@ fu_uf2_device_open(FuDevice *device, GError **error)
 	/* FuUdevDevice->open() */
 	if (!FU_DEVICE_CLASS(fu_uf2_device_parent_class)->open(device, error))
 		return FALSE;
+
+	/* skip */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* wait for the user session to auto-mount the volume -- ideally we want to avoid using
 	 * fu_volume_mount() which would make the volume only accessible by the fwupd user */

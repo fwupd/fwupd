@@ -21,3 +21,5 @@ const gchar *
 fu_block_partition_get_fs_uuid(FuBlockPartition *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_block_partition_get_fs_label(FuBlockPartition *self) G_GNUC_NON_NULL(1);
+gchar *
+fu_block_partition_get_mount_point(FuBlockPartition *self, GError **error) G_GNUC_NON_NULL(1);

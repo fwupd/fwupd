@@ -13,11 +13,20 @@
 #include "usb_msg.pb-c.h"
 
 static void
-fu_logitech_bulkcontroller_proto_manager_set_header(Logi__Device__Proto__Header *header_msg)
+fu_logitech_bulkcontroller_proto_manager_set_header(FuDevice *device,
+						    Logi__Device__Proto__Header *header_msg)
 {
 	gint64 timestamp_tv;
 
 	g_return_if_fail(header_msg != NULL);
+
+	/* make predictable */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		header_msg->id = 0;
+		header_msg->timestamp = g_strdup("0");
+		return;
+	}
 
 	timestamp_tv = g_get_real_time();
 	header_msg->id = g_uuid_string_random();
@@ -25,7 +34,7 @@ fu_logitech_bulkcontroller_proto_manager_set_header(Logi__Device__Proto__Header 
 }
 
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(void)
+fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(FuDevice *device)
 {
 	GByteArray *buf = g_byte_array_new();
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
@@ -36,7 +45,7 @@ fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(void)
 	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_GET_DEVICE_INFO_REQUEST;
 	request_msg.get_device_info_request = &get_deviceinfo_msg;
 
-	fu_logitech_bulkcontroller_proto_manager_set_header(&header_msg);
+	fu_logitech_bulkcontroller_proto_manager_set_header(device, &header_msg);
 	usb_msg.header = &header_msg;
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;
@@ -49,7 +58,8 @@ fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(void)
 }
 
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(void)
+fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
+    FuDevice *device)
 {
 	GByteArray *buf = g_byte_array_new();
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
@@ -61,7 +71,7 @@ fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_requ
 	    LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_TRANSITION_TO_DEVICEMODE_REQUEST;
 	request_msg.transition_to_devicemode_request = &transition_to_device_mode_msg;
 
-	fu_logitech_bulkcontroller_proto_manager_set_header(&header_msg);
+	fu_logitech_bulkcontroller_proto_manager_set_header(device, &header_msg);
 	usb_msg.header = &header_msg;
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;
@@ -74,7 +84,8 @@ fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_requ
 }
 
 GByteArray *
-fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(GError **error)
+fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(FuDevice *device,
+									  GError **error)
 {
 	g_autofree gchar *olson_location = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -85,16 +96,27 @@ fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(GError
 	Logi__Device__Proto__Request request_msg = LOGI__DEVICE__PROTO__REQUEST__INIT;
 
 	/* the device expects an olson_location, not a timezone */
-	olson_location = fu_common_get_olson_timezone_id(error);
-	if (olson_location == NULL)
-		return NULL;
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		olson_location = g_strdup("Europe/London");
+	} else {
+		olson_location = fu_common_get_olson_timezone_id(error);
+		if (olson_location == NULL)
+			return NULL;
+	}
 
 	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_SET_DEVICE_TIME_REQUEST;
 	request_msg.set_device_time_request = &set_devicetime_msg;
 
-	set_devicetime_msg.ts = (g_get_real_time() / 1000) + SET_TIME_DELAY_MS;
+	/* make predictable */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG)) {
+		set_devicetime_msg.ts = 0;
+	} else {
+		set_devicetime_msg.ts = (g_get_real_time() / 1000) + SET_TIME_DELAY_MS;
+	}
 	set_devicetime_msg.time_zone = olson_location;
-	fu_logitech_bulkcontroller_proto_manager_set_header(&header_msg);
+	fu_logitech_bulkcontroller_proto_manager_set_header(device, &header_msg);
 	usb_msg.header = &header_msg;
 	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
 	usb_msg.request = &request_msg;

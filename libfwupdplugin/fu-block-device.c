@@ -40,12 +40,8 @@ fu_block_device_probe(FuDevice *device, GError **error)
 		/* copy the VID and PID, and reconstruct compatible IDs */
 		if (!fu_device_probe(usb_device, error))
 			return FALSE;
-		fu_device_add_instance_str(device,
-					   "VEN",
-					   fu_device_get_instance_str(usb_device, "VID"));
-		fu_device_add_instance_str(device,
-					   "DEV",
-					   fu_device_get_instance_str(usb_device, "PID"));
+		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(usb_device));
+		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(usb_device));
 		if (!fu_device_build_instance_id_full(device,
 						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 						      error,

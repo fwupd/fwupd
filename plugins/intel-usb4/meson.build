@@ -13,3 +13,6 @@ plugin_builtins += static_library('fu_plugin_intel_usb4',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+enumeration_data += files('tests/intel-gatkex-setup.json')
+device_tests += files('tests/intel-gatkex.json')

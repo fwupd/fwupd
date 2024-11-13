@@ -40,6 +40,7 @@ struct _FuLogitechBulkcontrollerDevice {
 	gboolean is_sync_transfer_in_progress;
 	GString *device_info_response_json;
 	gsize transfer_bufsz;
+	guint32 sequence_id;
 };
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerDevice, fu_logitech_bulkcontroller_device, FU_TYPE_USB_DEVICE)
@@ -66,6 +67,7 @@ fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString
 					  "DeviceInfoResponse",
 					  self->device_info_response_json->str);
 	}
+	fwupd_codec_string_append_hex(str, idt, "SequenceId", self->sequence_id);
 }
 
 static gboolean
@@ -227,16 +229,17 @@ static gboolean
 fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
 						GByteArray *buf,
-						guint32 *sequence_id,
 						GError **error)
 {
 	g_autoptr(GByteArray) st_req = fu_struct_logitech_bulkcontroller_send_sync_req_new();
 	g_autofree gchar *str = NULL;
-	guint32 sequence_id_tmp = g_random_int_range(0, G_MAXINT32);
+
+	/* increment */
+	self->sequence_id++;
 
 	/* send */
 	fu_struct_logitech_bulkcontroller_send_sync_req_set_cmd(st_req, cmd);
-	fu_struct_logitech_bulkcontroller_send_sync_req_set_sequence_id(st_req, sequence_id_tmp);
+	fu_struct_logitech_bulkcontroller_send_sync_req_set_sequence_id(st_req, self->sequence_id);
 	if (buf != NULL) {
 		fu_struct_logitech_bulkcontroller_send_sync_req_set_payload_length(st_req,
 										   buf->len);
@@ -252,15 +255,12 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 		return FALSE;
 
 	/* success */
-	if (sequence_id != NULL)
-		*sequence_id = sequence_id_tmp;
 	return TRUE;
 }
 
 static gboolean
 fu_logitech_bulkcontroller_device_sync_send_ack(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
-						guint32 *sequence_id,
 						GError **error)
 {
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
@@ -268,7 +268,6 @@ fu_logitech_bulkcontroller_device_sync_send_ack(FuLogitechBulkcontrollerDevice *
 	if (!fu_logitech_bulkcontroller_device_sync_send_cmd(self,
 							     FU_LOGITECH_BULKCONTROLLER_CMD_ACK,
 							     buf_ack,
-							     sequence_id,
 							     error)) {
 		g_prefix_error(error,
 			       "failed to send ack for %s: ",
@@ -446,7 +445,7 @@ fu_logitech_bulkcontroller_device_sync_wait_ack_cb(FuDevice *device,
 
 	buf = fu_logitech_bulkcontroller_device_sync_wait_cmd(self,
 							      FU_LOGITECH_BULKCONTROLLER_CMD_ACK,
-							      helper->sequence_id,
+							      self->sequence_id,
 							      error);
 	if (buf == NULL)
 		return FALSE;
@@ -461,10 +460,9 @@ fu_logitech_bulkcontroller_device_sync_wait_ack_cb(FuDevice *device,
 static gboolean
 fu_logitech_bulkcontroller_device_sync_wait_ack(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
-						guint32 sequence_id,
 						GError **error)
 {
-	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd, .sequence_id = sequence_id};
+	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd};
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_logitech_bulkcontroller_device_sync_wait_ack_cb,
 				    10,
@@ -474,18 +472,18 @@ fu_logitech_bulkcontroller_device_sync_wait_ack(FuLogitechBulkcontrollerDevice *
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_sync_check_ack(FuLogitechBulkcontrollerResponse *response,
+fu_logitech_bulkcontroller_device_sync_check_ack(FuLogitechBulkcontrollerDevice *self,
+						 FuLogitechBulkcontrollerResponse *response,
 						 FuLogitechBulkcontrollerCmd cmd,
-						 guint32 sequence_id,
 						 GError **error)
 {
 	/* verify the sequence ID */
-	if (response->sequence_id != sequence_id) {
+	if (response->sequence_id != self->sequence_id) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "sequence ID invalid, expected 0x%04x and got 0x%04x",
-			    sequence_id,
+			    self->sequence_id,
 			    response->sequence_id);
 		return FALSE;
 	}
@@ -497,7 +495,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 					     GByteArray *req,
 					     GError **error)
 {
-	guint32 sequence_id = 0;
 	g_autoptr(GByteArray) res_ack = NULL;
 	g_autoptr(GByteArray) res_read = NULL;
 	g_autoptr(GByteArray) buf = NULL;
@@ -507,7 +504,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
 		req,
-		&sequence_id,
 		error)) {
 		g_prefix_error(error, "failed to send request: ");
 		return NULL;
@@ -517,7 +513,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_wait_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
-		sequence_id,
 		error)) {
 		g_prefix_error(error, "failed to wait for ack: ");
 		return NULL;
@@ -528,7 +523,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 		NULL,
-		&sequence_id,
 		error)) {
 		g_prefix_error(error, "failed to uninit buffer: ");
 		return NULL;
@@ -551,9 +545,9 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 				return NULL;
 			}
 			if (!fu_logitech_bulkcontroller_device_sync_check_ack(
+				self,
 				response_tmp,
 				FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
-				sequence_id,
 				error)) {
 				g_prefix_error(error, "failed to check uninit buffer: ");
 				return NULL;
@@ -575,7 +569,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
-		&sequence_id,
 		error)) {
 		g_prefix_error(error, "failed to ack read buffer: ");
 		return NULL;
@@ -596,7 +589,6 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
-		NULL,
 		error)) {
 		g_prefix_error(error, "failed to ack uninit buffer: ");
 		return NULL;
@@ -920,7 +912,8 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 */
 	if (send_req) {
 		g_autoptr(GByteArray) device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
+			device);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1021,7 +1014,8 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
 		device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request();
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
+			device);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1195,7 +1189,8 @@ fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_da
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
 	device_request =
-	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(error);
+	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(device,
+										      error);
 	if (device_request == NULL)
 		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
@@ -1247,7 +1242,8 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
-	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request();
+	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
+	    device);
 	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
 	if (res == NULL)
 		return FALSE;
@@ -1334,7 +1330,6 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_CHECK_BUFFERSIZE,
 		NULL, /* data */
-		NULL, /* sequence_id */
 		error)) {
 		g_prefix_error(error, "failed to send request: ");
 		return FALSE;

@@ -1,0 +1,17 @@
+{
+  "name": "Logi Rally Bar",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/logi-rally-bar-setup.json",
+      "components": [
+        {
+          "version": "1.9.556",
+          "guids": [
+            "9608c52f-e60f-597d-a813-84c6f2177a89"
+          ]
+        }
+      ]
+    }
+  ]
+}
