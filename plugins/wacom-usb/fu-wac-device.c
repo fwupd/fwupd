@@ -799,7 +799,8 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 	/* get versions of each module */
 	number_modules = fu_struct_module_desc_get_number_modules(st_desc);
 	for (guint8 i = 0; i < number_modules; i++) {
-		guint16 ver;
+		guint32 ver;
+		guint16 ver2;
 		FuWacModuleFwType fw_type;
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuStructModuleItem) st_item = NULL;
@@ -808,7 +809,18 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		st_item = fu_struct_module_item_parse(buf->data, buf->len, offset, error);
 		if (st_item == NULL)
 			return FALSE;
+
 		ver = fu_struct_module_item_get_version(st_item);
+		ver2 = fu_struct_module_item_get_version2(st_item);
+
+		/*
+  		* When ver2 is available and not 0, it is appended to ver in order to make it BCD
+  		* 32bits, otherwise it stays BCD 16bits.
+    		*/
+		if (ver2 != 0xFF && ver2 != 0) {
+			ver = (ver << 16);
+			ver |= (ver2 << 8);
+		}
 
 		fw_type = fu_struct_module_item_get_kind(st_item) & 0x7F;
 		switch (fw_type) {
@@ -945,6 +957,9 @@ fu_wac_device_set_progress(FuDevice *self, FuProgress *progress)
 static gchar *
 fu_wac_device_convert_version(FuDevice *device, guint64 version_raw)
 {
+	if (version_raw > G_MAXUINT16)
+		return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+
 	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
 }
 

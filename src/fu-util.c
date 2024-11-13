@@ -832,7 +832,11 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 		g_autofree gchar *msg = NULL;
 		/* TRANSLATORS: this is for the device tests */
 		msg = fu_console_color_format(_("OK!"), FU_CONSOLE_COLOR_GREEN);
-		fu_console_print(priv->console, "%s: %s", helper->name, msg);
+		if (g_strcmp0(name, "component") != 0) {
+			fu_console_print(priv->console, "%s [%s]: %s", helper->name, name, msg);
+		} else {
+			fu_console_print(priv->console, "%s: %s", helper->name, msg);
+		}
 	}
 	helper->nr_success++;
 	return TRUE;
