@@ -69,7 +69,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		       fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(ufshci_parent)));
 
 		attr_ufs_features =
-		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(ufshci_parent),
 					      "device_descriptor/ufs_features",
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      NULL);
@@ -91,7 +91,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 				fu_device_add_protocol(device, "org.jedec.ufs");
 			}
 			attr_ffu_timeout =
-			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+			    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(ufshci_parent),
 						      "device_descriptor/ffu_timeout",
 						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						      error);
