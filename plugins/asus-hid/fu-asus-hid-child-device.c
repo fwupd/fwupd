@@ -263,6 +263,7 @@ fu_asus_hid_child_device_init(FuAsusHidChildDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.asus.hid");
 	// TODO: is it?
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 }
 
 static void
