@@ -86,7 +86,6 @@ fu_asus_hid_device_probe(FuDevice *device, GError **error)
 		g_autoptr(FuDevice) dev_tmp =
 		    fu_asus_hid_child_device_new(fu_device_get_context(device), i);
 
-		fu_device_set_version_format(dev_tmp, FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_set_proxy(dev_tmp, device);
 		fu_device_add_child(device, dev_tmp);
 	}
