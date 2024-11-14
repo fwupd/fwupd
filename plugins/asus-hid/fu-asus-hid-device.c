@@ -524,6 +524,7 @@ fu_asus_hid_device_init(FuAsusHidDevice *self)
 	/* TODO: automatic backup */
 	// fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
