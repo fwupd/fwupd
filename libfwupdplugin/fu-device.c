@@ -7433,9 +7433,13 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	for (guint i = 0; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
-			g_debug("found out-of-order %s at position %u", id, i);
-			priv->event_idx = i + 1;
-			return event;
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "found out-of-order event %s at position %u",
+				    id,
+				    i);
+			return NULL;
 		}
 	}
 
