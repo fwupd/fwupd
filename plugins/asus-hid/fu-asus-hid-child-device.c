@@ -34,7 +34,7 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 					  guint8 report,
 					  GError **error)
 {
-	FuHidDevice *hid_dev = FU_HID_DEVICE(fu_device_get_proxy_with_fallback(FU_DEVICE(self)));
+	FuHidDevice *hid_dev = FU_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 
 	if (req != NULL) {
 		if (!fu_hid_device_set_report(hid_dev,
