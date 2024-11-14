@@ -152,8 +152,8 @@ fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **
 {
 	GByteArray *req = (GByteArray *)user_data;
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(device),
-					    (guint8 *)req->data,
-					    sizeof(req->len),
+					    req->data,
+					    req->len,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
@@ -321,7 +321,7 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 	}
 	g_debug("usage-page: 0x%x feature_report_id: %d",
 		PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE,
-		self->retransmit_id);
+		self->feature_report_id);
 
 	/* check ota notify input report usage page exist or not */
 	if (!fu_pxi_ble_device_search_hid_input_report_id(descriptor,
