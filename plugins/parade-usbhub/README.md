@@ -46,6 +46,12 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x273F`
 
 This plugin uses the following plugin-specific quirks:
 
+### ParadeUsbhubChip
+
+Set the chip used, e.g. `ps188` or `ps5512`, defaulting to the latter.
+
+Since: 2.0.2
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
