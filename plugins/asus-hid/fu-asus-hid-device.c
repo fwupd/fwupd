@@ -83,10 +83,7 @@ fu_asus_hid_device_probe(FuDevice *device, GError **error)
 	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
 	for (guint i = 0; i < self->num_mcu; i++) {
-		g_autoptr(FuDevice) dev_tmp =
-		    fu_asus_hid_child_device_new(fu_device_get_context(device), i);
-
-		fu_device_set_proxy(dev_tmp, device);
+		g_autoptr(FuDevice) dev_tmp = fu_asus_hid_child_device_new(device, i);
 		fu_device_add_child(device, dev_tmp);
 	}
 
