@@ -155,6 +155,27 @@ fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	name = g_strdup_printf("Microcontroller %u", self->idx);
+	fu_device_set_name(FU_DEVICE(self), name);
+
+	if (fu_device_has_flag(fu_device_get_proxy(FU_DEVICE(self)),
+			       FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_autofree gchar *recovery_str = g_strdup_printf("%d", self->idx);
+		// RC71LS = 0
+		// RC71LM = 1
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "RECOVERY", recovery_str);
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    "USB",
+					    "VID",
+					    "PID",
+					    "RECOVERY",
+					    NULL);
+		fu_device_set_logical_id(FU_DEVICE(self), recovery_str);
+		fu_device_set_version(FU_DEVICE(self), "0");
+		return TRUE;
+	}
+
 	if (!fu_asus_hid_child_device_ensure_manufacturer(self, error)) {
 		g_prefix_error(error, "failed to ensure manufacturer: ");
 		return FALSE;
@@ -163,9 +184,6 @@ fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to ensure version: ");
 		return FALSE;
 	}
-
-	name = g_strdup_printf("Microcontroller %u", self->idx);
-	fu_device_set_name(FU_DEVICE(self), name);
 
 	return TRUE;
 }
