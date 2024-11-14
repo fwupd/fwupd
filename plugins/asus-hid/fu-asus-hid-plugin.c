@@ -26,8 +26,8 @@ fu_asus_hid_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_ASUS_HID_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ASUS_HID_CHILD_DEVICE); /* coverage */
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_ASUS_HID_DEVICE);
 	fu_context_add_quirk_key(ctx, "AsusHidNumMcu");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ASUS_HID_FIRMWARE);
 }
