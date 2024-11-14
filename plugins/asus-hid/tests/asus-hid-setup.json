@@ -124,39 +124,39 @@
           "Data": "Ti1LRVkgRGV2aWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0002,Data=WtEBAQEA,Length=0x6",
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WtEBAQEA,Length=0x6",
           "Data": "WtEBAQEA"
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0002,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
           "Data": "WkFTVVNUZWNoLkluYy4AAA=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0002,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
           "Data": "WkFTVVNUZWNoLkluYy4AAGUAdgBpAGMAZQAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0002,Data=WgUDMQAg,Length=0x6",
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WgUDMQAg,Length=0x6",
           "Data": "WgUDMQAg"
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0002,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
           "Data": "WgUDMQAaE0ZHQTgwMTAwLlJDNzFMUy4zMTEAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0002,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
           "Data": "WkFTVVNUZWNoLkluYy4AAA=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0002,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
           "Data": "WkFTVVNUZWNoLkluYy4AAFJDNzFMUy4zMTEAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0002,Data=WgUEMQAg,Length=0x6",
+          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WgUEMQAg,Length=0x6",
           "Data": "WgUEMQAg"
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0002,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
           "Data": "WgUEMQAaE0ZHQTgwMTAwLlJDNzFMTS4zMTEAAAAAAAA="
         }
       ]

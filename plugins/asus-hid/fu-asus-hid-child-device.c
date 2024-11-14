@@ -16,7 +16,7 @@ struct _FuAsusHidChildDevice {
 	guint8 idx;
 };
 
-G_DEFINE_TYPE(FuAsusHidChildDevice, fu_asus_hid_child_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuAsusHidChildDevice, fu_asus_hid_child_device, FU_TYPE_DEVICE)
 
 #define FU_ASUS_HID_CHILD_DEVICE_TIMEOUT 200 /* ms */
 
@@ -150,6 +150,11 @@ fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 	FuAsusHidChildDevice *self = FU_ASUS_HID_CHILD_DEVICE(device);
 	g_autofree gchar *name = NULL;
 
+	if (fu_device_get_proxy(FU_DEVICE(self)) == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+		return FALSE;
+	}
+
 	if (!fu_asus_hid_child_device_ensure_manufacturer(self, error)) {
 		g_prefix_error(error, "failed to ensure manufacturer: ");
 		return FALSE;
@@ -169,8 +174,6 @@ static gboolean
 fu_asus_hid_child_device_reload(FuDevice *device, GError **error)
 {
 	FuAsusHidChildDevice *self = FU_ASUS_HID_CHILD_DEVICE(device);
-
-	fu_hid_device_set_interface(FU_HID_DEVICE(device), 2);
 
 	return fu_asus_hid_child_device_ensure_version(self, error);
 }

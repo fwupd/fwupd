@@ -16,7 +16,7 @@ G_DECLARE_FINAL_TYPE(FuAsusHidChildDevice,
 		     fu_asus_hid_child_device,
 		     FU,
 		     ASUS_HID_CHILD_DEVICE,
-		     FuHidDevice)
+		     FuDevice)
 
 FuDevice *
 fu_asus_hid_child_device_new(FuContext *ctx, guint8 idx) G_GNUC_NON_NULL(1);

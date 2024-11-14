@@ -80,6 +80,8 @@ fu_asus_hid_device_probe(FuDevice *device, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
 
+	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
+
 	for (guint i = 0; i < self->num_mcu; i++) {
 		g_autoptr(FuDevice) dev_tmp =
 		    fu_asus_hid_child_device_new(fu_device_get_context(device), i);
@@ -462,9 +464,6 @@ fu_asus_hid_device_write_firmware(FuDevice *device,
 				    "upgrades have not yet been validated");
 		return FALSE;
 	}
-
-	/* TODO: why isn't this applying from probe() to bootloader in emulation case? */
-	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
 	if (!fu_asus_hid_device_verify_ite_part(self, error))
 		return FALSE;
