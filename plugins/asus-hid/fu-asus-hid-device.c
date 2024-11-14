@@ -13,6 +13,7 @@
 struct _FuAsusHidDevice {
 	FuHidDevice parent_instance;
 	guint8 num_mcu;
+	gulong child_added_id;
 };
 
 G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HID_DEVICE)
@@ -73,6 +74,15 @@ fu_asus_hid_device_init_seq(FuAsusHidDevice *self, GError **error)
 	}
 
 	return TRUE;
+}
+
+static void
+fu_asus_hid_device_child_added_cb(FuDevice *device, FuDevice *child, gpointer user_data)
+{
+	g_debug("child %s added to parent %s updating proxy",
+		fu_device_get_id(child),
+		fu_device_get_id(device));
+	fu_device_set_proxy(child, device);
 }
 
 static gboolean
@@ -516,18 +526,37 @@ fu_asus_hid_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_asus_hid_device_dispose(GObject *object)
+{
+	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(object);
+
+	if (self->child_added_id != 0) {
+		g_signal_handler_disconnect(FU_DEVICE(self), self->child_added_id);
+		self->child_added_id = 0;
+	}
+
+	G_OBJECT_CLASS(fu_asus_hid_device_parent_class)->dispose(object);
+}
+
+static void
 fu_asus_hid_device_init(FuAsusHidDevice *self)
 {
 	/* TODO: automatic backup */
 	// fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
+	self->child_added_id = g_signal_connect(FU_DEVICE(self),
+						"child-added",
+						G_CALLBACK(fu_asus_hid_device_child_added_cb),
+						self);
 }
 
 static void
 fu_asus_hid_device_class_init(FuAsusHidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->dispose = fu_asus_hid_device_dispose;
 	device_class->setup = fu_asus_hid_device_setup;
 	device_class->probe = fu_asus_hid_device_probe;
 	device_class->set_quirk_kv = fu_asus_hid_device_set_quirk_kv;
