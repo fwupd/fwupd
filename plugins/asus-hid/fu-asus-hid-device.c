@@ -78,10 +78,16 @@ fu_asus_hid_device_init_seq(FuAsusHidDevice *self, GError **error)
 static gboolean
 fu_asus_hid_device_probe(FuDevice *device, GError **error)
 {
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
-	else
-		fu_hid_device_set_interface(FU_HID_DEVICE(device), 2);
+	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
+
+	for (guint i = 0; i < self->num_mcu; i++) {
+		g_autoptr(FuDevice) dev_tmp =
+		    fu_asus_hid_child_device_new(fu_device_get_context(device), i);
+
+		fu_device_set_version_format(dev_tmp, FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_proxy(dev_tmp, device);
+		fu_device_add_child(device, dev_tmp);
+	}
 
 	/* FuHidDevice->probe */
 	return FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->probe(device, error);
@@ -102,20 +108,6 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 
 	if (!fu_asus_hid_device_init_seq(self, error))
 		return FALSE;
-
-	for (guint i = 0; i < self->num_mcu; i++) {
-		g_autoptr(FuDevice) dev_tmp =
-		    fu_asus_hid_child_device_new(fu_device_get_context(device), i);
-
-		fu_device_set_version_format(dev_tmp, FWUPD_VERSION_FORMAT_PLAIN);
-		fu_device_set_proxy(dev_tmp, device);
-
-		if (!fu_device_setup(dev_tmp, error))
-			return FALSE;
-
-		fu_device_set_proxy(dev_tmp, NULL);
-		fu_device_add_child(device, dev_tmp);
-	}
 
 	/* success */
 	return TRUE;
