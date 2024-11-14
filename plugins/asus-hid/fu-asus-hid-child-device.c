@@ -237,40 +237,40 @@ fu_asus_hid_child_device_write_firmware(FuDevice *device,
 					FwupdInstallFlags flags,
 					GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
 
-	return fu_asus_hid_device_write_firmware(parent, firmware, progress, flags, error);
+	return fu_asus_hid_device_write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static gboolean
 fu_asus_hid_child_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
 
-	return fu_device_attach(parent, error);
+	return fu_device_attach(proxy, error);
 }
 
 static gboolean
 fu_asus_hid_child_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
 		return FALSE;
 	}
 
-	return fu_device_detach(parent, error);
+	return fu_device_detach(proxy, error);
 }
 
 static void
