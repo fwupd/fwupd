@@ -4999,11 +4999,6 @@ main(int argc, char *argv[])
 	textdomain(GETTEXT_PACKAGE);
 	g_set_prgname(fu_util_get_prgname(argv[0]));
 
-#ifndef SUPPORTED_BUILD
-	/* make critical warnings fatal */
-	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
-#endif
-
 	/* ensure D-Bus errors are registered */
 	(void)fwupd_error_quark();
 

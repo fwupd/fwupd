@@ -45,11 +45,6 @@ main(int argc, char **argv)
 
 	setlocale(LC_ALL, "");
 
-#ifndef SUPPORTED_BUILD
-	/* make critical warnings fatal */
-	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
-#endif
-
 	g_option_context_add_main_entries(context, options, NULL);
 	if (!g_option_context_parse(context, &argc, &argv, &error)) {
 		g_printerr("Failed to parse arguments: %s\n", error->message);

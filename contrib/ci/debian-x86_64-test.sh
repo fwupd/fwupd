@@ -11,6 +11,7 @@ fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 ./contrib/ci/get_test_firmware.sh
 cp fwupd-test-firmware/installed-tests/* /usr/share/installed-tests/fwupd/ -LRv
 service dbus restart
+G_DEBUG=fatal-criticals /usr/libexec/fwupd/fwupd --verbose &
 gnome-desktop-testing-runner fwupd
 
 # generate coverage report

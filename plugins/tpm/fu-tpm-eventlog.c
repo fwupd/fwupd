@@ -116,11 +116,6 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
-#ifndef SUPPORTED_BUILD
-	/* make critical warnings fatal */
-	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
-#endif
-
 #ifdef HAVE_GETUID
 	/* ensure root user */
 	if (argc < 2 && interactive && (getuid() != 0 || geteuid() != 0))
