@@ -1273,6 +1273,7 @@
   <dependency id="python3-dbusmock">
     <distro id="debian">
       <package variant="x86_64" />
+      <package variant="i386" />
     </distro>
     <distro id="arch">
       <package variant="x86_64">python-dbusmock</package>
