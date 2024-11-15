@@ -14,6 +14,8 @@ CONFARGS =
 
 ifneq ($(CI),)
 	CONFARGS += --werror -Db_coverage=true
+else
+	CONFARGS += -Dsupported_build=enabled
 endif
 
 ifneq ($(DEB_HOST_ARCH_CPU),ia64)
@@ -36,7 +38,7 @@ ifneq ($(filter nodoc,$(DEB_BUILD_PROFILES)),)
 	CONFARGS += -Ddocs=disabled
 endif
 
-CONFARGS += -Dplugin_powerd=disabled -Dsupported_build=enabled -Dplugin_modem_manager=enabled
+CONFARGS += -Dplugin_powerd=disabled -Dplugin_modem_manager=enabled
 
 %:
 	dh $@ --with gir
