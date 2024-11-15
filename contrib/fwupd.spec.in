@@ -235,6 +235,8 @@ fwupd wrapper for Qubes OS
     --werror \
     -Db_coverage=true \
     -Db_sanitize=address,undefined \
+%else
+    -Dsupported_build=enabled \
 %endif
     -Dumockdev_tests=disabled \
     -Ddocs=enabled \
@@ -279,8 +281,7 @@ fwupd wrapper for Qubes OS
     -Dsystemd_unit_user="" \
     -Dbluez=enabled \
     -Dplugin_powerd=disabled \
-    -Dlaunchd=disabled \
-    -Dsupported_build=enabled
+    -Dlaunchd=disabled
 
 %meson_build
 
