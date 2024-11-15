@@ -36,7 +36,7 @@ discover additional metadata about the image. For instance, adding a quirk like:
     [MTD\VENDOR_PINE64&PRODUCT_PinePhone-Pro&NAME_spi1.0]
     FirmwareGType = FuUswidFirmware
 
-... and then append or insert the image into the MTD image with prepared SBoM metadata:
+... and then append or insert the image into the MTD image with prepared SBOM metadata:
 
     pip install uswid
     uswid --load uswid.ini --save metadata.uswid
