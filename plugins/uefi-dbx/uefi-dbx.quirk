@@ -120,3 +120,8 @@ Flags = no-dbx-updates
 # Family=ideacentre 300-20ISH
 [fbc17b82-0f29-561d-be80-578285ec4477]
 Flags = no-dbx-updates
+
+# Manufacturer=SAMSUNG ELECTRONICS CO., LTD.
+# Family=Galaxy Book2 360
+[c4cd9095-8757-593c-8cbd-c7c281c699a7]
+Flags = no-dbx-updates
