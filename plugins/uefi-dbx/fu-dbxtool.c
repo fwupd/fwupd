@@ -167,11 +167,6 @@ main(int argc, char *argv[])
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
-#ifndef SUPPORTED_BUILD
-	/* make critical warnings fatal */
-	(void)g_setenv("G_DEBUG", "fatal-criticals", FALSE);
-#endif
-
 	/* get a action_list of the commands */
 	context = g_option_context_new(NULL);
 	g_option_context_set_description(
