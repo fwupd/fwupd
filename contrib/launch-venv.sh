@@ -27,6 +27,9 @@ if [ ! -f ${EXE} ]; then
         echo "# build-fwupd"
         exit 1
 fi
+if [ -z "${G_DEBUG}" ]; then
+        G_DEBUG="fatal-criticals"
+fi
 ENV="FWUPD_POLKIT_NOCHECK=1 \
      G_DEBUG=${G_DEBUG} \
      LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
