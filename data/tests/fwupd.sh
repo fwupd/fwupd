@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 exec 2>&1
 
@@ -6,7 +6,6 @@ run_test()
 {
         if [ -f @installedtestsbindir@/$1 ]; then
                 @installedtestsbindir@/$1
-                rc=$?; if [ $rc != 0 ]; then exit $rc; fi
         fi
 }
 
@@ -22,7 +21,6 @@ run_device_tests()
 				--no-metadata-check \
 				--verbose \
 				"$f"
-		        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 		done
 		fwupdmgr quit
 	fi
@@ -36,7 +34,6 @@ run_umockdev_test()
 		TESTS=`${INSPECTOR} ${ARG}`
 		for test in ${TESTS}; do
 			${ARG} ${test} --verbose
-			rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 		done
 	fi
 }
