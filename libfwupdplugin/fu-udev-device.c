@@ -77,6 +77,10 @@ static guint signals[SIGNAL_LAST] = {0};
 
 #define GET_PRIVATE(o) (fu_udev_device_get_instance_private(o))
 
+#define FU_UDEV_DEVICE_DUMP_FIRMWARE_SIZE_MAX (16 * 1024 * 1024) /* 16MB */
+
+#define FU_UDEV_DEVICE_DUMP_FIRMWARE_TIMEOUT (10 * 1000) /* ms */
+
 /**
  * fu_udev_device_emit_changed:
  * @self: a #FuUdevDevice
@@ -1848,12 +1852,9 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	guint number_reads = 0;
-	g_autofree gchar *fn = NULL;
+	g_autoptr(FuIOChannel) io_channel = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 
 	/* open the file */
 	if (priv->device_file == NULL) {
@@ -1864,20 +1865,9 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 		return NULL;
 	}
 
-	/* open file */
-	file = g_file_new_for_path(priv->device_file);
-	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error_local));
-	if (stream == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_AUTH_FAILED,
-				    error_local->message);
-		return NULL;
-	}
-
 	/* we have to enable the read for devices */
-	fn = g_file_get_path(file);
-	if (g_str_has_prefix(fn, "/sys")) {
+	if (g_str_has_prefix(priv->device_file, "/sys")) {
+		g_autoptr(GFile) file = g_file_new_for_path(priv->device_file);
 		g_autoptr(GFileOutputStream) output_stream = NULL;
 		output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
 		if (output_stream == NULL) {
@@ -1895,28 +1885,15 @@ fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 		}
 	}
 
-	/* ensure we got enough data to fill the buffer */
-	while (TRUE) {
-		gssize sz;
-		guint8 tmp[32 * 1024] = {0x0};
-		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
-		if (sz == 0)
-			break;
-		g_debug("ROM returned 0x%04x bytes", (guint)sz);
-		if (sz < 0)
-			return NULL;
-		g_byte_array_append(buf, tmp, sz);
-
-		/* check the firmware isn't serving us small chunks */
-		if (number_reads++ > 1024) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "firmware not fulfilling requests");
-			return NULL;
-		}
-	}
-	return g_bytes_new(buf->data, buf->len);
+	/* open file */
+	io_channel = fu_io_channel_new_file(priv->device_file, FU_IO_CHANNEL_OPEN_FLAG_READ, error);
+	if (io_channel == NULL)
+		return NULL;
+	return fu_io_channel_read_bytes(io_channel,
+					FU_UDEV_DEVICE_DUMP_FIRMWARE_SIZE_MAX,
+					FU_UDEV_DEVICE_DUMP_FIRMWARE_TIMEOUT,
+					FU_IO_CHANNEL_FLAG_NONE,
+					error);
 }
 
 /* private */
