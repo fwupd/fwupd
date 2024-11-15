@@ -632,9 +632,6 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GE
 	g_return_val_if_fail(filename != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-#ifdef HAVE_POLL_H
-	flags |= O_NONBLOCK;
-#endif
 	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_READ &&
 	    open_flags & FU_IO_CHANNEL_OPEN_FLAG_WRITE) {
 		flags |= O_RDWR;
