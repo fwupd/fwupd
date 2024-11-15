@@ -664,7 +664,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "not enough SBoM data");
+				    "not enough SBOM data");
 		return FALSE;
 	}
 

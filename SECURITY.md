@@ -60,12 +60,12 @@ Important things to note:
 * The firmware archive internal metadata and firmware payload are both signed
 * Reports have to be signed by the user machine key to be attributable to an OEM or QA team
 * Signed reports are uploaded using a username and access token
-* SBoM metadata is extracted from the payload by the LVFS and formatted into HTML/SWID formats
+* SBOM metadata is extracted from the payload by the LVFS and formatted into HTML/SWID formats
 * Security researchers can only run FwHunt/Yara scans on public firmware
 
 ```mermaid
   flowchart TD
-      LVFS((LVFS Webservice)) -- "SBoM.html" --> User(End User)
+      LVFS((LVFS Webservice)) -- "SBOM.html" --> User(End User)
       LVFS -- "md.[xml|jcat] 🔒" --> CDN(Fastly CDN)
       CDN -- "md.[xml|jcat] 🔒" --> User
       LVFS -- "embargo.[xml|jcat] 🔒" --> User

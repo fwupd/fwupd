@@ -586,7 +586,7 @@
           <li>Rename 'fwupdmgr sync-bkc' to 'fwupdmgr sync' and also consider the branch</li>
           <li>Require additional requirements for devices using non-OEM USB VIDs</li>
           <li>Set the waiting-for-user status when sending a request</li>
-          <li>Support uSWID SBoM data with LZMA compressed payloads</li>
+          <li>Support uSWID SBOM data with LZMA compressed payloads</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
@@ -998,14 +998,14 @@
           This release adds the following features:
         </p>
         <ul>
-          <li>Add a PE/COFF firmware parser to allow reading coSWID SBoM data</li>
+          <li>Add a PE/COFF firmware parser to allow reading coSWID SBOM data</li>
           <li>Allow dumping CFI SPI chips using devices like CH341a</li>
           <li>Refactor the HWIDs functionality to include FDT data</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
           <li>Add back a legacy eMMC GUID to fix a regression</li>
-          <li>Always search for uSWID SBoM data in the image</li>
+          <li>Always search for uSWID SBOM data in the image</li>
           <li>Do not allow LZX compressed cabinet archives</li>
           <li>Fallback to the checksum if the metadata artifact is invalid</li>
           <li>Improve FDT parsing compatibility with new OpenBMC images</li>
@@ -1364,7 +1364,7 @@
         </p>
         <ul>
           <li>Add a new attribute for CPUs supported by HSI</li>
-          <li>Add coSWID and uSWID parsers to libfwupdplugin for initial SBoM support</li>
+          <li>Add coSWID and uSWID parsers to libfwupdplugin for initial SBOM support</li>
           <li>Add new HSI attributes for the AMD PSP and various other system protections</li>
           <li>Add the runtime fwupd-efi version as a firmware requirement</li>
           <li>Allow 'fwupdmgr install' to install a specified firmware version</li>
