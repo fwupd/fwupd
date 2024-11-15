@@ -6280,10 +6280,10 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
 	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED)) {
-		g_warning("%s [%s] does not declare signed/unsigned payload -- perhaps add "
-			  "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
-			  fu_device_get_plugin(device),
-			  fu_device_get_id(device));
+		g_critical("%s [%s] does not declare signed/unsigned payload -- perhaps add "
+			   "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
+			   fu_device_get_plugin(device),
+			   fu_device_get_id(device));
 	}
 #endif
 
