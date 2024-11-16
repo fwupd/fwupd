@@ -55,7 +55,7 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 	self->product = g_strdup(fu_struct_asus_hid_desc_get_product(desc));
 	self->version = g_strdup(fu_struct_asus_hid_desc_get_version(desc));
 
-	stream_payload = fu_partial_input_stream_new(stream, 0x0, G_MAXSIZE, error);
+	stream_payload = fu_partial_input_stream_new(stream, 0x2000, G_MAXSIZE, error);
 	if (stream_payload == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
