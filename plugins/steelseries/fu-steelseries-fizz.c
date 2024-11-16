@@ -708,14 +708,6 @@ fu_steelseries_fizz_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_steelseries_fizz_replace(FuDevice *device, FuDevice *donor)
-{
-	/* copy to device without serial, i.e. USB-C connection in bootloader mode */
-	if (fu_device_get_equivalent_id(device) == NULL)
-		fu_device_set_equivalent_id(device, fu_device_get_equivalent_id(donor));
-}
-
-static void
 fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -723,7 +715,6 @@ fu_steelseries_fizz_class_init(FuSteelseriesFizzClass *klass)
 	device_class->detach = fu_steelseries_fizz_detach;
 	device_class->attach = fu_steelseries_fizz_attach;
 	device_class->setup = fu_steelseries_fizz_setup;
-	device_class->replace = fu_steelseries_fizz_replace;
 	device_class->write_firmware = fu_steelseries_fizz_write_firmware;
 	device_class->read_firmware = fu_steelseries_fizz_read_firmware;
 	device_class->set_progress = fu_steelseries_fizz_set_progress;
