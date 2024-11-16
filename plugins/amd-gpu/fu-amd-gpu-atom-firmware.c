@@ -123,6 +123,11 @@ fu_amd_gpu_atom_firmware_parse_vbios_date(FuAmdGpuAtomFirmware *self,
 					  GError **error)
 {
 	g_autoptr(GByteArray) st = fu_struct_atom_image_get_vbios_date(atom_image);
+	g_autofree gchar *year = NULL;
+	g_autofree gchar *month = NULL;
+	g_autofree gchar *day = NULL;
+	g_autofree gchar *hours = NULL;
+	g_autofree gchar *minutes = NULL;
 
 	if (st == NULL) {
 		g_set_error(error,
@@ -132,13 +137,14 @@ fu_amd_gpu_atom_firmware_parse_vbios_date(FuAmdGpuAtomFirmware *self,
 		return FALSE;
 	}
 
+	year = fu_struct_vbios_date_get_year(st);
+	month = fu_struct_vbios_date_get_month(st);
+	day = fu_struct_vbios_date_get_day(st);
+	hours = fu_struct_vbios_date_get_hours(st);
+	minutes = fu_struct_vbios_date_get_minutes(st);
+
 	/* same date format as atom_get_vbios_date() */
-	self->bios_date = g_strdup_printf("20%s/%s/%s %s:%s",
-					  fu_struct_vbios_date_get_year(st),
-					  fu_struct_vbios_date_get_month(st),
-					  fu_struct_vbios_date_get_day(st),
-					  fu_struct_vbios_date_get_hours(st),
-					  fu_struct_vbios_date_get_minutes(st));
+	self->bios_date = g_strdup_printf("20%s/%s/%s %s:%s", year, month, day, hours, minutes);
 
 	return TRUE;
 }

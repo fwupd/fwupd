@@ -51,9 +51,9 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 	desc = fu_struct_asus_hid_desc_parse_stream(stream, FGA_OFFSET, error);
 	if (desc == NULL)
 		return FALSE;
-	self->fga = g_strdup(fu_struct_asus_hid_desc_get_fga(desc));
-	self->product = g_strdup(fu_struct_asus_hid_desc_get_product(desc));
-	self->version = g_strdup(fu_struct_asus_hid_desc_get_version(desc));
+	self->fga = fu_struct_asus_hid_desc_get_fga(desc);
+	self->product = fu_struct_asus_hid_desc_get_product(desc);
+	self->version = fu_struct_asus_hid_desc_get_version(desc);
 
 	stream_payload = fu_partial_input_stream_new(stream, 0x2000, G_MAXSIZE, error);
 	if (stream_payload == NULL)

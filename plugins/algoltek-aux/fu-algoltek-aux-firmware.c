@@ -32,7 +32,7 @@ fu_algoltek_aux_firmware_parse(FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
-	const gchar *version;
+	g_autofree gchar *version = NULL;
 	gsize offset = 0;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
