@@ -5914,6 +5914,17 @@ fu_plugin_struct_bits_func(void)
 }
 
 static void
+fu_plugin_struct_list_func(void)
+{
+	guint num = 5; // fixed size
+
+	/* size */
+	g_assert_cmpint(FU_STRUCT_SELF_TEST_LIST_MEMBER_SIZE * num,
+			==,
+			FU_STRUCT_SELF_TEST_LIST_SIZE_DATALIST);
+}
+
+static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
@@ -6113,6 +6124,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
+	g_test_add_func("/fwupd/struct{list}", fu_plugin_struct_list_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);

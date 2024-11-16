@@ -40,3 +40,13 @@ struct FuStructSelfTestBits {
     middle: u1 = 0b1,
     upper: u4 = 0xF,
 }
+
+struct FuStructSelfTestListMember {
+    data1: u8,
+    data2: u8,
+}
+
+#[derive(New, Getters, Parse)]
+struct FuStructSelfTestList {
+    datalist: [FuStructSelfTestListMember; 5],
+}
