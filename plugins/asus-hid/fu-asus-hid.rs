@@ -87,32 +87,10 @@ struct FuStructAsusPreUpdateCommand {
 
 // Flashing sequence
 
-#[repr(u8)]
-enum FuAsusHidFlashCommand {
-    IdentifyFlash = 0xf0200007,
-    ReadFlash = 0xd1,
-    ClearRemoteBuffer = 0xc0,
-    WritePage = 0xc1,
-    Flash4 = 0xc2,
-    FlushPage = 0xc3,
-    VerifyPage = 0xd0,
-    FlashReset = 0xc4,
-}
-
 #[derive(Default, New)]
-struct FuStructFlashIdentify {
-    command: u8 == 0x07,
-    offset: u24 = 0xf02000,
-    datasz: u8 == 0x2,
-    data: [u8; 58],
-}
-
-#[derive(New, Getters)]
-struct FuStructFlashIdentifyResponse {
-    command: u32,
-    datasz: u8,
-    part: u16,
-    data: [u8; 56],
+struct FuStructAsusFlashReset {
+    command: u8 == 0xc4,
+    reserved: [u8; 62],
 }
 
 #[derive(Default, New, Getters)]
@@ -122,46 +100,3 @@ struct FuStructAsusReadFlashCommand {
     datasz: u8,
     data: [u8; 58],
 }
-
-#[derive(Default, New)]
-struct FuStructAsusWriteFlashCommand {
-    command: u8 == 0xc1,
-    offset: u16,
-    datasz: u8,
-    data: [u8; 59],
-}
-
-#[derive(Default, New)]
-struct FuStructAsusFlashReset {
-    command: u8 == 0xc4,
-    reserved: [u8; 62],
-}
-
-#[derive(Default, New)]
-struct FuStructAsusFlushPage {
-    command: u8 == 0xc3,
-    address: u32,
-    page_size: u16be == 0x400,
-    reserved: [u8; 56],
-}
-
-#[derive(Default, New)]
-struct FuStructAsusClearBuffer {
-    command: u8 == 0xc0,
-    reserved: [u8; 62],
-}
-
-#[derive(Default, New)]
-struct FuStructAsusVerifyBuffer {
-    command: u8 == 0xd0,
-    reserved: [u8; 62],
-}
-
-#[derive(Default, New)]
-struct FuStructAsusVerifyResult {
-    command: u8 == 0xd0,
-    reserved: [u8; 62],
-}
-
-// Wire shark filter
-// !(usbhid.setup.ReportID == 13) && _ws.col.protocol == "USBHID" && !(_ws.col.info == "SET_IDLE Request") && !(_ws.col.info == "SET_IDLE Response")

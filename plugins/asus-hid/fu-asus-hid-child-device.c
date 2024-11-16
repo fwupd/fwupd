@@ -196,57 +196,6 @@ fu_asus_hid_child_device_reload(FuDevice *device, GError **error)
 	return fu_asus_hid_child_device_ensure_version(self, error);
 }
 
-static FuFirmware *
-fu_asus_hid_child_device_prepare_firmware(FuDevice *device,
-					  GInputStream *stream,
-					  FuProgress *progress,
-					  FwupdInstallFlags flags,
-					  GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_asus_hid_firmware_new();
-	const gchar *fw_pn;
-	const gchar *logical;
-
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
-	fw_pn = fu_asus_hid_firmware_get_product(firmware);
-	logical = fu_device_get_logical_id(device);
-	if (g_strcmp0(fw_pn, logical) != 0) {
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware for %s does not match %s",
-				    fw_pn,
-				    logical);
-			return NULL;
-		}
-		g_warning("firmware for %s does not match %s but is being force installed anyway",
-			  fw_pn,
-			  logical);
-	}
-
-	return g_steal_pointer(&firmware);
-}
-
-static gboolean
-fu_asus_hid_child_device_write_firmware(FuDevice *device,
-					FuFirmware *firmware,
-					FuProgress *progress,
-					FwupdInstallFlags flags,
-					GError **error)
-{
-	FuDevice *proxy = fu_device_get_proxy(device);
-
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
-		return FALSE;
-	}
-
-	return fu_asus_hid_device_write_firmware(proxy, firmware, progress, flags, error);
-}
-
 static gboolean
 fu_asus_hid_child_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -277,9 +226,7 @@ static void
 fu_asus_hid_child_device_init(FuAsusHidChildDevice *self)
 {
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.asus.hid");
-	// TODO: is it?
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
@@ -290,8 +237,6 @@ fu_asus_hid_child_device_class_init(FuAsusHidChildDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_asus_hid_child_device_to_string;
-	device_class->prepare_firmware = fu_asus_hid_child_device_prepare_firmware;
-	device_class->write_firmware = fu_asus_hid_child_device_write_firmware;
 	device_class->detach = fu_asus_hid_child_device_detach;
 	device_class->attach = fu_asus_hid_child_device_attach;
 	device_class->setup = fu_asus_hid_child_device_setup;

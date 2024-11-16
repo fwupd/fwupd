@@ -10,9 +10,3 @@
 
 #define FU_TYPE_ASUS_HID_FIRMWARE (fu_asus_hid_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuAsusHidFirmware, fu_asus_hid_firmware, FU, ASUS_HID_FIRMWARE, FuFirmware)
-
-const gchar *
-fu_asus_hid_firmware_get_product(FuFirmware *firmware);
-
-FuFirmware *
-fu_asus_hid_firmware_new(void);

@@ -30,13 +30,6 @@ fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 	fu_xmlb_builder_insert_kv(bn, "version", self->version);
 }
 
-const gchar *
-fu_asus_hid_firmware_get_product(FuFirmware *firmware)
-{
-	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
-	return self->product;
-}
-
 static gboolean
 fu_asus_hid_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
@@ -89,10 +82,4 @@ fu_asus_hid_firmware_class_init(FuAsusHidFirmwareClass *klass)
 	object_class->finalize = fu_asus_hid_firmware_finalize;
 	firmware_class->parse = fu_asus_hid_firmware_parse;
 	firmware_class->export = fu_asus_hid_firmware_export;
-}
-
-FuFirmware *
-fu_asus_hid_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_ASUS_HID_FIRMWARE, NULL));
 }
