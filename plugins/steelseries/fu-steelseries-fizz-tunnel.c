@@ -262,7 +262,6 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 						     &error_local);
 	if (serial != NULL) {
 		fu_device_set_serial(device, serial);
-		fu_device_set_equivalent_id(device, serial);
 	} else {
 		g_debug("ignoring error: %s", error_local->message);
 	}
