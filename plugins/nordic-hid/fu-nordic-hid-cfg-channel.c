@@ -128,7 +128,6 @@ fu_nordic_hid_cfg_channel_module_free(FuNordicCfgChannelModule *mod)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelModule, fu_nordic_hid_cfg_channel_module_free);
 
-#ifdef HAVE_HIDRAW_H
 static FuUdevDevice *
 fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **error)
 {
@@ -148,7 +147,6 @@ fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **
 
 	return self->parent_udev;
 }
-#endif
 
 static gboolean
 fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
@@ -156,7 +154,6 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 			       gsize bufsz,
 			       GError **error)
 {
-#ifdef HAVE_HIDRAW_H
 	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
 	if (udev_device == NULL)
 		return FALSE;
@@ -165,13 +162,6 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 					    bufsz,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -181,7 +171,6 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 				  GError **error)
 {
 	g_autoptr(FuNordicCfgChannelMsg) recv_msg = g_new0(FuNordicCfgChannelMsg, 1);
-#ifdef HAVE_HIDRAW_H
 	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
 	if (udev_device == NULL)
 		return FALSE;
@@ -221,13 +210,6 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	 * plugins/pixart-rf/fu-pxi-ble-device.c for an example.
 	 */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
