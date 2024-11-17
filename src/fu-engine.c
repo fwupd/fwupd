@@ -419,6 +419,7 @@ fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_device_is_updatable(device) &&
 	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_lid_state(self->ctx) == FU_LID_STATE_CLOSED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_LID_IS_CLOSED);
 		return;
@@ -431,6 +432,7 @@ fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *devic
 {
 	if (fu_device_is_updatable(device) &&
 	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_display_state(self->ctx) == FU_DISPLAY_STATE_DISCONNECTED) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_DISPLAY_REQUIRED);
 		return;
@@ -441,7 +443,8 @@ fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *devic
 static void
 fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
 {
-	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
+	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_SYSTEM_INHIBIT);
 		return;
 	}
