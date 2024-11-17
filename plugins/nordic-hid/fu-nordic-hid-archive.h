@@ -9,8 +9,4 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_NORDIC_HID_ARCHIVE (fu_nordic_hid_archive_get_type())
-G_DECLARE_FINAL_TYPE(FuNordicHidArchive,
-		     fu_nordic_hid_archive,
-		     FU,
-		     NORDIC_HID_ARCHIVE,
-		     FuArchiveFirmware)
+G_DECLARE_FINAL_TYPE(FuNordicHidArchive, fu_nordic_hid_archive, FU, NORDIC_HID_ARCHIVE, FuFirmware)
