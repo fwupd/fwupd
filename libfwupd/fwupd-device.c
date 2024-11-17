@@ -468,7 +468,7 @@ fwupd_device_set_parent_id(FwupdDevice *self, const gchar *parent_id)
 		return;
 
 	/* sanity check */
-	if (!fwupd_device_id_is_valid(parent_id)) {
+	if (parent_id != NULL && !fwupd_device_id_is_valid(parent_id)) {
 		g_critical("%s is not a valid device ID", parent_id);
 		return;
 	}
