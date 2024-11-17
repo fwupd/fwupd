@@ -134,7 +134,7 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 			return FALSE;
 
 		if (self->windows_hid_tool_ver >= FU_TELINK_DEVICE_WINDOWS_TOOL_VERSION(5, 2)) {
-			FuStructTelinkDfuHidPktPayload *st_payload =
+			g_autoptr(FuStructTelinkDfuHidPktPayload) st_payload =
 			    fu_struct_telink_dfu_hid_pkt_get_payload(st_pkt);
 			/* TODO: find a better method to declare the structure array */
 			payload_index = i % 3;
@@ -142,7 +142,7 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 			    st_long_pkt,
 			    FU_TELINK_DFU_HID_DEVICE_OTA_DATA_LEN * (payload_index + 1));
 			if (payload_index == 0) {
-				FuStructTelinkDfuHidPktPayload *st_default_payload =
+				g_autoptr(FuStructTelinkDfuHidPktPayload) st_default_payload =
 				    fu_struct_telink_dfu_hid_pkt_payload_new();
 				if (!fu_struct_telink_dfu_hid_long_pkt_set_payload_1(st_long_pkt,
 										     st_payload,
