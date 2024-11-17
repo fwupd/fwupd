@@ -823,10 +823,12 @@ fu_engine_requirements_check(FuEngine *self,
 
 	/* sanity check */
 	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "device is not updatable");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s [%s] is not updatable",
+			    fu_device_get_name(device),
+			    fu_device_get_id(device));
 		return FALSE;
 	}
 
