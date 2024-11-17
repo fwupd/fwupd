@@ -45,7 +45,8 @@ fu_rp_pico_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 					    2000,
 					    NULL,
 					    &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring expected error %s", error_local->message);
 		} else {
 			g_propagate_prefixed_error(error,
