@@ -396,6 +396,7 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 
 	if (fu_device_is_updatable(device) &&
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    !fu_power_state_is_ac(fu_context_get_power_state(self->ctx))) {
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_REQUIRE_AC_POWER);
 	} else {
@@ -403,6 +404,7 @@ fu_engine_ensure_device_power_inhibit(FuEngine *self, FuDevice *device)
 	}
 	if (fu_device_is_updatable(device) &&
 	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
