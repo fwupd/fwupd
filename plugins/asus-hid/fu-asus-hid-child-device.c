@@ -125,11 +125,8 @@ fu_asus_hid_child_device_ensure_version(FuAsusHidChildDevice *self, GError **err
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	if (fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
-		fu_device_add_instance_strsafe(
-		    FU_DEVICE(self),
-		    "PART",
-		    fu_struct_asus_hid_desc_get_product(
-			fu_struct_asus_hid_fw_info_get_description(result)));
+		g_autofree gchar *product = fu_struct_asus_hid_desc_get_product(fw_info);
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "PART", product);
 		fu_device_build_instance_id(FU_DEVICE(self),
 					    NULL,
 					    "USB",
@@ -138,9 +135,7 @@ fu_asus_hid_child_device_ensure_version(FuAsusHidChildDevice *self, GError **err
 					    "PART",
 					    NULL);
 
-		fu_device_set_logical_id(FU_DEVICE(self),
-					 fu_struct_asus_hid_desc_get_product(
-					     fu_struct_asus_hid_fw_info_get_description(result)));
+		fu_device_set_logical_id(FU_DEVICE(self), product);
 	}
 
 	return TRUE;
