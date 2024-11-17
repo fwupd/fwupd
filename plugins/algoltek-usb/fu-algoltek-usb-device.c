@@ -344,7 +344,7 @@ static gboolean
 fu_algoltek_usb_device_status_check_cb(FuDevice *self, gpointer user_data, GError **error)
 {
 	guint8 update_status;
-	g_autoptr(GByteArray) update_status_array = g_byte_array_new();
+	g_autoptr(GByteArray) update_status_array = NULL;
 
 	update_status_array =
 	    fu_algoltek_usb_device_rdr(FU_ALGOLTEK_USB_DEVICE(self), AG_UPDATE_STATUS, error);
