@@ -5914,6 +5914,42 @@ fu_plugin_struct_bits_func(void)
 }
 
 static void
+fu_plugin_struct_list_func(void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuStructSelfTestList) st = fu_struct_self_test_list_new();
+
+	for (guint i = 0; i < FU_STRUCT_SELF_TEST_LIST_N_ELEMENTS_BASIC; i++) {
+		fu_struct_self_test_list_set_basic(st, i, i * 16);
+		g_assert_cmpint(fu_struct_self_test_list_get_basic(st, i), ==, i * 16);
+	}
+
+	for (guint i = 0; i < FU_STRUCT_SELF_TEST_LIST_N_ELEMENTS_MEMBERS; i++) {
+		gboolean ret;
+		g_autoptr(FuStructSelfTestListMember) st2 = fu_struct_self_test_list_member_new();
+		g_autoptr(FuStructSelfTestListMember) st3 = NULL;
+		g_autoptr(GError) error = NULL;
+
+		fu_struct_self_test_list_member_set_data1(st2, i * 16);
+		fu_struct_self_test_list_member_set_data2(st2, i * 32);
+		ret = fu_struct_self_test_list_set_members(st, i, st2, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		st3 = fu_struct_self_test_list_get_members(st, i);
+		g_assert_cmpint(fu_struct_self_test_list_member_get_data1(st3), ==, i * 16);
+		g_assert_cmpint(fu_struct_self_test_list_member_get_data2(st3), ==, i * 32);
+	}
+
+	/* size */
+	str = fu_byte_array_to_string(st);
+	g_assert_cmpstr(
+	    str,
+	    ==,
+	    "000000001000000020000000300000004000000050000000600000007000000000001020204030604080");
+}
+
+static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
@@ -6025,6 +6061,7 @@ fu_plugin_struct_wrapped_func(void)
 
 	/* to string */
 	str2 = fu_struct_self_test_wrapped_to_string(st);
+	g_debug("%s", str2);
 	g_assert_cmpstr(str2,
 			==,
 			"FuStructSelfTestWrapped:\n"
@@ -6113,6 +6150,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);
+	g_test_add_func("/fwupd/struct{list}", fu_plugin_struct_list_func);
 	g_test_add_func("/fwupd/struct{wrapped}", fu_plugin_struct_wrapped_func);
 	g_test_add_func("/fwupd/plugin{quirks-append}", fu_plugin_quirks_append_func);
 	g_test_add_func("/fwupd/quirks{vendor-ids}", fu_quirks_vendor_ids_func);
