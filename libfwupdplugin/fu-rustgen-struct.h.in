@@ -28,33 +28,62 @@ gchar *{{obj.c_method('ToString')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G
 
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Getters') == Export.PUBLIC %}
+
 {%- if item.type == Type.STRING %}
 gchar *{{item.c_getter}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+
 {%- elif item.struct_obj %}
+{%- if item.n_elements %}
+{{item.struct_obj.name}} *{{item.c_getter}}(const {{obj.name}} *st, guint idx) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- else %}
 {{item.struct_obj.name}} *{{item.c_getter}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
-{%- elif item.type == Type.U8 and item.multiplier %}
+{%- endif %}
+
+{%- elif item.type == Type.U8 and item.n_elements %}
 const guint8 *{{item.c_getter}}(const {{obj.name}} *st, gsize *bufsz) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+
 {%- elif item.type == Type.GUID %}
 const fwupd_guid_t *{{item.c_getter}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
-{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+
+{%- elif item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+{%- if item.n_elements %}
+{{item.type_glib}} {{item.c_getter}}(const {{obj.name}} *st, guint idx) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- else %}
 {{item.type_glib}} {{item.c_getter}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- endif %}
+
 {%- endif %}
 {%- endif %}
 {%- endfor %}
 
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Setters') == Export.PUBLIC %}
+
 {%- if item.type == Type.STRING %}
 gboolean {{item.c_setter}}({{obj.name}} *st, const gchar *value, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+
 {%- elif item.struct_obj %}
+{%- if item.n_elements %}
+gboolean
+{{item.c_setter}}({{obj.name}} *st, guint idx, const {{item.struct_obj.name}} *st_donor, GError **error) G_GNUC_NON_NULL(1, 3) G_GNUC_WARN_UNUSED_RESULT;
+{%- else %}
 gboolean
 {{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error) G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
-{%- elif item.type == Type.U8 and item.multiplier %}
+{%- endif %}
+
+{%- elif item.type == Type.U8 and item.n_elements %}
 gboolean {{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error) G_GNUC_NON_NULL(1, 2) G_GNUC_WARN_UNUSED_RESULT;
+
 {%- elif item.type == Type.GUID %}
 void {{item.c_setter}}({{obj.name}} *st, const fwupd_guid_t *value) G_GNUC_NON_NULL(1, 2);
-{%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+
+{%- elif item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+{%- if item.n_elements %}
+void {{item.c_setter}}({{obj.name}} *st, guint idx, {{item.type_glib}} value) G_GNUC_NON_NULL(1);
+{%- else %}
 void {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value) G_GNUC_NON_NULL(1);
+{%- endif %}
+
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -68,15 +97,16 @@ void {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value) G_GNUC_NON_NU
 #endif
 
 #ifndef __GI_SCANNER__
-{%- for item in obj.items | selectattr('enabled') | selectattr('multiplier') %}
+{%- for item in obj.items | selectattr('enabled') | selectattr('n_elements') %}
 #define {{item.c_define('SIZE')}} 0x{{'{:X}'.format(item.size)}}
+#define {{item.c_define('N_ELEMENTS')}} {{item.n_elements}}
 {%- endfor %}
 #define {{obj.c_define('SIZE')}} 0x{{'{:X}'.format(obj.size)}}
 #endif
 
 #ifndef __GI_SCANNER__
 {%- for item in obj.items | selectattr('enabled') | selectattr('default') %}
-{%- if item.type == Type.STRING or item.multiplier %}
+{%- if item.type == Type.STRING or item.type == Type.GUID or item.n_elements %}
 #define {{item.c_define('DEFAULT')}} "{{item.default}}"
 {%- else %}
 #define {{item.c_define('DEFAULT')}} {{item.default}}
