@@ -50,7 +50,7 @@ jobs:
           path: ${{ github.workspace }}/coverage.xml
       - name: Upload to codecov
         if: matrix.os == 'debian-x86_64' || matrix.os == 'debian-i386' || matrix.os == 'arch'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
