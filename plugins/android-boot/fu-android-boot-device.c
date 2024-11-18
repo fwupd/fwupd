@@ -113,6 +113,13 @@ fu_android_boot_device_setup(FuDevice *device, GError **error)
 	 * unique Devices have a fixed partition scheme anyway because they originally have Android
 	 * which has such requirements.
 	 */
+	if (fu_block_partition_get_fs_uuid(FU_BLOCK_PARTITION(self)) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no partition UUID");
+		return FALSE;
+	}
 	fu_device_add_instance_strsafe(device,
 				       "UUID",
 				       fu_block_partition_get_fs_uuid(FU_BLOCK_PARTITION(self)));
