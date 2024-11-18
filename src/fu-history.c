@@ -457,14 +457,15 @@ static gboolean
 fu_history_migrate_database_v12(FuHistory *self, GError **error)
 {
 	gint rc;
-	rc = sqlite3_exec(self->db,
-			  "BEGIN TRANSACTION;"
-			  "CREATE TABLE emulation_tag (device_id TEXT);"
-			  "CREATE UNIQUE INDEX idx_device_id ON emulation_tag (device_id);"
-			  "COMMIT;",
-			  NULL,
-			  NULL,
-			  NULL);
+	rc = sqlite3_exec(
+	    self->db,
+	    "BEGIN TRANSACTION;"
+	    "CREATE TABLE IF NOT EXISTS emulation_tag (device_id TEXT);"
+	    "CREATE UNIQUE INDEX IF NOT EXISTS idx_device_id ON emulation_tag (device_id);"
+	    "COMMIT;",
+	    NULL,
+	    NULL,
+	    NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
