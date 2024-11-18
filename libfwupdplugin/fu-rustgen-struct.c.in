@@ -12,7 +12,23 @@
     g_return_val_if_fail(st != NULL, NULL);
     return fu_memstrsafe(st->data, st->len, {{item.offset}}, {{item.size}}, NULL);
 }
+
 {%- elif item.struct_obj %}
+{%- if item.n_elements %}
+{{export.value}}{{item.struct_obj.name}} *
+{{item.c_getter}}(const {{obj.name}} *st, guint idx)
+{
+    g_autoptr(GByteArray) buf = g_byte_array_new();
+    g_return_val_if_fail(st != NULL, NULL);
+    g_return_val_if_fail(idx < {{item.n_elements}}, NULL);
+    g_byte_array_append(buf,
+                        st->data
+                            + {{item.c_define('OFFSET')}}
+                            + ({{item.struct_obj.c_define('SIZE')}} * idx),
+                        {{item.struct_obj.size}});
+    return g_steal_pointer(&buf);
+}
+{%- else %}
 {{export.value}}{{item.struct_obj.name}} *
 {{item.c_getter}}(const {{obj.name}} *st)
 {
@@ -21,7 +37,9 @@
     g_byte_array_append(buf, st->data + {{item.c_define('OFFSET')}}, {{item.size}});
     return g_steal_pointer(&buf);
 }
-{%- elif item.type == Type.U8 and item.multiplier %}
+{%- endif %}
+
+{%- elif item.type == Type.U8 and item.n_elements %}
 {{export.value}}const guint8 *
 {{item.c_getter}}(const {{obj.name}} *st, gsize *bufsz)
 {
@@ -30,6 +48,7 @@
         *bufsz = {{item.size}};
     return st->data + {{item.offset}};
 }
+
 {%- elif item.type == Type.GUID %}
 {{export.value}}const fwupd_guid_t *
 {{item.c_getter}}(const {{obj.name}} *st)
@@ -37,6 +56,7 @@
     g_return_val_if_fail(st != NULL, NULL);
     return (const fwupd_guid_t *) (st->data + {{item.offset}});
 }
+
 {%- elif item.type == Type.U8 %}
 {{export.value}}{{item.type_glib}}
 {{item.c_getter}}(const {{obj.name}} *st)
@@ -44,13 +64,25 @@
     g_return_val_if_fail(st != NULL, 0x0);
     return st->data[{{item.offset}}];
 }
-{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
+
+{%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
+{%- if item.n_elements %}
+{{export.value}}{{item.type_glib}}
+{{item.c_getter}}(const {{obj.name}} *st, guint idx)
+{
+    g_return_val_if_fail(st != NULL, 0x0);
+    return fu_memread_{{item.type_mem}}(st->data + {{item.offset}} + (sizeof({{item.type_glib}}) * idx),
+                                        {{item.endian_glib}});
+}
+{%- else %}
 {{export.value}}{{item.type_glib}}
 {{item.c_getter}}(const {{obj.name}} *st)
 {
     g_return_val_if_fail(st != NULL, 0x0);
     return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
 }
+{%- endif %}
+
 {%- elif item.type in [Type.B32] %}
 {{export.value}}{{item.type_glib}}
 {{item.c_getter}}(const {{obj.name}} *st)
@@ -94,7 +126,35 @@
     }
     return fu_memcpy_safe(st->data, st->len, {{item.offset}}, (const guint8 *)value, len, 0x0, len, error);
 }
+
 {%- elif item.struct_obj %}
+{%- if item.n_elements %}
+{{export.value}}gboolean
+{{item.c_setter}}({{obj.name}} *st, guint idx, const {{item.struct_obj.name}} *st_donor, GError **error)
+{
+    g_return_val_if_fail(st != NULL, FALSE);
+    g_return_val_if_fail(st_donor != NULL, FALSE);
+    g_return_val_if_fail(idx < {{item.n_elements}}, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+    if (st_donor->len > {{item.struct_obj.c_define('SIZE')}}) {
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "donor '{{item.struct_obj.name}}' (0x%x bytes) does not fit in "
+                    "{{obj.name}}.{{item.element_id}} (0x%x bytes)",
+                    (guint) st_donor->len,
+                    (guint) {{item.struct_obj.c_define('SIZE')}});
+        return FALSE;
+    }
+    memcpy(st->data
+            + {{item.c_define('OFFSET')}}
+            + ({{item.struct_obj.c_define('SIZE')}} * idx),
+           st_donor->data,
+           st_donor->len);
+    return TRUE;
+}
+{%- else %}
 {{export.value}}gboolean
 {{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error)
 {
@@ -102,20 +162,22 @@
     g_return_val_if_fail(st_donor != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    if (st_donor->len > {{item.c_define('SIZE')}}) {
+    if (st_donor->len > {{item.struct_obj.c_define('SIZE')}}) {
         g_set_error(error,
                     G_IO_ERROR,
                     G_IO_ERROR_INVALID_DATA,
                     "donor '{{item.struct_obj.name}}' (0x%x bytes) does not fit in "
                     "{{obj.name}}.{{item.element_id}} (0x%x bytes)",
                     (guint) st_donor->len,
-                    (guint) {{item.c_define('SIZE')}});
+                    (guint) {{item.struct_obj.c_define('SIZE')}});
         return FALSE;
     }
     memcpy(st->data + {{item.c_define('OFFSET')}}, st_donor->data, st_donor->len);
     return TRUE;
 }
-{%- elif item.type == Type.U8 and item.multiplier %}
+{%- endif %}
+
+{%- elif item.type == Type.U8 and item.n_elements %}
 {{export.value}}gboolean
 {{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error)
 {
@@ -124,6 +186,7 @@
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     return fu_memcpy_safe(st->data, st->len, {{item.offset}}, buf, bufsz, 0x0, bufsz, error);
 }
+
 {%- elif item.type == Type.GUID %}
 {{export.value}}void
 {{item.c_setter}}({{obj.name}} *st, const fwupd_guid_t *value)
@@ -132,6 +195,7 @@
     g_return_if_fail(value != NULL);
     memcpy(st->data + {{item.offset}}, value, sizeof(*value));
 }
+
 {%- elif item.type == Type.U8 %}
 {{export.value}}void
 {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
@@ -139,6 +203,7 @@
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
 }
+
 {%- elif item.type == Type.B32 %}
 {{export.value}}void
 {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
@@ -151,13 +216,27 @@
     tmp |= (value & {{item.bits_mask}}) << {{item.bits_offset}};
     fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, tmp, {{item.endian_glib}});
 }
-{%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
+
+{%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
+{%- if item.n_elements %}
+{{export.value}}void
+{{item.c_setter}}({{obj.name}} *st, guint idx, {{item.type_glib}} value)
+{
+    g_return_if_fail(st != NULL);
+    g_return_if_fail(idx < {{item.n_elements}});
+    fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}} + (sizeof({{item.type_glib}}) * idx),
+                                  value,
+                                  {{item.endian_glib}});
+}
+
+{%- else %}
 {{export.value}}void
 {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
 {
     g_return_if_fail(st != NULL);
     fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, value, {{item.endian_glib}});
 }
+{%- endif %}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -186,8 +265,8 @@
     {{item.c_setter}}(st, "{{item.default}}", NULL);
 {%- elif item.type == Type.GUID %}
     {{item.c_setter}}(st, (fwupd_guid_t *) "{{item.default}}");
-{%- elif item.type == Type.U8 and item.multiplier %}
-    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}});
+{%- elif item.type == Type.U8 and item.n_elements %}
+    memcpy(st->data + 0x{{'{:X}'.format(item.offset)}}, "{{item.default}}", {{item.size}}); /* nocheck:blocked */
 {%- else %}
     {{item.c_setter}}(st, {{item.default}});
 {%- endif %}
@@ -207,7 +286,7 @@
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
 {%- for item in obj.items | selectattr('enabled') | rejectattr('constant') %}
-{%- if not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+
 {%- if item.enum_obj %}
     {
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
@@ -217,30 +296,9 @@
             g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n", (guint) {{item.c_getter}}(st));
         }
     }
-{%- else %}
-    g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n",
-                           (guint) {{item.c_getter}}(st));
-{%- endif %}
-{%- elif item.type == Type.GUID %}
-    {
-        g_autofree gchar *tmp = fwupd_guid_to_string({{item.c_getter}}(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
-        g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
-    }
-{%- elif item.type == Type.STRING %}
-    {
-        g_autofree gchar *tmp = {{item.c_getter}}(st);
-        if (tmp != NULL)
-            g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
-    }
-{%- elif item.struct_obj %}
-    {
-        g_autoptr(GByteArray) st_tmp = g_byte_array_new();
-        g_autofree gchar *tmp = NULL;
-        g_byte_array_append(st_tmp, st->data + {{item.offset}}, {{item.size}});
-        tmp = {{item.struct_obj.c_method('ToString')}}(st_tmp);
-        g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
-    }
-{%- else %}
+
+{%- elif item.type == Type.U8 %}
+{%- if item.n_elements %}
     {
         gsize bufsz = 0;
         const guint8 *buf = {{item.c_getter}}(st, &bufsz);
@@ -249,7 +307,52 @@
             g_string_append_printf(tmp, "%02X", buf[i]);
         g_string_append_printf(str, "  {{item.element_id}}: 0x%s\n", tmp->str);
     }
+{%- else %}
+    g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n",
+                           (guint) {{item.c_getter}}(st));
 {%- endif %}
+
+{%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
+{%- if item.n_elements %}
+    for (guint i = 0; i < {{item.n_elements}}; i++) {
+        g_string_append_printf(str, "  {{item.element_id}}[%u]: 0x%x\n",
+                               i, (guint) {{item.c_getter}}(st, i));
+    }
+{%- else %}
+    g_string_append_printf(str, "  {{item.element_id}}: 0x%x\n",
+                           (guint) {{item.c_getter}}(st));
+{%- endif %}
+
+{%- elif item.type == Type.GUID %}
+    {
+        g_autofree gchar *tmp = fwupd_guid_to_string({{item.c_getter}}(st), FWUPD_GUID_FLAG_MIXED_ENDIAN);
+        g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
+    }
+
+{%- elif item.type == Type.STRING %}
+    {
+        g_autofree gchar *tmp = {{item.c_getter}}(st);
+        if (tmp != NULL)
+            g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
+    }
+
+{%- elif item.struct_obj %}
+{%- if item.n_elements %}
+    for (guint i = 0; i < {{item.n_elements}}; i++) {
+        g_autoptr(GByteArray) st_tmp = {{item.c_getter}}(st, i);
+        g_autofree gchar *tmp = {{item.struct_obj.c_method('ToString')}}(st_tmp);
+        g_string_append_printf(str, "  {{item.element_id}}[%u]: %s\n", i, tmp);
+    }
+{%- else %}
+    {
+        g_autoptr(GByteArray) st_tmp = {{item.c_getter}}(st);
+        g_autofree gchar *tmp = {{item.struct_obj.c_method('ToString')}}(st_tmp);
+        g_string_append_printf(str, "  {{item.element_id}}: %s\n", tmp);
+    }
+{%- endif %}
+
+{%- endif %}
+
 {%- endfor %}
     if (str->len > 0)
         g_string_set_size(str, str->len - 1);
@@ -281,7 +384,7 @@
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st->data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
+{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.n_elements) %}
     if (memcmp(st->data + {{item.offset}}, "{{item.constant}}", {{item.size}}) != 0) {
 {%- else %}
     if ({{item.c_getter}}(st) != {{item.constant}}) {
@@ -337,7 +440,7 @@
 {%- for item in obj.items | selectattr('constant') %}
 {%- if item.type == Type.STRING %}
     if (strncmp((const gchar *) (st.data + {{item.offset}}), "{{item.constant}}", {{item.size}}) != 0) {
-{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.multiplier) %}
+{%- elif item.type == Type.GUID or (item.type == Type.U8 and item.n_elements) %}
     if (memcmp({{item.c_getter}}(&st), "{{item.constant}}", {{item.size}}) != 0) {
 {%- else %}
     if ({{item.c_getter}}(&st) != {{item.constant}}) {

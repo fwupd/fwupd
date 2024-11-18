@@ -22,6 +22,7 @@ class Endian(Enum):
 
 
 class Type(Enum):
+    NONE = None
     U8 = "u8"
     U16 = "u16"
     U24 = "u24"
@@ -209,7 +210,7 @@ class StructObj:
                 if (
                     item.constant
                     and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.multiplier)
+                    and not (item.type == Type.U8 and item.n_elements)
                 ):
                     item.add_private_export("Getters")
                 if item.struct_obj:
@@ -230,14 +231,14 @@ class StructObj:
                 if (
                     item.constant
                     and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.multiplier)
+                    and not (item.type == Type.U8 and item.n_elements)
                 ):
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("Validate")
         elif derive == "New":
             for item in self.items:
-                if item.constant and not (item.type == Type.U8 and item.multiplier):
+                if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Setters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("New")
@@ -273,14 +274,14 @@ class StructItem:
     def __init__(self, obj: StructObj) -> None:
         self.obj: StructObj = obj
         self.element_id: str = ""
-        self.type: Type = Type.U8
+        self.type: Type = Type.NONE
         self.enum_obj: Optional[EnumObj] = None
         self.struct_obj: Optional[StructObj] = None
         self.default: Optional[str] = None
         self.constant: Optional[str] = None
         self.padding: Optional[str] = None
         self.endian: Endian = Endian.NATIVE
-        self.multiplier: int = 0
+        self.n_elements: int = 0
         self._bits_size: int = 0
         self._bits_offset: int = 0
         self.offset: int = 0
@@ -318,19 +319,23 @@ class StructItem:
 
     @property
     def size(self) -> int:
-        multiplier = self.multiplier
-        if not multiplier:
-            multiplier = 1
-        if self.type in [Type.U8, Type.I8, Type.STRING, Type.GUID]:
-            return multiplier
+        n_elements = self.n_elements
+        if not n_elements:
+            n_elements = 1
+        if self.struct_obj:
+            return n_elements * self.struct_obj.size
+        if self.type in [Type.U8, Type.I8, Type.STRING]:
+            return n_elements
+        if self.type in [Type.GUID]:
+            return n_elements * 16
         if self.type in [Type.U16, Type.I16]:
-            return multiplier * 2
+            return n_elements * 2
         if self.type == Type.U24:
-            return multiplier * 3
+            return n_elements * 3
         if self.type in [Type.U32, Type.I32]:
-            return multiplier * 4
+            return n_elements * 4
         if self.type in [Type.U64, Type.I64]:
-            return multiplier * 8
+            return n_elements * 8
         return 0
 
     @property
@@ -422,7 +427,7 @@ class StructItem:
             if val.startswith('"') and val.endswith('"'):
                 return val[1:-1]
             raise ValueError(f"string default {val} needs double quotes")
-        if self.type == Type.GUID or (self.type == Type.U8 and self.multiplier):
+        if self.type == Type.GUID or (self.type == Type.U8 and self.n_elements):
             if not val.startswith("0x"):
                 raise ValueError(f"0x prefix for hex number expected, got: {val}")
             if len(val) != (self.size * 2) + 2:
@@ -448,7 +453,7 @@ class StructItem:
 
         if (
             self.type == Type.U8
-            and self.multiplier
+            and self.n_elements
             and val.startswith("0x")
             and len(val) == 4
         ):
@@ -467,19 +472,17 @@ class StructItem:
 
         # is array
         if val.startswith("[") and val.endswith("]"):
-            typestr, multiplier = val[1:-1].split(";", maxsplit=1)
-            if multiplier.startswith("0x"):
-                self.multiplier = int(multiplier[2:], 16)
+            typestr, n_elements = val[1:-1].split(";", maxsplit=1)
+            if n_elements.startswith("0x"):
+                self.n_elements = int(n_elements[2:], 16)
             else:
-                self.multiplier = int(multiplier)
+                self.n_elements = int(n_elements)
         else:
             typestr = val
 
         # nested struct
         if typestr in struct_objs:
             self.struct_obj = struct_objs[typestr]
-            self.multiplier = self.struct_obj.size
-            self.type = Type.U8
             return
 
         # find the type
@@ -512,15 +515,13 @@ class StructItem:
         # defined types
         try:
             self.type = Type(typestr)
-            if self.type == Type.GUID:
-                self.multiplier = 16
         except ValueError as e:
             raise ValueError(f"invalid type: {typestr}") from e
 
     def __str__(self) -> str:
         tmp = f"{self.element_id}: "
-        if self.multiplier:
-            tmp += str(self.multiplier)
+        if self.n_elements:
+            tmp += str(self.n_elements)
         tmp += self.type.value
         if self.endian != Endian.NATIVE:
             tmp += self.endian.value
