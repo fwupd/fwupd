@@ -6624,6 +6624,10 @@ fu_device_category_to_name(const gchar *cat)
 		return "Graphics Tablet";
 	if (g_strcmp0(cat, "X-InputController") == 0)
 		return "Input Controller";
+	if (g_strcmp0(cat, "X-Headphones") == 0)
+		return "Headphones";
+	if (g_strcmp0(cat, "X-Headset") == 0)
+		return "Headset";
 	return NULL;
 }
 
