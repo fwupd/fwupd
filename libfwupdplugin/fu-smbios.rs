@@ -50,6 +50,7 @@ enum FuSmbiosChassisKind {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructSmbiosEp32 {
     anchor_str: [char; 4],
     entry_point_csum: u8,
@@ -68,6 +69,7 @@ struct FuStructSmbiosEp32 {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructSmbiosEp64 {
     anchor_str: [char; 5],
     entry_point_csum: u8,
@@ -82,6 +84,7 @@ struct FuStructSmbiosEp64 {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructSmbiosStructure {
     type: u8,
     length: u8,

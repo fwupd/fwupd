@@ -11,6 +11,7 @@ enum FuWistronDockStatusCode {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructWistronDockWdit {
     hid_id: u8,
     tag_id: u16be,
@@ -37,6 +38,7 @@ enum FuWistronDockComponentIdx {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructWistronDockWditImg {
     comp_id: FuWistronDockComponentIdx,
     mode: u8,   // 0=single, 1=dual-s, 2=dual-a

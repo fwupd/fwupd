@@ -13,12 +13,14 @@ enum FuTelinkDfuCmd {
 }
 
 #[derive(New, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructTelinkDfuEndCheck {
     pkt_index: u16,
     inverted_pkt_index: u16,
 }
 
 #[derive(New, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructTelinkDfuBlePkt {
     preamble: u16,
     payload: [u8; 16] = 0xFF,
@@ -26,6 +28,7 @@ struct FuStructTelinkDfuBlePkt {
 }
 
 #[derive(New, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructTelinkDfuHidPktPayload {
     ota_cmd: u16 = 0xFFFF,
     ota_data: [u8; 16] = 0xFF,
@@ -33,6 +36,7 @@ struct FuStructTelinkDfuHidPktPayload {
 }
 
 #[derive(New, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructTelinkDfuHidPkt {
     op_code: u8 = 0x02,
     ota_data_len: u16 = 0x0000,
@@ -40,6 +44,7 @@ struct FuStructTelinkDfuHidPkt {
 }
 
 #[derive(New, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructTelinkDfuHidLongPkt {
     op_code: u8 = 0x02,
     ota_data_len: u16 = 0x0000,

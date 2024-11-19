@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructEfs {
     signature: u32le = 0x55aa55aa,
     reserved: [u32le; 4],
@@ -15,6 +16,7 @@ struct FuStructEfs {
 }
 
 #[derive(ParseStream, ValidateStream, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructPspDir {
     cookie: [char; 4] == "$PSP",
     checksum: u32le,
@@ -23,6 +25,7 @@ struct FuStructPspDir {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructPspDirTable {
     fw_id: u32le,
     size: u32le,
@@ -30,6 +33,7 @@ struct FuStructPspDirTable {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructImageSlotHeader {
     checksum: u32le,
     boot_priority: u32le,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructParadeUsbhubHdr {
     signature: u16be == 0x55AA,
 }

@@ -12,6 +12,7 @@ enum FuIntelUsb4Opcode {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructIntelUsb4Mbox {
     opcode: FuIntelUsb4Opcode,
     _rsvd: u8,
@@ -19,6 +20,7 @@ struct FuStructIntelUsb4Mbox {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructIntelUsb4MetadataNvmRead {
     address: u24le,
     length: u8, // in DWORDs

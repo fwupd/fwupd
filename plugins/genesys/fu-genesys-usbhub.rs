@@ -2,18 +2,21 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructGenesysFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "XROM",
 }
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructGenesysDevFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "HOST",
 }
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructGenesysPdFirmwareHdr {
     reserved: [u8; 252],
     magic: [char; 4] == "PRDY",
@@ -35,6 +38,7 @@ enum FuGenesysTsVersion {
 }
 
 #[derive(Parse, ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructGenesysTsStatic {
     tool_string_version: FuGenesysTsVersion,
 
@@ -52,6 +56,7 @@ struct FuStructGenesysTsStatic {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsDynamicGl3523 {
     running_mode: char, // 'M' for mask code, the others for bank code
 
@@ -90,6 +95,7 @@ struct FuStructGenesysTsDynamicGl3523 {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsDynamicGl3590 {
     running_mode: char,
 
@@ -118,6 +124,7 @@ enum FuGenesysFwStatus {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsDynamicGl359030 {
     running_mode: char,
 
@@ -140,6 +147,7 @@ struct FuStructGenesysTsDynamicGl359030 {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsDynamicGl3525 {
     running_mode: char,
 
@@ -164,6 +172,7 @@ struct FuStructGenesysTsDynamicGl3525 {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsFirmwareInfo {
     tool_version: [u8; 6],      // ISP tool defined by itself
     address_mode: u8,           // 3 or 4: support 3 or 4-bytes address, others are no meaning.
@@ -190,6 +199,7 @@ enum FuGenesysVsHidIsp {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsVendorSupport {
     version: [char; 2],
     reserved1: [char; 8],
@@ -200,6 +210,7 @@ struct FuStructGenesysTsVendorSupport {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructGenesysTsBrandProject {
     project: [char; 15],
 }
@@ -213,6 +224,7 @@ enum FuGenesysFwCodesign {
 }
 
 #[derive(ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructGenesysFwCodesignInfoRsa {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -224,6 +236,7 @@ struct FuStructGenesysFwCodesignInfoRsa {
 }
 
 #[derive(Parse, Validate, Default)]
+#[repr(C, packed)]
 struct FuStructGenesysFwRsaPublicKeyText {
     tag_n: u32be == 0x4E203D20, // 'N = '
     text_n: [char; 512],
@@ -234,6 +247,7 @@ struct FuStructGenesysFwRsaPublicKeyText {
 }
 
 #[derive(Parse, ParseStream, Validate, ValidateStream)]
+#[repr(C, packed)]
 struct FuStructGenesysFwCodesignInfoEcdsa {
     hash: [u8; 32],
     key: [u8; 64],
@@ -241,6 +255,7 @@ struct FuStructGenesysFwCodesignInfoEcdsa {
 }
 
 #[derive(Parse, Validate)]
+#[repr(C, packed)]
 struct FuStructGenesysFwEcdsaPublicKey {
     key: [u8; 64],
 }

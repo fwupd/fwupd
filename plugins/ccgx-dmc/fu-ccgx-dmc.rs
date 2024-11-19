@@ -139,6 +139,7 @@ enum FuCcgxDmcUpdateModel {
 
 // fields of data returned when reading dock_identity for new firmware
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcDockIdentity {
     // this field indicates both validity and structure version
     // 0 : invalid
@@ -163,6 +164,7 @@ struct FuStructCcgxDmcDockIdentity {
 
 // fields of status of a specific device
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcDevxStatus {
     // device ID of the device
     device_type: FuCcgxDmcDevxDeviceType,
@@ -190,6 +192,7 @@ struct FuStructCcgxDmcDevxStatus {
 
 // fields of data returned when reading dock_status
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcDockStatus {
     device_status: FuCcgxDmcDeviceStatus,
     device_count: u8,
@@ -200,6 +203,7 @@ struct FuStructCcgxDmcDockStatus {
 
 // fields of data returned when reading an interrupt from DMC
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcIntRqt {
     opcode: FuCcgxDmcIntOpcode,
     length: u8,
@@ -208,6 +212,7 @@ struct FuStructCcgxDmcIntRqt {
 
 // header structure of FWCT
 #[derive(New, ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcFwctInfo {
     signature: u32le == 0x54435746, // 'F' 'W' 'C' 'T'
     size: u16le,
@@ -225,6 +230,7 @@ struct FuStructCcgxDmcFwctInfo {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcFwctImageInfo {
     device_type: u8,
     img_type: u8,
@@ -241,6 +247,7 @@ struct FuStructCcgxDmcFwctImageInfo {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructCcgxDmcFwctSegmentationInfo {
     img_id: u8,
     type: u8,

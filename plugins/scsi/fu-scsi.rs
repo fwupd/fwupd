@@ -22,6 +22,7 @@ enum FuScsiSenseKey {
 
 // see https://tldp.org/HOWTO/archived/SCSI-Programming-HOWTO/SCSI-Programming-HOWTO-9.html
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructScsiInquiry {
     reserved: [u8; 8],
     vendor_id: [char; 8],

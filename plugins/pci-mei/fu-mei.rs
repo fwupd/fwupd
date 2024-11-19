@@ -79,6 +79,7 @@ enum FuMeiFirmwareSku {
 
 /* CSME11 - Host Firmware Status register 1 */
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts1 {
     _working_state: FuMeHfsCws,
     mfg_mode: u1,
@@ -100,6 +101,7 @@ struct FuMeiCsme11Hfsts1 {
 }
 
 /* CSME11 - Host Firmware Status register 2 */
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts2 {
     nftp_load_failure: u1,
     icc_prog_status: u2,
@@ -121,6 +123,7 @@ struct FuMeiCsme11Hfsts2 {
 }
 
 /* CSME11 - Host Firmware Status register 3 */
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts3 {
     chunk0: u1,
     chunk1: u1,
@@ -139,6 +142,7 @@ struct FuMeiCsme11Hfsts3 {
 }
 
 /* CSME11 - Host Firmware Status register 4 */
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts4 {
     rsvd0: u9,
     enforcement_flow: u1,
@@ -152,6 +156,7 @@ struct FuMeiCsme11Hfsts4 {
 }
 
 /* CSME11 - Host Firmware Status register 5 */
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts5 {
     acm_active: u1,
     valid: u1,
@@ -169,6 +174,7 @@ struct FuMeiCsme11Hfsts5 {
 
 /* CSME11 - Host Firmware Status register 6 */
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuMeiCsme11Hfsts6 {
     force_boot_guard_acm: u1,
     _cpu_debug_disable: u1,
@@ -192,6 +198,7 @@ struct FuMeiCsme11Hfsts6 {
 
 /* CSME18 - Host Firmware Status register 1 */
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts1 {
     _working_state: FuMeHfsCws,
     spi_protection_mode: u1,
@@ -214,6 +221,7 @@ struct FuMeiCsme18Hfsts1 {
 
 
 /* CSME18 - Host Firmware Status register 2 */
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts2 {
     nftp_load_failure: u1,
     icc_prog_status: u2,
@@ -235,6 +243,7 @@ struct FuMeiCsme18Hfsts2 {
 }
 
 /* CSME18 - Host Firmware Status register 3 */
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts3 {
     reserved: u4,
     fw_sku: FuMeiFirmwareSku,
@@ -249,6 +258,7 @@ struct FuMeiCsme18Hfsts3 {
 }
 
 /* CSME18 - Host Firmware Status register 4 */
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts4 {
     rsvd0: u2,
     flash_log_exist: u1,
@@ -273,6 +283,7 @@ enum FuMeiCsme18ErrorStatusCode {
 
 /* CSME18 - Host Firmware Status register 5 */
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts5 {
     btg_acm_active: u1,
     valid: u1,
@@ -294,6 +305,7 @@ struct FuMeiCsme18Hfsts5 {
 
 /* CSME18 - Host Firmware Status register 6 */
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuMeiCsme18Hfsts6 {
     _reserved0: u21,
     manufacturing_lock: u1,

@@ -34,6 +34,7 @@ enum FuSynapticsCxaudioFileKind {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSynapticsCxaudioCustomInfo {
     patch_version_string_address: u16le,
     cpx_patch_version: [u8; 3],
@@ -51,18 +52,21 @@ struct FuStructSynapticsCxaudioCustomInfo {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructSynapticsCxaudioStringHeader {
     length: u8,
     type: u8 == 0x03,
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructSynapticsCxaudioValiditySignature {
     magic_byte: u8 = 0x4C,    // 'L'
     eeprom_size_code: u8,
 }
 
 #[derive(Parse, Setters)]
+#[repr(C, packed)]
 struct FuStructSynapticsCxaudioPatchInfo {
     patch_signature: u8,
     patch_address: u16le,

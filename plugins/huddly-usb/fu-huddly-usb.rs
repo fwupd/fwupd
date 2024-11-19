@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructHLinkHeader {
     req_id: u32le,
     res_id: u32le,

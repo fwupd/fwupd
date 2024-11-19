@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructSynapticsVmm9 {
     signature: [char; 7] == "CARRERA",
 }
@@ -46,6 +47,7 @@ enum FuSynapticsVmm9RcSts {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructHidPayload {
     cap: u8,
     state: u8,
@@ -57,6 +59,7 @@ struct FuStructHidPayload {
 }
 
 #[derive(New, ToString, Getters, Default)]
+#[repr(C, packed)]
 struct FuStructHidSetCommand {
     id: u8 == 0x1,
     type: u8 == 0x0, // packet write
@@ -66,6 +69,7 @@ struct FuStructHidSetCommand {
 }
 
 #[derive(New, Parse, Default)]
+#[repr(C, packed)]
 struct FuStructHidGetCommand {
     id: u8 == 0x1,
     type: u8 == 0x0, // packet reply
@@ -75,6 +79,7 @@ struct FuStructHidGetCommand {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSynapticsUpdGetId {
     _pid: u16le,
     cid: u8,

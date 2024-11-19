@@ -29,6 +29,7 @@ enum FuIntelThunderboltNvmFamily {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuIntelThunderboltNvmDigital {
     reserved: [u8; 2],
     available_sections: u8, // FuIntelThunderboltNvmSectionFlag
@@ -49,6 +50,7 @@ struct FuIntelThunderboltNvmDigital {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuIntelThunderboltNvmDrom {
     reserved: [u8; 16],
     vendor_id: u16le,
@@ -57,6 +59,7 @@ struct FuIntelThunderboltNvmDrom {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuIntelThunderboltNvmArcParams {
     reserved: [u8; 268],
     pd_pointer: u32le,
@@ -64,6 +67,7 @@ struct FuIntelThunderboltNvmArcParams {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuIntelThunderboltNvmDram {
     reserved: [u8; 16],
 }

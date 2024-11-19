@@ -16,6 +16,7 @@ enum FuAlgoltekAuxCmd {
 }
 
 #[derive(ParseStream, ValidateStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxProductIdentity {
     header_len: u8 == 0x8,
     header: u64le == 0x4B45544C4F474C41, // 'A' 'L' 'G' 'O' 'L' 'T' 'E' 'K'
@@ -26,6 +27,7 @@ struct FuStructAlgoltekAuxProductIdentity {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxRdvCmdAddressPkt {
     i2c_address: u8 = 0x51,
     sublen: u8,
@@ -35,6 +37,7 @@ struct FuStructAlgoltekAuxRdvCmdAddressPkt {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxBotErsCmdAddressPkt {
     i2c_address: u8 = 0x51,
     sublen: u8,
@@ -45,6 +48,7 @@ struct FuStructAlgoltekAuxBotErsCmdAddressPkt {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxEnRstWrrCmdAddressPkt {
     i2c_address: u8 = 0x51,
     sublen: u8,
@@ -56,6 +60,7 @@ struct FuStructAlgoltekAuxEnRstWrrCmdAddressPkt {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxIspFlashWriteCmdAddressPkt {
     i2c_address: u8 = 0x51,
     sublen: u8,
@@ -66,6 +71,7 @@ struct FuStructAlgoltekAuxIspFlashWriteCmdAddressPkt {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructAlgoltekAuxCrcCmdAddressPkt {
     i2c_address: u8 = 0x51,
     sublen: u8,

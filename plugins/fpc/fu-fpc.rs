@@ -7,6 +7,7 @@ enum FuFpcDfuState {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructFpcDfu {
     status: u8,
     max_payload_size: u8,
@@ -16,6 +17,7 @@ struct FuStructFpcDfu {
 }
 
 #[derive(ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructFpcFf2Hdr {
     compat_sig: [char; 7] == "FPC0001",
     reserved: [u8; 20],
@@ -31,6 +33,7 @@ enum FuFpcFf2BlockDir {
 
 // dfu_meta_content_hdr_t
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructFpcFf2BlockHdr {
     meta_type: u8 == 0xCD,
     meta_id: u8,
@@ -39,6 +42,7 @@ struct FuStructFpcFf2BlockHdr {
 
 // dfu_sec_link_t
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructFpcFf2BlockSec {
     header: u8 == 0xEE,
     type: u8,

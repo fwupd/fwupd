@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ParseBytes, Default)]
+#[repr(C, packed)]
 struct FuStructCcgxMetadataHdr {
     fw_checksum: u8,
     fw_entry: u32le,

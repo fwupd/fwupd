@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructDs20 {
     _reserved: u8,
     guid: Guid,
@@ -12,6 +13,7 @@ struct FuStructDs20 {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructMsDs20 {
     size: u16le,
     type: u16le,

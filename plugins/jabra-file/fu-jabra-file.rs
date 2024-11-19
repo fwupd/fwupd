@@ -11,6 +11,7 @@ enum FuJabraFilePacketCmd {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuJabraFilePacket {
     iface: u8 == 0x05,
     dst: u8,

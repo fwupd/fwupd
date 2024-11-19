@@ -34,11 +34,13 @@ enum FuQcReq {
     Disconnect = 0x07,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcConnectReq {
     req: FuQcReq == Connect,
     data_len: u16be,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcDisconnectReq {
     req: FuQcReq == Disconnect,
     data_len: u16be,
@@ -55,16 +57,19 @@ enum FuQcStatus {
     InvalidPowerState,  // Invalid power management state
 }
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructQcUpdateStatus {
     status: FuQcStatus,
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcVersionReq {
     opcode: FuQcOpcode == HostVersionReq,
     data_len: u16be == 0x00,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcVersion {
     status: FuQcOpcode == HostVersionCfm,
     data_len: u16be == 0x0006,
@@ -74,11 +79,13 @@ struct FuStructQcVersion {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcAbortReq {
     opcode: FuQcOpcode == AbortReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcAbort {
     opcode: FuQcOpcode == AbortCfm,
     data_len: u16be = 0x00,
@@ -95,12 +102,14 @@ enum FuQcResumePoint {
     PostCommit,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcSyncReq {
     opcode: FuQcOpcode == SyncReq,
     data_len: u16be = 0x04,
     fileId: u32be,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcSync {
     opcode: FuQcOpcode == SyncCfm,
     data_len: u16be = 0x06,
@@ -116,11 +125,13 @@ enum FuQcStartStatus {
     Failure = 1,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcStartReq {
     opcode: FuQcOpcode == StartReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcStart {
     opcode: FuQcOpcode == StartCfm,
     data_len: u16be = 0x0003,
@@ -129,6 +140,7 @@ struct FuStructQcStart {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcStartDataReq {
     opcode: FuQcOpcode == StartDataReq,
     data_len: u16be = 0x00,
@@ -140,6 +152,7 @@ enum FuQcMoreData {
     Last = 1,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcDataReq {
     opcode: FuQcOpcode == DataBytesReq,
     data_len: u16be = 0x0008,
@@ -147,6 +160,7 @@ struct FuStructQcDataReq {
     fw_data_offset: u32be,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcData {
     opcode: FuQcOpcode == Data,
     data_len: u16be,
@@ -154,17 +168,20 @@ struct FuStructQcData {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcValidationReq {
     opcode: FuQcOpcode == IsValidationDoneReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcIsValidationDone {
     opcode: FuQcOpcode == IsValidationDoneCfm,
     data_len: u16be,
     delay: u16be,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcTransferCompleteInd {
     opcode: FuQcOpcode == TransferCompleteInd,
     data_len: u16be,
@@ -177,6 +194,7 @@ enum FuQcTransferAction {
     Silent = 2,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcTransferComplete {
     opcode: FuQcOpcode == TransferCompleteRes,
     data_len: u16be = 0x01,
@@ -189,12 +207,14 @@ enum FuQcCommitAction {
     NotProceed = 1,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcProceedToCommit {
     opcode: FuQcOpcode == ProceedToCommit,
     data_len: u16be = 0x01,
     action: FuQcCommitAction,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcCommitReq {
     opcode: FuQcOpcode == CommitReq,
     data_len: u16be = 0x00,
@@ -206,24 +226,28 @@ enum FuQcCommitCfmAction {
     Rollback = 1,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcCommitCfm {
     opcode: FuQcOpcode == CommitCfm,
     data_len: u16be = 0x01,
     action: FuQcCommitCfmAction,
 }
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcComplete {
     opcode: FuQcOpcode == CompleteInd,
     data_len: u16be = 0x00,
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructQcErrorInd {
     opcode: FuQcOpcode == ErrorInd,
     data_len: u16be = 0x02,
     error_code: u16be,
 }
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructQcErrorRes {
     opcode: FuQcOpcode == ErrorRes,
     data_len: u16be = 0x02,

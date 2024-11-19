@@ -22,6 +22,7 @@ enum FuRmiPartitionId {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructRmiPartitionTbl {
     partition_id: FuRmiPartitionId,
     partition_len: u16le,
@@ -30,6 +31,7 @@ struct FuStructRmiPartitionTbl {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructRmiImg {
     checksum: u32le,
     _reserved1: [u8; 2],
@@ -76,6 +78,7 @@ enum FuRmiContainerId {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructRmiContainerDescriptor {
     content_checksum: u32le,
     container_id: FuRmiContainerId,

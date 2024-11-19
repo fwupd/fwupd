@@ -77,6 +77,7 @@ enum FuHpiCfuFirmwareUpdateStatus {
 
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructHpiCfuOfferCmd {
     report_id: u8,
     segment_number: u8,
@@ -93,6 +94,7 @@ struct FuStructHpiCfuOfferCmd {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructHpiCfuPayloadCmd {
     report_id: u8,
     flags: u8,
@@ -103,6 +105,7 @@ struct FuStructHpiCfuPayloadCmd {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructHpiCfuBuf {
     report_id: u8,
     command: u8,

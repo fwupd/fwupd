@@ -17,11 +17,13 @@ enum FuLegionHid2ReportId {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructLegionGetVersion {
     cmd: u8 == 0x01,
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructLegionVersion {
     command: u8,
     version: u32,
@@ -29,17 +31,20 @@ struct FuStructLegionVersion {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructLegionGetMcuId {
     cmd: u8 == 0x02,
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructLegionMcuId {
     id: [u8; 12],
     reserved: [u8; 52],
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructLegionStartIap {
     cmd: u8 == 0xE1,
     data: [char; 7] == "UPGRADE",
@@ -47,6 +52,7 @@ struct FuStructLegionStartIap {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructLegionIapResult {
     ret: u8,
     reserved: [u8; 63],
@@ -54,6 +60,7 @@ struct FuStructLegionIapResult {
 
 //Reset in app mode, unused by fwupd
 //#[derive(New)]
+//#[repr(C, packed)]
 //struct FuStructLegionIcReset {
 //    cmd: u8 == 0xEF,
 //    data: [char; 7] == "ICRESET",
@@ -83,6 +90,7 @@ enum FuLegionIapError {
 }
 
 #[derive(New, Setters, Getters)]
+#[repr(C, packed)]
 struct FuStructLegionIapTlv {
     tag: u16,
     length: u16,
@@ -91,6 +99,7 @@ struct FuStructLegionIapTlv {
 
 // Parsing firmware update header
 #[derive(Getters, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructLegionHid2Header {
     magic: [char; 7] == "#Legion",
     reserved: [u8; 7],
@@ -101,6 +110,7 @@ struct FuStructLegionHid2Header {
 }
 
 #[derive(Getters, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructLegionHid2Version {
     signature: [char; 7] == "VERSION",
     reserved: u8,

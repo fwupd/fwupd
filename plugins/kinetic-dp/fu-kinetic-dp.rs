@@ -52,6 +52,7 @@ enum FuKineticDpFwState {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructKineticDpPumaHeader {
     _unknown: u8,
     object_count: u8 == 8,
@@ -59,6 +60,7 @@ struct FuStructKineticDpPumaHeader {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructKineticDpPumaHeaderInfo {
     type: u8,
     subtype: u8,
@@ -91,6 +93,7 @@ enum FuKineticDpPumaRequest {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructKineticDpJaguarFooter {
     app_id_struct_ver: u32le,
     app_id: [u8; 4],
@@ -105,6 +108,7 @@ struct FuStructKineticDpJaguarFooter {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructKineticDpFlashInfo {
     id: u16be,
     size: u16be,

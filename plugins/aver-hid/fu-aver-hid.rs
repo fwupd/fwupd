@@ -68,6 +68,7 @@ enum FuAverSafeispAckStatus {
 }
 
 #[derive(Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
@@ -77,6 +78,7 @@ struct FuStructAverHidReqIsp {
 }
 
 #[derive(Setters, Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqIspFileStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
@@ -89,6 +91,7 @@ struct FuStructAverHidReqIspFileStart {
 }
 
 #[derive(Setters, Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqIspFileDnload {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
@@ -97,6 +100,7 @@ struct FuStructAverHidReqIspFileDnload {
 }
 
 #[derive(Setters, Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqIspFileEnd {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
@@ -110,6 +114,7 @@ struct FuStructAverHidReqIspFileEnd {
 }
 
 #[derive(Getters, Setters, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqIspStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
@@ -120,6 +125,7 @@ struct FuStructAverHidReqIspStart {
 }
 
 #[derive(Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidReqDeviceVersion {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x25,
@@ -129,6 +135,7 @@ struct FuStructAverHidReqDeviceVersion {
 }
 
 #[derive(New, Getters, Validate, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidResIspStatus {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
@@ -141,6 +148,7 @@ struct FuStructAverHidResIspStatus {
 }
 
 #[derive(Getters, Setters, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidResIsp {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
@@ -150,6 +158,7 @@ struct FuStructAverHidResIsp {
 }
 
 #[derive(Getters, New, Validate, Default)]
+#[repr(C, packed)]
 struct FuStructAverHidResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x25,
@@ -159,6 +168,7 @@ struct FuStructAverHidResDeviceVersion {
 }
 
 #[derive(Setters, Getters, New, Default)]
+#[repr(C, packed)]
 struct FuStructAverSafeispReq {
     report_id_custom_command: u8 == 0x08,
     custom_cmd: u8,
@@ -169,6 +179,7 @@ struct FuStructAverSafeispReq {
 };
 
 #[derive(New, Getters, Validate, Default)]
+#[repr(C, packed)]
 struct FuStructAverSafeispRes {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8,
@@ -179,6 +190,7 @@ struct FuStructAverSafeispRes {
 };
 
 #[derive(Getters, Validate, Default)]
+#[repr(C, packed)]
 struct FuStructAverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8 == 0x14,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructAudioSerialNumber {
     mac_address: [u8; 6],
     pid: u16le,
@@ -26,6 +27,7 @@ enum FuUsbCmdStatus {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructUsbInitRequest {
     id: FuUsbCmdId == Init,
     status: FuUsbCmdStatus == InitReq,
@@ -33,6 +35,7 @@ struct FuStructUsbInitRequest {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructUsbInitResponse {
     id: FuUsbCmdId == Init,
     status: FuUsbCmdStatus == InitReqAck,
@@ -40,6 +43,7 @@ struct FuStructUsbInitResponse {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructUsbFirmwareDownloadRequest {
     id: FuUsbCmdId == FirmwareDownload,
     status: FuUsbCmdStatus == Req,
@@ -48,6 +52,7 @@ struct FuStructUsbFirmwareDownloadRequest {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructUsbFirmwareDownloadResponse {
     id: FuUsbCmdId == FirmwareDownload,
     status: FuUsbCmdStatus == Ok,
@@ -55,6 +60,7 @@ struct FuStructUsbFirmwareDownloadResponse {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructUsbReadVersionRequest {
     id: FuUsbCmdId == ReadVersion,
     status: FuUsbCmdStatus == Req,
@@ -69,12 +75,14 @@ enum FuUsbImageState {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructUsbReadVersionResponse {
     fw_version: [char; 16],
     img_state: FuUsbImageState,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructUsbProgressResponse {
     completed: u32le,
 }

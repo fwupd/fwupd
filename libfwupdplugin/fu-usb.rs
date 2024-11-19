@@ -71,12 +71,14 @@ enum FuUsbDescriptorKind {
 }
 
 #[derive(ParseStream, Parse)]
+#[repr(C, packed)]
 struct FuUsbBaseHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind,
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuUsbDeviceHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Device,
@@ -95,6 +97,7 @@ struct FuUsbDeviceHdr {
 };
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuUsbDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Config,
@@ -107,6 +110,7 @@ struct FuUsbDescriptorHdr {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuUsbHidDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Hid,
@@ -118,6 +122,7 @@ struct FuUsbHidDescriptorHdr {
 }
 
 #[derive(ParseBytes, Default)]
+#[repr(C, packed)]
 struct FuUsbDfuDescriptorHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Hid,
@@ -128,6 +133,7 @@ struct FuUsbDfuDescriptorHdr {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuUsbInterfaceHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind == Interface,
@@ -141,6 +147,7 @@ struct FuUsbInterfaceHdr {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuUsbEndpointHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind,
@@ -151,6 +158,7 @@ struct FuUsbEndpointHdr {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuUsbBosHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind,

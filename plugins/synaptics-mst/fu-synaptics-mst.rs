@@ -62,6 +62,7 @@ enum FuSynapticsMstRegRc {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructSynapticsFirmwareConfig {
     version: u8,
     reserved: u8,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructIgscOpromVersion {
     major: u16le,
     minor: u16le,
@@ -10,6 +11,7 @@ struct FuStructIgscOpromVersion {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructIgscFwVersion {
     project: [char; 4], // project code name
     hotfix: u16le,
@@ -17,12 +19,14 @@ struct FuStructIgscFwVersion {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructIgscOpromSubsystemDeviceId {
     subsys_vendor_id: u16le,
     subsys_device_id: u16le,
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructIgscOpromSubsystemDevice4Id {
     vendor_id: u16le,
     device_id: u16le,
@@ -31,6 +35,7 @@ struct FuStructIgscOpromSubsystemDevice4Id {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructIgscFwuGwsImageInfo {
     format_version: u32le == 0x1,
     instance_id: u32le,
@@ -38,6 +43,7 @@ struct FuStructIgscFwuGwsImageInfo {
 }
 /* represents a GSC FW sub-partition such as FTPR, RBEP */
 #[derive(Getters)]
+#[repr(C, packed)]
 struct FuStructIgscFwuFwImageData {
     version_major: u16le,
     version_minor: u16le,
@@ -52,6 +58,7 @@ struct FuStructIgscFwuFwImageData {
 }
 
 #[derive(Getters)]
+#[repr(C, packed)]
 struct FuStructIgscFwuIupData {
     iup_name: u32le,
     flags: u16le,
@@ -61,11 +68,13 @@ struct FuStructIgscFwuIupData {
 }
 
 #[derive(Getters, Default)]
+#[repr(C, packed)]
 struct FuStructIgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructIgscFwuImageMetadataV1 {
     version_format: u32le = 0x1,  // struct IgscFwuHeciImageMetadata
     project: [char; 4],

@@ -12,6 +12,7 @@ enum FuGoodixtpIcType {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructGoodixBrlbHdr {
     firmware_size: u32le,
     checksum: u32le,
@@ -22,6 +23,7 @@ struct FuStructGoodixBrlbHdr {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructGoodixBrlbImg {
     kind: u8,
     size: u32le,
@@ -30,6 +32,7 @@ struct FuStructGoodixBrlbImg {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructGoodixGtx8Hdr {
     firmware_size: u32be,
     checksum: u16be,
@@ -40,6 +43,7 @@ struct FuStructGoodixGtx8Hdr {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructGoodixGtx8Img {
     kind: u8,
     size: u32be,

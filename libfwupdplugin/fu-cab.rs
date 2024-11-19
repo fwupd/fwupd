@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructCabData {
     checksum: u32le,
     comp: u16le,
@@ -29,6 +30,7 @@ enum FuCabFileAttribute {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructCabFile {
     usize: u32le, // uncompressed
     uoffset: u32le, // uncompressed
@@ -39,6 +41,7 @@ struct FuStructCabFile {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructCabFolder {
     offset: u32le,
     ndatab: u16le,
@@ -46,6 +49,7 @@ struct FuStructCabFolder {
 }
 
 #[derive(ParseStream, ValidateStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructCabHeader {
     signature: [char; 4] == "MSCF",
     _reserved1: [u8; 4],
@@ -63,6 +67,7 @@ struct FuStructCabHeader {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructCabHeaderReserve {
     rsvd_hdr: u16le,
     rsvd_folder: u8,

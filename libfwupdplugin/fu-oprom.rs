@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructOprom {
     signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
@@ -16,6 +17,7 @@ struct FuStructOprom {
 }
 
 #[derive(New, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructOpromPci {
     signature: u32le == 0x52494350,
     vendor_id: u16le,

@@ -12,6 +12,7 @@ enum FuSteelseriesGamepadCmd {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadEraseReq {
     cmd: FuSteelseriesGamepadCmd == Erase,
     magic1: u8 == 0xAA,
@@ -23,11 +24,13 @@ struct FuStructSteelseriesGamepadEraseReq {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadGetVersionsReq {
     cmd: FuSteelseriesGamepadCmd == GetVersions,
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadGetVersionsRes {
     cmd: FuSteelseriesGamepadCmd == GetVersions,
     runtime_version: u16le,
@@ -35,6 +38,7 @@ struct FuStructSteelseriesGamepadGetVersionsRes {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadResetReq {
     cmd: FuSteelseriesGamepadCmd == Reset,
     magic1: u8 == 0xAA,
@@ -48,12 +52,14 @@ enum FuSteelseriesGamepadMode {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadBootloaderModeReq {
     cmd: FuSteelseriesGamepadCmd == WorkMode,
     mode: FuSteelseriesGamepadMode == BootloaderMode,
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadWriteChunkReq {
     cmd: FuSteelseriesGamepadCmd == WriteChunk,
     block_id: u16le,
@@ -62,6 +68,7 @@ struct FuStructSteelseriesGamepadWriteChunkReq {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadWriteChecksumReq {
     cmd: FuSteelseriesGamepadCmd == WriteChecksum,
     magic1: u8 == 0xAA,
@@ -77,6 +84,7 @@ enum FuSteelseriesGamepadChecksumStatus {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesGamepadWriteChecksumRes {
     cmd: FuSteelseriesGamepadCmd == WriteChecksum,
     magic1: u8 == 0xAA,

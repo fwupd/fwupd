@@ -35,6 +35,7 @@ enum FuAsusHidReportId {
 }
 
 #[derive(Default, New)]
+#[repr(C, packed)]
 struct FuStructAsusManCommand {
     report_id: FuAsusHidReportId == Info,
     data: [char; 14] == "ASUS Tech.Inc.",
@@ -42,12 +43,14 @@ struct FuStructAsusManCommand {
 }
 
 #[derive(Default, New, Getters)]
+#[repr(C, packed)]
 struct FuStructAsusManResult {
     report_id: FuAsusHidReportId == Info,
     data: [char; 31],
 }
 
 #[derive(Default, New)]
+#[repr(C, packed)]
 struct FuStructAsusHidCommand {
     report_id: FuAsusHidReportId == Info,
     cmd: u32,
@@ -55,12 +58,14 @@ struct FuStructAsusHidCommand {
 }
 
 #[derive(Default, New)]
+#[repr(C, packed)]
 struct FuStructAsusHidResult {
     report_id: FuAsusHidReportId == Info,
     data: [u8; 31],
 }
 
 #[derive(Getters, ParseStream)]
+#[repr(C, packed)]
 struct FuStructAsusHidDesc {
     fga: [char; 8],
     reserved: u8,
@@ -71,6 +76,7 @@ struct FuStructAsusHidDesc {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructAsusHidFwInfo {
     header: FuStructAsusHidCommand,
     reserved: u8,
@@ -78,6 +84,7 @@ struct FuStructAsusHidFwInfo {
 }
 
 #[derive(Default, New)]
+#[repr(C, packed)]
 struct FuStructAsusPreUpdateCommand {
     report_id: FuAsusHidReportId == Info,
     cmd: u32,
@@ -88,12 +95,14 @@ struct FuStructAsusPreUpdateCommand {
 // Flashing sequence
 
 #[derive(Default, New)]
+#[repr(C, packed)]
 struct FuStructAsusFlashReset {
     command: u8 == 0xc4,
     reserved: [u8; 62],
 }
 
 #[derive(Default, New, Getters)]
+#[repr(C, packed)]
 struct FuStructAsusReadFlashCommand {
     command: u8 == 0xd1,
     offset: u24,

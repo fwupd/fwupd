@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later OR MIT
 
 #[derive(Getters)]
+#[repr(C, packed)]
 struct FuStructVbiosDate {
     month: [char; 2],
     _separator: u8,
@@ -18,6 +19,7 @@ struct FuStructVbiosDate {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructAtomImage {
     signature: u16be = 0x55aa,
     size: u16le,
@@ -40,6 +42,7 @@ struct FuStructAtomImage {
 }
 
 #[derive(Getters)]
+#[repr(C, packed)]
 struct FuStructAtomHeaderCommon {
     size: u16le,
     format_rev: u8,
@@ -47,6 +50,7 @@ struct FuStructAtomHeaderCommon {
 }
 
 #[derive(ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructAtomRom21Header {
     header: FuStructAtomHeaderCommon,
     signature: [char; 4] == "ATOM" ,

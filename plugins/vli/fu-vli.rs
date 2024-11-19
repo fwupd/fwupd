@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(Parse, ParseStream)]
+#[repr(C, packed)]
 struct FuStructVliPdHdr {
     fwver: u32be,
     vid: u16le,
@@ -9,6 +10,7 @@ struct FuStructVliPdHdr {
 }
 
 #[derive(New, Parse, ParseStream, ToString)]
+#[repr(C, packed)]
 struct FuStructVliUsbhubHdr {
     dev_id: u16be,
     strapping1: u8,
