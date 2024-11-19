@@ -4,6 +4,7 @@
 // https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/ipmi-platform-mgt-fru-info-storage-def-v1-0-rev-1-3-spec-update.pdf
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructIpmiCommon {
     version: u8 = 0x1,
     internal_offest: u8,
@@ -16,6 +17,7 @@ struct FuStructIpmiCommon {
 }
 
 #[derive(ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructBoardInfo {
     version: u8 = 0x1,
     length: u8,

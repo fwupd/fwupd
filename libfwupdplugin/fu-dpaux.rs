@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructDpauxDpcd {
     ieee_oui: u24be,
     dev_id: [char; 6],

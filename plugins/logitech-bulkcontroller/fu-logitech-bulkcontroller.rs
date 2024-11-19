@@ -43,6 +43,7 @@ enum FuLogitechBulkcontrollerCmd {
 }
 
 #[derive(New, ToString, Getters)]
+#[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerSendSyncReq {
     cmd: FuLogitechBulkcontrollerCmd,
     payload_length: u32le,
@@ -50,6 +51,7 @@ struct FuStructLogitechBulkcontrollerSendSyncReq {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerSendSyncRes {
     cmd: FuLogitechBulkcontrollerCmd,
     payload_length: u32le,
@@ -57,12 +59,14 @@ struct FuStructLogitechBulkcontrollerSendSyncRes {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerUpdateReq {
     cmd: FuLogitechBulkcontrollerCmd,
     payload_length: u32le,
 }
 
 #[derive(Getters)]
+#[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerUpdateRes {
     cmd: FuLogitechBulkcontrollerCmd,
     _payload_length: u32le,

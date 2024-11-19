@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructIfwiCpd {
     header_marker: u32le == 0x44504324,
     num_of_entries: u32le,
@@ -14,6 +15,7 @@ struct FuStructIfwiCpd {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructIfwiCpdEntry {
     name: [char; 12],
     offset: u32le,
@@ -22,6 +24,7 @@ struct FuStructIfwiCpdEntry {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructIfwiCpdManifest {
     header_type: u32le,
     header_length: u32le,		// dwords
@@ -37,12 +40,14 @@ struct FuStructIfwiCpdManifest {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructIfwiCpdManifestExt {
     extension_type: u32le,
     extension_length: u32le,
 }
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructIfwiFpt {
     header_marker: u32le == 0x54504624,
     num_of_entries: u32le,
@@ -61,6 +66,7 @@ struct FuStructIfwiFpt {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructIfwiFptEntry {
     partition_name: u32le,
     _reserved1: [u8; 4],

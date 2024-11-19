@@ -73,6 +73,7 @@ enum FuSteelseriesFizzCommandError {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzHidGetVersionReq {
     report_id: u8 == 0x04,  // GetReport
     command: u8 == 0x90,    // GetVersion
@@ -80,6 +81,7 @@ struct FuStructSteelseriesFizzHidGetVersionReq {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzHidResponse {
     report_id: u8 = 0x04,  // GetReport
     _data: [u8; 64],
@@ -103,6 +105,7 @@ enum FuSteelseriesFizzCmd {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzWriteAccessFileReq {
     cmd: FuSteelseriesFizzCmd = WriteAccessFile,
     filesystem: u8,
@@ -113,6 +116,7 @@ struct FuStructSteelseriesFizzWriteAccessFileReq {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzReadAccessFileReq {
     cmd: FuSteelseriesFizzCmd = ReadAccessFile,
     filesystem: u8,
@@ -122,12 +126,14 @@ struct FuStructSteelseriesFizzReadAccessFileReq {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzReadAccessFileRes {
     reserved: [u8; 2],
     data: [u8; 52],
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzEraseFileReq {
     cmd: FuSteelseriesFizzCmd = EraseFile,
     filesystem: u8,
@@ -135,12 +141,14 @@ struct FuStructSteelseriesFizzEraseFileReq {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzResetReq {
     cmd: FuSteelseriesFizzCmd = Reset,
     mode: FuSteelseriesFizzResetMode,
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzFileCrc32Req {
     cmd: FuSteelseriesFizzCmd = FileCrc32,
     filesystem: u8,
@@ -148,6 +156,7 @@ struct FuStructSteelseriesFizzFileCrc32Req {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzFileCrc32Res {
     reserved: [u8; 2],
     calculated: u32le,
@@ -155,6 +164,7 @@ struct FuStructSteelseriesFizzFileCrc32Res {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzGenericRes {
     cmd: FuSteelseriesFizzCmd,
     error: u8,
@@ -162,6 +172,7 @@ struct FuStructSteelseriesFizzGenericRes {
 
 // gen1 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzVersionReq {
     cmd: FuSteelseriesFizzCmd = Version,
     mode: u8 == 0, // string
@@ -169,22 +180,26 @@ struct FuStructSteelseriesFizzVersionReq {
 
 // gen1 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesPairedStatusReq {
     cmd: FuSteelseriesFizzCmd == PairedStatus,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesPairedStatusRes {
     status: u8,
 }
 
 // gen1 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesConnectionStatusReq {
     cmd: FuSteelseriesFizzCmd == ConnectionStatus,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesConnectionStatusRes {
     reserved: u8,
     status: u8,
@@ -192,11 +207,13 @@ struct FuStructSteelseriesConnectionStatusRes {
 
 // gen1 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesBatteryLevelReq {
     cmd: FuSteelseriesFizzCmd = BatteryLevel,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesBatteryLevelRes {
     reserved: u8,
     level: u8,
@@ -204,11 +221,13 @@ struct FuStructSteelseriesBatteryLevelRes {
 
 // gen2 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesFizzVersion2Req {
     cmd: FuSteelseriesFizzCmd == Version2,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesVersion2Res {
     reserved: u8,
     version_receiver: [char; 12],
@@ -218,11 +237,13 @@ struct FuStructSteelseriesVersion2Res {
 
 // gen2 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesBatteryLevel2Req {
     cmd: FuSteelseriesFizzCmd == ConnectionStatus2, // FIXME weird, confirm!
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesBatteryLevel2Res {
     reserved: [u8; 3],
     level: u8,
@@ -230,11 +251,13 @@ struct FuStructSteelseriesBatteryLevel2Res {
 
 // gen2 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesConnectionStatus2Req {
     cmd: FuSteelseriesFizzCmd == ConnectionStatus2,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesConnectionStatus2Res {
     reserved: u8,
     status: FuSteelseriesFizzConnection,
@@ -242,11 +265,13 @@ struct FuStructSteelseriesConnectionStatus2Res {
 
 // gen2 only
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSerial2Req {
     cmd: FuSteelseriesFizzCmd == Serial2,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSerial2Res {
     reserved: u8,
     serial: [char; 0x12],

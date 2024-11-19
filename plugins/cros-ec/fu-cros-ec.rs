@@ -34,6 +34,7 @@ enum FuCrosEcFirmwareUpgradeStatus {
 // The flash update function receives the unframed PDU body (starting at the cmd field below),
 // and puts its reply into the same buffer the PDU was in.
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructCrosEcUpdateFrameHeader {
     block_size: u32be,          // total frame size, including this field
     _cmd_block_digest: u32be,    // four bytes of the structure sha1 digest (or 0 where ignored)
@@ -42,6 +43,7 @@ struct FuStructCrosEcUpdateFrameHeader {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructCrosEcUpdateDone {
     value: u32be == 0xB007AB1E,
 }
@@ -49,6 +51,7 @@ struct FuStructCrosEcUpdateDone {
 // various revision fields of the header created by the signer (cr50-specific).
 // these fields are compared when deciding if versions of two images are the same or when deciding
 // which one of the available images to run.
+#[repr(C, packed)]
 struct FuStructCrosEcSignedHeaderVersion {
     minor: u32be,
     major: u32be,
@@ -56,6 +59,7 @@ struct FuStructCrosEcSignedHeaderVersion {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCrosEcFirstResponsePdu {
     return_value: u32be,
     header_type: FuStructCrosEcFirstResponsePduHeaderType,

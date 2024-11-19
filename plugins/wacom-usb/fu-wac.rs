@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructWacFirmwareHdr {
     magic: [char; 5] == "WACOM",
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructWtaBlockHeader {
     block_start: u32le,
     block_size: u32le,
@@ -86,6 +88,7 @@ enum FuWacDeviceStatus {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructId9UnknownCmd {
     unknown1: u16be == 0x7050,
     unknown2: u32be == 0,
@@ -93,6 +96,7 @@ struct FuStructId9UnknownCmd {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructId9SpiCmd {
     command: u8 == 0x91,
     start_addr: u32be == 0,
@@ -101,6 +105,7 @@ struct FuStructId9SpiCmd {
 }
 
 #[derive(New,Validate)]
+#[repr(C, packed)]
 struct FuStructId9LoaderCmd {
     command: u8,
     size: u16be,                  // sizeof(data) + size of payload
@@ -109,6 +114,7 @@ struct FuStructId9LoaderCmd {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructModuleDesc {
     _report_id: u8,
     bootloader_version: u16be,
@@ -117,6 +123,7 @@ struct FuStructModuleDesc {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructModuleItem {
     kind: FuWacModuleFwType,
     version: u16be,

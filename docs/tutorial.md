@@ -885,6 +885,7 @@ Although these files *look like* Rust files they're *not actually compiled by
 rustc*, so small differences may be noticeable.
 
     #[derive(New, Validate, Parse, Default)]
+    #[repr(C, packed)]
     struct FuExampleHdr {
         magic: Guid,
         hdrver: u8,

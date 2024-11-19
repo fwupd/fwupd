@@ -25,38 +25,45 @@ enum FuSteelseriesSonicOpcode8 {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicWirelessStatusReq {
     opcode: FuSteelseriesSonicOpcode8 == WirelessStatus,
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicWirelessStatusRes {
     status: FuSteelseriesSonicWirelessStatus,
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicBatteryReq {
     opcode: FuSteelseriesSonicOpcode8 == Battery,
     bat_mode: u8 == 0x01, // percentage
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicBatteryRes {
     value: u16le,
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicRestartReq {
     opcode: u16le,
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicEraseReq {
     opcode: u16le,
     chipid: u16le,
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicReadFromRamReq {
     opcode: u16le,
     offset: u16le,
@@ -64,11 +71,13 @@ struct FuStructSteelseriesSonicReadFromRamReq {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicReadFromRamRes {
     data: [u8; 48],
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicReadFromFlashReq {
     opcode: u16le,
     chipid: u16le,
@@ -77,6 +86,7 @@ struct FuStructSteelseriesSonicReadFromFlashReq {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicWriteToRamReq {
     opcode: u16le,
     offset: u16le,
@@ -85,6 +95,7 @@ struct FuStructSteelseriesSonicWriteToRamReq {
 }
 
 #[derive(New)]
+#[repr(C, packed)]
 struct FuStructSteelseriesSonicWriteToFlashReq {
     opcode: u16le,
     chipid: u16le,

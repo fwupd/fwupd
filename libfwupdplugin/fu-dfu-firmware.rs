@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructDfuFtr {
     release: u16le,
     pid: u16le,
@@ -13,6 +14,7 @@ struct FuStructDfuFtr {
 }
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructDfuseHdr {
     sig: [char; 5] == "DfuSe",
     ver: u8 == 0x01,
@@ -21,6 +23,7 @@ struct FuStructDfuseHdr {
 }
 
 #[derive(New, Validate, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructDfuseImage {
     sig: [char; 6] == "Target",
     alt_setting: u8,
@@ -31,6 +34,7 @@ struct FuStructDfuseImage {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructDfuseElement {
     address: u32le,
     size: u32le,

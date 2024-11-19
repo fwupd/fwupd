@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructFdt {
     magic: u32be == 0xD00DFEED,
     totalsize: u32be,
@@ -16,12 +17,14 @@ struct FuStructFdt {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructFdtReserveEntry {
     address: u64be,
     size: u64be,
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructFdtProp {
     len: u32be,
     nameoff: u32be,

@@ -8,6 +8,7 @@ enum FuSelfTestRevision {
 }
 
 #[derive(New, Validate, Parse, ToString, Default)]
+#[repr(C, packed)]
 struct FuStructSelfTest {
     signature: u32be == 0x1234_5678,
     length: u32le = $struct_size, // bytes
@@ -21,6 +22,7 @@ struct FuStructSelfTest {
 }
 
 #[derive(New, Validate, Parse, ToString)]
+#[repr(C, packed)]
 struct FuStructSelfTestWrapped {
     less: u8,
     base: FuStructSelfTest,
@@ -35,6 +37,7 @@ enum FuStructSelfTestLower {
 }
 
 #[derive(New, Parse, ToString, Default)]
+#[repr(C, packed)]
 struct FuStructSelfTestBits {
     lower: FuStructSelfTestLower = Two,
     middle: u1 = 0b1,
@@ -42,12 +45,14 @@ struct FuStructSelfTestBits {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructSelfTestListMember {
     data1: u8,
     data2: u8,
 }
 
 #[derive(New, Setters, Getters, ToString)]
+#[repr(C, packed)]
 struct FuStructSelfTestList {
     basic: [u32; 8],
     members: [FuStructSelfTestListMember; 5],

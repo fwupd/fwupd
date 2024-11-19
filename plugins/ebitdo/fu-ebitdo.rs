@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructEbitdoHdr {
     version: u32le,
     destination_addr: u32le,
@@ -40,6 +41,7 @@ enum FuEbitdoPktCmd {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructEbitdoPkt {
     pkt_len: u8,
     type: FuEbitdoPktType,

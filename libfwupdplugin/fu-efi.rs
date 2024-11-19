@@ -41,6 +41,7 @@ enum FuEfiFileType {
 }
 
 #[derive(New, Validate, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructEfiFile {
     name: Guid,
     hdr_checksum: u8,
@@ -52,6 +53,7 @@ struct FuStructEfiFile {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiFile2 {
     _base: FuStructEfiFile,
     extended_size: u64le,
@@ -64,6 +66,7 @@ enum FuEfiCompressionType {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSectionCompression {
     uncompressed_length: u32le,
     compression_type: FuEfiCompressionType,
@@ -77,6 +80,7 @@ enum FuEfiLz77DecompressorVersion {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiLz77DecompressorHeader {
     src_size: u32le,
     dst_size: u32le,
@@ -108,23 +112,27 @@ enum FuEfiSectionType {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSection {
     size: u24le,
     type: FuEfiSectionType,
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSection2 {
     _base: FuStructEfiSection,
     extended_size: u32le,
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSectionFreeformSubtypeGuid {
     guid: Guid,
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSectionGuidDefined {
     name: Guid,
     offset: u16le,
@@ -132,6 +140,7 @@ struct FuStructEfiSectionGuidDefined {
 }
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructEfiVolume {
     zero_vector: Guid,
     guid: Guid,
@@ -146,6 +155,7 @@ struct FuStructEfiVolume {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiVolumeExtHeader {
     fv_name: Guid,
     size: u32le,
@@ -160,18 +170,21 @@ enum FuEfiVolumeExtEntryType {
 }
 
 #[derive(ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiVolumeExtEntry {
     size: u16le,
     type: FuEfiVolumeExtEntryType,
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiVolumeBlockMap {
     num_blocks: u32le,
     length: u32le,
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructEfiSignatureList {
     type: Guid,
     list_size: u32le,
@@ -190,6 +203,7 @@ enum FuEfiLoadOptionAttrs {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructEfiLoadOption {
     attrs: FuEfiLoadOptionAttrs,
     dp_size: u16le,
@@ -206,6 +220,7 @@ enum FuEfiDevicePathType {
 }
 
 #[derive(ParseStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructEfiDevicePath {
     type: FuEfiDevicePathType,
     subtype: u8 = 0xFF,
@@ -241,6 +256,7 @@ enum FuEfiHardDriveDevicePathSignatureType {
 }
 
 #[derive(ParseStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructEfiHardDriveDevicePath {
     type: FuEfiDevicePathType == Media,
     subtype: FuEfiHardDriveDevicePathSubtype = HardDrive,
@@ -254,6 +270,7 @@ struct FuStructEfiHardDriveDevicePath {
 }
 
 #[derive(ParseStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructShimHive {
     magic: [char; 4] == "HIVE",
     header_version: u8 = 0x1,
@@ -264,6 +281,7 @@ struct FuStructShimHive {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructShimHiveItem {
     key_length: u8,
     value_length: u32le,

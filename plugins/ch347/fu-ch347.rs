@@ -12,6 +12,7 @@ enum FuCh347CmdSpi {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCh347Req {
     cmd: FuCh347CmdSpi,
     payloadsz: u16le,

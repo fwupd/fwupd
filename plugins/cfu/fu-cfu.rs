@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructCfuGetVersionRsp {
     component_cnt: u8,
     _reserved: u16le,
@@ -10,6 +11,7 @@ struct FuStructCfuGetVersionRsp {
 }
 
 #[derive(New, Parse)]
+#[repr(C, packed)]
 struct FuStructCfuGetVersionRspComponent {
     fw_version: u32le,
     flags: u8,
@@ -50,6 +52,7 @@ enum FuCfuOfferStatus {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructCfuOfferInfoReq {
     code: FuCfuOfferInfoCode,
     _reserved1: u8,
@@ -59,6 +62,7 @@ struct FuStructCfuOfferInfoReq {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructCfuOfferRsp {
     _reserved1: [u8; 3],
     token: u8,
@@ -95,6 +99,7 @@ enum FuCfuContentStatus {
 }
 
 #[derive(New, Getters)]
+#[repr(C, packed)]
 struct FuStructCfuContentReq {
     flags: FuCfuContentFlag,
     data_length: u8,
@@ -103,6 +108,7 @@ struct FuStructCfuContentReq {
 }
 
 #[derive(Parse)]
+#[repr(C, packed)]
 struct FuStructCfuContentRsp {
     seq_number: u16le,
     _reserved1: u16le,

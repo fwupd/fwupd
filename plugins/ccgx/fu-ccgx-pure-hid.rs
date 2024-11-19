@@ -27,6 +27,7 @@ enum FuCcgxPureHidCommand {
 }
 
 #[derive(Parse, Default)]
+#[repr(C, packed)]
 struct FuStructCcgxPureHidFwInfo {
     report_id: FuCcgxPureHidReportId == Info,
     _reserved_1: u8,
@@ -49,6 +50,7 @@ struct FuStructCcgxPureHidFwInfo {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructCcgxPureHidCommand {
     report_id: FuCcgxPureHidReportId == Command,
     cmd: u8,
@@ -58,6 +60,7 @@ struct FuStructCcgxPureHidCommand {
 }
 
 #[derive(New, Default)]
+#[repr(C, packed)]
 struct FuStructCcgxPureHidWriteHdr {
     report_id: FuCcgxPureHidReportId == Write,
     pd_resp: u8,

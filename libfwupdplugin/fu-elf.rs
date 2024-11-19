@@ -11,6 +11,7 @@ enum FuElfFileHeaderType {
 }
 
 #[derive(ParseStream, ValidateStream, New, Default)]
+#[repr(C, packed)]
 struct FuStructElfFileHeader64le {
     ei_magic: [char; 4] == "\x7F\x45\x4C\x46",
     ei_class: u8 == 0x2, // 64-bit format
@@ -35,6 +36,7 @@ struct FuStructElfFileHeader64le {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructElfProgramHeader64le {
     flags: u32le,
     offset: u64le,
@@ -70,6 +72,7 @@ enum FuElfSectionHeaderType {
 }
 
 #[derive(ParseStream, New)]
+#[repr(C, packed)]
 struct FuStructElfSectionHeader64le {
     name: u32le,
     type: FuElfSectionHeaderType,

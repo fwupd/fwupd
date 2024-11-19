@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ValidateStream, ParseStream, Default)]
+#[repr(C, packed)]
 struct FuStructFmap {
     signature: [char; 8] == "__FMAP__",
     ver_major: u8 = 0x1,
@@ -13,6 +14,7 @@ struct FuStructFmap {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructFmapArea {		// area of volatile and static regions
     offset: u32le,		// offset relative to base
     size: u32le,		// bytes

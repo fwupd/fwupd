@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ParseStream, ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructQcFwUpdateHdr {
     magic1: u32be == 0x41505055,
     magic2: u16be == 0x4844,

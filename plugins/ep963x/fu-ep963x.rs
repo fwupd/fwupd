@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ValidateStream, Default)]
+#[repr(C, packed)]
 struct FuStructEp963xFirmwareHdr {
     reserved: [u8; 16],
     magic: [char; 5] == "EP963",

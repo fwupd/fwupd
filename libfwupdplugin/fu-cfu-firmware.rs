@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructCfuPayload {
     addr: u32le,
     size: u8,
@@ -16,6 +17,7 @@ enum FuCfuOfferComponentId {
 }
 
 #[derive(New, ParseStream)]
+#[repr(C, packed)]
 struct FuStructCfuOffer {
     segment_number: u8,
     flags1: u8,
