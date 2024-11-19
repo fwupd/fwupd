@@ -741,6 +741,14 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: an input device used by gamers, e.g. a joystick */
 			return g_strdup_printf(_("%s Input Controller Update"), name);
 		}
+		if (g_strcmp0(cat, "X-Headphones") == 0) {
+			/* TRANSLATORS: two miniature speakers attached to your ears */
+			return g_strdup_printf(_("%s Headphones Update"), name);
+		}
+		if (g_strcmp0(cat, "X-Headset") == 0) {
+			/* TRANSLATORS: headphones with an integrated microphone */
+			return g_strdup_printf(_("%s Headset Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
