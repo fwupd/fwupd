@@ -527,6 +527,15 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	};
 	g_autoptr(GSource) source = NULL;
 
+	/* minijail -p prevents access */
+	if (nls.nl_pid <= 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get PID, perhaps sandboxed?");
+		return FALSE;
+	}
+
 	self->netlink_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_KOBJECT_UEVENT);
 	if (self->netlink_fd < 0) {
 		g_set_error(error,
