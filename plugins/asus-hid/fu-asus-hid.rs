@@ -53,7 +53,7 @@ struct FuStructAsusManResult {
 #[repr(C, packed)]
 struct FuStructAsusHidCommand {
     report_id: FuAsusHidReportId == Info,
-    cmd: u32,
+    cmd: u32le,
     length: u8,
 }
 
@@ -87,7 +87,7 @@ struct FuStructAsusHidFwInfo {
 #[repr(C, packed)]
 struct FuStructAsusPreUpdateCommand {
     report_id: FuAsusHidReportId == Info,
-    cmd: u32,
+    cmd: u32le,
     length: u8,
     data: [u8; 58],
 }
@@ -105,7 +105,7 @@ struct FuStructAsusFlashReset {
 #[repr(C, packed)]
 struct FuStructAsusReadFlashCommand {
     command: u8 == 0xd1,
-    offset: u24,
+    offset: u24le,
     datasz: u8,
     data: [u8; 58],
 }
