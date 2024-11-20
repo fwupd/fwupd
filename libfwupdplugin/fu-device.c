@@ -1257,6 +1257,10 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 		g_critical("%s is not a valid device ID", equivalent_id);
 		return;
 	}
+	if (g_strcmp0(equivalent_id, fu_device_get_id(self)) == 0) {
+		g_critical("%s is the same as this device ID", equivalent_id);
+		return;
+	}
 
 	g_free(priv->equivalent_id);
 	priv->equivalent_id = g_strdup(equivalent_id);
