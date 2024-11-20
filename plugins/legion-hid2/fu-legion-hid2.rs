@@ -26,7 +26,7 @@ struct FuStructLegionGetVersion {
 #[repr(C, packed)]
 struct FuStructLegionVersion {
     command: u8,
-    version: u32,
+    version: u32le,
     reserved: [u8; 59],
 }
 
@@ -92,8 +92,8 @@ enum FuLegionIapError {
 #[derive(New, Setters, Getters)]
 #[repr(C, packed)]
 struct FuStructLegionIapTlv {
-    tag: u16,
-    length: u16,
+    tag: u16le,
+    length: u16le,
     value: [u8; 60],
 }
 
@@ -103,10 +103,10 @@ struct FuStructLegionIapTlv {
 struct FuStructLegionHid2Header {
     magic: [char; 7] == "#Legion",
     reserved: [u8; 7],
-    sig_add: u32,
-    sig_len: u32,
-    data_add: u32,
-    data_len: u32,
+    sig_add: u32le,
+    sig_len: u32le,
+    data_add: u32le,
+    data_len: u32le,
 }
 
 #[derive(Getters, ParseStream, Default)]
@@ -114,5 +114,5 @@ struct FuStructLegionHid2Header {
 struct FuStructLegionHid2Version {
     signature: [char; 7] == "VERSION",
     reserved: u8,
-    version: u32,
+    version: u32le,
 }
