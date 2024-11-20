@@ -275,6 +275,7 @@ class StructItem:
         self.obj: StructObj = obj
         self.element_id: str = ""
         self.type: Type = Type.NONE
+        self.is_packed: bool = False
         self.enum_obj: Optional[EnumObj] = None
         self.struct_obj: Optional[StructObj] = None
         self.default: Optional[str] = None
@@ -514,6 +515,16 @@ class StructItem:
         except ValueError as e:
             raise ValueError(f"invalid type: {typestr}") from e
 
+        # sanity check
+        if (
+            self.enabled
+            and self.is_packed
+            and self.endian == Endian.NATIVE
+            and self.type
+            in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I16, Type.I32, Type.I64]
+        ):
+            raise ValueError(f"endian not specified for packed struct: {typestr}")
+
     def __str__(self) -> str:
         tmp = f"{self.element_id}: "
         if self.n_elements:
@@ -666,6 +677,8 @@ class Generator:
                 item._bits_offset = bits_offset
                 item.offset = offset
                 item.element_id = parts[0]
+                if repr_type == "C, packed":
+                    item.is_packed = True
 
                 type_parts = parts[1].split("=", maxsplit=3)
                 try:
