@@ -14,7 +14,7 @@ Plugin = parade_usbhub
 [USB\VID_1DA0&PID_0188]
 Plugin = parade_usbhub
 ParadeUsbhubChip = ps188
-[USB\VID_17EF&PID_2188]
+[USB\VID_1DA0&PID_2188]
 Plugin = parade_usbhub
 ParadeUsbhubChip = ps188
 
