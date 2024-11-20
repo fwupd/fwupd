@@ -1106,11 +1106,14 @@ fu_parade_usbhub_device_prepare(FuDevice *device,
 {
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(device);
 
-	/* prevent staying in high-power charging mode if UFP is disconnected */
-	if (!fu_parade_usbhub_device_set_ufp_disconnect_flag(self, error)) {
-		g_prefix_error(error, "failed to set UFP disconnect flag: ");
-		return FALSE;
+	if (self->chip == FU_PARADE_USBHUB_CHIP_PS188) {
+		/* prevent staying in high-power charging mode if UFP is disconnected */
+		if (!fu_parade_usbhub_device_set_ufp_disconnect_flag(self, error)) {
+			g_prefix_error(error, "failed to set UFP disconnect flag: ");
+			return FALSE;
+		}
 	}
+
 	return TRUE;
 }
 
