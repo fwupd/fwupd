@@ -107,7 +107,7 @@ struct FuMeiCsme11Hfsts2 {
     icc_prog_status: u2,
     invoke_mebx: u1,
     cpu_replaced: u1,
-    rsvd0: u1,
+    _rsvd0: u1,
     mfs_failure: u1,
     warm_reset_rqst: u1,
     cpu_replaced_valid: u1,
@@ -115,7 +115,7 @@ struct FuMeiCsme11Hfsts2 {
     me_power_gate: u1,
     ipu_needed: u1,
     forced_safe_boot: u1,
-    rsvd1: u2,
+    _rsvd1: u2,
     listener_change: u1,
     status_data: u8,
     current_pmevent: u4,
@@ -144,15 +144,15 @@ struct FuMeiCsme11Hfsts3 {
 /* CSME11 - Host Firmware Status register 4 */
 #[repr(C, packed)]
 struct FuMeiCsme11Hfsts4 {
-    rsvd0: u9,
+    _rsvd0: u9,
     enforcement_flow: u1,
     sx_resume_type: u1,
-    rsvd1: u1,
+    _rsvd1: u1,
     tpms_disconnected: u1,
     rvsd2: u1,
     fwsts_valid: u1,
     boot_guard_self_test: u1,
-    rsvd3: u16,
+    _rsvd3: u16,
 }
 
 /* CSME11 - Host Firmware Status register 5 */
@@ -168,7 +168,7 @@ struct FuMeiCsme11Hfsts5 {
     inc_boot_guard_acm: u4,
     inc_key_manifest: u4,
     inc_boot_policy: u4,
-    rsvd0: u2,
+    _rsvd0: u2,
     start_enforcement: u1,
 }
 
@@ -227,14 +227,14 @@ struct FuMeiCsme18Hfsts2 {
     icc_prog_status: u2,
     invoke_mebx: u1,
     cpu_replaced: u1,
-    rsvd0: u1,
+    _rsvd0: u1,
     mfs_failure: u1,
     warm_reset_rqst: u1,
     cpu_replaced_valid: u1,
     low_power_state: u1,
     me_power_gate: u1,
     ipu_needed: u1,
-    rsvd1: u2,
+    _rsvd1: u2,
     cse_way_to_disabled: u1,
     listener_change: u1,
     status_data: u8,
@@ -260,9 +260,9 @@ struct FuMeiCsme18Hfsts3 {
 /* CSME18 - Host Firmware Status register 4 */
 #[repr(C, packed)]
 struct FuMeiCsme18Hfsts4 {
-    rsvd0: u2,
+    _rsvd0: u2,
     flash_log_exist: u1,
-    rsvd1: u29,
+    _rsvd1: u29,
 }
 
 #[repr(u5)]
