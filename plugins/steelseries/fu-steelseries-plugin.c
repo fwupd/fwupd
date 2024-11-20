@@ -45,9 +45,47 @@ fu_steelseries_plugin_constructed(GObject *obj)
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 }
 
+static FuDevice *
+fu_steelseries_plugin_find_device_by_serial(FuSteelseriesPlugin *self, const gchar *serial)
+{
+	GPtrArray *devices = fu_plugin_get_devices(FU_PLUGIN(self));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (g_strcmp0(serial, fu_device_get_serial(device)) == 0)
+			return device;
+	}
+	return NULL;
+}
+
+static void
+fu_steelseries_plugin_device_added_all(FuSteelseriesPlugin *self, FuDevice *device)
+{
+	if (fu_device_get_serial(device) != NULL) {
+		FuDevice *device2 =
+		    fu_steelseries_plugin_find_device_by_serial(self, fu_device_get_serial(device));
+		if (device2 != NULL && device != device2)
+			fu_device_set_equivalent_id(device, fu_device_get_id(device2));
+	}
+}
+
+static void
+fu_steelseries_plugin_device_added(FuPlugin *plugin, FuDevice *device)
+{
+	FuSteelseriesPlugin *self = FU_STEELSERIES_PLUGIN(plugin);
+	GPtrArray *children = fu_device_get_children(device);
+
+	/* parent then children */
+	fu_steelseries_plugin_device_added_all(self, device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		fu_steelseries_plugin_device_added_all(self, child);
+	}
+}
+
 static void
 fu_steelseries_plugin_class_init(FuSteelseriesPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_steelseries_plugin_constructed;
+	plugin_class->device_added = fu_steelseries_plugin_device_added;
 }
