@@ -49,6 +49,6 @@ struct FuStructSelfTestListMember {
 
 #[derive(New, Setters, Getters, ToString)]
 struct FuStructSelfTestList {
-    basic: [u32; 8],
+    basic: [u32le; 8],
     members: [FuStructSelfTestListMember; 5],
 }
