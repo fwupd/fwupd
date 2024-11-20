@@ -1,11 +1,25 @@
+# PS5511 devboard
+[USB\VID_1DA0&PID_5511]
+Plugin = parade_usbhub
+[USB\VID_1DA0&PID_55A1]
+Plugin = parade_usbhub
+
 # PS5512 devboard
-[USB\VID_1DA0&PID_551A]
+[USB\VID_1DA0&PID_5512]
 Plugin = parade_usbhub
 [USB\VID_1DA0&PID_551D]
 Plugin = parade_usbhub
 
 # PS188
-[USB\VID_1DA0&PID_2188]
+[USB\VID_1DA0&PID_0188]
+Plugin = parade_usbhub
+ParadeUsbhubChip = ps188
+[USB\VID_17EF&PID_2188]
+Plugin = parade_usbhub
+ParadeUsbhubChip = ps188
+
+# PS188 - Lenovo
+[USB\VID_17EF&PID_10B7]
 Plugin = parade_usbhub
 ParadeUsbhubChip = ps188
 [USB\VID_17EF&PID_10B8]
