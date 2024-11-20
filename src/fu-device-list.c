@@ -329,8 +329,10 @@ fu_device_list_filter_by_id(FuDeviceList *self, const gchar *device_id, GError *
 				      fu_device_get_equivalent_id(item_tmp->device),
 				      NULL};
 		for (guint j = 0; ids[j] != NULL; j++) {
-			if (strncmp(ids[j], device_id, device_id_len) == 0)
+			if (strncmp(ids[j], device_id, device_id_len) == 0) {
 				g_ptr_array_add(items, item_tmp);
+				break;
+			}
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
@@ -349,8 +351,10 @@ fu_device_list_filter_by_id(FuDeviceList *self, const gchar *device_id, GError *
 		ids[0] = fu_device_get_id(item_tmp->device_old);
 		ids[1] = fu_device_get_equivalent_id(item_tmp->device_old);
 		for (guint j = 0; ids[j] != NULL; j++) {
-			if (strncmp(ids[j], device_id, device_id_len) == 0)
+			if (strncmp(ids[j], device_id, device_id_len) == 0) {
 				g_ptr_array_add(items, item_tmp);
+				break;
+			}
 		}
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
