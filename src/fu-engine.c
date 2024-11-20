@@ -302,6 +302,8 @@ fu_engine_ensure_device_problem_priority(FuEngine *self, FuDevice *device)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		if (g_strcmp0(fu_device_get_id(device_tmp), fu_device_get_id(device)) == 0)
+			continue;
 		fu_engine_ensure_device_problem_priority_full(self, device, device_tmp);
 	}
 }
