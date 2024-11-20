@@ -16,8 +16,8 @@ enum FuDellKestrelEcUsbHidCmd {
 struct FuStructEcHidCmdBuffer {
     cmd: u8,
     ext: u8,
-    dwregaddr: u32,
-    bufferlen: u16,
+    dwregaddr: u32le,
+    bufferlen: u16le,
     parameters: [u8; 3] = 0xEC0180, // addr, length, speed
     extended_cmdarea: [u8; 53] = 0x00,
     databytes: [u8; 192] = 0x00,
