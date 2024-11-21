@@ -116,6 +116,10 @@ fu_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Password", NULL);
 		fwupd_remote_set_password(self, tmp);
 	}
+	if (g_key_file_has_key(kf, group, "FirmwareBaseURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "FirmwareBaseURI", NULL);
+		fwupd_remote_set_firmware_base_uri(self, tmp);
+	}
 	if (g_key_file_has_key(kf, group, "OrderBefore", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "OrderBefore", NULL);
 		fwupd_remote_set_order_before(self, tmp);
@@ -197,6 +201,11 @@ fu_remote_save_to_filename(FwupdRemote *self,
 		g_key_file_set_string(kf, group, "Username", fwupd_remote_get_username(self));
 	if (fwupd_remote_get_password(self) != NULL)
 		g_key_file_set_string(kf, group, "Password", fwupd_remote_get_password(self));
+	if (fwupd_remote_get_firmware_base_uri(self) != NULL)
+		g_key_file_set_string(kf,
+				      group,
+				      "FirmwareBaseURI",
+				      fwupd_remote_get_firmware_base_uri(self));
 	if (fwupd_remote_get_order_after(self) != NULL) {
 		g_autofree gchar *str = g_strjoinv(";", fwupd_remote_get_order_after(self));
 		g_key_file_set_string(kf, group, "OrderAfter", str);

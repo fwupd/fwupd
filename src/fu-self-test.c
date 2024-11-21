@@ -6218,6 +6218,42 @@ fu_remote_download_func(void)
 	g_assert_cmpstr(fwupd_remote_get_filename_cache_sig(remote), ==, expected_signature);
 }
 
+/* verify we used the FirmwareBaseURI just for firmware */
+static void
+fu_remote_baseuri_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *firmware_uri = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autofree gchar *directory = NULL;
+	g_autoptr(GError) error = NULL;
+
+	remote = fwupd_remote_new();
+	directory = g_build_filename(FWUPD_LOCALSTATEDIR, "lib", "fwupd", "remotes2.d", NULL);
+	fwupd_remote_set_remotes_dir(remote, directory);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware-base-uri.conf", NULL);
+	ret = fu_remote_load_from_filename(remote, fn, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
+	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
+	g_assert_true(fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED));
+	g_assert_cmpstr(fwupd_remote_get_firmware_base_uri(remote), ==, "https://my.fancy.cdn/");
+	g_assert_cmpstr(fwupd_remote_get_agreement(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri_sig(remote),
+			==,
+			"https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
+	firmware_uri =
+	    fwupd_remote_build_firmware_uri(remote, "http://bbc.co.uk/firmware.cab", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
+}
+
 static void
 fu_remote_auth_func(void)
 {
@@ -6305,6 +6341,7 @@ fu_remote_auth_func(void)
 		"  \"ReportUri\" : \"https://fwupd.org/lvfs/firmware/report\",\n"
 		"  \"MetadataUri\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz\",\n"
 		"  \"MetadataUriSig\" : \"https://cdn.fwupd.org/downloads/firmware.xml.gz.jcat\",\n"
+		"  \"FirmwareBaseUri\" : \"https://my.fancy.cdn/\",\n"
 		"  \"Username\" : \"user\",\n"
 		"  \"Password\" : \"pass\",\n"
 		"  \"ChecksumSig\" : "
@@ -7083,6 +7120,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/idle", fu_idle_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
+	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
 	g_test_add_func("/fwupd/remote{no-path}", fu_remote_nopath_func);
 	g_test_add_func("/fwupd/remote{local}", fu_remote_local_func);
 	g_test_add_func("/fwupd/remote{duplicate}", fu_remote_duplicate_func);
