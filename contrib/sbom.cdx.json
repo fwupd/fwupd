@@ -23,6 +23,11 @@
           "https://github.com/fwupd/fwupd/blob/main/MAINTAINERS"
         ]
       },
+      "authors": [
+        {
+          "name": "@VCS_AUTHORS@"
+        }
+      ],
       "licenses": [
         {
           "license": {
