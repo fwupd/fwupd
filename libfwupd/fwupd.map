@@ -993,3 +993,10 @@ LIBFWUPD_2.0.1 {
     fwupd_client_get_details_finish;
   local: *;
 } LIBFWUPD_2.0.0;
+
+LIBFWUPD_2.0.2 {
+  global:
+    fwupd_remote_get_firmware_base_uri;
+    fwupd_remote_set_firmware_base_uri;
+  local: *;
+} LIBFWUPD_2.0.1;

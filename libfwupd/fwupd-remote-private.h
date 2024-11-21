@@ -49,6 +49,9 @@ void
 fwupd_remote_set_password(FwupdRemote *self, const gchar *password) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_firmware_base_uri(FwupdRemote *self, const gchar *firmware_base_uri)
+    G_GNUC_NON_NULL(1);
 
 void
 fwupd_remote_set_remotes_dir(FwupdRemote *self, const gchar *directory) G_GNUC_NON_NULL(1);
