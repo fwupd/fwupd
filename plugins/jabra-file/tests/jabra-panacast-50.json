@@ -1,0 +1,20 @@
+{
+  "name": "Jabra PanaCast 50",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/887800a9dec01390fa1581f95c07ec5d54aa0bdcda9e7fb5f9bb782702eedfe0-jabra-panacast-50-8.0.7.cab",
+      "emulation-url": "https://fwupd.org/downloads/779eda568d6146da1c02ee36d65e3b0dcc9b0094b924ccc976ab90b01967ed51-emulation.zip",
+      "emulation-file": "@enumeration_datadir@/jabra-panacast-50-setup.json",
+      "components": [
+        {
+          "version": "8.0.7",
+          "protocol": "com.jabra.file",
+          "guids": [
+            "e18cee37-6325-5b8d-9c30-8b2fb6ddd577"
+          ]
+        }
+      ]
+    }
+  ]
+}

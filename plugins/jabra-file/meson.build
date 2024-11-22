@@ -14,3 +14,10 @@ plugin_builtins += static_library('fu_plugin_jabra_file',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/jabra-panacast-50.json',
+)
+enumeration_data += files(
+  'tests/jabra-panacast-50-setup.json',
+)
