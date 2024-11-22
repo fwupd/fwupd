@@ -25,23 +25,19 @@ typedef struct {
 	GDestroyNotify destroy;
 } FuDeviceEventBlob;
 
-typedef struct {
+struct _FuDeviceEvent {
+	GObject parent_instance;
 	gchar *id;
 	GHashTable *values; /* (utf-8) (FuDeviceEventBlob) */
-} FuDeviceEventPrivate;
+};
 
 static void
 fu_device_event_codec_iface_init(FwupdCodecInterface *iface);
 
-G_DEFINE_TYPE_EXTENDED(FuDeviceEvent,
-		       fu_device_event,
-		       G_TYPE_OBJECT,
-		       0,
-		       G_ADD_PRIVATE(FuDeviceEvent)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						 fu_device_event_codec_iface_init));
-
-#define GET_PRIVATE(o) (fu_device_event_get_instance_private(o))
+G_DEFINE_TYPE_WITH_CODE(FuDeviceEvent,
+			fu_device_event,
+			G_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_event_codec_iface_init))
 
 static void
 fu_device_event_blob_free(FuDeviceEventBlob *blob)
@@ -74,9 +70,8 @@ fu_device_event_blob_create(GType gtype, gpointer data, GDestroyNotify destroy)
 const gchar *
 fu_device_event_get_id(FuDeviceEvent *self)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE_EVENT(self), NULL);
-	return priv->id;
+	return self->id;
 }
 
 /**
@@ -92,10 +87,9 @@ fu_device_event_get_id(FuDeviceEvent *self)
 void
 fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *value)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
-	g_hash_table_insert(priv->values,
+	g_hash_table_insert(self->values,
 			    g_strdup(key),
 			    fu_device_event_blob_create(G_TYPE_STRING, g_strdup(value), g_free));
 }
@@ -113,13 +107,12 @@ fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *valu
 void
 fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 
 	g_hash_table_insert(
-	    priv->values,
+	    self->values,
 	    g_strdup(key),
 	    fu_device_event_blob_create(G_TYPE_INT, g_memdup2(&value, sizeof(value)), g_free));
 }
@@ -137,12 +130,11 @@ fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
 void
 fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
 	g_hash_table_insert(
-	    priv->values,
+	    self->values,
 	    g_strdup(key),
 	    fu_device_event_blob_create(
 		G_TYPE_STRING,
@@ -164,11 +156,10 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
 void
 fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *buf, gsize bufsz)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 	g_hash_table_insert(
-	    priv->values,
+	    self->values,
 	    g_strdup(key),
 	    fu_device_event_blob_create(G_TYPE_STRING, g_base64_encode(buf, bufsz), g_free));
 }
@@ -176,8 +167,7 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
 static gpointer
 fu_device_event_lookup(FuDeviceEvent *self, const gchar *key, GType gtype, GError **error)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
-	FuDeviceEventBlob *blob = g_hash_table_lookup(priv->values, key);
+	FuDeviceEventBlob *blob = g_hash_table_lookup(self->values, key);
 	if (blob == NULL) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event for key %s", key);
 		return NULL;
@@ -317,16 +307,15 @@ static void
 fu_device_event_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	GHashTableIter iter;
 	gpointer key, value;
 
-	if (priv->id != NULL) {
+	if (self->id != NULL) {
 		json_builder_set_member_name(builder, "Id");
-		json_builder_add_string_value(builder, priv->id);
+		json_builder_add_string_value(builder, self->id);
 	}
 
-	g_hash_table_iter_init(&iter, priv->values);
+	g_hash_table_iter_init(&iter, self->values);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		FuDeviceEventBlob *blob = (FuDeviceEventBlob *)value;
 		if (blob->gtype == G_TYPE_INT) {
@@ -345,7 +334,6 @@ static gboolean
 fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
 	JsonNode *member_node;
 	JsonObjectIter iter;
 	JsonObject *json_object = json_node_get_object(json_node);
@@ -359,8 +347,8 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 		gtype = json_node_get_value_type(member_node);
 		if (gtype == G_TYPE_STRING) {
 			if (g_strcmp0(member_name, "Id") == 0) {
-				g_free(priv->id);
-				priv->id = json_node_dup_string(member_node);
+				g_free(self->id);
+				self->id = json_node_dup_string(member_node);
 				continue;
 			}
 			fu_device_event_set_str(self,
@@ -381,8 +369,7 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 static void
 fu_device_event_init(FuDeviceEvent *self)
 {
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
-	priv->values = g_hash_table_new_full(g_str_hash,
+	self->values = g_hash_table_new_full(g_str_hash,
 					     g_str_equal,
 					     g_free,
 					     (GDestroyNotify)fu_device_event_blob_free);
@@ -392,9 +379,8 @@ static void
 fu_device_event_finalize(GObject *object)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(object);
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
-	g_free(priv->id);
-	g_hash_table_unref(priv->values);
+	g_free(self->id);
+	g_hash_table_unref(self->values);
 	G_OBJECT_CLASS(fu_device_event_parent_class)->finalize(object);
 }
 
@@ -424,7 +410,6 @@ FuDeviceEvent *
 fu_device_event_new(const gchar *id)
 {
 	FuDeviceEvent *self = g_object_new(FU_TYPE_DEVICE_EVENT, NULL);
-	FuDeviceEventPrivate *priv = GET_PRIVATE(self);
-	priv->id = g_strdup(id);
+	self->id = g_strdup(id);
 	return FU_DEVICE_EVENT(self);
 }
