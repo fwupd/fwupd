@@ -29,6 +29,21 @@
           ]
         }
       ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/acef8b8dc286659a6e783e49aaf55872d4ce6f0f0c50330452c5db756cb2d307-jabra-evolve2-75-1.11.7.cab",
+      "emulation-url": "https://fwupd.org/downloads/169609950e6182d1c0add7aae7b2627510b29651287312bcd6e924f76c167cf3-emulation.zip",
+      "components": [
+        {
+          "version": "1.11.7",
+          "protocol": "com.jabra.gnp",
+          "guids": [
+            "354b39e6-e12e-557e-8beb-fa4128b0a98c",
+            "dc636868-13f1-5c3b-bac5-c4432d447707",
+            "b0870be4-7c69-50af-9b7d-fdfa8d849607"
+          ]
+        }
+      ]
     }
   ]
 }
