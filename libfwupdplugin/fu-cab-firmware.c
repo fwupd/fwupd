@@ -12,7 +12,7 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
-#include "fu-cab-firmware.h"
+#include "fu-cab-firmware-private.h"
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"
 #include "fu-chunk-array.h"
@@ -134,23 +134,29 @@ fu_cab_firmware_parse_helper_free(FuCabFirmwareParseHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCabFirmwareParseHelper, fu_cab_firmware_parse_helper_free)
 
 /* compute the MS cabinet checksum */
-static gboolean
+gboolean
 fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
+	guint32 tmp = *checksum;
 	for (gsize i = 0; i < bufsz; i += 4) {
-		guint32 ul = 0;
-		guint chunksz = MIN(bufsz - i, 4);
-		if (chunksz == 4) {
-			ul = fu_memread_uint32(buf + i, G_LITTLE_ENDIAN);
+		gsize chunksz = bufsz - i;
+		if (G_LIKELY(chunksz >= 4)) {
+			/* 3,2,1,0 */
+			tmp ^= ((guint32)buf[i + 3] << 24) | ((guint32)buf[i + 2] << 16) |
+			       ((guint32)buf[i + 1] << 8) | (guint32)buf[i + 0];
 		} else if (chunksz == 3) {
-			ul = fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
+			/* 0,1,2 -- yes, weird */
+			tmp ^= ((guint32)buf[i + 0] << 16) | ((guint32)buf[i + 1] << 8) |
+			       (guint32)buf[i + 2];
 		} else if (chunksz == 2) {
-			ul = fu_memread_uint16(buf + i, G_BIG_ENDIAN); /* err.. */
-		} else if (chunksz == 1) {
-			ul = buf[i];
+			/* 0,1 -- yes, weird */
+			tmp ^= ((guint32)buf[i + 0] << 8) | (guint32)buf[i + 1];
+		} else {
+			/* 0 */
+			tmp ^= (guint32)buf[i + 0];
 		}
-		*checksum ^= ul;
 	}
+	*checksum = tmp;
 	return TRUE;
 }
 
