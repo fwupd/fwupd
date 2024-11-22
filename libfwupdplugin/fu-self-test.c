@@ -18,6 +18,7 @@
 
 #include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
+#include "fu-cab-firmware-private.h"
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
@@ -5743,6 +5744,34 @@ fu_lzma_func(void)
 }
 
 static void
+fu_cab_checksum_func(void)
+{
+	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
+	guint32 checksums[] = {
+	    0xc0404040,
+	    0x40604060,
+	    0x40307070,
+	    0x40302040,
+	    0x40302010,
+	    0x102030,
+	    0x1020,
+	    0x10,
+	    0x0,
+	};
+
+	for (guint i = 0; i <= sizeof(buf); i++) {
+		gboolean ret;
+		guint32 checksum = 0x0;
+		g_autoptr(GError) error = NULL;
+
+		ret = fu_cab_firmware_compute_checksum(buf, sizeof(buf) - i, &checksum, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		g_assert_cmpint(checksum, ==, checksums[i]);
+	}
+}
+
+static void
 fu_efi_lz77_decompressor_func(void)
 {
 	gboolean ret;
@@ -6140,6 +6169,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 	(void)g_setenv("CACHE_DIRECTORY", "/tmp/fwupd-self-test/cache", TRUE);
 
+	g_test_add_func("/fwupd/cab{checksum}", fu_cab_checksum_func);
 	g_test_add_func("/fwupd/efi-lz77{decompressor}", fu_efi_lz77_decompressor_func);
 	g_test_add_func("/fwupd/input-stream", fu_input_stream_func);
 	g_test_add_func("/fwupd/input-stream{sum-overflow}", fu_input_stream_sum_overflow_func);
