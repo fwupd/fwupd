@@ -7392,7 +7392,6 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	for (guint i = priv->event_idx; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id) == 0) {
-			g_debug("found in-order %s at position %u", id, i);
 			priv->event_idx = i + 1;
 			return event;
 		}
