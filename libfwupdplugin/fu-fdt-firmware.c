@@ -376,9 +376,35 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	/* parse device tree struct */
 	if (fu_struct_fdt_get_size_dt_struct(st_hdr) != 0x0 &&
 	    fu_struct_fdt_get_size_dt_strings(st_hdr) != 0x0) {
+		gsize size_dt_struct = fu_struct_fdt_get_size_dt_struct(st_hdr);
+		guint32 token_tmp = 0;
 		g_autoptr(GByteArray) dt_strings = NULL;
 		g_autoptr(GByteArray) dt_struct = NULL;
 		g_autoptr(GBytes) dt_struct_buf = NULL;
+
+		/* some FDT structs are truncated by 4 bytes, no idea why */
+		if (!fu_input_stream_read_u32(stream,
+					      fu_struct_fdt_get_off_dt_struct(st_hdr) +
+						  size_dt_struct - 4,
+					      &token_tmp,
+					      G_BIG_ENDIAN,
+					      error))
+			return FALSE;
+		if (token_tmp != FU_FDT_TOKEN_END) {
+			if (!fu_input_stream_read_u32(stream,
+						      fu_struct_fdt_get_off_dt_struct(st_hdr) +
+							  size_dt_struct,
+						      &token_tmp,
+						      G_BIG_ENDIAN,
+						      error))
+				return FALSE;
+			if (token_tmp == FU_FDT_TOKEN_END) {
+				size_dt_struct += sizeof(guint32);
+				g_warning("FDT size_dt_struct was incorrect, fixing to 0x%x",
+					  (guint)size_dt_struct);
+			}
+		}
+
 		dt_strings =
 		    fu_input_stream_read_byte_array(stream,
 						    fu_struct_fdt_get_off_dt_strings(st_hdr),
@@ -387,15 +413,14 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 						    error);
 		if (dt_strings == NULL)
 			return FALSE;
-		dt_struct =
-		    fu_input_stream_read_byte_array(stream,
-						    fu_struct_fdt_get_off_dt_struct(st_hdr),
-						    fu_struct_fdt_get_size_dt_struct(st_hdr),
-						    NULL,
-						    error);
+		dt_struct = fu_input_stream_read_byte_array(stream,
+							    fu_struct_fdt_get_off_dt_struct(st_hdr),
+							    size_dt_struct,
+							    NULL,
+							    error);
 		if (dt_struct == NULL)
 			return FALSE;
-		if (dt_struct->len != fu_struct_fdt_get_size_dt_struct(st_hdr)) {
+		if (dt_struct->len != size_dt_struct) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
