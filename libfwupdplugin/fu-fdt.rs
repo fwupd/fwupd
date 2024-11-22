@@ -1,6 +1,14 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuFdtToken {
+    BeginNode   = 0x00000001,
+    EndNode     = 0x00000002,
+    Prop        = 0x00000003,
+    Nop         = 0x00000004,
+    End         = 0x00000009,
+}
+
 #[derive(New, ValidateStream, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructFdt {

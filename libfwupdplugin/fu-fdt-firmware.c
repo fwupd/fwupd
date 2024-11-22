@@ -37,12 +37,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuFdtFirmware, fu_fdt_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fdt_firmware_get_instance_private(o))
 
-#define FDT_BEGIN_NODE 0x00000001
-#define FDT_END_NODE   0x00000002
-#define FDT_PROP       0x00000003
-#define FDT_NOP	       0x00000004
-#define FDT_END	       0x00000009
-
 #define FDT_LAST_COMP_VERSION 2
 #define FDT_DEPTH_MAX	      128
 
@@ -167,15 +161,14 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &token, G_BIG_ENDIAN, error))
 			return FALSE;
-		g_debug("token: 0x%x", token);
 		offset += sizeof(guint32);
 
 		/* nothing to do */
-		if (token == FDT_NOP)
+		if (token == FU_FDT_TOKEN_NOP)
 			continue;
 
 		/* END */
-		if (token == FDT_END) {
+		if (token == FU_FDT_TOKEN_END) {
 			if (firmware_current != FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -188,7 +181,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		}
 
 		/* BEGIN NODE */
-		if (token == FDT_BEGIN_NODE) {
+		if (token == FU_FDT_TOKEN_BEGIN_NODE) {
 			g_autoptr(GString) str = NULL;
 			g_autoptr(FuFirmware) image = NULL;
 
@@ -217,7 +210,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		}
 
 		/* END NODE */
-		if (token == FDT_END_NODE) {
+		if (token == FU_FDT_TOKEN_END_NODE) {
 			if (firmware_current == FU_FIRMWARE(self)) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -232,7 +225,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 		}
 
 		/* PROP */
-		if (token == FDT_PROP) {
+		if (token == FU_FDT_TOKEN_PROP) {
 			guint32 prop_len;
 			guint32 prop_nameoff;
 			g_autoptr(GBytes) blob = NULL;
@@ -464,7 +457,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	}
 
 	/* BEGIN_NODE, ID, NUL */
-	fu_byte_array_append_uint32(helper->dt_struct, FDT_BEGIN_NODE, G_BIG_ENDIAN);
+	fu_byte_array_append_uint32(helper->dt_struct, FU_FDT_TOKEN_BEGIN_NODE, G_BIG_ENDIAN);
 	if (id != NULL) {
 		g_byte_array_append(helper->dt_struct, (const guint8 *)id, strlen(id) + 1);
 	} else {
@@ -481,7 +474,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 		blob = fu_fdt_image_get_attr(img, key, error);
 		if (blob == NULL)
 			return FALSE;
-		fu_byte_array_append_uint32(helper->dt_struct, FDT_PROP, G_BIG_ENDIAN);
+		fu_byte_array_append_uint32(helper->dt_struct, FU_FDT_TOKEN_PROP, G_BIG_ENDIAN);
 		fu_struct_fdt_prop_set_len(st_prp, g_bytes_get_size(blob));
 		fu_struct_fdt_prop_set_nameoff(st_prp,
 					       fu_fdt_firmware_append_to_strtab(helper, key));
@@ -498,7 +491,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	}
 
 	/* END_NODE */
-	fu_byte_array_append_uint32(helper->dt_struct, FDT_END_NODE, G_BIG_ENDIAN);
+	fu_byte_array_append_uint32(helper->dt_struct, FU_FDT_TOKEN_END_NODE, G_BIG_ENDIAN);
 	return TRUE;
 }
 
@@ -540,7 +533,7 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 					 0,
 					 error))
 		return NULL;
-	fu_byte_array_append_uint32(dt_struct, FDT_END, G_BIG_ENDIAN);
+	fu_byte_array_append_uint32(dt_struct, FU_FDT_TOKEN_END, G_BIG_ENDIAN);
 
 	/* dt_strings */
 	off_dt_strings =
