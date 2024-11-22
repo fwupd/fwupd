@@ -671,6 +671,7 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	FuMsrPlugin *self = FU_MSR_PLUGIN(plugin);
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
+	gboolean sinkclose_vuln = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
@@ -681,6 +682,29 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	if (!self->amd64_hwcfg_supported)
 		return;
 
+	if (device != NULL) {
+		const gchar *needed =
+		    fu_device_get_metadata(device, FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED);
+		g_auto(GStrv) mitigations = NULL;
+		mitigations = g_strsplit(needed, ",", -1);
+		for (guint i = 0; mitigations[i] != NULL; i++) {
+			/* check for sinkclose vulnerability */
+			if (g_strcmp0(mitigations[i], "sinkclose") == 0) {
+				guint64 min = fu_device_get_metadata_integer(
+				    device,
+				    FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER);
+				g_debug("microcode version: %" G_GUINT64_FORMAT
+					", sinkclose microcode version: %" G_GUINT64_FORMAT,
+					fu_device_get_version_raw(device),
+					min);
+				if (fu_device_get_version_raw(device) < min) {
+					g_info("vulnerable to sinkclose");
+					sinkclose_vuln = TRUE;
+				}
+				continue;
+			}
+		}
+	}
 	/* create attr */
 	attr1 = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED);
 	if (device != NULL)
@@ -688,7 +712,11 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	fwupd_security_attr_set_result_success(attr1, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr1);
 
-	if (!self->amd64_hwcfg.fields.smm_locked || !self->amd64_hwcfg.fields.smm_base_lock) {
+	if (sinkclose_vuln) {
+		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	} else if (!self->amd64_hwcfg.fields.smm_locked ||
+		   !self->amd64_hwcfg.fields.smm_base_lock) {
 		fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONTACT_OEM);
 	} else

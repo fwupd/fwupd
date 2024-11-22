@@ -69,3 +69,71 @@ CpuMitigationsRequired = gds
 CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A7]
 CpuMitigationsRequired = gds
+
+#Affected by Sinkclose
+[CPUID\PRO_0&FAM_17&MOD_01&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0800126f
+[CPUID\PRO_0&FAM_17&MOD_31&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0830107c
+[CPUID\PRO_0&FAM_17&MOD_60&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0860010d
+[CPUID\PRO_0&FAM_17&MOD_68&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x08608108
+[CPUID\PRO_0&FAM_17&MOD_71&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x08701034
+[CPUID\PRO_0&FAM_17&MOD_A0&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x08a0000a
+[CPUID\PRO_0&FAM_19&MOD_01&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a0011d5
+[CPUID\PRO_0&FAM_19&MOD_01&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a001238
+[CPUID\PRO_0&FAM_19&MOD_08&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a00820c
+[CPUID\PRO_0&FAM_19&MOD_11&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a101148
+[CPUID\PRO_0&FAM_19&MOD_11&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a101248
+[CPUID\PRO_0&FAM_19&MOD_18&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a108108
+[CPUID\PRO_0&FAM_19&MOD_21&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a20102d
+[CPUID\PRO_0&FAM_19&MOD_21&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a201210
+[CPUID\PRO_0&FAM_19&MOD_44&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a404107
+[CPUID\PRO_0&FAM_19&MOD_50&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a500011
+[CPUID\PRO_0&FAM_19&MOD_61&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a601209
+[CPUID\PRO_0&FAM_19&MOD_74&STP_1]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a704107
+[CPUID\PRO_0&FAM_19&MOD_77&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a705206
+[CPUID\PRO_0&FAM_19&MOD_78&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a708007
+[CPUID\PRO_0&FAM_19&MOD_7C&STP_0]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0a70c005
+[CPUID\PRO_0&FAM_19&MOD_A0&STP_2]
+CpuMitigationsRequired = sinkclose
+CpuSinkcloseMicrocodeVersion = 0x0aa00215

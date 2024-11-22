@@ -28,6 +28,16 @@ Mitigations required for this specific CPU. Valid values are:
 
 Since: 1.9.4
 
+* `sinkclose`
+
+Since: 2.0.2
+
+### CpuSinkcloseMicrocodeVersion
+
+Minimum version of microcode to mitigate the `sinkclose` vulnerability.
+
+Since: 2.0.2
+
 ## External Interface Access
 
 This plugin requires no extra access.
