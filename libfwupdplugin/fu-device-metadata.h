@@ -50,3 +50,10 @@
  * CPU mitigations required. See the CPU plugin for more details.
  */
 #define FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED "CpuMitigationsRequired"
+
+/**
+ * FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER:
+ *
+ * Microcode version required to mitigate Sinkclose. See the CPU plugin for more details.
+ */
+#define FU_DEVICE_METADATA_CPU_SINKCLOSE_MICROCODE_VER "CpuSinkcloseMicrocodeVersion"

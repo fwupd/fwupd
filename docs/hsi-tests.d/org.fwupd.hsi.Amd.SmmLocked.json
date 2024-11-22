@@ -3,16 +3,21 @@
   "name": "SMM locked down",
   "description": [
     "Disable SMM_BASE from being saved to and restored from the SMM save state area.",
-    "Code in the ASeg and TSeg range and the SMM registers are Read-only and SMI interrupts are not intercepted in SVM."
+    "Code in the ASeg and TSeg range and the SMM registers are Read-only and SMI interrupts are not intercepted in SVM.",
+    "This check also ensures that the system is not affected by the Sinkclose vulnerability."
   ],
   "failure-impact": [
     "An attacker with an existing unrelated vulnerability can the SMM save state area to exfiltrate data."
   ],
   "failure-results": {
-    "not-locked": "SMM is not locked down"
+    "not-locked": "SMM is not locked down",
+    "not-valid": "Vulnerable to Sinkclose"
   },
   "success-results": {
     "locked": "SMM is locked down"
+  },
+  "references": {
+    "https://www.amd.com/en/resources/product-security/bulletin/amd-sb-7014.html": "AMD Sinkclose"
   },
   "hsi-level": 1,
   "fwupd-version": "2.0.2"
