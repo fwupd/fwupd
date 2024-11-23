@@ -193,10 +193,12 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 								    error);
 	if (st_res == NULL)
 		return FALSE;
-	if (fu_struct_steelseries_connection_status2_res_get_status(st_res))
+	if (fu_struct_steelseries_connection_status2_res_get_status(st_res) ==
+	    FU_STEELSERIES_FIZZ_CONNECTION_CONNECTED) {
 		*status = FU_STEELSERIES_FIZZ_CONNECTION_STATUS_CONNECTED;
-	else
+	} else {
 		*status = FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED;
+	}
 
 	/* success */
 	return TRUE;
