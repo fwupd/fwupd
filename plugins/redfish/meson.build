@@ -53,6 +53,7 @@ if get_option('tests')
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
+  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'contrib', 'lsan-suppressions.txt')))
   e = executable(
     'redfish-self-test',
     rustgen.process('fu-redfish.rs'),
