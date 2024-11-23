@@ -45,7 +45,6 @@ fu_steelseries_fizz_gen2_response(FuSteelseriesFizzImpl *self, GError **error)
 static gchar *
 fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
 {
-	guint64 version[3] = {0};
 	g_autofree gchar *version_raw = NULL;
 	g_autoptr(FuStructSteelseriesFizzVersion2Req) st_req =
 	    fu_struct_steelseries_fizz_version2_req_new();
@@ -84,22 +83,17 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 	/* very interesting version format */
 	if (version_raw[1] == 0x2E && version_raw[4] == 0x2E && version_raw[8] == 0x2E) {
 		/* format triple */
-		version[0] = ((version_raw[2] - 0x30) << 4) + (version_raw[3] - 0x30);
-		version[1] = ((version_raw[6] - 0x30) << 4) + (version_raw[7] - 0x30);
-		version[2] = ((version_raw[9] - 0x30) << 4) + (version_raw[10] - 0x30);
-	} else {
-		/* format dual */
-		version[0] = ((version_raw[7] - 0x30) << 4) + (version_raw[8] - 0x30);
-		version[1] = ((version_raw[10] - 0x30) << 4) + (version_raw[11] - 0x30);
-		version[2] = 0x00U;
+		return g_strdup_printf(
+		    "%u.%u.%u",
+		    ((guint32)(version_raw[2] - 0x30) << 4) + (version_raw[3] - 0x30),
+		    ((guint32)(version_raw[6] - 0x30) << 4) + (version_raw[7] - 0x30),
+		    ((guint32)(version_raw[9] - 0x30) << 4) + (version_raw[10] - 0x30));
 	};
 
-	return g_strdup_printf("%" G_GUINT64_FORMAT "."
-			       "%" G_GUINT64_FORMAT "."
-			       "%" G_GUINT64_FORMAT "",
-			       version[0],
-			       version[1],
-			       version[2]);
+	/* format dual */
+	return g_strdup_printf("%u.%u.0",
+			       ((guint32)(version_raw[7] - 0x30) << 4) + (version_raw[8] - 0x30),
+			       ((guint32)(version_raw[10] - 0x30) << 4) + (version_raw[11] - 0x30));
 }
 
 static gboolean
