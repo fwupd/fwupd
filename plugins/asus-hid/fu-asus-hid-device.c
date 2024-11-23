@@ -268,6 +268,8 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 	fu_progress_set_steps(progress, blocks->len);
 	for (guint i = 0, offset = 0; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(blocks, i);
+		const guint8 *buf;
+		gsize bufsz = 0;
 		g_autoptr(FuStructAsusReadFlashCommand) cmd =
 		    fu_struct_asus_read_flash_command_new();
 		g_autoptr(FuStructAsusReadFlashCommand) result =
@@ -282,12 +284,12 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 							 FU_ASUS_HID_REPORT_ID_FLASHING,
 							 error))
 			return NULL;
-
+		buf = fu_struct_asus_read_flash_command_get_data(result, &bufsz);
 		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
 				    fu_chunk_get_data_sz(chk),
 				    0x0,
-				    fu_struct_asus_read_flash_command_get_data(result, NULL),
-				    fu_struct_asus_read_flash_command_get_datasz(result),
+				    buf,
+				    bufsz,
 				    0x0,
 				    fu_struct_asus_read_flash_command_get_datasz(result),
 				    error))
