@@ -140,8 +140,8 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 	guint32 tmp = *checksum;
 	for (gsize i = 0; i < bufsz; i += 4) {
 		guint32 ul = 0;
-		guint chunksz = MIN(bufsz - i, 4);
-		if (G_LIKELY(chunksz == 4)) {
+		guint chunksz = bufsz - i;
+		if (G_LIKELY(chunksz >= 4)) {
 			ul = fu_memread_uint32(buf + i, G_LITTLE_ENDIAN);
 		} else if (chunksz == 3) {
 			ul = fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
