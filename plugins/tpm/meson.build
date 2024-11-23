@@ -37,7 +37,7 @@ if get_option('tests')
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   env.set('G_DEBUG', 'fatal-criticals')
-  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.current_source_dir(), 'lsan-suppressions.txt')))
+  env.set('LSAN_OPTIONS', 'suppressions=@0@'.format(join_paths(meson.project_source_root(), 'contrib', 'lsan-suppressions.txt')))
   e = executable(
     'tpm-self-test',
     rustgen.process('fu-tpm.rs'),
