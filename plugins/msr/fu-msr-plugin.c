@@ -172,15 +172,15 @@ fu_msr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SmmLock",
-					       self->amd64_hwcfg.fields.smm_locked);
+					       self->amd64_hwcfg.fields.smm_locked > 0);
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SmmPgCfgLock",
-					       self->amd64_hwcfg.fields.smm_pg_cfg_lock);
+					       self->amd64_hwcfg.fields.smm_pg_cfg_lock > 0);
 		fwupd_codec_string_append_bool(str,
 					       idt,
 					       "Amd64SmmBaseLock",
-					       self->amd64_hwcfg.fields.smm_base_lock);
+					       self->amd64_hwcfg.fields.smm_base_lock > 0);
 	}
 }
 
