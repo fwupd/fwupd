@@ -146,7 +146,7 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 			tmp ^= fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
 		} else if (chunksz == 2) {
 			tmp ^= fu_memread_uint16(buf + i, G_BIG_ENDIAN); /* err.. */
-		} else if (chunksz == 1) {
+		} else {
 			tmp ^= buf[i];
 		}
 	}
