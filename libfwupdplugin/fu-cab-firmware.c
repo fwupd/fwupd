@@ -137,6 +137,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCabFirmwareParseHelper, fu_cab_firmware_parse_he
 static gboolean
 fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checksum, GError **error)
 {
+	guint32 tmp = *checksum;
 	for (gsize i = 0; i < bufsz; i += 4) {
 		guint32 ul = 0;
 		guint chunksz = MIN(bufsz - i, 4);
@@ -149,8 +150,9 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 		} else if (chunksz == 1) {
 			ul = buf[i];
 		}
-		*checksum ^= ul;
+		tmp ^= ul;
 	}
+	*checksum = tmp;
 	return TRUE;
 }
 
