@@ -143,7 +143,9 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 		if (G_LIKELY(chunksz >= 4)) {
 			tmp ^= fu_memread_uint32(buf + i, G_LITTLE_ENDIAN);
 		} else if (chunksz == 3) {
-			tmp ^= fu_memread_uint24(buf + i, G_BIG_ENDIAN); /* err.. */
+			/* 0,1,2 -- yes, weird */
+			tmp ^= ((guint32)buf[i + 0] << 16) | ((guint32)buf[i + 1] << 8) |
+			       (guint32)buf[i + 2];
 		} else if (chunksz == 2) {
 			/* 0,1 -- yes, weird */
 			tmp ^= ((guint32)buf[i + 0] << 8) | (guint32)buf[i + 1];
