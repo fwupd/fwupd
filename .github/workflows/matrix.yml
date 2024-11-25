@@ -1,5 +1,9 @@
 on:
   workflow_call:
+    inputs:
+      publish:
+        required: true
+        type: boolean
 
 permissions:
   contents: read
@@ -56,6 +60,7 @@ jobs:
 
   openbmc:
     runs-on: ubuntu-22.04
+    if: ${{ !inputs.publish }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Refresh dependencies
@@ -105,6 +110,7 @@ jobs:
 
   macos:
     runs-on: macos-latest
+    if: ${{ !inputs.publish }}
     steps:
     - name: install dependencies
       run: |
@@ -132,3 +138,66 @@ jobs:
         path: |
           ${{ github.workspace }}/dist/setup/*.msi
           ${{ github.workspace }}/dist/news.txt
+
+  publish-docs:
+    name: Publish docs
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        id: download
+        with:
+          name: ubuntu-x86_64
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
+          name: id_rsa # optional
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
+      - name: Clone docs
+        run: |
+          cd dist/share/doc/fwupd
+          git clone --depth 1 git@github.com:fwupd/fwupd.github.io.git
+      - name: Trigger docs deployment
+        run: |
+          cd dist/share/doc/fwupd/fwupd.github.io
+          git config credential.helper 'cache --timeout=120'
+          git config user.email "info@fwupd.org"
+          git config user.name "Documentation deployment Bot"
+          rm -rf *
+          cp ../../libfwupd* ../*html . -R
+          git add .
+          git commit -a --allow-empty -m "Trigger deployment"
+          git push git@github.com:fwupd/fwupd.github.io.git
+
+  publish-windows:
+    name: Publish Windows binaries
+    runs-on: ubuntu-latest
+    if: ${{ inputs.publish }}
+    needs: build-windows
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        id: download
+        with:
+          name: windows
+      - name: Populate release body
+        id: read_release
+        shell: bash
+        run: |
+          r=$(cat dist/news.txt)
+          echo "RELEASE_BODY=$r" >> $GITHUB_OUTPUT
+      - name: Upload Binaries to Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file_glob: true
+          file: dist/setup/*.msi
+          body: |
+            ${{ steps.read_release.outputs.RELEASE_BODY }}  # <--- Use environment variables that was created earlier

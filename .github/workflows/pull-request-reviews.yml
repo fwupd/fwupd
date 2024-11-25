@@ -29,4 +29,6 @@ jobs:
   matrix:
     needs: pre-commit
     uses: ./.github/workflows/matrix.yml
+    with:
+      publish: false
     secrets: inherit
