@@ -7,14 +7,14 @@
  **/
 {%- if item.type == Type.STRING %}
 {{export.value}}gchar *
-{{item.c_getter}}(const GByteArray *st)
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     g_return_val_if_fail(st != NULL, NULL);
     return fu_memstrsafe(st->data, st->len, {{item.offset}}, {{item.size}}, NULL);
 }
 {%- elif item.struct_obj %}
-{{export.value}}GByteArray *
-{{item.c_getter}}(const GByteArray *st)
+{{export.value}}{{item.struct_obj.name}} *
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     g_autoptr(GByteArray) buf = g_byte_array_new();
     g_return_val_if_fail(st != NULL, NULL);
@@ -23,7 +23,7 @@
 }
 {%- elif item.type == Type.U8 and item.multiplier %}
 {{export.value}}const guint8 *
-{{item.c_getter}}(const GByteArray *st, gsize *bufsz)
+{{item.c_getter}}(const {{obj.name}} *st, gsize *bufsz)
 {
     g_return_val_if_fail(st != NULL, NULL);
     if (bufsz != NULL)
@@ -32,28 +32,28 @@
 }
 {%- elif item.type == Type.GUID %}
 {{export.value}}const fwupd_guid_t *
-{{item.c_getter}}(const GByteArray *st)
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     g_return_val_if_fail(st != NULL, NULL);
     return (const fwupd_guid_t *) (st->data + {{item.offset}});
 }
 {%- elif item.type == Type.U8 %}
 {{export.value}}{{item.type_glib}}
-{{item.c_getter}}(const GByteArray *st)
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     g_return_val_if_fail(st != NULL, 0x0);
     return st->data[{{item.offset}}];
 }
 {%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
 {{export.value}}{{item.type_glib}}
-{{item.c_getter}}(const GByteArray *st)
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     g_return_val_if_fail(st != NULL, 0x0);
     return fu_memread_{{item.type_mem}}(st->data + {{item.offset}}, {{item.endian_glib}});
 }
 {%- elif item.type in [Type.B32] %}
 {{export.value}}{{item.type_glib}}
-{{item.c_getter}}(const GByteArray *st)
+{{item.c_getter}}(const {{obj.name}} *st)
 {
     guint32 val;
     g_return_val_if_fail(st != NULL, 0x0);
@@ -73,7 +73,7 @@
  **/
 {%- if item.type == Type.STRING %}
 {{export.value}}gboolean
-{{item.c_setter}}(GByteArray *st, const gchar *value, GError **error)
+{{item.c_setter}}({{obj.name}} *st, const gchar *value, GError **error)
 {
     gsize len;
     g_return_val_if_fail(st != NULL, FALSE);
@@ -95,7 +95,7 @@
 }
 {%- elif item.struct_obj %}
 {{export.value}}gboolean
-{{item.c_setter}}(GByteArray *st, GByteArray *st_donor, GError **error)
+{{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error)
 {
     g_return_val_if_fail(st != NULL, FALSE);
     g_return_val_if_fail(st_donor != NULL, FALSE);
@@ -106,7 +106,7 @@
 }
 {%- elif item.type == Type.U8 and item.multiplier %}
 {{export.value}}gboolean
-{{item.c_setter}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error)
+{{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error)
 {
     g_return_val_if_fail(st != NULL, FALSE);
     g_return_val_if_fail(buf != NULL, FALSE);
@@ -115,7 +115,7 @@
 }
 {%- elif item.type == Type.GUID %}
 {{export.value}}void
-{{item.c_setter}}(GByteArray *st, const fwupd_guid_t *value)
+{{item.c_setter}}({{obj.name}} *st, const fwupd_guid_t *value)
 {
     g_return_if_fail(st != NULL);
     g_return_if_fail(value != NULL);
@@ -123,14 +123,14 @@
 }
 {%- elif item.type == Type.U8 %}
 {{export.value}}void
-{{item.c_setter}}(GByteArray *st, {{item.type_glib}} value)
+{{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
 {
     g_return_if_fail(st != NULL);
     st->data[{{item.offset}}] = value;
 }
 {%- elif item.type == Type.B32 %}
 {{export.value}}void
-{{item.c_setter}}(GByteArray *st, {{item.type_glib}} value)
+{{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
 {
     guint32 tmp;
     g_return_if_fail(st != NULL);
@@ -141,7 +141,7 @@
 }
 {%- elif not item.multiplier and item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
 {{export.value}}void
-{{item.c_setter}}(GByteArray *st, {{item.type_glib}} value)
+{{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value)
 {
     g_return_if_fail(st != NULL);
     fu_memwrite_{{item.type_mem}}(st->data + {{item.offset}}, value, {{item.endian_glib}});
@@ -155,10 +155,10 @@
 /**
  * {{obj.c_method('New')}}: (skip):
  **/
-{{export.value}}GByteArray *
+{{export.value}}{{obj.name}} *
 {{obj.c_method('New')}}(void)
 {
-    GByteArray *st = g_byte_array_sized_new({{obj.size}});
+    {{obj.name}} *st = g_byte_array_sized_new({{obj.size}});
     fu_byte_array_set_size(st, {{obj.size}}, 0x0);
 {%- for item in obj.items | selectattr('padding') %}
     memset(st->data + {{item.offset}}, {{item.padding}}, {{item.size}});
@@ -190,7 +190,7 @@
  * {{obj.c_method('ToString')}}: (skip):
  **/
 {{export.value}}gchar *
-{{obj.c_method('ToString')}}(const GByteArray *st)
+{{obj.c_method('ToString')}}(const {{obj.name}} *st)
 {
     g_autoptr(GString) str = g_string_new("{{obj.name}}:\n");
     g_return_val_if_fail(st != NULL, NULL);
@@ -250,7 +250,7 @@
 /**
  * {{obj.c_method('Parse')}}: (skip):
  **/
-{{export.value}}GByteArray *
+{{export.value}}{{obj.name}} *
 {{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
     g_autoptr(GByteArray) st = g_byte_array_new();
@@ -292,7 +292,7 @@
 /**
  * {{obj.c_method('ParseBytes')}}: (skip):
  **/
-{{export.value}}GByteArray *
+{{export.value}}{{obj.name}} *
 {{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error)
 {
     gsize bufsz = 0;

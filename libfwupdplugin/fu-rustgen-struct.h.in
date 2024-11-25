@@ -1,11 +1,14 @@
+typedef GByteArray {{obj.name}};
+G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, g_byte_array_unref)
+
 {%- if obj.export('New') == Export.PUBLIC %}
-GByteArray *{{obj.c_method('New')}}(void);
+{{obj.name}} *{{obj.c_method('New')}}(void);
 {%- endif %}
 {%- if obj.export('Parse') == Export.PUBLIC %}
-GByteArray *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
+{{obj.name}} *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
 {%- endif %}
 {%- if obj.export('ParseBytes') == Export.PUBLIC %}
-GByteArray *{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error);
+{{obj.name}} *{{obj.c_method('ParseBytes')}}(GBytes *blob, gsize offset, GError **error);
 {%- endif %}
 {%- if obj.export('Validate') == Export.PUBLIC %}
 gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error);
@@ -14,21 +17,21 @@ gboolean {{obj.c_method('Validate')}}(const guint8 *buf, gsize bufsz, gsize offs
 gboolean {{obj.c_method('ValidateBytes')}}(GBytes *blob, gsize offset, GError **error);
 {%- endif %}
 {%- if obj.export('ToString') == Export.PUBLIC %}
-gchar *{{obj.c_method('ToString')}}(const GByteArray *st);
+gchar *{{obj.c_method('ToString')}}(const {{obj.name}} *st);
 {%- endif %}
 
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Getters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
-gchar *{{item.c_getter}}(const GByteArray *st);
+gchar *{{item.c_getter}}(const {{obj.name}} *st);
 {%- elif item.struct_obj %}
-GByteArray *{{item.c_getter}}(const GByteArray *st);
+{{obj.name}} *{{item.c_getter}}(const {{obj.name}} *st);
 {%- elif item.type == Type.U8 and item.multiplier %}
-const guint8 *{{item.c_getter}}(const GByteArray *st, gsize *bufsz);
+const guint8 *{{item.c_getter}}(const {{obj.name}} *st, gsize *bufsz);
 {%- elif item.type == Type.GUID %}
-const fwupd_guid_t *{{item.c_getter}}(const GByteArray *st);
+const fwupd_guid_t *{{item.c_getter}}(const {{obj.name}} *st);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
-{{item.type_glib}} {{item.c_getter}}(const GByteArray *st);
+{{item.type_glib}} {{item.c_getter}}(const {{obj.name}} *st);
 {%- endif %}
 {%- endif %}
 {%- endfor %}
@@ -36,16 +39,16 @@ const fwupd_guid_t *{{item.c_getter}}(const GByteArray *st);
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Setters') == Export.PUBLIC %}
 {%- if item.type == Type.STRING %}
-gboolean {{item.c_setter}}(GByteArray *st, const gchar *value, GError **error);
+gboolean {{item.c_setter}}({{obj.name}} *st, const gchar *value, GError **error);
 {%- elif item.struct_obj %}
 gboolean
-{{item.c_setter}}(GByteArray *st, GByteArray *st_donor, GError **error);
+{{item.c_setter}}({{obj.name}} *st, const {{item.struct_obj.name}} *st_donor, GError **error);
 {%- elif item.type == Type.U8 and item.multiplier %}
-gboolean {{item.c_setter}}(GByteArray *st, const guint8 *buf, gsize bufsz, GError **error);
+gboolean {{item.c_setter}}({{obj.name}} *st, const guint8 *buf, gsize bufsz, GError **error);
 {%- elif item.type == Type.GUID %}
-void {{item.c_setter}}(GByteArray *st, const fwupd_guid_t *value);
+void {{item.c_setter}}({{obj.name}} *st, const fwupd_guid_t *value);
 {%- elif not item.multiplier and item.type in [Type.U8, Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64, Type.B32] %}
-void {{item.c_setter}}(GByteArray *st, {{item.type_glib}} value);
+void {{item.c_setter}}({{obj.name}} *st, {{item.type_glib}} value);
 {%- endif %}
 {%- endif %}
 {%- endfor %}
