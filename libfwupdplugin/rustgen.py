@@ -164,6 +164,7 @@ class StructObj:
             "ParseBytes": Export.NONE,
             "New": Export.NONE,
             "ToString": Export.NONE,
+            "Default": Export.NONE,
         }
 
     def c_method(self, suffix: str):
