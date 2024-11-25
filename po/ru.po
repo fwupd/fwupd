@@ -710,6 +710,10 @@ msgstr "Имя файла источника"
 msgid "Filename required"
 msgstr "Требуется имя файла"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "База URI микропрограммы"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus служба обновления прошивки"

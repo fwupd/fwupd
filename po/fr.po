@@ -422,6 +422,10 @@ msgstr "Source de nom de fichier"
 msgid "Filename required"
 msgstr "Nom de fichier obligatoire"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI de base du micrologiciel"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Service D-Bus de mise à jour des micrologiciels"

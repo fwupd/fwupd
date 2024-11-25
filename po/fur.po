@@ -577,6 +577,10 @@ msgstr "Regjon BIOS dal firmware"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "La Regjon BIOS dal firmware e protêç des modifichis la memorie firmware dal dispositîf ."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI de base dal firmware"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Servizi D-Bus inzornament firmware"

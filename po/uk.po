@@ -123,6 +123,16 @@ msgstr "Оновлення для відеокартки %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Оновлення графічного планшета %s"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "%s Оновлення для навушників"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s Оновлення для гарнітури"
+
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
@@ -493,8 +503,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Для встановлення застарілої версії мікропрограми на цей комп’ютер слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Щоб увімкнути збірку даних емуляції, слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Для виправлення проблеми із захистом слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Щоб завантажити дані емуляції обладнання, слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -517,12 +535,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Для відновлення типових налаштувань фонової служби слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Щоб зберегти дані емуляції обладнання, слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Щоб встановити список схвалених мікропрограм, вам слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Щоб підписати дані за допомогою клієнтського сертифіката, вам слід пройти розпізнавання"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Щоб отримати доступ до служби оновлення мікропрограми, вам слід пройти розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -634,6 +660,10 @@ msgstr "Платформа CET"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Для боротьби з різноманітними проблемами розкриття даних має бути оновлено мікрокод процесора."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Можна встановлювати мітки для емуляції"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Скасувати"
@@ -696,6 +726,10 @@ msgstr "Такої команди не знайдено"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Підтримка спільноти"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Порівнює дві версії на схожість"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1072,6 +1106,9 @@ msgstr "Емульований вузол"
 msgid "Enable"
 msgstr "Увімкнути"
 
+msgid "Enable emulation data collection"
+msgstr "Увімкнути збірку даних емуляції"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Увімкнути нове віддалене сховище?"
@@ -1307,6 +1344,10 @@ msgstr "Регіон BIOS мікропрограми"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Захист регіону BIOS захищає пам'ять мікропрограми пристрою від внесення змін."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Основна адреса мікропрограми"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Служба D-Bus оновлення мікропрограми"
@@ -1444,6 +1485,10 @@ msgstr "Отримати список усіх пристроїв, у яких �
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Отримати список усіх додатків, які зареєстровано у системі"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Отримати усі відомі формати версій"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2412,6 +2457,10 @@ msgstr "ПАРАМЕТР1 ЗНАЧЕННЯ1 [ПАРАМЕТР2] [ЗНАЧЕНН�
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM заблоковано"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Дескриптор SPI BIOS"
@@ -2608,6 +2657,9 @@ msgstr "Джерело"
 msgid "Specify the dbx database file"
 msgstr "Вказати файл бази даних dbx"
 
+msgid "Stop the fwupd service"
+msgstr "Зупинити службу fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Рядок"
@@ -2755,9 +2807,17 @@ msgstr "Перемкнути гілку мікропрограми на прис
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Синхронізувати версії мікропрограм із вибраною конфігурацією"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Режим керування системою"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Оновлення системи заборонено"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Режим керування системою використовується мікропрограмою для доступу до поточного коду BIOS та даних."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3246,6 +3306,10 @@ msgstr "Сповіщено користувача"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Користувач"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "ВЕРСІЯ1 ВЕРСІЯ2 [ФОРМАТ]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

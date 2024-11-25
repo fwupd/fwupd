@@ -11,23 +11,23 @@ To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50e
 
 Check IFD parsing (if the files are available):
 
-    ../contrib/check-ifd-firmware.py ../../fwupd-test-roms/
+    ../../contrib/check-ifd-firmware.py ../../fwupd-test-roms/
 
 Write release entries:
 
- * ../contrib/generate-release.py
- * copy into ../data/org.freedesktop.fwupd.metainfo.xml
- * appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
+ * ../../contrib/generate-release.py
+ * copy into ../../data/org.freedesktop.fwupd.metainfo.xml
+ * appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
 Update translations:
 
 ninja-build fwupd-pot
-cd ..
+cd ../..
 tx push --source
 tx pull --all --force --minimum-perc=5
-cd build
+cd venv/build
 ninja-build fix-translations
-git add ../po/*.po
+git add ../../po/*.po
 
 2. Commit changes to git:
 

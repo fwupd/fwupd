@@ -1149,6 +1149,10 @@ msgstr "Descrittore BIOS firmware"
 msgid "Firmware BIOS Region"
 msgstr "Regione BIOS firmware"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI di base del firmware"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Servizio D-Bus di aggiornamento firmware"

@@ -122,6 +122,16 @@ msgstr "Actualització de la GPU %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Actualització de la tauleta gràfica %s"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Actualització dels auriculars amb micròfon %s"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "Actualització dels auriculars %s"
+
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
@@ -478,8 +488,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Es requereix autenticació per a desactualitzar el microprogramari en aquesta màquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Es requereix autenticació per a permetre la recollida de les dades d'emulació"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Cal autenticació per a solucionar un problema de seguretat a l'amfitrió"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Es requereix autenticació per a carregar les dades d'emulació en el maquinari"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -502,12 +520,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "És necessària l'autenticació per a restablir la configuració del dimoni als valors predeterminats"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Es requereix autenticació per a desar les dades d'emulació del maquinari"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Es requereix autenticació per a establir la llista de microprogramari aprovat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Es requereix autenticació per a signar les dades emprant el certificat del client"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Es requereix autenticació per a aturar el servei d'actualització del microprogramari"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -619,6 +645,10 @@ msgstr "Plataforma CET"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "El microcodi de la CPU s'ha d'actualitzar per a mitigar diversos problemes de seguretat de divulgació d'informació."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Es pot etiquetar per a emular"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancel·la"
@@ -681,6 +711,10 @@ msgstr "No s'ha trobat cap ordre"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Sostinguda per la comunitat"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Compara dues versions per a comprovar-ne la igualtat"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1057,6 +1091,9 @@ msgstr "Amfitrió emulat"
 msgid "Enable"
 msgstr "Habilita"
 
+msgid "Enable emulation data collection"
+msgstr "Activa la recollida de les dades d'emulació"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Voleu habilitar el remot nou?"
@@ -1425,6 +1462,10 @@ msgstr "Obté tots els dispositius que admeten actualitzacions de microprogramar
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Obté tots els connectors habilitats registrats amb el sistema."
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Obtèn tots els formats de versió coneguts"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2391,6 +2432,10 @@ msgstr "CONFIG_1 VALOR_1 [CONFIG_2] [VALOR_2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM tancat"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Descriptor del BIOS per a l'SPI"
@@ -2587,6 +2632,9 @@ msgstr "Origen"
 msgid "Specify the dbx database file"
 msgstr "Especifica el fitxer de base de dades dbx."
 
+msgid "Stop the fwupd service"
+msgstr "Atura el servei del «fwupd»"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Cadena"
@@ -2732,9 +2780,17 @@ msgstr "Canvia la branca de microprogramari en el dispositiu."
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Sincronitza les versions del microprogramari amb la configuració triada"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Mode de gestió del sistema"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "S'ha inhibit l'actualització del sistema"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "El microprogramari empra el mode de gestió del sistema per a accedir al codi i a les dades residents al BIOS."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3219,6 +3275,10 @@ msgstr "S'ha notificat a l'usuari"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Nom d'usuari"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSIÓ_1 VERSIÓ_2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

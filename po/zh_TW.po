@@ -797,6 +797,10 @@ msgstr "韌體 BIOS 描述元"
 msgid "Firmware BIOS Region"
 msgstr "韌體 BIOS 領域"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "韌體基礎 URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "韌體更新 D-Bus 服務"

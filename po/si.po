@@ -946,6 +946,10 @@ msgstr "ගොනුවේ නම අවශ්‍යයි"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "බැහැර කිරීමට ~ උපසර්ගයක් භාවිතා කරමින් උපාංග ධජ කට්ටලයක් සමඟ පෙරහන් කරන්න, උදා 'අභ්‍යන්තර,~needs-reboot'"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "ස්ථිරාංග පදනම URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "ස්ථිරාංග යාවත්කාලීන D-බස් සේවාව"

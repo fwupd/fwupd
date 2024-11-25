@@ -5,6 +5,7 @@
 # Translators:
 # Green <usergreen@users.osdn.me>, 2021
 # Nobuhiro Iwamatsu <iwamatsu@nigauri.org>, 2021
+# Ryo Nakano, 2024
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021
 msgid ""
@@ -32,7 +33,7 @@ msgstr "外付け機器でファームウェアをダウングレードするに
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "この機器のファームウェアをダウングレードするには認証が必要です。"
+msgstr "この機器のファームウェアをダウングレードするには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -43,6 +44,10 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "デーモン構成の変更には認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "デーモン構成をデフォルトにリセットするには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "認証済みファームウェアの一覧を設定するには認証が必要です"
 
@@ -51,12 +56,16 @@ msgid "Authentication is required to sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名するには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "ファームウェア更新サービスを停止するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "新版のファームウェアに切り替えるには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "機器を開錠するには認証が必要です"
+msgstr "機器のロックを解除するには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
@@ -70,16 +79,9 @@ msgstr "当機でファームウェアを更新するには認証が必要です
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "保存された機器の検査合計を更新するには認証が必要です"
 
-msgid "BYTES"
-msgstr "バイト数"
-
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr "コマンドが見付かりません"
-
-#. TRANSLATORS: DFU stands for device firmware update
-msgid "DFU Utility"
-msgstr "DFU ユーティリティ"
+msgstr "コマンドが見つかりません"
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "この機能を有効にすることは、お客様自身の責任で行ってください。つまり、これらの更新によって発生した問題については、製造元のメーカーに連絡する必要があります。更新プロセス自体に関する問題だけを $OS_RELEASE:BUG_REPORT_URL$ へ提出してください。"
@@ -88,20 +90,19 @@ msgstr "この機能を有効にすることは、お客様自身の責任で行
 msgid "FILENAME"
 msgstr "ファイル名"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
-msgstr "ファイル名 機器の代替名|機器の代替ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
-msgstr "ファイル名 機器の代替名|機器の代替ID [イメージの代替名|イメージの代替ID]"
-
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "引数の解析に失敗しました"
 
-msgid "Force the action ignoring all warnings"
-msgstr "警告を全て無視して処理を強行"
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "ファイルの解析に失敗しました"
+
+msgid "Install old version of signed system firmware"
+msgstr "旧版の署名済みシステムファームウェアを導入する"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "旧版の署名のないシステムファームウェアを導入する"
 
 msgid "Install signed device firmware"
 msgstr "署名済みデバイスファームウェアを導入する"
@@ -115,6 +116,10 @@ msgstr "署名のないデバイスファームウェアを導入する"
 msgid "Install unsigned system firmware"
 msgstr "署名のないシステムファームウェアを導入する"
 
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "ファームウェアの更新をインストールしています…"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux ベンダーファームウェアサービス (安定版ファームウェア)"
 
@@ -127,23 +132,8 @@ msgstr "遠隔構成を変更する"
 msgid "Modify daemon configuration"
 msgstr "デーモン構成を変更する"
 
-msgid "Print the version number"
-msgstr "版数を表示する"
-
-msgid "Print verbose debug statements"
-msgstr "冗長な診断明細を表示する"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from device into a file"
-msgstr "ファームウェアを機器からファイルに読み込む"
-
-#. TRANSLATORS: command description
-msgid "Read firmware from one partition into a file"
-msgstr "ファームウェアをひとつの領域からファイルに読み込む"
-
-#. TRANSLATORS: command description
-msgid "Replace data in an existing firmware file"
-msgstr "既存のファームウェアファイル内のデータを置き換えます"
+msgid "Reset daemon configuration"
+msgstr "デーモン構成をリセットする"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -151,7 +141,7 @@ msgstr "認証済みファームウェアの一覧を設定する"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "追加のデバッグ情報を表示します"
+msgstr "追加のデバッグ情報を表示する"
 
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
@@ -161,11 +151,8 @@ msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
 
-msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "DFU機器のベンダーまたは製品IDを指定してください"
-
-msgid "Specify the number of bytes per USB transfer"
-msgstr "USB伝送器ごとのバイト数を指定する"
+msgid "Stop the fwupd service"
+msgstr "fwupd サービスを停止する"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -175,18 +162,7 @@ msgid "This remote contains firmware which is not embargoed, but is still being 
 msgstr "この遠隔側ソースには、輸出禁止ではないファームウェアが含まれていますが、ハードウェアベンダーによって未だテスト中です。ファームウェアの更新に失敗した場合は、ファームウェアを手動でダウングレードする方法を確保しておく必要があります。"
 
 msgid "Unlock the device to allow access"
-msgstr "アクセスを許可するために機器を開錠してください"
+msgstr "アクセスを許可するには機器のロックを解除してください"
 
 msgid "Update the stored device verification information"
 msgstr "保存された機器の検証情報を更新する"
-
-msgid "VID:PID"
-msgstr "ベンダーID:製品ID"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into device"
-msgstr "ファームウェアをファイルから機器に書き込む"
-
-#. TRANSLATORS: command description
-msgid "Write firmware from file into one partition"
-msgstr "ファームウェアをファイルから 1 つの領域に書き込む"

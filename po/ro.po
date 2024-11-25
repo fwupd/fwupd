@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2024
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -120,6 +121,16 @@ msgstr "Actualizarea GPU %s"
 #, c-format
 msgid "%s Graphics Tablet Update"
 msgstr "Actualizarea tabletei grafice %s"
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Actualizarea căștilor auriculare %s"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "Actualizarea căștilor cu microfon %s"
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
@@ -484,8 +495,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autentificarea este necesară pentru a retrograda firmware-ul la o versiune anterioară pe această mașină"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Autentificarea este necesară pentru a activa colectarea datelor de emulare"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Autentificarea este necesară pentru a rezolva o problemă de securitate a gazdei"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Autentificarea este necesară pentru încărcarea datelor de emulare hardware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -508,12 +527,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autentificarea este necesară pentru a restabili configurația demonului la valorile implicite"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Autentificarea este necesară pentru a salva datele de emulare hardware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Autentificarea este necesară pentru a defini lista de firmware aprobat"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Autentificarea este necesară pentru semnarea datelor utilizând certificatul clientului"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Autentificarea este necesară pentru a opri serviciul de actualizare a firmware-ului"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -625,6 +652,10 @@ msgstr "Platforma CET"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Microcodul CPU trebuie actualizat pentru a atenua diverse probleme de securitate legate de divulgarea informațiilor."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Se poate eticheta pentru emulare"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Anulează"
@@ -687,6 +718,10 @@ msgstr "Comanda nu a fost găsită"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Susținut de comunitate"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Compară două versiuni pentru egalitate"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1063,6 +1098,9 @@ msgstr "Gazdă emulată"
 msgid "Enable"
 msgstr "Activare"
 
+msgid "Enable emulation data collection"
+msgstr "Activează colectarea datelor de emulare"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Activați noul depozit ca sursă de software?"
@@ -1433,6 +1471,10 @@ msgstr "Obține toate dispozitivele care acceptă actualizări ale firmware-ului
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Obține toate modulele activate înregistrate în sistem"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Obține toate formatele de versiune cunoscute"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2400,6 +2442,10 @@ msgstr "PARAMETRU1 VALOARE1 [ PARAMETRU2] [VALOARE2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM blocat"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Descriptorul BIOS SPI"
@@ -2596,6 +2642,9 @@ msgstr "Sursa"
 msgid "Specify the dbx database file"
 msgstr "Specifică fișierul bazei de date dbx"
 
+msgid "Stop the fwupd service"
+msgstr "Oprește serviciul fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Șir"
@@ -2742,9 +2791,17 @@ msgstr "Schimbă ramura firmware a dispozitivului"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Sincronizează versiunile firmware cu configurația aleasă"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Modul de gestionare a sistemului"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Actualizarea sistemului inhibată"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Modul de gestionare a sistemului este utilizat de firmware pentru a accesa codul și datele BIOS rezidente."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3231,6 +3288,10 @@ msgstr "Utilizatorul a fost notificat"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Numele utilizatorului"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSIUNEA1 VERSIUNEA2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

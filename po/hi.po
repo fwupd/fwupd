@@ -1241,6 +1241,10 @@ msgstr "फर्मवेयर BIOS क्षेत्र"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "फर्मवेयर BIOS क्षेत्र उपकरण फर्मवेयर मेमोरी को छेड़छाड़ से बचाता है।"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "फर्मवेयर बेस  URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "फर्मवेयर अद्यतन डी-बस सेवा"

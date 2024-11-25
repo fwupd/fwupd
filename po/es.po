@@ -129,6 +129,11 @@ msgstr "Actualización de GPU %s"
 msgid "%s Graphics Tablet Update"
 msgstr "%s Tabla de Gráficos de Actualización"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Actualizar Controlador %s de Entrada"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -487,8 +492,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Se requiere autenticación para degradar la versión del firmware en esta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Se requiere autenticación para habilitar la colección de datos de emulación"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "La autenticación es requerida para reparar un problema de seguridad del hospedaje"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Se requiere autenticación para cargar datos de emulación de hardware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -511,12 +524,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autenticación requerida para reiniciar la configuración del demonio a su estado por defecto"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Se requiere autenticación para guardar datos de emulación del hardware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Se requiere autenticación para establecer el listado de firmware aprobado"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Se requiere autenticación para firmar datos utilizando el certificado del cliente"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Se requiere autenticación para detener el servicio de actualización del firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -627,6 +648,10 @@ msgstr "Plataforma CET"
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "El micro-código de CPU debe ser actualizarlo para mitigar varios informes descubiertos en problemas de seguridad."
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Puede etiquetar para emulación"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -794,6 +819,10 @@ msgstr "La carga de la batería del dispositivo es muy baja (%u%%, requiere %u%%
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "El dispositivo puede recuperar errores de flash"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be updated while the lid is closed"
+msgstr "El dispositivo no puede ser actualizado mientras la tapa esté cerrada"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -1058,6 +1087,9 @@ msgstr "Anfitrión emulado"
 msgid "Enable"
 msgstr "Activar"
 
+msgid "Enable emulation data collection"
+msgstr "Habilita la colección de datos de emulación"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "¿Habilitar remoto nuevo?"
@@ -1078,6 +1110,10 @@ msgstr "Habilitado si coincide con el hardware"
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Activa un remoto proporcionado"
+
+#. TRANSLATORS: command description
+msgid "Enables virtual testing devices"
+msgstr "Habilita dispositivos con prueva virtual"
 
 #. TRANSLATORS: longer description
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
@@ -1279,6 +1315,10 @@ msgstr "Región BIOS Firmware"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Región Firmware BIOS protege memoria del firmware del dispositivo con el cual se está manipulando."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI de Firmware Base"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Actualizar Firmware de Servicio D-Bus"
@@ -1337,6 +1377,11 @@ msgstr[2] "Los metadatos de firmware no han sido actualizados para %u días y pu
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Actualizaciones del firmware"
+
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Actualizaciones de firmware desactivadas; ejecute '%s' para activarlo"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1909,6 +1954,12 @@ msgstr "URI Metadatos"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadatos pueden obtenerse desde el Servicio de Firmware del Proveedor Linux."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Los metadatos están al día; utilice %s para recargar de nuevo."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Versión Mínima"
@@ -2114,6 +2165,11 @@ msgstr "Asegure que tenga la tecla de recuperación del volumen antes de continu
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduzca un número desde 0 hasta %u: "
 
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Introduzca o bien %s o bien %s:"
+
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependencias ausentes del complemento"
@@ -2206,6 +2262,10 @@ msgstr "Leyendo desde %s…"
 msgid "Reading…"
 msgstr "Leyendo…"
 
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr "Preparado"
+
 #. TRANSLATORS: how often we should refresh the metadata
 msgid "Refresh Interval"
 msgstr "Intervalo de recarga"
@@ -2276,6 +2336,10 @@ msgstr "Requiere conexión a Internet"
 msgid "Reset daemon configuration"
 msgstr "Reiniciar la configuración del demonio"
 
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Resets a daemon configuration section"
+msgstr "Restablece una sección de la configuración del demonio"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "¿Reiniciar ahora?"
@@ -2340,6 +2404,10 @@ msgstr "Ejecutando kernel que es demasiado antiguo"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufijo de tiempo de ejecución"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "SECCIÓN"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
@@ -2446,6 +2514,10 @@ msgstr "Fije un parámetro de la BIOS"
 msgid "Set one or more BIOS settings"
 msgstr "Fije uno o más parámetros de BIOS"
 
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr "Fija reintentos de descarga para errores transitorios"
+
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
 msgstr "Fija uno o más parámetros de BIOS"
@@ -2545,6 +2617,9 @@ msgstr "Origen"
 msgid "Specify the dbx database file"
 msgstr "Específicamente el archivo de la base de datos sbx"
 
+msgid "Stop the fwupd service"
+msgstr "Detiene el servicio fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Cadena"
@@ -2598,6 +2673,10 @@ msgstr "Remoto modificado correctamente"
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
 msgstr "Metadatos actualizados manualmente correctamente"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration section"
+msgstr "Sección de configuración restablecida correctamente"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully reset configuration values"
@@ -3282,8 +3361,16 @@ msgid "[REASON]"
 msgstr "[RAZÓN]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr "[SECCIÓN] CLAVE VALOR"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[PARÁMETRO1] [PARÁMETRO2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[OPCIÓN1] [OPCIÓN2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

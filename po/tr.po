@@ -648,6 +648,10 @@ msgstr "Donanım Yazılımı BIOS Açıklayıcısı"
 msgid "Firmware BIOS Region"
 msgstr "Donanım Yazılımı BIOS Bölgesi"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Donanım Yazılımı Temel URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Donanım Yazılımı Güncellemesi D-Bus Hizmeti"

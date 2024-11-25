@@ -126,6 +126,16 @@ msgstr "%s GPU-Aktualisierung"
 msgid "%s Graphics Tablet Update"
 msgstr "%s Grafiktablett-Aktualisierung"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "%s Kopfhörer-Aktualisierung"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s Headset-Aktualisierung"
+
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
@@ -482,8 +492,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Zum Herabstufen der Firmware auf diesem System ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Zum Aktivieren der Emulationsdatenerfassung ist eine Authentifizierung erforderlich."
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Zur Behebung eines Host-Sicherheitsproblems ist eine Authentifizierung erforderlich"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Zum Laden von Hardware-Emulationsdaten ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -506,12 +524,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Zum Zurücksetzen der Daemon-Konfiguration auf die Standardeinstellungen ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Zum Speichern von Hardware-Emulationsdaten ist eine Authentifizierung erforderlich"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Zum Festlegen der Liste der zugelassenen Firmware ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Zum Signieren von Daten mit dem Client-Zertifikat ist eine Authentifizierung erforderlich"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Zum Stoppen des Firmware-Aktualisierungsdienstes ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -623,6 +649,10 @@ msgstr "CET-Plattform"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Der CPU-Mikrocode muss aktualisiert werden, um verschiedene Sicherheitsprobleme bei der Informationspreisgabe abzumildern."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Kann für die Emulation markieren"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -685,6 +715,10 @@ msgstr "Befehl nicht gefunden"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Von der Gemeinschaft unterstützt"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Vergleicht zwei Versionen auf Gleichheit"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1061,6 +1095,9 @@ msgstr "Emulierter Host"
 msgid "Enable"
 msgstr "Aktivieren"
 
+msgid "Enable emulation data collection"
+msgstr "Emulationsdatenerfassung aktivieren"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Neue Gegenstelle aktivieren?"
@@ -1429,6 +1466,10 @@ msgstr "Alle Geräte ermitteln, die Firmware-Aktualisierungen unterstützen"
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Alle aktivierten und im System registrierten Plugins ermitteln"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Alle bekannten Versionsformate abrufen"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2395,6 +2436,10 @@ msgstr "EINSTELLUNG1 WERT1 [EINSTELLUNG2] [WERT2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM gesperrt"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "SPI-BIOS-Deskriptor"
@@ -2591,6 +2636,9 @@ msgstr "Quelle"
 msgid "Specify the dbx database file"
 msgstr "dbx-Datenbankdatei angeben"
 
+msgid "Stop the fwupd service"
+msgstr "Den Dienst fwupd stoppen"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Zeichenkette"
@@ -2736,9 +2784,17 @@ msgstr "Den Firmware-Zweig auf dem Gerät wechseln"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Firmware-Versionen mit der ausgewählten Konfiguration synchronisieren"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Systemverwaltungsmodus"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Systemaktualisierung blockiert"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Der Systemverwaltungsmodus wird von der Firmware für den Zugriff auf speicherresidenten BIOS-Code und Daten verwendet."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3223,6 +3279,10 @@ msgstr "Benutzer wurde benachrichtigt"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Benutzername"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSION1 VERSION2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

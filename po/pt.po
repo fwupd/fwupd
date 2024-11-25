@@ -846,6 +846,10 @@ msgstr "Nome de ficheiro necessário"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtra com um conjunto de opções de dispositivo usando um prefixo ~ para excluir, p.ex.  \"internal,~needs-reboot\""
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI base de firmware"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Serviço D-Bus de Atualização de Firmware"

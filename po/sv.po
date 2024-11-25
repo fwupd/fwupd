@@ -127,6 +127,16 @@ msgstr "%s GPU-uppdatering"
 msgid "%s Graphics Tablet Update"
 msgstr "%s-ritplatteuppdatering"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "%s-hörlursuppdatering"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s-headsetuppdatering"
+
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
@@ -483,8 +493,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autentisering krävs för att nedgradera den fasta programvaran på denna maskin"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Autentisering krävs för att aktivera emuleringsdatainsamling"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Autentisering krävs för att fixa ett säkerhetsproblem på värden"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Autentisering krävs för att läsa in hårdvaruemuleringsdata"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -507,12 +525,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Autentisering krävs för att återställa demonkonfigurationer till standardvärden"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Autentisering krävs för att spara hårdvaruemuleringsdata"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Autentisering krävs för att sätta listan över godkänd fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Autentisering krävs för att signera data med klientcertifikatet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Autentisering krävs för att stoppa tjänsten för uppdatering av fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -624,6 +650,10 @@ msgstr "CET-plattform"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "CPU-mikrokod måste uppdateras för att förmildra mot diverse informationsavslöjande säkerhetsproblem."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Kan tagga för emulering"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Avbryt"
@@ -686,6 +716,10 @@ msgstr "Kommandot hittades inte"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Stöds av gemenskapen"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Jämför om två versioner är lika"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1062,6 +1096,9 @@ msgstr "Emulerad värd"
 msgid "Enable"
 msgstr "Aktivera"
 
+msgid "Enable emulation data collection"
+msgstr "Aktivera datasamling för emulering"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Aktivera ny fjärrkälla?"
@@ -1297,6 +1334,10 @@ msgstr "BIOS-region för fast programvara"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "BIOS-region för fast programvara skyddar enhetens minne för fast programvara från att mixtras med."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Fast programvara bas-URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus-tjänst för uppdatering av fast programvara"
@@ -1430,6 +1471,10 @@ msgstr "Hämta alla enheter som stödjer uppdateringar av fast programvara"
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Erhåll alla aktiverade insticksmoduler som är registrerade i systemet"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Hämta alla kända versionsformat"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2396,6 +2441,10 @@ msgstr "INSTÄLLNING1 VÄRDE1 [INSTÄLLNING2] [VÄRDE2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM låst"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "SPI BIOS-beskrivare"
@@ -2592,6 +2641,9 @@ msgstr "Källa"
 msgid "Specify the dbx database file"
 msgstr "Ange dbx-databasfilen"
 
+msgid "Stop the fwupd service"
+msgstr "Stoppa fwupd-tjänsten"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Sträng"
@@ -2737,9 +2789,17 @@ msgstr "Byt gren för fast programvara på enheten"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Synkronisera versioner för fast programvara till den valda konfigurationen"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Systemhanteringsläge"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Systemuppdatering hindrad."
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Systemhanteringsläge används av den fasta programvaran för att komma åt inbyggd BIOS-kod och data."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3224,6 +3284,10 @@ msgstr "Användare har aviserats"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Användarnamn"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSION1 VERSION2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

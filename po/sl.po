@@ -123,6 +123,16 @@ msgstr "Posodobitev GPE %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Posodobitev grafične tablice %s"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Posodobitev slušalk %s"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "Posodobitev slušalk z mikrofonom %s"
+
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
@@ -493,8 +503,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Preverjanje pristnosti je potrebno za vrnitev na starejšo različico vdelane programske opreme v tem računalniku"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Za omogočanje zbiranja podatkov emulacije strojne opreme je potrebno preverjanje pristnosti"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Preverjanje pristnosti je potrebno za odpravljanje težave z varnostjo gostitelja"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Za nalaganje podatkov emulacije strojne opreme je potrebno preverjanje pristnosti"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -517,12 +535,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Za spreminjanje prilagoditve prikritega procesa na privzeto je potrebno preverjanje pristnosti"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Za shranjevanje podatkov emulacije strojne opreme je potrebno preverjanje pristnosti"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Preverjanje pristnosti je potrebno za nastavitev seznama odobrene vdelane programske opreme"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Preverjanje pristnosti je potrebno za podpisovanje podatkov s potrdilom odjemalca"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Preverjanje pristnosti je potrebno za ustavitev storitve posodabljanja strojno programske opreme"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -634,6 +660,10 @@ msgstr "Platforma CET"
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Mikrokodo CPE je treba posodobiti, da se ublažijo različna varnostna vprašanja razkritja informacij."
 
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Lahko označite za emulacijo"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Prekliči"
@@ -696,6 +726,10 @@ msgstr "Ukaz ni mogoče najti"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Podprto s strani skupnosti"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Primerja dve različici, če sta enaki"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1072,6 +1106,9 @@ msgstr "Emulirani gostitelj"
 msgid "Enable"
 msgstr "Omogoči"
 
+msgid "Enable emulation data collection"
+msgstr "Omogoči zbiranje podatkov emulacije"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Želite omogočiti nov oddaljeni strežnik?"
@@ -1444,6 +1481,10 @@ msgstr "Pridobi vse naprave, ki podpirajo posodobitve vdelane programske opreme"
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Pridobi vse omogočene vstavke, registrirane v sistemu"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Pridobi vse znane oblike različic"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2412,6 +2453,10 @@ msgstr "NASTAVITEV1 VREDNOST1 [NASTAVITEV2] [VREDNOST2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM (NUS) zaklenjen"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Deskriptor SPI BIOS-a"
@@ -2608,6 +2653,9 @@ msgstr "Vir"
 msgid "Specify the dbx database file"
 msgstr "Določite datoteko zbirke podatkov dbx"
 
+msgid "Stop the fwupd service"
+msgstr "Ustavi storitev fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Niz znakov"
@@ -2755,9 +2803,17 @@ msgstr "Preklopite vejo vdelane programske opreme na napravi"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Sinhronizirajte različice vdelane programske opreme z izbrano konfiguracijo"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Način upravljanja sistema"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Posodobitev sistema je preprečena"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Način upravljanja sistema uporablja programje strojne opreme za dostop do kode in podatkov rezidenčnega BIOS-a."
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low to perform the update"
@@ -3246,6 +3302,10 @@ msgstr "Uporabnik je bil obveščen"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Uporabniško ime"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSION1 VERSION2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

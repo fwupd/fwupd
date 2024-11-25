@@ -38,6 +38,65 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.2" date="2024-11-25">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add fwupdtool 'get-version-formats' and 'vercmp' commands</li>
+          <li>Add support for checking AMD HW configuration MSR</li>
+          <li>Add support for enumerate-only device emulation to increase test coverage</li>
+          <li>Add support for passing a JSON file for emulation instead of ZIP</li>
+          <li>Remove support for now-obsolete CSR DFU and Nitrokey devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add additional version checks for AMD Sinkclose</li>
+          <li>Check that getpid() returned a sensible value to detect minijail failure</li>
+          <li>Check the VLI USB3 firmware size before erasing</li>
+          <li>Correctly parse the ThunderBolt controller NVM</li>
+          <li>Disallow DBX updates on the Samsung Galaxy Book2 360</li>
+          <li>Do not create zero-sized archive entries when loading some ZIP files</li>
+          <li>Fix a critical warning when parsing a corrupt ELF file</li>
+          <li>Fix a small memory leak when checking algoltek-usb status</li>
+          <li>Fix a small memory leak when writing telink-dfu firmware</li>
+          <li>Fix eMMC probing regression in 2.0.x</li>
+          <li>Fix endianness parsing of msgpack float64</li>
+          <li>Fix failure to load the EFI DEVICE_PATH when there is no payload</li>
+          <li>Fix polkit message for emulation data collection</li>
+          <li>Fix sector erasing on Algoltek AG941x</li>
+          <li>Fix type confusion when saving emulation data</li>
+          <li>Fix UFS device feature discovery</li>
+          <li>Fix various device enumerations on s390x</li>
+          <li>Ignore LIBUSB_ERROR_NO_DEVICE when rebooting VIA VL103</li>
+          <li>Improve the algorithm for detecting multiple device-id matches</li>
+          <li>Mark all UEFI dbx updates as FWUPD_DEVICE_FLAG_AFFECTS_FDE</li>
+          <li>Only check for fwupdx64.efi when not using capsule-on-disk</li>
+          <li>Only set can-verify-image when CURRENT.UF2 exists</li>
+          <li>Parse install flags from apps compiled against old libfwupd versions</li>
+          <li>Repair the cros-ec device after flush failure</li>
+          <li>Reset the SteelSeries device only for certain models</li>
+          <li>Save the usb.ids and pci.ids name in the quirk database</li>
+          <li>Speed up decompressing large cab archives by 30%</li>
+          <li>Use a much more efficient method to calculate chunk sizes</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>ASUS ROG ally and ROG ally X (initial support, community provided)</li>
+          <li>Google GID8 headset</li>
+          <li>j5create USB-C JCD373</li>
+          <li>Logitech Sight (as standalone device)</li>
+          <li>MNT Pocket Reform</li>
+          <li>Netprisma LCUR57 and FCUN69</li>
+          <li>Parade PS188</li>
+          <li>Quectel DFOTA devices</li>
+          <li>Raspberry Pi Pico</li>
+          <li>SteelSeries Nova 5</li>
+          <li>Telink DFU-HID devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.1" date="2024-10-15">
       <description>
         <p>

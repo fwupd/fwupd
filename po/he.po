@@ -263,6 +263,10 @@ msgid "Authentication is required to fix a host security issue"
 msgstr "נדרש אימות כדי לתקן תקלות אבטחה במארח"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "נדרש אימות כדי לטעון נתוני הדמיית התקן"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "נדרש אימות כדי לשנות הגדרות BIOS"
 
@@ -279,12 +283,20 @@ msgid "Authentication is required to read BIOS settings"
 msgstr "נדרשת אימות על מנת לקרוא הגדרות BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "נדרש אימות כדי לאפס את הגדרות הסוכן לברירות המחדל"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "נדרש אימות כדי להגדיר את רשימת הקושחות המותרות"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "נדרש אימות כדי לחתום נתונים באמצעות אישור לקוח"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "נדרש אימות כדי לעצור את שירות עדכון הקושחה"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -376,6 +388,14 @@ msgstr "בודק שהגיבוב הקריפטוגרפי תואם לקושחה"
 msgid "Checksum"
 msgstr "סכום ביקורת"
 
+#. TRANSLATORS: get interactive prompt
+msgid "Choose device"
+msgstr "בחירת התקן"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose firmware"
+msgstr "בחירת קושחה"
+
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "פקודה לא נמצאה"
@@ -458,6 +478,11 @@ msgstr "התקנים שעודכנו כראוי:"
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
 msgstr "התקנים שלא עודכנו כראוי:"
+
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "התקנים עם עדכוני קושחה שצריכים התערבות משתמש:"
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -688,6 +713,10 @@ msgstr "מקור שם קובץ"
 msgid "Filename required"
 msgstr "נדרש שם קובץ"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "כתובת בסיס קושחה"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "שירות D-Bus עדכון קושחה"
@@ -695,6 +724,10 @@ msgstr "שירות D-Bus עדכון קושחה"
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
 msgstr "שדון עדכון קושחה"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "עדכוני קושחה"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
@@ -779,6 +812,11 @@ msgstr "גבוה"
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "מזהה אבטחת מארח:"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "הגנת IOMMU"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -867,6 +905,18 @@ msgstr "נותרה פחות מדקה"
 msgid "License"
 msgstr "רישיון"
 
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "נעילת ליבת לינוקס"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "אימות ליבת לינוקס"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "שטח החלפה של לינוקס"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "שירות קושחת יצרנים ללינוקס (קושחה יציבה)"
 
@@ -892,6 +942,10 @@ msgstr "הצגת סוגי הקושחות הזמינים"
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
 msgstr "מציג קבצים ב־ESP"
+
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr "טעינת נתוני הדמיית התקן"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -971,6 +1025,10 @@ msgstr "אין שנמוכים עבור %s"
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "לא נמצאו מזהי קושחה"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "לא נמצאה קושחה"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -1131,6 +1189,9 @@ msgstr "דורש מנהל טעינה"
 msgid "Requires internet connection"
 msgstr "דורש חיבור לאינטרנט"
 
+msgid "Reset daemon configuration"
+msgstr "איפוס הגדרות סוכן"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "להפעיל כעת מחדש?"
@@ -1269,6 +1330,9 @@ msgstr "מקור"
 msgid "Specify the dbx database file"
 msgstr "ציון קובץ מסד הנתוני מסוג dbx"
 
+msgid "Stop the fwupd service"
+msgstr "עצירת שירות fwupd"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1314,6 +1378,10 @@ msgstr "מעבד נתמך"
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "נתמך בשרת המרוחק"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "השהיה לזיכרון (RAM)"
 
 #. TRANSLATORS: Title: a better sleep state
 msgid "Suspend-to-idle"
@@ -1409,6 +1477,14 @@ msgstr "סוג"
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
 msgstr "מחיצת ESP של UEFI לא זוהתה או הוגדרה"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "מפתח פלטפורמה של UEFI"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "טעינה מאובטחת של UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"

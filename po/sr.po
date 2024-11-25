@@ -182,6 +182,10 @@ msgstr "Назив датотеке"
 msgid "Filename Signature"
 msgstr "Потпис назива датотеке"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Основни URI фирмвера"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Д-Бус услуга ажурирања фирмвера"

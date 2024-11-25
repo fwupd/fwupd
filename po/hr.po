@@ -1155,6 +1155,10 @@ msgstr "Firmver BIOS područje"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Firmver BIOS područje štiti memoriju firmvera uređaja od nevlaštenog mijenjanja."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Osnovni URI frimvera"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Firmver nadopuna D-Bus usluge"

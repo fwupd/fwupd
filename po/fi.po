@@ -481,8 +481,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Tämän järjestelmän laiteohjelmiston version alentaminen vaatii tunnistautumisen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Todennus vaaditaan laitteiston emulointitietojen keräämiseksi"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Host tietoturvaongelman korjaaminen edellyttää todennusta"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Todennus vaaditaan laitteiston emulointitietojen lataamiseen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -505,12 +513,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Todennus vaaditaan taustaprosessin palauttamiseksi oletuksiin"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Todennus vaaditaan laitteiston emulointitietojen tallentamiseen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Hyväksyttyjen laiteohjelmistojen luettelon tallentaminen vaatii tunnistautumisen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Tietojen allekirjoittaminen asiakaan sertifikaatin avulla vaatii tunnistautumisen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Todennus vaaditaan päivityspalvelun pysäyttämiseksi"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -621,6 +637,10 @@ msgstr "CET Platform"
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "CPU-mikrokoodi on päivitettävä erilaisten tietojen paljastamisen turvaongelmien lieventämiseksi."
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Voidaan merkitä emulointiin"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -1060,6 +1080,9 @@ msgstr "Emuloitu kone"
 msgid "Enable"
 msgstr "Ota käyttöön"
 
+msgid "Enable emulation data collection"
+msgstr "Käytä emulointitietojen keräämistä"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Otetaanko uusi lähde käyttöön?"
@@ -1294,6 +1317,10 @@ msgstr "Laiteohjelmiston BIOS-alue"
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Laiteohjelmiston BIOS-alue estää laiteohjelmiston muistin peukaloimisen."
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Firmware pohja URI"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -1591,7 +1618,7 @@ msgid "Install signed device firmware"
 msgstr "Asenna allekirjoitettu laiteohjelmisto"
 
 msgid "Install signed system firmware"
-msgstr "Asenna allekirjoitettu järjestelmän laiteohjelmisto"
+msgstr "Asenna allekirjoitettu firmware"
 
 msgid "Install unsigned device firmware"
 msgstr "Asenna allekirjoittamaton laiteohjelmisto"
@@ -2585,6 +2612,9 @@ msgstr "Lähde"
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "Määritä dbx-tietokantatiedosto"
+
+msgid "Stop the fwupd service"
+msgstr "Pysäytä fwupd-palvelu"
 
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"

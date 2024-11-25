@@ -1196,6 +1196,10 @@ msgstr "Belső vezérlőprogram BIOS-ának területe"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "A belső vezérlőprogram BIOS-területe megvédi az eszköz belső vezérlőprogramjának memóriáját a manipulációtól."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Belső vezérlőprogram alap URI-ja"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Belsővezérlőprogram-frissítési D-busz-szolgáltatás"

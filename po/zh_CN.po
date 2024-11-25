@@ -825,6 +825,10 @@ msgstr "需要文件名"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "筛选器为一组设备标志，使用 ~ 前缀来排除设备，示例 \"internal,~needs-reboot\""
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "固件库 URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "固件更新 D-Bus 服务"

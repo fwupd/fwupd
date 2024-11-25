@@ -121,6 +121,11 @@ msgstr "Pemutakhiran GPU %s"
 msgid "%s Graphics Tablet Update"
 msgstr "Pemutakhiran Tablet Grafis %s"
 
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Pembaruan Pengendali Masukan %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -228,6 +233,12 @@ msgstr "%s menghilang: %s"
 msgid "%s is not currently updatable"
 msgstr "%s saat ini tidak dapat diperbarui"
 
+#. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+#. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
+#, c-format
+msgid "%s is pending activation; use %s to complete the update."
+msgstr "%s sedang menunggu aktivasi; gunakan %s untuk menyelesaikan pembaruan."
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -321,6 +332,10 @@ msgstr "Perlindungan Tulis Firmware AMD"
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
 msgstr "Perlindungan Rollback Prosesor Aman AMD"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARSIP FIRMWARE METAINFO [FIRMWARE] [METAINFO] [BERKAS­_JCAT]"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -455,8 +470,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Autentikasi diperlukan untuk menuruntingkatkan firmware pada mesin ini"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Autentikasi diperlukan untuk memfungsikan pengumpulan data emulasi"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Autentikasi diperlukan untuk memperbaiki masalah keamanan host"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Autentikasi diperlukan untuk memuat data emulasi perangkat keras"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -475,6 +498,14 @@ msgid "Authentication is required to read BIOS settings"
 msgstr "Autentikasi diperlukan untuk membaca pengaturan BIOS"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "Autentikasi diperlukan untuk mengatur ulang konfigurasi daemon ke baku"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Autentikasi diperlukan untuk menyimpan data emulasi perangkat keras"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Autentikasi diperlukan untuk mengatur daftar firmware yang disetujui"
 
@@ -483,12 +514,16 @@ msgid "Authentication is required to sign data using the client certificate"
 msgstr "Autentikasi diperlukan untuk menandatangani data menggunakan sertifikat klien"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Autentikasi diperlukan untuk menghentikan layanan pembaruan firmware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
 msgstr "Autentikasi diperlukan untuk beralih ke versi firmware baru"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
-msgstr "Autentikasi diperlukan untuk membatalkan perbaikan masalah keamanan host."
+msgstr "Autentikasi diperlukan untuk membatalkan perbaikan masalah keamanan host"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -571,6 +606,10 @@ msgid "Branch"
 msgstr "Cabang"
 
 #. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "Membuat arsip kabinet dari blob firmware dan metadata XML"
+
+#. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Build berkas firmware"
 
@@ -583,6 +622,14 @@ msgstr "Dukungan OS CET"
 #. * enabled means supported by the processor
 msgid "CET Platform"
 msgstr "Platform CET"
+
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "Microcode CPU harus diperbarui untuk mengurangi berbagai masalah-masalah keamanan pengungkapan informasi."
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Dapat menandai untuk emulasi"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -734,6 +781,10 @@ msgstr "Permintaan Perangkat"
 msgid "Device added:"
 msgstr "Perangkat ditambahkan:"
 
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "Perangkat sudah ada"
+
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
 msgstr "Daya baterai perangkat terlalu lemah"
@@ -746,6 +797,10 @@ msgstr "Daya baterai perangkat terlalu lemah (%u%%, membutuhkan %u%%)"
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device can recover flash failures"
 msgstr "Perangkat dapat memulihkan kegagalan flash"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be updated while the lid is closed"
+msgstr "Perangkat tidak dapat diperbarui saat lid-nya tertutup"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -766,6 +821,11 @@ msgstr "Perangkat sedang dipakai"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Perangkat terkunci"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Perangkat memiliki prioritas lebih rendah daripada perangkat yang setara"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -788,6 +848,10 @@ msgstr "Perangkat dapat digunakan selama durasi pembaruan"
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
 msgstr "Perangkat sedang menunggu pembaruan diterapkan"
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Device list uploaded successfully, thanks!"
+msgstr "Daftar perangkat berhasil diunggah, terima kasih!"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -837,6 +901,11 @@ msgstr "Peranti yang sukses diperbarui:"
 msgid "Devices that were not updated correctly:"
 msgstr "Peranti yang tidak diperbarui dengan benar:"
 
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "Perangkat dengan pembaruan firmware yang memerlukan tindakan pengguna: "
+
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
@@ -869,6 +938,10 @@ msgstr "Dinonaktifkan"
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Menonaktifkan remote yang diberikan"
+
+#. TRANSLATORS: command description
+msgid "Disables virtual testing devices"
+msgstr "Menonaktifkan perangkat pengujian virtual"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -938,6 +1011,10 @@ msgstr "Apakah Anda ingin menyegarkan remote ini sekarang?"
 msgid "Do you want to upload reports automatically for future updates?"
 msgstr "Apakah Anda ingin mengunggah laporan secara otomatis untuk pembaruan di masa mendatang?"
 
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "Jangan meminta autentikasi (detail yang ditampilkan mungkin lebih sedikit)"
+
 #. TRANSLATORS: success
 msgid "Done!"
 msgstr "Selesai!"
@@ -992,6 +1069,9 @@ msgstr "Host yang diemulasi"
 msgid "Enable"
 msgstr "Fungsikan"
 
+msgid "Enable emulation data collection"
+msgstr "Memfungsikan pengumpulan data emulasi"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Aktifkan remote baru?"
@@ -1012,6 +1092,14 @@ msgstr "Diaktifkan jika perangkat keras cocok"
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Mengaktifkan remote yang diberikan"
+
+#. TRANSLATORS: command description
+msgid "Enables virtual testing devices"
+msgstr "Memfungsikan perangkat pengujian virtual"
+
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "Memfungsikan pembaruan firmware untuk BIOS memungkinkan memperbaiki masalah keamanan."
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Mengaktifkan fungsi ini dilakukan dengan risiko Anda sendiri, yang berarti Anda harus menghubungi produsen peralatan asli Anda mengenai masalah yang disebabkan oleh pembaruan ini. Hanya masalah dengan proses pembaruan itu sendiri yang harus diajukan pada $OS_RELEASE:BUG_REPORT_URL$."
@@ -1058,6 +1146,10 @@ msgstr "Keluar setelah mesin telah dimuat"
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
 msgstr "Mengekspor struktur berkas firmware ke XML"
+
+#. TRANSLATORS: command description
+msgid "Export firmware history for manual upload"
+msgstr "Ekspor riwayat firmware untuk unggah manual"
 
 #. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
@@ -1140,6 +1232,16 @@ msgstr "Gagal mengurai argumen"
 msgid "Failed to parse file"
 msgstr "Gagal mengurai berkas"
 
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Gagal mengurai flag untuk %s"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Gagal mengurai dbx lokal"
@@ -1181,6 +1283,14 @@ msgstr "Memfilter dengan suatu set flag perangkat menggunakan awalan ~ untuk men
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filter dengan set flag rilis menggunakan awalan ~ untuk mengecualikan, misalnya 'trusted-release,~trusted-metadata'"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "Atestasi Firmware"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "Atestas Firmware memeriksa perangkat lunak perangkat menggunakan salinan referensi, untuk memastikan bahwa perangkat lunak tersebut tidak diubah."
+
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
 msgstr "Deskriptor BIOS Firmware"
@@ -1196,6 +1306,10 @@ msgstr "Wilayah BIOS Firmware"
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Wilayah BIOS Firmware melindungi memori firmware perangkat agar tidak dirusak."
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI Basis Firmware"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -1254,6 +1368,15 @@ msgstr[0] "Metadata firmware belum diperbarui selama %uhari dan mungkin tidak mu
 msgid "Firmware updates"
 msgstr "Pemutakhiran firmware"
 
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Pembaruan firmware dinonaktifkan; jalankan '%s' untuk memfungsikan"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "Memperbaiki atribut keamanan host tertentu"
+
 #. TRANSLATORS: we've fixed a security problem on the machine
 msgid "Fix reverted successfully"
 msgstr "Perbaikan sukses dibatalkan"
@@ -1284,6 +1407,10 @@ msgid "Full disk encryption secrets may be invalidated when updating"
 msgstr "Rahasia enkripsi disk lengkap mungkin jadi tidak valid saat memperbarui"
 
 #. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Platform Fused"
+
+#. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
 msgstr "Platform yang memakai fuse"
 
@@ -1296,6 +1423,10 @@ msgstr[0] "GUID"
 msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|DEVICE-ID"
 
 msgid "Get BIOS settings"
 msgstr "Dapatkan pengaturan BIOS"
@@ -1419,6 +1550,10 @@ msgstr "Abaikan kegagalan checksum firmware"
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Abaikan kegagalan ketidakcocokan perangkat keras firmware"
 
+#. TRANSLATORS: command line option
+msgid "Ignore non-critical firmware requirements"
+msgstr "Abaikan persyaratan firmware yang tidak kritis"
+
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis di masa depan, eksporlah DISABLE_SSL_STRICT di lingkungan Anda"
@@ -1431,6 +1566,11 @@ msgstr "Citra"
 msgid "Image (custom)"
 msgstr "Citra (ubahan)"
 
+#. TRANSLATORS: the inhibit ID is a short string like dbus-123456
+#, c-format
+msgid "Inhibit ID is %s."
+msgstr "ID Inhibit adalah %s."
+
 #. TRANSLATORS: command description
 msgid "Inhibit the system to prevent upgrades"
 msgstr "Melarang sistem untuk mencegah peningkatan"
@@ -1440,8 +1580,20 @@ msgid "Install Duration"
 msgstr "Durasi Instalasi"
 
 #. TRANSLATORS: command description
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "Pasang berkas firmware dalam format kabinet pada perangkat keras ini"
+
+#. TRANSLATORS: command description
 msgid "Install a raw firmware blob on a device"
 msgstr "Pasang suatu blob firmware mentah pada perangkat"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr "Pasang berkas firmware tertentu di semua perangkat yang cocok"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "Pasang firmware tertentu pada perangkat, semua perangkat yang mungkin juga akan dipasang setelah CAB cocok"
 
 msgid "Install old version of signed system firmware"
 msgstr "Menginstal versi lama firmware sistem yang ditandatangani"
@@ -1545,6 +1697,18 @@ msgstr "Mitigasi GDS Intel"
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Manufacturing Mode"
 msgstr "Mode Manufaktur Intel Management Engine"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "Penimpaan Mesin Manajemen Intel"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "Intel Management Engine Override menonaktifkan pemeriksaan untuk pengubahan perangkat lunak dalam perangkat."
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "Intel Management Engine Version"
@@ -1664,9 +1828,25 @@ msgstr "Penguncian kernel Linux"
 msgid "Linux swap"
 msgstr "Linux swap"
 
+#. TRANSLATORS: command description
+msgid "List EFI boot files"
+msgstr "Mencantumkan daftar berkas boot EFI"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot parameters"
+msgstr "Mencantumkan daftar parameter boot EFI"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "Mencantumkan variabel EFI dengan GUID tertentu"
+
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "Membuat daftar entri di dbx"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "Cantumkan daftar firmware GTypes yang tersedia"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
@@ -1724,6 +1904,10 @@ msgstr "Versi MEI"
 msgid "Manually enable specific plugins"
 msgstr "Aktifkan plugin tertentu secara manual"
 
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "Mode Manufaktur digunakan saat perangkat dibuat dan fitur keamanan belum diaktifkan."
+
 #. TRANSLATORS: Longest valid string for BIOS setting
 msgid "Maximum length"
 msgstr "Panjang maksimum"
@@ -1755,6 +1939,12 @@ msgstr "URI Metadata"
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata dapat diperoleh dari Layanan Firmware Vendor Linux."
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadata mutakhir; gunakan %s untuk menyegarkan lagi."
 
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
@@ -1879,6 +2069,10 @@ msgstr "Versi lama"
 msgid "Only show single PCR value"
 msgstr "Hanya tampilkan nilai PCR tunggal"
 
+#. TRANSLATORS: command line option
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "Hanya gunakan jaringan peer-to-peer saat mengunduh berkas"
+
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
@@ -1939,6 +2133,10 @@ msgstr "Lakukan operasi?"
 msgid "Platform Debugging"
 msgstr "Pengawakutuan Platform"
 
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "Debug Platform memungkinkan fitur keamanan perangkat dinonaktifkan. Ini hanya boleh digunakan oleh produsen perangkat keras."
+
 #. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
 msgid "Platform debugging"
 msgstr "Pengawakutuan platform"
@@ -1953,9 +2151,18 @@ msgstr "Pastikan Anda memiliki kunci pemulihan volume sebelum melanjutkan."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Silakan masukkan angka dari 0 hingga %u: "
 
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Silakan masukkan %s atau %s: "
+
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Dependensi plugin kurang"
+
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr "Plugin hanya untuk pengujian"
 
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
@@ -2041,6 +2248,10 @@ msgstr "Membaca dari %s…"
 msgid "Reading…"
 msgstr "Membaca…"
 
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr "Siap"
+
 #. TRANSLATORS: how often we should refresh the metadata
 msgid "Refresh Interval"
 msgstr "Selang Waktu Penyegaran"
@@ -2108,6 +2319,13 @@ msgstr "Membutuhkan bootloader"
 msgid "Requires internet connection"
 msgstr "Memerlukan koneksi internet"
 
+msgid "Reset daemon configuration"
+msgstr "Setel ulang konfigurasi daemon"
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Resets a daemon configuration section"
+msgstr "Mengatur ulang bagian konfigurasi daemon"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Mulai ulang sekarang?"
@@ -2128,6 +2346,26 @@ msgstr "Ambil pengaturan BIOS.  Jika tidak ada argumen yang diteruskan, semua pe
 msgid "Return all the hardware IDs for the machine"
 msgstr "Memberikan kembalian semua ID perangkat keras bagi mesin"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "Tinjau dan unggah laporan sekarang?"
+
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "Perlindungan Rollback mencegah perangkat lunak perangkat diturunkan ke versi lama yang memiliki masalah keamanan."
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Jalankan '%s' untuk informasi selengkapnya."
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Jalankan '%s' untuk menyelesaikan tindakan ini."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Menjalankan rutin pembersihan komposit plugin saat menggunakan install-blob"
@@ -2135,6 +2373,10 @@ msgstr "Menjalankan rutin pembersihan komposit plugin saat menggunakan install-b
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Menjalankan rutin persiapan komposit saat menggunakan install-blob"
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "Jalankan tindakan pembersihan pasca-reboot"
 
 #. TRANSLATORS: tell a user how to get information
 #, c-format
@@ -2150,8 +2392,16 @@ msgid "Runtime Suffix"
 msgstr "Akhiran Runtime"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "BAGIAN"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "NILAI PENGATURAN"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "PENGATURAN1 NILAI1 [PENGATURAN2] [NILAI2]"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "SMAP"
@@ -2193,9 +2443,21 @@ msgstr "Menyimpan berkas yang memungkinkan pembuatan ID perangkat keras"
 msgid "Save device emulation data"
 msgstr "Simpan data emulasi perangkat"
 
+#. TRANSLATORS: key for a offline report filename
+msgid "Saved report"
+msgstr "Laporan tersimpan"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "Kenaikan Nilai Skalar"
+
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Menjadwalkan…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Secure Boot dinonaktifkan"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
@@ -2237,6 +2499,10 @@ msgstr "Atur pengaturan BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Atur satu atau beberapa pengaturan BIOS"
+
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr "Menyetel percobaan ulang unduhan untuk kesalahan sementara"
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
@@ -2337,6 +2603,9 @@ msgstr "Sumber"
 msgid "Specify the dbx database file"
 msgstr "Menentukan berkas basis data dbx"
 
+msgid "Stop the fwupd service"
+msgstr "Hentikan layanan fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "String"
@@ -2354,6 +2623,10 @@ msgstr "Berhasil mengaktifkan semua perangkat"
 msgid "Successfully disabled remote"
 msgstr "Remote yang berhasil dinonaktifkan"
 
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully disabled test devices"
+msgstr "Sukses menonaktifkan perangkat pengujian"
+
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -2366,6 +2639,10 @@ msgstr "Berhasil mengaktifkan dan menyegarkan remote"
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
 msgstr "Remote yang berhasil diaktifkan"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully enabled test devices"
+msgstr "Sukses memfungsikan perangkat pengujian"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
@@ -2383,6 +2660,14 @@ msgstr "Remote yang berhasil dimodifikasi"
 msgid "Successfully refreshed metadata manually"
 msgstr "Metadata berhasil disegarkan secara manual"
 
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration section"
+msgstr "Sukses mengatur ulang bagian konfigurasi"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration values"
+msgstr "Berhasil mengatur ulang nilai konfigurasi"
+
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
 msgstr "Checksum perangkat berhasil diperbarui"
@@ -2397,6 +2682,11 @@ msgstr[0] "Berhasil mengunggah %u laporan"
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"
 msgstr "Checksum perangkat berhasil diverifikasi"
+
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "Berhasil menunggu %.0fms untuk perangkat"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -2455,6 +2745,10 @@ msgstr "Beralih cabang dari %s ke %s?"
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Beralih cabang firmware pada perangkat"
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Sinkronkan versi firmware ke konfigurasi yang dipilih"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
@@ -2545,6 +2839,14 @@ msgstr "Diuji oleh %s"
 msgid "Tested by trusted vendor"
 msgstr "Diuji oleh vendor terpercaya"
 
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "Manifes Kunci Mesin Manajemen Intel harus valid sehingga firmware perangkat dapat dipercaya oleh CPU."
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "Mesin Manajemen Intel mengontrol komponen perangkat dan harus memiliki versi terbaru untuk menghindari masalah keamanan."
+
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS adalah layanan gratis yang beroperasi sebagai badan hukum independen dan tidak memiliki koneksi dengan $OS_RELEASE:NAME$. Distributor Anda mungkin belum memverifikasi pembaruan firmware untuk kompatibilitas dengan sistem Anda atau perangkat yang terhubung. Semua firmware hanya disediakan oleh pabrikan peralatan asli."
@@ -2590,6 +2892,10 @@ msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut dan ke
 msgid "The update will continue when the device USB cable has been unplugged."
 msgstr "Pembaruan akan berlanjut ketika kabel USB perangkat telah dicabut."
 
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Pembaruan akan berlanjut saat kabel daya perangkat telah dilepas dan dipasang kembali."
+
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
 msgstr "Vendor tidak memberikan catatan rilis apa pun."
@@ -2606,6 +2912,12 @@ msgstr "Tidak ada berkas firmware yang diblokir"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Tidak ada firmware yang disetujui."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Perangkat ini akan dikembalikan ke %s saat perintah %s dilakukan."
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
@@ -2646,6 +2958,22 @@ msgstr "Alat ini memungkinkan administrator untuk kuiri dan mengontrol daemon fw
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Alat ini memungkinkan administrator untuk menggunakan plugin fwupd tanpa diinstal pada sistem host."
 
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "Alat ini dapat menambahkan argumen kernel '%s', tetapi hanya akan aktif setelah memulai ulang komputer."
+
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "Alat ini dapat mengubah pengaturan BIOS '%s' dari '%s' menjadi '%s' secara otomatis, tetapi hanya akan aktif setelah memulai ulang komputer."
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "Alat ini dapat mengubah argumen kernel dari '%s' menjadi '%s', tetapi hanya akan aktif setelah memulai ulang komputer."
+
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Alat ini akan membaca dan mengurai log kejadian TPM dari firmware sistem."
@@ -2669,6 +2997,14 @@ msgstr "Payload tepercaya"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipe"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "Variabel UEFI Bootservice"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "Partisi UEFI ESP mungkin tidak disiapkan dengan benar"
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
@@ -2734,6 +3070,10 @@ msgstr "Membuka blokir firmware:"
 msgid "Unblocks a specific firmware from being installed"
 msgstr "Membuka blokir firmware tertentu agar tidak diinstal"
 
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "Batalkan perbaikan atribut keamanan host"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Tidak terenkripsi"
@@ -2767,6 +3107,10 @@ msgstr "Membuka kunci perangkat bagi akses firmware"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Lepas kait ESP"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Cabut dan pasang kembali perangkat untuk melanjutkan proses pembaruan."
 
 #. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
 msgid "Unsigned Payload"
@@ -2820,6 +3164,16 @@ msgstr "Mutakhirkan informasi verifikasi perangkat yang tersimpan"
 msgid "Update the stored metadata with current contents"
 msgstr "Perbarui metadata yang disimpan dengan konten saat ini"
 
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Memperbarui semua perangkat yang ditentukan ke versi firmware terbaru, atau semua perangkat jika tidak ditentukan"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Pembaruan telah dipublikasikan untuk %u dari %u perangkat lokal"
+
 msgid "Updating"
 msgstr "Memutakhirkan"
 
@@ -2834,11 +3188,24 @@ msgstr "Memutakhirkan %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Meningkatkan %s dari %s ke %s?"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Upload data now?"
+msgstr "Unggah data sekarang?"
+
+#. TRANSLATORS: command description
+msgid "Upload the list of updatable devices to a remote server"
+msgstr "Mengunggah daftar perangkat yang dapat diperbarui ke server jarak jauh"
+
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
 #, c-format
 msgid "Upload these anonymous results to the %s to help other users?"
 msgstr "Unggah hasil anonim ini ke %s untuk membantu pengguna lain?"
+
+#. TRANSLATORS: explain why we want to upload
+#, c-format
+msgid "Uploading a device list allows the %s team to know what hardware exists, and allows us to put pressure on vendors that do not upload firmware updates for their hardware."
+msgstr "Mengunggah daftar perangkat memungkinkan tim %s untuk mengetahui perangkat keras apa yang ada, dan memungkinkan kami untuk menekan vendor yang tidak mengunggah pembaruan firmware bagi perangkat keras mereka."
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -2926,6 +3293,14 @@ msgstr "Menulis berkas:"
 msgid "Writing…"
 msgstr "Menulis…"
 
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Anda harus memastikan bahwa Anda merasa nyaman memulihkan pengaturan dari disk pemulihan atau instalasi, karena perubahan ini dapat menyebabkan sistem tidak boot ke Linux atau menyebabkan ketidakstabilan sistem lainnya."
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "Anda harus memastikan bahwa Anda merasa nyaman memulihkan pengaturan dari penyiapan firmware sistem, karena perubahan ini dapat menyebabkan sistem tidak bisa boot ke Linux atau menyebabkan ketidakstabilan sistem lainnya."
+
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Distributor Anda mungkin belum memverifikasi pembaruan firmware untuk kompatibilitas dengan sistem Anda atau perangkat yang terhubung."
@@ -2941,6 +3316,10 @@ msgstr "Perangkat keras Anda mungkin rusak menggunakan firmware ini, dan mengins
 #, c-format
 msgid "Your system is set up to the BKC of %s."
 msgstr "Sistem Anda disiapkan sebagai BKC dari %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM_ID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
@@ -2959,6 +3338,10 @@ msgid "[DEVICE-ID|GUID] [VERSION]"
 msgstr "[ID-PERANGKAT|GUID] [VERSI]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[PERANGKAT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[BERKAS TTD_BERKAS ID-REMOTE]"
 
@@ -2971,8 +3354,16 @@ msgid "[REASON]"
 msgstr "[ALASAN]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr "[BAGIAN] KUNCI NILAI"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[PENGATURAN1] [PENGATURAN2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[PENGATURAN1] [PENGATURAN2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

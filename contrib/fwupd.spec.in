@@ -17,7 +17,7 @@
 %global __meson_wrap_mode nodownload
 
 # fwupd.efi is only available on these arches
-%ifarch x86_64 aarch64
+%ifarch x86_64 aarch64 riscv64
 %global have_uefi 1
 %endif
 
@@ -27,7 +27,7 @@
 %endif
 
 # flashrom is only available on these arches
-%ifarch i686 x86_64 armv7hl aarch64 ppc64le
+%ifarch i686 x86_64 armv7hl aarch64 ppc64le riscv64
 %global have_flashrom 1
 %endif
 
@@ -322,7 +322,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %config(noreplace)%{_sysconfdir}/fwupd/fwupd.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
-%ifarch i686 x86_64
+%ifarch x86_64
 %{_libexecdir}/fwupd/fwupd-detect-cet
 %endif
 %{_bindir}/dbxtool
@@ -411,13 +411,8 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %files tests
 %if 0%{?enable_tests}
 %{_datadir}/fwupd/host-emulate.d/*.json.gz
-%dir %{_datadir}/installed-tests/fwupd
-%{_datadir}/installed-tests/fwupd/tests/*
-%{_datadir}/installed-tests/fwupd/*
-%if 0%{?have_uefi}
-%{_datadir}/installed-tests/fwupd/efi
-%endif
-%{_libexecdir}/installed-tests/fwupd/*
+%{_datadir}/installed-tests/fwupd
+%{_libexecdir}/installed-tests/fwupd
 %{_datadir}/fwupd/remotes.d/fwupd-tests.conf
 %endif
 

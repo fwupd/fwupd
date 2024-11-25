@@ -493,8 +493,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Wymagane jest uwierzytelnienie, aby zainstalować poprzednią wersję oprogramowania sprzętowego tego komputera"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Wymagane jest uwierzytelnienie, aby włączyć zbieranie danych emulacji"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Wymagane jest uwierzytelnienie, aby naprawić problem z zabezpieczeniami komputera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Wymagane jest uwierzytelnienie, aby wczytać dane emulacji sprzętu"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -517,12 +525,20 @@ msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "Wymagane jest uwierzytelnienie, aby przywrócić konfigurację usługi do domyślnej"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Wymagane jest uwierzytelnienie, aby zapisać dane emulacji sprzętu"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Wymagane jest uwierzytelnienie, aby ustawić listę zatwierdzonego oprogramowania sprzętowego"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Wymagane jest uwierzytelnienie, aby podpisać dane za pomocą certyfikatu klienta"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Wymagane jest uwierzytelnienie, aby zatrzymać usługę aktualizacji oprogramowania sprzętowego"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -629,6 +645,10 @@ msgstr "Obsługa CET przez system operacyjny"
 #. * enabled means supported by the processor
 msgid "CET Platform"
 msgstr "Platforma CET"
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Może być oznaczone do emulacji"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -1056,6 +1076,9 @@ msgstr "Emulowany komputer"
 msgid "Enable"
 msgstr "Włącz"
 
+msgid "Enable emulation data collection"
+msgstr "Włączenie zbierania danych emulacji"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Włączyć nowe repozytorium?"
@@ -1271,6 +1294,10 @@ msgstr "Deskryptor BIOS-u oprogramowania sprzętowego"
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
 msgstr "Region BIOS-u oprogramowania sprzętowego"
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Podstawowy adres URI oprogramowania sprzętowego"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -2524,6 +2551,9 @@ msgstr "Źródło"
 #. TRANSLATORS: command line option
 msgid "Specify the dbx database file"
 msgstr "Podaje plik bazy dbx"
+
+msgid "Stop the fwupd service"
+msgstr "Zatrzymanie usługi fwupd"
 
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"

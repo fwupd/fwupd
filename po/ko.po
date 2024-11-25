@@ -1205,6 +1205,10 @@ msgstr "펌웨어 BIOS 영역"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "펌웨어 BIOS 영역에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "펌웨어 기본 URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "펌웨어 업데이트 D-Bus 서비스"
