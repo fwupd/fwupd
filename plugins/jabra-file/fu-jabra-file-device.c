@@ -43,10 +43,7 @@ fu_jabra_file_device_probe(FuDevice *device, GError **error)
 {
 	FuJabraFileDevice *self = FU_JABRA_FILE_DEVICE(device);
 	FuUsbInterface *iface = NULL;
-	FuUsbEndpoint *ep1 = NULL;
-	FuUsbEndpoint *ep2 = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
-	g_autoptr(GPtrArray) endpoints = NULL;
 
 	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (ifaces == NULL) {
@@ -56,11 +53,14 @@ fu_jabra_file_device_probe(FuDevice *device, GError **error)
 				    "update interface not found");
 		return FALSE;
 	}
-	for (guint8 i = 0; i < ifaces->len; i++) {
+	for (guint i = 0; i < ifaces->len; i++) {
+		g_autoptr(GPtrArray) endpoints = NULL;
+		FuUsbEndpoint *ep1 = NULL;
+		FuUsbEndpoint *ep2 = NULL;
 		iface = g_ptr_array_index(ifaces, i);
 		if (fu_usb_interface_get_class(iface) == FU_USB_CLASS_HID) {
 			endpoints = fu_usb_interface_get_endpoints(iface);
-			if (NULL == endpoints || endpoints->len == 0)
+			if (NULL == endpoints || endpoints->len == 0 || endpoints->len < 2)
 				continue;
 			ep1 = g_ptr_array_index(endpoints, 0);
 			ep2 = g_ptr_array_index(endpoints, 1);
@@ -68,8 +68,13 @@ fu_jabra_file_device_probe(FuDevice *device, GError **error)
 			self->epout = fu_usb_endpoint_get_address(ep2);
 		}
 	}
-	if (ep1 == NULL || ep2 == NULL)
+	if (self->epin == 0x0 || self->epout == 0x0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "update endpoints not found");
 		return FALSE;
+	}
 	return TRUE;
 }
 
