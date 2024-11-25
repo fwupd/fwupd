@@ -80,6 +80,15 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		return;
 	}
 	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
+
+	/*
+	 * Quirk for behavior on Framework systems where the EC reports as discharging
+	 * while on AC but at 100%.
+	 */
+	if (fu_context_get_power_state(ctx) == FU_POWER_STATE_BATTERY_DISCHARGING &&
+	    fu_context_get_battery_level(ctx) == 100 &&
+	    fu_context_has_hwid_guid(ctx, "2185e781-ed4b-5fc2-8839-b5ddb1e7d649"))
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
 }
 
 static void
