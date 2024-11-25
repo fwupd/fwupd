@@ -43,6 +43,17 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
+
+	/* get percentage */
+	percentage_val = g_dbus_proxy_get_cached_property(self->proxy, "Percentage");
+	if (percentage_val == NULL) {
+		g_warning("failed to query power percentage level");
+		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
+		return;
+	}
+	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
+
+	/* get state */
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
 	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
@@ -71,15 +82,6 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		break;
 	}
-
-	/* get percentage */
-	percentage_val = g_dbus_proxy_get_cached_property(self->proxy, "Percentage");
-	if (percentage_val == NULL) {
-		g_warning("failed to query power percentage level");
-		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
-		return;
-	}
-	fu_context_set_battery_level(ctx, g_variant_get_double(percentage_val));
 }
 
 static void
