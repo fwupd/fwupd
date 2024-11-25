@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ParseBytes)]
-struct Ds20 {
+struct FuStructDs20 {
     _reserved: u8,
     guid: Guid,
     platform_ver: u32le,
@@ -11,7 +11,7 @@ struct Ds20 {
     alt_code: u8,
 }
 #[derive(New, ParseBytes)]
-struct MsDs20 {
+struct FuStructMsDs20 {
     size: u16le,
     type: u16le,
 }

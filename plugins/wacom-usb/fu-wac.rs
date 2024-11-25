@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(Parse)]
-struct WtaBlockHeader {
+struct FuStructWtaBlockHeader {
     block_start: u32le,
     block_size: u32le,
 }
 #[derive(ToString)]
-enum WacReportId {
+enum FuWacReportId {
     FwDescriptor              = 0xCB, // GET_FEATURE
     SwitchToFlashLoader       = 0xCC, // SET_FEATURE
     QuitAndReset              = 0xCD, // SET_FEATURE
@@ -28,7 +28,7 @@ enum WacReportId {
     Module                    = 0xE4,
 }
 #[derive(ToString)]
-enum WacModuleFwType {
+enum FuWacModuleFwType {
     Touch         = 0x00,
     Bluetooth     = 0x01,
     EmrCorrection = 0x02,
@@ -41,13 +41,13 @@ enum WacModuleFwType {
     Main          = 0x3F,
 }
 #[derive(ToString)]
-enum WacModuleCommand {
+enum FuWacModuleCommand {
     Start = 0x01,
     Data  = 0x02,
     End   = 0x03,
 }
 #[derive(ToString)]
-enum WacModuleStatus {
+enum FuWacModuleStatus {
     Ok,
     Busy,
     ErrCrc,
@@ -66,7 +66,7 @@ enum WacModuleStatus {
 }
 
 #[derive(ToBitString)]
-enum WacDeviceStatus {
+enum FuWacDeviceStatus {
     Unknown = 0,
     Writing = 1 << 0,
     Erasing = 1 << 1,
@@ -76,22 +76,22 @@ enum WacDeviceStatus {
 }
 
 #[derive(New)]
-struct Id9UnknownCmd {
+struct FuStructId9UnknownCmd {
     unknown1: u16be == 0x7050,
     unknown2: u32be == 0,
     size: u16be,                  // Size of payload to be transferred
 }
 #[derive(New)]
-struct Id9SpiCmd {
+struct FuStructId9SpiCmd {
     command: u8 == 0x91,
     start_addr: u32be == 0,
     size: u16be,                  // sizeof(data) + size of payload
-    data: Id9UnknownCmd,
+    data: FuStructId9UnknownCmd,
 }
 #[derive(New, Validate)]
-struct Id9LoaderCmd {
+struct FuStructId9LoaderCmd {
     command: u8,
     size: u16be,                  // sizeof(data) + size of payload
     crc: u32be,                   // CRC(concat(data, payload))
-    data: Id9SpiCmd,
+    data: FuStructId9SpiCmd,
 }

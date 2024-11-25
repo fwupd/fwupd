@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ValidateBytes, ParseBytes)]
-struct DfuCsrFile {
+struct FuStructDfuCsrFile {
     file_id: [char; 8] == "CSR-dfu2",
     file_version: u16le == 0x02,
     file_len: u32le,
@@ -11,21 +11,21 @@ struct DfuCsrFile {
 }
 
 #[repr(u8)]
-enum DfuCsrReportId {
+enum FuDfuCsrReportId {
     Command = 0x01,
     Status = 0x02,
     Control = 0x03,
 }
 
 #[repr(u8)]
-enum DfuCsrCommand {
+enum FuDfuCsrCommand {
     Upgrade = 0x01,
 }
 
 #[derive(New)]
-struct DfuCsrCommandHeader {
-    report_id: DfuCsrReportId,
-    command: DfuCsrCommand,
+struct FuStructDfuCsrCommandHeader {
+    report_id: FuDfuCsrReportId,
+    command: FuDfuCsrCommand,
     idx: u16le,
     chunk_sz: u16le,
 }

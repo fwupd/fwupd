@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ParseBytes, ValidateBytes)]
-struct QcFwUpdateHdr {
+struct FuStructQcFwUpdateHdr {
     magic1: u32be == 0x41505055,
     magic2: u16be == 0x4844,
     magic3: u8 == 0x52,

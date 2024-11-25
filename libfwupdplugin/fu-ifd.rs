@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum IfdRegion {
+enum FuIfdRegion {
     Desc = 0x00,
     Bios = 0x01,
     Me = 0x02,
@@ -17,7 +17,7 @@ enum IfdRegion {
 }
 
 #[derive(ParseBytes, New, ValidateBytes)]
-struct IfdFdbar {
+struct FuStructIfdFdbar {
     reserved: [u8; 16] = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
     signature: u32le == 0x0FF0A55A,
     descriptor_map0: u32le,
@@ -26,7 +26,7 @@ struct IfdFdbar {
 }
 
 #[derive(ParseBytes, New)]
-struct IfdFcba {
+struct FuStructIfdFcba {
     flcomp: u32le,
     flill: u32le,
     flill1: u32le,

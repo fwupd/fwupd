@@ -2,29 +2,29 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[repr(u8)]
-enum QcReportId {
+enum FuQcReportId {
     Command = 3,
     DataTransfer = 5,
     Response = 6,
 }
 
 #[derive(New)]
-struct QcHidCommand {
-    report_id: QcReportId == Command,
+struct FuStructQcHidCommand {
+    report_id: FuQcReportId == Command,
     payload_len: u8,
     payload: [u8; 61],
 }
 
 #[derive(Parse)]
-struct QcHidResponse {
-    report_id: QcReportId == Response,
+struct FuStructQcHidResponse {
+    report_id: FuQcReportId == Response,
     payload_len: u8,
     payload: [u8; 11],
 }
 
 #[derive(New)]
-struct QcHidDataTransfer {
-    report_id: QcReportId == DataTransfer,
+struct FuStructQcHidDataTransfer {
+    report_id: FuQcReportId == DataTransfer,
     payload_len: u8,
     payload: [u8; 253],
 }

@@ -3,7 +3,7 @@
 
 // byte = 0x07
 #[derive(ToString)]
-enum Ep963xSmbusError {
+enum FuEp963xSmbusError {
     None = 0x00,
     Address = 0x01,
     NoAck = 0x02,

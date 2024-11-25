@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString, FromString)]
-enum CorsairDeviceKind {
+enum FuCorsairDeviceKind {
     Unknown,
     Mouse,
     Receiver,

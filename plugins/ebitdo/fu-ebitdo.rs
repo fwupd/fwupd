@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ParseBytes)]
-struct EbitdoHdr {
+struct FuStructEbitdoHdr {
     version: u32le,
     destination_addr: u32le,
     destination_len: u32le,
     reserved: [u32le; 4],
 }
 #[repr(u8)]
-enum EbitdoPktType {
+enum FuEbitdoPktType {
     UserCmd = 0x00,
     UserData = 0x01,
     MidCmd = 0x02,
 }
 #[derive(ToString)]
 #[repr(u8)]
-enum EbitdoPktCmd {
+enum FuEbitdoPktCmd {
     FwUpdateData       = 0x00, // update firmware data
     FwUpdateHeader     = 0x01, // update firmware header
     FwUpdateOk         = 0x02, // mark update as successful
@@ -37,11 +37,11 @@ enum EbitdoPktCmd {
     GetVersionResponse = 0x22, // get fw version response
 }
 #[derive(New, Parse)]
-struct EbitdoPkt {
+struct FuStructEbitdoPkt {
     pkt_len: u8,
-    type: EbitdoPktType,
+    type: FuEbitdoPktType,
     subtype: u8,
     cmd_len: u16le,
-    cmd: EbitdoPktCmd,
+    cmd: FuEbitdoPktCmd,
     payload_len: u16le, // optional
 }

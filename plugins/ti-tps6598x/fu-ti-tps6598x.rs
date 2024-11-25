@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum TiTps6598xSfwi {
+enum FuTiTps6598xSfwi {
     Success = 0x0,
     FailFlashErrorOrBusy = 0x4,
     FailFlashInvalidAddress = 0x5,
@@ -13,7 +13,7 @@ enum TiTps6598xSfwi {
 }
 
 #[derive(ToString)]
-enum TiTps6598xSfwd {
+enum FuTiTps6598xSfwd {
     Success = 0x0,
     FailFlashEraseWriteError = 0x4,
     FailSfwiNotRunFirst = 0x6,
@@ -26,7 +26,7 @@ enum TiTps6598xSfwd {
 }
 
 #[derive(ToString)]
-enum TiTps6598xSfws {
+enum FuTiTps6598xSfws {
     Success = 0x0,
     FailFlashEraseWriteError = 0x4,
     FailSfwdNotRunOrNoKeyExists = 0x6,

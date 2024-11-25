@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum AverHidStatus {
+enum FuAverHidStatus {
     Ready,
     Busy,
     Dnload,
@@ -17,7 +17,7 @@ enum AverHidStatus {
 }
 
 #[derive(ToString)]
-enum AverHidCustomIspCmd {
+enum FuAverHidCustomIspCmd {
     Status = 0x01,
     FileStart,
     FileDnload,
@@ -36,7 +36,7 @@ enum AverHidCustomIspCmd {
 }
 
 #[derive(ToString)]
-enum AverSafeispCustomCmd {
+enum FuAverSafeispCustomCmd {
     GetVersion = 0x14,
     Support = 0x29,
     EraseTemp,
@@ -50,7 +50,7 @@ enum AverSafeispCustomCmd {
     UpdateStart,
 }
 
-enum AverSafeispAckStatus {
+enum FuAverSafeispAckStatus {
     Idle = 0x00,
     Success,
     Checksum,
@@ -68,7 +68,7 @@ enum AverSafeispAckStatus {
 }
 
 #[derive(Getters, New)]
-struct AverHidReqIsp {
+struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -77,7 +77,7 @@ struct AverHidReqIsp {
 }
 
 #[derive(Setters, Getters, New)]
-struct AverHidReqIspFileStart {
+struct FuStructAverHidReqIspFileStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -89,7 +89,7 @@ struct AverHidReqIspFileStart {
 }
 
 #[derive(Setters, Getters, New)]
-struct AverHidReqIspFileDnload {
+struct FuStructAverHidReqIspFileDnload {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -97,7 +97,7 @@ struct AverHidReqIspFileDnload {
 }
 
 #[derive(Setters, Getters, New)]
-struct AverHidReqIspFileEnd {
+struct FuStructAverHidReqIspFileEnd {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -110,7 +110,7 @@ struct AverHidReqIspFileEnd {
 }
 
 #[derive(Getters, Setters)]
-struct AverHidReqIspStart {
+struct FuStructAverHidReqIspStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -120,7 +120,7 @@ struct AverHidReqIspStart {
 }
 
 #[derive(Getters, New)]
-struct AverHidReqDeviceVersion {
+struct FuStructAverHidReqDeviceVersion {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x25,
     ver: [u8; 11],
@@ -129,7 +129,7 @@ struct AverHidReqDeviceVersion {
 }
 
 #[derive(New, Getters, Validate)]
-struct AverHidResIspStatus {
+struct FuStructAverHidResIspStatus {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -141,7 +141,7 @@ struct AverHidResIspStatus {
 }
 
 #[derive(Getters, Setters)]
-struct AverHidResIsp {
+struct FuStructAverHidResIsp {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
     custom_isp_cmd: u8,
@@ -150,7 +150,7 @@ struct AverHidResIsp {
 }
 
 #[derive(Getters, New, Validate)]
-struct AverHidResDeviceVersion {
+struct FuStructAverHidResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x25,
     ver: [u8; 11],
@@ -159,7 +159,7 @@ struct AverHidResDeviceVersion {
 }
 
 #[derive(Setters, Getters, New)]
-struct AverSafeispReq {
+struct FuStructAverSafeispReq {
     report_id_custom_command: u8 == 0x08,
     custom_cmd: u8,
     custom_res: u16,
@@ -169,7 +169,7 @@ struct AverSafeispReq {
 };
 
 #[derive(New, Getters, Validate)]
-struct AverSafeispRes {
+struct FuStructAverSafeispRes {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8,
     custom_res: u16,
@@ -179,7 +179,7 @@ struct AverSafeispRes {
 };
 
 #[derive(Getters, Validate)]
-struct AverSafeispResDeviceVersion {
+struct FuStructAverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
     custom_cmd: u8 == 0x14,
     ver: [u8; 11],

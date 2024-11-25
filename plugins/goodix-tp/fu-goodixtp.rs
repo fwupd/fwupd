@@ -1,7 +1,7 @@
 // Copyright (C) 2023 Goodix.inc <xulinkun@goodix.com>
 // SPDX-License-Identifier: LGPL-2.1+
 
-enum GoodixtpIcType {
+enum FuGoodixtpIcType {
     None,
     Phoenix,
     TypeNanjing,
@@ -12,7 +12,7 @@ enum GoodixtpIcType {
 }
 
 #[derive(ParseBytes)]
-struct GoodixBrlbHdr {
+struct FuStructGoodixBrlbHdr {
     firmware_size: u32le,
     checksum: u32le,
     _unknown: [u8; 19],
@@ -22,7 +22,7 @@ struct GoodixBrlbHdr {
 }
 
 #[derive(ParseBytes)]
-struct GoodixBrlbImg {
+struct FuStructGoodixBrlbImg {
     kind: u8,
     size: u32le,
     addr: u32le,
@@ -30,7 +30,7 @@ struct GoodixBrlbImg {
 }
 
 #[derive(ParseBytes)]
-struct GoodixGtx8Hdr {
+struct FuStructGoodixGtx8Hdr {
     firmware_size: u32be,
     checksum: u16be,
     _unknown: [u8; 19],
@@ -40,7 +40,7 @@ struct GoodixGtx8Hdr {
 }
 
 #[derive(ParseBytes)]
-struct GoodixGtx8Img {
+struct FuStructGoodixGtx8Img {
     kind: u8,
     size: u32be,
     addr: u16be,

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum IntelThunderboltNvmSection {
+enum FuIntelThunderboltNvmSection {
     Digital,
     Drom,
     ArcParams,
@@ -10,7 +10,7 @@ enum IntelThunderboltNvmSection {
 }
 
 #[derive(ToString, FromString)]
-enum IntelThunderboltNvmFamily {
+enum FuIntelThunderboltNvmFamily {
     Unknown,
     FalconRidge,
     WinRidge,

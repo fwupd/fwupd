@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Parse)]
-struct AcpiTable {
+struct FuStructAcpiTable {
     signature: [char; 4],
     length: u32le,
     revision: u8,

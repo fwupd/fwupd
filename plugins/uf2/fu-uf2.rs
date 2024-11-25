@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Parse)]
-struct Uf2 {
+struct FuStructUf2 {
     magic0: u32le == 0x0A324655,
     magic1: u32le == 0x9E5D5157,
     flags: u32le,

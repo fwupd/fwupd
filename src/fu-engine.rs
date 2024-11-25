@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(FromString)]
-enum ReleasePriority {
+enum FuReleasePriority {
     None,
     Local,
     Remote,
 }
 
 #[derive(FromString)]
-enum P2pPolicy {
+enum FuP2pPolicy {
     Nothing = 0x00,
     Metadata = 0x01,
     Firmware = 0x02,
 }
 
 #[derive(ToString)]
-enum EngineInstallPhase {
+enum FuEngineInstallPhase {
     Setup,
     Install,
     Attach,
@@ -29,20 +29,20 @@ enum EngineInstallPhase {
 }
 
 #[derive(ToBitString)]
-enum EngineRequestFlag {
+enum FuEngineRequestFlag {
     None = 0,
     NoRequirements = 1 << 0,
     AnyRelease = 1 << 1,
 }
 
 #[derive(ToBitString)]
-enum IdleInhibit {
+enum FuIdleInhibit {
     None = 0,
     Timeout = 1 << 0,
     Signals = 1 << 1,
 }
 
-enum ClientFlag {
+enum FuClientFlag {
     None = 0,
     Active = 1 << 0,
 }

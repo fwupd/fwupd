@@ -6,13 +6,13 @@
  */
 
 #[repr(u8)]
-enum DdcOpcode {
+enum FuDdcOpcode {
     GetVcp = 0x01, // standard get vcp feature
     Req = 0xCC, // vendor specific opcode
 }
 
 #[repr(u8)]
-enum DdcVcpCode {
+enum FuDdcVcpCode {
     ControllerType = 0xC8, // standard display controller type
     Priority = 0x90,
     UpdatePrep = 0xF2,
@@ -28,13 +28,13 @@ enum DdcVcpCode {
 }
 
 #[derive(New)]
-struct DdcCmd {
-    opcode: DdcOpcode = Req,
-    vcp_code: DdcVcpCode,
+struct FuStructDdcCmd {
+    opcode: FuDdcOpcode = Req,
+    vcp_code: FuDdcVcpCode,
 }
 
 #[repr(u8)]
-enum DdcI2cAddr{
+enum FuDdcI2cAddr{
     DisplayDevice = 0x6E,
     HostDevice = 0x51,
     Checksum = 0x50,
@@ -42,13 +42,13 @@ enum DdcI2cAddr{
 
 #[derive(ToString)]
 #[repr(u8)]
-enum DdcciPriority{
+enum FuDdcciPriority{
     Normal,
     Up,
 }
 
 #[repr(u8)]
-enum MediatekScalerIspStatus {
+enum FuMediatekScalerIspStatus {
     Busy = 0x00,
     Failure,
     Success,

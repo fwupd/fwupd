@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Getters)]
-struct EfiUxCapsuleHeader {
+struct FuStructEfiUxCapsuleHeader {
     version: u8 == 0x01,
     checksum: u8,
     image_type: u8,
@@ -12,7 +12,7 @@ struct EfiUxCapsuleHeader {
     y_offset: u32le,
 }
 #[derive(New, Getters)]
-struct EfiCapsuleHeader {
+struct FuStructEfiCapsuleHeader {
     guid: Guid,
     header_size: u32le = $struct_size,
     flags: u32le,
@@ -21,30 +21,30 @@ struct EfiCapsuleHeader {
 
 #[derive(ToString)]
 #[repr(u32le)]
-enum UefiUpdateInfoStatus {
+enum FuUefiUpdateInfoStatus {
     Unknown,
     AttemptUpdate,
     Attempted,
 }
 
 #[derive(New, Parse)]
-struct EfiUpdateInfo {
+struct FuStructEfiUpdateInfo {
     version: u32le = 0x7,
     guid: Guid,
     flags: u32le,
     hw_inst: u64le,
     time_attempted: [u8; 16], // a EFI_TIME_T
-    status: UefiUpdateInfoStatus,
+    status: FuUefiUpdateInfoStatus,
     // EFI_DEVICE_PATH goes here
 }
 #[derive(Parse)]
-struct AcpiInsydeQuirk {
+struct FuStructAcpiInsydeQuirk {
     signature: [char; 6],
     size: u32le,
     flags: u32le,
 }
 #[derive(ToString, FromString)]
-enum UefiDeviceKind {
+enum FuUefiDeviceKind {
     Unknown,
     SystemFirmware,
     DeviceFirmware,
@@ -53,7 +53,7 @@ enum UefiDeviceKind {
     DellTpmFirmware,
 }
 #[derive(ToString)]
-enum UefiDeviceStatus {
+enum FuUefiDeviceStatus {
     Success,
     ErrorUnsuccessful,
     ErrorInsufficientResources,

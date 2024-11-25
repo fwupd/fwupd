@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum ScsiSenseKey {
+enum FuScsiSenseKey {
     NoSense = 0x00,
     RecoveredError = 0x01,
     NotReady = 0x02,

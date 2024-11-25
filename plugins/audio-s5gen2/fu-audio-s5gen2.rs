@@ -4,7 +4,7 @@
 #[derive(ToString)]
 #[repr(u8)]
 // Upgrade protocol OpCode
-enum QcOpcode {
+enum FuQcOpcode {
     StartReq = 0x01,
     StartCfm = 0x02,
     DataBytesReq = 0x03,
@@ -29,28 +29,28 @@ enum QcOpcode {
 }
 
 #[repr(u8)]
-enum QcAction {
+enum FuQcAction {
     Proceed = 0,
     NotProceed = 1,
 }
 
 #[repr(u8)]
-enum QcReq {
+enum FuQcReq {
     Connect = 0x02,
     Disconnect = 0x07,
 }
 #[derive(New)]
-struct QcConnectReq {
-    req: QcReq == Connect,
+struct FuStructQcConnectReq {
+    req: FuQcReq == Connect,
 }
 #[derive(New)]
-struct QcDisconnectReq {
-    req: QcReq == Disconnect,
+struct FuStructQcDisconnectReq {
+    req: FuQcReq == Disconnect,
 }
 
 #[derive(ToString)]
 #[repr(u8)]
-enum QcStatus {
+enum FuQcStatus {
     Success = 0,         // Operation succeeded
     UnexpectedError,    // Operation failed
     AlreadyConnectedWarning,       // Already connected
@@ -59,18 +59,18 @@ enum QcStatus {
     InvalidPowerState,  // Invalid power management state
 }
 #[derive(Parse)]
-struct QcUpdateStatus {
-    status: QcStatus,
+struct FuStructQcUpdateStatus {
+    status: FuQcStatus,
 }
 
 #[derive(New)]
-struct QcVersionReq {
-    opcode: QcOpcode == HostVersionReq,
+struct FuStructQcVersionReq {
+    opcode: FuQcOpcode == HostVersionReq,
     data_len: u16be == 0x00,
 }
 #[derive(Parse)]
-struct QcVersion {
-    status: QcOpcode == HostVersionCfm,
+struct FuStructQcVersion {
+    status: FuQcOpcode == HostVersionCfm,
     data_len: u16be == 0x0006,
     major: u16be,
     minor: u16be,
@@ -78,19 +78,19 @@ struct QcVersion {
 }
 
 #[derive(New)]
-struct QcAbortReq {
-    opcode: QcOpcode == AbortReq,
+struct FuStructQcAbortReq {
+    opcode: FuQcOpcode == AbortReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse)]
-struct QcAbort {
-    opcode: QcOpcode == AbortCfm,
+struct FuStructQcAbort {
+    opcode: FuQcOpcode == AbortCfm,
     data_len: u16be = 0x00,
 }
 
 #[derive(ToString)]
 #[repr(u8)]
-enum QcResumePoint {
+enum FuQcResumePoint {
     Start = 0,
     PreValidate,
     PreReboot,
@@ -98,110 +98,110 @@ enum QcResumePoint {
     PostCommit,
 }
 #[derive(New)]
-struct QcSyncReq {
-    opcode: QcOpcode == SyncReq,
+struct FuStructQcSyncReq {
+    opcode: FuQcOpcode == SyncReq,
     data_len: u16be = 0x04,
     fileId: u32be,
 }
 #[derive(Parse)]
-struct QcSync {
-    opcode: QcOpcode == SyncCfm,
+struct FuStructQcSync {
+    opcode: FuQcOpcode == SyncCfm,
     data_len: u16be = 0x06,
-    resume_point: QcResumePoint,
+    resume_point: FuQcResumePoint,
     file_id: u32be,
     protocolVersion: u8,
 }
 
 #[derive(ToString)]
 #[repr(u8)]
-enum QcStartStatus {
+enum FuQcStartStatus {
     Success = 0,
     Failure = 1,
 }
 #[derive(New)]
-struct QcStartReq {
-    opcode: QcOpcode == StartReq,
+struct FuStructQcStartReq {
+    opcode: FuQcOpcode == StartReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse)]
-struct QcStart {
-    opcode: QcOpcode == StartCfm,
+struct FuStructQcStart {
+    opcode: FuQcOpcode == StartCfm,
     data_len: u16be = 0x0003,
-    status: QcStartStatus,
+    status: FuQcStartStatus,
     battery_level: u16be,
 }
 
 #[derive(New)]
-struct QcStartDataReq {
-    opcode: QcOpcode == StartDataReq,
+struct FuStructQcStartDataReq {
+    opcode: FuQcOpcode == StartDataReq,
     data_len: u16be = 0x00,
     data: [u8; 250],
 }
 
 #[repr(u8)]
-enum QcMoreData {
+enum FuQcMoreData {
     More = 0,
     Last = 1,
 }
 #[derive(Parse)]
-struct QcDataReq {
-    opcode: QcOpcode == DataBytesReq,
+struct FuStructQcDataReq {
+    opcode: FuQcOpcode == DataBytesReq,
     data_len: u16be = 0x0008,
     fw_data_len: u32be,
     fw_data_offset: u32be,
 }
 #[derive(New)]
-struct QcData {
-    opcode: QcOpcode == Data,
+struct FuStructQcData {
+    opcode: FuQcOpcode == Data,
     data_len: u16be,
-    last_packet: QcMoreData,
+    last_packet: FuQcMoreData,
     data: [u8; 249],
 }
 
 #[derive(New)]
-struct QcValidationReq {
-    opcode: QcOpcode == IsValidationDoneReq,
+struct FuStructQcValidationReq {
+    opcode: FuQcOpcode == IsValidationDoneReq,
     data_len: u16be = 0x00,
 }
 #[derive(Parse)]
-struct QcValidation {
-    opcode: QcOpcode, // Could be TransferCompleteInd or IsValidationDoneCfm
+struct FuStructQcValidation {
+    opcode: FuQcOpcode, // Could be TransferCompleteInd or IsValidationDoneCfm
     data_len: u16be,
     delay: u16be,
 }
 
 #[derive(New)]
-struct QcTransferComplete {
-    opcode: QcOpcode == TransferCompleteRes,
+struct FuStructQcTransferComplete {
+    opcode: FuQcOpcode == TransferCompleteRes,
     data_len: u16be = 0x01,
-    action: QcAction,
+    action: FuQcAction,
 }
 
 #[derive(New)]
-struct QcProceedToCommit {
-    opcode: QcOpcode == ProceedToCommit,
+struct FuStructQcProceedToCommit {
+    opcode: FuQcOpcode == ProceedToCommit,
     data_len: u16be = 0x01,
-    action: QcAction,
+    action: FuQcAction,
 }
 #[derive(Parse)]
-struct QcCommitReq {
-    opcode: QcOpcode == CommitReq,
+struct FuStructQcCommitReq {
+    opcode: FuQcOpcode == CommitReq,
     data_len: u16be = 0x00,
 }
 
 #[repr(u8)]
-enum QcCommitAction {
+enum FuQcCommitAction {
     Upgrade = 0,
     Rollback = 1,
 }
 #[derive(New)]
-struct QcCommitCfm {
-    opcode: QcOpcode == CommitCfm,
+struct FuStructQcCommitCfm {
+    opcode: FuQcOpcode == CommitCfm,
     data_len: u16be = 0x01,
-    action: QcCommitAction,
+    action: FuQcCommitAction,
 }
 #[derive(Parse)]
-struct QcComplete {
-    opcode: QcOpcode == CompleteInd,
+struct FuStructQcComplete {
+    opcode: FuQcOpcode == CompleteInd,
     data_len: u16be = 0x00,
 }

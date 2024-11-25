@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ParseBytes)]
-struct AcpiPhatHealthRecord {
+struct FuStructAcpiPhatHealthRecord {
     signature: u16le = 0x1,
     rcdlen: u16le,
     version: u8,
@@ -12,13 +12,13 @@ struct AcpiPhatHealthRecord {
     device_specific_data: u32le,
 }
 #[derive(New, ParseBytes)]
-struct AcpiPhatVersionElement {
+struct FuStructAcpiPhatVersionElement {
     component_id: Guid,
     version_value: u64le,
     producer_id: [char; 4],
 }
 #[derive(New, ParseBytes)]
-struct AcpiPhatVersionRecord {
+struct FuStructAcpiPhatVersionRecord {
     signature: u16le = 0x0,
     rcdlen: u16le,
     version: u8,
