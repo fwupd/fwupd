@@ -1114,6 +1114,16 @@ fu_context_set_power_state(FuContext *self, FuPowerState power_state)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
+
+	/* quirk for behavior on Framework systems where the EC reports as discharging
+	 * while on AC but at 100% */
+	if (power_state == FU_POWER_STATE_BATTERY_DISCHARGING && priv->battery_level == 100 &&
+	    fu_context_has_hwid_flag(self, "discharging-when-fully-changed")) {
+		power_state = FU_POWER_STATE_AC_FULLY_CHARGED;
+		g_debug("quirking power state to %s", fu_power_state_to_string(power_state));
+	}
+
+	/* is the same */
 	if (priv->power_state == power_state)
 		return;
 	priv->power_state = power_state;
