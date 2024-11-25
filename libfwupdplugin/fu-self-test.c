@@ -2012,10 +2012,10 @@ fu_device_event_func(void)
 			==,
 			"{\n"
 			"  \"Id\" : \"foo:bar:baz\",\n"
-			"  \"Data\" : \"\",\n"
-			"  \"Age\" : 123,\n"
 			"  \"Name\" : \"Richard\",\n"
-			"  \"Blob\" : \"aGVsbG8A\"\n"
+			"  \"Age\" : 123,\n"
+			"  \"Blob\" : \"aGVsbG8A\",\n"
+			"  \"Data\" : \"\"\n"
 			"}");
 
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(event2), json, &error);
