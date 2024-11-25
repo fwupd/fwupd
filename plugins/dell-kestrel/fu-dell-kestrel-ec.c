@@ -86,7 +86,7 @@ fu_dell_kestrel_ec_devicetype_to_str(FuDellKestrelEcDevType dev_type,
 	case FU_DELL_KESTREL_EC_DEV_TYPE_PD:
 		if (subtype == FU_DELL_KESTREL_EC_DEV_SUBTYPE_TI) {
 			if (instance == FU_DELL_KESTREL_EC_DEV_INSTANCE_TI_UP5)
-				return "PD UP5";
+				return "PD";
 			if (instance == FU_DELL_KESTREL_EC_DEV_INSTANCE_TI_UP15)
 				return "PD UP15";
 			if (instance == FU_DELL_KESTREL_EC_DEV_INSTANCE_TI_UP17)
@@ -213,6 +213,7 @@ fu_dell_kestrel_ec_probe_pd(FuDevice *ec_dev,
 static gboolean
 fu_dell_kestrel_ec_probe_subcomponents(FuDevice *device, GError **error)
 {
+	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(device);
 	g_return_val_if_fail(device != NULL, FALSE);
 
 	/* Package */
@@ -269,6 +270,12 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDevice *device, GError **error)
 		ilan_device = fu_dell_kestrel_ilan_new(device);
 		if (!fu_dell_kestrel_ec_create_node(device, FU_DEVICE(ilan_device), error))
 			return FALSE;
+
+		/* max firmware size */
+		if (fu_struct_dell_kestrel_dock_data_get_board_id(self->dock_data) < 0x4)
+			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 2 * 1024 * 1024);
+		else
+			fu_device_set_firmware_size(FU_DEVICE(ilan_device), 1 * 1024 * 1024);
 	}
 
 	return TRUE;
@@ -404,10 +411,18 @@ fu_dell_kestrel_ec_own_dock(FuDevice *device, gboolean lock, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *msg = NULL;
 
 	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_MODIFY_LOCK);
 	fu_byte_array_append_uint8(req, 2); // length of data
-	fu_byte_array_append_uint16(req, lock ? 0xFFFF : 0x0000, G_LITTLE_ENDIAN);
+
+	if (lock) {
+		msg = g_strdup("own the dock");
+		fu_byte_array_append_uint16(req, 0xFFFF, G_LITTLE_ENDIAN);
+	} else {
+		msg = g_strdup("relesae the dock");
+		fu_byte_array_append_uint16(req, 0x0000, G_LITTLE_ENDIAN);
+	}
 
 	fu_device_sleep(device, 1000);
 	if (!fu_dell_kestrel_ec_write(device, req, &error_local)) {
@@ -415,11 +430,11 @@ fu_dell_kestrel_ec_own_dock(FuDevice *device, gboolean lock, GError **error)
 			g_debug("ignoring: %s", error_local->message);
 		else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
-			g_prefix_error(error, "failed to %s dock: ", lock ? "own" : "release");
+			g_prefix_error(error, "failed to %s", msg);
 			return FALSE;
 		}
 	}
-	g_debug("dock is %s successfully", lock ? "owned" : "released");
+	g_debug("%s successfully", msg);
 
 	return TRUE;
 }
