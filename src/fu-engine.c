@@ -2644,7 +2644,7 @@ fu_engine_emulation_load_phase(FuEngine *self, GError **error)
 	buf = g_bytes_get_data(json_blob, &bufsz);
 	if (bufsz > 0) {
 		g_autofree gchar *json_truncated =
-		    g_strndup((const gchar *)buf, MIN(bufsz, 0x2000));
+		    fu_strsafe((const gchar *)buf, MIN(bufsz, 0x2000));
 		g_info("loading phase %s: %s",
 		       fu_engine_install_phase_to_string(self->install_phase),
 		       json_truncated);

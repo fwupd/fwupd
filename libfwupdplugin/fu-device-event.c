@@ -21,14 +21,16 @@
 
 typedef struct {
 	GType gtype;
+	gchar *key;
+	GDestroyNotify key_destroy;
 	gpointer data;
-	GDestroyNotify destroy;
+	GDestroyNotify data_destroy;
 } FuDeviceEventBlob;
 
 struct _FuDeviceEvent {
 	GObject parent_instance;
 	gchar *id;
-	GHashTable *values; /* (utf-8) (FuDeviceEventBlob) */
+	GPtrArray *values; /* element-type FuDeviceEventBlob */
 };
 
 static void
@@ -42,18 +44,32 @@ G_DEFINE_TYPE_WITH_CODE(FuDeviceEvent,
 static void
 fu_device_event_blob_free(FuDeviceEventBlob *blob)
 {
-	if (blob->destroy)
-		blob->destroy(blob->data);
+	if (blob->key_destroy != NULL)
+		g_free(blob->key);
+	if (blob->data_destroy != NULL)
+		blob->data_destroy(blob->data);
 	g_free(blob);
 }
 
 static FuDeviceEventBlob *
-fu_device_event_blob_create(GType gtype, gpointer data, GDestroyNotify destroy)
+fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyNotify data_destroy)
 {
 	FuDeviceEventBlob *blob = g_new0(FuDeviceEventBlob, 1);
+	const gchar *known_keys[] = {"Data", "DataOut", "Error", "Rc"};
+
+	for (guint i = 0; i < G_N_ELEMENTS(known_keys); i++) {
+		if (g_strcmp0(key, known_keys[i]) == 0) {
+			blob->key = (gchar *)known_keys[i];
+			break;
+		}
+	}
+	if (blob->key == NULL) {
+		blob->key = g_strdup(key);
+		blob->key_destroy = g_free;
+	}
 	blob->gtype = gtype;
 	blob->data = data;
-	blob->destroy = destroy;
+	blob->data_destroy = data_destroy;
 	return blob;
 }
 
@@ -89,9 +105,8 @@ fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *valu
 {
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
-	g_hash_table_insert(self->values,
-			    g_strdup(key),
-			    fu_device_event_blob_create(G_TYPE_STRING, g_strdup(value), g_free));
+	g_ptr_array_add(self->values,
+			fu_device_event_blob_new(G_TYPE_STRING, key, g_strdup(value), g_free));
 }
 
 /**
@@ -110,10 +125,9 @@ fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 
-	g_hash_table_insert(
+	g_ptr_array_add(
 	    self->values,
-	    g_strdup(key),
-	    fu_device_event_blob_create(G_TYPE_INT, g_memdup2(&value, sizeof(value)), g_free));
+	    fu_device_event_blob_new(G_TYPE_INT, key, g_memdup2(&value, sizeof(value)), g_free));
 }
 
 /**
@@ -132,13 +146,12 @@ fu_device_event_set_bytes(FuDeviceEvent *self, const gchar *key, GBytes *value)
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 	g_return_if_fail(value != NULL);
-	g_hash_table_insert(
-	    self->values,
-	    g_strdup(key),
-	    fu_device_event_blob_create(
-		G_TYPE_STRING,
-		g_base64_encode(g_bytes_get_data(value, NULL), g_bytes_get_size(value)),
-		g_free));
+	g_ptr_array_add(self->values,
+			fu_device_event_blob_new(
+			    G_TYPE_STRING,
+			    key,
+			    g_base64_encode(g_bytes_get_data(value, NULL), g_bytes_get_size(value)),
+			    g_free));
 }
 
 /**
@@ -157,16 +170,23 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
 {
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
-	g_hash_table_insert(
+	g_ptr_array_add(
 	    self->values,
-	    g_strdup(key),
-	    fu_device_event_blob_create(G_TYPE_STRING, g_base64_encode(buf, bufsz), g_free));
+	    fu_device_event_blob_new(G_TYPE_STRING, key, g_base64_encode(buf, bufsz), g_free));
 }
 
 static gpointer
 fu_device_event_lookup(FuDeviceEvent *self, const gchar *key, GType gtype, GError **error)
 {
-	FuDeviceEventBlob *blob = g_hash_table_lookup(self->values, key);
+	FuDeviceEventBlob *blob = NULL;
+
+	for (guint i = 0; i < self->values->len; i++) {
+		FuDeviceEventBlob *blob_tmp = g_ptr_array_index(self->values, i);
+		if (g_strcmp0(blob_tmp->key, key) == 0) {
+			blob = blob_tmp;
+			break;
+		}
+	}
 	if (blob == NULL) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event for key %s", key);
 		return NULL;
@@ -306,22 +326,19 @@ static void
 fu_device_event_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
-	GHashTableIter iter;
-	gpointer key, value;
 
 	if (self->id != NULL) {
 		json_builder_set_member_name(builder, "Id");
 		json_builder_add_string_value(builder, self->id);
 	}
 
-	g_hash_table_iter_init(&iter, self->values);
-	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		FuDeviceEventBlob *blob = (FuDeviceEventBlob *)value;
+	for (guint i = 0; i < self->values->len; i++) {
+		FuDeviceEventBlob *blob = g_ptr_array_index(self->values, i);
 		if (blob->gtype == G_TYPE_INT) {
-			json_builder_set_member_name(builder, (const gchar *)key);
+			json_builder_set_member_name(builder, blob->key);
 			json_builder_add_int_value(builder, *((gint64 *)blob->data));
 		} else if (blob->gtype == G_TYPE_BYTES || blob->gtype == G_TYPE_STRING) {
-			json_builder_set_member_name(builder, (const gchar *)key);
+			json_builder_set_member_name(builder, blob->key);
 			json_builder_add_string_value(builder, (const gchar *)blob->data);
 		} else {
 			g_warning("invalid GType %s, ignoring", g_type_name(blob->gtype));
@@ -368,10 +385,7 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 static void
 fu_device_event_init(FuDeviceEvent *self)
 {
-	self->values = g_hash_table_new_full(g_str_hash,
-					     g_str_equal,
-					     g_free,
-					     (GDestroyNotify)fu_device_event_blob_free);
+	self->values = g_ptr_array_new_with_free_func((GDestroyNotify)fu_device_event_blob_free);
 }
 
 static void
@@ -379,7 +393,7 @@ fu_device_event_finalize(GObject *object)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(object);
 	g_free(self->id);
-	g_hash_table_unref(self->values);
+	g_ptr_array_unref(self->values);
 	G_OBJECT_CLASS(fu_device_event_parent_class)->finalize(object);
 }
 
