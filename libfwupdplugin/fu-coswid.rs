@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString, FromString)]
-enum CoswidTag {
+enum FuCoswidTag {
     TagId,
     SoftwareName,
     Entity,
@@ -64,7 +64,7 @@ enum CoswidTag {
 }
 
 #[derive(ToString, FromString)]
-enum CoswidVersionScheme {
+enum FuCoswidVersionScheme {
     Unknown,
     Multipartnumeric,
     MultipartnumericSuffix,
@@ -74,7 +74,7 @@ enum CoswidVersionScheme {
 }
 
 #[derive(ToString, FromString)]
-enum CoswidLinkRel {
+enum FuCoswidLinkRel {
     License = -2,
     Compiler = -1,
     Unknown = 0,
@@ -92,7 +92,7 @@ enum CoswidLinkRel {
 }
 
 #[derive(ToString, FromString)]
-enum CoswidEntityRole {
+enum FuCoswidEntityRole {
     Unknown,
     TagCreator,
     SoftwareCreator,
@@ -103,7 +103,7 @@ enum CoswidEntityRole {
 }
 
 #[derive(ToString, FromString)]
-enum CoswidHashAlg {
+enum FuCoswidHashAlg {
     Unknown = 0,
     SHA256 = 1,
     SHA384 = 7,

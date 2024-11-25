@@ -76,19 +76,15 @@ class EnumObj:
         }
 
     def c_method(self, suffix: str):
-        return f"fu_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+        return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
 
     @property
     def c_type(self):
-        if self.name.startswith("Fu"):
-            return self.name
-        return f"Fu{self.name}"
+        return f"{self.name}"
 
     @property
     def c_define_last(self) -> str:
-        if self.name.startswith("Fu"):
-            return f"{_camel_to_snake(self.name).upper()}_LAST"
-        return f"FU_{_camel_to_snake(self.name).upper()}_LAST"
+        return f"{_camel_to_snake(self.name).upper()}_LAST"
 
     @property
     def items_any_defaults(self) -> bool:
@@ -128,9 +124,7 @@ class EnumItem:
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
-        if self.obj.name.startswith("Fu"):
-            return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
-        return f"FU_{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
+        return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
     def parse_default(self, val: str) -> None:
 
@@ -169,14 +163,10 @@ class StructObj:
         }
 
     def c_method(self, suffix: str):
-        if self.name.startswith("Fu"):
-            return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
-        return f"fu_struct_{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
+        return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
 
     def c_define(self, suffix: str):
-        if self.name.startswith("Fu"):
-            return f"{_camel_to_snake(self.name).upper()}_{suffix.upper()}"
-        return f"FU_STRUCT_{_camel_to_snake(self.name).upper()}_{suffix.upper()}"
+        return f"{_camel_to_snake(self.name).upper()}_{suffix.upper()}"
 
     @property
     def _has_bits(self) -> bool:

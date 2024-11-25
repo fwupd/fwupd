@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ParseBytes)]
-struct RedfishProtocolOverIp {
+struct FuStructRedfishProtocolOverIp {
     service_uuid: Guid,
     host_ip_assignment_type: u8,
     host_ip_address_format: u8,
@@ -19,21 +19,21 @@ struct RedfishProtocolOverIp {
 }
 
 #[derive(ToString)]
-enum RedfishInterfaceType {
+enum FuRedfishInterfaceType {
     UsbNetwork = 0x02,
     PciNetwork = 0x03,
     UsbNetworkV2 = 0x04,
     PciNetworkV2 = 0x05,
 }
 
-enum RedfishIpAssignmentType {
+enum FuRedfishIpAssignmentType {
     Static = 0x00,
     Dhcp = 0x02,
     AutoConfig = 0x03,
     HostSelect = 0x04,
 }
 
-enum RedfishIpAddressFormat {
+enum FuRedfishIpAddressFormat {
     Unknown = 0x00,
     V4 = 0x01,
     V6 = 0x02,
@@ -41,7 +41,7 @@ enum RedfishIpAddressFormat {
 
 #[repr(u8)]
 #[derive(ToString)]
-enum RedfishSmbiosInterfaceType {
+enum FuRedfishSmbiosInterfaceType {
     Unknown = 0x00,
     Kcs = 0x02,
     8250Uart = 0x03,
@@ -56,11 +56,11 @@ enum RedfishSmbiosInterfaceType {
 }
 
 #[derive(ParseBytes)]
-struct RedfishSmbiosType42 {
+struct FuStructRedfishSmbiosType42 {
     type: u8 == 42,
     length: u8,
     handle: u16le,
-    interface_type: RedfishSmbiosInterfaceType = Network,
+    interface_type: FuRedfishSmbiosInterfaceType = Network,
     data_length: u8,
     // data: [u8; data_length],
     // protocol_cnt: u8,
@@ -68,7 +68,7 @@ struct RedfishSmbiosType42 {
 }
 
 #[derive(ToString)]
-enum RedfishNetworkDeviceState {
+enum FuRedfishNetworkDeviceState {
     Unknown = 0,
     Unmanaged = 10,
     Unavailable = 20,

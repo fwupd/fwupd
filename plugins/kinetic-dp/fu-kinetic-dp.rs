@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum KineticDpFamily {
+enum FuKineticDpFamily {
     Unknown,
     Mustang,
     Jaguar,
@@ -10,7 +10,7 @@ enum KineticDpFamily {
 }
 
 #[derive(ToString)]
-enum KineticDpChip {
+enum FuKineticDpChip {
     None = 0,
     Bobcat_2800 = 1,
     Bobcat_2850 = 2,
@@ -23,7 +23,7 @@ enum KineticDpChip {
     Mustang_5200 = 9,
 }
 
-enum KineticDpDev {
+enum FuKineticDpDev {
     Host = 0,
     Port1 = 1,
     Port2 = 2,
@@ -32,19 +32,19 @@ enum KineticDpDev {
 }
 
 #[derive(ToString)]
-enum KineticDpBank {
+enum FuKineticDpBank {
     A = 0,
     B = 1,
     None = 0xFF,
 }
 
-enum KineticDpFirmwareIdx {
+enum FuKineticDpFirmwareIdx {
     IspDrv = 0,
     AppFw = 1,
 }
 
 #[derive(ToString)]
-enum KineticDpFwState {
+enum FuKineticDpFwState {
     None = 0,
     Irom = 1,
     BootCode = 2,
@@ -52,28 +52,28 @@ enum KineticDpFwState {
 }
 
 #[derive(ParseBytes)]
-struct KineticDpPumaHeader {
+struct FuStructKineticDpPumaHeader {
     _unknown: u8,
     object_count: u8 == 8,
     // certificate + ESM + Signature + hash + certificate + Puma App + Signature + hash
 }
 
 #[derive(ParseBytes)]
-struct KineticDpPumaHeaderInfo {
+struct FuStructKineticDpPumaHeaderInfo {
     type: u8,
     subtype: u8,
     length: u32le,
 }
 
 #[derive(ToString)]
-enum KineticDpPumaMode {
+enum FuKineticDpPumaMode {
     ChunkProcessed = 0x03,
     ChunkReceived = 0x07,
     FlashInfoReady = 0xA1,
     UpdateAbort = 0x55,
 }
 
-enum KineticDpPumaRequest {
+enum FuKineticDpPumaRequest {
     ChipResetRequest = 0,
     CodeLoadRequest = 0x01,
     CodeLoadReady = 0x03,
@@ -91,7 +91,7 @@ enum KineticDpPumaRequest {
 }
 
 #[derive(ParseBytes)]
-struct KineticDpJaguarFooter {
+struct FuStructKineticDpJaguarFooter {
     app_id_struct_ver: u32le,
     app_id: [u8; 4],
     app_ver_id: u32le,
@@ -105,14 +105,14 @@ struct KineticDpJaguarFooter {
 }
 
 #[derive(Parse)]
-struct KineticDpFlashInfo {
+struct FuStructKineticDpFlashInfo {
     id: u16be,
     size: u16be,
     erase_time: u16be,
 }
 
 #[derive(ToString)]
-enum KineticDpDpcd {
+enum FuKineticDpDpcd {
     // status
     CmdStsNone = 0x0,
     StsInvalidInfo = 0x01,

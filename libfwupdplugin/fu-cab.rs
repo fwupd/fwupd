@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ParseBytes, New)]
-struct CabData {
+struct FuStructCabData {
     checksum: u32le,
     comp: u16le,
     uncomp: u16le,
@@ -10,7 +10,7 @@ struct CabData {
 
 #[repr(u16)]
 #[derive(ToString)]
-enum CabCompression {
+enum FuCabCompression {
     None = 0x0000,
     Mszip = 0x0001,
     Quantum = 0x0002,
@@ -18,7 +18,7 @@ enum CabCompression {
 }
 
 #[repr(u16)]
-enum CabFileAttribute {
+enum FuCabFileAttribute {
     None = 0x00,
     Readonly = 0x01,
     Hidden = 0x02,
@@ -29,24 +29,24 @@ enum CabFileAttribute {
 }
 
 #[derive(ParseBytes, New)]
-struct CabFile {
+struct FuStructCabFile {
     usize: u32le, // uncompressed
     uoffset: u32le, // uncompressed
     index: u16le,
     date: u16le,
     time: u16le,
-    fattr: CabFileAttribute,
+    fattr: FuCabFileAttribute,
 }
 
 #[derive(ParseBytes, New)]
-struct CabFolder {
+struct FuStructCabFolder {
     offset: u32le,
     ndatab: u16le,
-    compression: CabCompression,
+    compression: FuCabCompression,
 }
 
 #[derive(ParseBytes, ValidateBytes, New)]
-struct CabHeader {
+struct FuStructCabHeader {
     signature: [char; 4] == "MSCF",
     _reserved1: [u8; 4],
     size: u32le, // in bytes
@@ -63,7 +63,7 @@ struct CabHeader {
 }
 
 #[derive(ParseBytes, New)]
-struct CabHeaderReserve {
+struct FuStructCabHeaderReserve {
     rsvd_hdr: u16le,
     rsvd_folder: u8,
     rsvd_block: u8,

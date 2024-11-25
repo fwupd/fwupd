@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString, FromString)]
-enum IntelSpiKind {
+enum FuIntelSpiKind {
     Unknown,
     Apl,
     C620,

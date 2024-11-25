@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ParseBytes)]
-struct CfuPayload {
+struct FuStructCfuPayload {
     addr: u32le,
     size: u8,
 }
 
 #[repr(u8)]
-enum CfuOfferComponentId {
+enum FuCfuOfferComponentId {
     NotUsed = 0,
     // values in between are either valid or reserved
     OfferInformation = 0xFF,
@@ -16,10 +16,10 @@ enum CfuOfferComponentId {
 }
 
 #[derive(New, ParseBytes)]
-struct CfuOffer {
+struct FuStructCfuOffer {
     segment_number: u8,
     flags1: u8,
-    component_id: CfuOfferComponentId,
+    component_id: FuCfuOfferComponentId,
     token: u8,
     version: u32le,
     compat_variant_mask: u32le,

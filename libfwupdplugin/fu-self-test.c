@@ -4576,7 +4576,7 @@ fu_plugin_struct_func(void)
 	str2 = fu_struct_self_test_to_string(st);
 	g_assert_cmpstr(str2,
 			==,
-			"SelfTest:\n"
+			"FuStructSelfTest:\n"
 			"  length: 0xdead\n"
 			"  revision: 0xff [all]\n"
 			"  owner: 00000000-0000-0000-0000-000000000000\n"
@@ -4647,9 +4647,9 @@ fu_plugin_struct_wrapped_func(void)
 	g_debug("%s", str2);
 	g_assert_cmpstr(str2,
 			==,
-			"SelfTestWrapped:\n"
+			"FuStructSelfTestWrapped:\n"
 			"  less: 0x99\n"
-			"  base: SelfTest:\n"
+			"  base: FuStructSelfTest:\n"
 			"  length: 0x33\n"
 			"  revision: 0xfe\n"
 			"  owner: 00000000-0000-0000-0000-000000000000\n"

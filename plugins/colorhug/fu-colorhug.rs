@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToString)]
-enum ColorhugError {
+enum FuColorhugError {
     None,
     UnknownCmd,
     WrongUnlockCode,

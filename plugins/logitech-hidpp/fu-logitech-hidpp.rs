@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum LogitechHidppFeature {
+enum FuLogitechHidppFeature {
     Root                  = 0x0000,
     IFeatureSet           = 0x0001,
     IFirmwareInfo         = 0x0003,
@@ -24,13 +24,13 @@ enum LogitechHidppFeature {
 }
 
 #[derive(ToString)]
-enum LogitechHidppDeviceIdx {
+enum FuLogitechHidppDeviceIdx {
     Wired = 0x00,
     Receiver = 0xFF,
 }
 
 #[derive(ToString)]
-enum LogitechHidppReportId {
+enum FuLogitechHidppReportId {
     Short = 0x10,
     Long = 0x11,
     VeryLong = 0x12,
@@ -38,7 +38,7 @@ enum LogitechHidppReportId {
 
 // HID++1.0 registers
 #[derive(ToString)]
-enum LogitechHidppRegister {
+enum FuLogitechHidppRegister {
     HidppNotifications = 0x00,
     EnableIndividualFeatures = 0x01,
     BatteryStatus = 0x07,
@@ -60,7 +60,7 @@ enum LogitechHidppRegister {
 }
 
 #[derive(ToString)]
-enum LogitechHidppSubid {
+enum FuLogitechHidppSubid {
     VendorSpecificKeys = 0x03,
     PowerKeys = 0x04,
     Roller = 0x05,
@@ -101,7 +101,7 @@ enum LogitechHidppSubid {
     ErrorMsg_20 = 0xFF,
 }
 
-enum LogitechHidppBootloaderCmd {
+enum FuLogitechHidppBootloaderCmd {
     General_error = 0x01,
     Read = 0x10,
     Write = 0x20,

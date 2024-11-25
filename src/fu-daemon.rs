@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(FromString)]
-enum DaemonMachineKind {
+enum FuDaemonMachineKind {
     Unknown,
     Physical,
     Virtual,

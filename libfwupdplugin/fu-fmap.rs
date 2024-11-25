@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, ValidateBytes, ParseBytes)]
-struct Fmap {
+struct FuStructFmap {
     signature: [char; 8] == "__FMAP__",
     ver_major: u8 = 0x1,
     ver_minor: u8 = 0x1,
@@ -12,7 +12,7 @@ struct Fmap {
     nareas: u16le,		// number of areas
 }
 #[derive(New, ParseBytes)]
-struct FmapArea {		// area of volatile and static regions
+struct FuStructFmapArea {		// area of volatile and static regions
     offset: u32le,		// offset relative to base
     size: u32le,		// bytes
     name: [char; 32],	// descriptive name

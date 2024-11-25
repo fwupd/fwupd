@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(FromString, ToString)]
-enum ArchiveFormat {
+enum FuArchiveFormat {
     Unknown, // Since: 1.8.1
     Cpio,    // Since: 1.8.1
     Shar,    // Since: 1.8.1
@@ -22,7 +22,7 @@ enum ArchiveFormat {
 }
 
 #[derive(FromString, ToString)]
-enum ArchiveCompression {
+enum FuArchiveCompression {
     Unknown,  // Since: 1.8.1
     None,     // Since: 1.8.1
     Gzip,     // Since: 1.8.1

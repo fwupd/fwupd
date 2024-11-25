@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum MeiFamily {
+enum FuMeiFamily {
     Unknown,
     Sps,
     Txe,

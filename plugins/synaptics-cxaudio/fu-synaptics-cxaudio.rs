@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum SynapticsCxaudioDeviceKind {
+enum FuSynapticsCxaudioDeviceKind {
     Unknown,
     Cx20562 = 20562,
     Cx2070x = 20700,
@@ -14,14 +14,14 @@ enum SynapticsCxaudioDeviceKind {
     Cx2198x = 21980,
 }
 
-enum SynapticsCxaudioMemKind {
+enum FuSynapticsCxaudioMemKind {
     Eeprom,
     CpxRam,
     CpxRom,
 }
 
 #[derive(ToString)]
-enum SynapticsCxaudioFileKind {
+enum FuSynapticsCxaudioFileKind {
     Unknown,
     Cx2070xFw,
     Cx2070xPatch,
@@ -34,7 +34,7 @@ enum SynapticsCxaudioFileKind {
 }
 
 #[derive(Parse)]
-struct SynapticsCxaudioCustomInfo {
+struct FuStructSynapticsCxaudioCustomInfo {
     patch_version_string_address: u16le,
     cpx_patch_version: [u8; 3],
     spx_patch_version: [u8; 4],
@@ -50,17 +50,17 @@ struct SynapticsCxaudioCustomInfo {
     serial_number_string_address: u16le,
 }
 #[derive(Parse)]
-struct SynapticsCxaudioStringHeader {
+struct FuStructSynapticsCxaudioStringHeader {
     length: u8,
     type: u8 == 0x03,
 }
 #[derive(Parse)]
-struct SynapticsCxaudioValiditySignature {
+struct FuStructSynapticsCxaudioValiditySignature {
     magic_byte: u8 = 0x4C,    // 'L'
     eeprom_size_code: u8,
 }
 #[derive(Parse, Setters)]
-struct SynapticsCxaudioPatchInfo {
+struct FuStructSynapticsCxaudioPatchInfo {
     patch_signature: u8,
     patch_address: u16le,
 }

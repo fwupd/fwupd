@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(New, Parse)]
-struct SynapromMfwHdr {
+struct FuStructSynapromMfwHdr {
     product: u32le,
     id: u32le = 0xFF,		// MFW unique id used for compat verification
     buildtime: u32le = 0xFF,	// unix-style
@@ -14,7 +14,7 @@ struct SynapromMfwHdr {
 
 #[derive(ToString)]
 #[repr(u16le)]
-enum SynapromFirmwareTag {
+enum FuSynapromFirmwareTag {
     MfwUpdateHeader  = 0x0001,
     MfwUpdatePayload = 0x0002,
     CfgUpdateHeader  = 0x0003,
@@ -22,13 +22,13 @@ enum SynapromFirmwareTag {
 }
 
 #[derive(New, Parse)]
-struct SynapromHdr {
-    tag: SynapromFirmwareTag,
+struct FuStructSynapromHdr {
+    tag: FuSynapromFirmwareTag,
     bufsz: u32le,
 }
 
 #[derive(ParseBytes)]
-struct SynapromCfgHdr {
+struct FuStructSynapromCfgHdr {
     product: u32le = 65, // Prometheus (b1422)
     id1: u32le,
     id2: u32le,
@@ -36,14 +36,14 @@ struct SynapromCfgHdr {
     _unused: [u8; 2],
 }
 #[derive(Parse)]
-struct SynapromIotaConfigVersion {
+struct FuStructSynapromIotaConfigVersion {
     config_id1: u32le, // YYMMDD
     config_id2: u32le, // HHMMSS
     version: u16le,
     _unused: [u16; 3],
 }
 #[derive(Parse)]
-struct SynapromReplyIotaFindHdr {
+struct FuStructSynapromReplyIotaFindHdr {
     status: u16le,
     fullsize: u32le,
     nbytes: u16le,
@@ -52,7 +52,7 @@ struct SynapromReplyIotaFindHdr {
 // Iotas can exceed the size of available RAM in the part: to allow the host to read them the
 // IOTA_FIND command supports transferring iotas with multiple commands
 #[derive(New, Getters)]
-struct SynapromCmdIotaFind {
+struct FuStructSynapromCmdIotaFind {
     itype: u16le,    // type of iotas to find
     flags: u16le,
     maxniotas: u8,   // maximum number of iotas to return, 0 = unlimited

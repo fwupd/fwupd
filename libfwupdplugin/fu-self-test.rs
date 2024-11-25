@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[repr(u8)]
-enum SelfTestRevision {
+enum FuSelfTestRevision {
     None = 0x0,
     All	= 0xF_F,
 }
 
 #[derive(New, Validate, Parse, ToString)]
-struct SelfTest {
+struct FuStructSelfTest {
     signature: u32be == 0x1234_5678,
     length: u32le = $struct_size, // bytes
-    revision: SelfTestRevision,
+    revision: FuSelfTestRevision,
     owner: Guid,
     oem_id: [char; 6] == "ABCDEF",
     oem_table_id: [char; 8],
@@ -21,9 +21,9 @@ struct SelfTest {
 }
 
 #[derive(New, Validate, Parse, ToString)]
-struct SelfTestWrapped {
+struct FuStructSelfTestWrapped {
     less: u8,
-    base: SelfTest,
+    base: FuStructSelfTest,
     more: u8,
 }
 

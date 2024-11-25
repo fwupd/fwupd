@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(Parse)]
-struct VliPdHdr {
+struct FuStructVliPdHdr {
     fwver: u32be,
     vid: u16le,
     pid: u16le,
 }
 #[derive(New, Parse, ToString)]
-struct VliUsbhubHdr {
+struct FuStructVliUsbhubHdr {
     dev_id: u16be,
     strapping1: u8,
     strapping2: u8,
@@ -28,7 +28,7 @@ struct VliUsbhubHdr {
     checksum: u8,
 }
 #[derive(ToString, FromString)]
-enum VliDeviceKind {
+enum FuVliDeviceKind {
     Unknown = 0x0,
     Vl100 = 0x0100,
     Vl101 = 0x0101,

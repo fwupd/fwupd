@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum HailuckCmd {
+enum FuHailuckCmd {
     Erase             = 0x45,
     ReadBlockStart    = 0x52,
     Attach            = 0x55, // guessed

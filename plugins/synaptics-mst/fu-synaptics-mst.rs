@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+
 
 #[derive(ToString)]
-enum SynapticsMstFamily {
+enum FuSynapticsMstFamily {
     Unknown = 0xFF,
     Tesla = 0,
     Leaf = 1,
@@ -13,7 +13,7 @@ enum SynapticsMstFamily {
 }
 
 #[derive(ToString)]
-enum SynapticsMstUpdcRc {
+enum FuSynapticsMstUpdcRc {
     Success,
     Invalid,
     Unsupported,
@@ -25,7 +25,7 @@ enum SynapticsMstUpdcRc {
 }
 
 #[derive(ToString)]
-enum SynapticsMstUpdcCmd {
+enum FuSynapticsMstUpdcCmd {
     EnableRc = 0x01,
     DisableRc = 0x02,
     GetId = 0x03,
@@ -51,7 +51,7 @@ enum SynapticsMstUpdcCmd {
     ReadFromTxDpcdTx3 = 0x35,
 }
 
-enum SynapticsMstRegRc {
+enum FuSynapticsMstRegRc {
     Cap    = 0x4B0,
     State  = 0x4B1,
     Cmd    = 0x4B2,
@@ -62,7 +62,7 @@ enum SynapticsMstRegRc {
 }
 
 #[derive(ParseBytes)]
-struct SynapticsFirmwareConfig {
+struct FuStructSynapticsFirmwareConfig {
     version: u8,
     reserved: u8,
     magic1: u8,

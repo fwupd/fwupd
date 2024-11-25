@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1+ OR MIT
 
 #[derive(Getters)]
-struct VbiosDate {
+struct FuStructVbiosDate {
     month: [char; 2],
     _separator: u8,
     day: [char; 2],
@@ -18,7 +18,7 @@ struct VbiosDate {
 }
 
 #[derive(ParseBytes)]
-struct AtomImage {
+struct FuStructAtomImage {
     signature: u16be = 0x55aa,
     size: u16le,
     reserved: [u64be; 2],
@@ -33,22 +33,22 @@ struct AtomImage {
     reserved: [u64le; 3],
     rom_loc: u16le,
     reserved: [u16le; 3],
-    vbios_date: VbiosDate,
+    vbios_date: FuStructVbiosDate,
     oem: u16le,
     reserved: [u16le; 5],
     str_loc: u32le,
 }
 
 #[derive(Getters)]
-struct AtomHeaderCommon {
+struct FuStructAtomHeaderCommon {
     size: u16le,
     format_rev: u8,
     content_rev: u8,
 }
 
 #[derive(ParseBytes, ValidateBytes)]
-struct AtomRom21Header {
-    header: AtomHeaderCommon,
+struct FuStructAtomRom21Header {
+    header: FuStructAtomHeaderCommon,
     signature: [char; 4] == "ATOM" ,
     bios_runtime_seg_addr: u16le,
     protected_mode_info_offset: u16le,
@@ -69,7 +69,7 @@ struct AtomRom21Header {
 }
 
 #[repr(u8)]
-enum AtomStringIndex {
+enum FuAtomStringIndex {
     PartNumber = 0x00,
     ASIC = 0x01,
     PciType = 0x02,
