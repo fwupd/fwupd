@@ -365,18 +365,18 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 			if (g_strcmp0(member_name, "Id") == 0) {
 				g_free(self->id);
 				self->id = json_node_dup_string(member_node);
-				continue;
+			} else {
+				fu_device_event_set_str(self,
+							member_name,
+							json_node_get_string(member_node));
 			}
-			fu_device_event_set_str(self,
-						member_name,
-						json_node_get_string(member_node));
-			continue;
-		}
-		if (gtype == G_TYPE_INT64) {
+		} else if (gtype == G_TYPE_INT64) {
 			fu_device_event_set_i64(self, member_name, json_node_get_int(member_node));
-			continue;
 		}
 	}
+
+	/* we do not need this again, so avoid keeping all the tree data in memory */
+	json_node_init_null(json_node);
 
 	/* success */
 	return TRUE;
