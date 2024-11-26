@@ -75,88 +75,88 @@
       ],
       "UsbEvents": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "usb"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "usb"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=2\nDEVNAME=bus/usb/001/003\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=b05/1abe/2\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=003"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME",
+          "Id": "#d432c663",
           "Data": "bus/usb/001/003"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=2\nDEVNAME=bus/usb/001/003\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=b05/1abe/2\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=003"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "003"
         },
         {
-          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Id": "#1fcf122d",
           "Data": "Ti1LRVkgRGV2aWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WtEBAQEA,Length=0x6",
+          "Id": "#16f4e7da",
           "Data": "WtEBAQEA"
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
+          "Id": "#a3bf98cf",
           "Data": "WkFTVVNUZWNoLkluYy4AAA=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "#ff7d0ded",
           "Data": "WkFTVVNUZWNoLkluYy4AAGUAdgBpAGMAZQAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WgUDMQAg,Length=0x6",
+          "Id": "#66f65422",
           "Data": "WgUDMQAg"
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "#ff7d0ded",
           "Data": "WgUDMQAaE0ZHQTgwMTAwLlJDNzFMUy4zMTEAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WkFTVVNUZWNoLkluYy4AAA==,Length=0x10",
+          "Id": "#a3bf98cf",
           "Data": "WkFTVVNUZWNoLkluYy4AAA=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "#ff7d0ded",
           "Data": "WkFTVVNUZWNoLkluYy4AAFJDNzFMUy4zMTEAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x01,RequestType=0x01,Recipient=0x01,Request=0x09,Value=0x035a,Idx=0x0000,Data=WgUEMQAg,Length=0x6",
+          "Id": "#2fa92714",
           "Data": "WgUEMQAg"
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x035a,Idx=0x0000,Data=WgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x20",
+          "Id": "#ff7d0ded",
           "Data": "WgUEMQAaE0ZHQTgwMTAwLlJDNzFMTS4zMTEAAAAAAAA="
         }
       ]

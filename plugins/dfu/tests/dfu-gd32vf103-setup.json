@@ -29,19 +29,19 @@
       ],
       "UsbEvents": [
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "005"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=532\nDEVNAME=bus/usb/005/021\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=28e9/189/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=021"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "021"
         },
         {
-          "Id": "GetStringDescriptorBytes:DescIndex=0x03,Langid=0x0409,Length=0x80",
+          "Id": "#c379adf5",
           "Data": "BgMzQ0JK"
         }
       ]

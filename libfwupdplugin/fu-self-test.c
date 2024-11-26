@@ -2011,7 +2011,7 @@ fu_device_event_func(void)
 	g_assert_cmpstr(json,
 			==,
 			"{\n"
-			"  \"Id\" : \"foo:bar:baz\",\n"
+			"  \"Id\" : \"#f9f98a90\",\n"
 			"  \"Name\" : \"Richard\",\n"
 			"  \"Age\" : 123,\n"
 			"  \"Blob\" : \"aGVsbG8A\",\n"
@@ -2021,7 +2021,7 @@ fu_device_event_func(void)
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(event2), json, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpstr(fu_device_event_get_id(event2), ==, "foo:bar:baz");
+	g_assert_cmpstr(fu_device_event_get_id(event2), ==, "#f9f98a90");
 	g_assert_cmpint(fu_device_event_get_i64(event2, "Age", NULL), ==, 123);
 	g_assert_cmpstr(fu_device_event_get_str(event2, "Name", NULL), ==, "Richard");
 	blob2 = fu_device_event_get_bytes(event2, "Blob", &error);

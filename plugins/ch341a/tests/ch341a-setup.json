@@ -44,35 +44,35 @@
       ],
       "UsbEvents": [
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=76\nDEVNAME=bus/usb/001/077\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1a86/5512/304\nTYPE=255/0/2\nBUSNUM=001\nDEVNUM=077"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "077"
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x02,Data=qmEA,Length=0x3",
+          "Id": "#cb0c7049",
           "Data": "qmEA"
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x02,Data=q7Z/IA==,Length=0x4",
+          "Id": "#8fcc316a",
           "Data": "q7Z/IA=="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x02,Data=qPkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Length=0x1b",
+          "Id": "#21f01298",
           "Data": "qPkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x82,Data=nwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x1a",
+          "Id": "#469f419f",
           "Data": "//////////////////////////////////8="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x02,Data=q7dAIA==,Length=0x4",
+          "Id": "#9952189d",
           "Data": "q7dAIA=="
         }
       ]

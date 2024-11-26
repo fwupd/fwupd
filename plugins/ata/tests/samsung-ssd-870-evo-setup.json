@@ -8,170 +8,170 @@
       "Created": "2024-11-06T16:43:40.107335Z",
       "Events": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "block"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver"
+          "Id": "#ad8c58d3"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "disk"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=8\nMINOR=48\nDEVNAME=sdd\nDEVTYPE=disk\nDISKSEQ=4"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME",
+          "Id": "#d432c663",
           "Data": "sdd"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "disk"
         },
         {
-          "Id": "GetBackendParent:Subsystem=usb:usb_device"
+          "Id": "#19c26604"
         },
         {
-          "Id": "GetBackendParent:Subsystem=scsi",
+          "Id": "#862c0ee3",
           "GType": "FuUdevDevice",
           "BackendId": "/sys/devices/pci0000:50/0000:50:02.0/0000:51:00.0/host17/port-17:2/end_device-17:2/target17:0:2/17:0:2:0/block/sdd"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "scsi"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "sd"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "scsi_device"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DEVTYPE=scsi_device\nDRIVER=sd\nMODALIAS=scsi:t-0x00"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor",
+          "Id": "#9b895db2",
           "Data": "ATA     "
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "scsi_device"
         },
         {
-          "Id": "GetBackendParent:Subsystem=pci",
+          "Id": "#285d9a88",
           "GType": "FuPciDevice",
           "BackendId": "/sys/devices/pci0000:50/0000:50:02.0/0000:51:00.0/host17/port-17:2/end_device-17:2/target17:0:2/17:0:2:0/block/sdd",
           "PhysicalId": "/sys/devices/pci0000:50/0000:50:02.0/0000:51:00.0/host17/port-17:2/end_device-17:2/target17:0:2/17:0:2:0"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "pci"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "mpt3sas"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DRIVER=mpt3sas\nPCI_CLASS=10700\nPCI_ID=1000:00AF\nPCI_SUBSYS_ID=1D49:0200\nPCI_SLOT_NAME=0000:51:00.0\nMODALIAS=pci:v00001000d000000AFsv00001D49sd00000200bc01sc07i00"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor",
+          "Id": "#9b895db2",
           "Data": "0x1000"
         },
         {
-          "Id": "ReadAttr:Attr=device",
+          "Id": "#66f3e150",
           "Data": "0x00af"
         },
         {
-          "Id": "ReadAttr:Attr=class",
+          "Id": "#d410b6c7",
           "Data": "0x010700"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DRIVER=mpt3sas\nPCI_CLASS=10700\nPCI_ID=1000:00AF\nPCI_SUBSYS_ID=1D49:0200\nPCI_SLOT_NAME=0000:51:00.0\nMODALIAS=pci:v00001000d000000AFsv00001D49sd00000200bc01sc07i00"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor",
+          "Id": "#9b895db2",
           "Data": "0x1000"
         },
         {
-          "Id": "ReadAttr:Attr=device",
+          "Id": "#66f3e150",
           "Data": "0x00af"
         },
         {
-          "Id": "ReadAttr:Attr=class",
+          "Id": "#d410b6c7",
           "Data": "0x010700"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "GetBackendParent:Subsystem=i2c"
+          "Id": "#fbe018fe"
         },
         {
-          "Id": "ReadAttr:Attr=class",
+          "Id": "#d410b6c7",
           "Data": "0x010700"
         },
         {
-          "Id": "ReadAttr:Attr=revision",
+          "Id": "#bf29d2f6",
           "Data": "0x01"
         },
         {
-          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Id": "#269abd81",
           "Data": "0x1d49"
         },
         {
-          "Id": "ReadAttr:Attr=subsystem_device",
+          "Id": "#360cec38",
           "Data": "0x0200"
         },
         {
-          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Id": "#d2629d83",
           "Data": "0000:51:00.0"
         },
         {
-          "Id": "GetBackendParent:Subsystem=usb"
+          "Id": "#3df6ae5e"
         },
         {
-          "Id": "Ioctl:Request=0x2285,DxferDirection=0xfffffffd,PackId=0x00,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x200,CdbData=oQgOAAEAAABA7AAA,CdbLength=0xc,SenseData=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,SenseLength=0x20",
+          "Id": "#fb0427e1",
           "SenseDataOut": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
           "DataOut": "QAD/PzfIEAAAAAAAPwAAAAAAAAA2U1BQWE5XMDAyNzM1MSBQICAgIAAAAAAAAFZTMFRCMlE2YVNzbW51IGdTUyBENzggMFZFIE9UMiBCICAgICAgICAgICAgICAgIAGAAUAALwBAAAIAAgcA/z8QAD8AEPz7AAEB////DwAABwADAHgAeAB4AHgAME8AAAAAAAAAAAAAHwAOhcYAbAVkAPwJXgBrdAF9Y0FpdAG8Y0F/QAIABAAAAP7/AAAAAAAAAAAAAAAAAACwiODoAAAAAAAACAAAQAAAAlCPUyJDsSIAAAAAAAAAAAAAAAAAAB5AHEAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwABACAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD0AAAAAAABAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAA/xEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApck="
         }

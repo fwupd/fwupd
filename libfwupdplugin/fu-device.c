@@ -7367,6 +7367,7 @@ FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *id_hash = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
@@ -7389,9 +7390,10 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* look for the next event in the sequence */
+	id_hash = fu_device_event_build_id(id);
 	for (guint i = priv->event_idx; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
-		if (g_strcmp0(fu_device_event_get_id(event), id) == 0) {
+		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
 			priv->event_idx = i + 1;
 			return event;
 		}
@@ -7400,7 +7402,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	/* look for *any* event that matches */
 	for (guint i = 0; i < priv->events->len; i++) {
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
-		if (g_strcmp0(fu_device_event_get_id(event), id) == 0) {
+		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
 			g_debug("found out-of-order %s at position %u", id, i);
 			priv->event_idx = i + 1;
 			return event;

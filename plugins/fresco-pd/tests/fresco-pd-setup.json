@@ -43,47 +43,47 @@
       ],
       "UsbEvents": [
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=92\nDEVNAME=bus/usb/001/093\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1d5c/7102/100\nTYPE=17/0/0\nBUSNUM=001\nDEVNUM=093"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "093"
         },
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=92\nDEVNAME=bus/usb/001/093\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=1d5c/7102/100\nTYPE=17/0/0\nBUSNUM=001\nDEVNUM=093"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "093"
         },
         {
-          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Id": "#1fcf122d",
           "Data": "R2VuZXJpYyBCaWxsYm9hcmQgRGV2aWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3000,Data=AA==,Length=0x1",
+          "Id": "#933f091c",
           "Data": "AA=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3001,Data=AA==,Length=0x1",
+          "Id": "#8e7dabc5",
           "Data": "Yw=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3002,Data=AA==,Length=0x1",
+          "Id": "#de7b3dbb",
           "Data": "Eg=="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x02,Recipient=0x00,Request=0x40,Value=0x0000,Idx=0x3003,Data=AA==,Length=0x1",
+          "Id": "#b4a87976",
           "Data": "Bw=="
         }
       ]

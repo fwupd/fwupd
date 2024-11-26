@@ -41,6 +41,12 @@ G_DEFINE_TYPE_WITH_CODE(FuDeviceEvent,
 			G_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_event_codec_iface_init))
 
+/*
+ * NOTE: We use an event *counter* that gets the next event in the emulation, and this ID is only
+ * used as a sanity check in case we have to skip an entry.
+ */
+#define FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE 8
+
 static void
 fu_device_event_blob_free(FuDeviceEventBlob *blob)
 {
@@ -74,10 +80,41 @@ fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyN
 }
 
 /**
+ * fu_device_event_build_id:
+ * @id: a string
+ *
+ * Return the hash of the event ID.
+ *
+ * Returns: string hash prefix
+ *
+ * Since: 2.0.3
+ **/
+gchar *
+fu_device_event_build_id(const gchar *id)
+{
+	guint8 buf[20] = {0};
+	gsize bufsz = sizeof(buf);
+	g_autoptr(GChecksum) csum = g_checksum_new(G_CHECKSUM_SHA1);
+	g_autoptr(GString) id_hash = g_string_sized_new(FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE + 1);
+
+	g_return_val_if_fail(id != NULL, NULL);
+
+	/* IMPORTANT: if you're reading this we're not using the SHA1 prefix for any kind of secure
+	 * hash, just because it is a tiny string that takes up less memory than the full ID. */
+	g_checksum_update(csum, (const guchar *)id, strlen(id));
+	g_checksum_get_digest(csum, buf, &bufsz);
+	g_string_append_c(id_hash, '#');
+	for (guint i = 0; i < FU_DEVICE_EVENT_KEY_HASH_PREFIX_SIZE / 2; i++)
+		g_string_append_printf(id_hash, "%02x", buf[i]);
+	return g_string_free(g_steal_pointer(&id_hash), FALSE);
+}
+
+/**
  * fu_device_event_get_id:
  * @self: a #FuDeviceEvent
  *
- * Return the id of the #FuDeviceEvent, which is normally set when creating the object.
+ * Return the truncated SHA1 of the #FuDeviceEvent key, which is normally set when creating the
+ * object.
  *
  * Returns: (nullable): string
  *
@@ -362,13 +399,18 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 			continue;
 		gtype = json_node_get_value_type(member_node);
 		if (gtype == G_TYPE_STRING) {
+			const gchar *str = json_node_get_string(member_node);
 			if (g_strcmp0(member_name, "Id") == 0) {
-				g_free(self->id);
-				self->id = json_node_dup_string(member_node);
+				/* already a truncated SHA1 hash? */
+				if (g_str_has_prefix(str, "#")) {
+					g_free(self->id);
+					self->id = g_strdup(str);
+				} else {
+					g_free(self->id);
+					self->id = fu_device_event_build_id(str);
+				}
 			} else {
-				fu_device_event_set_str(self,
-							member_name,
-							json_node_get_string(member_node));
+				fu_device_event_set_str(self, member_name, str);
 			}
 		} else if (gtype == G_TYPE_INT64) {
 			fu_device_event_set_i64(self, member_name, json_node_get_int(member_node));
@@ -413,7 +455,7 @@ fu_device_event_codec_iface_init(FwupdCodecInterface *iface)
 
 /**
  * fu_device_event_new:
- * @id: a cache key
+ * @id: a cache key, which is converted to a truncated SHA1 hash if required
  *
  * Return value: (transfer full): a new #FuDeviceEvent object.
  *
@@ -423,6 +465,7 @@ FuDeviceEvent *
 fu_device_event_new(const gchar *id)
 {
 	FuDeviceEvent *self = g_object_new(FU_TYPE_DEVICE_EVENT, NULL);
-	self->id = g_strdup(id);
+	if (id != NULL)
+		self->id = fu_device_event_build_id(id);
 	return FU_DEVICE_EVENT(self);
 }
