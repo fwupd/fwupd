@@ -3803,6 +3803,33 @@ fu_util_emulation_untag(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GInputStream) stream = NULL;
+
+	/* check args */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected FILENAME");
+		return FALSE;
+	}
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
+		return FALSE;
+	stream = fu_input_stream_from_path(values[0], error);
+	if (stream == NULL)
+		return FALSE;
+	if (!fu_engine_emulation_load(priv->engine, stream, error))
+		return FALSE;
+	if (!fu_engine_emulation_load_phase(priv->engine, FU_ENGINE_EMULATOR_PHASE_INSTALL, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 _g_str_equal0(gconstpointer str1, gconstpointer str2)
 {
 	return g_strcmp0(str1, str2) == 0;
@@ -4937,6 +4964,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Removes devices to watch for future emulation"),
 			      fu_util_emulation_untag);
+	fu_util_cmd_array_add(cmd_array,
+			      "emulation-load",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME"),
+			      /* TRANSLATORS: command description */
+			      _("Load device emulation data"),
+			      fu_util_emulation_load);
 	fu_util_cmd_array_add(cmd_array,
 			      "esp-mount",
 			      NULL,

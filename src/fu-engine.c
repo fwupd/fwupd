@@ -344,6 +344,12 @@ fu_engine_set_emulator_phase(FuEngine *self, FuEngineEmulatorPhase emulator_phas
 	self->emulator_phase = emulator_phase;
 }
 
+gboolean
+fu_engine_emulation_load_phase(FuEngine *self, FuEngineEmulatorPhase emulator_phase, GError **error)
+{
+	return fu_engine_emulator_load_phase(self->emulation, emulator_phase, error);
+}
+
 static void
 fu_engine_watch_device(FuEngine *self, FuDevice *device)
 {
