@@ -673,6 +673,7 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
 	gboolean sinkclose_vuln = FALSE;
 	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
+	g_auto(GStrv) mitigations = NULL;
 
 	/* this MSR is only valid for a subset of AMD CPUs */
 	if (fu_cpu_get_vendor() != FU_CPU_VENDOR_AMD)
@@ -685,8 +686,10 @@ fu_msr_plugin_add_security_attr_amd_hwcr(FuPlugin *plugin, FuSecurityAttrs *attr
 	if (device != NULL) {
 		const gchar *needed =
 		    fu_device_get_metadata(device, FU_DEVICE_METADATA_CPU_MITIGATIONS_REQUIRED);
-		g_auto(GStrv) mitigations = NULL;
-		mitigations = g_strsplit(needed, ",", -1);
+		if (needed != NULL)
+			mitigations = g_strsplit(needed, ",", -1);
+	}
+	if (mitigations != NULL) {
 		for (guint i = 0; mitigations[i] != NULL; i++) {
 			/* check for sinkclose vulnerability */
 			if (g_strcmp0(mitigations[i], "sinkclose") == 0) {
