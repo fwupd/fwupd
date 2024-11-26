@@ -60,7 +60,7 @@ fu_jabra_file_device_probe(FuDevice *device, GError **error)
 		iface = g_ptr_array_index(ifaces, i);
 		if (fu_usb_interface_get_class(iface) == FU_USB_CLASS_HID) {
 			endpoints = fu_usb_interface_get_endpoints(iface);
-			if (NULL == endpoints || endpoints->len == 0 || endpoints->len < 2)
+			if (NULL == endpoints || endpoints->len < 2)
 				continue;
 			ep1 = g_ptr_array_index(endpoints, 0);
 			ep2 = g_ptr_array_index(endpoints, 1);
