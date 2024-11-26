@@ -11,6 +11,7 @@ _fwupdtool_cmd_list=(
 	'enable-test-devices'
 	'emulation-tag'
 	'emulation-untag'
+	'emulation-load'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
@@ -280,6 +281,12 @@ _fwupdtool()
 		#device ID
 		elif [[ "$args" = "3" ]]; then
 			_show_device_ids
+		fi
+		;;
+	emulation-load)
+		#find files
+		if [[ "$args" = "2" ]]; then
+			_filedir
 		fi
 		;;
 	attach|detach|activate|verify-update|reinstall|get-updates)
