@@ -16,7 +16,7 @@ enum FuP2pPolicy {
 }
 
 #[derive(ToString)]
-enum FuEngineInstallPhase {
+enum FuEngineEmulatorPhase {
     Setup,
     Install,
     Attach,
