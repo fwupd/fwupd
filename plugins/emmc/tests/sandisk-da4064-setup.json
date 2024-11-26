@@ -8,148 +8,148 @@
       "Created": "2024-11-07T13:44:05.189919Z",
       "Events": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "block"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver"
+          "Id": "#ad8c58d3"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "disk"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=179\nMINOR=0\nDEVNAME=mmcblk2\nDEVTYPE=disk\nDISKSEQ=1"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME",
+          "Id": "#d432c663",
           "Data": "mmcblk2"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "disk"
         },
         {
-          "Id": "GetBackendParent:Subsystem=usb:usb_device"
+          "Id": "#19c26604"
         },
         {
-          "Id": "GetBackendParent:Subsystem=mmc:block",
+          "Id": "#0e9e7dc9",
           "GType": "FuUdevDevice",
           "BackendId": "/sys/devices/platform/fe330000.mmc/mmc_host/mmc2/mmc2:0001/block/mmcblk2"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "mmc"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "mmcblk"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DRIVER=mmcblk\nMMC_TYPE=MMC\nMMC_NAME=DA4064\nMODALIAS=mmc:block"
         },
         {
-          "Id": "ReadProp:Key=MODALIAS",
+          "Id": "#0d176430",
           "Data": "mmc:block"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=ffu_capable",
+          "Id": "#e9f704fa",
           "Data": "1"
         },
         {
-          "Id": "ReadAttr:Attr=name",
+          "Id": "#e371a663",
           "Data": "DA4064"
         },
         {
-          "Id": "ReadAttr:Attr=fwrev",
+          "Id": "#4f7d7cad",
           "Data": "0x3536323330613137"
         },
         {
-          "Id": "ReadAttr:Attr=manfid",
+          "Id": "#e9729218",
           "Data": "0x000045"
         },
         {
-          "Id": "ReadAttr:Attr=oemid",
+          "Id": "#d8e0d47a",
           "Data": "0x0100"
         },
         {
-          "Id": "ReadAttr:Attr=manfid",
+          "Id": "#e9729218",
           "Data": "0x000045"
         },
         {
-          "Id": "GetBackendParent:Subsystem=mmc",
+          "Id": "#1fdc635e",
           "GType": "FuUdevDevice",
           "BackendId": "/sys/devices/platform/fe330000.mmc/mmc_host/mmc2/mmc2:0001/block/mmcblk2"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "mmc"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "mmcblk"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DRIVER=mmcblk\nMMC_TYPE=MMC\nMMC_NAME=DA4064\nMODALIAS=mmc:block"
         },
         {
-          "Id": "ReadProp:Key=MODALIAS",
+          "Id": "#0d176430",
           "Data": "mmc:block"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=removable",
+          "Id": "#0b053619",
           "Data": "0"
         },
         {
-          "Id": "Ioctl:Request=0xc048b300,Opcode=0x08,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x200",
+          "Id": "#09a5a089",
           "DataOut": "AAAAAAAAAAAAAAAAAAAAAAgDmAlnAgAAAAAAAAAAAAAAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACUJAAcBAAIAABUfgAAAAAAAAAEAAAAAAAAAAAECAA0AAAAACAACAFcfCgPd3QAAAAoKCgoKCgEAwEcHFxMXBwgQAQMBCCAAB6amVQMAAAAA3d0AAf8QAAAAABkZABAAAN01NjIzMGExN1FQCAgIAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB8BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAQAAMDAAUDAwE/PwEBAQAAAAAAAAA="
         }
       ]

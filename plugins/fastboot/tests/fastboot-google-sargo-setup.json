@@ -41,84 +41,84 @@
       ],
       "UsbEvents": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "usb"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "usb"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=534\nDEVNAME=bus/usb/005/023\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=18d1/4ee0/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=023"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME",
+          "Id": "#d432c663",
           "Data": "bus/usb/005/023"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "005"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=534\nDEVNAME=bus/usb/005/023\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=18d1/4ee0/100\nTYPE=0/0/0\nBUSNUM=005\nDEVNUM=023"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "023"
         },
         {
-          "Id": "GetStringDescriptor:DescIndex=0x03",
+          "Id": "#028c3a0e",
           "Data": "OTdYQVkxMkJHTQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnByb2R1Y3Q=,Length=0xe",
+          "Id": "#bb126633",
           "Data": "Z2V0dmFyOnByb2R1Y3Q="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Id": "#deac3674",
           "Data": "T0tBWXNhcmdv"
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnZlcnNpb24tYm9vdGxvYWRlcg==,Length=0x19",
+          "Id": "#5ba8514a",
           "Data": "Z2V0dmFyOnZlcnNpb24tYm9vdGxvYWRlcg=="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Id": "#deac3674",
           "Data": "T0tBWWI0czQtMC40LTgwNDg2ODk="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnNlcmlhbG5v,Length=0xf",
+          "Id": "#a5c5177c",
           "Data": "Z2V0dmFyOnNlcmlhbG5v"
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Id": "#deac3674",
           "Data": "T0tBWTk3WEFZMTJCR00="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x01,Data=Z2V0dmFyOnNlY3VyZQ==,Length=0xd",
+          "Id": "#a4275b28",
           "Data": "Z2V0dmFyOnNlY3VyZQ=="
         },
         {
-          "Id": "BulkTransfer:Endpoint=0x81,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x40",
+          "Id": "#deac3674",
           "Data": "T0tBWXllcw=="
         }
       ]

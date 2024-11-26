@@ -49,72 +49,72 @@
       ],
       "UsbEvents": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "usb"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "usb"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=40\nDEVNAME=bus/usb/001/041\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=45e/9bc/101\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=041"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME",
+          "Id": "#d432c663",
           "Data": "bus/usb/001/041"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE",
+          "Id": "#1075ed5c",
           "Data": "usb_device"
         },
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=40\nDEVNAME=bus/usb/001/041\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=45e/9bc/101\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=041"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "041"
         },
         {
-          "Id": "ReadProp:Key=BUSNUM",
+          "Id": "#4693935e",
           "Data": "001"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "MAJOR=189\nMINOR=40\nDEVNAME=bus/usb/001/041\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=45e/9bc/101\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=041"
         },
         {
-          "Id": "ReadProp:Key=DEVNUM",
+          "Id": "#1ab3ae0a",
           "Data": "041"
         },
         {
-          "Id": "GetStringDescriptor:DescIndex=0x02",
+          "Id": "#1fcf122d",
           "Data": "VVNCMi4wIEhJRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x00,Recipient=0x01,Request=0x06,Value=0x2200,Idx=0x0000,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x53",
+          "Id": "#dee13002",
           "Data": "Bgv/CgEBoQEVACX/hfR1CJU8CceRAoX1dQiVEAnMgQKF8nUIlRAJ3JEChfN1CJUQCdiBAoXxdQiVPAnIsQKF+XUIlRgJ3ZEChfh1CJUUCd6BAsA="
         },
         {
-          "Id": "ControlTransfer:Direction=0x00,RequestType=0x01,Recipient=0x01,Request=0x01,Value=0x03f1,Idx=0x0000,Data=8QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==,Length=0x3d",
+          "Id": "#07310562",
           "Data": "8QEAAAIDDwkCAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsQ=="
         }
       ]

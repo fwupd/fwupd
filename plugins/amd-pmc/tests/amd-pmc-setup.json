@@ -8,45 +8,45 @@
       "Created": "2024-11-02T01:12:31.404404Z",
       "Events": [
         {
-          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Id": "#d5a801ad",
           "Data": "platform"
         },
         {
-          "Id": "GetSymlinkTarget:Attr=driver",
+          "Id": "#ad8c58d3",
           "Data": "amd_pmc"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=uevent",
+          "Id": "#bddbca22",
           "Data": "DRIVER=amd_pmc\nMODALIAS=acpi:AMDI0009:PNP0D80:"
         },
         {
-          "Id": "ReadProp:Key=MODALIAS",
+          "Id": "#0d176430",
           "Data": "acpi:AMDI0009:PNP0D80:"
         },
         {
-          "Id": "ReadProp:Key=DEVNAME"
+          "Id": "#d432c663"
         },
         {
-          "Id": "ReadAttr:Attr=vendor"
+          "Id": "#9b895db2"
         },
         {
-          "Id": "ReadAttr:Attr=device"
+          "Id": "#66f3e150"
         },
         {
-          "Id": "ReadAttr:Attr=class"
+          "Id": "#d410b6c7"
         },
         {
-          "Id": "ReadProp:Key=DEVTYPE"
+          "Id": "#1075ed5c"
         },
         {
-          "Id": "ReadAttr:Attr=smu_fw_version",
+          "Id": "#1e802949",
           "Data": "76.87.0"
         },
         {
-          "Id": "ReadAttr:Attr=smu_program",
+          "Id": "#a7d0bb1a",
           "Data": "0"
         }
       ]
