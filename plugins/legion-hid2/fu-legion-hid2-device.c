@@ -412,11 +412,17 @@ fu_legion_hid2_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_legion_hid2_device_write_data(self, firmware, progress, error))
+	if (!fu_legion_hid2_device_write_data(self,
+					      firmware,
+					      fu_progress_get_child(progress),
+					      error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_legion_hid2_device_write_sig(self, firmware, progress, error))
+	if (!fu_legion_hid2_device_write_sig(self,
+					     firmware,
+					     fu_progress_get_child(progress),
+					     error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
