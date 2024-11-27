@@ -14,6 +14,3 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRtshubFirmware,
 		     FU,
 		     DELL_KESTREL_RTSHUB_FIRMWARE,
 		     FuFirmware)
-
-FuFirmware *
-fu_dell_kestrel_rtshub_firmware_new(void);
