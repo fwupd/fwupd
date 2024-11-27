@@ -513,6 +513,9 @@ fu_sahara_loader_init(FuSaharaLoader *self)
 static void
 fu_sahara_loader_finalize(GObject *object)
 {
+	FuSaharaLoader *self = FU_SAHARA_LOADER(object);
+	if (self->usb_device != NULL)
+		g_object_unref(self->usb_device);
 	G_OBJECT_CLASS(fu_sahara_loader_parent_class)->finalize(object);
 }
 
