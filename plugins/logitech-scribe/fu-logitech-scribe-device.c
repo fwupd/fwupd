@@ -662,17 +662,9 @@ fu_logitech_scribe_device_init(FuLogitechScribeDevice *self)
 }
 
 static void
-fu_logitech_scribe_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_logitech_scribe_device_parent_class)->finalize(object);
-}
-
-static void
 fu_logitech_scribe_device_class_init(FuLogitechScribeDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_logitech_scribe_device_finalize;
 	device_class->to_string = fu_logitech_scribe_device_to_string;
 	device_class->write_firmware = fu_logitech_scribe_device_write_firmware;
 	device_class->probe = fu_logitech_scribe_device_probe;

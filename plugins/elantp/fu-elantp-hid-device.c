@@ -955,17 +955,9 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 }
 
 static void
-fu_elantp_hid_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_elantp_hid_device_parent_class)->finalize(object);
-}
-
-static void
 fu_elantp_hid_device_class_init(FuElantpHidDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_elantp_hid_device_finalize;
 	device_class->to_string = fu_elantp_hid_device_to_string;
 	device_class->attach = fu_elantp_hid_device_attach;
 	device_class->set_quirk_kv = fu_elantp_hid_device_set_quirk_kv;
