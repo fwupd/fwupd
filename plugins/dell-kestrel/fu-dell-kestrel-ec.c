@@ -25,20 +25,19 @@ fu_dell_kestrel_ec_dev_entry(FuDellKestrelEc *self,
 			     FuDellKestrelEcDevSubtype subtype,
 			     FuDellKestrelEcDevInstance instance)
 {
-	FuStructDellKestrelDockInfoHeader *hdr = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoHeader) hdr = NULL;
 	guint num = 0;
 
 	hdr = fu_struct_dell_kestrel_dock_info_get_header(self->dock_info);
 	num = fu_struct_dell_kestrel_dock_info_header_get_total_devices(hdr);
-
 	if (num < 1) {
 		g_debug("no device found in dock info hdr");
 		return NULL;
 	}
 
 	for (guint i = 0; i < num; i++) {
-		FuStructDellKestrelDockInfoEcQueryEntry *comp_dev = NULL;
-		FuStructDellKestrelDockInfoEcAddrMap *comp_info = NULL;
+		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) comp_dev = NULL;
+		g_autoptr(FuStructDellKestrelDockInfoEcAddrMap) comp_info = NULL;
 
 		comp_dev = fu_struct_dell_kestrel_dock_info_get_devices(self->dock_info, i);
 		comp_info =
@@ -58,7 +57,7 @@ fu_dell_kestrel_ec_dev_entry(FuDellKestrelEc *self,
 			fu_struct_dell_kestrel_dock_info_ec_addr_map_get_instance(comp_info))
 			continue;
 
-		return comp_dev;
+		return g_steal_pointer(&comp_dev);
 	}
 	return NULL;
 }
@@ -69,7 +68,9 @@ fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevSubtype subtype,
 				  FuDellKestrelEcDevInstance instance)
 {
-	return fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance) != NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
+	return dev_entry != NULL;
 }
 
 const gchar *
@@ -196,8 +197,10 @@ fu_dell_kestrel_ec_probe_pd(FuDellKestrelEc *self,
 			    GError **error)
 {
 	g_autoptr(FuDellKestrelPd) pd_dev = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
-	if (fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance) == NULL)
+	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
+	if (dev_entry == NULL)
 		return TRUE;
 
 	pd_dev = fu_dell_kestrel_pd_new(FU_DEVICE(self), subtype, instance);
@@ -207,6 +210,10 @@ fu_dell_kestrel_ec_probe_pd(FuDellKestrelEc *self,
 static gboolean
 fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 {
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_ilan = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_dpmux = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_wt = NULL;
+
 	/* Package */
 	if (!fu_dell_kestrel_ec_probe_package(self, error))
 		return FALSE;
@@ -236,7 +243,9 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 		return FALSE;
 
 	/* DP MUX | Retimer */
-	if (fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX, 0, 0) != NULL) {
+	dev_entry_dpmux =
+	    fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX, 0, 0);
+	if (dev_entry_dpmux != NULL) {
 		g_autoptr(FuDellKestrelDpmux) dpmux_device = NULL;
 
 		dpmux_device = fu_dell_kestrel_dpmux_new(FU_DEVICE(self));
@@ -245,7 +254,8 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 	}
 
 	/* WT PD */
-	if (fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_WTPD, 0, 0) != NULL) {
+	dev_entry_wt = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_WTPD, 0, 0);
+	if (dev_entry_wt != NULL) {
 		g_autoptr(FuDellKestrelWtpd) wt_dev = NULL;
 
 		wt_dev = fu_dell_kestrel_wtpd_new(FU_DEVICE(self));
@@ -254,7 +264,8 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 	}
 
 	/* LAN */
-	if (fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_LAN, 0, 0) != NULL) {
+	dev_entry_ilan = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_LAN, 0, 0);
+	if (dev_entry_ilan != NULL) {
 		g_autoptr(FuDellKestrelIlan) ilan_device = NULL;
 
 		ilan_device = fu_dell_kestrel_ilan_new(FU_DEVICE(self));
@@ -336,15 +347,17 @@ fu_dell_kestrel_ec_dock_data_extract(FuDellKestrelEc *self, GError **error)
 {
 	g_autofree gchar *mkt_name = NULL;
 	g_autofree gchar *serial = NULL;
+	g_autofree gchar *service_tag = NULL;
 
 	/* set FuDevice name */
 	mkt_name = fu_struct_dell_kestrel_dock_data_get_marketing_name(self->dock_data);
 	fu_device_set_name(FU_DEVICE(self), mkt_name);
 
 	/* set FuDevice serial */
+	service_tag = fu_struct_dell_kestrel_dock_data_get_service_tag(self->dock_data);
 	serial =
 	    g_strdup_printf("%.7s/%016" G_GUINT64_FORMAT,
-			    fu_struct_dell_kestrel_dock_data_get_service_tag(self->dock_data),
+			    service_tag,
 			    fu_struct_dell_kestrel_dock_data_get_module_serial(self->dock_data));
 	fu_device_set_serial(FU_DEVICE(self), serial);
 
@@ -447,18 +460,22 @@ static gboolean
 fu_dell_kestrel_ec_set_dock_sku(FuDellKestrelEc *self, GError **error)
 {
 	if (self->base_type == FU_DELL_DOCK_BASE_TYPE_KESTREL) {
+		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+
 		/* TBT type yet available, do workaround */
-		if (fu_dell_kestrel_ec_dev_entry(self,
-						 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
-						 FU_DELL_KESTREL_EC_DEV_SUBTYPE_BR,
-						 0) != NULL) {
+		dev_entry = fu_dell_kestrel_ec_dev_entry(self,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
+							 FU_DELL_KESTREL_EC_DEV_SUBTYPE_BR,
+							 0);
+		if (dev_entry != NULL) {
 			self->base_sku = FU_DELL_KESTREL_DOCK_SKU_T5;
 			return TRUE;
 		}
-		if (fu_dell_kestrel_ec_dev_entry(self,
-						 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
-						 FU_DELL_KESTREL_EC_DEV_SUBTYPE_GR,
-						 0) != NULL) {
+		dev_entry = fu_dell_kestrel_ec_dev_entry(self,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
+							 FU_DELL_KESTREL_EC_DEV_SUBTYPE_GR,
+							 0);
+		if (dev_entry != NULL) {
 			self->base_sku = FU_DELL_KESTREL_DOCK_SKU_T4;
 			return TRUE;
 		}
@@ -479,7 +496,7 @@ fu_dell_kestrel_ec_get_pd_version(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevInstance instance)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_PD;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
 	return (dev_entry == NULL)
@@ -491,7 +508,7 @@ guint32
 fu_dell_kestrel_ec_get_ilan_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_LAN;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
 	return (dev_entry == NULL)
@@ -503,7 +520,7 @@ guint32
 fu_dell_kestrel_ec_get_wtpd_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_WTPD;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
 	return (dev_entry == NULL)
@@ -515,7 +532,7 @@ guint32
 fu_dell_kestrel_ec_get_dpmux_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
 	return (dev_entry == NULL)
@@ -527,7 +544,7 @@ guint32
 fu_dell_kestrel_ec_get_rmm_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_RMM;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
 	return (dev_entry == NULL)
@@ -539,7 +556,7 @@ static guint32
 fu_dell_kestrel_ec_get_ec_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC;
-	FuStructDellKestrelDockInfoEcQueryEntry *dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
 
 	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
 	return (dev_entry == NULL)
