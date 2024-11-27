@@ -907,8 +907,10 @@ static void
 fu_dell_kestrel_ec_finalize(GObject *object)
 {
 	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(object);
-	g_free(self->dock_data);
-	g_free(self->dock_info);
+	if (self->dock_data != NULL)
+		fu_struct_dell_kestrel_dock_data_unref(self->dock_data);
+	if (self->dock_info != NULL)
+		fu_struct_dell_kestrel_dock_info_unref(self->dock_info);
 	G_OBJECT_CLASS(fu_dell_kestrel_ec_parent_class)->finalize(object);
 }
 
@@ -925,9 +927,6 @@ fu_dell_kestrel_ec_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_dell_kestrel_ec_init(FuDellKestrelEc *self)
 {
-	self->dock_data = g_new0(FuStructDellKestrelDockData, 1);
-	self->dock_info = g_new0(FuStructDellKestrelDockInfo, 1);
-
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.kestrel");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
 	fu_device_add_icon(FU_DEVICE(self), "dock-usb");
