@@ -184,10 +184,10 @@ fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags)
 	/* mixed is bizaar, but specified as the DCE encoding */
 	if (flags & FWUPD_GUID_FLAG_MIXED_ENDIAN) {
 		return g_strdup_printf("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-				       (guint)GUINT32_FROM_LE(gnat.a),
-				       (guint)GUINT16_FROM_LE(gnat.b),
-				       (guint)GUINT16_FROM_LE(gnat.c),
-				       (guint)GUINT16_FROM_BE(gnat.d),
+				       (guint)GUINT32_FROM_LE(gnat.a), /* nocheck:blocked */
+				       (guint)GUINT16_FROM_LE(gnat.b), /* nocheck:blocked */
+				       (guint)GUINT16_FROM_LE(gnat.c), /* nocheck:blocked */
+				       (guint)GUINT16_FROM_BE(gnat.d), /* nocheck:blocked */
 				       gnat.e[0],
 				       gnat.e[1],
 				       gnat.e[2],
@@ -196,10 +196,10 @@ fwupd_guid_to_string(const fwupd_guid_t *guid, FwupdGuidFlags flags)
 				       gnat.e[5]);
 	}
 	return g_strdup_printf("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-			       (guint)GUINT32_FROM_BE(gnat.a),
-			       (guint)GUINT16_FROM_BE(gnat.b),
-			       (guint)GUINT16_FROM_BE(gnat.c),
-			       (guint)GUINT16_FROM_BE(gnat.d),
+			       (guint)GUINT32_FROM_BE(gnat.a), /* nocheck:blocked */
+			       (guint)GUINT16_FROM_BE(gnat.b), /* nocheck:blocked */
+			       (guint)GUINT16_FROM_BE(gnat.c), /* nocheck:blocked */
+			       (guint)GUINT16_FROM_BE(gnat.d), /* nocheck:blocked */
 			       gnat.e[0],
 			       gnat.e[1],
 			       gnat.e[2],
@@ -264,16 +264,16 @@ fwupd_guid_from_string(const gchar *guidstr,
 	/* parse */
 	if (!g_ascii_string_to_unsigned(split[0], 16, 0, 0xffffffff, &tmp, error))
 		return FALSE;
-	gu.a = mixed_endian ? GUINT32_TO_LE(tmp) : GUINT32_TO_BE(tmp);
+	gu.a = mixed_endian ? GUINT32_TO_LE(tmp) : GUINT32_TO_BE(tmp); /* nocheck:blocked */
 	if (!g_ascii_string_to_unsigned(split[1], 16, 0, 0xffff, &tmp, error))
 		return FALSE;
-	gu.b = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp);
+	gu.b = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp); /* nocheck:blocked */
 	if (!g_ascii_string_to_unsigned(split[2], 16, 0, 0xffff, &tmp, error))
 		return FALSE;
-	gu.c = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp);
+	gu.c = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp); /* nocheck:blocked */
 	if (!g_ascii_string_to_unsigned(split[3], 16, 0, 0xffff, &tmp, error))
 		return FALSE;
-	gu.d = GUINT16_TO_BE(tmp);
+	gu.d = GUINT16_TO_BE(tmp); /* nocheck:blocked */
 	for (guint i = 0; i < 6; i++) {
 		gchar buffer[3] = {0x0};
 		memcpy(buffer, split[4] + (i * 2), 2); /* nocheck:blocked */

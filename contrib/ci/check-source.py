@@ -227,6 +227,18 @@ class Checker:
             "&= ~(1ull <<": "Use FU_BIT_CLEAR() instead",
             "__attribute__((packed))": "Use rustgen instead",
             "memcpy(": "Use fu_memcpy_safe or rustgen instead",
+            "GUINT16_FROM_BE(": "Use fu_memread_uint16_safe() or rustgen instead",
+            "GUINT16_FROM_LE(": "Use fu_memread_uint16_safe() or rustgen instead",
+            "GUINT16_TO_BE(": "Use fu_memwrite_uint16_safe() or rustgen instead",
+            "GUINT16_TO_LE(": "Use fu_memwrite_uint16_safe() or rustgen instead",
+            "GUINT32_FROM_BE(": "Use fu_memread_uint32_safe() or rustgen instead",
+            "GUINT32_FROM_LE(": "Use fu_memread_uint32_safe() or rustgen instead",
+            "GUINT32_TO_BE(": "Use fu_memwrite_uint32_safe() or rustgen instead",
+            "GUINT32_TO_LE(": "Use fu_memwrite_uint32_safe() or rustgen instead",
+            "GUINT64_FROM_BE(": "Use fu_memread_uint64_safe() or rustgen instead",
+            "GUINT64_FROM_LE(": "Use fu_memread_uint64_safe() or rustgen instead",
+            "GUINT64_TO_BE(": "Use fu_memwrite_uint64_safe() or rustgen instead",
+            "GUINT64_TO_LE(": "Use fu_memwrite_uint64_safe() or rustgen instead",
             " ioctl(": "Use fu_udev_device_ioctl() instead",
         }.items():
             if line.find(token) != -1:

@@ -556,8 +556,8 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
 	 *        \0x0       \0x20          \0x24  \0x44          |0x48 */
-	guint32 offset_table[] = {
-	    GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* offset to first descriptor */
+	guint32 offset_table[] = {/* offset to first descriptor */
+				  GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* nocheck:blocked */
 	fu_struct_rmi_container_descriptor_set_container_id(desc, FU_RMI_CONTAINER_ID_FLASH_CONFIG);
 	fu_struct_rmi_container_descriptor_set_content_address(desc, RMI_IMG_FW_OFFSET + 0x44);
 

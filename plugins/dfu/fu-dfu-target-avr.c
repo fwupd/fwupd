@@ -476,7 +476,6 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	const gchar *chip_id;
 	const guint8 *buf;
 	gsize sz;
-	guint32 device_id_be;
 	g_autofree gchar *chip_id_guid = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) chunk_sig = NULL;
@@ -502,16 +501,10 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	/* get data back */
 	buf = g_bytes_get_data(chunk_sig, &sz);
 	fu_dump_bytes(G_LOG_DOMAIN, "AVR:CID", chunk_sig);
-	if (sz != 4) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "cannot read config memory, got 0x%02x bytes",
-			    (guint)sz);
+	if (!fu_memread_uint32_safe(buf, sz, 0x0, &priv->device_id, G_BIG_ENDIAN, error)) {
+		g_prefix_error(error, "cannot read config memory: ");
 		return FALSE;
 	}
-	memcpy(&device_id_be, buf, 4); /* nocheck:blocked */
-	priv->device_id = GINT32_FROM_BE(device_id_be);
 
 	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {
 		chip_id_guid = g_strdup_printf("0x%08x", (guint)priv->device_id);

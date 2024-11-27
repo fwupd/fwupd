@@ -375,7 +375,7 @@ fu_bcm57xx_recovery_device_nvram_read(FuBcm57xxRecoveryDevice *self,
 							 &val32,
 							 error))
 			return FALSE;
-		buf[i] = GUINT32_FROM_BE(val32);
+		buf[i] = GUINT32_FROM_BE(val32); /* nocheck:blocked */
 		address += sizeof(guint32);
 		fu_progress_step_done(progress);
 	}
@@ -411,11 +411,12 @@ fu_bcm57xx_recovery_device_nvram_write(FuBcm57xxRecoveryDevice *self,
 		BcmRegNVMCommand tmp = {0};
 		if (!fu_bcm57xx_recovery_device_nvram_clear_done(self, error))
 			return FALSE;
-		if (!fu_bcm57xx_recovery_device_bar_write(self,
-							  FU_BCM57XX_BAR_DEVICE,
-							  REG_NVM_WRITE,
-							  GUINT32_TO_BE(buf[i]),
-							  error))
+		if (!fu_bcm57xx_recovery_device_bar_write(
+			self,
+			FU_BCM57XX_BAR_DEVICE,
+			REG_NVM_WRITE,
+			GUINT32_TO_BE(buf[i]), /* nocheck:blocked */
+			error))
 			return FALSE;
 		if (!fu_bcm57xx_recovery_device_bar_write(self,
 							  FU_BCM57XX_BAR_DEVICE,
@@ -689,7 +690,7 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 	if (fwversion != 0x0) {
 		/* this is only set on the OSS firmware */
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version_raw(device, GUINT32_FROM_BE(fwversion));
+		fu_device_set_version_raw(device, GUINT32_FROM_BE(fwversion)); /* nocheck:blocked */
 		fu_device_set_branch(device, BCM_FW_BRANCH_OSS_FIRMWARE);
 		fu_progress_step_done(progress);
 		fu_progress_step_done(progress);
@@ -708,7 +709,7 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 							   error))
 			return FALSE;
 		fu_progress_step_done(progress);
-		veraddr = GUINT32_FROM_BE(veraddr);
+		veraddr = GUINT32_FROM_BE(veraddr); /* nocheck:blocked */
 		if (veraddr > BCM_PHYS_ADDR_DEFAULT)
 			veraddr -= BCM_PHYS_ADDR_DEFAULT;
 		if (!fu_bcm57xx_recovery_device_nvram_read(self,
