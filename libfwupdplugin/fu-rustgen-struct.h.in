@@ -1,5 +1,7 @@
 typedef GByteArray {{obj.name}};
-G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, g_byte_array_unref)
+
+#define {{obj.c_method('Unref')}} g_byte_array_unref
+G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, {{obj.c_method('Unref')}})
 
 {%- if obj.export('New') == Export.PUBLIC %}
 {{obj.name}} *{{obj.c_method('New')}}(void) G_GNUC_WARN_UNUSED_RESULT;

@@ -517,7 +517,7 @@ fu_genesys_usbhub_firmware_finalize(GObject *object)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(object);
 	if (self->st_static_ts != NULL)
-		g_byte_array_unref(self->st_static_ts);
+		fu_struct_genesys_ts_static_unref(self->st_static_ts);
 	G_OBJECT_CLASS(fu_genesys_usbhub_firmware_parent_class)->finalize(object);
 }
 

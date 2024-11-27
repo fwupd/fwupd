@@ -74,7 +74,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to read PD header: ");
 			return FALSE;
 		}
-		g_byte_array_unref(st);
+		fu_struct_vli_pd_hdr_unref(st);
 		st = fu_struct_vli_pd_hdr_parse(buf, bufsz, 0x0, error);
 		if (st == NULL)
 			return FALSE;
