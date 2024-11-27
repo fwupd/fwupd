@@ -8,6 +8,8 @@ enum FuJabraFilePacketCmd {
     File = 0x03,
     Dfu = 0x07,
     Video = 0x26,
+    Nack = 0xFE,
+    Ack = 0xFF,
 }
 
 #[derive(New, Default)]
