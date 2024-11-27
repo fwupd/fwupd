@@ -118,7 +118,7 @@ fu_idle_inhibit(FuIdle *self, FuIdleInhibit inhibit, const gchar *reason)
 	item = g_new0(FuIdleItem, 1);
 	item->inhibit = inhibit;
 	item->reason = g_strdup(reason);
-	item->token = g_random_int_range(1, G_MAXINT);
+	item->token = g_random_int_range(1, G_MAXINT); /* nocheck:blocked */
 	g_ptr_array_add(self->items, item);
 
 	fu_idle_emit_inhibit_changed(self);

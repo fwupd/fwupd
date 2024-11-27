@@ -199,6 +199,7 @@ class Checker:
             "g_usb_device_set_interface_alt(": "Use fu_usb_device_set_interface_alt() instead",
             "g_ascii_strtoull(": "Use fu_strtoull() instead",
             "g_ascii_strtoll(": "Use fu_strtoll() instead",
+            "g_random_int_range(": "Use a predicatable token instead",
             "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
             "g_udev_device_get_sysfs_attr(": "Use fu_udev_device_read_sysfs() instead",
             "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",

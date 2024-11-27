@@ -56,7 +56,7 @@ fu_redfish_plugin_generate_password(guint length)
 
 	/* get a random password string */
 	while (str->len < length) {
-		gchar tmp = (gchar)g_random_int_range(0x0, 0xff);
+		gchar tmp = (gchar)g_random_int_range(0x0, 0xff); /* nocheck:blocked */
 		if (g_ascii_isalnum(tmp))
 			g_string_append_c(str, tmp);
 	}
