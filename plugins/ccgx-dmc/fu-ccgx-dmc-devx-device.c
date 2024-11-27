@@ -355,7 +355,7 @@ fu_ccgx_dmc_devx_device_finalize(GObject *object)
 {
 	FuCcgxDmcDevxDevice *self = FU_CCGX_DMC_DEVX_DEVICE(object);
 	if (self->status != NULL)
-		g_byte_array_unref(self->status);
+		fu_struct_ccgx_dmc_devx_status_unref(self->status);
 	G_OBJECT_CLASS(fu_ccgx_dmc_devx_device_parent_class)->finalize(object);
 }
 

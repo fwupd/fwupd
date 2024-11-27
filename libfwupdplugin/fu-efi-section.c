@@ -266,7 +266,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 
 	/* use extended size */
 	if (fu_struct_efi_section_get_size(st) == 0xFFFFFF) {
-		g_byte_array_unref(st);
+		fu_struct_efi_section_unref(st);
 		st = fu_struct_efi_section2_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;

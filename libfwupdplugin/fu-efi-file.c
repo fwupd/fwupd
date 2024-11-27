@@ -102,7 +102,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 				    (guint)fu_struct_efi_file_get_size(st));
 			return FALSE;
 		}
-		g_byte_array_unref(st);
+		fu_struct_efi_file_unref(st);
 		st = fu_struct_efi_file2_parse_stream(stream, 0x0, error);
 		if (st == NULL)
 			return FALSE;

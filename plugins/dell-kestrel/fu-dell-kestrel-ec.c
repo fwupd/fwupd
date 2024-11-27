@@ -363,6 +363,8 @@ fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 		return FALSE;
 	}
 
+	if (self->dock_data != NULL)
+		fu_struct_dell_kestrel_dock_data_unref(self->dock_data);
 	self->dock_data = fu_struct_dell_kestrel_dock_data_parse(res->data, res->len, 0, error);
 	if (self->dock_data == NULL)
 		return FALSE;
