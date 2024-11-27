@@ -3088,7 +3088,7 @@ fu_genesys_usbhub_device_finalize(GObject *object)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(object);
 	if (self->st_static_ts != NULL)
-		g_byte_array_unref(self->st_static_ts);
+		fu_struct_genesys_ts_static_unref(self->st_static_ts);
 	if (self->st_dynamic_ts != NULL)
 		g_byte_array_unref(self->st_dynamic_ts);
 	if (self->st_fwinfo_ts != NULL)
