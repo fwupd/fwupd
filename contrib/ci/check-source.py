@@ -379,12 +379,25 @@ def test_files() -> int:
     rc: int = 0
 
     checker = Checker()
-    for fn in (
-        glob.glob("libfwupd/*.[c|h]")
-        + glob.glob("libfwupdplugin/*.[c|h]")
-        + glob.glob("plugins/*/*.[c|h]")
-        + glob.glob("src/*.[c|h]")
-    ):
+
+    # use any file specified in argv, falling back to scanning the entire tree
+    fns: List[str] = []
+    if len(sys.argv) > 1:
+        for fn in sys.argv[1:]:
+            try:
+                ext: str = fn.rsplit(".", maxsplit=1)[1]
+            except IndexError:
+                continue
+            if ext in ["c", "h"]:
+                fns.append(fn)
+    else:
+        fns.extend(glob.glob("libfwupd/*.[c|h]"))
+        fns.extend(glob.glob("libfwupdplugin/*.[c|h]"))
+        fns.extend(glob.glob("plugins/*/*.[c|h]"))
+        fns.extend(glob.glob("src/*.[c|h]"))
+    for fn in fns:
+        if os.path.basename(fn) == "check-source.py":
+            continue
         checker.test_file(fn)
 
     # show issues
