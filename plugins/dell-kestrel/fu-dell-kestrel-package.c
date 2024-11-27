@@ -31,8 +31,8 @@ static gboolean
 fu_dell_kestrel_package_setup(FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellKestrelDockSku dock_sku = fu_dell_kestrel_ec_get_dock_sku(proxy);
-	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(proxy);
+	FuDellKestrelDockSku dock_sku = fu_dell_kestrel_ec_get_dock_sku(FU_DELL_KESTREL_EC(proxy));
+	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
 	guint32 pkg_version_raw;
 
 	/* instance ID */
@@ -42,7 +42,7 @@ fu_dell_kestrel_package_setup(FuDevice *device, GError **error)
 	fu_device_build_instance_id(device, error, "EC", "DOCKTYPE", "DOCKSKU", "DEVTYPE", NULL);
 
 	/* setup version */
-	pkg_version_raw = fu_dell_kestrel_ec_get_package_version(proxy);
+	pkg_version_raw = fu_dell_kestrel_ec_get_package_version(FU_DELL_KESTREL_EC(proxy));
 	fu_device_set_version_raw(device, pkg_version_raw);
 
 	return TRUE;
@@ -89,7 +89,7 @@ fu_dell_kestrel_package_write(FuDevice *device,
 		fu_device_get_version(device),
 		dynamic_version);
 
-	if (!fu_dell_kestrel_ec_commit_package(proxy, fw, error))
+	if (!fu_dell_kestrel_ec_commit_package(FU_DELL_KESTREL_EC(proxy), fw, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */

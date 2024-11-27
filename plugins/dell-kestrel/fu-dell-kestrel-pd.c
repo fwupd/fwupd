@@ -31,8 +31,8 @@ fu_dell_kestrel_pd_setup(FuDevice *device, GError **error)
 {
 	FuDellKestrelPd *self = FU_DELL_KESTREL_PD(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(proxy);
-	FuDellKestrelDockSku dock_sku = fu_dell_kestrel_ec_get_dock_sku(proxy);
+	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
+	FuDellKestrelDockSku dock_sku = fu_dell_kestrel_ec_get_dock_sku(FU_DELL_KESTREL_EC(proxy));
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_PD;
 	guint32 raw_version;
 	g_autofree gchar *devname = NULL;
@@ -58,7 +58,9 @@ fu_dell_kestrel_pd_setup(FuDevice *device, GError **error)
 				    NULL);
 
 	/* version */
-	raw_version = fu_dell_kestrel_ec_get_pd_version(proxy, self->pd_subtype, self->pd_instance);
+	raw_version = fu_dell_kestrel_ec_get_pd_version(FU_DELL_KESTREL_EC(proxy),
+							self->pd_subtype,
+							self->pd_instance);
 	fu_device_set_version_raw(device, raw_version);
 
 	return TRUE;
@@ -72,8 +74,8 @@ fu_dell_kestrel_pd_write(FuDevice *device,
 			 GError **error)
 {
 	FuDellKestrelPd *self = FU_DELL_KESTREL_PD(device);
-
-	return fu_dell_kestrel_ec_write_firmware_helper(fu_device_get_proxy(device),
+	FuDevice *proxy = fu_device_get_proxy(device);
+	return fu_dell_kestrel_ec_write_firmware_helper(FU_DELL_KESTREL_EC(proxy),
 							firmware,
 							progress,
 							FU_DELL_KESTREL_EC_DEV_TYPE_PD,

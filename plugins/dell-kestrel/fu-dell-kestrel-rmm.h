@@ -17,4 +17,4 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRmm, fu_dell_kestrel_rmm, FU, DELL_KESTREL_RMM
 FuDellKestrelRmm *
 fu_dell_kestrel_rmm_new(FuUsbDevice *device);
 void
-fu_dell_kestrel_rmm_fix_version(FuDevice *device);
+fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self);

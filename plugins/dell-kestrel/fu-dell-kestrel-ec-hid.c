@@ -12,9 +12,9 @@
 #include "fu-dell-kestrel-ec-hid.h"
 
 gboolean
-fu_dell_kestrel_ec_hid_write(FuDevice *device, GByteArray *buf, GError **error)
+fu_dell_kestrel_ec_hid_write(FuDellKestrelEc *self, GByteArray *buf, GError **error)
 {
-	return fu_hid_device_set_report(FU_HID_DEVICE(device),
+	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					0x0,
 					buf->data,
 					buf->len,
@@ -63,9 +63,9 @@ fu_dell_kestrel_ec_hid_set_report_cb(FuDevice *self, gpointer user_data, GError 
 }
 
 static gboolean
-fu_dell_kestrel_ec_hid_set_report(FuDevice *self, guint8 *outbuffer, GError **error)
+fu_dell_kestrel_ec_hid_set_report(FuDellKestrelEc *self, guint8 *outbuffer, GError **error)
 {
-	return fu_device_retry(self,
+	return fu_device_retry(FU_DEVICE(self),
 			       fu_dell_kestrel_ec_hid_set_report_cb,
 			       FU_DELL_KESTREL_EC_HID_MAX_RETRIES,
 			       outbuffer,
@@ -86,9 +86,9 @@ fu_dell_kestrel_ec_hid_get_report_cb(FuDevice *self, gpointer user_data, GError 
 }
 
 static gboolean
-fu_dell_kestrel_ec_hid_get_report(FuDevice *self, guint8 *inbuffer, GError **error)
+fu_dell_kestrel_ec_hid_get_report(FuDellKestrelEc *self, guint8 *inbuffer, GError **error)
 {
-	return fu_device_retry(self,
+	return fu_device_retry(FU_DEVICE(self),
 			       fu_dell_kestrel_ec_hid_get_report_cb,
 			       FU_DELL_KESTREL_EC_HID_MAX_RETRIES,
 			       inbuffer,
@@ -96,7 +96,7 @@ fu_dell_kestrel_ec_hid_get_report(FuDevice *self, guint8 *inbuffer, GError **err
 }
 
 gboolean
-fu_dell_kestrel_ec_hid_i2c_write(FuDevice *self, GByteArray *cmd_buf, GError **error)
+fu_dell_kestrel_ec_hid_i2c_write(FuDellKestrelEc *self, GByteArray *cmd_buf, GError **error)
 {
 	FuStructEcHidCmdBuffer *buf = fu_struct_ec_hid_cmd_buffer_new();
 	g_return_val_if_fail(cmd_buf->len <= FU_DELL_KESTREL_HIDI2C_MAX_WRITE, FALSE);
@@ -111,7 +111,7 @@ fu_dell_kestrel_ec_hid_i2c_write(FuDevice *self, GByteArray *cmd_buf, GError **e
 }
 
 gboolean
-fu_dell_kestrel_ec_hid_i2c_read(FuDevice *self,
+fu_dell_kestrel_ec_hid_i2c_read(FuDellKestrelEc *self,
 				FuDellKestrelEcHidCmd cmd,
 				GByteArray *res,
 				guint delayms,
@@ -128,7 +128,7 @@ fu_dell_kestrel_ec_hid_i2c_read(FuDevice *self,
 		return FALSE;
 
 	if (delayms > 0)
-		fu_device_sleep(self, delayms);
+		fu_device_sleep(FU_DEVICE(self), delayms);
 
 	if (!fu_dell_kestrel_ec_hid_get_report(self, inbuf, error))
 		return FALSE;

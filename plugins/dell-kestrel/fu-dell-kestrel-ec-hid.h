@@ -10,6 +10,7 @@
 
 #include "fu-dell-kestrel-ec-hid-struct.h"
 #include "fu-dell-kestrel-ec-struct.h"
+#include "fu-dell-kestrel-ec.h"
 
 /* Used for EC HID communication */
 #define FU_DELL_KESTREL_EC_HID_TIMEOUT	       2000
@@ -28,7 +29,7 @@
 #define FU_DELL_KESTREL_HIDI2C_MAX_WRITE 128
 
 gboolean
-fu_dell_kestrel_ec_hid_write(FuDevice *device, GByteArray *buf, GError **error);
+fu_dell_kestrel_ec_hid_write(FuDellKestrelEc *self, GByteArray *buf, GError **error);
 
 GBytes *
 fu_dell_kestrel_ec_hid_fwup_pkg_new(FuChunk *chk,
@@ -37,9 +38,9 @@ fu_dell_kestrel_ec_hid_fwup_pkg_new(FuChunk *chk,
 				    guint8 dev_identifier);
 
 gboolean
-fu_dell_kestrel_ec_hid_i2c_write(FuDevice *self, GByteArray *cmd_buf, GError **error);
+fu_dell_kestrel_ec_hid_i2c_write(FuDellKestrelEc *self, GByteArray *cmd_buf, GError **error);
 gboolean
-fu_dell_kestrel_ec_hid_i2c_read(FuDevice *self,
+fu_dell_kestrel_ec_hid_i2c_read(FuDellKestrelEc *self,
 				FuDellKestrelEcHidCmd cmd,
 				GByteArray *res,
 				guint delayms,
