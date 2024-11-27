@@ -73,7 +73,7 @@ fu_efivars_delete(FuEfivars *self, const gchar *guid, const gchar *name, GError 
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
 		return FALSE;
 	}
-	return efivars_class->delete (self, guid, name, error);
+	return efivars_class->delete(self, guid, name, error);
 }
 
 /**

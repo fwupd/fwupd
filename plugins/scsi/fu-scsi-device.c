@@ -35,6 +35,7 @@ G_DEFINE_TYPE(FuScsiDevice, fu_scsi_device, FU_TYPE_UDEV_DEVICE)
 #define READ_BUFFER_CMD	 0x3C
 
 #define FU_SCSI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+
 #define FU_SCSI_DEFAULT_WRITE_BUFFER_SIZE 4096 /* byte */
 
 static void

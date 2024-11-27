@@ -158,9 +158,7 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 }
 
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
-					  gsize *size,
-					  GError **error)
+fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GError **error)
 {
 	guint8 kbs = 0;
 	if (!fu_input_stream_read_u8(stream, GENESYS_USBHUB_CODE_SIZE_OFFSET, &kbs, error)) {
@@ -272,9 +270,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		break;
 	case ISP_MODEL_HUB_GL3523: {
 		if (self->chip.revision == 50) {
-			if (!fu_genesys_usbhub_firmware_calculate_size(stream,
-								       &code_size,
-								       error))
+			if (!fu_genesys_usbhub_firmware_calculate_size(stream, &code_size, error))
 				return FALSE;
 		} else {
 			code_size = 0x6000;

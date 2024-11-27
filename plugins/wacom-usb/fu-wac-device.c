@@ -814,9 +814,9 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		ver2 = fu_struct_module_item_get_version2(st_item);
 
 		/*
-  		* When ver2 is available and not 0, it is appended to ver in order to make it BCD
-  		* 32bits, otherwise it stays BCD 16bits.
-    		*/
+		 * When ver2 is available and not 0, it is appended to ver in order to make it BCD
+		 * 32bits, otherwise it stays BCD 16bits.
+		 */
 		if (ver2 != 0xFF && ver2 != 0) {
 			ver = (ver << 16);
 			ver |= (ver2 << 8);

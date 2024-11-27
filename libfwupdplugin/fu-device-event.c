@@ -107,7 +107,6 @@ fu_device_event_set_str(FuDeviceEvent *self, const gchar *key, const gchar *valu
 void
 fu_device_event_set_i64(FuDeviceEvent *self, const gchar *key, gint64 value)
 {
-
 	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
 	g_return_if_fail(key != NULL);
 

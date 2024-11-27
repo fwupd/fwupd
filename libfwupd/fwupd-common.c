@@ -22,8 +22,8 @@
 #include <sys/mman.h>
 #endif
 
-#include <string.h>
 #include <json-glib/json-glib.h>
+#include <string.h>
 
 /**
  * fwupd_checksum_guess_kind:

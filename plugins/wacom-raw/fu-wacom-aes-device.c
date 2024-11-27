@@ -27,17 +27,11 @@ fu_wacom_aes_device_add_recovery_hwid(FuWacomAesDevice *self, GError **error)
 	fu_struct_wacom_raw_request_set_echo(st_req, 0x01);
 	fu_struct_wacom_raw_request_set_addr(st_req, FU_WACOM_RAW_BL_START_ADDR);
 	fu_struct_wacom_raw_request_set_size8(st_req, FU_WACOM_RAW_BL_BYTES_CHECK / 8);
-	if (!fu_wacom_device_set_feature(FU_WACOM_DEVICE(self),
-					 st_req->data,
-					 st_req->len,
-					 error)) {
+	if (!fu_wacom_device_set_feature(FU_WACOM_DEVICE(self), st_req->data, st_req->len, error)) {
 		g_prefix_error(error, "failed to send: ");
 		return FALSE;
 	}
-	if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self),
-					 st_req->data,
-					 st_req->len,
-					 error)) {
+	if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self), st_req->data, st_req->len, error)) {
 		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
@@ -74,8 +68,8 @@ fu_wacom_aes_device_add_recovery_hwid(FuWacomAesDevice *self, GError **error)
 
 static gboolean
 fu_wacom_aes_device_query_operation_mode(FuWacomAesDevice *self,
-				  FuWacomRawOperationMode *mode,
-				  GError **error)
+					 FuWacomRawOperationMode *mode,
+					 GError **error)
 {
 	g_autoptr(GByteArray) st_req = fu_struct_wacom_raw_fw_query_mode_request_new();
 	g_autoptr(GByteArray) st_rsp = NULL;

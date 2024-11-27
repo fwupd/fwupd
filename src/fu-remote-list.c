@@ -289,9 +289,7 @@ fu_remote_list_is_remote_origin_lvfs(FwupdRemote *remote)
 }
 
 static gboolean
-fu_remote_list_add_for_file(FuRemoteList *self,
-			    const gchar *filename,
-			    GError **error)
+fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **error)
 {
 	FwupdRemote *remote_tmp;
 	g_autofree gchar *remotesdir = NULL;
