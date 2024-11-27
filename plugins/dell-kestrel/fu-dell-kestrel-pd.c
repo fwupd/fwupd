@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-dell-kestrel-common.h"
 #include "fu-dell-kestrel-ec-struct.h"
 

@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-dell-kestrel-common.h"
 
 struct _FuDellKestrelIlan {

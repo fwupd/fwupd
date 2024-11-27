@@ -6,9 +6,6 @@
 
 #include "config.h"
 
-#include <errno.h>
-#include <string.h>
-
 #include "fu-dell-kestrel-ec-hid.h"
 
 gboolean
