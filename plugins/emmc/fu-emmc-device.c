@@ -619,17 +619,9 @@ fu_emmc_device_init(FuEmmcDevice *self)
 }
 
 static void
-fu_emmc_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_emmc_device_parent_class)->finalize(object);
-}
-
-static void
 fu_emmc_device_class_init(FuEmmcDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_emmc_device_finalize;
 	device_class->set_quirk_kv = fu_emmc_device_set_quirk_kv;
 	device_class->setup = fu_emmc_device_setup;
 	device_class->to_string = fu_emmc_device_to_string;

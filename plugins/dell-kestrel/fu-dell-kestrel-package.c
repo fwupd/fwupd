@@ -114,12 +114,6 @@ fu_dell_kestrel_package_attach(FuDevice *device, FuProgress *progress, GError **
 }
 
 static void
-fu_dell_kestrel_package_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_dell_kestrel_package_parent_class)->finalize(object);
-}
-
-static void
 fu_dell_kestrel_package_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -147,9 +141,7 @@ fu_dell_kestrel_package_init(FuDellKestrelPackage *self)
 static void
 fu_dell_kestrel_package_class_init(FuDellKestrelPackageClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_dell_kestrel_package_finalize;
 	device_class->write_firmware = fu_dell_kestrel_package_write;
 	device_class->setup = fu_dell_kestrel_package_setup;
 	device_class->set_progress = fu_dell_kestrel_package_set_progress;

@@ -919,17 +919,9 @@ fu_ata_device_init(FuAtaDevice *self)
 }
 
 static void
-fu_ata_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_ata_device_parent_class)->finalize(object);
-}
-
-static void
 fu_ata_device_class_init(FuAtaDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_ata_device_finalize;
 	device_class->to_string = fu_ata_device_to_string;
 	device_class->set_quirk_kv = fu_ata_device_set_quirk_kv;
 	device_class->setup = fu_ata_device_setup;

@@ -185,12 +185,6 @@ fu_dell_dock_hub_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_dell_dock_hub_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_dell_dock_hub_parent_class)->finalize(object);
-}
-
-static void
 fu_dell_dock_hub_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -212,9 +206,7 @@ fu_dell_dock_hub_init(FuDellDockHub *self)
 static void
 fu_dell_dock_hub_class_init(FuDellDockHubClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_dell_dock_hub_finalize;
 	device_class->setup = fu_dell_dock_hub_setup;
 	device_class->probe = fu_dell_dock_hub_probe;
 	device_class->write_firmware = fu_dell_dock_hub_write_fw;

@@ -505,17 +505,9 @@ fu_nvme_device_init(FuNvmeDevice *self)
 }
 
 static void
-fu_nvme_device_finalize(GObject *object)
-{
-	G_OBJECT_CLASS(fu_nvme_device_parent_class)->finalize(object);
-}
-
-static void
 fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_nvme_device_finalize;
 	device_class->to_string = fu_nvme_device_to_string;
 	device_class->set_quirk_kv = fu_nvme_device_set_quirk_kv;
 	device_class->setup = fu_nvme_device_setup;
