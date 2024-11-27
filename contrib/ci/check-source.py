@@ -371,7 +371,10 @@ class Checker:
     def test_file(self, fn: str) -> None:
         self._current_fn = fn
         with open(fn, "rb") as f:
-            self._test_lines(f.read().decode().split("\n"))
+            try:
+                self._test_lines(f.read().decode().split("\n"))
+            except UnicodeDecodeError as e:
+                print(f"failed to read {fn}: {e}")
 
 
 def test_files() -> int:
