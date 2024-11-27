@@ -36,6 +36,7 @@ G_DEFINE_TYPE_EXTENDED(FuEfiLoadOption,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_efi_load_option_codec_iface_init))
 
 #define FU_EFI_LOAD_OPTION_DESCRIPTION_SIZE_MAX 0x1000u /* bytes */
+
 #define FU_EFI_LOAD_OPTION_HIVE_HEADER_VERSION_MIN 1
 
 static void

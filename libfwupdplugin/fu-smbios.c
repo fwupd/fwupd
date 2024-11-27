@@ -324,10 +324,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 }
 
 static gboolean
-fu_smbios_parse(FuFirmware *firmware,
-		GInputStream *stream,
-		FwupdInstallFlags flags,
-		GError **error)
+fu_smbios_parse(FuFirmware *firmware, GInputStream *stream, FwupdInstallFlags flags, GError **error)
 {
 	FuSmbios *self = FU_SMBIOS(firmware);
 	g_autoptr(GBytes) fw = NULL;

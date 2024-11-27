@@ -1426,7 +1426,6 @@ fu_util_device_to_string(FwupdClient *client, FwupdDevice *dev, guint idt)
 					  /* TRANSLATORS: hardware state, e.g. "pending" */
 					  _("Update State"),
 					  fu_util_update_state_to_string(state));
-
 	}
 
 	/* battery, but only if we're not about to show the same info as an inhibit */

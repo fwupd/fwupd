@@ -63,16 +63,16 @@
 
 /* CAPE message structure, Little endian */
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	gint16 data_len : 16; /* data length in dwords */
-	guint16 cmd_id : 15;  /* command id */
-	guint16 reply : 1;    /* host want a reply from device, 1 = true */
-	guint32 module_id;    /* module id */
+	gint16 data_len : 16;		 /* data length in dwords */
+	guint16 cmd_id : 15;		 /* command id */
+	guint16 reply : 1;		 /* host want a reply from device, 1 = true */
+	guint32 module_id;		 /* module id */
 	guint32 data[FU_SYNAPTICS_CAPE_CMD_MAX_DATA_LEN]; /* command data */
 } FuCapCmd;
 
 /* CAPE HID report structure */
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint16 report_id; /* two bytes of report id, this should be 1 */
+	guint16 report_id;		 /* two bytes of report id, this should be 1 */
 	FuCapCmd cmd;
 } FuCapCmdHidReport;
 

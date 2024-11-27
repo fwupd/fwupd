@@ -20,8 +20,6 @@ fu_genesys_usbhub_firmware_new(void);
 gboolean
 fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error);
 gboolean
-fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream,
-					  gsize *size,
-					  GError **error);
+fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GError **error);
 gboolean
 fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error);

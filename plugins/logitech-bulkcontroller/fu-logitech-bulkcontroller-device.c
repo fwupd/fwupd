@@ -752,7 +752,6 @@ fu_logitech_bulkcontroller_device_ensure_child(FuLogitechBulkcontrollerDevice *s
 		}
 	}
 
-
 	/* create new child */
 	child = g_object_new(FU_TYPE_LOGITECH_BULKCONTROLLER_CHILD, "proxy", self, NULL);
 	fu_device_add_private_flag(child, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);

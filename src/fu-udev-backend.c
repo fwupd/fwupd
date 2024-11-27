@@ -24,8 +24,8 @@
 struct _FuUdevBackend {
 	FuBackend parent_instance;
 	gint netlink_fd;
-	GHashTable *map_paths;	      /* of str:None */
-	GPtrArray *dpaux_devices;     /* of FuDpauxDevice */
+	GHashTable *map_paths;	  /* of str:None */
+	GPtrArray *dpaux_devices; /* of FuDpauxDevice */
 	guint dpaux_devices_rescan_id;
 	gboolean done_coldplug;
 };

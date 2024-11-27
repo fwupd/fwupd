@@ -839,28 +839,17 @@ fu_engine_modify_config(FuEngine *self,
 	/* check keys are valid */
 	if (g_strcmp0(section, "fwupd") == 0) {
 		const gchar *keys[] = {
-		    "ArchiveSizeMax",
-		    "ApprovedFirmware",
-		    "BlockedFirmware",
-		    "DisabledDevices",
-		    "DisabledPlugins",
-		    "EnumerateAllDevices",
-		    "EspLocation",
-		    "HostBkc",
-		    "IdleTimeout",
-		    "IgnorePower",
-		    "OnlyTrusted",
-		    "P2pPolicy",
-		    "ReleaseDedupe",
-		    "ReleasePriority",
-		    "ShowDevicePrivate",
-		    "TestDevices",
-		    "TrustedReports",
-		    "TrustedUids",
-		    "UpdateMotd",
-		    "UriSchemes",
-		    "VerboseDomains",
-		    NULL,
+		    "ArchiveSizeMax",	 "ApprovedFirmware",
+		    "BlockedFirmware",	 "DisabledDevices",
+		    "DisabledPlugins",	 "EnumerateAllDevices",
+		    "EspLocation",	 "HostBkc",
+		    "IdleTimeout",	 "IgnorePower",
+		    "OnlyTrusted",	 "P2pPolicy",
+		    "ReleaseDedupe",	 "ReleasePriority",
+		    "ShowDevicePrivate", "TestDevices",
+		    "TrustedReports",	 "TrustedUids",
+		    "UpdateMotd",	 "UriSchemes",
+		    "VerboseDomains",	 NULL,
 		};
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
@@ -1880,7 +1869,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
 		return NULL;
 
-		/* these affect the report credibility */
+	/* these affect the report credibility */
 #ifdef SUPPORTED_BUILD
 	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", TRUE);
 #else
@@ -2665,9 +2654,7 @@ fu_engine_emulation_load_phase(FuEngine *self, GError **error)
 }
 
 gboolean
-fu_engine_emulation_load(FuEngine *self,
-			 GInputStream *stream,
-			 GError **error)
+fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
 {
 	gboolean got_json = FALSE;
 	const gchar *json_empty = "{\"UsbDevices\":[]}";

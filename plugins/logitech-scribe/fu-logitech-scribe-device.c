@@ -10,7 +10,6 @@
 #include <linux/types.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-
 #include <string.h>
 
 #include "fu-logitech-scribe-device.h"

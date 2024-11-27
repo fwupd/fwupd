@@ -243,10 +243,7 @@ fu_asus_hid_child_device_class_init(FuAsusHidChildDeviceClass *klass)
 FuDevice *
 fu_asus_hid_child_device_new(FuDevice *proxy, guint8 idx)
 {
-	FuDevice *dev = g_object_new(FU_TYPE_ASUS_HID_CHILD_DEVICE,
-				     "proxy",
-				     proxy,
-				     NULL);
+	FuDevice *dev = g_object_new(FU_TYPE_ASUS_HID_CHILD_DEVICE, "proxy", proxy, NULL);
 	FuAsusHidChildDevice *self = FU_ASUS_HID_CHILD_DEVICE(dev);
 
 	self->idx = idx;
