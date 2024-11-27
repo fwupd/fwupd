@@ -238,7 +238,7 @@ class Checker:
         for linecnt, line in enumerate(lines):
             if line.find(self._current_nocheck) != -1:
                 continue
-            self._current_linecnt = linecnt
+            self._current_linecnt = linecnt + 1
 
             # do not use G_IO_ERROR internally
             if line.find("g_set_error") != -1:
@@ -305,7 +305,7 @@ class Checker:
         for linecnt, line in enumerate(lines):
             if line.find(self._current_nocheck) != -1:
                 continue
-            self._current_linecnt = linecnt
+            self._current_linecnt = linecnt + 1
             if line.find("fu_firmware_set_version(") != -1:
                 self.add_failure(
                     "Use FuFirmwareClass->convert_version rather than fu_firmware_set_version()"
@@ -334,7 +334,7 @@ class Checker:
         for linecnt, line in enumerate(lines):
             if line.find(self._current_nocheck) != -1:
                 continue
-            self._current_linecnt = linecnt
+            self._current_linecnt = linecnt + 1
             if line.find("fu_device_set_version(") != -1:
                 self.add_failure(
                     "Use FuDeviceClass->convert_version rather than fu_device_set_version()"
@@ -347,7 +347,7 @@ class Checker:
         for linecnt, line in enumerate(lines):
             if line.find(self._current_nocheck) != -1:
                 continue
-            self._current_linecnt = linecnt
+            self._current_linecnt = linecnt + 1
             for char in line:
                 if char == "{":
                     depth += 1
@@ -373,7 +373,7 @@ class Checker:
 
         # tests we can do line by line
         for linecnt, line in enumerate(lines):
-            self._current_linecnt = linecnt
+            self._current_linecnt = linecnt + 1
 
             # test for blocked functions
             self._test_line_blocked_fns(line)
