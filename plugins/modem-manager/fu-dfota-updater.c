@@ -376,6 +376,9 @@ fu_dfota_updater_init(FuDfotaUpdater *self)
 static void
 fu_dfota_updater_finalize(GObject *object)
 {
+	FuDfotaUpdater *self = FU_DFOTA_UPDATER(object);
+	if (self->io_channel != NULL)
+		g_object_unref(self->io_channel);
 	G_OBJECT_CLASS(fu_dfota_updater_parent_class)->finalize(object);
 }
 
@@ -392,7 +395,7 @@ FuDfotaUpdater *
 fu_dfota_updater_new(FuIOChannel *io_channel)
 {
 	FuDfotaUpdater *self = g_object_new(FU_TYPE_DFOTA_UPDATER, NULL);
-	self->io_channel = io_channel;
+	self->io_channel = g_object_ref(io_channel);
 	return self;
 }
 #endif // MM_CHECK_VERSION(1, 24, 0)
