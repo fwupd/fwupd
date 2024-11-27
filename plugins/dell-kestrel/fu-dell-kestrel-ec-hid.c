@@ -26,7 +26,7 @@ fu_dell_kestrel_ec_hid_fwup_pkg_new(FuChunk *chk,
 				    FuDellKestrelEcDevType dev_type,
 				    guint8 dev_identifier)
 {
-	FuStructEcHidFwUpdatePkg *fwbuf = fu_struct_ec_hid_fw_update_pkg_new();
+	g_autoptr(FuStructEcHidFwUpdatePkg) fwbuf = fu_struct_ec_hid_fw_update_pkg_new();
 	gsize chk_datasz = fu_chunk_get_data_sz(chk);
 
 	/* header */
@@ -95,7 +95,8 @@ fu_dell_kestrel_ec_hid_get_report(FuDellKestrelEc *self, guint8 *inbuffer, GErro
 gboolean
 fu_dell_kestrel_ec_hid_i2c_write(FuDellKestrelEc *self, GByteArray *cmd_buf, GError **error)
 {
-	FuStructEcHidCmdBuffer *buf = fu_struct_ec_hid_cmd_buffer_new();
+	g_autoptr(FuStructEcHidCmdBuffer) buf = fu_struct_ec_hid_cmd_buffer_new();
+
 	g_return_val_if_fail(cmd_buf->len <= FU_DELL_KESTREL_HIDI2C_MAX_WRITE, FALSE);
 
 	fu_struct_ec_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_EC_USB_HID_CMD_WRITE_DATA);
@@ -114,7 +115,7 @@ fu_dell_kestrel_ec_hid_i2c_read(FuDellKestrelEc *self,
 				guint delayms,
 				GError **error)
 {
-	FuStructEcHidCmdBuffer *buf = fu_struct_ec_hid_cmd_buffer_new();
+	g_autoptr(FuStructEcHidCmdBuffer) buf = fu_struct_ec_hid_cmd_buffer_new();
 	guint8 inbuf[FU_DELL_KESTREL_HIDI2C_MAX_READ] = {0xff};
 
 	fu_struct_ec_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_EC_USB_HID_CMD_WRITE_DATA);
