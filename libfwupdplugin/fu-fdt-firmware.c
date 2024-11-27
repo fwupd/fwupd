@@ -277,13 +277,8 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 	}
 
 	/* did not see FDT_END */
-	if (!has_end) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "did not see FDT_END");
-		return FALSE;
-	}
+	if (!has_end)
+		g_warning("did not see FDT_END, perhaps size_dt_struct is invalid?");
 
 	/* success */
 	return TRUE;
