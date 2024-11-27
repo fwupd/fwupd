@@ -48,6 +48,10 @@ class Checker:
         )
 
     def _test_line_function_names_valid(self, func_name: str) -> None:
+        # sanity check
+        if not self._current_fn:
+            return
+
         # ignore headers
         if self._current_fn.endswith(".h"):
             return
