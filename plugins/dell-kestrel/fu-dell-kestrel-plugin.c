@@ -50,7 +50,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	}
 
 	/* dock type according to ec */
-	dock_type = fu_dell_kestrel_ec_get_dock_type(ec_device);
+	dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(ec_device));
 	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -88,7 +88,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 			return FALSE;
 
 		fu_device_add_child(ec_device, FU_DEVICE(rmm_device));
-		fu_dell_kestrel_rmm_fix_version(FU_DEVICE(rmm_device));
+		fu_dell_kestrel_rmm_fix_version(rmm_device);
 
 		return TRUE;
 	}
@@ -233,12 +233,18 @@ fu_dell_kestrel_plugin_config_mst_dev(FuPlugin *plugin)
 
 	/* vmm8 */
 	mst_subtype = FU_DELL_KESTREL_EC_DEV_SUBTYPE_VMM8;
-	if (fu_dell_kestrel_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
+	if (fu_dell_kestrel_ec_is_dev_present(FU_DELL_KESTREL_EC(device_ec),
+					      mst_devtype,
+					      mst_subtype,
+					      0))
 		devname = fu_dell_kestrel_ec_devicetype_to_str(mst_devtype, mst_subtype, 0);
 
 	/* vmm9 */
 	mst_subtype = FU_DELL_KESTREL_EC_DEV_SUBTYPE_VMM9;
-	if (fu_dell_kestrel_ec_is_dev_present(device_ec, mst_devtype, mst_subtype, 0))
+	if (fu_dell_kestrel_ec_is_dev_present(FU_DELL_KESTREL_EC(device_ec),
+					      mst_devtype,
+					      mst_subtype,
+					      0))
 		devname = fu_dell_kestrel_ec_devicetype_to_str(mst_devtype, mst_subtype, 0);
 
 	/* device name */
@@ -343,7 +349,7 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 		return FALSE;
 
 	/* release the dock */
-	if (!fu_dell_kestrel_ec_own_dock(ec_dev, FALSE, error))
+	if (!fu_dell_kestrel_ec_own_dock(FU_DELL_KESTREL_EC(ec_dev), FALSE, error))
 		return FALSE;
 
 	return TRUE;
@@ -370,13 +376,14 @@ fu_dell_kestrel_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, G
 		return FALSE;
 
 	/* own the dock */
-	if (!fu_dell_kestrel_ec_own_dock(ec_dev, TRUE, error))
+	if (!fu_dell_kestrel_ec_own_dock(FU_DELL_KESTREL_EC(ec_dev), TRUE, error))
 		return FALSE;
 
 	/* conditionally enable passive flow */
 	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
 		if (fu_device_has_flag(ec_dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-			if (!fu_dell_kestrel_ec_run_passive_update(ec_dev, error))
+			if (!fu_dell_kestrel_ec_run_passive_update(FU_DELL_KESTREL_EC(ec_dev),
+								   error))
 				return FALSE;
 		}
 	}
