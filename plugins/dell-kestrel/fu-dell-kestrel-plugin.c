@@ -142,11 +142,10 @@ fu_dell_kestrel_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_devi
 
 	for (guint i = 0; hw_dev_ids[i].pid != 0; i++) {
 		FuDevice *device;
-		const gchar *key;
+		g_autofree gchar *key = NULL;
 
 		key =
 		    g_strdup_printf("USB\\VID_%04X&PID_%04X", hw_dev_ids[i].vid, hw_dev_ids[i].pid);
-
 		device = fu_plugin_cache_lookup(plugin, key);
 		if (device != NULL) {
 			if (!(fu_dell_kestrel_plugin_device_add(plugin, device, error)))
