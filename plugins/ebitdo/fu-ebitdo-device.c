@@ -324,7 +324,8 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 					      error)) {
 			return FALSE;
 		}
-		fu_device_set_version_raw(FU_DEVICE(self), GUINT32_FROM_LE(version_tmp));
+		fu_device_set_version_raw(FU_DEVICE(self),
+					  GUINT32_FROM_LE(version_tmp)); /* nocheck:blocked */
 		return TRUE;
 	}
 
@@ -341,7 +342,7 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 	if (!fu_ebitdo_device_receive(self, (guint8 *)&version_tmp, sizeof(version_tmp), error)) {
 		return FALSE;
 	}
-	fu_device_set_version_raw(device, GUINT32_FROM_LE(version_tmp));
+	fu_device_set_version_raw(device, GUINT32_FROM_LE(version_tmp)); /* nocheck:blocked */
 
 	/* get verification ID */
 	if (!fu_ebitdo_device_send(self,
@@ -357,7 +358,7 @@ fu_ebitdo_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	for (guint i = 0; i < 9; i++)
-		self->serial[i] = GUINT32_FROM_LE(serial_tmp[i]);
+		self->serial[i] = GUINT32_FROM_LE(serial_tmp[i]); /* nocheck:blocked */
 
 	/* success */
 	return TRUE;

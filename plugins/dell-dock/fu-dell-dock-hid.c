@@ -130,7 +130,7 @@ fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error)
 	    .cmd_data1 = 0,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
-	    .bufferlen = GUINT16_TO_LE(12),
+	    .bufferlen = GUINT16_TO_LE(12), /* nocheck:blocked */
 	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
@@ -206,8 +206,8 @@ fu_dell_dock_hid_write_flash(FuDevice *self,
 	FuHIDCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_WRITE_DATA,
 	    .ext = HUB_EXT_WRITEFLASH,
-	    .dwregaddr = GUINT32_TO_LE(dwAddr),
-	    .bufferlen = GUINT16_TO_LE(write_size),
+	    .dwregaddr = GUINT32_TO_LE(dwAddr),	    /* nocheck:blocked */
+	    .bufferlen = GUINT16_TO_LE(write_size), /* nocheck:blocked */
 	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
@@ -236,7 +236,7 @@ fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error)
 	    .cmd_data1 = 0,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
-	    .bufferlen = GUINT16_TO_LE(1),
+	    .bufferlen = GUINT16_TO_LE(1), /* nocheck:blocked */
 	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
@@ -265,7 +265,7 @@ fu_dell_dock_hid_i2c_write(FuDevice *self,
 	    .cmd = HUB_CMD_WRITE_DATA,
 	    .ext = HUB_EXT_I2C_WRITE,
 	    .dwregaddr = 0,
-	    .bufferlen = GUINT16_TO_LE(write_size),
+	    .bufferlen = GUINT16_TO_LE(write_size), /* nocheck:blocked */
 	    .parameters = {.i2ctargetaddr = parameters->i2ctargetaddr,
 			   .regaddrlen = 0,
 			   .i2cspeed = parameters->i2cspeed | 0x80},
@@ -290,8 +290,8 @@ fu_dell_dock_hid_i2c_read(FuDevice *self,
 	FuHIDCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_WRITE_DATA,
 	    .ext = HUB_EXT_I2C_READ,
-	    .dwregaddr = GUINT32_TO_LE(cmd),
-	    .bufferlen = GUINT16_TO_LE(read_size),
+	    .dwregaddr = GUINT32_TO_LE(cmd),	   /* nocheck:blocked */
+	    .bufferlen = GUINT16_TO_LE(read_size), /* nocheck:blocked */
 	    .parameters = {.i2ctargetaddr = parameters->i2ctargetaddr,
 			   .regaddrlen = parameters->regaddrlen,
 			   .i2cspeed = parameters->i2cspeed | 0x80},
@@ -364,7 +364,7 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
-	    .startaddress = GUINT32_TO_LE(start_addr),
+	    .startaddress = GUINT32_TO_LE(start_addr), /* nocheck:blocked */
 	    .bufferlen = write_size,
 	    .extended_cmdarea[0 ... 53] = 0,
 	};
@@ -412,7 +412,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
-	    .tbt_command = GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE),
+	    .tbt_command = GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE), /* nocheck:blocked */
 	    .bufferlen = 0,
 	    .extended_cmdarea[0 ... 53] = 0,
 	};
@@ -423,7 +423,8 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 		return FALSE;
 	}
 
-	cmd_buffer.tbt_command = GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE_STATUS);
+	cmd_buffer.tbt_command =
+	    GUINT32_TO_LE(TBT_COMMAND_AUTHENTICATE_STATUS); /* nocheck:blocked */
 	/* needs at least 2 seconds */
 	fu_device_sleep(self, 2000);
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {

@@ -513,7 +513,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 	if (fwversion != 0x0) {
 		/* this is only set on the OSS firmware */
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_device_set_version_raw(device, GUINT32_FROM_BE(fwversion));
+		fu_device_set_version_raw(device, GUINT32_FROM_BE(fwversion)); /* nocheck:blocked */
 		fu_device_set_branch(device, BCM_FW_BRANCH_OSS_FIRMWARE);
 	} else {
 		guint8 bufver[16] = {0x0};
@@ -527,7 +527,7 @@ fu_bcm57xx_device_setup(FuDevice *device, GError **error)
 						  sizeof(guint32),
 						  error))
 			return FALSE;
-		veraddr = GUINT32_FROM_BE(veraddr);
+		veraddr = GUINT32_FROM_BE(veraddr); /* nocheck:blocked */
 		if (veraddr > BCM_PHYS_ADDR_DEFAULT)
 			veraddr -= BCM_PHYS_ADDR_DEFAULT;
 		if (!fu_bcm57xx_device_nvram_read(self,

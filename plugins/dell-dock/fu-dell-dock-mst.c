@@ -584,7 +584,8 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 					    error))
 		return FALSE;
 	data = g_bytes_get_data(csum_bytes, NULL);
-	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24);
+	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | data[2] << 16 | /* nocheck:blocked */
+				   data[3] << 24);
 	g_debug("MST: Bank %u checksum: 0x%x", bank, bank_sum);
 
 	*checksum = (bank_sum == payload_sum);
