@@ -52,6 +52,7 @@ typedef struct {
 
 struct _FuMediatekScalerDevice {
 	FuDrmDevice parent_instance;
+	guint8 randval_cnt;
 };
 
 G_DEFINE_TYPE(FuMediatekScalerDevice, fu_mediatek_scaler_device, FU_TYPE_DRM_DEVICE)
@@ -198,8 +199,8 @@ fu_mediatek_scaler_device_display_is_connected(FuMediatekScalerDevice *self, GEr
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 	guint8 randval_req = 0;
-	guint8 randval1 = g_random_int_range(1, 255);
-	guint8 randval2 = g_random_int_range(1, 255);
+	guint8 randval1 = self->randval_cnt++;
+	guint8 randval2 = self->randval_cnt++;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_SUM);
 	fu_byte_array_append_uint8(st_req, randval1);
