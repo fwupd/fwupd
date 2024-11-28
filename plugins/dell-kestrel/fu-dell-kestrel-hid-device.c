@@ -252,6 +252,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 			    j == fu_chunk_array_length(pages) - 1 &&
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_debug("ignored error: %s", error_local->message);
+				fu_progress_step_done(progress);
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_local));
