@@ -567,8 +567,7 @@ fu_dell_kestrel_ec_get_ec_version(FuDellKestrelEc *self)
 guint32
 fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 {
-	return GUINT32_FROM_BE(
-	    fu_struct_dell_kestrel_dock_data_get_dock_firmware_pkg_ver(self->dock_data));
+	return fu_struct_dell_kestrel_dock_data_get_dock_firmware_pkg_ver(self->dock_data);
 }
 
 gboolean
