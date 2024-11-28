@@ -254,6 +254,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 					    G_USB_DEVICE_ERROR,
 					    G_USB_DEVICE_ERROR_TIMED_OUT)) {
 				g_debug("ignored error: %s", error_local->message);
+				fu_progress_step_done(progress);
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_local));
