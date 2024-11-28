@@ -85,7 +85,7 @@ struct FuStructDellKestrelDockData {
     board_id: u16le,
     reserved: u16le,
     reserved: u16le,
-    dock_firmware_pkg_ver: u32le,
+    dock_firmware_pkg_ver: u32be,
     module_serial: u64le,
     reserved: u64le,
     service_tag: [char; 7],
