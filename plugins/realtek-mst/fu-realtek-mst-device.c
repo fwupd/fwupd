@@ -817,6 +817,7 @@ fu_realtek_mst_device_read_firmware(FuDevice *device, FuProgress *progress, GErr
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 	guint32 bank_address;
 	g_autofree guint8 *image_bytes = NULL;
+	g_autoptr(GBytes) firmware_bytes = NULL;
 
 	if (self->active_bank == FLASH_BANK_USER1)
 		bank_address = FLASH_USER1_ADDR;
@@ -836,8 +837,9 @@ fu_realtek_mst_device_read_firmware(FuDevice *device, FuProgress *progress, GErr
 		return NULL;
 	if (!flash_iface_read(self, bank_address, image_bytes, FLASH_USER_SIZE, progress, error))
 		return NULL;
-	return fu_firmware_new_from_bytes(
-	    g_bytes_new_take(g_steal_pointer(&image_bytes), FLASH_USER_SIZE));
+	firmware_bytes = g_bytes_new_take(g_steal_pointer(&image_bytes), FLASH_USER_SIZE);
+
+	return fu_firmware_new_from_bytes(firmware_bytes);
 }
 
 static GBytes *
