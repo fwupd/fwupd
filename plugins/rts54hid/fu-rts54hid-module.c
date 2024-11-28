@@ -9,6 +9,7 @@
 #include "fu-rts54hid-common.h"
 #include "fu-rts54hid-device.h"
 #include "fu-rts54hid-module.h"
+#include "fu-rts54hid-struct.h"
 
 struct _FuRts54HidModule {
 	FuDevice parent_instance;
@@ -46,16 +47,15 @@ fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
 			     GError **error)
 {
 	FuRts54HidDevice *parent;
-	const FuRts54HidCmdBuffer cmd_buffer = {
-	    .cmd = FU_RTS54HID_CMD_WRITE_DATA,
-	    .ext = FU_RTS54HID_EXT_I2C_WRITE,
-	    .dwregaddr = 0,
-	    .bufferlen = GUINT16_TO_LE(data_sz),
-	    .parameters_i2c = {.target_addr = self->target_addr,
-			       .data_sz = self->register_addr_len,
-			       .speed = self->i2c_speed | 0x80},
-	};
-	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = {0};
+	g_autoptr(FuRts54HidCmdBuffer) st = fu_rts54_hid_cmd_buffer_new();
+
+	fu_rts54_hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
+	fu_rts54_hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_WRITE);
+	fu_rts54_hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_rts54_hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_rts54_hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_rts54_hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_byte_array_set_size(st, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 128, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
@@ -66,17 +66,8 @@ fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
 	if (parent == NULL)
 		return FALSE;
 
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
-			    0x0, /* dst */
-			    (const guint8 *)&cmd_buffer,
-			    sizeof(cmd_buffer),
-			    0x0, /* src */
-			    sizeof(cmd_buffer),
-			    error))
-		return FALSE;
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
+	if (!fu_memcpy_safe(st->data,
+			    st->len,
 			    FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, /* dst */
 			    data,
 			    data_sz,
@@ -86,8 +77,8 @@ fu_rts54hid_module_i2c_write(FuRts54HidModule *self,
 		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(parent),
 				      0x0,
-				      buf,
-				      sizeof(buf),
+				      st->data,
+				      st->len,
 				      FU_RTS54HID_DEVICE_TIMEOUT * 2,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -105,16 +96,16 @@ fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
 			    GError **error)
 {
 	FuRts54HidDevice *parent;
-	const FuRts54HidCmdBuffer cmd_buffer = {
-	    .cmd = FU_RTS54HID_CMD_WRITE_DATA,
-	    .ext = FU_RTS54HID_EXT_I2C_READ,
-	    .dwregaddr = GUINT32_TO_LE(cmd),
-	    .bufferlen = GUINT16_TO_LE(data_sz),
-	    .parameters_i2c = {.target_addr = self->target_addr,
-			       .data_sz = self->register_addr_len,
-			       .speed = self->i2c_speed | 0x80},
-	};
-	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = {0};
+	g_autoptr(FuRts54HidCmdBuffer) st = fu_rts54_hid_cmd_buffer_new();
+
+	fu_rts54_hid_cmd_buffer_set_cmd(st, FU_RTS54HID_CMD_WRITE_DATA);
+	fu_rts54_hid_cmd_buffer_set_ext(st, FU_RTS54HID_EXT_I2C_READ);
+	fu_rts54_hid_cmd_buffer_set_dwregaddr(st, cmd);
+	fu_rts54_hid_cmd_buffer_set_bufferlen(st, data_sz);
+	fu_rts54_hid_cmd_buffer_set_i2c_target_addr(st, self->target_addr);
+	fu_rts54_hid_cmd_buffer_set_i2c_data_sz(st, self->register_addr_len);
+	fu_rts54_hid_cmd_buffer_set_i2c_speed(st, self->i2c_speed | 0x80);
+	fu_byte_array_set_size(st, FU_RTS54FU_HID_REPORT_LENGTH, 0x0);
 
 	g_return_val_if_fail(data_sz <= 192, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
@@ -126,19 +117,10 @@ fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
 		return FALSE;
 
 	/* read from module */
-	if (!fu_memcpy_safe(buf,
-			    sizeof(buf),
-			    0x0, /* dst */
-			    (const guint8 *)&cmd_buffer,
-			    sizeof(cmd_buffer),
-			    0x0, /* src */
-			    sizeof(cmd_buffer),
-			    error))
-		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(parent),
 				      0x0,
-				      buf,
-				      sizeof(buf),
+				      st->data,
+				      st->len,
 				      FU_RTS54HID_DEVICE_TIMEOUT * 2,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
@@ -147,8 +129,8 @@ fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
 	}
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(parent),
 				      0x0,
-				      buf,
-				      sizeof(buf),
+				      st->data,
+				      st->len,
 				      FU_RTS54HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
@@ -156,8 +138,8 @@ fu_rts54hid_module_i2c_read(FuRts54HidModule *self,
 	return fu_memcpy_safe(data,
 			      data_sz,
 			      0x0,
-			      buf,
-			      sizeof(buf),
+			      st->data,
+			      st->len,
 			      FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,
 			      data_sz,
 			      error);
