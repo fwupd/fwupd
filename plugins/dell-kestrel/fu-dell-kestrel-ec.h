@@ -6,13 +6,16 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
-
 #include "fu-dell-kestrel-common.h"
 #include "fu-dell-kestrel-ec-struct.h"
+#include "fu-dell-kestrel-hid-device.h"
 
 #define FU_TYPE_DELL_KESTREL_EC (fu_dell_kestrel_ec_get_type())
-G_DECLARE_FINAL_TYPE(FuDellKestrelEc, fu_dell_kestrel_ec, FU, DELL_KESTREL_EC, FuHidDevice)
+G_DECLARE_FINAL_TYPE(FuDellKestrelEc,
+		     fu_dell_kestrel_ec,
+		     FU,
+		     DELL_KESTREL_EC,
+		     FuDellKestrelHidDevice)
 
 FuDellKestrelEc *
 fu_dell_kestrel_ec_new(FuDevice *device, gboolean uod);
@@ -53,10 +56,3 @@ fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevType dev_type,
 				  FuDellKestrelEcDevSubtype subtype,
 				  FuDellKestrelEcDevInstance instance);
-gboolean
-fu_dell_kestrel_ec_write_firmware_helper(FuDellKestrelEc *self,
-					 FuFirmware *firmware,
-					 FuProgress *progress,
-					 FuDellKestrelEcDevType dev_type,
-					 guint8 dev_identifier,
-					 GError **error);
