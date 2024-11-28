@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-dell-kestrel-dpmux.h"
-#include "fu-dell-kestrel-ec-hid.h"
 #include "fu-dell-kestrel-ec-struct.h"
 #include "fu-dell-kestrel-ec.h"
 #include "fu-dell-kestrel-ilan.h"

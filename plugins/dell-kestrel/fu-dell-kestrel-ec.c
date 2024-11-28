@@ -10,14 +10,14 @@
 
 /* Private structure */
 struct _FuDellKestrelEc {
-	FuDevice parent_instance;
+	FuDellKestrelHidDevice parent_instance;
 	FuStructDellKestrelDockData *dock_data;
 	FuStructDellKestrelDockInfo *dock_info;
 	FuDellDockBaseType base_type;
 	FuDellKestrelDockSku base_sku;
 };
 
-G_DEFINE_TYPE(FuDellKestrelEc, fu_dell_kestrel_ec, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuDellKestrelEc, fu_dell_kestrel_ec, FU_TYPE_DELL_KESTREL_HID_DEVICE)
 
 static FuStructDellKestrelDockInfoEcQueryEntry *
 fu_dell_kestrel_ec_dev_entry(FuDellKestrelEc *self,
@@ -146,7 +146,11 @@ fu_dell_kestrel_ec_read(FuDellKestrelEc *self,
 			GByteArray *res,
 			GError **error)
 {
-	if (!fu_dell_kestrel_ec_hid_i2c_read(self, cmd, res, 800, error)) {
+	if (!fu_dell_kestrel_hid_device_i2c_read(FU_DELL_KESTREL_HID_DEVICE(self),
+						 cmd,
+						 res,
+						 800,
+						 error)) {
 		g_prefix_error(error, "read over HID-I2C failed: ");
 		return FALSE;
 	}
@@ -158,7 +162,7 @@ fu_dell_kestrel_ec_write(FuDellKestrelEc *self, GByteArray *buf, GError **error)
 {
 	g_return_val_if_fail(buf->len > 1, FALSE);
 
-	if (!fu_dell_kestrel_ec_hid_i2c_write(self, buf, error)) {
+	if (!fu_dell_kestrel_hid_device_i2c_write(FU_DELL_KESTREL_HID_DEVICE(self), buf, error)) {
 		g_prefix_error(error, "write over HID-I2C failed: ");
 		return FALSE;
 	}
@@ -600,226 +604,6 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GBytes *blob_fw, GError
 	return TRUE;
 }
 
-static guint
-fu_dell_kestrel_ec_get_chunk_delaytime(FuDellKestrelEcDevType dev_type)
-{
-	switch (dev_type) {
-	case FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC:
-		return 3 * 1000;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_RMM:
-		return 60 * 1000;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_PD:
-		return 15 * 1000;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_LAN:
-		return 70 * 1000;
-	default:
-		return 30 * 1000;
-	}
-}
-
-static gsize
-fu_dell_kestrel_ec_get_chunk_size(FuDellKestrelEcDevType dev_type)
-{
-	/* return the max chunk size in bytes */
-	switch (dev_type) {
-	case FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC:
-		return FU_DELL_KESTREL_EC_DEV_EC_CHUNK_SZ;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_RMM:
-		return FU_DELL_KESTREL_EC_DEV_NO_CHUNK_SZ;
-	default:
-		return FU_DELL_KESTREL_EC_DEV_ANY_CHUNK_SZ;
-	}
-}
-
-static guint
-fu_dell_kestrel_ec_get_first_page_delaytime(FuDellKestrelEcDevType dev_type)
-{
-	return (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
-}
-
-static gboolean
-fu_dell_kestrel_ec_write_firmware_pages(FuDellKestrelEc *self,
-					FuChunkArray *pages,
-					FuProgress *progress,
-					FuDellKestrelEcDevType dev_type,
-					guint chunk_idx,
-					GError **error)
-{
-	guint first_page_delay = fu_dell_kestrel_ec_get_first_page_delaytime(dev_type);
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
-
-	for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
-		g_autoptr(GByteArray) page_aligned = g_byte_array_new();
-		g_autoptr(FuChunk) page = NULL;
-		g_autoptr(GBytes) page_bytes = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		page = fu_chunk_array_index(pages, j, error);
-		if (page == NULL)
-			return FALSE;
-
-		g_debug("sending chunk: %u, page: %u/%u.",
-			chunk_idx,
-			j,
-			fu_chunk_array_length(pages) - 1);
-
-		/* strictly align the page size with 0x00 as packet */
-		g_byte_array_append(page_aligned,
-				    fu_chunk_get_data(page),
-				    fu_chunk_get_data_sz(page));
-		fu_byte_array_set_size(page_aligned, FU_DELL_KESTREL_EC_HID_DATA_PAGE_SZ, 0xFF);
-
-		/* send to ec */
-		if (!fu_dell_kestrel_ec_hid_write(self, page_aligned, &error_local)) {
-			/* A buggy device may fail to send an acknowledgment receipt
-			   after the last page write, resulting in a timeout error.
-
-			   This is a known issue so waive it for now.
-			*/
-			if (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_LAN &&
-			    j == fu_chunk_array_length(pages) - 1 &&
-			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-				g_debug("ignored error: %s", error_local->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-
-		/* device needs time to process incoming pages */
-		if (j == 0) {
-			g_debug("wait %u ms before the next page", first_page_delay);
-			fu_device_sleep(FU_DEVICE(self), first_page_delay);
-		}
-		fu_progress_step_done(progress);
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_dell_kestrel_ec_verify_chunk_result(FuDellKestrelEc *self, guint chunk_idx, GError **error)
-{
-	guint8 res[FU_DELL_KESTREL_EC_HID_DATA_PAGE_SZ] = {0xff};
-
-	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
-				      0x0,
-				      res,
-				      sizeof(res),
-				      FU_DELL_KESTREL_EC_HID_TIMEOUT,
-				      FU_HID_DEVICE_FLAG_NONE,
-				      error))
-		return FALSE;
-
-	switch (res[1]) {
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_UPDATE_COMPLETE:
-		g_debug("dock response '%u' to chunk[%u]: firmware updated successfully.",
-			res[1],
-			chunk_idx);
-		break;
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_SEND_NEXT_CHUNK:
-		g_debug("dock response '%u' to chunk[%u]: send next chunk.", res[1], chunk_idx);
-		break;
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_UPDATE_FAILED:
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "dock response '%u' to chunk[%u]: failed to write firmware.",
-			    res[1],
-			    chunk_idx);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_dell_kestrel_ec_write_firmware_helper(FuDellKestrelEc *self,
-					 FuFirmware *firmware,
-					 FuProgress *progress,
-					 FuDellKestrelEcDevType dev_type,
-					 guint8 dev_identifier,
-					 GError **error)
-{
-	gsize fw_sz = 0;
-	gsize chunk_sz = fu_dell_kestrel_ec_get_chunk_size(dev_type);
-	guint chunk_delay = fu_dell_kestrel_ec_get_chunk_delaytime(dev_type);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* payload size */
-	fw_sz = g_bytes_get_size(fw);
-
-	if (fu_firmware_get_version(firmware) != 0x0) {
-		g_debug("writing %s firmware %s -> %s",
-			fu_device_get_name(FU_DEVICE(self)),
-			fu_device_get_version(FU_DEVICE(self)),
-			fu_firmware_get_version(firmware));
-	}
-
-	/* maximum buffer size */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       chunk_sz);
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-
-	/* iterate the chunks */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(FuChunkArray) pages = NULL;
-		g_autoptr(GBytes) buf = NULL;
-
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-
-		/* prepend header and command to the chunk data */
-		buf = fu_dell_kestrel_ec_hid_fwup_pkg_new(chk, fw_sz, dev_type, dev_identifier);
-
-		/* slice the chunk into pages */
-		pages = fu_chunk_array_new_from_bytes(buf,
-						      FU_CHUNK_ADDR_OFFSET_NONE,
-						      FU_CHUNK_PAGESZ_NONE,
-						      FU_DELL_KESTREL_EC_HID_DATA_PAGE_SZ);
-
-		/* write pages */
-		if (!fu_dell_kestrel_ec_write_firmware_pages(self,
-							     pages,
-							     fu_progress_get_child(progress),
-							     dev_type,
-							     i,
-							     error))
-			return FALSE;
-
-		/* delay time */
-		g_debug("wait %u ms for dock to finish the chunk", chunk_delay);
-		fu_device_sleep(FU_DEVICE(self), chunk_delay);
-
-		/* ensure the chunk has been acknowledged */
-		if (!fu_dell_kestrel_ec_verify_chunk_result(self, i, error))
-			return FALSE;
-
-		fu_progress_step_done(progress);
-	}
-
-	/* success */
-	g_debug("firmware written successfully");
-
-	return TRUE;
-}
-
 static gboolean
 fu_dell_kestrel_ec_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
@@ -828,12 +612,12 @@ fu_dell_kestrel_ec_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(device);
-	return fu_dell_kestrel_ec_write_firmware_helper(self,
-							firmware,
-							progress,
-							FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC,
-							0,
-							error);
+	return fu_dell_kestrel_hid_device_write_firmware(FU_DELL_KESTREL_HID_DEVICE(self),
+							 firmware,
+							 progress,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC,
+							 0,
+							 error);
 }
 
 static gboolean
