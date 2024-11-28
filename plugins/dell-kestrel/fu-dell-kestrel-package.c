@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-dell-kestrel-common.h"
-#include "fu-dell-kestrel-ec-hid.h"
 #include "fu-dell-kestrel-ec-struct.h"
 #include "fu-dell-kestrel-package.h"
 

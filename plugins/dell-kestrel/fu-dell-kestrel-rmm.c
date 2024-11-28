@@ -9,10 +9,10 @@
 #include "fu-dell-kestrel-common.h"
 
 struct _FuDellKestrelRmm {
-	FuDevice parent_instance;
+	FuDellKestrelHidDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuDellKestrelRmm, fu_dell_kestrel_rmm, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuDellKestrelRmm, fu_dell_kestrel_rmm, FU_TYPE_DELL_KESTREL_HID_DEVICE)
 
 static gchar *
 fu_dell_kestrel_rmm_convert_version(FuDevice *device, guint64 version_raw)
@@ -54,12 +54,12 @@ fu_dell_kestrel_rmm_write(FuDevice *device,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	return fu_dell_kestrel_ec_write_firmware_helper(FU_DELL_KESTREL_EC(device),
-							firmware,
-							progress,
-							FU_DELL_KESTREL_EC_DEV_TYPE_RMM,
-							0,
-							error);
+	return fu_dell_kestrel_hid_device_write_firmware(FU_DELL_KESTREL_HID_DEVICE(device),
+							 firmware,
+							 progress,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_RMM,
+							 0,
+							 error);
 }
 
 static void

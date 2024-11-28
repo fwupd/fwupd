@@ -53,12 +53,12 @@ fu_dell_kestrel_ilan_write(FuDevice *device,
 			   GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	return fu_dell_kestrel_ec_write_firmware_helper(FU_DELL_KESTREL_EC(proxy),
-							firmware,
-							progress,
-							FU_DELL_KESTREL_EC_DEV_TYPE_LAN,
-							0,
-							error);
+	return fu_dell_kestrel_hid_device_write_firmware(FU_DELL_KESTREL_HID_DEVICE(proxy),
+							 firmware,
+							 progress,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_LAN,
+							 0,
+							 error);
 }
 
 static void

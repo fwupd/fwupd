@@ -73,12 +73,12 @@ fu_dell_kestrel_pd_write(FuDevice *device,
 {
 	FuDellKestrelPd *self = FU_DELL_KESTREL_PD(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
-	return fu_dell_kestrel_ec_write_firmware_helper(FU_DELL_KESTREL_EC(proxy),
-							firmware,
-							progress,
-							FU_DELL_KESTREL_EC_DEV_TYPE_PD,
-							self->pd_identifier,
-							error);
+	return fu_dell_kestrel_hid_device_write_firmware(FU_DELL_KESTREL_HID_DEVICE(proxy),
+							 firmware,
+							 progress,
+							 FU_DELL_KESTREL_EC_DEV_TYPE_PD,
+							 self->pd_identifier,
+							 error);
 }
 
 static void
