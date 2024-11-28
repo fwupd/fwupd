@@ -9,33 +9,8 @@
 
 #include <fwupdplugin.h>
 
-#include <string.h>
-
 #include "fu-synaprom-common.h"
-
-enum {
-	FU_SYNAPROM_RESULT_OK = 0,
-	FU_SYNAPROM_RESULT_GEN_OPERATION_CANCELED = 103,
-	FU_SYNAPROM_RESULT_GEN_INVALID = 110,
-	FU_SYNAPROM_RESULT_GEN_BAD_PARAM = 111,
-	FU_SYNAPROM_RESULT_GEN_NULL_POINTER = 112,
-	FU_SYNAPROM_RESULT_GEN_UNEXPECTED_FORMAT = 114,
-	FU_SYNAPROM_RESULT_GEN_TIMEOUT = 117,
-	FU_SYNAPROM_RESULT_GEN_OBJECT_DOESNT_EXIST = 118,
-	FU_SYNAPROM_RESULT_GEN_ERROR = 119,
-	FU_SYNAPROM_RESULT_SENSOR_MALFUNCTIONED = 202,
-	FU_SYNAPROM_RESULT_SYS_OUT_OF_MEMORY = 602,
-};
-
-GByteArray *
-fu_synaprom_request_new(guint8 cmd, const guint8 *buf, gsize bufsz)
-{
-	GByteArray *blob = g_byte_array_new();
-	fu_byte_array_append_uint8(blob, cmd);
-	if (buf != NULL)
-		g_byte_array_append(blob, buf, bufsz);
-	return blob;
-}
+#include "fu-synaprom-struct.h"
 
 GByteArray *
 fu_synaprom_reply_new(gsize cmdlen)

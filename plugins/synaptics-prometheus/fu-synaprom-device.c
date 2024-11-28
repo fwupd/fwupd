@@ -13,6 +13,7 @@
 #include "fu-synaprom-config.h"
 #include "fu-synaprom-device.h"
 #include "fu-synaprom-firmware.h"
+#include "fu-synaprom-struct.h"
 
 struct _FuSynapromDevice {
 	FuUsbDevice parent_instance;
@@ -30,36 +31,8 @@ struct _FuSynapromDevice {
 #define FU_SYNAPROM_USB_FINGERPRINT_EP 0x82
 #define FU_SYNAPROM_USB_INTERRUPT_EP   0x83
 
-/* le */
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint16 status;
-} FuSynapromReplyGeneric;
-
-/* le */
-typedef struct __attribute__((packed)) { /* nocheck:blocked */
-	guint16 status;
-	guint32 buildtime;	 /* Unix-style build time */
-	guint32 buildnum;	 /* build number */
-	guint8 vmajor;		 /* major version */
-	guint8 vminor;		 /* minor version */
-	guint8 target;		 /* target, e.g. VCSFW_TARGET_ROM */
-	guint8 product;		 /* product, e.g.  VCSFW_PRODUCT_FALCON */
-	guint8 siliconrev;	 /* silicon revision */
-	guint8 formalrel;	 /* boolean: non-zero -> formal release */
-	guint8 platform;	 /* Platform (PCB) revision */
-	guint8 patch;		 /* patch level */
-	guint8 serial_number[6]; /* 48-bit Serial Number */
-	guint8 security[2];	 /* bytes 0 and 1 of OTP */
-	guint32 patchsig;	 /* opaque patch signature */
-	guint8 iface;		 /* interface type, see below */
-	guint8 otpsig[3];	 /* OTP Patch Signature */
-	guint16 otpspare1;	 /* spare space */
-	guint8 reserved;	 /* reserved byte */
-	guint8 device_type;	 /* device type */
-} FuSynapromReplyGetVersion;
-
 /* the following bits describe security options in
-** FuSynapromReplyGetVersion::security[1] bit-field */
+** FuStructSynapromReplyGetVersion::security[1] bit-field */
 #define FU_SYNAPROM_SECURITY1_PROD_SENSOR (1 << 5)
 
 G_DEFINE_TYPE(FuSynapromDevice, fu_synaprom_device, FU_TYPE_USB_DEVICE)
@@ -128,9 +101,15 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *self,
 	fu_progress_step_done(progress);
 
 	/* parse as FuSynapromReplyGeneric */
-	if (reply->len >= sizeof(FuSynapromReplyGeneric)) {
-		FuSynapromReplyGeneric *hdr = (FuSynapromReplyGeneric *)reply->data;
-		return fu_synaprom_error_from_status(GUINT16_FROM_LE(hdr->status), error);
+	if (reply->len >= FU_STRUCT_SYNAPROM_REPLY_GENERIC_SIZE) {
+		g_autoptr(FuStructSynapromReplyGeneric) st_reply = NULL;
+		st_reply =
+		    fu_struct_synaprom_reply_generic_parse(reply->data, reply->len, 0x0, error);
+		if (st_reply == NULL)
+			return FALSE;
+		return fu_synaprom_error_from_status(
+		    fu_struct_synaprom_reply_generic_get_status(st_reply),
+		    error);
 	}
 
 	/* success */
@@ -180,10 +159,10 @@ static gboolean
 fu_synaprom_device_setup(FuDevice *device, GError **error)
 {
 	FuSynapromDevice *self = FU_SYNAPROM_DEVICE(device);
-	FuSynapromReplyGetVersion pkt;
 	guint32 product;
 	guint64 serial_number = 0;
-	g_autoptr(GByteArray) request = NULL;
+	g_autoptr(FuStructSynapromReplyGetVersion) st_reply = NULL;
+	g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
@@ -192,27 +171,28 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get version */
-	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_GET_VERSION, NULL, 0);
-	reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyGetVersion));
-	if (!fu_synaprom_device_cmd_send(self, request, reply, progress, 250, error)) {
+	fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_GET_VERSION);
+	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GET_VERSION_SIZE);
+	if (!fu_synaprom_device_cmd_send(self, st_request, reply, progress, 250, error)) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
-	memcpy(&pkt, reply->data, sizeof(pkt)); /* nocheck:blocked */
-	product = GUINT32_FROM_LE(pkt.product);
-	g_info("product ID is %u, version=%u.%u, buildnum=%u prod=%i",
-	       product,
-	       pkt.vmajor,
-	       pkt.vminor,
-	       GUINT32_FROM_LE(pkt.buildnum),
-	       pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR);
-	fu_synaprom_device_set_version(self, pkt.vmajor, pkt.vminor, GUINT32_FROM_LE(pkt.buildnum));
+	st_reply = fu_struct_synaprom_reply_get_version_parse(reply->data, reply->len, 0x0, error);
+	if (st_reply == NULL)
+		return FALSE;
+	fu_synaprom_device_set_version(self,
+				       fu_struct_synaprom_reply_get_version_get_vmajor(st_reply),
+				       fu_struct_synaprom_reply_get_version_get_vminor(st_reply),
+				       fu_struct_synaprom_reply_get_version_get_buildnum(st_reply));
 
-	/* get serial number */
-	memcpy(&serial_number, pkt.serial_number, sizeof(pkt.serial_number)); /* nocheck:blocked */
+	/* get 48-bit serial number */
+	memcpy(&serial_number, /* nocheck:blocked */
+	       fu_struct_synaprom_reply_get_version_get_serial_number(st_reply, NULL),
+	       FU_STRUCT_SYNAPROM_REPLY_GET_VERSION_SIZE_SERIAL_NUMBER);
 	fu_synaprom_device_set_serial_number(self, serial_number);
 
 	/* check device type */
+	product = fu_struct_synaprom_reply_get_version_get_product(st_reply);
 	if (product == FU_SYNAPROM_PRODUCT_PROMETHEUS || product == FU_SYNAPROM_PRODUCT_TRITON) {
 		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else if (product == FU_SYNAPROM_PRODUCT_PROMETHEUSPBL ||
@@ -238,7 +218,8 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	/* add updatable config child, if this is a production sensor */
 	if (fu_device_get_children(device)->len == 0 &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
-	    pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
+	    fu_struct_synaprom_reply_get_version_get_security1(st_reply) &
+		FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
 		g_autoptr(FuSynapromConfig) cfg = fu_synaprom_config_new(self);
 		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(cfg));
 	}
@@ -304,15 +285,15 @@ fu_synaprom_device_write_chunks(FuSynapromDevice *self,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		GByteArray *chunk = g_ptr_array_index(chunks, i);
-		g_autoptr(GByteArray) request = NULL;
+		g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
 		g_autoptr(GByteArray) reply = NULL;
 
 		/* patch */
-		request =
-		    fu_synaprom_request_new(FU_SYNAPROM_CMD_BOOTLDR_PATCH, chunk->data, chunk->len);
-		reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyGeneric));
+		fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_BOOTLDR_PATCH);
+		g_byte_array_append(st_request, chunk->data, chunk->len);
+		reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_GENERIC_SIZE);
 		if (!fu_synaprom_device_cmd_send(self,
-						 request,
+						 st_request,
 						 reply,
 						 fu_progress_get_child(progress),
 						 20000,

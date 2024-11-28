@@ -1,6 +1,87 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u8)]
+enum FuSynapromCmd {
+    GetVersion      = 0x01,
+    BootldrPatch    = 0x7d,
+    IotaFind        = 0x8e,
+}
+
+#[derive(New)]
+#[repr(C, packed)]
+struct FuStructSynapromRequest {
+    cmd: FuSynapromCmd,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructSynapromReplyGeneric {
+    status: u16le,
+}
+
+#[repr(u8)]
+enum FuSynapromProduct {
+    Prometheus      = 65, // b1422
+    Prometheuspbl   = 66,
+    Prometheusmsbl  = 67,
+    Triton          = 69,
+    Tritonpbl       = 70,
+    Tritonmsbl      = 71,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructSynapromReplyGetVersion {
+    status: u16le,
+    buildtime: u32le,
+    buildnum: u32le,
+    vmajor: u8,
+    vminor: u8,
+    target: u8,             // e.g. VCSFW_TARGET_ROM
+    product: FuSynapromProduct,
+    siliconrev: u8,
+    formalrel: u8,          // boolean: non-zero -> formal release
+    platform: u8,           // PCB revision
+    patch: u8,
+    serial_number: [u8; 6], // 48-bit */
+    security0: u8,          // byte of OTP */
+    security1: u8,          // byte of OTP */
+    patchsig: u32le,        // opaque patch signature */
+    iface: u8,              // interface type
+    otpsig: [u8; 3],        // OTP Patch Signature
+    otpspare1: u16le,       // OTP spare space
+    reserved: u8,
+    device_type: u8,
+}
+
+enum FuSynapromResult {
+    Ok                      = 0,
+    GenOperationCanceled    = 103,
+    GenInvalid              = 110,
+    GenBadParam             = 111,
+    GenNullPointer          = 112,
+    GenUnexpectedFormat     = 114,
+    GenTimeout              = 117,
+    GenObjectDoesntExist    = 118,
+    GenError                = 119,
+    SensorMalfunctioned     = 202,
+    SysOutOfMemory          = 602,
+}
+
+enum FuSynapromProductType {
+    Denali      = 0,
+    Hayes       = 1,
+    Shasta      = 2,
+    Steller     = 3,
+    Whitney     = 4,
+    Prometheus  = 5,
+    PacificPeak = 6,
+    Morgan      = 7,
+    Ox6101      = 8,
+    Triton      = 9,
+}
+
 #[derive(New, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructSynapromMfwHdr {
