@@ -95,6 +95,14 @@ option('libdrm',
   type: 'feature',
   description: 'libdrm support',
 )
+option('valgrind',
+  type: 'feature',
+  description: 'valgrind support',
+)
+option('blkid',
+  type: 'feature',
+  description: 'libblkid support',
+)
 option('lvfs',
   type: 'combo',
   choices: [
