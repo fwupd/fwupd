@@ -16,6 +16,7 @@ plugin_quirks += files('modem-manager.quirk')
 shared_module('fu_plugin_modem_manager',
   rustgen.process(
     'fu-cinterion-fdl-updater.rs',
+    'fu-sahara.rs',
   ),
   sources: [
     'fu-mm-plugin.c',
