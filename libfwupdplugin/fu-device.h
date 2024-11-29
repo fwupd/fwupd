@@ -781,6 +781,15 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_COMPOSITE_ERROR_CONTINUE:
+ *
+ * Continue the next release even if the device failed to install an update.
+ *
+ * Since: 2.0.3
+ */
+#define FU_DEVICE_PRIVATE_FLAG_COMPOSITE_ERROR_CONTINUE "composite-error-continue"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

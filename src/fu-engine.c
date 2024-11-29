@@ -2165,6 +2165,7 @@ fu_engine_install_releases(FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
+	g_autoptr(GString) composite_error_message = g_string_new(NULL);
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle,
@@ -2213,6 +2214,9 @@ fu_engine_install_releases(FuEngine *self,
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
 		GInputStream *stream = fu_release_get_stream(release);
+		FuProgress *child = fu_progress_get_child(progress);
+		g_autoptr(GError) error_local_install = NULL;
+
 		if (stream == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -2223,17 +2227,50 @@ fu_engine_install_releases(FuEngine *self,
 		if (!fu_engine_install_release(self,
 					       release,
 					       stream,
-					       fu_progress_get_child(progress),
+					       child,
 					       flags,
-					       error)) {
+					       &error_local_install)) {
+			FuDevice *device = fu_release_get_device(release);
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
-				g_warning("failed to cleanup failed composite action: %s",
-					  error_local->message);
+
+			/* resume composite updates on device error */
+			if (fu_device_has_private_flag(
+				device,
+				FU_DEVICE_PRIVATE_FLAG_COMPOSITE_ERROR_CONTINUE)) {
+				/* terminate the child progress */
+				fu_progress_finished(child);
+
+				/* store the update error message */
+				g_string_append_printf(composite_error_message,
+						       "failed composite update on %s: %s. ",
+						       fu_device_get_name(device),
+						       error_local_install->message);
+			} else {
+				if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
+					g_warning("failed to cleanup failed composite action: %s",
+						  error_local->message);
+				}
+				return FALSE;
 			}
-			return FALSE;
 		}
 		fu_progress_step_done(progress);
+	}
+
+	/* abort because an error already occurred */
+	if (composite_error_message->len > 0) {
+		g_autoptr(GError) error_local = NULL;
+
+		/* best effort to cleanup the devices */
+		if (!fu_engine_composite_cleanup(self, devices, &error_local))
+			g_warning("failed to cleanup failed composite action: %s",
+				  error_local->message);
+
+		/* propagate the error message */
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    composite_error_message->str);
+		return FALSE;
 	}
 
 	/* set all the device statuses back to unknown */
