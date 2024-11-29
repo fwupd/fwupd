@@ -1,6 +1,64 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u16le)]
+enum FuSynapticsCapeCmd {
+    FwUpdateStart           = 0xC8,
+    FwUpdateWrite           = 0xC9,
+    FwUpdateEnd             = 0xCA,
+    McuSoftReset            = 0xAF,
+    FwGetActivePartition    = 0x1CF,
+    GetVersion              = 0x103,
+}
+
+enum FuSynapticsCapeError {
+    Eagain                                  = -11,
+    SfuFail                                 = -200,
+    SfuWriteFail                            = -201,
+    SfuReadFail                             = -202,
+    SfuCrcError                             = -203,
+    SfuUsbIdNotMatch                        = -204,
+    SfuVersionDowngrade                     = -205,
+    SfuHeaderCorruption                     = -206,
+    SfuImageCorruption                      = -207,
+    SfuAlreadyActive                        = -208,
+    SfuNotReady                             = -209,
+    SfuSignTransferCorruption               = -210,
+    SfuDigitalSignatureVerificationFailed   = -211,
+    SfuTaskNotRunning                       = -212,
+    GenericFailure                          = -1025,
+    AlreadyExists                           = -1026,
+    NullAppPointer                          = -1027,
+    NullModulePointer                       = -1028,
+    NullStreamPointer                       = -1029,
+    NullPointer                             = -1030,
+    BadAppId                                = -1031,
+    ModuleTypeHasNoApi                      = -1034,
+    BadMagicNumber                          = -1052,
+    CmdModeUnsupported                      = -1056,
+}
+
+#[repr(u32le)]
+enum FuSynapticsCapeModuleId {
+    AppCtrl                                 = 0xb32d2300,
+}
+
+#[derive(New, Getters, Default)]
+#[repr(C, packed)]
+struct FuSynapticsCapeMsg {
+    data_len: u16le,            // data length in DWORDs
+    cmd_id: FuSynapticsCapeCmd, // bit 15 set when the host want a reply from device
+    module_id: FuSynapticsCapeModuleId = AppCtrl,
+    data: [u32le; 13],
+}
+
+#[derive(New, Getters, Default)]
+#[repr(C, packed)]
+struct FuSynapticsCapeCmdHidReport {
+    report_id: u16le == 1,
+    msg: FuSynapticsCapeMsg,
+}
+
 #[derive(New, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructSynapticsCapeHidHdr {
