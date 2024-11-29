@@ -11,11 +11,9 @@
 #include <string.h>
 
 #include "fu-sahara-loader.h"
+#include "fu-sahara-struct.h"
 
-#define SAHARA_VERSION		  2
-#define SAHARA_VERSION_COMPATIBLE 1
-
-#define SAHARA_RAW_BUFFER_SIZE (4 * 1024)
+#define FU_SAHARA_RAW_BUFFER_SIZE (4 * 1024)
 
 #define IO_TIMEOUT_MS 15000
 
@@ -31,88 +29,6 @@ struct _FuSaharaLoader {
 };
 
 G_DEFINE_TYPE(FuSaharaLoader, fu_sahara_loader, G_TYPE_OBJECT)
-
-/* Protocol definitions */
-typedef enum {
-	SAHARA_NO_CMD_ID = 0,
-	SAHARA_HELLO_ID,
-	SAHARA_HELLO_RESPONSE_ID,
-	SAHARA_READ_DATA_ID,
-	SAHARA_END_OF_IMAGE_TX_ID,
-	SAHARA_DONE_ID,
-	SAHARA_DONE_RESP_ID,
-	SAHARA_RESET_ID,
-	SAHARA_RESET_RESPONSE_ID,
-	SAHARA_READ_DATA_64_BIT_ID = 0x12,
-	SAHARA_LAST_CMD_ID
-} FuSaharaCommandId;
-
-typedef enum {
-	SAHARA_STATUS_SUCCESS = 0,
-	SAHARA_STATUS_FAILED,
-	SAHARA_STATUS_LAST
-} FuSaharaStatusCode;
-
-typedef enum {
-	SAHARA_MODE_IMAGE_TX_PENDING,
-	SAHARA_MODE_IMAGE_TX_COMPLETE,
-	SAHARA_MODE_LAST
-} FuSaharaMode;
-
-/* Sahara packet definition */
-struct sahara_packet {
-	guint32 command_id;
-	guint32 length;
-
-	union {
-		struct {
-			guint32 version;
-			guint32 version_compatible;
-			guint32 max_packet_length;
-			guint32 mode;
-		} hello;
-		struct {
-			guint32 version;
-			guint32 version_compatible;
-			guint32 status;
-			guint32 mode;
-			guint32 reserved[6];
-		} hello_response;
-		struct {
-			guint32 image_id;
-			guint32 offset;
-			guint32 length;
-		} read_data;
-		struct {
-			guint32 image_id;
-			guint32 status;
-		} end_of_image_transfer;
-		/* done packet = header only */
-		struct {
-			guint32 image_transfer_status;
-		} done_response;
-		/* reset packet = header only */
-		/* reset response packet = header only */
-		struct {
-			guint64 image_id;
-			guint64 offset;
-			guint64 length;
-		} read_data_64bit;
-	};
-} __attribute((packed));
-
-/* helper functions */
-static FuSaharaCommandId
-fu_sahara_loader_packet_get_command_id(GByteArray *packet)
-{
-	return ((struct sahara_packet *)(packet->data))->command_id;
-}
-
-static FuSaharaCommandId
-fu_sahara_loader_packet_get_length(GByteArray *packet)
-{
-	return ((struct sahara_packet *)(packet->data))->length;
-}
 
 /* IO functions */
 static gboolean
@@ -207,8 +123,8 @@ GByteArray *
 fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 {
 	gsize actual_len = 0;
-	g_autoptr(GByteArray) buf = g_byte_array_sized_new(SAHARA_RAW_BUFFER_SIZE);
-	fu_byte_array_set_size(buf, SAHARA_RAW_BUFFER_SIZE, 0x00);
+	g_autoptr(GByteArray) buf = g_byte_array_sized_new(FU_SAHARA_RAW_BUFFER_SIZE);
+	fu_byte_array_set_size(buf, FU_SAHARA_RAW_BUFFER_SIZE, 0x00);
 
 	if (!fu_usb_device_bulk_transfer(self->usb_device,
 					 self->ep_in,
@@ -223,7 +139,7 @@ fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error)
 	}
 
 	g_byte_array_set_size(buf, actual_len);
-	g_debug("received %" G_GSIZE_FORMAT " bytes", actual_len);
+	fu_dump_raw(G_LOG_DOMAIN, "rx packet", buf->data, buf->len);
 
 	return g_steal_pointer(&buf);
 }
@@ -308,99 +224,30 @@ fu_sahara_loader_write_prog(FuSaharaLoader *self,
 }
 
 static gboolean
-fu_sahara_loader_send_packet(FuSaharaLoader *self, GByteArray *pkt, GError **error)
+fu_sahara_loader_send_packet(FuSaharaLoader *self, FuStructSaharaPkt *pkt, GError **error)
 {
-	g_return_val_if_fail(pkt != NULL, FALSE);
-
 	fu_dump_raw(G_LOG_DOMAIN, "tx packet", pkt->data, pkt->len);
 	return fu_sahara_loader_qdl_write(self, pkt->data, pkt->len, error);
-}
-
-/* packet composers */
-static GByteArray *
-fu_sahara_loader_create_byte_array_from_packet(const struct sahara_packet *pkt)
-{
-	GByteArray *self;
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail(pkt != NULL, NULL);
-
-	self = g_byte_array_sized_new(pkt->length);
-	fu_byte_array_set_size(self, pkt->length, 0x00);
-	if (!fu_memcpy_safe(self->data,
-			    self->len,
-			    0,
-			    (gconstpointer)pkt,
-			    sizeof(struct sahara_packet),
-			    0,
-			    pkt->length,
-			    &error_local)) {
-		g_debug("sahara create packet failed: %s", error_local->message);
-		return NULL;
-	}
-
-	return self;
-}
-
-static GByteArray *
-fu_sahara_loader_compose_reset_packet(void)
-{
-	guint32 len = 0x08;
-	struct sahara_packet pkt = {.command_id = GUINT32_TO_LE(SAHARA_RESET_ID),
-				    .length = GUINT32_TO_LE(len),
-				    {{0}}};
-
-	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
-}
-
-static GByteArray *
-fu_sahara_loader_compose_hello_response_packet(FuSaharaMode mode)
-{
-	guint32 len = 0x30;
-	struct sahara_packet pkt = {.command_id = GUINT32_TO_LE(SAHARA_HELLO_RESPONSE_ID),
-				    .length = GUINT32_TO_LE(len),
-				    {{0}}};
-
-	pkt.hello_response.version = GUINT32_TO_LE(SAHARA_VERSION);
-	pkt.hello_response.version_compatible = GUINT32_TO_LE(SAHARA_VERSION_COMPATIBLE);
-	pkt.hello_response.status = GUINT32_TO_LE(SAHARA_STATUS_SUCCESS);
-	pkt.hello_response.mode = GUINT32_TO_LE(SAHARA_MODE_IMAGE_TX_PENDING);
-
-	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
-}
-
-static GByteArray *
-fu_sahara_loader_compose_done_packet(void)
-{
-	guint32 len = 0x08;
-	struct sahara_packet pkt = {.command_id = GUINT32_TO_LE(SAHARA_DONE_ID),
-				    .length = GUINT32_TO_LE(len),
-				    {{0}}};
-
-	return fu_sahara_loader_create_byte_array_from_packet(&pkt);
 }
 
 static gboolean
 fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 {
-	g_autoptr(GByteArray) rx_packet = NULL;
-	g_autoptr(GByteArray) tx_packet = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(FuStructSaharaPktResetRes) st_res = fu_struct_sahara_pkt_reset_req_new();
+	g_autoptr(FuStructSaharaPktResetReq) st_req = NULL;
 
-	tx_packet = fu_sahara_loader_compose_reset_packet();
-	if (!fu_sahara_loader_send_packet(self, tx_packet, error)) {
+	if (!fu_sahara_loader_send_packet(self, st_req, error)) {
 		g_prefix_error(error, "Failed to send reset packet: ");
 		return FALSE;
 	}
 
-	rx_packet = fu_sahara_loader_qdl_read(self, error);
-	if (rx_packet == NULL ||
-	    fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_RESET_RESPONSE_ID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to receive RESET_RESPONSE packet");
+	buf = fu_sahara_loader_qdl_read(self, error);
+	if (buf == NULL)
 		return FALSE;
-	}
+	st_res = fu_struct_sahara_pkt_reset_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
 
 	g_debug("reset succeeded");
 	return TRUE;
@@ -409,34 +256,29 @@ fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 static gboolean
 fu_sahara_loader_wait_hello_rsp(FuSaharaLoader *self, GError **error)
 {
-	g_autoptr(GByteArray) rx_packet = NULL;
-	g_autoptr(GByteArray) tx_packet = NULL;
+	g_autoptr(FuStructSaharaPktHelloResponseReq) st_req = NULL;
+	g_autoptr(FuStructSaharaPktHelloRes) st_res = NULL;
+	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	rx_packet = fu_sahara_loader_qdl_read(self, error);
-	if (rx_packet == NULL) {
-		g_autoptr(GByteArray) ping = NULL;
-		ping = g_byte_array_sized_new(1);
+	buf = fu_sahara_loader_qdl_read(self, &error_local);
+	if (buf == NULL) {
+		g_autoptr(FuStructSaharaPkt) ping = g_byte_array_sized_new(1);
+		g_debug("got %s, ignoring with ping", error_local->message);
 		g_byte_array_set_size(ping, 1);
 		fu_sahara_loader_send_packet(self, ping, NULL);
-		rx_packet = fu_sahara_loader_qdl_read(self, error);
 	}
-
-	g_return_val_if_fail(rx_packet != NULL, FALSE);
-
-	fu_dump_raw(G_LOG_DOMAIN, "rx packet", rx_packet->data, rx_packet->len);
-
-	if (fu_sahara_loader_packet_get_command_id(rx_packet) != SAHARA_HELLO_ID) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "received a different packet while waiting for the HELLO packet");
-		fu_sahara_loader_send_reset_packet(self, NULL);
+	if (buf == NULL) {
+		buf = fu_sahara_loader_qdl_read(self, error);
+		if (buf == NULL)
+			return FALSE;
+	}
+	st_res = fu_struct_sahara_pkt_hello_res_parse(buf->data, buf->len, 0x0, error);
+	if (st_res == NULL)
 		return FALSE;
-	}
 
-	tx_packet = fu_sahara_loader_compose_hello_response_packet(SAHARA_MODE_IMAGE_TX_PENDING);
-
-	return fu_sahara_loader_send_packet(self, tx_packet, error);
+	st_req = fu_struct_sahara_pkt_hello_response_req_new();
+	return fu_sahara_loader_send_packet(self, st_req, error);
 }
 
 /* main routine */
@@ -451,50 +293,77 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 
 	while (TRUE) {
 		guint32 command_id;
-		struct sahara_packet *pkt;
-		g_autoptr(GByteArray) rx_packet = NULL;
-		g_autoptr(GByteArray) tx_packet = NULL;
+		g_autoptr(GByteArray) buf = NULL;
+		g_autoptr(FuStructSaharaPkt) st_res = NULL;
+		g_autoptr(FuStructSaharaPkt) st_req = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		g_debug("STATE -- SAHARA_WAIT_COMMAND");
-		rx_packet = fu_sahara_loader_qdl_read(self, error);
-		if (rx_packet == NULL)
+		buf = fu_sahara_loader_qdl_read(self, error);
+		if (buf == NULL)
 			break;
-		if (rx_packet->len != fu_sahara_loader_packet_get_length(rx_packet)) {
+		st_res = fu_struct_sahara_pkt_parse(buf->data, buf->len, 0x0, error);
+		if (st_res == NULL)
+			return FALSE;
+		if (buf->len != fu_struct_sahara_pkt_get_hdr_length(st_res)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "received packet length is not matching");
 			break;
 		}
-		fu_dump_raw(G_LOG_DOMAIN, "rx_packet", rx_packet->data, rx_packet->len);
 
-		command_id = fu_sahara_loader_packet_get_command_id(rx_packet);
-		pkt = (struct sahara_packet *)(rx_packet->data);
-		if (command_id == SAHARA_HELLO_ID) {
-			tx_packet = fu_sahara_loader_compose_hello_response_packet(
-			    SAHARA_MODE_IMAGE_TX_PENDING);
-			fu_sahara_loader_send_packet(self, tx_packet, &error_local);
-		} else if (command_id == SAHARA_READ_DATA_ID) {
-			guint32 offset = pkt->read_data.offset;
-			guint32 length = pkt->read_data.length;
-			fu_sahara_loader_write_prog(self, offset, length, prog, &error_local);
-		} else if (command_id == SAHARA_READ_DATA_64_BIT_ID) {
-			guint64 offset = pkt->read_data_64bit.offset;
-			guint64 length = pkt->read_data_64bit.length;
-			fu_sahara_loader_write_prog(self, offset, length, prog, &error_local);
-		} else if (command_id == SAHARA_END_OF_IMAGE_TX_ID) {
-			guint32 status = pkt->end_of_image_transfer.status;
-			if (status == SAHARA_STATUS_SUCCESS) {
-				tx_packet = fu_sahara_loader_compose_done_packet();
-				fu_sahara_loader_send_packet(self, tx_packet, &error_local);
+		command_id = fu_struct_sahara_pkt_get_hdr_command_id(st_res);
+		if (command_id == FU_SAHARA_COMMAND_ID_HELLO) {
+			st_req = fu_struct_sahara_pkt_hello_response_req_new();
+			fu_sahara_loader_send_packet(self, st_req, &error_local);
+		} else if (command_id == FU_SAHARA_COMMAND_ID_READ_DATA) {
+			g_autoptr(FuStructSaharaPktReadDataRes) st_res2 =
+			    fu_struct_sahara_pkt_read_data_res_parse(buf->data,
+								     buf->len,
+								     0x0,
+								     error);
+			if (st_res2 == NULL)
+				return FALSE;
+			fu_sahara_loader_write_prog(
+			    self,
+			    fu_struct_sahara_pkt_read_data_res_get_offset(st_res2),
+			    fu_struct_sahara_pkt_read_data_res_get_length(st_res2),
+			    prog,
+			    &error_local);
+		} else if (command_id == FU_SAHARA_COMMAND_ID_READ_DATA64) {
+			g_autoptr(FuStructSaharaPktReadData64Res) st_res2 =
+			    fu_struct_sahara_pkt_read_data64_res_parse(buf->data,
+								       buf->len,
+								       0x0,
+								       error);
+			if (st_res2 == NULL)
+				return FALSE;
+			fu_sahara_loader_write_prog(
+			    self,
+			    fu_struct_sahara_pkt_read_data64_res_get_offset(st_res2),
+			    fu_struct_sahara_pkt_read_data64_res_get_length(st_res2),
+			    prog,
+			    &error_local);
+		} else if (command_id == FU_SAHARA_COMMAND_ID_END_OF_IMAGE_TX) {
+			g_autoptr(FuStructSaharaPktEndOfImageTxRes) st_res2 =
+			    fu_struct_sahara_pkt_end_of_image_tx_res_parse(buf->data,
+									   buf->len,
+									   0x0,
+									   error);
+			if (st_res2 == NULL)
+				return FALSE;
+			if (fu_struct_sahara_pkt_end_of_image_tx_res_get_status(st_res2) ==
+			    FU_SAHARA_STATUS_SUCCESS) {
+				st_req = fu_struct_sahara_pkt_done_req_new();
+				fu_sahara_loader_send_packet(self, st_req, &error_local);
 			}
-		} else if (command_id == SAHARA_DONE_RESP_ID) {
+		} else if (command_id == FU_SAHARA_COMMAND_ID_DONE_RESP) {
 			return TRUE;
 		} else {
 			g_warning("Unexpected packet received: cmd_id = %u, len = %u",
 				  command_id,
-				  fu_sahara_loader_packet_get_length(rx_packet));
+				  fu_struct_sahara_pkt_get_hdr_length(st_res));
 		}
 
 		if (error_local != NULL)
