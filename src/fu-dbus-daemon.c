@@ -1638,7 +1638,6 @@ fu_dbus_daemon_method_emulation_load(FuDbusDaemon *self,
 				     GDBusMethodInvocation *invocation)
 {
 	gint32 fd_handle = 0;
-	g_autoptr(GError) error = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(h)", &fd_handle);
@@ -1695,7 +1694,6 @@ fu_dbus_daemon_method_emulation_save(FuDbusDaemon *self,
 				     GDBusMethodInvocation *invocation)
 {
 	gint32 fd_handle = 0;
-	g_autoptr(GError) error = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
 
 	g_variant_get(parameters, "(h)", &fd_handle);

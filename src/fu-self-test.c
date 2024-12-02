@@ -6528,7 +6528,6 @@ fu_config_migrate_1_9_func(void)
 	const gchar *fake_localconf_fn = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
 	const gchar *fake_sysconf_fn = "/tmp/fwupd-self-test/fwupd/fwupd.conf";
 	gboolean ret;
-	g_autofree gchar *localconf_data = NULL;
 	g_autoptr(FuConfig) config = FU_CONFIG(fu_engine_config_new());
 	g_autoptr(GError) error = NULL;
 
