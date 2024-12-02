@@ -21,6 +21,28 @@ struct _FuPciMeiPlugin {
 
 G_DEFINE_TYPE(FuPciMeiPlugin, fu_pci_mei_plugin, FU_TYPE_PLUGIN)
 
+static void
+fu_pci_mei_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPciMeiPlugin *self = FU_PCI_MEI_PLUGIN(plugin);
+	if (self->pci_device)
+		fu_string_append(str, idt, "PciDevice", fu_device_get_id(self->pci_device));
+	for (guint i = 0; i < 6; i++) {
+		g_autofree gchar *title = g_strdup_printf("Hfsts%u", i);
+		fu_string_append_kx(str,
+				    idt,
+				    title,
+				    fu_memread_uint32(self->hfsts_buf[i], G_LITTLE_ENDIAN));
+	}
+	fu_string_append(str, idt, "Family", fu_mei_family_to_string(self->family));
+	fu_string_append_ku(str, idt, "VersionPlatform", self->vers.platform);
+	fu_string_append_ku(str, idt, "VersionMajor", self->vers.major);
+	fu_string_append_ku(str, idt, "VersionMinor", self->vers.minor);
+	fu_string_append_ku(str, idt, "VersionHotfix", self->vers.hotfix);
+	fu_string_append_ku(str, idt, "VersionBuildno", self->vers.buildno);
+	fu_string_append(str, idt, "Issue", fu_mei_issue_to_string(self->issue));
+}
+
 static FuMeiFamily
 fu_mei_detect_family(FuPlugin *plugin)
 {
@@ -761,4 +783,5 @@ fu_pci_mei_plugin_class_init(FuPciMeiPluginClass *klass)
 	plugin_class->constructed = fu_pci_mei_plugin_constructed;
 	plugin_class->add_security_attrs = fu_pci_mei_plugin_add_security_attrs;
 	plugin_class->backend_device_added = fu_pci_mei_plugin_backend_device_added;
+	plugin_class->to_string = fu_pci_mei_plugin_to_string;
 }
