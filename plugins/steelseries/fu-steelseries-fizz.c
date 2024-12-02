@@ -354,7 +354,6 @@ static gboolean
 fu_steelseries_fizz_ensure_children(FuSteelseriesFizz *self, GError **error)
 {
 	guint8 status;
-	g_autofree gchar *version = NULL;
 
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	if (proxy == NULL) {

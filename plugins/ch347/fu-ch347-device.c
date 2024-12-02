@@ -278,7 +278,6 @@ static gboolean
 fu_ch347_device_setup(FuDevice *device, GError **error)
 {
 	FuCh347Device *self = FU_CH347_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_ch347_device_parent_class)->setup(device, error))

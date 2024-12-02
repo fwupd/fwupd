@@ -294,7 +294,6 @@ fu_telink_dfu_hid_device_write_blob(FuTelinkDfuHidDevice *self,
 				    GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(FuStructTelinkDfuHidPkt) st_pkt = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

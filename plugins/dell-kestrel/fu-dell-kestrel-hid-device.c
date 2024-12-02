@@ -223,7 +223,6 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 	for (guint j = 0; j < fu_chunk_array_length(pages); j++) {
 		g_autoptr(GByteArray) page_aligned = g_byte_array_new();
 		g_autoptr(FuChunk) page = NULL;
-		g_autoptr(GBytes) page_bytes = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		page = fu_chunk_array_index(pages, j, error);

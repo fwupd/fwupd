@@ -1549,7 +1549,6 @@ fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *path = NULL;
-	g_autofree gchar *value = NULL;
 	g_autoptr(FuIOChannel) io_channel = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
