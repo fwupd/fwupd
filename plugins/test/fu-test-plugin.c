@@ -285,6 +285,16 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	/* composite test, upgrade composite devices */
 	if (fu_plugin_get_config_value_boolean(plugin, "CompositeChild")) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+		if (fu_device_has_private_flag(device,
+					       FU_DEVICE_PRIVATE_FLAG_COMPOSITE_ERROR_CONTINUE)) {
+			/* the error type and error code should exactly match the
+			   predefined errors in fu_engine_install_releases() */
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed composite update (intentional)");
+			return FALSE;
+		}
 		if (g_strcmp0(fu_device_get_logical_id(device), "child1") == 0) {
 			fu_device_set_version(device, "2");
 			return TRUE;

@@ -2261,9 +2261,10 @@ fu_engine_install_releases(FuEngine *self,
 		g_autoptr(GError) error_local = NULL;
 
 		/* best effort to cleanup the devices */
-		if (!fu_engine_composite_cleanup(self, devices, &error_local))
+		if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
 			g_warning("failed to cleanup failed composite action: %s",
 				  error_local->message);
+		}
 
 		/* propagate the error message */
 		g_set_error_literal(error,
