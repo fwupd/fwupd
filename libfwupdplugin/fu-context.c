@@ -2055,6 +2055,23 @@ fu_context_get_backend_by_name(FuContext *self, const gchar *name, GError **erro
 }
 
 /* private */
+gboolean
+fu_context_has_backend(FuContext *self, const gchar *name)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+
+	for (guint i = 0; i < priv->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(priv->backends, i);
+		if (g_strcmp0(fu_backend_get_name(backend), name) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/* private */
 gpointer
 fu_context_get_data(FuContext *self, const gchar *key)
 {
