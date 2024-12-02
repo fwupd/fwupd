@@ -180,6 +180,7 @@ fu_amd_gpu_device_set_marketing_name(FuAmdGpuDevice *self)
 		const gchar *marketing_name = amdgpu_get_marketing_name(device_handle);
 		if (marketing_name != NULL)
 			fu_device_set_name(FU_DEVICE(self), marketing_name);
+		amdgpu_device_deinitialize(device_handle);
 	} else
 		g_warning("unable to set marketing name: %s", g_strerror(r));
 }
