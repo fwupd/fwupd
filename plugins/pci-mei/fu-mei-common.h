@@ -6,14 +6,7 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
-
-typedef enum {
-	FU_MEI_ISSUE_UNKNOWN,
-	FU_MEI_ISSUE_NOT_VULNERABLE,
-	FU_MEI_ISSUE_VULNERABLE,
-	FU_MEI_ISSUE_PATCHED,
-} FuMeiIssue;
+#include "fu-mei-struct.h"
 
 typedef struct {
 	guint8 platform;

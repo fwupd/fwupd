@@ -11,6 +11,14 @@ enum FuMeiFamily {
     Csme18,
 }
 
+#[derive(ToString)]
+enum FuMeiIssue {
+    Unknown,
+    NotVulnerable,
+    Vulnerable,
+    Patched,
+}
+
 # HFS1 Current Working State Values
 #[repr(u4)]
 enum FuMeHfsCws {
