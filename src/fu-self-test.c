@@ -6762,6 +6762,12 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 
+	/* non-linux */
+	if (!fu_context_has_backend(self->ctx, "udev")) {
+		g_test_skip("no Udev backend");
+		return;
+	}
+
 	/* load engine and check the device was found */
 	fu_engine_add_plugin_filter(engine, "colorhug");
 	ret = fu_engine_load(engine,
