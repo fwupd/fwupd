@@ -56,6 +56,8 @@ GPtrArray *
 fu_context_get_udev_subsystems(FuContext *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_context_get_backends(FuContext *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_context_has_backend(FuContext *self, const gchar *name) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_context_get_plugin_names_for_udev_subsystem(FuContext *self,
 					       const gchar *subsystem,
