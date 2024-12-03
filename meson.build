@@ -339,6 +339,19 @@ if libgbinder.found()
   conf.set('HAVE_BINDER', '1')
 endif
 
+if host_machine.system() == 'android'
+  # HAS_BINDER_NDK?
+  binder_ndk = cc.find_library('binder_ndk')
+  if (binder_ndk.found() and
+      cc.has_header('android/binder_parcel.h') and
+      cc.has_header('android/persistable_bundle.h') and
+      cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create', dependencies: binder_ndk) and
+      cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal', dependencies: binder_ndk) and
+      cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new', dependencies: binder_ndk))
+    conf.set('HAS_BINDER_NDK', '1')
+  endif
+endif
+
 lzma = dependency('liblzma', required: get_option('lzma'))
 if lzma.found()
   conf.set('HAVE_LZMA', '1')
