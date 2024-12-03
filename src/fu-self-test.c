@@ -3530,6 +3530,7 @@ fu_device_list_delay_func(gconstpointer user_data)
 	/* add one device */
 	fu_device_set_id(device1, "device1");
 	fu_device_add_instance_id(device1, "foobar");
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_convert_instance_ids(device1);
 	fu_device_list_add(device_list, device1);
@@ -3545,6 +3546,7 @@ fu_device_list_delay_func(gconstpointer user_data)
 
 	/* add a device with the same ID */
 	fu_device_set_id(device2, "device1");
+	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
 	fu_device_list_add(device_list, device2);
 	fu_device_set_remove_delay(device2, 100);
 	g_assert_cmpint(added_cnt, ==, 1);
@@ -3759,6 +3761,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
 	fu_device_add_instance_id(device1, "foobar");
 	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_set_remove_delay(device1, 100);
@@ -3986,7 +3989,6 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 	fu_device_add_instance_id(device1, "runtime"); /* 420dde7c-3102-5d8f-86bc-aaabd7920150 */
 	fu_device_add_counterpart_guid(device1, "bootloader");
 	fu_device_convert_instance_ids(device1);
-	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_list_add(device_list, device1);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
