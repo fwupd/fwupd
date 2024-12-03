@@ -999,7 +999,6 @@ fu_dell_dock_ec_init(FuDellDockEc *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 }
 
 static void
