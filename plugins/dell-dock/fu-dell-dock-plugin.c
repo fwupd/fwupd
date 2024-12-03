@@ -235,18 +235,12 @@ fu_dell_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	const gchar *device_key = fu_device_get_id(device);
-	FuDevice *dev;
 	FuDevice *parent;
 
-	/* only the device with bridge will be in cache */
-	dev = fu_plugin_cache_lookup(plugin, device_key);
-	if (dev == NULL)
+	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
-	fu_plugin_cache_remove(plugin, device_key);
 
-	/* find the parent and ask daemon to remove whole chain  */
-	parent = fu_device_get_parent(dev);
+	parent = fu_device_get_parent(device);
 	if (parent != NULL && FU_IS_DELL_DOCK_EC(parent)) {
 		g_debug("Removing %s (%s)", fu_device_get_name(parent), fu_device_get_id(parent));
 		fu_plugin_device_remove(plugin, parent);
