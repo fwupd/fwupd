@@ -1,13 +1,22 @@
 /*
  * Copyright 2024 Richard Hughes <richard@hughsie.com>
+ * Copyright 2024 Colin Kinloch <colin.kinloch@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#include "fu-engine-request.h"
+#include "gbinder_types.h"
+#include "glib.h"
+#include "glibconfig.h"
+#include "gparcelable.h"
 #define G_LOG_DOMAIN "FuMain"
 
 #include "config.h"
 
+#include <android/binder_parcel.h>
+#include <android/binder_status.h>
+#include <android/persistable_bundle.h>
 #include <gbinder.h>
 
 #include "fu-binder-aidl.h"
@@ -17,8 +26,12 @@
  * ./build/release/binder-client -v -d /dev/hwbinder -n devices@1.0/org.freedesktop.fwupd
  */
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
+
 #define DEFAULT_DEVICE "/dev/binder"
-#define DEFAULT_IFACE  "org.freedesktop.fwupd"
+#define DEFAULT_IFACE  "org.freedesktop.fwupd.IFwupd"
 #define DEFAULT_NAME   "fwupd"
 
 #define BINDER_TRANSACTION(c2, c3, c4) GBINDER_FOURCC('_', c2, c3, c4)
@@ -34,38 +47,136 @@ struct _FuBinderDaemon {
 
 G_DEFINE_TYPE(FuBinderDaemon, fu_binder_daemon, FU_TYPE_DAEMON)
 
-static GBinderLocalReply *
-fu_binder_daemon_app_reply(GBinderLocalObject *obj,
-			   GBinderRemoteRequest *req,
-			   guint code,
-			   guint flags,
-			   int *status,
-			   gpointer user_data)
+static void
+fu_binder_daemon_device_array_to_persistable_bundle(FuBinderDaemon *self,
+						    FuEngineRequest *request,
+						    GPtrArray *devices,
+						    AParcel *parcel,
+						    GError **error)
 {
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
+	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
+		flags |= FWUPD_CODEC_FLAG_TRUSTED;
+	GVariant *variant = fwupd_codec_array_to_variant(devices, flags);
+
+	GVariantIter iter;
+	g_variant_iter_init(&iter, variant);
+	GVariant *child = g_variant_iter_next_value(&iter);
+
+	gp_parcel_write_variant(parcel, child, error);
+}
+
+static GBinderLocalReply *
+fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
+				    GBinderRemoteRequest *remote_request,
+				    FuEngineRequest *request,
+				    int *status)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	// g_autoptr(AParcel) val = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	GBinderWriter packet_writer;
+	gsize size;
+	binder_status_t nstatus = STATUS_OK;
+
+	devices = fu_engine_get_devices(engine, &error);
+	if (devices == NULL) {
+		// TODO: How do we return meaningful aidl errors
+		// fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		*status = GBINDER_STATUS_FAILED;
+		return NULL;
+	}
+
+	g_autoptr(AStatus) status_header = AStatus_newOk();
+	AParcel *packet_parcel = AParcel_create();
+
+	AParcel_writeStatusHeader(packet_parcel, status_header);
+	fu_binder_daemon_device_array_to_persistable_bundle(self,
+							    request,
+							    devices,
+							    packet_parcel,
+							    &error);
+
+	gbinder_local_reply_init_writer(local_reply, &packet_writer);
+
+	size = AParcel_getDataSize(packet_parcel);
+	g_autofree uint8_t *buffer = calloc(1, size);
+	nstatus = AParcel_marshal(packet_parcel, buffer, 0, size);
+	if (nstatus != STATUS_OK) {
+		g_warning("Failed to marshal parcel %d", nstatus);
+	}
+
+	gbinder_writer_append_bytes(&packet_writer, buffer, size);
+
+	return local_reply;
+}
+
+static FuEngineRequest *
+fu_binder_daemon_create_request(FuBinderDaemon *self, const gchar *sender, GError **error)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(sender);
+
+	// TODO: Check if sender is trusted
+	fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
+
+	return g_object_ref(request);
+}
+
+typedef GBinderLocalReply *(*FuBinderDaemonMethodFunc)(FuBinderDaemon *self,
+						       GBinderRemoteRequest *remote_request,
+						       FuEngineRequest *request,
+						       int *status);
+
+static GBinderLocalReply *
+fu_binder_daemon_method_call(GBinderLocalObject *daemon_object,
+			     GBinderRemoteRequest *remote_request,
+			     guint code,
+			     guint flags,
+			     int *status,
+			     gpointer user_data)
+{
+	FuBinderDaemon *self = FU_BINDER_DAEMON(user_data);
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	g_autoptr(FuEngineRequest) request = NULL;
+	g_autoptr(GError) error = NULL;
+
 	GBinderReader reader;
+	const gchar *iface = gbinder_remote_request_interface(remote_request);
+	gbinder_remote_request_init_reader(remote_request, &reader);
 
-	gbinder_remote_request_init_reader(req, &reader);
-	if (code == GET_DEVICES) {
-		const gchar *iface = gbinder_remote_request_interface(req);
-		if (g_strcmp0(iface, DEFAULT_IFACE) == 0) {
-			GBinderLocalReply *reply = gbinder_local_object_new_reply(obj);
-			g_autofree gchar *str = gbinder_reader_read_string16(&reader);
-			g_autofree gchar *str2 = g_strdup_printf("I think you said '%s'", str);
+	/* Keep these in the same order as in the aidl file */
+	FuBinderDaemonMethodFunc method_funcs[] = {
+	    NULL,
+	    fu_binder_daemon_method_get_devices, /* getDevices */
+	};
 
-			g_debug("%s %u", iface, code);
-			g_debug("%s", str);
-			*status = GBINDER_STATUS_OK;
-			gbinder_local_reply_append_int32(reply, GBINDER_STATUS_OK);
-			gbinder_local_reply_append_string16(reply, str2);
-			return reply;
+	/* build request */
+	request = fu_binder_daemon_create_request(self, "sender?", &error);
+	if (request == NULL) {
+		// fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		*status = GBINDER_STATUS_FAILED;
+		return NULL;
+	}
+
+	/* activity */
+	fu_engine_idle_reset(engine);
+
+	if (g_strcmp0(iface, DEFAULT_IFACE) == 0) {
+		if (code > 0 && code <= G_N_ELEMENTS(method_funcs) && method_funcs[code]) {
+			return method_funcs[code](self, remote_request, request, status);
 		}
+
 		g_debug("unexpected interface %s", iface);
 	} else if (code == BINDER_DUMP_TRANSACTION) {
 		int fd = gbinder_reader_read_fd(&reader);
 		const gchar *dump = "Sorry, I've got nothing to dump...\n";
 		const gssize dump_len = strlen(dump);
 
-		g_debug("dump request from %d", gbinder_remote_request_sender_pid(req));
+		g_debug("dump request from %d", gbinder_remote_request_sender_pid(remote_request));
 		if (write(fd, dump, dump_len) != dump_len) {
 			g_warning("failed to write dump: %s", strerror(errno));
 		}
@@ -173,7 +284,7 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 		g_debug("waited for SM, creating local object");
 		self->obj = gbinder_servicemanager_new_local_object(self->sm,
 								    DEFAULT_IFACE,
-								    fu_binder_daemon_app_reply,
+								    fu_binder_daemon_method_call,
 								    self);
 	}
 	fu_progress_step_done(progress);
