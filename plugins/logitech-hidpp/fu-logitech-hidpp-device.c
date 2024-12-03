@@ -379,6 +379,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuLogitechHidppHidppMsg) msg_count = fu_logitech_hidpp_msg_new();
 	gboolean radio_ok = FALSE;
+	gboolean app_ok = FALSE;
 
 	/* get the feature index */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self,
@@ -416,6 +417,12 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 			g_prefix_error(error, "failed to get firmware info: ");
 			return FALSE;
 		}
+		/* use the single available slot, otherwise -- the slot which is not active */
+		if (msg->data[0] == 0) {
+			if (!app_ok || FU_BIT_IS_CLEAR(msg->data[8], 0))
+				priv->cached_fw_entity = i;
+			app_ok = TRUE;
+		}
 		if (msg->data[1] == 0x00 && msg->data[2] == 0x00 && msg->data[3] == 0x00 &&
 		    msg->data[4] == 0x00 && msg->data[5] == 0x00 && msg->data[6] == 0x00 &&
 		    msg->data[7] == 0x00) {
@@ -427,8 +434,9 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		version = fu_logitech_hidpp_format_version(name, msg->data[4], msg->data[5], build);
 		g_debug("firmware entity 0x%02x version is %s", i, version);
 		if (msg->data[0] == 0) {
-			fu_device_set_version(FU_DEVICE(self), version);
-			priv->cached_fw_entity = i;
+			/* set version from the active entity */
+			if (FU_BIT_IS_SET(msg->data[8], 0))
+				fu_device_set_version(FU_DEVICE(self), version);
 		} else if (msg->data[0] == 1) {
 			fu_device_set_version_bootloader(FU_DEVICE(self), version);
 		} else if (msg->data[0] == 2) {
