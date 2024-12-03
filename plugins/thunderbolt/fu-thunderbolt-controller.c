@@ -10,11 +10,7 @@
 
 #include "fu-thunderbolt-common.h"
 #include "fu-thunderbolt-controller.h"
-
-typedef enum {
-	FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE,
-	FU_THUNDERBOLT_CONTROLLER_KIND_HOST,
-} FuThunderboltControllerKind;
+#include "fu-thunderbolt-struct.h"
 
 struct _FuThunderboltController {
 	FuThunderboltDevice parent_instance;
@@ -70,7 +66,7 @@ fu_thunderbolt_controller_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append(str,
 				  idt,
 				  "DeviceType",
-				  fu_thunderbolt_controller_kind_to_string(self));
+				  fu_thunderbolt_controller_kind_to_string(self->controller_kind));
 	fwupd_codec_string_append_bool(str, idt, "SafeMode", self->safe_mode);
 	fwupd_codec_string_append_bool(str, idt, "NativeMode", self->is_native);
 	fwupd_codec_string_append_int(str, idt, "Generation", self->gen);
@@ -81,22 +77,29 @@ fu_thunderbolt_controller_probe(FuDevice *device, GError **error)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(device);
 	g_autofree gchar *attr_unique_id = NULL;
-	g_autoptr(FuDevice) device_parent = NULL;
+	g_autofree gchar *prop_type = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_thunderbolt_controller_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* determine if host controller or not */
-	device_parent =
-	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
-							"thunderbolt:thunderbolt_domain",
-							NULL);
-	if (device_parent != NULL) {
-		g_autofree gchar *parent_name = g_path_get_basename(
-		    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_parent)));
-		if (g_str_has_prefix(parent_name, "domain"))
-			self->controller_kind = FU_THUNDERBOLT_CONTROLLER_KIND_HOST;
+	prop_type = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "USB4_TYPE", NULL);
+	if (prop_type != NULL) {
+		self->controller_kind = fu_thunderbolt_controller_kind_from_string(prop_type);
+	} else {
+		g_autoptr(FuDevice) device_parent =
+		    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
+								"thunderbolt:thunderbolt_domain",
+								NULL);
+		if (device_parent != NULL) {
+			g_autofree gchar *parent_name = g_path_get_basename(
+			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device_parent)));
+			if (g_str_has_prefix(parent_name, "domain"))
+				self->controller_kind = FU_THUNDERBOLT_CONTROLLER_KIND_HOST;
+			else
+				self->controller_kind = FU_THUNDERBOLT_CONTROLLER_KIND_DEVICE;
+		}
 	}
 
 	attr_unique_id = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(device),
