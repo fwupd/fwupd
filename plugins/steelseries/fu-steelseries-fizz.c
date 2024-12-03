@@ -730,7 +730,6 @@ fu_steelseries_fizz_init(FuSteelseriesFizz *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.steelseries.fizz");

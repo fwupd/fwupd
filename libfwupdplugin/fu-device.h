@@ -560,14 +560,14 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING "auto-pause-polling"
 /**
- * FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG:
+ * FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL:
  *
- * Only use the device removal delay when explicitly waiting for a replug, rather than
- * every time the device is removed.
+ * Use the device removal delay every time the device is removed, rather than when explicitly
+ * waiting for a replug.
  *
- * Since: 1.8.1
+ * Since: 2.0.3
  */
-#define FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG "only-wait-for-replug"
+#define FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL "delayed-removal"
 /**
  * FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER:
  *

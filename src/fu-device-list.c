@@ -508,7 +508,7 @@ fu_device_list_should_remove_with_delay(FuDevice *device)
 {
 	if (fu_device_get_remove_delay(device) == 0)
 		return FALSE;
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG) &&
+	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
 		return FALSE;
 	return TRUE;

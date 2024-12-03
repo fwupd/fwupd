@@ -275,7 +275,7 @@ fu_device_register_flags(FuDevice *self)
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ONLY_WAIT_FOR_REPLUG);
+	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
