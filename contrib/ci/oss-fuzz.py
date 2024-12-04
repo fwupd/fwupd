@@ -295,7 +295,7 @@ def _build(bld: Builder) -> None:
 
     # GLib
     src = bld.checkout_source(
-        "glib", url="https://gitlab.gnome.org/GNOME/glib.git", commit="glib-2-68"
+        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
     )
     bld.build_meson_project(
         src,
@@ -319,9 +319,7 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgthread-2.0.a")
 
     # JSON-GLib
-    src = bld.checkout_source(
-        "json-glib", url="https://gitlab.gnome.org/GNOME/json-glib.git"
-    )
+    src = bld.checkout_source("json-glib", url="https://github.com/GNOME/json-glib.git")
     bld.build_meson_project(
         src, ["-Dgtk_doc=disabled", "-Dtests=false", "-Dintrospection=disabled"]
     )

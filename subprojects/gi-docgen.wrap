@@ -1,5 +1,5 @@
 [wrap-git]
 directory=gi-docgen
-url=https://gitlab.gnome.org/GNOME/gi-docgen.git
+url=https://github.com/GNOME/gi-docgen.git
 revision=2021.8
 depth=1
