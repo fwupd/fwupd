@@ -303,7 +303,7 @@ def _build(bld: Builder) -> None:
 
     # GLib
     src = bld.checkout_source(
-        "glib", url="https://gitlab.gnome.org/GNOME/glib.git", commit="glib-2-68"
+        "glib", url="https://github.com/GNOME/glib.git", commit="glib-2-68"
     )
     bld.build_meson_project(
         src,
@@ -329,7 +329,7 @@ def _build(bld: Builder) -> None:
     # JSON-GLib
     src = bld.checkout_source(
         "json-glib",
-        url="https://gitlab.gnome.org/GNOME/json-glib.git",
+        url="https://github.com/GNOME/json-glib.git",
         commit="1.8.0-actual",
     )
     bld.build_meson_project(
