@@ -68,13 +68,6 @@ enum FuDellKestrelDockSku {
     T5,
 }
 
-#[repr(u8)]
-enum FuDellKestrelEcRespToChunk {
-    UpdateComplete = 1,
-    SendNextChunk,
-    UpdateFailed,
-}
-
 #[repr(C, packed)]
 #[derive(New, Getters, Parse)]
 struct FuStructDellKestrelDockData {
