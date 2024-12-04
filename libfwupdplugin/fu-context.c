@@ -1978,8 +1978,17 @@ fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **
 		return NULL;
 	for (guint i = 0; i < entries->len; i++) {
 		FuEfiLoadOption *entry = g_ptr_array_index(entries, i);
-		if (!fu_context_get_esp_files_for_entry(self, entry, files, flags, error))
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_context_get_esp_files_for_entry(self, entry, files, flags, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("ignoring %s: %s",
+					fu_firmware_get_id(FU_FIRMWARE(entry)),
+					error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return NULL;
+		}
 	}
 
 	/* success */
