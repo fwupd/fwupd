@@ -33,3 +33,12 @@ struct FuStructDellKestrelHidFwUpdatePkg {
     dev_identifier: u8,
     fw_sz: u32be,
 }
+
+#[repr(u8)]
+#[derive(ToString)]
+enum FuDellKestrelHidEcChunkResponse {
+    Unknown = 0,
+    UpdateComplete,
+    SendNextChunk,
+    UpdateFailed,
+}

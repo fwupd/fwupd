@@ -273,41 +273,21 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 
 static gboolean
 fu_dell_kestrel_hid_device_verify_chunk_result(FuDellKestrelHidDevice *self,
-					       guint chunk_idx,
+					       FuDellKestrelHidEcChunkResponse *resp,
 					       GError **error)
 {
-	guint8 res[FU_DELL_KESTREL_HID_DATA_PAGE_SZ] = {0xff};
+	guint8 buf[FU_DELL_KESTREL_HID_DATA_PAGE_SZ] = {0xff};
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x0,
-				      res,
-				      sizeof(res),
+				      buf,
+				      sizeof(buf),
 				      FU_DELL_KESTREL_HID_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error))
 		return FALSE;
 
-	switch (res[1]) {
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_UPDATE_COMPLETE:
-		g_debug("dock response '%u' to chunk[%u]: firmware updated successfully.",
-			res[1],
-			chunk_idx);
-		break;
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_SEND_NEXT_CHUNK:
-		g_debug("dock response '%u' to chunk[%u]: send next chunk.", res[1], chunk_idx);
-		break;
-	case FU_DELL_KESTREL_EC_RESP_TO_CHUNK_UPDATE_FAILED:
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "dock response '%u' to chunk[%u]: failed to write firmware.",
-			    res[1],
-			    chunk_idx);
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_memread_uint8_safe(buf, sizeof(buf), 1, (guint8 *)resp, error);
 }
 
 gboolean
@@ -348,6 +328,8 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 
 	/* iterate the chunks */
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		FuDellKestrelHidEcChunkResponse resp =
+		    FU_DELL_KESTREL_HID_EC_CHUNK_RESPONSE_UNKNOWN;
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(FuChunkArray) pages = NULL;
 		g_autoptr(GBytes) buf = NULL;
@@ -376,11 +358,32 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 		g_debug("wait %u ms for dock to finish the chunk", chunk_delay);
 		fu_device_sleep(FU_DEVICE(self), chunk_delay);
 
-		/* ensure the chunk has been acknowledged */
-		if (!fu_dell_kestrel_hid_device_verify_chunk_result(self, i, error))
+		/* get device response for the chunk in transaction */
+		if (!fu_dell_kestrel_hid_device_verify_chunk_result(self, &resp, error))
 			return FALSE;
 
-		fu_progress_step_done(progress);
+		/* verify the device response */
+		g_debug("dock response %u to chunk[%u]: %s",
+			resp,
+			i,
+			fu_dell_kestrel_hid_ec_chunk_response_to_string(resp));
+
+		switch (resp) {
+		case FU_DELL_KESTREL_HID_EC_CHUNK_RESPONSE_UPDATE_COMPLETE:
+			fu_progress_finished(progress);
+			return TRUE;
+		case FU_DELL_KESTREL_HID_EC_CHUNK_RESPONSE_SEND_NEXT_CHUNK:
+			fu_progress_step_done(progress);
+			break;
+		default:
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "failed to write chunk[%u]: %s",
+				    i,
+				    fu_dell_kestrel_hid_ec_chunk_response_to_string(resp));
+			return FALSE;
+		}
 	}
 
 	/* success */
