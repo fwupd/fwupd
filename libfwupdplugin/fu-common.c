@@ -357,3 +357,18 @@ fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text(bn, key, value ? "true" : "false", NULL);
 }
+
+/**
+ * fu_snap_is_in_snap:
+ *
+ * Check whether the current process is running inside a snap.
+ *
+ * Returns: TRUE if current process is running inside a snap.
+ *
+ * Since: 2.0.4
+ **/
+gboolean
+fu_snap_is_in_snap(void)
+{
+	return getenv("SNAP") != NULL;
+}
