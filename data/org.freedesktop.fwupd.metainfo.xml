@@ -38,6 +38,30 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.27" date="2024-12-05">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a power quirk for Framework systems</li>
+          <li>Allow cros-ec repair the device after flush failure</li>
+          <li>Check the VLI USB3 firmware size before erasing</li>
+          <li>Disallow DBX updates on the Samsung Galaxy Book2 360</li>
+          <li>Do not show 'Device has been removed' as a dock error</li>
+          <li>Do not use a CMSE11 function when using CSME18</li>
+          <li>Fix an unlikely memory leak when using ModemManger Sahara devices</li>
+          <li>Fix a tiny memory leak in algoltek-usb when checking status</li>
+          <li>Mark UEFI dbx updates as affecting full disk encryption</li>
+          <li>Parse FDTs with missing END tokens</li>
+          <li>Rename the dell-k2 plugin to dell-kestrel and rework the update flow</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Google GID8 Headset</li>
+          <li>Parade PS188</li>
+          <li>Primax Ryder Mouse</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.26" date="2024-10-14">
       <description>
         <p>This release fixes the following bugs:</p>
