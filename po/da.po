@@ -811,6 +811,10 @@ msgstr "Filnavn kræves"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtrer med et sæt enhedsflag med et ~-præfiks for at udelukke, f.eks. 'intern,~behøver-genstart'"
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Grund-URI for firmware"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus-tjeneste for firmwareopdatering"

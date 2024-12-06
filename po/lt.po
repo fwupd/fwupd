@@ -571,6 +571,11 @@ msgstr "Įrenginiai, kurie buvo sėkmingai atnaujinti:"
 msgid "Devices that were not updated correctly:"
 msgstr "Įrenginiai, kurių nepavyko atnaujinti:"
 
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "Įrenginiai, kuriems prieinami programinės aparatinės įrangos naujinimai, reikalaujantys naudotojo veiksmų: "
+
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
@@ -582,6 +587,15 @@ msgstr "Įrenginiai, kurių nepavyko atnaujinti:"
 msgid "Devices with no available firmware updates: "
 msgstr "Įrenginiai, neturintys prieinamų aparatinės programinės įrangos naujinimų: "
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
+msgid "Devices with the latest available firmware version:"
+msgstr "Įrenginiai, kuriuose jau įdiegta naujausia prieinama programinės aparatinės įrangos versija:"
+
 #. TRANSLATORS: Plugin is inactive and not used
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Disabled"
@@ -591,6 +605,10 @@ msgstr "Išjungtas"
 msgid "Disables a given remote"
 msgstr "Išjungia nurodytą nuotolinę saugyklą"
 
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "Platinamasis paketas"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "Netikrinti ar yra senų metaduomenų"
@@ -598,6 +616,10 @@ msgstr "Netikrinti ar yra senų metaduomenų"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Netikrinti ar yra istorijos apie kurią nepranešta"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "Neišjunkite kompiuterio ir neištraukite elektros maitinimo laido tol, kol vyksta naujinimas."
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1084,6 +1106,9 @@ msgstr "Šiuo metu nėra įjungtos jokios nuotolinės saugyklos, taigi, nėra pr
 msgid "No updates available"
 msgstr "Nėra prieinamų naujinimų"
 
+msgid "No updates available for remaining devices"
+msgstr "Likusiems įrenginiams nėra prieinamų naujinimų"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Nerastas"
@@ -1430,6 +1455,10 @@ msgstr "Santrauka"
 msgid "Supported"
 msgstr "Palaikomas"
 
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "Palaikomas procesorius"
+
 #. TRANSLATORS: Is found in current metadata
 msgid "Supported on remote server"
 msgstr "Palaikomas nuotoliniame serveryje"
@@ -1479,6 +1508,22 @@ msgstr "Išbandė %s"
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS – tai nemokama paslauga, teikiama nepriklausomo juridinio asmens ir nesusijusi su „$OS_RELEASE:NAME$“. Jūsų OS platintojas gali nebūti patikrinęs šių aparatinės programinės įrangos naujinimų suderinamumo su jūsų sistema ar prijungtais įrenginiais. Visa aparatinė programinė įranga LVFS pateikiama tik aparatinės įrangos gamintojų."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "Naujinimas bus pratęstas tada, kai įrenginio USB laidas bus įkištas iš naujo."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "Naujinimas bus pratęstas tada, kai įrenginio USB laidas bus ištrauktas ir vėl įkištas."
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "Naujinimas bus pratęstas tada, kai įrenginio USB laidas bus ištrauktas."
+
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "Naujinimas bus pratęstas tada, kai įrenginio elektros maitinimo laidas bus ištrauktas ir vėl įkištas."
 
 #. TRANSLATORS: naughty vendor
 msgid "The vendor did not supply any release notes."
@@ -1573,6 +1618,10 @@ msgstr "Atrakina įrenginį aparatinės programinės įrangos prieigai"
 #. TRANSLATORS: command description
 msgid "Unmounts the ESP"
 msgstr "Atjungia ESP"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "Atjunkite įrenginį ir prijunkite jį iš naujo, kad pratęstumėte naujinimo procesą."
 
 #. TRANSLATORS: error message
 #, c-format

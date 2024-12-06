@@ -1329,6 +1329,10 @@ msgstr "Regió de microprogramari del BIOS"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "La regió de microprogramari del BIOS protegeix que la memòria de microprogramari del dispositiu no es mantingui alterada."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "URI base del microprogramari"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Servei de D-Bus per a l'actualització de microprogramari"

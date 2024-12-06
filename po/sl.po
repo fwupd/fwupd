@@ -1344,6 +1344,10 @@ msgstr "Področje BIOS-a vdelane programske opreme"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Firmware BIOS Region ščiti pomnilnik vdelane programske opreme naprave pred nedovoljenimi posegi."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Osnovni URI vdelane programske opreme"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Storitev D-Bus posodobitve vdelane programske opreme"

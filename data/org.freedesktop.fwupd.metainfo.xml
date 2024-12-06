@@ -38,6 +38,32 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.3" date="2024-12-06">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a power quirk for Framework systems</li>
+          <li>Speed up writing firmware to the new Dell dock</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Deinitialize DRM after getting GPU marketing name to fix Xorg startup</li>
+          <li>Do not show 'Device has been removed' as a dock device error</li>
+          <li>Fix a warning about legion-hid2 progress going backwards</li>
+          <li>Fix some small memory leaks in realtek-mst and dell-kestrel</li>
+          <li>Only mark supported Logitech devices as updatable</li>
+          <li>Parse FDTs with missing END tokens to work on more ChromeBooks</li>
+          <li>Reduce the device emulation RSS requirement by ~40%</li>
+          <li>Skip checking BootXXXX entries when the partition does not exist</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Primax Ryder Mouse</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.2" date="2024-11-25">
       <description>
         <p>

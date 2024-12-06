@@ -1237,6 +1237,10 @@ msgstr "BIOS oblast firmware"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Firmware BIOS Region chrání paměť firmware zařízení proti úpravám."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Základní URI firmwaru"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Služba D-Bus pro aktualizaci firmwaru"

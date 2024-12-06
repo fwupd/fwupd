@@ -1333,6 +1333,10 @@ msgstr "Firmware-BIOS-Region"
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Firmware-BIOS-Region schützt den Firmware-Speicher des Geräts vor Manipulationen."
 
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Firmware Basis-URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus-Dienst für Firmware-Aktualisierung"
@@ -1840,10 +1844,10 @@ msgid "Linux Swap"
 msgstr "Linux-Auslagerung"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Linux Hersteller Firmware Dienst (stabile Firmware)"
+msgstr "Linux-Hersteller-Firmwaredienst (stabile Firmware)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux Vendor Firmware Service (Test-Firmware)"
+msgstr "Linux-Hersteller-Firmwaredienst (Test-Firmware)"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
@@ -1967,7 +1971,7 @@ msgstr "Metadaten-URI"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Metadaten können über den Linux Vendor Firmware Service bezogen werden."
+msgstr "Metadaten können über den Linux-Hersteller-Firmwaredienst bezogen werden."
 
 #. TRANSLATORS: error message for a user who ran fwupdmgr
 #. * refresh recently -- %1 is '--force'
@@ -2637,7 +2641,7 @@ msgid "Specify the dbx database file"
 msgstr "dbx-Datenbankdatei angeben"
 
 msgid "Stop the fwupd service"
-msgstr "Den Dienst fwupd stoppen"
+msgstr "Dienst fwupd stoppen"
 
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
