@@ -193,6 +193,7 @@ fu_common_check_full_disk_encryption(GError **error)
 				    g_variant_get_bytestring(device));
 			return FALSE;
 		}
+		/* TODO identify Ubuntu Core FDE volumes */
 	}
 	return TRUE;
 }
