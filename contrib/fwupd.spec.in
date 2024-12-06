@@ -45,6 +45,10 @@
 %global have_modem_manager 1
 %endif
 
+%if 0%{?fedora}
+%global have_passim 1
+%endif
+
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
@@ -69,7 +73,7 @@ BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
-%if 0%{?rhel} >= 10 || 0%{?fedora} >= 28
+%if 0%{?have_passim}
 BuildRequires: passim-devel
 %endif
 BuildRequires: gobject-introspection-devel
@@ -83,11 +87,7 @@ BuildRequires: gnutls-utils
 BuildRequires: meson
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
-%if 0%{?rhel} >= 10 || 0%{?fedora} >= 41
-BuildRequires: bash-completion-devel
-%else
-BuildRequires: bash-completion
-%endif
+BuildRequires: pkgconfig(bash-completion)
 BuildRequires: git-core
 %if 0%{?have_flashrom}
 BuildRequires: flashrom-devel >= 1.2-2
@@ -138,7 +138,7 @@ Provides: fwupdate-efi
 Recommends: udisks2
 Recommends: bluez
 Recommends: jq
-%if 0%{?rhel} >= 10 || 0%{?fedora} >= 28
+%if 0%{?have_passim}
 Recommends: passim
 %endif
 
@@ -273,6 +273,11 @@ fwupd wrapper for Qubes OS
     -Dplugin_modem_manager=enabled \
 %else
     -Dplugin_modem_manager=disabled \
+%endif
+%if 0%{?have_passim}
+    -Dpassim=enabled \
+%else
+    -Dpassim=disabled \
 %endif
 %if 0%{?qubes_packages}
     -Dqubes=true \
