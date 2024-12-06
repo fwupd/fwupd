@@ -215,6 +215,14 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_gen = NULL;
 	g_autoptr(GError) error_version = NULL;
 
+	/* requires kernel 5.5 or later, non-fatal if not available */
+	self->gen =
+	    fu_thunderbolt_udev_get_attr_uint16(FU_UDEV_DEVICE(self), "generation", &error_gen);
+	if (self->gen == 0)
+		g_debug("unable to read generation: %s", error_gen->message);
+	if (self->gen >= 4)
+		fu_thunderbolt_device_set_retries(FU_THUNDERBOLT_DEVICE(self), 1);
+
 	/* try to read the version */
 	if (!fu_thunderbolt_device_get_version(FU_THUNDERBOLT_DEVICE(self), &error_version)) {
 		if (self->controller_kind != FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
@@ -233,12 +241,6 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	did = fu_device_get_pid(device);
 	if (did == 0x0)
 		g_debug("failed to get Device ID");
-
-	/* requires kernel 5.5 or later, non-fatal if not available */
-	self->gen =
-	    fu_thunderbolt_udev_get_attr_uint16(FU_UDEV_DEVICE(self), "generation", &error_gen);
-	if (self->gen == 0)
-		g_debug("unable to read generation: %s", error_gen->message);
 
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
