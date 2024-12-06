@@ -28,3 +28,5 @@ gboolean
 fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error);
 void
 fu_thunderbolt_device_set_auth_method(FuThunderboltDevice *self, const gchar *auth_method);
+void
+fu_thunderbolt_device_set_retries(FuThunderboltDevice *self, guint retries);
