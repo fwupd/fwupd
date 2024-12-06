@@ -31,7 +31,7 @@ fu_pci_mei_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 					  "PciDevice",
 					  fu_device_get_id(self->pci_device));
 	}
-	for (guint i = 0; i < 6; i++) {
+	for (guint i = 1; i < G_N_ELEMENTS(self->hfsts_buf); i++) {
 		g_autofree gchar *title = g_strdup_printf("Hfsts%u", i);
 		fwupd_codec_string_append_hex(
 		    str,
