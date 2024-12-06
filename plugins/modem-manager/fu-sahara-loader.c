@@ -234,8 +234,8 @@ static gboolean
 fu_sahara_loader_send_reset_packet(FuSaharaLoader *self, GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
-	g_autoptr(FuStructSaharaPktResetRes) st_res = fu_struct_sahara_pkt_reset_req_new();
-	g_autoptr(FuStructSaharaPktResetReq) st_req = NULL;
+	g_autoptr(FuStructSaharaPktResetReq) st_res = NULL;
+	g_autoptr(FuStructSaharaPktResetRes) st_req = fu_struct_sahara_pkt_reset_req_new();
 
 	if (!fu_sahara_loader_send_packet(self, st_req, error)) {
 		g_prefix_error(error, "Failed to send reset packet: ");
