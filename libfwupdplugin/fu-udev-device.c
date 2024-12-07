@@ -1847,25 +1847,17 @@ static GBytes *
 fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	guint number_reads = 0;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GInputStream) stream = NULL;
-
-	/* open the file */
-	if (priv->device_file == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Unable to read firmware from device");
-		return NULL;
-	}
+	g_autofree gchar *rom_fn = NULL;
 
 	/* open file */
-	file = g_file_new_for_path(priv->device_file);
+	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(self), "rom", NULL);
+	file = g_file_new_for_path(rom_fn);
 	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error_local));
 	if (stream == NULL) {
 		g_set_error_literal(error,
