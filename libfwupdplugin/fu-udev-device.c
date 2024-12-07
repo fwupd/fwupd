@@ -1843,82 +1843,6 @@ fu_udev_device_get_subsystem_devtype(FuUdevDevice *self)
 	return g_strdup(priv->subsystem);
 }
 
-static GBytes *
-fu_udev_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuUdevDevice *self = FU_UDEV_DEVICE(device);
-	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	guint number_reads = 0;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-
-	/* open the file */
-	if (priv->device_file == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Unable to read firmware from device");
-		return NULL;
-	}
-
-	/* open file */
-	file = g_file_new_for_path(priv->device_file);
-	stream = G_INPUT_STREAM(g_file_read(file, NULL, &error_local));
-	if (stream == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_AUTH_FAILED,
-				    error_local->message);
-		return NULL;
-	}
-
-	/* we have to enable the read for devices */
-	fn = g_file_get_path(file);
-	if (g_str_has_prefix(fn, "/sys")) {
-		g_autoptr(GFileOutputStream) output_stream = NULL;
-		output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-		if (output_stream == NULL) {
-			fu_error_convert(error);
-			return NULL;
-		}
-		if (!g_output_stream_write_all(G_OUTPUT_STREAM(output_stream),
-					       "1",
-					       1,
-					       NULL,
-					       NULL,
-					       error)) {
-			fu_error_convert(error);
-			return NULL;
-		}
-	}
-
-	/* ensure we got enough data to fill the buffer */
-	while (TRUE) {
-		gssize sz;
-		guint8 tmp[32 * 1024] = {0x0};
-		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
-		if (sz == 0)
-			break;
-		g_debug("ROM returned 0x%04x bytes", (guint)sz);
-		if (sz < 0)
-			return NULL;
-		g_byte_array_append(buf, tmp, sz);
-
-		/* check the firmware isn't serving us small chunks */
-		if (number_reads++ > 1024) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "firmware not fulfilling requests");
-			return NULL;
-		}
-	}
-	return g_bytes_new(buf->data, buf->len);
-}
-
 /* private */
 void
 fu_udev_device_add_property(FuUdevDevice *self, const gchar *key, const gchar *value)
@@ -2246,7 +2170,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 	device_class->probe_complete = fu_udev_device_probe_complete;
-	device_class->dump_firmware = fu_udev_device_dump_firmware;
 
 	/**
 	 * FuUdevDevice::changed:

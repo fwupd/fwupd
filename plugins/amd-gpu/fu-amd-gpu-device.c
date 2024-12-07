@@ -21,7 +21,7 @@
 #include "fu-amd-gpu-psp-firmware.h"
 
 struct _FuAmdGpuDevice {
-	FuPciDevice parent_instance;
+	FuOptionromDevice parent_instance;
 	gchar *vbios_pn;
 	guint32 drm_major;
 	guint32 drm_minor;

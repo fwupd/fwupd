@@ -90,6 +90,7 @@
 #include <libfwupdplugin/fu-msgpack-item.h>
 #include <libfwupdplugin/fu-msgpack.h>
 #include <libfwupdplugin/fu-oprom-firmware.h>
+#include <libfwupdplugin/fu-optionrom-device.h>
 #include <libfwupdplugin/fu-partial-input-stream.h>
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pci-device.h>
