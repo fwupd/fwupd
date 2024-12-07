@@ -21,7 +21,7 @@
 #include "fu-amd-gpu-psp-firmware.h"
 
 struct _FuAmdGpuDevice {
-	FuPciDevice parent_instance;
+	FuOpromDevice parent_instance;
 	gchar *vbios_pn;
 	guint32 drm_major;
 	guint32 drm_minor;
@@ -34,7 +34,7 @@ struct _FuAmdGpuDevice {
 
 #define PART_NUM_STR_SIZE 10
 
-G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_PCI_DEVICE)
+G_DEFINE_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU_TYPE_OPROM_DEVICE)
 
 static void
 fu_amd_gpu_device_to_string(FuDevice *device, guint idt, GString *str)

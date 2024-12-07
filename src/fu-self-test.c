@@ -6827,8 +6827,7 @@ fu_test_engine_fake_pci(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "pci");
 	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_true(
-	    g_str_has_suffix(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), "/rom"));
+	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpint(fu_device_get_vid(device), ==, 0x8086);
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x06ed);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "optionrom");
