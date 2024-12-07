@@ -14,4 +14,4 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_AMDGPU_DEVICE (fu_amd_gpu_device_get_type())
-G_DECLARE_FINAL_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU, AMDGPU_DEVICE, FuPciDevice)
+G_DECLARE_FINAL_TYPE(FuAmdGpuDevice, fu_amd_gpu_device, FU, AMDGPU_DEVICE, FuOpromDevice)
