@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-optionrom-device.h"
 #include "fu-optionrom-plugin.h"
 
 struct _FuOptionromPlugin {
@@ -43,10 +42,27 @@ fu_optionrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_optionrom_plugin_device_created(FuPlugin *self, FuDevice *device, GError **error)
+{
+	if (!fu_device_probe(device, error))
+		return FALSE;
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unable to read firmware from device, 'rom' does not exist");
+		return FALSE;
+	}
+	fu_device_set_logical_id(device, "rom");
+	return TRUE;
+}
+
 static void
 fu_optionrom_plugin_class_init(FuOptionromPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_optionrom_plugin_constructed;
+	plugin_class->device_created = fu_optionrom_plugin_device_created;
 	plugin_class->startup = fu_optionrom_plugin_startup;
 }

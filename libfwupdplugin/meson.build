@@ -145,6 +145,7 @@ fwupdplugin_src = [
   'fu-path.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
   'fu-pci-device.c',
+  'fu-optionrom-device.c',
   'fu-plugin.c',
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
@@ -281,6 +282,7 @@ fwupdplugin_headers = [
   'fu-path.h',
   'fu-pefile-firmware.h',
   'fu-pci-device.h',
+  'fu-optionrom-device.h',
   'fu-plugin.h',
   'fu-plugin-private.h',
   'fu-progress.h',
