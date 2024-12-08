@@ -283,6 +283,10 @@ option('plugin_uefi_pk',
   type: 'feature',
   description: 'UEFI PK support',
 )
+option('plugin_uefi_dbx_snapd',
+  type: 'feature',
+  description: 'enable UEFI DBX update snapd integration',
+)
 option('plugin_uf2',
   type: 'feature',
   description: 'support for UF2',

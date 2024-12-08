@@ -153,6 +153,7 @@ fwupdplugin_src = [
   'fu-security-attrs.c',
   'fu-serio-device.c',
   'fu-smbios.c', # fuzzing
+  'fu-snap.c',
   'fu-srec-firmware.c', # fuzzing
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
