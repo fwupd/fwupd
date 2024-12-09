@@ -822,7 +822,8 @@ fu_engine_requirements_check(FuEngine *self,
 		return FALSE;
 
 	/* sanity check */
-	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
