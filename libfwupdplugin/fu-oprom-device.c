@@ -26,12 +26,58 @@ fu_oprom_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_oprom_device_set_enabled(FuOpromDevice *self, gboolean value, GError **error)
+{
+	g_autofree gchar *rom_fn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileOutputStream) output_stream = NULL;
+
+	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "rom", NULL);
+	if (!g_str_has_prefix(rom_fn, "/sys"))
+		return TRUE;
+
+	file = g_file_new_for_path(rom_fn);
+	output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
+	if (output_stream == NULL) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+	if (!g_output_stream_write_all(G_OUTPUT_STREAM(output_stream),
+				       value ? "1" : "0",
+				       1,
+				       NULL,
+				       NULL,
+				       error)) {
+		fu_error_convert(error);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_oprom_device_dump_enable_cb(GObject *device, GError **error)
+{
+	FuOpromDevice *self = FU_OPROM_DEVICE(device);
+	return fu_oprom_device_set_enabled(self, TRUE, error);
+}
+
+static gboolean
+fu_oprom_device_dump_disable_cb(GObject *device, GError **error)
+{
+	FuOpromDevice *self = FU_OPROM_DEVICE(device);
+	return fu_oprom_device_set_enabled(self, FALSE, error);
+}
+
 static GBytes *
 fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuOpromDevice *self = FU_OPROM_DEVICE(device);
 	guint number_reads = 0;
 	g_autofree gchar *rom_fn = NULL;
+	g_autoptr(FuDeviceLocker) locker_enable = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -59,23 +105,12 @@ fu_oprom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **e
 	}
 
 	/* we have to enable the read for devices */
-	if (g_str_has_prefix(rom_fn, "/sys")) {
-		g_autoptr(GFileOutputStream) output_stream = NULL;
-		output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-		if (output_stream == NULL) {
-			fu_error_convert(error);
-			return NULL;
-		}
-		if (!g_output_stream_write_all(G_OUTPUT_STREAM(output_stream),
-					       "1",
-					       1,
-					       NULL,
-					       NULL,
-					       error)) {
-			fu_error_convert(error);
-			return NULL;
-		}
-	}
+	locker_enable = fu_device_locker_new_full(device,
+						  fu_oprom_device_dump_enable_cb,
+						  fu_oprom_device_dump_disable_cb,
+						  error);
+	if (locker_enable == NULL)
+		return NULL;
 
 	/* ensure we got enough data to fill the buffer */
 	while (TRUE) {
