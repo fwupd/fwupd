@@ -918,6 +918,133 @@ fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_mm_device_mbim_open(FuMmDevice *self, GError **error)
+{
+	self->mbim_qdu_updater = fu_mbim_qdu_updater_new(self->port_mbim);
+	return fu_mbim_qdu_updater_open(self->mbim_qdu_updater, error);
+}
+
+static gboolean
+fu_mm_device_mbim_close(FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuMbimQduUpdater) updater = NULL;
+	updater = g_steal_pointer(&self->mbim_qdu_updater);
+	return fu_mbim_qdu_updater_close(updater, error);
+}
+
+#if MBIM_CHECK_VERSION(1, 27, 5)
+static void
+fu_mm_device_switch_to_edl_mbim_ready(MbimDevice *device, GAsyncResult *res, gpointer user_data)
+{
+	/* No need to check for a response since MBIM
+	 * port goes away without sending one */
+	GMainLoop *loop = user_data;
+
+	g_main_loop_quit(loop);
+}
+
+static gboolean
+fu_mm_device_mbim_switch_to_edl(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(MbimMessage) message = NULL;
+	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_mbim_open,
+					   (FuDeviceLockerFunc)fu_mm_device_mbim_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	message = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
+	mbim_device_command(fu_mbim_qdu_updater_get_mbim_device(self->mbim_qdu_updater),
+			    message,
+			    5,
+			    NULL,
+			    (GAsyncReadyCallback)fu_mm_device_switch_to_edl_mbim_ready,
+			    mainloop);
+
+	g_main_loop_run(mainloop);
+
+	return TRUE;
+}
+#endif // MBIM_CHECK_VERSION(1, 27, 5)
+
+static gboolean
+fu_mm_device_qcdm_switch_to_edl_cb(FuDevice *device, gpointer userdata, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	const guint8 emergency_download[] = {0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e};
+
+	/* when the QCDM port does not exist anymore, we are already detached */
+	if (!g_file_test(self->port_qcdm, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	return fu_mm_device_qcdm_cmd(self, emergency_download, sizeof(emergency_download), error);
+}
+
+static gboolean
+fu_mm_device_qcdm_switch_to_edl(FuMmDevice *self, GError **error)
+{
+	/* retry up to 30 times until the QCDM port goes away */
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_mm_device_qcdm_switch_to_edl_cb,
+				    30,
+				    1000,
+				    NULL,
+				    error);
+}
+
+static gboolean
+fu_mm_device_detach_sahara(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	/* use special command for Quectel MBIM devices */
+	if (fu_device_get_vid(device) == 0x2c7c && self->port_mbim != NULL) {
+#if MBIM_CHECK_VERSION(1, 27, 5)
+		if (!fu_mm_device_mbim_switch_to_edl(device, error))
+			return FALSE;
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "libmbim >= 1.27.5 required for Quectel MBIM devices");
+		return FALSE;
+#endif
+	} else if (self->port_qcdm != NULL) {
+		if (!fu_mm_device_qcdm_switch_to_edl(self, error))
+			return FALSE;
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "suitable port not found");
+		return FALSE;
+	}
+
+	fu_device_sleep(device, 1000);
+
+	/* make sure the udev device is still present */
+	if (!fu_mm_device_ensure_udev_device(self, error))
+		return FALSE;
+
+	self->port_edl = g_strdup(fu_udev_device_get_device_file(self->udev_device));
+
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -963,6 +1090,10 @@ fu_mm_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 		/* fastboot */
 		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 			return fu_mm_device_detach_fastboot(device, error);
+#if MM_CHECK_VERSION(1, 19, 1)
+		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA)
+			return fu_mm_device_detach_sahara(device, error);
+#endif // MM_CHECK_VERSION(1, 19, 1)
 #if MM_CHECK_VERSION(1, 24, 0)
 		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL)
 			return fu_mm_device_detach_fdl(device, progress, error);
@@ -1152,21 +1283,6 @@ typedef struct {
 } FuMmGetFirmwareVersionCtx;
 
 static gboolean
-fu_mm_device_mbim_open(FuMmDevice *self, GError **error)
-{
-	self->mbim_qdu_updater = fu_mbim_qdu_updater_new(self->port_mbim);
-	return fu_mbim_qdu_updater_open(self->mbim_qdu_updater, error);
-}
-
-static gboolean
-fu_mm_device_mbim_close(FuMmDevice *self, GError **error)
-{
-	g_autoptr(FuMbimQduUpdater) updater = NULL;
-	updater = g_steal_pointer(&self->mbim_qdu_updater);
-	return fu_mbim_qdu_updater_close(updater, error);
-}
-
-static gboolean
 fu_mm_device_locker_new_timeout(gpointer user_data)
 {
 	FuMmGetFirmwareVersionCtx *ctx = user_data;
@@ -1345,80 +1461,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 
 	return TRUE;
 }
-
-static gboolean
-fu_mm_device_qcdm_switch_to_edl_cb(FuDevice *device, gpointer userdata, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	static const guint8 emergency_download[] = {0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e};
-
-	locker = fu_device_locker_new_full(self,
-					   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
-					   (FuDeviceLockerFunc)fu_mm_device_io_close,
-					   &error_local);
-
-	if (locker == NULL) {
-		/* FIXME: this should have been done at attach */
-		// if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
-		//	return fu_mm_device_find_edl_port(device, "wwan", error);
-		// }
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
-	}
-
-	if (!fu_mm_device_qcdm_cmd(self,
-				   emergency_download,
-				   G_N_ELEMENTS(emergency_download),
-				   error))
-		return FALSE;
-
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
-		    "Device haven't switched to EDL yet");
-	return FALSE;
-}
-
-#if MBIM_CHECK_VERSION(1, 27, 5)
-static void
-fu_mm_device_switch_to_edl_mbim_ready(MbimDevice *device, GAsyncResult *res, GMainLoop *loop)
-{
-	/* No need to check for a response since MBIM
-	 * port goes away without sending one */
-
-	g_main_loop_quit(loop);
-}
-
-static gboolean
-fu_mm_device_mbim_switch_to_edl(FuDevice *device, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(MbimMessage) message = NULL;
-	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
-
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_mm_device_mbim_open,
-					   (FuDeviceLockerFunc)fu_mm_device_mbim_close,
-					   error);
-	if (locker == NULL)
-		return FALSE;
-
-	message = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
-	mbim_device_command(fu_mbim_qdu_updater_get_mbim_device(self->mbim_qdu_updater),
-			    message,
-			    5,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_device_switch_to_edl_mbim_ready,
-			    mainloop);
-
-	g_main_loop_run(mainloop);
-
-	return TRUE;
-}
-#endif // MBIM_CHECK_VERSION(1, 27, 5)
 
 static gboolean
 fu_mm_device_firehose_open(FuMmDevice *self, GError **error)
@@ -1615,26 +1657,15 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 
 		/* FIXME: this should have been done in attach */
 
-		/* trigger emergency download mode, up to 30s retrying until the QCDM
-		 * port goes away; this takes us to the EDL (embedded downloader) execution
-		 * environment */
-		if (!fu_device_retry_full(FU_DEVICE(self),
-					  fu_mm_device_qcdm_switch_to_edl_cb,
-					  30,
-					  1000,
-					  NULL,
-					  error))
+		/* trigger emergency download mode; this takes us to the EDL
+		 * (embedded downloader) execution environment */
+		if (!fu_mm_device_qcdm_switch_to_edl(self, error))
 			return FALSE;
 
 		g_debug("found edl port: %s", self->port_edl);
 	}
 #if MM_CHECK_VERSION(1, 19, 1)
-	else if ((FU_MM_DEVICE(self)->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA) &&
-		 self->port_mbim != NULL) {
-		/* switch to emergency download (EDL) execution environment */
-		if (!fu_mm_device_mbim_switch_to_edl(device, error))
-			return FALSE;
-
+	else if (FU_MM_DEVICE(self)->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA) {
 		locker = fu_device_locker_new_full(self,
 						   (FuDeviceLockerFunc)fu_mm_device_sahara_open,
 						   (FuDeviceLockerFunc)fu_mm_device_sahara_close,
