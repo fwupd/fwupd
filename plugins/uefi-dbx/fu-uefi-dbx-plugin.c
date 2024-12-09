@@ -27,10 +27,11 @@ G_DEFINE_TYPE(FuUefiDbxPlugin, fu_uefi_dbx_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
-	gboolean inhibited = FALSE;
+#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
+	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
+#endif
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -49,7 +50,6 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 		fu_device_inhibit(FU_DEVICE(device),
 				  "no-dbx",
 				  "System firmware cannot accept DBX updates");
-		inhibited = TRUE;
 	}
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
@@ -57,7 +57,8 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 	if (self->snapd_notifier != NULL) {
 		g_debug("adding snapd notifier");
 		fu_uefi_dbx_device_set_snapd_notifier(device, self->snapd_notifier);
-	} else if (!inhibited && self->snapd_integration_supported && fu_snap_is_in_snap()) {
+	} else if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) &&
+		   self->snapd_integration_supported && fu_snap_is_in_snap()) {
 		/* we're running inside a snap, the device is not inhibited and snapd
 		 * supports integration, in which case this is a hard error and we
 		 * should not give an option to dbx */
@@ -112,13 +113,13 @@ static void
 fu_uefi_dbx_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_capsule");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_DBX_DEVICE);
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	if (fu_snap_is_in_snap()) {
+		FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 		g_autoptr(GError) error_local = NULL;
 		/* only enable snapd integration if running inside a snap */
 		if (!fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj), &error_local)) {
