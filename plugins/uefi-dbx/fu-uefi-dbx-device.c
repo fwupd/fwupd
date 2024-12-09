@@ -22,10 +22,33 @@ struct _FuUefiDbxDevice {
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
+void
+fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
+{
+	g_set_object(&self->snapd_notifier, obs);
+}
+
 static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error);
+fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error)
+{
+	if (self->snapd_notifier == NULL) {
+		/* nothing to do */
+		return TRUE;
+	}
+
+	return fu_uefi_dbx_snapd_notifier_dbx_update_prepare(self->snapd_notifier, data, error);
+}
+
 static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error);
+fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error)
+{
+	if (self->snapd_notifier == NULL) {
+		/* nothing to do */
+		return TRUE;
+	}
+
+	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
+}
 #endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 
 static gboolean
@@ -49,7 +72,7 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	g_debug("firmware write - notify snapd");
 	if (!fu_uefi_dbx_device_maybe_notify_snapd_prepare(FU_UEFI_DBX_DEVICE(device), fw, error)) {
-		g_warning("cannot notify snapd of pending update");
+		g_prefix_error(error, "cannot notify snapd of pending update");
 		return FALSE;
 	}
 #endif
@@ -270,7 +293,6 @@ fu_uefi_dbx_device_finalize(GObject *object)
 
 	if (self->snapd_notifier != NULL) {
 		g_object_unref(self->snapd_notifier);
-		self->snapd_notifier = NULL;
 	}
 #endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 	G_OBJECT_CLASS(fu_uefi_dbx_device_parent_class)->finalize(object);
@@ -298,33 +320,3 @@ fu_uefi_dbx_device_new(FuContext *ctx)
 	self = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	return self;
 }
-
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
-void
-fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
-{
-	self->snapd_notifier = g_object_ref(obs);
-}
-
-static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error)
-{
-	if (self->snapd_notifier == NULL) {
-		/* nothing to do */
-		return TRUE;
-	}
-
-	return fu_uefi_dbx_snapd_notifier_dbx_update_prepare(self->snapd_notifier, data, error);
-}
-
-static gboolean
-fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error)
-{
-	if (self->snapd_notifier == NULL) {
-		/* nothing to do */
-		return TRUE;
-	}
-
-	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
-}
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */

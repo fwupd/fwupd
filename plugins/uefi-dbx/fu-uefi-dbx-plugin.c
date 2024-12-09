@@ -24,14 +24,10 @@ struct _FuUefiDbxPlugin {
 
 G_DEFINE_TYPE(FuUefiDbxPlugin, fu_uefi_dbx_plugin, FU_TYPE_PLUGIN)
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
-static gboolean
-fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self);
-#endif
-
 static gboolean
 fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
+	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
 	gboolean inhibited = FALSE;
@@ -58,12 +54,10 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	/* TODO progress? */
-	if (FU_UEFI_DBX_PLUGIN(plugin)->snapd_notifier != NULL) {
+	if (self->snapd_notifier != NULL) {
 		g_debug("adding snapd notifier");
-		fu_uefi_dbx_device_set_snapd_notifier(device,
-						      FU_UEFI_DBX_PLUGIN(plugin)->snapd_notifier);
-	} else if (!inhibited && FU_UEFI_DBX_PLUGIN(plugin)->snapd_integration_supported &&
-		   fu_snap_is_in_snap()) {
+		fu_uefi_dbx_device_set_snapd_notifier(device, self->snapd_notifier);
+	} else if (!inhibited && self->snapd_integration_supported && fu_snap_is_in_snap()) {
 		/* we're running inside a snap, the device is not inhibited and snapd
 		 * supports integration, in which case this is a hard error and we
 		 * should not give an option to dbx */
@@ -99,6 +93,29 @@ fu_uefi_dbx_plugin_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_uefi_dbx_plugin_parent_class)->finalize(object);
 }
 
+#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
+static gboolean
+fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self)
+{
+	g_autoptr(FuUefiDbxSnapdNotifier) obs = fu_uefi_dbx_snapd_notifier_new();
+	g_autoptr(GError) error_local = NULL;
+
+	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, &error_local)) {
+		self->snapd_notifier = g_object_ref(obs);
+		self->snapd_integration_supported = TRUE;
+		return TRUE;
+	}
+
+	/* specific error code if relevant APIs are not present */
+	self->snapd_integration_supported =
+	    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+
+	g_info("failed to initialize snapd notifier: %s", error_local->message);
+
+	return FALSE;
+}
+#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
+
 static void
 fu_uefi_dbx_plugin_constructed(GObject *obj)
 {
@@ -133,27 +150,3 @@ fu_uefi_dbx_plugin_class_init(FuUefiDbxPluginClass *klass)
 
 	object_class->finalize = fu_uefi_dbx_plugin_finalize;
 }
-
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
-static gboolean
-fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self)
-{
-	g_autoptr(FuUefiDbxSnapdNotifier) obs = fu_uefi_dbx_snapd_notifier_new();
-	GError *err = NULL;
-
-	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, &err)) {
-		self->snapd_notifier = g_object_ref(obs);
-		self->snapd_integration_supported = TRUE;
-		return TRUE;
-	}
-
-	/* specific error code if relevant APIs are not present */
-	self->snapd_integration_supported =
-	    !g_error_matches(err, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-
-	g_info("failed to initialize snapd notifier: %s", err->message);
-	g_error_free(err);
-
-	return FALSE;
-}
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
