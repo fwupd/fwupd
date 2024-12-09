@@ -101,7 +101,6 @@ fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 
 	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error)) {
 		g_set_object(&self->snapd_notifier, obs);
-		self->snapd_integration_supported = TRUE;
 		return TRUE;
 	}
 
@@ -124,6 +123,7 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 		/* only enable snapd integration if running inside a snap */
 		if (fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj), &error_local)) {
 			g_info("snapd integration enabled ");
+			self->snapd_integration_supported = TRUE;
 		} else {
 			/* specific error code if relevant APIs are not present and thus
 			 * integration cannot be supported */
