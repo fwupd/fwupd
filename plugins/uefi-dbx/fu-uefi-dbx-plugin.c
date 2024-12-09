@@ -99,12 +99,12 @@ fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 {
 	g_autoptr(FuUefiDbxSnapdNotifier) obs = fu_uefi_dbx_snapd_notifier_new();
 
-	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error)) {
-		g_set_object(&self->snapd_notifier, obs);
-		return TRUE;
+	if (!fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error)) {
+		return FALSE;
 	}
 
-	return FALSE;
+	g_set_object(&self->snapd_notifier, obs);
+	return TRUE;
 }
 #endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 
@@ -121,16 +121,16 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 	if (fu_snap_is_in_snap()) {
 		g_autoptr(GError) error_local = NULL;
 		/* only enable snapd integration if running inside a snap */
-		if (fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj), &error_local)) {
-			g_info("snapd integration enabled ");
-			self->snapd_integration_supported = TRUE;
-		} else {
+		if (!fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj), &error_local)) {
 			/* specific error code if relevant APIs are not present and thus
 			 * integration cannot be supported */
 			self->snapd_integration_supported =
 			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 
 			g_info("snapd integration non-functional: %s", error_local->message);
+		} else {
+			g_info("snapd integration enabled ");
+			self->snapd_integration_supported = TRUE;
 		}
 	} else {
 		/* TODO figure out non-snap scenarios */
