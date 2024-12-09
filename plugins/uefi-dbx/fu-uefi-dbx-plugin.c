@@ -95,22 +95,15 @@ fu_uefi_dbx_plugin_finalize(GObject *object)
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 static gboolean
-fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self)
+fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 {
 	g_autoptr(FuUefiDbxSnapdNotifier) obs = fu_uefi_dbx_snapd_notifier_new();
-	g_autoptr(GError) error_local = NULL;
 
-	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, &error_local)) {
-		self->snapd_notifier = g_object_ref(obs);
+	if (fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error)) {
+		g_set_object(&self->snapd_notifier, obs);
 		self->snapd_integration_supported = TRUE;
 		return TRUE;
 	}
-
-	/* specific error code if relevant APIs are not present */
-	self->snapd_integration_supported =
-	    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-
-	g_info("failed to initialize snapd notifier: %s", error_local->message);
 
 	return FALSE;
 }
@@ -120,17 +113,24 @@ static void
 fu_uefi_dbx_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_capsule");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_DBX_DEVICE);
 
 #ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	if (fu_snap_is_in_snap()) {
+		g_autoptr(GError) error_local = NULL;
 		/* only enable snapd integration if running inside a snap */
-		if (fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj))) {
+		if (fu_uefi_dbx_plugin_snapd_notify_init(FU_UEFI_DBX_PLUGIN(obj), &error_local)) {
 			g_info("snapd integration enabled ");
 		} else {
-			g_info("snapd integration disabled");
+			/* specific error code if relevant APIs are not present and thus
+			 * integration cannot be supported */
+			self->snapd_integration_supported =
+			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+
+			g_info("snapd integration non-functional: %s", error_local->message);
 		}
 	} else {
 		/* TODO figure out non-snap scenarios */
