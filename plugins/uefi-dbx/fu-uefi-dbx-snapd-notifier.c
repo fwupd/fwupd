@@ -125,15 +125,16 @@ fu_uefi_dbx_snapd_notifier_simple_req(FuUefiDbxSnapdNotifier *self,
 	}
 
 	if (status_code != 200) {
+		const char *rsp = "";
 		if (rsp_buf->len > 0) {
-			/* make sure the response is null terminated */
-			g_byte_array_append(rsp_buf, (const guint8 *)"\0", 1);
+			/* make sure the response is printable */
+			rsp = fu_strsafe((const char *)rsp_buf->data, rsp_buf->len + 1);
 		}
 
 		/* TODO check whether the response is even printable? */
 		g_warning("snapd request failed with status %ld, response: %s",
 			  (glong)status_code,
-			  rsp_buf->data);
+			  rsp);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
