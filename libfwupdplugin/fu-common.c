@@ -371,8 +371,5 @@ fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value)
 gboolean
 fu_snap_is_in_snap(void)
 {
-	if (getenv("SNAP") != NULL) {
-		return TRUE;
-	}
-	return FALSE;
+	return getenv("SNAP") != NULL;
 }
