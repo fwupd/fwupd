@@ -1,7 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-if get_option('plugin_uefi_dbx_snapd').require(libcurl.found(),
+snapd_opt = get_option('plugin_uefi_dbx_snapd')
+
+if snapd_opt.require(libcurl.found(),
   error_message: 'curl is needed for plugin_uefi_dbx_snapd').disable_auto_if(host_machine.system() != 'linux').allowed()
 endif
 
@@ -11,8 +13,7 @@ uefi_dbx_sources = [
   'fu-uefi-dbx-device.c',
 ]
 uefi_dbx_dependencies = [ plugin_deps ]
-
-if get_option('plugin_uefi_dbx_snapd').allowed()
+if snapd_opt.allowed()
   uefi_dbx_sources += [
     'fu-uefi-dbx-snapd-notifier.c',
   ]
