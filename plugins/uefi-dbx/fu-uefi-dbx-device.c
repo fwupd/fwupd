@@ -242,9 +242,8 @@ fu_uefi_dbx_device_cleanup(FuDevice *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error)) {
+	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error))
 		return FALSE;
-	}
 
 	return TRUE;
 }
