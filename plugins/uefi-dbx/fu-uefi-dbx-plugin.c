@@ -89,9 +89,8 @@ fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 {
 	g_autoptr(FuUefiDbxSnapdNotifier) obs = fu_uefi_dbx_snapd_notifier_new();
 
-	if (!fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error)) {
+	if (!fu_uefi_dbx_snapd_notifier_dbx_manager_startup(obs, error))
 		return FALSE;
-	}
 
 	g_set_object(&self->snapd_notifier, obs);
 	return TRUE;
