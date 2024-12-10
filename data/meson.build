@@ -111,6 +111,10 @@ if build_daemon
     if get_option('plugin_intel_me').allowed()
       device_allows += ['char-mei']
     endif
+    if get_option('plugin_uefi_capsule').allowed()
+      # for BLKSSZGET
+      device_allows += ['block-blkext']
+    endif
     foreach device_allow: device_allows
       dynamic_options += ['DeviceAllow=' + device_allow + ' rw']
     endforeach
