@@ -8,20 +8,15 @@
 
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 #include "fu-uefi-dbx-snapd-notifier.h"
-#endif
 
 struct _FuUefiDbxDevice {
 	FuDevice parent_instance;
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	FuUefiDbxSnapdNotifier *snapd_notifier;
-#endif
 };
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 void
 fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
 {
@@ -49,7 +44,6 @@ fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **er
 
 	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
 }
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
@@ -69,13 +63,11 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	g_debug("firmware write - notify snapd");
 	if (!fu_uefi_dbx_device_maybe_notify_snapd_prepare(FU_UEFI_DBX_DEVICE(device), fw, error)) {
 		g_prefix_error(error, "cannot notify snapd of pending update");
 		return FALSE;
 	}
-#endif
 
 	/* write entire chunk to efivarsfs */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
@@ -250,11 +242,10 @@ fu_uefi_dbx_device_cleanup(FuDevice *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	if (!fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FU_UEFI_DBX_DEVICE(self), error)) {
 		return FALSE;
 	}
-#endif
+
 	return TRUE;
 }
 
@@ -288,13 +279,12 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 static void
 fu_uefi_dbx_device_finalize(GObject *object)
 {
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(object);
 
 	if (self->snapd_notifier != NULL) {
 		g_object_unref(self->snapd_notifier);
 	}
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
+
 	G_OBJECT_CLASS(fu_uefi_dbx_device_parent_class)->finalize(object);
 }
 

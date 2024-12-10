@@ -8,18 +8,13 @@
 
 #include "fu-uefi-dbx-device.h"
 #include "fu-uefi-dbx-plugin.h"
-
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 #include "fu-uefi-dbx-snapd-notifier.h"
-#endif
 
 struct _FuUefiDbxPlugin {
 	FuPlugin parent_instance;
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	FuUefiDbxSnapdNotifier *snapd_notifier;
 	gboolean snapd_integration_supported;
-#endif
 };
 
 G_DEFINE_TYPE(FuUefiDbxPlugin, fu_uefi_dbx_plugin, FU_TYPE_PLUGIN)
@@ -29,9 +24,8 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
-#endif
+	gboolean inhibited = FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -50,15 +44,13 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 		fu_device_inhibit(FU_DEVICE(device),
 				  "no-dbx",
 				  "System firmware cannot accept DBX updates");
+		inhibited = TRUE;
 	}
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
-	/* TODO progress? */
 	if (self->snapd_notifier != NULL) {
 		g_debug("adding snapd notifier");
 		fu_uefi_dbx_device_set_snapd_notifier(device, self->snapd_notifier);
-	} else if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) &&
-		   self->snapd_integration_supported && fu_snap_is_in_snap()) {
+	} else if (!inhibited && self->snapd_integration_supported && fu_snap_is_in_snap()) {
 		/* we're running inside a snap, the device is not inhibited and snapd
 		 * supports integration, in which case this is a hard error and we
 		 * should not give an option to dbx */
@@ -70,7 +62,6 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 				  "no-snapd-dbx",
 				  "Snapd integration for DBX update is not available");
 	}
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 
 	fu_plugin_device_add(plugin, FU_DEVICE(device));
 	return TRUE;
@@ -84,17 +75,15 @@ fu_uefi_dbx_plugin_init(FuUefiDbxPlugin *self)
 static void
 fu_uefi_dbx_plugin_finalize(GObject *object)
 {
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(object);
 	if (self->snapd_notifier != NULL) {
 		g_object_unref(self->snapd_notifier);
 		self->snapd_notifier = NULL;
 	}
-#endif
+
 	G_OBJECT_CLASS(fu_uefi_dbx_plugin_parent_class)->finalize(object);
 }
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 static gboolean
 fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 {
@@ -107,7 +96,6 @@ fu_uefi_dbx_plugin_snapd_notify_init(FuUefiDbxPlugin *self, GError **error)
 	g_set_object(&self->snapd_notifier, obs);
 	return TRUE;
 }
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 
 static void
 fu_uefi_dbx_plugin_constructed(GObject *obj)
@@ -117,7 +105,6 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_DBX_DEVICE);
 
-#ifdef WITH_UEFI_DBX_SNAPD_NOTIFIER
 	if (fu_snap_is_in_snap()) {
 		FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 		g_autoptr(GError) error_local = NULL;
@@ -137,7 +124,6 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 		/* TODO figure out non-snap scenarios */
 		g_info("snapd integration outside of snap is not supported");
 	}
-#endif /* WITH_UEFI_DBX_SNAPD_NOTIFIER */
 }
 
 static void
