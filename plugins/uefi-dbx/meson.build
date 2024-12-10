@@ -5,18 +5,8 @@ uefi_dbx_sources = [
   'fu-uefi-dbx-plugin.c',
   'fu-uefi-dbx-common.c',
   'fu-uefi-dbx-device.c',
+  'fu-uefi-dbx-snapd-notifier.c',
 ]
-uefi_dbx_dependencies = [ plugin_deps ]
-
-snapd_opt = get_option('plugin_uefi_dbx_snapd').disable_auto_if(host_machine.system() != 'linux')
-if snapd_opt.require(libcurl.found(),
-  error_message: 'curl is needed for plugin_uefi_dbx_snapd').disable_auto_if(host_machine.system() != 'linux').enabled()
-  uefi_dbx_sources += [
-    'fu-uefi-dbx-snapd-notifier.c',
-  ]
-  uefi_dbx_dependencies += [ libcurl ]
-  cargs += ['-DWITH_UEFI_DBX_SNAPD_NOTIFIER=1']
-endif
 
 plugin_quirks += files('uefi-dbx.quirk')
 plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
@@ -24,7 +14,10 @@ plugin_builtin_uefi_dbx = static_library('fu_plugin_uefi_dbx',
   include_directories: plugin_incdirs,
   link_with: plugin_libs,
   c_args: cargs,
-  dependencies: uefi_dbx_dependencies
+  dependencies: [
+    plugin_deps,
+    libcurl,
+  ],
 )
 plugin_builtins += plugin_builtin_uefi_dbx
 
