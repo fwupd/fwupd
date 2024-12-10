@@ -280,9 +280,8 @@ fu_uefi_dbx_device_finalize(GObject *object)
 {
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(object);
 
-	if (self->snapd_notifier != NULL) {
+	if (self->snapd_notifier != NULL)
 		g_object_unref(self->snapd_notifier);
-	}
 
 	G_OBJECT_CLASS(fu_uefi_dbx_device_parent_class)->finalize(object);
 }
