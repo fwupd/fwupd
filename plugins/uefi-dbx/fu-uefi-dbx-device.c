@@ -26,10 +26,8 @@ fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotif
 static gboolean
 fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *data, GError **error)
 {
-	if (self->snapd_notifier == NULL) {
-		/* nothing to do */
+	if (self->snapd_notifier == NULL)
 		return TRUE;
-	}
 
 	return fu_uefi_dbx_snapd_notifier_dbx_update_prepare(self->snapd_notifier, data, error);
 }
@@ -37,10 +35,8 @@ fu_uefi_dbx_device_maybe_notify_snapd_prepare(FuUefiDbxDevice *self, GBytes *dat
 static gboolean
 fu_uefi_dbx_device_maybe_notify_snapd_cleanup(FuUefiDbxDevice *self, GError **error)
 {
-	if (self->snapd_notifier == NULL) {
-		/* nothing to do */
+	if (self->snapd_notifier == NULL)
 		return TRUE;
-	}
 
 	return fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(self->snapd_notifier, error);
 }
