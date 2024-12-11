@@ -1921,7 +1921,7 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 			g_string_replace(filename2, shim_name, grub_name, 1);
 		}
 		g_debug("check for 2nd stage bootloader: %s", filename2->str);
-		if (g_file_test(filename2->str, G_FILE_TEST_EXISTS)) {
+		if (g_file_test(filename2->str, G_FILE_TEST_IS_REGULAR)) {
 			g_autoptr(FuFirmware) firmware =
 			    fu_context_esp_load_pe_file(filename2->str, error);
 			if (firmware == NULL)
