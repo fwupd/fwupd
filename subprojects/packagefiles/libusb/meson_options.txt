@@ -26,3 +26,8 @@ option('tests', type : 'boolean',
   value: true,
   description : 'Build libusb example tests',
 )
+
+option('android-os', type : 'boolean',
+  value: false,
+  description : 'Build with netlink on android',
+)
