@@ -87,7 +87,7 @@ else
   sources += files('libusb/os/events_posix.c', 'libusb/os/threads_posix.c')
 endif
 
-if host_machine.system() == 'linux'
+if host_machine.system() in ['linux', 'android']
   sources += 'libusb/os/linux_usbfs.c'
   udev_dep = dependency('libudev', required: get_option('udev'))
   if udev_dep.found()
@@ -95,6 +95,9 @@ if host_machine.system() == 'linux'
     sources += 'libusb/os/linux_udev.c'
   else
     sources += 'libusb/os/linux_netlink.c'
+  endif
+  if get_option('android-os')
+    add_project_arguments('-DANDROID_OS', language : 'c')
   endif
 elif host_machine.system() == 'haiku'
   sources += files('libusb/os/haiku_pollfs.cpp', 'libusb/os/haiku_usb_backend.cpp', 'libusb/os/haiku_usb_raw.cpp')
