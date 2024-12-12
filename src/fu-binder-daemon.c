@@ -56,15 +56,21 @@ fu_binder_daemon_device_array_to_persistable_bundle(FuBinderDaemon *self,
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
+	g_autoptr(GVariant) device_array = NULL;
+	GVariantIter iter;
+
+	// TODO: Clean up intermediate variants
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
-	GVariant *variant = fwupd_codec_array_to_variant(devices, flags);
+	if (devices != NULL) {
+		g_autoptr(GVariant) variant = fwupd_codec_array_to_variant(devices, flags);
 
-	GVariantIter iter;
-	g_variant_iter_init(&iter, variant);
-	GVariant *child = g_variant_iter_next_value(&iter);
+		g_variant_iter_init(&iter, variant);
+		device_array = g_variant_iter_next_value(&iter);
+	}
+	GVariant *variant = g_variant_new_maybe(G_VARIANT_TYPE("aa{sv}"), device_array);
 
-	gp_parcel_write_variant(parcel, child, error);
+	gp_parcel_write_variant(parcel, variant, error);
 }
 
 static GBinderLocalReply *
@@ -86,8 +92,10 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 	if (devices == NULL) {
 		// TODO: How do we return meaningful aidl errors
 		// fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		*status = GBINDER_STATUS_FAILED;
-		return NULL;
+		//*status = GBINDER_STATUS_FAILED;
+		// TODO: This is received by the client as an empty array, should we do something
+		// else?
+		// return local_reply;
 	}
 
 	g_autoptr(AStatus) status_header = AStatus_newOk();
@@ -110,6 +118,34 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 	}
 
 	gbinder_writer_append_bytes(&packet_writer, buffer, size);
+
+	return local_reply;
+}
+
+static GBinderLocalReply *
+fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
+					   GBinderRemoteRequest *remote_request,
+					   FuEngineRequest *request,
+					   int *status)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+
+	g_warning("unimplemented method");
+
+	return local_reply;
+}
+
+static GBinderLocalReply *
+fu_binder_daemon_method_unimplemented(FuBinderDaemon *self,
+				      GBinderRemoteRequest *remote_request,
+				      FuEngineRequest *request,
+				      int *status)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+
+	g_warning("unimplemented method");
 
 	return local_reply;
 }
@@ -151,7 +187,9 @@ fu_binder_daemon_method_call(GBinderLocalObject *daemon_object,
 	/* Keep these in the same order as in the aidl file */
 	FuBinderDaemonMethodFunc method_funcs[] = {
 	    NULL,
-	    fu_binder_daemon_method_get_devices, /* getDevices */
+	    fu_binder_daemon_method_get_devices,	/* getDevices */
+	    fu_binder_daemon_method_add_event_listener, /* addEventListener */
+	    fu_binder_daemon_method_unimplemented,	/* removeEventListener */
 	};
 
 	/* build request */
