@@ -27,9 +27,12 @@ cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
-# install and run the custom redfish simulator
+# install dependencies for auxiliary simulators
 pacman -S --noconfirm python-flask
+# run custom redfish simulator
 ../plugins/redfish/tests/redfish.py &
+# run custom snapd simulator
+../plugins/uefi-dbx/tests/snapd.py &
 
 # install and run TPM simulator necessary for plugins/uefi-capsule/uefi-self-test
 pacman -S --noconfirm swtpm tpm2-tools
