@@ -6,7 +6,6 @@
  */
 
 #include "fu-engine-request.h"
-#include "gbinder_types.h"
 #include "glib.h"
 #include "glibconfig.h"
 #include "gparcelable.h"
@@ -34,8 +33,18 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
 #define DEFAULT_IFACE  "org.freedesktop.fwupd.IFwupd"
 #define DEFAULT_NAME   "fwupd"
 
+#define EVENT_LISTENER_IFACE "org.freedesktop.fwupd.IFwupdEventListener"
+
 #define BINDER_TRANSACTION(c2, c3, c4) GBINDER_FOURCC('_', c2, c3, c4)
 #define BINDER_DUMP_TRANSACTION	       BINDER_TRANSACTION('D', 'M', 'P')
+
+enum event_listener_transactions {
+	EVENT_LISTENER_ON_CHANGED = GBINDER_FIRST_CALL_TRANSACTION,
+	EVENT_LISTENER_ON_DEVICE_ADDED,
+	EVENT_LISTENER_ON_DEVICE_REMOVED,
+	EVENT_LISTENER_ON_DEVICE_CHANGED,
+	EVENT_LISTENER_ON_DEVICE_REQUEST,
+};
 
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
@@ -43,6 +52,7 @@ struct _FuBinderDaemon {
 	gulong presence_id;
 	GBinderServiceManager *sm;
 	GBinderLocalObject *obj;
+	GPtrArray *event_listener_remote_objects;
 };
 
 G_DEFINE_TYPE(FuBinderDaemon, fu_binder_daemon, FU_TYPE_DAEMON)
@@ -122,16 +132,167 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 	return local_reply;
 }
 
+static bool
+parcel_string_allocator(void *stringData, int32_t length, char **buffer)
+{
+	char **outString = (char **)stringData;
+	g_warning("string length is %d", length);
+
+	if (length == 0)
+		return false;
+
+	if (length == -1) {
+		*outString = NULL;
+		return true;
+	}
+
+	*buffer = calloc(1, length);
+	*outString = *buffer;
+
+	return true;
+}
+
+// TODO: I have so far failed to receive an fd over AIDL
+static GBinderLocalReply *
+fu_binder_daemon_method_install(FuBinderDaemon *self,
+				GBinderRemoteRequest *remote_request,
+				FuEngineRequest *request,
+				int *status)
+{
+	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	binder_status_t nstatus = STATUS_OK;
+	GBinderReader reader;
+	gsize size = 0;
+	char *guid = NULL;
+	gint fd = -1;
+
+	g_warning("install firmware fd");
+
+	gbinder_remote_request_init_reader(remote_request, &reader);
+	guid = gbinder_reader_read_string16(&reader);
+	g_warning("guid is %s", guid);
+	fd = gbinder_reader_read_fd(&reader);
+	// gint fd = gbinder_reader_read_dup_fd(&reader);
+	g_warning("fd is %d", fd);
+
+	// TODO: AParcel_unmarshal and read fd
+	gbinder_remote_request_init_reader(remote_request, &reader);
+
+	// gbinder reader data returns full buffer, to unmarshal we need to derive the offset
+	const void *buffer = gbinder_reader_get_data(&reader, &size);
+	const gsize offset = size - gbinder_reader_bytes_remaining(&reader);
+#if 0
+	// Debug print parcel
+	for (gsize i = 0; i < size ; i++) {
+		const guint8 value = ((const guint8 *)buffer + offset)[i];
+		g_warning("value is (%u) (%#0x) %c", value, value, value);
+	}
+#endif
+	g_autoptr(AParcel) parcel = AParcel_create();
+	nstatus = AParcel_unmarshal(parcel, (const guint8 *)buffer + offset, size - offset);
+	if (nstatus != STATUS_OK) {
+		g_warning("Failed to unmarshal parcel %d", nstatus);
+	}
+
+	// Reset cursor position to start of parcel after unmarshal
+	nstatus = AParcel_setDataPosition(parcel, 0);
+	if (nstatus != STATUS_OK) {
+		g_warning("Failed to set parcel position to zero %d: %s",
+			  nstatus,
+			  g_strerror(-nstatus));
+	}
+
+	nstatus = AParcel_readString(parcel, (void *)(&guid), parcel_string_allocator);
+	if (nstatus != STATUS_OK) {
+		g_warning("failed to read guid string %d (%s)", nstatus, g_strerror(-nstatus));
+	}
+	g_warning("guid is %s", guid);
+
+	// Debug print the rest of the parcel
+	gint pos = AParcel_getDataPosition(parcel);
+	for (gint32 i = pos; i < AParcel_getDataSize(parcel); i++) {
+		gint8 value;
+		// WARNING: AParcel_readByte increments 4 per byte
+		nstatus = AParcel_setDataPosition(parcel, i);
+		AParcel_readByte(parcel, &value);
+		g_warning("value is (%u) (%#0x) %c", value, value, value);
+	}
+	nstatus = AParcel_setDataPosition(parcel, pos);
+
+	// TODO: This returns failed to read parcel fd Status(-129, EX_TRANSACTION_FAILED):
+	// 'BAD_TYPE: ' And logcat  W Parcel  : Attempt to read object from Parcel
+	// 0xb400007b1bf0c570 at offset 156 that is not in the object list Printing the bytes the
+	// BINDER_TYPE_FD header is present in reverse:
+	//  0x85, '*', 'd', 'f'
+	//  https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/kernel/uapi/linux/android/binder.h;l=18;drc=b4d6320e2ae398b36f0aaafb2ecd83609d2d99af
+	// What does this mean? "fd (-arrays) must always appear in the meta-data list (eg touched
+	// by the kernel)"
+	//  https://cs.android.com/android/platform/superproject/main/+/main:system/libhwbinder/Parcel.cpp;l=1225?q=%22that%20is%20not%20in%20the%20object%20list%22&ss=android%2Fplatform%2Fsuperproject%2Fmain
+	// The value seems to be binder_fd_object
+	//  https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/kernel/uapi/linux/android/binder.h;l=51;drc=b4d6320e2ae398b36f0aaafb2ecd83609d2d99af
+	// header, pad to 64 bit, union {fd, pad_binder (64 bit)}, cookie (64 bit)
+	// hdr: {0x85, '*', 'd', 'f'}, fd: 0xf, cookie: 0x1
+	// Maybe I should test whether libbinder_ndk.so session management works better
+	nstatus = AParcel_readParcelFileDescriptor(parcel, &fd);
+	if (nstatus != STATUS_OK) {
+		g_autoptr(AStatus) ystatus = AStatus_fromStatus(nstatus);
+		g_warning("failed to read parcel fd %s \n%s",
+			  AStatus_getDescription(ystatus),
+			  AStatus_getMessage(ystatus));
+	}
+
+	g_warning("fd is %d", fd);
+
+	// TODO: read options Bundle
+	gint32 bundle_not_null = 0;
+	nstatus = AParcel_readInt32(parcel, &bundle_not_null);
+	if (bundle_not_null) {
+		gint32 bundle_value = 0;
+		g_autoptr(APersistableBundle) bundle = APersistableBundle_new();
+		nstatus = APersistableBundle_readFromParcel(parcel, &bundle);
+		if (nstatus != STATUS_OK) {
+			g_autoptr(AStatus) ystatus = AStatus_fromStatus(nstatus);
+			g_warning("failed to read parcel bundle %s \n%s",
+				  AStatus_getDescription(ystatus),
+				  AStatus_getMessage(ystatus));
+		}
+
+		g_warning("options bundle size %d", APersistableBundle_size(bundle));
+		APersistableBundle_getInt(bundle, "value", &bundle_value);
+		g_warning("options bundle value = %d", bundle_value);
+	}
+
+	return local_reply;
+}
+
+static void
+event_listener_death_handler(GBinderRemoteObject *event_listener_remote_object, void *user_data)
+{
+	FuBinderDaemon *self = user_data;
+
+	g_warning("remove dead event listener");
+
+	g_ptr_array_remove(self->event_listener_remote_objects, event_listener_remote_object);
+}
+
 static GBinderLocalReply *
 fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 					   GBinderRemoteRequest *remote_request,
 					   FuEngineRequest *request,
 					   int *status)
 {
-	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
 
-	g_warning("unimplemented method");
+	GBinderRemoteObject *event_listener_remote_object =
+	    gbinder_remote_request_read_object(remote_request);
+	g_ptr_array_add(self->event_listener_remote_objects, event_listener_remote_object);
+	gbinder_remote_object_add_death_handler(event_listener_remote_object,
+						event_listener_death_handler,
+						self);
+
+	// TODO: Initial retransmit status events (dbus properties)?
+
+	g_warning("add event listener");
 
 	return local_reply;
 }
@@ -188,8 +349,8 @@ fu_binder_daemon_method_call(GBinderLocalObject *daemon_object,
 	FuBinderDaemonMethodFunc method_funcs[] = {
 	    NULL,
 	    fu_binder_daemon_method_get_devices,	/* getDevices */
+	    fu_binder_daemon_method_install,		/* install */
 	    fu_binder_daemon_method_add_event_listener, /* addEventListener */
-	    fu_binder_daemon_method_unimplemented,	/* removeEventListener */
 	};
 
 	/* build request */
@@ -254,6 +415,130 @@ fu_binder_daemon_app_sm_presence_handler_cb(GBinderServiceManager *sm, gpointer 
 	}
 }
 
+static void
+fu_binder_daemon_send_codec_event(FuBinderDaemon *self, FwupdCodec *codec, guint32 transaction_id)
+{
+	GBinderRemoteObject *event_listener_remote_object;
+	GBinderClient *client;
+	GBinderLocalRequest *event_listener_req;
+	GBinderWriter event_params_writer;
+	gsize size;
+	g_autofree uint8_t *buffer = NULL;
+	// TODO: Reuse parcel????
+	g_autoptr(GError) error = NULL;
+
+	GVariant *val;
+	AParcel *parcel;
+	binder_status_t nstatus = -1;
+
+	if (self->event_listener_remote_objects->len == 0)
+		return;
+
+	val = fwupd_codec_to_variant(codec, FWUPD_CODEC_FLAG_NONE);
+
+	parcel = AParcel_create();
+
+	gp_parcel_write_variant(parcel, val, &error);
+
+	size = AParcel_getDataSize(parcel);
+	buffer = calloc(1, size);
+
+	nstatus = AParcel_marshal(parcel, buffer, 0, size);
+	if (nstatus != GBINDER_STATUS_OK) {
+		g_warning("Failed to marshal parcel %d", nstatus);
+	}
+
+	for (guint i = 0; i < self->event_listener_remote_objects->len; i++) {
+		event_listener_remote_object =
+		    g_ptr_array_index(self->event_listener_remote_objects, i);
+		client = gbinder_client_new(event_listener_remote_object, EVENT_LISTENER_IFACE);
+		event_listener_req = gbinder_client_new_request(client);
+		gbinder_local_request_init_writer(event_listener_req, &event_params_writer);
+		gbinder_writer_append_bytes(&event_params_writer, buffer, size);
+
+		gbinder_client_transact_sync_oneway(client, transaction_id, event_listener_req);
+
+		gbinder_local_request_unref(event_listener_req);
+		gbinder_client_unref(client);
+	}
+}
+
+static void
+fu_binder_daemon_engine_changed_cb(FuEngine *engine, FuBinderDaemon *self)
+{
+	GBinderRemoteObject *event_listener_remote_object;
+	GBinderClient *client;
+
+	if (self->event_listener_remote_objects->len == 0)
+		return;
+
+	for (guint i = 0; i < self->event_listener_remote_objects->len; i++) {
+		event_listener_remote_object =
+		    g_ptr_array_index(self->event_listener_remote_objects, i);
+		client = gbinder_client_new(event_listener_remote_object, EVENT_LISTENER_IFACE);
+		gbinder_client_transact_sync_oneway(client, EVENT_LISTENER_ON_CHANGED, NULL);
+
+		gbinder_client_unref(client);
+	}
+
+	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
+}
+
+static void
+fu_binder_daemon_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuBinderDaemon *self)
+{
+	g_debug("added cb");
+	fu_binder_daemon_send_codec_event(self,
+					  FWUPD_CODEC(device),
+					  EVENT_LISTENER_ON_DEVICE_ADDED);
+	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
+}
+
+static void
+fu_binder_daemon_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuBinderDaemon *self)
+{
+	g_debug("removed cb");
+	fu_binder_daemon_send_codec_event(self,
+					  FWUPD_CODEC(device),
+					  EVENT_LISTENER_ON_DEVICE_REMOVED);
+	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
+}
+
+static void
+fu_binder_daemon_engine_device_changed_cb(FuEngine *engine, FuDevice *device, FuBinderDaemon *self)
+{
+	g_debug("changed cb");
+	fu_binder_daemon_send_codec_event(self,
+					  FWUPD_CODEC(device),
+					  EVENT_LISTENER_ON_DEVICE_CHANGED);
+	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
+}
+
+static void
+fu_binder_daemon_engine_device_request_cb(FuEngine *engine,
+					  FwupdRequest *request,
+					  FuBinderDaemon *self)
+{
+	g_debug("request cb");
+	fu_binder_daemon_send_codec_event(self,
+					  FWUPD_CODEC(request),
+					  EVENT_LISTENER_ON_DEVICE_REQUEST);
+	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
+}
+
+static void
+fu_binder_daemon_engine_status_changed_cb(FuEngine *engine,
+					  FwupdStatus status,
+					  FuBinderDaemon *self)
+{
+	// fu_dbus_daemon_set_status(self, status);
+	//  TODO: fu_binder_set_status
+
+	/* engine has gone idle */
+	if (status == FWUPD_STATUS_SHUTDOWN)
+		fu_daemon_stop(FU_DAEMON(self), NULL);
+}
+
 static gboolean
 fu_binder_daemon_stop(FuDaemon *daemon, GError **error)
 {
@@ -297,6 +582,26 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "create-sm");
 
 	/* load engine */
+	g_signal_connect(FU_ENGINE(engine),
+			 "changed",
+			 G_CALLBACK(fu_binder_daemon_engine_changed_cb),
+			 self);
+	g_signal_connect(FU_ENGINE(engine),
+			 "device-added",
+			 G_CALLBACK(fu_binder_daemon_engine_device_added_cb),
+			 self);
+	g_signal_connect(FU_ENGINE(engine),
+			 "device-removed",
+			 G_CALLBACK(fu_binder_daemon_engine_device_removed_cb),
+			 self);
+	g_signal_connect(FU_ENGINE(engine),
+			 "device-changed",
+			 G_CALLBACK(fu_binder_daemon_engine_device_changed_cb),
+			 self);
+	g_signal_connect(FU_ENGINE(engine),
+			 "device-request",
+			 G_CALLBACK(fu_binder_daemon_engine_device_request_cb),
+			 self);
 	if (!fu_engine_load(engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS |
@@ -336,6 +641,8 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 {
 	self->sm = gbinder_servicemanager_new2(DEFAULT_DEVICE, "aidl3", "aidl3");
 	// self->sm = gbinder_servicemanager_new(DEFAULT_DEVICE);
+	self->event_listener_remote_objects =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)gbinder_remote_object_unref);
 }
 
 static void
