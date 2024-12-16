@@ -1421,6 +1421,12 @@ fu_mm_device_mbim_switch_to_edl(FuDevice *device, GError **error)
 #endif // MBIM_CHECK_VERSION(1, 27, 5)
 
 static gboolean
+fu_mm_device_supports_zlp(FuMmDevice *self)
+{
+	return !fu_device_has_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_DISABLE_ZLP);
+}
+
+static gboolean
 fu_mm_device_firehose_open(FuMmDevice *self, GError **error)
 {
 	self->firehose_updater = fu_firehose_updater_new(self->port_edl, self->sahara_loader);
@@ -1450,6 +1456,11 @@ fu_mm_device_firehose_write(FuMmDevice *self,
 					   error);
 	if (locker == NULL)
 		return FALSE;
+
+	/* set zero-length packet support */
+	fu_firehose_updater_set_supports_zlp(self->firehose_updater,
+					     fu_mm_device_supports_zlp(self));
+
 	return fu_firehose_updater_write(self->firehose_updater,
 					 rawprogram_silo,
 					 rawprogram_actions,
@@ -1641,6 +1652,10 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 						   error);
 		if (locker == NULL)
 			return FALSE;
+
+		/* set zero-length packet support */
+		fu_sahara_loader_set_supports_zlp(self->sahara_loader,
+						  fu_mm_device_supports_zlp(self));
 
 		/* use sahara port to load firehose binary */
 		if (!fu_sahara_loader_run(self->sahara_loader, firehose_prog, error))
@@ -2091,6 +2106,7 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_DISABLE_ZLP);
 }
 
 static void

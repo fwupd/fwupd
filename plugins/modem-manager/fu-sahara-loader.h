@@ -21,6 +21,8 @@ GByteArray *
 fu_sahara_loader_qdl_read(FuSaharaLoader *self, GError **error);
 gboolean
 fu_sahara_loader_qdl_write_bytes(FuSaharaLoader *self, GBytes *bytes, GError **error);
+void
+fu_sahara_loader_set_supports_zlp(FuSaharaLoader *self, gboolean supports_zlp);
 
 gboolean
 fu_sahara_loader_open(FuSaharaLoader *self, FuUsbDevice *usb_device, GError **error);
