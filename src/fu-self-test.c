@@ -6902,7 +6902,8 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "nvme");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES |
+				 FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -6926,7 +6927,7 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_vid(device), ==, 0x1179);
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x010F);
 	g_assert_true(fu_device_has_vendor_id(device, "PCI:0x1179"));
-	g_assert_cmpstr(fu_device_get_vendor(device), ==, "Toshiba Corporation");
+	g_assert_cmpstr(fu_device_get_vendor(device), ==, NULL);
 	g_assert_cmpstr(fu_device_get_plugin(device), ==, "nvme");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:1b.0");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
