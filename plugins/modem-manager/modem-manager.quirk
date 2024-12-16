@@ -132,3 +132,9 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 [PCI\VID_203E&PID_1001]
 Summary = Netprisma FCUN69 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
+
+# Fibocom NL668-EAU
+[USB\VID_1508&PID_1001]
+Summary = Fibocom NL668-EAU LTE Module
+ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
+Flags = disable-zlp
