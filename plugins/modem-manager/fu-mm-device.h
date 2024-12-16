@@ -14,7 +14,8 @@
 #define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE "detach-at-fastboot-has-no-response"
 #define FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT                                       \
 	"uninhibit-modemmanager-after-fastboot-reboot"
-#define FU_MM_DEVICE_FLAG_USE_BRANCH "use-branch"
+#define FU_MM_DEVICE_FLAG_USE_BRANCH  "use-branch"
+#define FU_MM_DEVICE_FLAG_DISABLE_ZLP "disable-zlp"
 
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type())
 G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)

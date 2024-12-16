@@ -26,6 +26,7 @@ struct _FuSaharaLoader {
 	int ep_out;
 	gsize maxpktsize_in;
 	gsize maxpktsize_out;
+	gboolean supports_zlp;
 };
 
 G_DEFINE_TYPE(FuSaharaLoader, fu_sahara_loader, G_TYPE_OBJECT)
@@ -178,7 +179,7 @@ fu_sahara_loader_qdl_write(FuSaharaLoader *self, const guint8 *data, gsize sz, G
 			return FALSE;
 		}
 	}
-	if (sz % self->maxpktsize_out == 0) {
+	if (self->supports_zlp && sz % self->maxpktsize_out == 0) {
 		/* sent zlp packet if needed */
 		if (!fu_usb_device_bulk_transfer(self->usb_device,
 						 self->ep_out,
@@ -202,6 +203,12 @@ fu_sahara_loader_qdl_write_bytes(FuSaharaLoader *self, GBytes *bytes, GError **e
 	gsize sz;
 	const guint8 *data = g_bytes_get_data(bytes, &sz);
 	return fu_sahara_loader_qdl_write(self, data, sz, error);
+}
+
+void
+fu_sahara_loader_set_supports_zlp(FuSaharaLoader *self, gboolean supports_zlp)
+{
+	self->supports_zlp = supports_zlp;
 }
 
 static gboolean
@@ -377,6 +384,8 @@ fu_sahara_loader_run(FuSaharaLoader *self, GBytes *prog, GError **error)
 static void
 fu_sahara_loader_init(FuSaharaLoader *self)
 {
+	/* supported by most devices - enable by default */
+	self->supports_zlp = TRUE;
 }
 
 static void
