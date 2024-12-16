@@ -8,7 +8,6 @@
 
 #include "gparcelable.h"
 
-// #include "glibconfig.h"
 #include <glib-unix.h>
 #include <glib.h>
 #if HAS_BINDER_NDK
