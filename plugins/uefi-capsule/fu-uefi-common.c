@@ -207,6 +207,12 @@ fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 	if (os_release_id == NULL)
 		os_release_id = g_strdup("unknown");
 
+	/* for compatibility; I have no idea why we still do this */
+	if (g_strcmp0(os_release_id, "rhel") == 0) {
+		g_free(os_release_id);
+		os_release_id = g_strdup("redhat");
+	}
+
 	/* if ID key points at something existing return it */
 	esp_path = g_build_filename("EFI", os_release_id, NULL);
 	full_path = g_build_filename(esp_base, esp_path, NULL);
