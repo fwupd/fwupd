@@ -45,7 +45,6 @@
 #define CONFIGURE_ALWAYS_VALIDATE		      0
 #define CONFIGURE_MAX_DIGEST_TABLE_SIZE_IN_BYTES      2048
 #define CONFIGURE_MAX_PAYLOAD_SIZE_TO_TARGET_IN_BYTES 8192
-#define CONFIGURE_ZLP_AWARE_HOST		      1
 #define CONFIGURE_SKIP_STORAGE_INIT		      0
 
 struct _FuFirehoseUpdater {
@@ -53,6 +52,7 @@ struct _FuFirehoseUpdater {
 	gchar *port;
 	FuSaharaLoader *sahara;
 	FuIOChannel *io_channel;
+	gboolean supports_zlp;
 };
 
 G_DEFINE_TYPE(FuFirehoseUpdater, fu_firehose_updater, G_TYPE_OBJECT)
@@ -206,6 +206,12 @@ fu_firehose_updater_validate_rawprogram(GBytes *rawprogram,
 	*out_silo = g_steal_pointer(&silo);
 	*out_action_nodes = g_steal_pointer(&action_nodes);
 	return TRUE;
+}
+
+void
+fu_firehose_updater_set_supports_zlp(FuFirehoseUpdater *self, gboolean supports_zlp)
+{
+	self->supports_zlp = supports_zlp;
 }
 
 gboolean
@@ -449,7 +455,7 @@ fu_firehose_updater_configure(FuFirehoseUpdater *self, GError **error)
 		g_string_append_printf(cmd_str,
 				       " MaxPayloadSizeToTargetInBytes=\"%d\"",
 				       max_payload_size);
-		g_string_append_printf(cmd_str, " ZlpAwareHost=\"%d\"", CONFIGURE_ZLP_AWARE_HOST);
+		g_string_append_printf(cmd_str, " ZlpAwareHost=\"%d\"", self->supports_zlp ? 1 : 0);
 		g_string_append_printf(cmd_str,
 				       " SkipStorageInit=\"%d\"",
 				       CONFIGURE_SKIP_STORAGE_INIT);
@@ -885,6 +891,8 @@ fu_firehose_updater_write(FuFirehoseUpdater *self,
 static void
 fu_firehose_updater_init(FuFirehoseUpdater *self)
 {
+	/* supported by most devices - enable by default */
+	self->supports_zlp = TRUE;
 }
 
 static void

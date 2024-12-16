@@ -17,6 +17,8 @@ G_DECLARE_FINAL_TYPE(FuFirehoseUpdater, fu_firehose_updater, FU, FIREHOSE_UPDATE
 FuFirehoseUpdater *
 fu_firehose_updater_new(const gchar *port, FuSaharaLoader *sahara);
 
+void
+fu_firehose_updater_set_supports_zlp(FuFirehoseUpdater *self, gboolean supports_zlp);
 gboolean
 fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error);
 gboolean
