@@ -31,6 +31,7 @@
 #include "fu-efivars-private.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
+#include "fu-progress-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
@@ -5211,6 +5212,32 @@ fu_progress_finish_func(void)
 }
 
 static void
+fu_progress_global_fraction_func(void)
+{
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
+	/* sanity check */
+	fu_progress_set_steps(progress, 100);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_global_fraction(progress), 1.f, 0.001);
+
+	/* 1% */
+	child = fu_progress_get_child(progress);
+	g_assert_cmpfloat_with_epsilon(fu_progress_get_global_fraction(child), 0.01f, 0.001);
+
+	/* 0.01% */
+	fu_progress_set_id(child, G_STRLOC);
+	fu_progress_set_steps(child, 100);
+	fu_progress_step_done(child);
+	fu_progress_step_done(child);
+	fu_progress_step_done(child);
+	fu_progress_finished(child);
+
+	/* done */
+	fu_progress_finished(progress);
+}
+
+static void
 fu_progress_child_finished(void)
 {
 	FuProgress *child;
@@ -6200,6 +6227,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
 	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
 	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
+	g_test_add_func("/fwupd/progress{global-fraction}", fu_progress_global_fraction_func);
 	g_test_add_func("/fwupd/bios-attrs{load}", fu_bios_settings_load_func);
 	g_test_add_func("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func("/fwupd/security-attrs{compare}", fu_security_attrs_compare_func);

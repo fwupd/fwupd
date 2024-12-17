@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#include "fu-progress.h"
+#include "fu-progress-private.h"
 #include "fu-string.h"
 
 /**
@@ -67,6 +67,7 @@ struct _FuProgress {
 	GPtrArray *children; /* of FuProgress */
 	gboolean profile;
 	gdouble duration; /* seconds */
+	gdouble global_fraction;
 	guint step_weighting;
 	GTimer *timer;
 	GTimer *timer_child;
@@ -489,12 +490,35 @@ fu_progress_set_steps(FuProgress *self, guint step_max)
 	for (guint i = 0; i < step_max; i++)
 		fu_progress_add_step(self, self->status, 0, NULL);
 
+	/* adjust global fraction */
+	for (guint i = 0; i < self->children->len; i++) {
+		FuProgress *child = g_ptr_array_index(self->children, i);
+		child->global_fraction = self->global_fraction / step_max;
+	}
+
 	/* show that the sub-progress has been created */
 	fu_progress_set_percentage(self, 0);
 	fu_progress_add_flag(self, FU_PROGRESS_FLAG_NO_PROFILE);
 
 	/* reset child timer */
 	g_timer_start(self->timer_child);
+}
+
+/**
+ * fu_progress_get_global_fraction:
+ * @self: A #FuProgress
+ *
+ * Gets the global percentage.
+ *
+ * Return value: fraction, where 1.0 is 100%.
+ *
+ * Since: 2.0.4
+ **/
+gdouble
+fu_progress_get_global_fraction(FuProgress *self)
+{
+	g_return_val_if_fail(FU_IS_PROGRESS(self), -1.f);
+	return self->global_fraction;
 }
 
 /**
@@ -655,11 +679,17 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
 	fu_progress_set_status(child, status);
 	child->step_weighting = value;
 
-	/* connect signals */
-	g_signal_connect(FU_PROGRESS(child),
-			 "percentage-changed",
-			 G_CALLBACK(fu_progress_child_percentage_changed_cb),
-			 self);
+	/* adjust global percentage */
+	if (value > 0)
+		child->global_fraction = self->global_fraction * (gdouble)value / 100.f;
+
+	/* connect signals as required */
+	if (fu_progress_get_global_fraction(self) > 0.001f) {
+		g_signal_connect(FU_PROGRESS(child),
+				 "percentage-changed",
+				 G_CALLBACK(fu_progress_child_percentage_changed_cb),
+				 self);
+	}
 	g_signal_connect(FU_PROGRESS(child),
 			 "status-changed",
 			 G_CALLBACK(fu_progress_child_status_changed_cb),
@@ -1019,6 +1049,7 @@ fu_progress_init(FuProgress *self)
 	self->timer_child = g_timer_new();
 	self->children = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->duration = 0.f;
+	self->global_fraction = 1.f;
 }
 
 static void
