@@ -323,13 +323,14 @@ static const gchar *
 fu_device_find_private_flag_registered(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GRefString) flag_ref = g_ref_string_new_intern(flag);
 
 	/* make sure base private flags are registered */
 	fu_device_ensure_private_flags(self);
 
 	for (guint i = 0; i < priv->private_flags_registered->len; i++) {
-		const gchar *flag_tmp = g_ptr_array_index(priv->private_flags_registered, i);
-		if (g_strcmp0(flag, flag_tmp) == 0)
+		GRefString *flag_tmp = g_ptr_array_index(priv->private_flags_registered, i);
+		if (flag_ref == flag_tmp)
 			return flag_tmp;
 	}
 	return NULL;
