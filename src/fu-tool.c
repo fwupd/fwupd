@@ -398,15 +398,19 @@ fu_util_update_device_request_cb(FwupdClient *client, FwupdRequest *request, FuU
 static void
 fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
-	g_autofree gchar *tmp = fu_device_to_string(device);
-	g_debug("ADDED:\n%s", tmp);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *tmp = fu_device_to_string(device);
+		g_debug("ADDED:\n%s", tmp);
+	}
 }
 
 static void
 fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPrivate *priv)
 {
-	g_autofree gchar *tmp = fu_device_to_string(device);
-	g_debug("REMOVED:\n%s", tmp);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *tmp = fu_device_to_string(device);
+		g_debug("REMOVED:\n%s", tmp);
+	}
 }
 
 static void
