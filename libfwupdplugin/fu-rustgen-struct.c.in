@@ -467,11 +467,12 @@
 {{export.value}}gboolean
 {{obj.c_method('ParseInternal')}}({{obj.name}} *st, GError **error)
 {
-    g_autofree gchar *str = NULL;
     if (!{{obj.c_method('ValidateInternal')}}(st, error))
         return FALSE;
-    str = {{obj.c_method('ToString')}}(st);
-    g_debug("%s", str);
+    if (g_getenv("FWUPD_VERBOSE") != NULL) {
+        g_autofree gchar *str = {{obj.c_method('ToString')}}(st);
+        g_debug("%s", str);
+    }
     return TRUE;
 }
 {%- endif %}
