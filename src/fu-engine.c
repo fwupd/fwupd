@@ -7294,8 +7294,6 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 static void
 fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *progress)
 {
-	g_autofree gchar *str1 = NULL;
-	g_autofree gchar *str2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* progress */
@@ -7306,8 +7304,10 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 50, "query-possible-plugins");
 
 	/* super useful for plugin development */
-	str1 = fu_device_to_string(FU_DEVICE(device));
-	g_debug("%s added %s", fu_device_get_backend_id(device), str1);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
+		g_debug("%s added %s", fu_device_get_backend_id(device), str);
+	}
 
 	/* add any extra quirks */
 	fu_device_set_context(device, self->ctx);
@@ -7331,8 +7331,10 @@ fu_engine_backend_device_added(FuEngine *self, FuDevice *device, FuProgress *pro
 	fu_engine_ensure_device_emulation_tag(self, device);
 
 	/* super useful for plugin development */
-	str2 = fu_device_to_string(FU_DEVICE(device));
-	g_debug("%s added %s", fu_device_get_backend_id(device), str2);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_to_string(FU_DEVICE(device));
+		g_debug("%s added %s", fu_device_get_backend_id(device), str);
+	}
 
 	/* if this is for firmware attributes, reload that part of the daemon */
 	fu_engine_check_firmware_attributes(self, device, TRUE);
@@ -7867,7 +7869,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 #ifdef HAVE_PASSIM
 	g_autoptr(GError) error_passim = NULL;
 #endif
-	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -8202,17 +8203,20 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* dump plugin information to the console */
-	for (guint i = 0; i < backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index(backends, i);
-		fu_backend_add_string(backend, 0, str);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autoptr(GString) str = g_string_new(NULL);
+		for (guint i = 0; i < backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index(backends, i);
+			fu_backend_add_string(backend, 0, str);
+		}
+		for (guint i = 0; i < plugins->len; i++) {
+			FuPlugin *plugin = g_ptr_array_index(plugins, i);
+			if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+				continue;
+			fu_plugin_add_string(plugin, 0, str);
+		}
+		g_info("%s", str->str);
 	}
-	for (guint i = 0; i < plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
-			continue;
-		fu_plugin_add_string(plugin, 0, str);
-	}
-	g_info("%s", str->str);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
