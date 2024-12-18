@@ -6346,7 +6346,11 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
 				GRefString *flag_tmp =
 				    g_ptr_array_index(priv_donor->private_flags, i);
-				fu_device_add_private_flag(self, flag_tmp);
+				if (g_ptr_array_find(priv->private_flags_registered,
+						     flag_tmp,
+						     NULL)) {
+					fu_device_add_private_flag(self, flag_tmp);
+				}
 			}
 		}
 		if (priv->created_usec == 0 && priv_donor->created_usec != 0)
