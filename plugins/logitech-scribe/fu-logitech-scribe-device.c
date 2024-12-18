@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "fu-logitech-scribe-device.h"
+#include "fu-logitech-scribe-struct.h"
 
 /* UPD interface follows TLV (Type, Length, Value) protocol */
 /* Payload size limited to 8k for UPD interfaces            */
@@ -36,21 +37,6 @@
 enum { EP_OUT, EP_IN, EP_LAST };
 
 enum { BULK_INTERFACE_UPD };
-
-typedef enum {
-	CMD_CHECK_BUFFERSIZE = 0xCC00,
-	CMD_INIT = 0xCC01,
-	CMD_START_TRANSFER = 0xCC02,
-	CMD_DATA_TRANSFER = 0xCC03,
-	CMD_END_TRANSFER = 0xCC04,
-	CMD_UNINIT = 0xCC05,
-	CMD_BUFFER_READ = 0xCC06,
-	CMD_BUFFER_WRITE = 0xCC07,
-	CMD_UNINIT_BUFFER = 0xCC08,
-	CMD_ACK = 0xFF01,
-	CMD_TIMEOUT = 0xFF02,
-	CMD_NACK = 0xFF03
-} UsbCommands;
 
 #define FU_LOGITECH_SCRIBE_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 /* 2 byte for get len query */
@@ -176,7 +162,7 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 
 	/* extending the bulk transfer timeout value, as android device takes some time to
 	   calculate Hash and respond */
-	if (CMD_END_TRANSFER == cmd)
+	if (FU_LOGITECH_SCRIBE_USB_CMD_END_TRANSFER == cmd)
 		timeout = HASH_TIMEOUT;
 
 	if (!fu_logitech_scribe_device_recv(self,
@@ -194,11 +180,11 @@ fu_logitech_scribe_device_send_upd_cmd(FuLogitechScribeDevice *self,
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
-	if (cmd_tmp != CMD_ACK) {
+	if (cmd_tmp != FU_LOGITECH_SCRIBE_USB_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "not CMD_ACK, got %x",
+			    "not FU_LOGITECH_SCRIBE_USB_CMD_ACK, got %x",
 			    cmd);
 		return FALSE;
 	}
@@ -380,7 +366,11 @@ static gboolean
 fu_logitech_scribe_device_send_upd_init_cmd_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechScribeDevice *self = FU_LOGITECH_SCRIBE_DEVICE(device);
-	return fu_logitech_scribe_device_send_upd_cmd(self, user_data, CMD_INIT, NULL, error);
+	return fu_logitech_scribe_device_send_upd_cmd(self,
+						      user_data,
+						      FU_LOGITECH_SCRIBE_USB_CMD_INIT,
+						      NULL,
+						      error);
 }
 
 static gboolean
@@ -410,11 +400,12 @@ fu_logitech_scribe_device_write_fw(FuLogitechScribeDevice *self,
 		if (chk == NULL)
 			return FALSE;
 		g_byte_array_append(data_pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (!fu_logitech_scribe_device_send_upd_cmd(self,
-							    usb_device,
-							    CMD_DATA_TRANSFER,
-							    data_pkt,
-							    error)) {
+		if (!fu_logitech_scribe_device_send_upd_cmd(
+			self,
+			usb_device,
+			FU_LOGITECH_SCRIBE_USB_CMD_DATA_TRANSFER,
+			data_pkt,
+			error)) {
 			g_prefix_error(error, "failed to send data packet 0x%x: ", i);
 			return FALSE;
 		}
@@ -516,7 +507,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_byte_array_append_uint64(start_pkt, streamsz, G_LITTLE_ENDIAN);
 	if (!fu_logitech_scribe_device_send_upd_cmd(self,
 						    usb_device,
-						    CMD_START_TRANSFER,
+						    FU_LOGITECH_SCRIBE_USB_CMD_START_TRANSFER,
 						    start_pkt,
 						    error)) {
 		g_prefix_error(error, "failed to write start transfer packet: ");
@@ -545,7 +536,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	g_byte_array_append(end_pkt, (const guint8 *)base64hash, strlen(base64hash));
 	if (!fu_logitech_scribe_device_send_upd_cmd(self,
 						    usb_device,
-						    CMD_END_TRANSFER,
+						    FU_LOGITECH_SCRIBE_USB_CMD_END_TRANSFER,
 						    end_pkt,
 						    error)) {
 		g_prefix_error(error, "failed to write end transfer packet: ");
@@ -557,7 +548,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	/* no need to wait for ACK message, perhaps device reboot already in progress, ignore */
 	if (!fu_logitech_scribe_device_send_upd_cmd(self,
 						    usb_device,
-						    CMD_UNINIT,
+						    FU_LOGITECH_SCRIBE_USB_CMD_UNINIT,
 						    NULL,
 						    &error_local)) {
 		g_debug(
