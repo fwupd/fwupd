@@ -2,6 +2,8 @@
 
 > TLDR: enable root, disable selinux, `/data` is exec and rw
 
+It may be necessary to connect the device via USB, toggle the "Always allow from this computer" and press accept on the "Allow USB Debugging?" dialog.
+
 Since we're dealing with USB devices we want wireless debugging (Wired Ethernet would be nice but it doesn't seem possible)
 
 ```bash
@@ -15,9 +17,9 @@ You'll need root
 adb -e root
 ```
 
-This command may timeout as the adb server on the device will restart with a new port. You will probably need to reconnect.
+This command may timeout as the adb server on the device will restart with a new port. You will probably need to disconnect and connect again.
 
-Figure out where you can write to and run executables from in my case this is `/data`
+Find a writable directory that permits executables to be executed. In my case this is `/data`
 
 ```bash
 # List mountpoints that are exec and rw
@@ -40,7 +42,7 @@ adb -e shell setenforce permissive
 
 # Building and running on Android
 
-## 1. Point the `ndk_path` field to your `ANDROID_NDK_HOME` in `contrib/ci/android_arm64-cross-file.ini`
+## 1. Point the `ndk_path` field to your `ANDROID_NDK_HOME` in `contrib/android/android_arm64-cross-file.ini`
 
 ```ini
 [constants]
@@ -52,7 +54,7 @@ ndk_path = '/opt/android/android-ndk-r27/'
 Setting the prefix to a directory that is writeable on the device is important as fwupd will exit if the prefix cache path is not writeable ignoring the value of the `CACHE_DIRECTORY` environment variable.
 
 ```bash
-meson setup --cross-file contrib/ci/android_arm64-cross-file.ini --prefix=/data/fwupd _android_build
+meson setup --cross-file contrib/android/android_arm64-cross-file.ini --prefix=/data/fwupd _android_build
 ```
 
 This also disables libjcat features to sidestep the gpgme and gnutls dependencies.
@@ -66,7 +68,7 @@ meson install --destdir=$(pwd)/_android_dist -C _android_build
 ## 4. Upload to Device
 
 ```bash
-./adb-push-sync.sh _android_dist/data/fwupd/ /data/fwupd
+./contrib/android/adb-push-sync.sh _android_dist/data/fwupd/ /data/fwupd
 ```
 
 This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` to avoid issues I've had with `adb push` not updating the build.
@@ -74,7 +76,7 @@ This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` t
 ## 5. Run
 
 ```bash
-./adb_fwupd_env.sh fwupd-binder --verbose
+./contrib/android/adb_fwupd_env.sh fwupd-binder --verbose --verbase
 ```
 
 This script originally set environment variables to identify paths but since we're using the correct prefix that is unnecessary.  
@@ -82,7 +84,7 @@ Currently the script just sets the correct `LD_LIBRARY_PATH` and `PATH` environm
 
 # Debugging
 
-## logcat 
+## logcat
 
 [logcat](https://developer.android.com/tools/logcat) can be used for general Android logging:
 
@@ -97,6 +99,7 @@ Write `1` to `/sys/kernel/tracing/tracing_on` and `/sys/kernel/tracing/events/bi
 Read from `/sys/kernel/tracing/trace` or `/sys/kernel/tracing/trace_pipe`.
 
 For example:
+
 ```bash
 adb -e shell -t '\
  echo 1 > /sys/kernel/tracing/events/binder/enable ; \
@@ -108,6 +111,7 @@ adb -e shell -t '\
 `/sys/kernel/tracing/events/binder/` also contains subdirectories which can be used to filter specific binder functions.
 
 Example output of `/sys/kernel/tracing/trace_pipe`
+
 ```
  eedesktop.fwupd-3153  [001] .... 462762.700092: binder_ioctl: cmd=0xc0306201 arg=0x7fd42a0190
  eedesktop.fwupd-3153  [001] .... 462762.700104: binder_command: cmd=0x40406300 BC_TRANSACTION
