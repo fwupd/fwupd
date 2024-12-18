@@ -93,7 +93,7 @@ typedef struct {
 	GPtrArray *retry_recs;	       /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
 	GPtrArray *private_flags_registered; /* (nullable) (element-type GRefString) */
-	GPtrArray *private_flags;	     /* (nullable) (element-type utf-8) */
+	GPtrArray *private_flags;	     /* (nullable) (no-ref) (element-type GRefString) */
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 	gulong notify_flags_proxy_id;
@@ -319,7 +319,7 @@ fu_device_ensure_private_flags(FuDevice *self)
 		device_class->register_flags(self);
 }
 
-static const gchar *
+static GRefString *
 fu_device_find_private_flag_registered(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
@@ -349,7 +349,7 @@ void
 fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *flag_registered;
+	GRefString *flag_registered;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
@@ -402,7 +402,7 @@ void
 fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *flag_registered;
+	GRefString *flag_registered;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
@@ -436,7 +436,7 @@ gboolean
 fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	const gchar *flag_registered;
+	GRefString *flag_registered;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
@@ -4274,7 +4274,7 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 void
 fu_device_register_private_flag(FuDevice *self, const gchar *flag)
 {
-	const gchar *flag_registered;
+	GRefString *flag_registered;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
@@ -4304,7 +4304,7 @@ static void
 fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
-	const gchar *private_flag;
+	GRefString *private_flag;
 
 	g_return_if_fail(hint != NULL);
 
@@ -4838,7 +4838,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	if (priv->private_flags != NULL && priv->private_flags->len != 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
 		for (guint64 i = 0; i < priv->private_flags->len; i++) {
-			const gchar *private_flag = g_ptr_array_index(priv->private_flags, i);
+			GRefString *private_flag = g_ptr_array_index(priv->private_flags, i);
 			g_ptr_array_add(tmpv, (gpointer)private_flag);
 		}
 		if (tmpv->len > 0) {
@@ -6344,9 +6344,9 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		/* copy from donor FuDevice if has not already been set */
 		if (priv_donor->private_flags != NULL) {
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
-				const gchar *item_donor =
+				GRefString *flag_tmp =
 				    g_ptr_array_index(priv_donor->private_flags, i);
-				fu_device_add_private_flag(self, item_donor);
+				fu_device_add_private_flag(self, flag_tmp);
 			}
 		}
 		if (priv->created_usec == 0 && priv_donor->created_usec != 0)
