@@ -208,7 +208,7 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-enable_udev = get_option('udev').disable_auto_if(host_machine.system() != 'linux').allowed()
+enable_udev = get_option('udev').disable_auto_if(host_machine.system() not in ['linux']).allowed()
 if enable_udev
   conf.set('HAVE_UDEV', '1')
 endif
@@ -235,14 +235,20 @@ conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 # FreeBSD is missing some libusb symbols
 libusb = dependency('libusb-1.0', version : '>= 0.1.12')
 conf.set_quoted('LIBUSB_VERSION', libusb.version())
-if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+if libusb.type_name() == 'internal'
   conf.set('HAVE_LIBUSB_SET_OPTION', '1')
-endif
-if cc.has_header_symbol('libusb.h', 'libusb_init_context', dependencies: libusb)
   conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
-endif
-if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+else
+  if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_SET_OPTION', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_init_context', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_INIT_CONTEXT', '1')
+  endif
+  if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
+    conf.set('HAVE_LIBUSB_GET_PARENT', '1')
+  endif
 endif
 
 sqlite = dependency('sqlite3', required: get_option('sqlite'))
@@ -326,6 +332,24 @@ endif
 gnutls = dependency('gnutls', version: '>= 3.6.0', required: get_option('gnutls'))
 if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
+endif
+
+libgbinder = dependency('libgbinder', version: '>= 1.1.0', required: get_option('binder'))
+if libgbinder.found()
+  conf.set('HAVE_BINDER', '1')
+endif
+
+if host_machine.system() == 'android'
+  # HAS_BINDER_NDK?
+  binder_ndk = cc.find_library('binder_ndk')
+  if (binder_ndk.found() and
+      cc.has_header('android/binder_parcel.h') and
+      cc.has_header('android/persistable_bundle.h') and
+      cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create', dependencies: binder_ndk) and
+      cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal', dependencies: binder_ndk) and
+      cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new', dependencies: binder_ndk))
+    conf.set('HAS_BINDER_NDK', '1')
+  endif
 endif
 
 lzma = dependency('liblzma', required: get_option('lzma'))
