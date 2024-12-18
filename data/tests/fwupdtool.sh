@@ -27,7 +27,7 @@ rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Showing plugins"
-fwupdtool get-plugins
+fwupdtool -vv get-plugins
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
