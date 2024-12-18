@@ -5,8 +5,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#include <glib.h>
+
 #include "fu-engine-request.h"
-#include "glib.h"
 #include "glibconfig.h"
 #include "gparcelable.h"
 #define G_LOG_DOMAIN "FuMain"
@@ -18,7 +19,6 @@
 #include <android/persistable_bundle.h>
 #include <gbinder.h>
 
-#include "fu-binder-aidl.h"
 #include "fu-binder-daemon.h"
 
 /* this can be tested using:
@@ -28,6 +28,7 @@
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GBinderLocalReply, gbinder_local_reply_unref)
 
 #define DEFAULT_DEVICE "/dev/binder"
 #define DEFAULT_IFACE  "org.freedesktop.fwupd.IFwupd"
@@ -67,20 +68,21 @@ fu_binder_daemon_device_array_to_persistable_bundle(FuBinderDaemon *self,
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
 	g_autoptr(GVariant) device_array = NULL;
+	g_autoptr(GVariant) maybe_device_array = NULL;
 	GVariantIter iter;
 
-	// TODO: Clean up intermediate variants
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 	if (devices != NULL) {
-		g_autoptr(GVariant) variant = fwupd_codec_array_to_variant(devices, flags);
+		g_autoptr(GVariant) tuple_device_array =
+		    fwupd_codec_array_to_variant(devices, flags);
 
-		g_variant_iter_init(&iter, variant);
+		g_variant_iter_init(&iter, tuple_device_array);
 		device_array = g_variant_iter_next_value(&iter);
 	}
-	GVariant *variant = g_variant_new_maybe(G_VARIANT_TYPE("aa{sv}"), device_array);
+	maybe_device_array = g_variant_new_maybe(G_VARIANT_TYPE("aa{sv}"), device_array);
 
-	gp_parcel_write_variant(parcel, variant, error);
+	gp_parcel_write_variant(parcel, maybe_device_array, error);
 }
 
 static GBinderLocalReply *
@@ -90,10 +92,12 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 				    int *status)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	// g_autoptr(AParcel) val = NULL;
+	g_autoptr(GBinderLocalReply) local_reply = gbinder_local_object_new_reply(self->obj);
+	g_autoptr(AStatus) status_header = AStatus_newOk();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	g_autoptr(AParcel) packet_parcel = NULL;
+	g_autofree uint8_t *packet_buffer = NULL;
 	GBinderWriter packet_writer;
 	gsize size;
 	binder_status_t nstatus = STATUS_OK;
@@ -108,8 +112,7 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 		// return local_reply;
 	}
 
-	g_autoptr(AStatus) status_header = AStatus_newOk();
-	AParcel *packet_parcel = AParcel_create();
+	packet_parcel = AParcel_create();
 
 	AParcel_writeStatusHeader(packet_parcel, status_header);
 	fu_binder_daemon_device_array_to_persistable_bundle(self,
@@ -121,15 +124,15 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 	gbinder_local_reply_init_writer(local_reply, &packet_writer);
 
 	size = AParcel_getDataSize(packet_parcel);
-	g_autofree uint8_t *buffer = calloc(1, size);
-	nstatus = AParcel_marshal(packet_parcel, buffer, 0, size);
+	packet_buffer = calloc(1, size);
+	nstatus = AParcel_marshal(packet_parcel, packet_buffer, 0, size);
 	if (nstatus != STATUS_OK) {
 		g_warning("Failed to marshal parcel %d", nstatus);
 	}
 
-	gbinder_writer_append_bytes(&packet_writer, buffer, size);
+	gbinder_writer_append_bytes(&packet_writer, packet_buffer, size);
 
-	return local_reply;
+	return g_steal_pointer(&local_reply);
 }
 
 static bool
@@ -159,7 +162,7 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 				FuEngineRequest *request,
 				int *status)
 {
-	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	g_autoptr(GBinderLocalReply) local_reply = gbinder_local_object_new_reply(self->obj);
 	binder_status_t nstatus = STATUS_OK;
 	GBinderReader reader;
 	gsize size = 0;
@@ -215,7 +218,11 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 		// WARNING: AParcel_readByte increments 4 per byte
 		nstatus = AParcel_setDataPosition(parcel, i);
 		AParcel_readByte(parcel, &value);
-		g_warning("value is (%u) (%#0x) %c", value, value, value);
+		g_warning("value is (%i) (%#0x) (%#0x) %c",
+			  value,
+			  ((const char *)buffer)[offset + i],
+			  value,
+			  value);
 	}
 	nstatus = AParcel_setDataPosition(parcel, pos);
 
@@ -281,7 +288,7 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 					   FuEngineRequest *request,
 					   int *status)
 {
-	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	g_autoptr(GBinderLocalReply) local_reply = gbinder_local_object_new_reply(self->obj);
 
 	GBinderRemoteObject *event_listener_remote_object =
 	    gbinder_remote_request_read_object(remote_request);
@@ -294,7 +301,7 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 
 	g_warning("add event listener");
 
-	return local_reply;
+	return g_steal_pointer(&local_reply);
 }
 
 static GBinderLocalReply *
@@ -304,11 +311,11 @@ fu_binder_daemon_method_unimplemented(FuBinderDaemon *self,
 				      int *status)
 {
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
-	GBinderLocalReply *local_reply = gbinder_local_object_new_reply(self->obj);
+	g_autoptr(GBinderLocalReply) local_reply = gbinder_local_object_new_reply(self->obj);
 
 	g_warning("unimplemented method");
 
-	return local_reply;
+	return g_steal_pointer(&local_reply);
 }
 
 static FuEngineRequest *
@@ -320,7 +327,7 @@ fu_binder_daemon_create_request(FuBinderDaemon *self, const gchar *sender, GErro
 	// TODO: Check if sender is trusted
 	fu_engine_request_set_converter_flags(request, FWUPD_CODEC_FLAG_TRUSTED);
 
-	return g_object_ref(request);
+	return g_steal_pointer(&request);
 }
 
 typedef GBinderLocalReply *(*FuBinderDaemonMethodFunc)(FuBinderDaemon *self,
