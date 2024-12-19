@@ -231,7 +231,8 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 						GByteArray *buf,
 						GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_logitech_bulkcontroller_send_sync_req_new();
+	g_autoptr(FuStructLogitechBulkcontrollerSendSyncReq) st_req =
+	    fu_struct_logitech_bulkcontroller_send_sync_req_new();
 	g_autofree gchar *str = NULL;
 
 	/* increment */
@@ -282,7 +283,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 						GError **error)
 {
 	g_autofree guint8 *buf = g_malloc0(self->transfer_bufsz);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructLogitechBulkcontrollerSendSyncRes) st = NULL;
 	g_autoptr(FuLogitechBulkcontrollerResponse) response =
 	    fu_logitech_bulkcontroller_device_response_new();
 
@@ -607,7 +608,8 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 {
 	g_autofree guint8 *buf_tmp = g_malloc0(self->transfer_bufsz);
 	GByteArray buf_ack = {.data = buf_tmp, .len = self->transfer_bufsz};
-	g_autoptr(GByteArray) buf_pkt = fu_struct_logitech_bulkcontroller_update_req_new();
+	g_autoptr(FuStructLogitechBulkcontrollerUpdateReq) buf_pkt =
+	    fu_struct_logitech_bulkcontroller_update_req_new();
 
 	fu_struct_logitech_bulkcontroller_update_req_set_cmd(buf_pkt, cmd);
 	if (buf != NULL) {
