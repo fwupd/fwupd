@@ -144,7 +144,7 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	fu_dump_full(G_LOG_DOMAIN, "request", buf, bufsz, 20, FU_DUMP_FLAGS_SHOW_ASCII);
+	fu_dump_raw(G_LOG_DOMAIN, "request", buf, MIN(bufsz, 12));
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 ep,
 					 buf,
@@ -184,7 +184,6 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 				    "interface is invalid");
 		return FALSE;
 	}
-	g_debug("read response");
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 ep,
 					 buf,
@@ -196,7 +195,7 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
-	fu_dump_full(G_LOG_DOMAIN, "response", buf, actual_length, 20, FU_DUMP_FLAGS_SHOW_ASCII);
+	fu_dump_raw(G_LOG_DOMAIN, "response", buf, MIN(actual_length, 12));
 	return TRUE;
 }
 
