@@ -1689,6 +1689,8 @@ fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent)
 {
 	FuNordicHidCfgChannel *self =
 	    g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL, "proxy", parent, NULL);
+	/* copy the backend too */
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(parent), FU_DEVICE_INCORPORATE_FLAG_NONE);
 	self->peer_id = id;
 	return self;
 }
