@@ -193,6 +193,7 @@ fu_common_check_full_disk_encryption(GError **error)
 				    g_variant_get_bytestring(device));
 			return FALSE;
 		}
+		/* TODO identify Ubuntu Core FDE volumes */
 	}
 	return TRUE;
 }
@@ -356,4 +357,19 @@ void
 fu_xmlb_builder_insert_kb(XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text(bn, key, value ? "true" : "false", NULL);
+}
+
+/**
+ * fu_snap_is_in_snap:
+ *
+ * Check whether the current process is running inside a snap.
+ *
+ * Returns: TRUE if current process is running inside a snap.
+ *
+ * Since: 2.0.3
+ **/
+gboolean
+fu_snap_is_in_snap(void)
+{
+	return getenv("SNAP") != NULL;
 }
