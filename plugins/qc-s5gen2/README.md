@@ -23,6 +23,12 @@ These devices use the standard  DeviceInstanceId values, e.g.
 
 * `USB\VID_0A12&PID_4007`
 
+Pair 0A12:4007 is shared among vendors and shouldn't be used for the single device.
+Also these devices use a custom GUID generation scheme, please use GUID based on
+manufacturer and product names in case of shared VID:PID pair:
+
+* `USB\VID_0A12&PID_4007&MANUFACTURER_{iManufacturer}&PRODUCT_{iProduct}`
+
 Typically, BlueTooth devices should be detected by GAIA primary service with if
 default vendor ID has been used:
 

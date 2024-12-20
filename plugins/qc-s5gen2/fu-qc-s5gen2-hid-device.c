@@ -210,6 +210,46 @@ fu_qc_s5gen2_hid_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_qc_s5gen2_hid_device_setup(FuDevice *device, GError **error)
+{
+	guint idx;
+
+	/* FuHidDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_qc_s5gen2_hid_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
+
+	idx = fu_usb_device_get_manufacturer_index(FU_USB_DEVICE(device));
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), idx, NULL);
+		if (tmp != NULL)
+			fu_device_add_instance_str(device, "MANUFACTURER", tmp);
+	}
+
+	idx = fu_usb_device_get_product_index(FU_USB_DEVICE(device));
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), idx, NULL);
+		if (tmp != NULL)
+			fu_device_add_instance_str(device, "PRODUCT", tmp);
+	}
+
+	return fu_device_build_instance_id_full(device,
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS |
+						    FU_DEVICE_INSTANCE_FLAG_VISIBLE,
+						error,
+						"USB",
+						"VID",
+						"PID",
+						"MANUFACTURER",
+						"PRODUCT",
+						NULL);
+}
+
 static void
 fu_qc_s5gen2_hid_device_init(FuQcS5gen2HidDevice *self)
 {
@@ -233,4 +273,5 @@ fu_qc_s5gen2_hid_device_class_init(FuQcS5gen2HidDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_qc_s5gen2_hid_device_probe;
+	device_class->setup = fu_qc_s5gen2_hid_device_setup;
 }
