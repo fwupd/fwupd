@@ -73,7 +73,11 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_NORDIC);
-			fu_device_add_counterpart_guid(device, devid2);
+			fu_device_add_instance_id_full(device,
+						       devid2,
+						       FU_DEVICE_INSTANCE_FLAG_QUIRKS |
+							   FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+							   FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 			priv->version_bl_major = 0x01;
 			break;
 		case 0x2400:
@@ -82,7 +86,11 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_TEXAS);
-			fu_device_add_counterpart_guid(device, devid2);
+			fu_device_add_instance_id_full(device,
+						       devid2,
+						       FU_DEVICE_INSTANCE_FLAG_QUIRKS |
+							   FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+							   FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 			priv->version_bl_major = 0x03;
 			break;
 		case 0x0500:
