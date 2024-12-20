@@ -349,7 +349,7 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidppDevice *self,
 	    g_strdup_printf("%s-%s", fu_device_get_logical_id(FU_DEVICE(self)), priv->model_id);
 	fu_device_set_logical_id(FU_DEVICE(radio), logical_id);
 	instance_id = g_strdup_printf("HIDRAW\\VEN_%04X&MOD_%s&ENT_05",
-				      (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+				      fu_device_get_vid(FU_DEVICE(self)),
 				      priv->model_id);
 	fu_device_add_instance_id(FU_DEVICE(radio), instance_id);
 	fu_device_set_version(FU_DEVICE(radio), radio_version);
@@ -471,6 +471,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
+	guint64 pid_tmp = 0;
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -495,8 +496,16 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 		g_string_append_printf(str, "%02X", msg->data[i]);
 	fu_logitech_hidpp_device_set_model_id(self, str->str);
 
+	/* truncate to 4 chars and convert to a PID */
+	g_string_set_size(str, 4);
+	if (!fu_strtoull(str->str, &pid_tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error)) {
+		g_prefix_error(error, "failed to parse the model ID: ");
+		return FALSE;
+	}
+	fu_device_set_pid(FU_DEVICE(self), (guint32)pid_tmp);
+
 	/* add one more instance ID */
-	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", FU_LOGITECH_HIDPP_DEVICE_VID);
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", fu_device_get_vid(FU_DEVICE(self)));
 	fu_device_add_instance_str(FU_DEVICE(self), "MOD", priv->model_id);
 	return fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VEN", "MOD", NULL);
 }
@@ -694,6 +703,18 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static void
+fu_logitech_hidpp_device_vid_pid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	if (fu_device_get_pid(device) == 0x0)
+		return;
+
+	/* this is a non-standard extension, but essentially API */
+	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
+	fu_device_build_instance_id(device, NULL, "UFY", "VID", "PID", NULL);
 }
 
 static gboolean
@@ -1390,6 +1411,7 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_WIRED;
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	fu_device_set_vid(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_VID);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
@@ -1404,6 +1426,14 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vid",
+			 G_CALLBACK(fu_logitech_hidpp_device_vid_pid_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::pid",
+			 G_CALLBACK(fu_logitech_hidpp_device_vid_pid_notify_cb),
+			 NULL);
 }
 
 FuLogitechHidppDevice *
