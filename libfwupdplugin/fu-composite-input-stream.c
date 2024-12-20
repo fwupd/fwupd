@@ -322,7 +322,7 @@ fu_composite_input_stream_read(GInputStream *stream,
 
 	/* we have to keep track of this in case we have to switch the FuCompositeInputStreamItem
 	 * without an explicit seek */
-	self->pos_offset += rc;
+	self->pos += rc;
 	return rc;
 }
 
