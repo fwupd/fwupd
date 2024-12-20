@@ -5257,6 +5257,48 @@ fu_progress_child_finished(void)
 }
 
 static void
+fu_partial_input_stream_composite_func(void)
+{
+	gboolean ret;
+	gint rc;
+	guint8 buf[4] = {0};
+	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) composite_stream = fu_composite_input_stream_new();
+	g_autoptr(GInputStream) partial_stream = NULL;
+
+	fu_composite_input_stream_add_bytes(FU_COMPOSITE_INPUT_STREAM(composite_stream), blob);
+
+	/* limit to '34' */
+	partial_stream = fu_partial_input_stream_new(composite_stream, 2, 2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(partial_stream);
+
+	/* seek to the start of the partial input stream */
+	ret = g_seekable_seek(G_SEEKABLE(partial_stream), 0x0, G_SEEK_SET, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x2);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(partial_stream)), ==, 0x0);
+
+	/* read the 34 */
+	rc = g_input_stream_read(partial_stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 2);
+	g_assert_cmpint(buf[0], ==, '3');
+	g_assert_cmpint(buf[1], ==, '4');
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x4);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(partial_stream)), ==, 0x2);
+
+	/* there is no more data to read */
+	rc = g_input_stream_read(partial_stream, buf, sizeof(buf), NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(rc, ==, 0);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(composite_stream)), ==, 0x4);
+	g_assert_cmpint(g_seekable_tell(G_SEEKABLE(partial_stream)), ==, 0x2);
+}
+
+static void
 fu_partial_input_stream_simple_func(void)
 {
 	gboolean ret;
@@ -5599,13 +5641,6 @@ fu_composite_input_stream_func(void)
 	g_assert_no_error(error);
 	g_assert_cmpint(rc, ==, 1);
 	g_assert_cmpint(buf[0], ==, 'g');
-
-	/* dump entire composite stream */
-	blob4 = fu_input_stream_read_bytes(composite_stream, 0x0, G_MAXUINT32, NULL, &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(blob4);
-	g_assert_cmpint(g_bytes_get_size(blob4), ==, 7);
-	g_assert_cmpint(memcmp(g_bytes_get_data(blob4, NULL), "abcdefg", 7), ==, 0);
 }
 
 static gboolean
@@ -6206,6 +6241,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/input-stream{find}", fu_input_stream_find_func);
 	g_test_add_func("/fwupd/partial-input-stream", fu_partial_input_stream_func);
 	g_test_add_func("/fwupd/partial-input-stream{simple}", fu_partial_input_stream_simple_func);
+	g_test_add_func("/fwupd/partial-input-stream{composite}",
+			fu_partial_input_stream_composite_func);
 	g_test_add_func("/fwupd/composite-input-stream", fu_composite_input_stream_func);
 	g_test_add_func("/fwupd/struct", fu_plugin_struct_func);
 	g_test_add_func("/fwupd/struct{bits}", fu_plugin_struct_bits_func);

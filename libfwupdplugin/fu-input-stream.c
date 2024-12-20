@@ -285,23 +285,6 @@ fu_input_stream_read_byte_array(GInputStream *stream,
 		return NULL;
 	}
 
-	/* do not rely on composite input stream doing the right thing */
-	if (count == G_MAXSIZE) {
-		gsize streamsz = 0;
-		if (!fu_input_stream_size(stream, &streamsz, error))
-			return NULL;
-		if (offset > streamsz) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "offset 0x%x is out of range of stream size 0x%x",
-				    (guint)offset,
-				    (guint)streamsz);
-			return NULL;
-		}
-		count = streamsz - offset;
-	}
-
 	/* seek back to start */
 	if (G_IS_SEEKABLE(stream) && g_seekable_can_seek(G_SEEKABLE(stream))) {
 		if (!g_seekable_seek(G_SEEKABLE(stream), offset, G_SEEK_SET, NULL, error))
