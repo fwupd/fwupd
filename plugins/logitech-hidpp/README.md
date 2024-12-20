@@ -45,10 +45,6 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
 * `HIDRAW\VEN_046D&DEV_C52B`
 * `HIDRAW\VEN_046D&DEV_C52B&ENT_05`
 
-One additional legacy instance ID is added for peripherals:
-
-* `UFY\VID_046D&PID_C52B`
-
 The Bolt USB receiver and peripherals use HID raw DeviceInstanceId values
 regardless of their mode. This might change once these devices are
 handled by the Logitech Linux driver instead of by the generic hid
