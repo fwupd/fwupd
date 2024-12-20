@@ -1,7 +1,7 @@
 # 5171 devboard
 [USB\VID_0A12&PID_4007]
 Plugin = audio_s5gen2
-Flags = enforce-requires
+Flags = no-generic-guids
 ProxyGType = FuQcS5gen2HidDevice
 
 # GID8 headset
