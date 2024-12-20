@@ -71,7 +71,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			/* Nordic */
 			devid2 =
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
-					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    fu_device_get_vid(device),
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_NORDIC);
 			fu_device_add_instance_id_full(device,
 						       devid2,
@@ -84,7 +84,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			/* Texas */
 			devid2 =
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
-					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    fu_device_get_vid(device),
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_TEXAS);
 			fu_device_add_instance_id_full(device,
 						       devid2,
@@ -116,7 +116,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			}
 			devid2 =
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
-					    (guint)FU_LOGITECH_HIDPP_DEVICE_VID,
+					    fu_device_get_vid(device),
 					    (guint)FU_LOGITECH_HIDPP_DEVICE_PID_BOOTLOADER_BOLT);
 			fu_device_add_instance_id_full(device,
 						       devid2,
@@ -124,12 +124,32 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x03;
 			break;
 		default:
-			g_warning("bootloader release %04x invalid",
+			g_warning("bootloader release 0x%04x invalid",
 				  (guint)fu_usb_device_get_release(FU_USB_DEVICE(device_usb)));
 			break;
 		}
 	}
 	return TRUE;
+}
+
+static void
+fu_logitech_hidpp_runtime_vid_pid_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	if (fu_device_get_pid(device) == 0x0)
+		return;
+
+	/* this is a non-standard extension, but essentially API */
+	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
+	fu_device_build_instance_id(device, NULL, "UFY", "VID", "PID", NULL);
+
+	/* for vendor */
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 NULL);
 }
 
 static void
@@ -145,6 +165,7 @@ fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_vid(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_VID);
 	fu_device_add_icon(FU_DEVICE(self), "usb-receiver");
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver");
@@ -152,4 +173,12 @@ fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 	fu_device_set_poll_interval(FU_DEVICE(self), FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vid",
+			 G_CALLBACK(fu_logitech_hidpp_runtime_vid_pid_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::pid",
+			 G_CALLBACK(fu_logitech_hidpp_runtime_vid_pid_notify_cb),
+			 NULL);
 }
