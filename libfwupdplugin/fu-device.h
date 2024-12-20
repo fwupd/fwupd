@@ -118,6 +118,14 @@ typedef enum {
  **/
 typedef enum {
 	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_NONE:
+	 *
+	 * Only set the context and backend.
+	 *
+	 * Since: 2.0.4
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_NONE = 0,
+	/**
 	 * FU_DEVICE_INCORPORATE_FLAG_BASECLASS:
 	 *
 	 * Set baseclass properties.

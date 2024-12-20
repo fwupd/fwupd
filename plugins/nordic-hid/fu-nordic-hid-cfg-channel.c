@@ -98,7 +98,6 @@ struct _FuNordicHidCfgChannel {
 	guint8 flash_area_id;
 	guint32 flashed_image_len;
 	guint8 peer_id;
-	FuUdevDevice *parent_udev;
 	GPtrArray *modules; /* of FuNordicCfgChannelModule */
 };
 
@@ -128,27 +127,29 @@ fu_nordic_hid_cfg_channel_module_free(FuNordicCfgChannelModule *mod)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuNordicCfgChannelModule, fu_nordic_hid_cfg_channel_module_free);
 
-#ifdef HAVE_HIDRAW_H
 static FuUdevDevice *
-fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **error)
+fu_nordic_hid_cfg_channel_get_proxy(FuNordicHidCfgChannel *self, GError **error)
 {
+	FuDevice *proxy;
+
 	/* ourselves */
 	if (self->peer_id == 0)
 		return FU_UDEV_DEVICE(self);
 
 	/* parent */
-	if (self->parent_udev == NULL) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self));
+	if (proxy == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no parent for peer 0x%02x",
+			    "no proxy for peer 0x%02x",
 			    self->peer_id);
 		return NULL;
 	}
 
-	return self->parent_udev;
+	/* success, no ref */
+	return FU_UDEV_DEVICE(proxy);
 }
-#endif
 
 static gboolean
 fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
@@ -156,8 +157,7 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 			       gsize bufsz,
 			       GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
+	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_proxy(self, error);
 	if (udev_device == NULL)
 		return FALSE;
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(udev_device),
@@ -165,13 +165,6 @@ fu_nordic_hid_cfg_channel_send(FuNordicHidCfgChannel *self,
 					    bufsz,
 					    FU_IOCTL_FLAG_NONE,
 					    error);
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -181,8 +174,7 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 				  GError **error)
 {
 	g_autoptr(FuNordicCfgChannelMsg) recv_msg = g_new0(FuNordicCfgChannelMsg, 1);
-#ifdef HAVE_HIDRAW_H
-	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_udev_device(self, error);
+	FuUdevDevice *udev_device = fu_nordic_hid_cfg_channel_get_proxy(self, error);
 	if (udev_device == NULL)
 		return FALSE;
 	for (gint i = 1; i < 100; i++) {
@@ -221,13 +213,6 @@ fu_nordic_hid_cfg_channel_receive(FuNordicHidCfgChannel *self,
 	 * plugins/pixart-rf/fu-pxi-ble-device.c for an example.
 	 */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif
 }
 
 static gboolean
@@ -1370,13 +1355,6 @@ fu_nordic_hid_cfg_channel_direct_discovery(FuNordicHidCfgChannel *self, GError *
 	if (!fu_nordic_hid_cfg_channel_get_modinfo(self, error))
 		return FALSE;
 
-	/* generate the custom visible name for the device if absent */
-	if (fu_device_get_name(device) == NULL) {
-		const gchar *physical_id = NULL;
-		physical_id = fu_device_get_physical_id(device);
-		fu_device_set_name(device, physical_id);
-	}
-
 	/* get device info and version */
 	if (!fu_nordic_hid_cfg_channel_dfu_fwinfo(self, &error_fwinfo))
 		/* lack of firmware info support indicates that device does not support DFU. */
@@ -1690,6 +1668,7 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 	self->modules =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_nordic_hid_cfg_channel_module_free);
 
+	fu_device_set_name(FU_DEVICE(self), "HID nRF Desktop");
 	fu_device_set_vendor(FU_DEVICE(self), "Nordic");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.nordic.hidcfgchannel");
@@ -1702,11 +1681,11 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 static FuNordicHidCfgChannel *
 fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent)
 {
-	FuNordicHidCfgChannel *self = g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL,
-						   "context",
-						   fu_device_get_context(FU_DEVICE(parent)),
-						   NULL);
+	FuNordicHidCfgChannel *self =
+	    g_object_new(FU_TYPE_NORDIC_HID_CFG_CHANNEL, "proxy", FU_DEVICE(parent), NULL);
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(parent),
+			      FU_DEVICE_INCORPORATE_FLAG_BACKEND_ID);
 	self->peer_id = id;
-	self->parent_udev = FU_UDEV_DEVICE(parent);
 	return self;
 }
