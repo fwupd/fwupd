@@ -37,7 +37,7 @@ setup_run_wrappers()
     BIN=venv/bin/
     TEMPLATE=${BASE}/launch-venv.sh
     # launch wrappers
-    for F in fwupdtool fwupdmgr fwupd; do
+    for F in fwupdtool fwupdmgr fwupd fwupd-binder fwupdmgr-binder; do
         rm -f ${BIN}/${F}
         ln -s $TEMPLATE ${BIN}/${F}
     done

@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#define __need_size_t
+#include <stddef.h>
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"
