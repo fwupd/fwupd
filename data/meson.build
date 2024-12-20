@@ -134,6 +134,7 @@ if build_daemon
         '@chown',   # for sqlite3Step
         'ioctl',
         'uname',
+        'fadvise64',
         'sysinfo',  # for sysconf
         'madvise',  # for mtrim
         'mremap',   # for g_realloc
