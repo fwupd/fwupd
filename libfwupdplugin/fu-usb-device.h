@@ -45,6 +45,10 @@ fu_usb_device_get_configuration_index(FuUsbDevice *self, GError **error) G_GNUC_
 guint8
 fu_usb_device_get_serial_number_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8
+fu_usb_device_get_manufacturer_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+guint8
+fu_usb_device_get_product_index(FuUsbDevice *self) G_GNUC_NON_NULL(1);
+guint8
 fu_usb_device_get_custom_index(FuUsbDevice *self,
 			       guint8 class_id,
 			       guint8 subclass_id,

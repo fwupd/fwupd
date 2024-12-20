@@ -630,7 +630,17 @@ fu_usb_device_get_address(FuUsbDevice *self)
 	return priv->devnum;
 }
 
-static guint8
+/**
+ * fu_usb_device_get_manufacturer_index:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the index for the iManufacturer string descriptor.
+ *
+ * Return value: a string descriptor index.
+ *
+ * Since: 2.0.4
+ **/
+guint8
 fu_usb_device_get_manufacturer_index(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -638,7 +648,17 @@ fu_usb_device_get_manufacturer_index(FuUsbDevice *self)
 	return priv->desc.iManufacturer;
 }
 
-static guint8
+/**
+ * fu_usb_device_get_product_index:
+ * @self: a #FuUsbDevice
+ *
+ * Gets the index for the iProduct string descriptor.
+ *
+ * Return value: a string descriptor index.
+ *
+ * Since: 2.0.4
+ **/
+guint8
 fu_usb_device_get_product_index(FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
