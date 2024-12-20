@@ -99,6 +99,7 @@ struct _FuDeviceClass {
  * @FU_DEVICE_INSTANCE_FLAG_VISIBLE:		Show to the user
  * @FU_DEVICE_INSTANCE_FLAG_QUIRKS:		Match against quirk files
  * @FU_DEVICE_INSTANCE_FLAG_GENERIC:		Generic GUID added by a baseclass
+ * @FU_DEVICE_INSTANCE_FLAG_COUNTERPART:	Used as a bootloader ID
  *
  * The flags to use when interacting with a device instance
  **/
@@ -107,6 +108,7 @@ typedef enum {
 	FU_DEVICE_INSTANCE_FLAG_VISIBLE = 1 << 0,
 	FU_DEVICE_INSTANCE_FLAG_QUIRKS = 1 << 1,
 	FU_DEVICE_INSTANCE_FLAG_GENERIC = 1 << 2,
+	FU_DEVICE_INSTANCE_FLAG_COUNTERPART = 1 << 3,
 	/*< private >*/
 	FU_DEVICE_INSTANCE_FLAG_UNKNOWN = G_MAXUINT64,
 } FuDeviceInstanceFlags;

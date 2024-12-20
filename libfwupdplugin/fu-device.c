@@ -2586,6 +2586,8 @@ fu_device_add_instance_id_full(FuDevice *self,
 	}
 	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
+	if (flags & FU_DEVICE_INSTANCE_FLAG_COUNTERPART)
+		fu_device_add_counterpart_guid(self, instance_id);
 
 	/* save this to make debugging easier, and also so we can incorporate */
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE) == 0 &&
