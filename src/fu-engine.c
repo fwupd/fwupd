@@ -4337,8 +4337,9 @@ fu_engine_get_result_from_component(FuEngine *self,
 		}
 
 		/* add GUID */
-		fu_device_add_guid(dev, guid);
+		fu_device_add_instance_id(dev, guid);
 	}
+	fu_device_convert_instance_ids(dev);
 	if (fu_device_get_guids(dev)->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -6014,8 +6015,12 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	GPtrArray *device_guids;
 	g_autoptr(XbNode) component = NULL;
 
-	/* device has no GUIDs set! */
+	/* make tests easier */
 	device_guids = fu_device_get_guids(device);
+	if (device_guids->len == 0)
+		fu_device_convert_instance_ids(device);
+
+	/* device still has no GUIDs set! */
 	if (device_guids->len == 0) {
 		g_warning("no GUIDs for device %s [%s]",
 			  fu_device_get_name(device),

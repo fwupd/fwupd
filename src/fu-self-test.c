@@ -234,9 +234,10 @@ fu_engine_generate_md_func(gconstpointer user_data)
 			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.3");
+	fu_device_convert_instance_ids(device);
 	component = fu_engine_get_component_by_guids(engine, device);
 	g_assert_nonnull(component);
 
@@ -527,7 +528,8 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require one thing */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -576,7 +578,8 @@ fu_engine_requirements_version_lowest_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require one thing */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -673,7 +676,9 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
+
 	fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(child, "0.0.999");
 	fu_device_set_physical_id(child, "dummy");
@@ -734,7 +739,9 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
+
 	fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(child, "0.0.1");
 	fu_device_set_physical_id(child, "dummy");
@@ -848,7 +855,8 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require three things */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -917,7 +925,8 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require three things */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -969,7 +978,8 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	fu_device_set_version(device, "1.2.3.4");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require three things */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -1015,7 +1025,8 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device);
 
 	/* make the component require three things */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -1227,7 +1238,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
 	fu_engine_add_device(engine, device1);
 
@@ -1237,7 +1248,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(parent, "1.0.0");
 	fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(parent, "42f3d696-0b6f-4d69-908f-357f98ef115e");
+	fu_device_add_instance_id(parent, "42f3d696-0b6f-4d69-908f-357f98ef115e");
 	fu_device_add_protocol(parent, "com.acme");
 	fu_device_add_child(parent, device1);
 	fu_engine_add_device(engine, parent);
@@ -1251,7 +1262,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(unrelated_device3, "1.5.3");
 	fu_device_add_flag(unrelated_device3, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(unrelated_device3, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(unrelated_device3, "3e455c08-352e-4a16-84d3-f04287289fa2");
+	fu_device_add_instance_id(unrelated_device3, "3e455c08-352e-4a16-84d3-f04287289fa2");
 	fu_engine_add_device(engine, unrelated_device3);
 
 	/* import firmware metainfo */
@@ -1282,7 +1293,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(device2, "4.5.6");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_add_instance_id(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_device_add_child(parent, device2);
 	fu_engine_add_device(engine, device2);
 
@@ -1342,7 +1353,8 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_convert_instance_ids(device1);
 
 	/* set up a different device */
 	fu_device_set_id(device2, "id2");
@@ -1351,7 +1363,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	fu_device_set_name(device2, "Secondary firmware");
 	fu_device_set_version_format(device2, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device2, "4.5.6");
-	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_add_instance_id(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_engine_add_device(engine, device2);
 
 	/* import firmware metainfo */
@@ -1415,7 +1427,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	fu_device_build_vendor_id(device1, "DMI", "ACME");
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device1);
@@ -1426,7 +1438,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	fu_device_build_vendor_id(device2, "DMI", "ACME");
 	fu_device_set_version_format(device2, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device2, "1.2.3");
-	fu_device_add_guid(device2, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device2, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device2);
@@ -1502,7 +1514,8 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	fu_device_set_version(device2, "4.5.6");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_add_instance_id(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_convert_instance_ids(device2);
 
 	/* set up a parent device */
 	fu_device_set_id(device1, "parent");
@@ -1511,7 +1524,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	fu_device_set_name(device1, "parent");
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_child(device1, device2);
 	fu_engine_add_device(engine, device1);
 
@@ -1574,18 +1587,19 @@ fu_engine_requirements_child_device_func(gconstpointer user_data)
 	fu_device_set_name(device1, "parent");
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_convert_instance_ids(device1);
 
 	/* set up child device */
 	fu_device_set_id(device2, "child");
 	fu_device_set_name(device2, "child");
 	fu_device_set_version_format(device2, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device2, "4.5.6");
-	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_add_instance_id(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+	fu_device_convert_instance_ids(device2);
 	fu_device_add_child(device1, device2);
-
 	fu_engine_add_device(engine, device1);
 
 	/* import firmware metainfo */
@@ -1626,7 +1640,6 @@ fu_engine_device_parent_guid_func(gconstpointer user_data)
 	fu_device_add_protocol(device2, "com.acme");
 	fu_device_add_instance_id(device1, "child-GUID-1");
 	fu_device_add_parent_guid(device1, "parent-GUID");
-	fu_device_convert_instance_ids(device1);
 	fu_engine_add_device(engine, device1);
 
 	/* parent */
@@ -1685,7 +1698,6 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_device_add_instance_id(device1, "child-GUID-1");
 	fu_device_add_parent_physical_id(device1, "parent-ID-notfound");
 	fu_device_add_parent_physical_id(device1, "parent-ID");
-	fu_device_convert_instance_ids(device1);
 	fu_engine_add_device(engine, device1);
 
 	/* parent */
@@ -1720,7 +1732,6 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_device_add_protocol(device4, "com.acme");
 	fu_device_add_instance_id(device4, "child-GUID-4");
 	fu_device_add_parent_physical_id(device4, "parent-ID");
-	fu_device_convert_instance_ids(device4);
 	fu_engine_add_device(engine, device4);
 
 	/* this is normally done by fu_plugin_device_add() */
@@ -1734,7 +1745,6 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_device_add_protocol(device5, "com.acme");
 	fu_device_add_instance_id(device5, "child-GUID-5");
 	fu_device_add_parent_backend_id(device5, "/sys/devices/foo/bar/baz");
-	fu_device_convert_instance_ids(device5);
 	fu_engine_add_device(engine, device5);
 
 	/* this is normally done by fu_plugin_device_add() */
@@ -1774,14 +1784,14 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
 	fu_device_add_protocol(device1, "com.acme");
 	fu_device_set_plugin(device1, "test");
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_engine_add_device(engine, device1);
 	fu_device_set_id(device2, "device21");
 	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
 	fu_device_add_protocol(device2, "com.acme");
 	fu_device_set_plugin(device2, "test");
 	fu_device_set_equivalent_id(device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
-	fu_device_add_guid(device2, "87654321-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device2, "87654321-1234-1234-1234-123456789012");
 	fu_engine_add_device(engine, device2);
 
 	/* match nothing */
@@ -1853,7 +1863,7 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 	fu_device_set_id(device, "UEFI-dummy-dev0");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -1890,7 +1900,7 @@ fu_engine_device_equivalent_func(gconstpointer user_data)
 	fu_device_set_name(device1, "device1");
 	fu_device_build_vendor_id_u16(device1, "USB", 0xFFFF);
 	fu_device_add_protocol(device1, "com.acme");
-	fu_device_add_guid(device1, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device1, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device1);
@@ -1902,7 +1912,7 @@ fu_engine_device_equivalent_func(gconstpointer user_data)
 	fu_device_set_priority(device2, 999);
 	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
 	fu_device_add_protocol(device2, "com.acme");
-	fu_device_add_guid(device2, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device2, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device2);
@@ -1983,7 +1993,7 @@ fu_engine_device_md_set_flags_func(gconstpointer user_data)
 	fu_device_set_version(device, "0");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
@@ -2036,7 +2046,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device);
@@ -2094,7 +2104,7 @@ fu_engine_get_details_added_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device);
@@ -2296,7 +2306,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
-	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device);
@@ -2437,7 +2447,7 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device(engine, device);
 
@@ -2525,7 +2535,7 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration(device, 999);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -2610,7 +2620,7 @@ fu_engine_release_dedupe_func(gconstpointer user_data)
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_add_instance_id(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration(device, 999);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -2714,7 +2724,7 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -2794,6 +2804,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "    Version:            1.2.3\n"
 			    "    Checksum:           SHA1(%s)\n"
 			    "    Flags:              trusted-payload|trusted-metadata\n"
+			    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
@@ -2846,7 +2857,7 @@ fu_engine_history_verfmt_func(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -2906,7 +2917,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
@@ -3036,7 +3047,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
@@ -3112,7 +3123,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
 	fu_engine_add_device(engine, device);
@@ -3129,7 +3140,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
 	fu_engine_add_device(engine, device);
@@ -3177,7 +3188,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
@@ -3286,7 +3297,7 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
@@ -3383,7 +3394,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_device_add_protocol(device, "com.acme");
 	fu_device_set_name(device, "Test Device");
 	fu_device_set_plugin(device, "test");
-	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created_usec(device, 1515338000ull * G_USEC_PER_SEC);
@@ -3458,6 +3469,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "    Version:            1.2.3\n"
 	    "    Checksum:           SHA1(%s)\n"
 	    "    Flags:              trusted-payload|trusted-metadata\n"
+	    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 	    "  AcquiesceDelay:       50\n",
 	    checksum);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
@@ -3675,7 +3687,9 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	fu_device_set_name(device2, "device2");
 	fu_device_add_private_flag(device2, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id(device2, "baz");
-	fu_device_add_counterpart_guid(device2, "bar"); /* matches */
+	fu_device_add_instance_id_full(device2,
+				       "bar",
+				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART); /* matches */
 	fu_device_set_plugin(device2, "self-test");
 	fu_device_set_remove_delay(device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_convert_instance_ids(device2);
@@ -3763,7 +3777,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(device1, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
 	fu_device_add_instance_id(device1, "foobar");
-	fu_device_add_counterpart_guid(device1, "bootloader");
+	fu_device_add_instance_id_full(device1, "bootloader", FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_convert_instance_ids(device1);
 	fu_device_list_add(device_list, device1);
@@ -3945,16 +3959,18 @@ fu_device_list_better_than_func(gconstpointer user_data)
 	fu_device_set_id(device1, "87ea5dfc8b8e384d848979496e706390b497e547");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
+	fu_device_convert_instance_ids(device1);
 	fu_plugin_device_add(plugin1, device1);
 
 	/* should be ignored */
 	fu_device_set_id(device2, "87ea5dfc8b8e384d848979496e706390b497e547");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_guid(device2, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_instance_id(device2, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device2, "com.acme");
+	fu_device_convert_instance_ids(device2);
 	fu_plugin_device_add(plugin2, device2);
 
 	/* ensure we still have device1 */
@@ -3987,7 +4003,7 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 	/* add and then remove runtime */
 	fu_device_set_id(device1, "device-runtime");
 	fu_device_add_instance_id(device1, "runtime"); /* 420dde7c-3102-5d8f-86bc-aaabd7920150 */
-	fu_device_add_counterpart_guid(device1, "bootloader");
+	fu_device_add_instance_id_full(device1, "bootloader", FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 	fu_device_convert_instance_ids(device1);
 	fu_device_set_remove_delay(device1, 100);
 	fu_device_list_add(device_list, device1);
@@ -4008,7 +4024,8 @@ fu_device_list_counterpart_func(gconstpointer user_data)
 
 	/* should not have *visible* GUID of runtime */
 	g_assert_false(fu_device_has_guid(device2, "runtime"));
-	g_assert_true(fu_device_has_counterpart_guid(device2, "runtime"));
+	g_assert_false(
+	    fu_device_has_instance_id(device2, "runtime", FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
 static void
@@ -4508,7 +4525,9 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 
 	/* check the device was processed correctly by FuUsbDevice */
 	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "ColorHug2");
-	g_assert_true(fu_device_has_instance_id(device_tmp, "USB\\VID_273F&PID_1004"));
+	g_assert_true(fu_device_has_instance_id(device_tmp,
+						"USB\\VID_273F&PID_1004",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 	g_assert_true(fu_device_has_vendor_id(device_tmp, "USB:0x273F"));
 
 	/* check the fwupd DS20 descriptor was *not* parsed */
@@ -4551,6 +4570,7 @@ fu_plugin_module_func(gconstpointer user_data)
 
 	/* check we did the right thing */
 	g_assert_nonnull(device);
+	fu_device_convert_instance_ids(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "1.2.0");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
@@ -4601,7 +4621,7 @@ fu_history_func(gconstpointer user_data)
 	fu_device_set_version(device, "3.0.1"),
 	    fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 	fu_device_set_update_error(device, "word");
-	fu_device_add_guid(device, "827edddd-9bb6-5632-889f-2c01255503da");
+	fu_device_add_instance_id(device, "827edddd-9bb6-5632-889f-2c01255503da");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_created_usec(device, 1514338000ull * G_USEC_PER_SEC);
 	fu_device_set_modified_usec(device, 1514338999ull * G_USEC_PER_SEC);
@@ -4610,6 +4630,7 @@ fu_history_func(gconstpointer user_data)
 	    fu_release_add_checksum(release, "abcdef");
 	fu_release_set_version(release, "3.0.2");
 	fu_release_add_metadata_item(release, "FwupdVersion", VERSION);
+	fu_device_convert_instance_ids(device);
 	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5290,7 +5311,7 @@ fu_release_trusted_report_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device(engine, device);
 
@@ -5345,7 +5366,7 @@ fu_release_trusted_report_oem_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device(engine, device);
 
@@ -5400,7 +5421,7 @@ fu_release_no_trusted_report_upgrade_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device(engine, device);
 
@@ -5455,7 +5476,7 @@ fu_release_no_trusted_report_func(gconstpointer user_data)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(device, "com.acme");
-	fu_device_add_guid(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+	fu_device_add_instance_id(device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device(engine, device);
 
@@ -6981,7 +7002,9 @@ fu_test_engine_fake_serio(gconstpointer user_data)
 			==,
 			"DEVPATH=/devices/platform/i8042/serio1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
-	g_assert_true(fu_device_has_instance_id(device, "SERIO\\FWID_LEN0305-PNP0F13"));
+	g_assert_true(fu_device_has_instance_id(device,
+						"SERIO\\FWID_LEN0305-PNP0F13",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
 static void
