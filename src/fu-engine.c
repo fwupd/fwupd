@@ -7393,6 +7393,8 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED))
 			continue;
+		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG))
+			continue;
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
 			g_debug("incorporating new device for %s", fu_device_get_id(device_tmp));
