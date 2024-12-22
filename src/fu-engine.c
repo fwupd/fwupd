@@ -2737,6 +2737,7 @@ fu_engine_device_check_power(FuEngine *self,
 
 	/* not enough just in case */
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
