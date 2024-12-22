@@ -988,6 +988,7 @@ fu_strsafe_func(void)
 	ret = fu_device_build_instance_id(dev, &error, "SUB", "KEY", NULL);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	fu_device_convert_instance_ids(dev);
 	instance_ids = fu_device_get_instance_ids(dev);
 	g_assert_cmpint(instance_ids->len, ==, 1);
 	g_assert_cmpstr(g_ptr_array_index(instance_ids, 0), ==, "SUB\\KEY_LEN-VO");
@@ -1718,15 +1719,23 @@ fu_plugin_quirks_device_func(void)
 	fu_device_add_instance_id_full(device,
 				       "USB\\VID_0BDA&PID_1100",
 				       FU_DEVICE_INSTANCE_FLAG_GENERIC |
-					   FU_DEVICE_INSTANCE_FLAG_QUIRKS |
-					   FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+					   FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 	fu_device_add_instance_id(device, "USB\\VID_0BDA&PID_1100&CID_1234");
-	fu_device_convert_instance_ids(device);
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Hub");
 
 	/* ensure the non-customer-id instance ID is not available */
-	g_assert_true(fu_device_has_instance_id(device, "USB\\VID_0BDA&PID_1100&CID_1234"));
-	g_assert_false(fu_device_has_instance_id(device, "USB\\VID_0BDA&PID_1100"));
+	g_assert_true(fu_device_has_instance_id(device,
+						"USB\\VID_0BDA&PID_1100&CID_1234",
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS));
+	g_assert_true(fu_device_has_instance_id(device,
+						"USB\\VID_0BDA&PID_1100&CID_1234",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(device,
+						"USB\\VID_0BDA&PID_1100",
+						FU_DEVICE_INSTANCE_FLAG_QUIRKS));
+	g_assert_false(fu_device_has_instance_id(device,
+						 "USB\\VID_0BDA&PID_1100",
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 
 	/* ensure children are created */
 	children = fu_device_get_children(device);
@@ -2391,6 +2400,41 @@ fu_device_incorporate_descendant_func(void)
 }
 
 static void
+fu_device_incorporate_non_generic_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(FuDevice) donor = fu_device_new(ctx);
+
+	fu_device_add_instance_id_full(donor,
+				       "USB\\VID_273F&PID_1004",
+				       FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					   FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+	fu_device_add_instance_id_full(donor,
+				       "USB\\VID_273F&PID_1004&CID_1234",
+				       FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_INSTANCE_IDS);
+	g_assert_false(fu_device_has_instance_id(device,
+						 "USB\\VID_273F&PID_1004",
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(device,
+						"USB\\VID_273F&PID_1004&CID_1234",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	fu_device_convert_instance_ids(device);
+	g_assert_false(fu_device_has_instance_id(device,
+						 "USB\\VID_273F&PID_1004",
+						 FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(fu_device_has_instance_id(device,
+						"USB\\VID_273F&PID_1004&CID_1234",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_false(
+	    fwupd_device_has_instance_id(FWUPD_DEVICE(device), "USB\\VID_273F&PID_1004"));
+	g_assert_true(
+	    fwupd_device_has_instance_id(FWUPD_DEVICE(device), "USB\\VID_273F&PID_1004&CID_1234"));
+}
+
+static void
 fu_device_incorporate_flag_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -2475,7 +2519,8 @@ fu_device_incorporate_func(void)
 	ret = fu_device_build_instance_id(device, &error, "USB", "VID", NULL);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_true(fu_device_has_instance_id(device, "USB\\VID_0A5C"));
+	g_assert_true(
+	    fu_device_has_instance_id(device, "USB\\VID_0A5C", FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 	g_assert_cmpstr(fu_device_get_custom_flags(device), ==, "ignore-runtime");
 }
 
@@ -6366,6 +6411,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func("/fwupd/device{incorporate-flag}", fu_device_incorporate_flag_func);
+	g_test_add_func("/fwupd/device{incorporate-non-generic}",
+			fu_device_incorporate_non_generic_func);
 	g_test_add_func("/fwupd/device{incorporate-descendant}",
 			fu_device_incorporate_descendant_func);
 	if (g_test_slow())

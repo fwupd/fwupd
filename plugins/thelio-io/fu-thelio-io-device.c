@@ -25,7 +25,9 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* this is the atmel bootloader */
-	fu_device_add_counterpart_guid(device, "USB\\VID_03EB&PID_2FF4");
+	fu_device_add_instance_id_full(device,
+				       "USB\\VID_03EB&PID_2FF4",
+				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 
 	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 	if (G_UNLIKELY(devpath == NULL)) {
