@@ -477,7 +477,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
 	guid_lower = g_ascii_strdown(guid, -1);
 	if (fwupd_guid_is_valid(guid_lower)) {
-		fu_device_add_guid(dev, guid_lower);
+		fu_device_add_instance_id(dev, guid_lower);
 	} else {
 		if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
 			fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");

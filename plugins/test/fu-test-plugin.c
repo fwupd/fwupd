@@ -21,7 +21,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	device = fu_device_new(ctx);
 	fu_device_set_id(device, "FakeDevice");
-	fu_device_add_guid(device, "b585990a-003e-5270-89d5-3705a17f9a43");
+	fu_device_add_instance_id(device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name(device, "Integrated_Webcam(TM)");
 	fu_device_add_icon(device, "preferences-desktop-keyboard");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -60,7 +60,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_protocol(child1, "com.acme");
 		fu_device_set_physical_id(child1, "fake");
 		fu_device_set_logical_id(child1, "child1");
-		fu_device_add_guid(child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
+		fu_device_add_instance_id(child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
 		fu_device_set_name(child1, "Module1");
 		fu_device_set_version_format(child1, FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_set_version(child1, "1");
@@ -75,7 +75,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_protocol(child2, "com.acme");
 		fu_device_set_physical_id(child2, "fake");
 		fu_device_set_logical_id(child2, "child2");
-		fu_device_add_guid(child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
+		fu_device_add_instance_id(child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
 		fu_device_set_name(child2, "Module2");
 		fu_device_set_version_format(child2, FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_set_version(child2, "10");

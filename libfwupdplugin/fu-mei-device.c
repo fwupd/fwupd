@@ -166,7 +166,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_mei_device_set_uuid(self, uuid);
-	fu_device_add_guid(device, uuid);
+	fu_device_add_instance_id(device, uuid);
 
 	/* get the mei[0-9] device file the parent is using */
 	if (!fu_mei_device_ensure_parent_device_file(self, error))

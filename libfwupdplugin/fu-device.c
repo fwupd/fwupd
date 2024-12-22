@@ -68,7 +68,6 @@ typedef struct {
 	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	GPtrArray *parent_backend_ids;	/* (nullable) */
-	GPtrArray *counterpart_guids;	/* (nullable) */
 	GPtrArray *events;		/* (nullable) (element-type FuDeviceEvent) */
 	guint event_idx;
 	guint remove_delay;    /* ms */
@@ -87,10 +86,9 @@ typedef struct {
 	GType specialized_gtype;
 	GType proxy_gtype;
 	GType firmware_gtype;
-	GPtrArray *possible_plugins;   /* (element-type utf-8) */
-	GHashTable *guid_quirks;       /* (nullable) (element-type utf-8 int) */
-	GPtrArray *instance_id_quirks; /* (nullable) (element-type utf-8) */
-	GPtrArray *retry_recs;	       /* (nullable) (element-type FuDeviceRetryRecovery) */
+	GPtrArray *possible_plugins; /* (element-type utf-8) */
+	GPtrArray *instance_ids;     /* (nullable) (element-type FuDeviceInstanceIdItem) */
+	GPtrArray *retry_recs;	     /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
 	GPtrArray *private_flags_registered; /* (nullable) (element-type GRefString) */
 	GPtrArray *private_flags;	     /* (nullable) (no-ref) (element-type GRefString) */
@@ -112,6 +110,12 @@ typedef struct {
 	gchar *inhibit_id;
 	gchar *reason;
 } FuDeviceInhibit;
+
+typedef struct {
+	gchar *instance_id;
+	gchar *guid;
+	FuDeviceInstanceFlag flags;
+} FuDeviceInstanceIdItem;
 
 enum {
 	PROP_0,
@@ -1536,6 +1540,9 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_DEVICE(child));
 
+	/* make tests easier */
+	fu_device_convert_instance_ids(child);
+
 	/* add if the child does not already exist */
 	fwupd_device_add_child(FWUPD_DEVICE(self), FWUPD_DEVICE(child));
 
@@ -1919,7 +1926,7 @@ fu_device_add_child_by_type_guid(FuDevice *self, GType type, const gchar *guid, 
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuDevice) child = NULL;
 	child = g_object_new(type, "context", priv->ctx, "logical-id", guid, NULL);
-	fu_device_add_guid(child, guid);
+	fu_device_add_instance_id(child, guid);
 	fu_device_incorporate(child, self, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	if (!fu_device_ensure_id(self, error))
 		return FALSE;
@@ -2089,20 +2096,30 @@ fu_device_set_quirk_kv(FuDevice *self,
 	}
 	if (g_strcmp0(key, FU_QUIRKS_GUID) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
-		for (guint i = 0; sections[i] != NULL; i++)
-			fu_device_add_guid(self, sections[i]);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			fu_device_add_instance_id_full(self,
+						       sections[i],
+						       FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+							   FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		}
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_GUID_QUIRK) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
-		for (guint i = 0; sections[i] != NULL; i++)
-			fu_device_add_guid_full(self, sections[i], FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			fu_device_add_instance_id_full(self,
+						       sections[i],
+						       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		}
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_COUNTERPART_GUID) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
-		for (guint i = 0; sections[i] != NULL; i++)
-			fu_device_add_counterpart_guid(self, sections[i]);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			fu_device_add_instance_id_full(self,
+						       sections[i],
+						       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
+		}
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PARENT_GUID) == 0) {
@@ -2373,20 +2390,15 @@ static void
 fu_device_add_guid_quirks(FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(guid != NULL);
+
 	if (priv->ctx == NULL) {
 		g_autofree gchar *str = fu_device_to_string(self);
 		g_critical("no FuContext assigned for %s", str);
 		return;
 	}
-
-	/* do not run the query multiple times on the same device */
-	if (priv->guid_quirks == NULL) {
-		priv->guid_quirks = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	} else {
-		if (g_hash_table_contains(priv->guid_quirks, guid))
-			return;
-	}
-	g_hash_table_add(priv->guid_quirks, g_strdup(guid));
 
 	/* run the query */
 	fu_context_lookup_quirk_by_id_iter(priv->ctx, guid, NULL, fu_device_quirks_iter_cb, self);
@@ -2480,17 +2492,6 @@ fu_device_get_firmware_size_max(FuDevice *self)
 	return priv->size_max;
 }
 
-static void
-fu_device_add_guid_safe(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
-{
-	/* add the device GUID before adding additional GUIDs from quirks
-	 * to ensure the bootloader GUID is listed after the runtime GUID */
-	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
-		fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
-	if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
-		fu_device_add_guid_quirks(self, guid);
-}
-
 /**
  * fu_device_has_guid:
  * @self: a #FuDevice
@@ -2518,85 +2519,122 @@ fu_device_has_guid(FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid(FWUPD_DEVICE(self), guid);
 }
 
-static gboolean
-fu_device_has_instance_id_quirk(FuDevice *self, const gchar *instance_id)
+static void
+fu_device_instance_id_free(FuDeviceInstanceIdItem *item)
+{
+	g_free(item->instance_id);
+	g_free(item->guid);
+	g_free(item);
+}
+
+static FuDeviceInstanceIdItem *
+fu_device_get_instance_id(FuDevice *self, const gchar *instance_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->instance_id_quirks == NULL)
-		return FALSE;
-	for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
-		const gchar *instance_id_tmp = g_ptr_array_index(priv->instance_id_quirks, i);
-		if (g_strcmp0(instance_id, instance_id_tmp) == 0)
+	if (priv->instance_ids == NULL)
+		return NULL;
+	for (guint i = 0; i < priv->instance_ids->len; i++) {
+		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+		if (g_strcmp0(instance_id, item->instance_id) == 0)
+			return item;
+		if (g_strcmp0(instance_id, item->guid) == 0)
+			return item;
+	}
+	return NULL;
+}
+
+/**
+ * fu_device_has_instance_id:
+ * @self: a #FuDevice
+ * @instance_id: a instance ID, e.g. `WacomAES`
+ * @flags: instance ID flags
+ *
+ * Finds out if the device has this specific instance ID.
+ *
+ * NOTE: The instance IDs are only added to the actual base #FwupdDevice after
+ * fu_device_convert_instance_ids() has been called -- normally as part of `FuDevice->setup()`.
+ * This ensures that incorporating a baseclass to a target device with the flag
+ * %FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS does not have generic instance IDs added.
+ *
+ * Returns: %TRUE if the instance ID is found
+ *
+ * Since: 2.0.4
+ **/
+gboolean
+fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(instance_id != NULL, FALSE);
+
+	for (guint i = 0; priv->instance_ids != NULL && i < priv->instance_ids->len; i++) {
+		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+		if ((item->flags & flags) == 0)
+			continue;
+		if (g_strcmp0(item->instance_id, instance_id) == 0 ||
+		    g_strcmp0(item->guid, instance_id) == 0)
 			return TRUE;
 	}
 	return FALSE;
 }
 
-static void
-fu_device_add_instance_id_quirk(FuDevice *self, const gchar *instance_id)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-
-	if (fu_device_has_instance_id(self, instance_id))
-		return;
-	if (fu_device_has_instance_id_quirk(self, instance_id))
-		return;
-	if (priv->instance_id_quirks == NULL)
-		priv->instance_id_quirks = g_ptr_array_new_with_free_func(g_free);
-	g_ptr_array_add(priv->instance_id_quirks, g_strdup(instance_id));
-}
-
 /**
  * fu_device_add_instance_id_full:
  * @self: a #FuDevice
- * @instance_id: a instance ID, e.g. `WacomAES`
+ * @instance_id: a instance ID or GUID, e.g. `WacomAES`
  * @flags: instance ID flags
  *
- * Adds an instance ID with all parameters set
+ * Adds an instance ID or GUID with all parameters set.
+ *
+ * A counterpart GUID is the GUID of the same device in bootloader or runtime mode,
+ * if they have a different device PCI or USB ID.
  *
  * Since: 1.2.9
  **/
 void
-fu_device_add_instance_id_full(FuDevice *self,
-			       const gchar *instance_id,
-			       FuDeviceInstanceFlags flags)
+fu_device_add_instance_id_full(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *guid = NULL;
+	FuDeviceInstanceIdItem *item;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(instance_id != NULL);
 
-	if (fwupd_guid_is_valid(instance_id)) {
-		g_warning("use fu_device_add_guid(\"%s\") instead!", instance_id);
-		fu_device_add_guid_safe(self, instance_id, flags);
-		return;
-	}
+	/* add to cache */
+	item = fu_device_get_instance_id(self, instance_id);
+	if (item != NULL) {
+		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) == 0 &&
+		    (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) > 0) {
+			/* visible -> visible+quirks */
+			fu_device_add_guid_quirks(self, item->guid);
+		}
+		item->flags |= flags;
+	} else {
+		item = g_new0(FuDeviceInstanceIdItem, 1);
+		if (fwupd_guid_is_valid(instance_id)) {
+			item->guid = g_strdup(instance_id);
+		} else {
+			item->instance_id = g_strdup(instance_id);
+			item->guid = fwupd_guid_hash_string(instance_id);
+		}
+		item->flags |= flags;
+		if (priv->instance_ids == NULL)
+			priv->instance_ids = g_ptr_array_new_with_free_func(
+			    (GDestroyNotify)fu_device_instance_id_free);
+		g_ptr_array_add(priv->instance_ids, item);
 
-	/* it seems odd adding the instance ID and the GUID quirks and not just
-	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
-	 * so the plugin is set, but not the LVFS metadata to match firmware
-	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
-	guid = fwupd_guid_hash_string(instance_id);
-	if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
-		fu_device_add_guid_quirks(self, guid);
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
-	    fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS)) {
-		flags &= ~FU_DEVICE_INSTANCE_FLAG_VISIBLE;
+		/* we want the quirks to match so the plugin is set */
+		if (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS)
+			fu_device_add_guid_quirks(self, item->guid);
 	}
-	if (flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE)
-		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
-	if (flags & FU_DEVICE_INSTANCE_FLAG_COUNTERPART)
-		fu_device_add_counterpart_guid(self, instance_id);
-
-	/* save this to make debugging easier, and also so we can incorporate */
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE) == 0 &&
-	    (flags & FU_DEVICE_INSTANCE_FLAG_QUIRKS) > 0)
-		fu_device_add_instance_id_quirk(self, instance_id);
 
 	/* already done by ->setup(), so this must be ->registered() */
-	if (priv->done_setup)
-		fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
+	if (priv->done_setup) {
+		if (item->instance_id != NULL)
+			fwupd_device_add_instance_id(FWUPD_DEVICE(self), item->instance_id);
+		fwupd_device_add_guid(FWUPD_DEVICE(self), item->guid);
+	}
 }
 
 /**
@@ -2604,8 +2642,7 @@ fu_device_add_instance_id_full(FuDevice *self,
  * @self: a #FuDevice
  * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
- * Adds an instance ID to the device. If the @instance_id argument is already a
- * valid GUID then fu_device_add_guid() should be used instead.
+ * Adds an visible, quirked, instance ID to the device.
  *
  * Since: 1.2.5
  **/
@@ -2621,106 +2658,12 @@ fu_device_add_instance_id(FuDevice *self, const gchar *instance_id)
 }
 
 /**
- * fu_device_add_guid:
- * @self: a #FuDevice
- * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
- *
- * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fwupd_guid_hash_string().
- *
- * Since: 0.7.2
- **/
-void
-fu_device_add_guid(FuDevice *self, const gchar *guid)
-{
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(guid != NULL);
-	if (!fwupd_guid_is_valid(guid)) {
-		fu_device_add_instance_id(self, guid);
-		return;
-	}
-	fu_device_add_guid_safe(self,
-				guid,
-				FU_DEVICE_INSTANCE_FLAG_VISIBLE | FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-}
-
-/**
- * fu_device_add_guid_full:
- * @self: a #FuDevice
- * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
- * @flags: instance ID flags
- *
- * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fwupd_guid_hash_string().
- *
- * Since: 1.6.2
- **/
-void
-fu_device_add_guid_full(FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
-{
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(guid != NULL);
-	if (!fwupd_guid_is_valid(guid)) {
-		fu_device_add_instance_id_full(self, guid, flags);
-		return;
-	}
-	fu_device_add_guid_safe(self, guid, flags);
-}
-
-/**
- * fu_device_has_counterpart_guid:
- * @self: a #FuDevice
- * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
- *
- * Finds out if the device has a specific counterpart GUID.
- *
- * Returns: %TRUE if the counterpart GUID is found
- *
- * Since: 1.9.21
- **/
-gboolean
-fu_device_has_counterpart_guid(FuDevice *self, const gchar *guid)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-
-	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
-	g_return_val_if_fail(guid != NULL, FALSE);
-
-	/* never added */
-	if (priv->counterpart_guids == NULL)
-		return FALSE;
-
-	/* convert and try again */
-	if (!fwupd_guid_is_valid(guid)) {
-		g_autofree gchar *tmp = fwupd_guid_hash_string(guid);
-		return fu_device_has_counterpart_guid(self, tmp);
-	}
-
-	/* any defined? */
-	for (guint i = 0; i < priv->counterpart_guids->len; i++) {
-		const gchar *counterpart_guid = g_ptr_array_index(priv->counterpart_guids, i);
-		if (g_strcmp0(guid, counterpart_guid) == 0)
-			return TRUE;
-	}
-	return FALSE;
-}
-
-static void
-fu_device_ensure_counterpart_guids(FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->counterpart_guids != NULL)
-		return;
-	priv->counterpart_guids = g_ptr_array_new_with_free_func(g_free);
-}
-
-/**
  * fu_device_get_counterpart_guids:
  * @self: a #FuDevice
  *
  * Returns all the counterpart GUIDs.
  *
- * Returns: (transfer none) (element-type utf8): list of GUIDs
+ * Returns: (transfer container) (element-type utf8): list of GUIDs
  *
  * Since: 1.9.21
  **/
@@ -2728,50 +2671,16 @@ GPtrArray *
 fu_device_get_counterpart_guids(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) guids = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 
-	fu_device_ensure_counterpart_guids(self);
-	return priv->counterpart_guids;
-}
-
-/**
- * fu_device_add_counterpart_guid:
- * @self: a #FuDevice
- * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
- *
- * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fwupd_guid_hash_string().
- *
- * A counterpart GUID is typically the GUID of the same device in bootloader
- * or runtime mode, if they have a different device PCI or USB ID. Adding this
- * type of GUID does not cause a "cascade" by matching using the quirk database.
- *
- * Since: 1.1.2
- **/
-void
-fu_device_add_counterpart_guid(FuDevice *self, const gchar *guid)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(guid != NULL);
-
-	/* already present */
-	if (fu_device_has_counterpart_guid(self, guid))
-		return;
-
-	/* ensure exists */
-	fu_device_ensure_counterpart_guids(self);
-
-	/* make valid */
-	if (!fwupd_guid_is_valid(guid)) {
-		g_ptr_array_add(priv->counterpart_guids, fwupd_guid_hash_string(guid));
-		return;
+	for (guint i = 0; priv->instance_ids != NULL && i < priv->instance_ids->len; i++) {
+		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+		if (item->flags & FU_DEVICE_INSTANCE_FLAG_COUNTERPART)
+			g_ptr_array_add(guids, g_strdup(item->guid));
 	}
-
-	/* already valid */
-	g_ptr_array_add(priv->counterpart_guids, g_strdup(guid));
+	return g_steal_pointer(&guids);
 }
 
 /**
@@ -4767,23 +4676,33 @@ fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec)
 	fwupd_device_set_modified(FWUPD_DEVICE(self), modified_usec / G_USEC_PER_SEC);
 }
 
+static gchar *
+fu_device_instance_flag_to_string_trunc(FuDeviceInstanceFlag flags)
+{
+	g_autofree gchar *tmp = fu_device_instance_flag_to_string(flags);
+	g_auto(GStrv) split = g_strsplit(tmp, ",", -1);
+	for (guint i = 0; split[i] != NULL; i++) {
+		if (strlen(split[i]) > 2)
+			split[i][2] = '\0';
+	}
+	return g_strjoinv(",", split);
+}
+
 static void
 fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
-	if (priv->instance_id_quirks != NULL) {
-		for (guint i = 0; i < priv->instance_id_quirks->len; i++) {
-			const gchar *instance_id = g_ptr_array_index(priv->instance_id_quirks, i);
-			g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
-			g_autofree gchar *tmp2 = g_strdup_printf("%s ← %s", guid, instance_id);
-			fwupd_codec_string_append(str, idt, "Guid[quirk]", tmp2);
-		}
-	}
-	if (priv->counterpart_guids != NULL) {
-		for (guint i = 0; i < priv->counterpart_guids->len; i++) {
-			const gchar *guid = g_ptr_array_index(priv->counterpart_guids, i);
-			fwupd_codec_string_append(str, idt, "Guid[counterpart]", guid);
+	for (guint i = 0; priv->instance_ids != NULL && i < priv->instance_ids->len; i++) {
+		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+		g_autofree gchar *flags_str = fu_device_instance_flag_to_string_trunc(item->flags);
+		g_autofree gchar *title = g_strdup_printf("InstanceId[%s]", flags_str);
+		if (item->instance_id != NULL) {
+			g_autofree gchar *tmp2 =
+			    g_strdup_printf("%s ← %s", item->guid, item->instance_id);
+			fwupd_codec_string_append(str, idt, title, tmp2);
+		} else {
+			fwupd_codec_string_append(str, idt, title, item->guid);
 		}
 	}
 	fwupd_codec_string_append(str, idt, "EquivalentId", priv->equivalent_id);
@@ -5776,12 +5695,14 @@ fu_device_probe_complete(FuDevice *self)
 gboolean
 fu_device_rescan(FuDevice *self, GError **error)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* remove all GUIDs */
+	g_ptr_array_set_size(priv->instance_ids, 0);
 	g_ptr_array_set_size(fu_device_get_instance_ids(self), 0);
 	g_ptr_array_set_size(fu_device_get_guids(self), 0);
 
@@ -5837,17 +5758,33 @@ fu_device_set_progress(FuDevice *self, FuProgress *progress)
 void
 fu_device_convert_instance_ids(FuDevice *self)
 {
-	GPtrArray *instance_ids;
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	/* already set */
+	if (fu_device_get_guids(self)->len > 0)
+		return;
+
+	/* convert the FuDevice IDs to FwupdDevice IDs */
+	if (priv->instance_ids != NULL) {
+		for (guint i = 0; i < priv->instance_ids->len; i++) {
+			FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+			if ((item->flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE) == 0)
+				continue;
+			if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
+			    fu_device_has_private_flag(self,
+						       FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS))
+				continue;
+			if (item->instance_id != NULL)
+				fwupd_device_add_instance_id(FWUPD_DEVICE(self), item->instance_id);
+			fwupd_device_add_guid(FWUPD_DEVICE(self), item->guid);
+		}
+	}
 
 	/* OEM specific hardware */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS))
 		return;
-	instance_ids = fwupd_device_get_instance_ids(FWUPD_DEVICE(self));
-	for (guint i = 0; i < instance_ids->len; i++) {
-		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
-		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
-		fwupd_device_add_guid(FWUPD_DEVICE(self), guid);
-	}
 }
 
 /**
@@ -6198,6 +6135,26 @@ fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value
 	fwupd_device_add_vendor_id(FWUPD_DEVICE(self), vendor_id);
 }
 
+static void
+fu_device_incorporate_instance_ids(FuDevice *self, FuDevice *donor)
+{
+	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
+
+	if (priv_donor->instance_ids == NULL)
+		return;
+	for (guint i = 0; i < priv_donor->instance_ids->len; i++) {
+		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv_donor->instance_ids, i);
+		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
+		    fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS)) {
+			continue;
+		}
+		if (item->instance_id != NULL)
+			fu_device_add_instance_id_full(self, item->instance_id, item->flags);
+		else
+			fu_device_add_instance_id_full(self, item->guid, item->flags);
+	}
+}
+
 /**
  * fu_device_incorporate:
  * @self: a #FuDevice
@@ -6231,8 +6188,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		/* remove the baseclass-added serial number and GUIDs if set */
 		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER))
 			fwupd_device_set_serial(FWUPD_DEVICE(self), NULL);
-		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS))
-			g_ptr_array_set_size(fwupd_device_get_instance_ids(FWUPD_DEVICE(self)), 0);
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_VENDOR) {
 		if (fu_device_get_vendor(self) == NULL && fu_device_get_vendor(donor) != NULL)
@@ -6335,6 +6290,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		if (priv->update_image == NULL && priv_donor->update_image != NULL)
 			fu_device_set_update_image(self, priv_donor->update_image);
 	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_INSTANCE_IDS)
+		fu_device_incorporate_instance_ids(self, donor);
 
 	/* everything else */
 	if (flag == FU_DEVICE_INCORPORATE_FLAG_ALL) {
@@ -6389,13 +6346,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 				fu_device_add_parent_backend_id(self, tmp);
 			}
 		}
-		if (priv_donor->counterpart_guids != NULL) {
-			for (guint i = 0; i < priv_donor->counterpart_guids->len; i++) {
-				const gchar *tmp =
-				    g_ptr_array_index(priv_donor->counterpart_guids, i);
-				fu_device_add_counterpart_guid(self, tmp);
-			}
-		}
 		if (priv_donor->metadata != NULL) {
 			GHashTableIter iter;
 			gpointer key, value;
@@ -6411,15 +6361,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			const gchar *possible_plugin =
 			    g_ptr_array_index(priv_donor->possible_plugins, i);
 			fu_device_add_possible_plugin(self, possible_plugin);
-		}
-		if (priv_donor->instance_id_quirks != NULL) {
-			for (guint i = 0; i < priv_donor->instance_id_quirks->len; i++) {
-				const gchar *instance_id =
-				    g_ptr_array_index(priv_donor->instance_id_quirks, i);
-				fu_device_add_instance_id_full(self,
-							       instance_id,
-							       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-			}
 		}
 
 		/* copy all instance ID keys if not already set */
@@ -7201,7 +7142,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
  **/
 gboolean
 fu_device_build_instance_id_full(FuDevice *self,
-				 FuDeviceInstanceFlags flags,
+				 FuDeviceInstanceFlag flags,
 				 GError **error,
 				 const gchar *subsystem,
 				 ...)
@@ -7809,22 +7750,18 @@ fu_device_finalize(GObject *object)
 		g_hash_table_unref(priv->metadata);
 	if (priv->inhibits != NULL)
 		g_hash_table_unref(priv->inhibits);
-	if (priv->guid_quirks != NULL)
-		g_hash_table_unref(priv->guid_quirks);
 	if (priv->instance_hash != NULL)
 		g_hash_table_unref(priv->instance_hash);
 	if (priv->parent_physical_ids != NULL)
 		g_ptr_array_unref(priv->parent_physical_ids);
 	if (priv->parent_backend_ids != NULL)
 		g_ptr_array_unref(priv->parent_backend_ids);
-	if (priv->counterpart_guids != NULL)
-		g_ptr_array_unref(priv->counterpart_guids);
 	if (priv->events != NULL)
 		g_ptr_array_unref(priv->events);
 	if (priv->retry_recs != NULL)
 		g_ptr_array_unref(priv->retry_recs);
-	if (priv->instance_id_quirks != NULL)
-		g_ptr_array_unref(priv->instance_id_quirks);
+	if (priv->instance_ids != NULL)
+		g_ptr_array_unref(priv->instance_ids);
 	if (priv->parent_guids != NULL)
 		g_ptr_array_unref(priv->parent_guids);
 	if (priv->private_flags != NULL)
