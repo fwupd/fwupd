@@ -137,6 +137,10 @@ void
 fu_release_set_device(FuRelease *self, FuDevice *device)
 {
 	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* make tests easier */
+	fu_device_convert_instance_ids(device);
+
 	g_set_object(&self->device, device);
 	fu_release_set_device_version_old(self, fu_device_get_version(device));
 }

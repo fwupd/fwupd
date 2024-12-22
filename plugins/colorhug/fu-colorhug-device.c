@@ -366,7 +366,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device), idx, NULL);
-		fu_device_add_guid(device, tmp);
+		fu_device_add_instance_id(device, tmp);
 	}
 
 	/* using the USB descriptor and old firmware */

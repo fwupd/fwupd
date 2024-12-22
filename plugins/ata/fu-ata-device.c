@@ -144,7 +144,6 @@ fu_ata_device_parse_id_maybe_dell(FuAtaDevice *self, const guint16 *buf)
 	g_autofree gchar *component_id = NULL;
 	g_autofree gchar *guid_efi = NULL;
 	g_autofree gchar *guid_id = NULL;
-	g_autofree gchar *guid = NULL;
 
 	/* add extra component ID if set */
 	component_id = fu_ata_device_get_string(buf, 137, 140);
@@ -160,13 +159,11 @@ fu_ata_device_parse_id_maybe_dell(FuAtaDevice *self, const guint16 *buf)
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf("STORAGE-DELL-%s", component_id);
 	fu_device_add_instance_id(FU_DEVICE(self), guid_id);
-	guid = fwupd_guid_hash_string(guid_id);
-	fu_device_add_guid(FU_DEVICE(self), guid);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_ata_device_get_guid_safe(buf, 129);
 	if (guid_efi != NULL)
-		fu_device_add_guid(FU_DEVICE(self), guid_efi);
+		fu_device_add_instance_id(FU_DEVICE(self), guid_efi);
 
 	/* owned by Dell */
 	fu_device_set_vendor(FU_DEVICE(self), "Dell");

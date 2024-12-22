@@ -41,7 +41,7 @@ fu_uefi_recovery_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError 
 	fu_device_add_icon(device, "computer");
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *hwid = g_ptr_array_index(hwids, i);
-		fu_device_add_guid(device, hwid);
+		fu_device_add_instance_id(device, hwid);
 	}
 
 	/* set vendor ID as the BIOS vendor */

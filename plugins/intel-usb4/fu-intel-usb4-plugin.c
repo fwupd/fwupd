@@ -45,7 +45,9 @@ fu_intel_usb4_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		for (guint j = 0; j < instance_ids->len; j++) {
 			const gchar *instance_id = g_ptr_array_index(instance_ids, j);
 			if (g_str_has_prefix(instance_id, "TBT-") &&
-			    fu_device_has_instance_id(device_tmp, instance_id)) {
+			    fu_device_has_instance_id(device_tmp,
+						      instance_id,
+						      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
 				fu_device_remove_private_flag(
 				    device,
 				    FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
