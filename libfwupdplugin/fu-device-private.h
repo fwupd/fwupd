@@ -65,8 +65,6 @@ void
 fu_device_set_specialized_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
 void
 fu_device_set_proxy_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
-gboolean
-fu_device_has_counterpart_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_device_get_counterpart_guids(FuDevice *self) G_GNUC_NON_NULL(1);
 gboolean

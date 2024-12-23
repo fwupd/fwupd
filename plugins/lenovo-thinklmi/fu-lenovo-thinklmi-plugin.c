@@ -38,7 +38,9 @@ static void
 fu_lenovo_thinklmi_plugin_cpu_registered(FuContext *ctx, FuDevice *device)
 {
 	/* Ryzen 6000 doesn't support S3 even if the BIOS offers it */
-	if (fu_device_has_instance_id(device, "CPUID\\PRO_0&FAM_19&MOD_44")) {
+	if (fu_device_has_instance_id(device,
+				      "CPUID\\PRO_0&FAM_19&MOD_44",
+				      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
 		FwupdBiosSetting *attr = fu_context_get_bios_setting(ctx, BIOS_SETTING_SLEEP_MODE);
 
 		if (attr != NULL) {

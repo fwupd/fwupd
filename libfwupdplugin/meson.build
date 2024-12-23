@@ -6,6 +6,7 @@ fwupdplugin_structs = [
   'fu-cab.rs', # fuzzing
   'fu-cfu-firmware.rs', # fuzzing
   'fu-coswid.rs', # fuzzing
+  'fu-device.rs', # fuzzing
   'fu-dfu-firmware.rs', # fuzzing
   'fu-dpaux.rs', # fuzzing
   'fu-edid.rs', # fuzzing

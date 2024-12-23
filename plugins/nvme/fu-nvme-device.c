@@ -213,12 +213,12 @@ fu_nvme_device_parse_cns_maybe_dell(FuNvmeDevice *self, const guint8 *buf)
 	devid = g_strdup_printf("STORAGE-DELL-%s", component_id);
 	fu_device_add_instance_id(FU_DEVICE(self), devid);
 	guid = fwupd_guid_hash_string(devid);
-	fu_device_add_guid(FU_DEVICE(self), guid);
+	fu_device_add_instance_id(FU_DEVICE(self), guid);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_nvme_device_get_guid_safe(buf, 0x0c26);
 	if (guid_efi != NULL)
-		fu_device_add_guid(FU_DEVICE(self), guid_efi);
+		fu_device_add_instance_id(FU_DEVICE(self), guid_efi);
 }
 
 static gboolean
@@ -269,7 +269,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	/* FRU globally unique identifier (FGUID) */
 	gu = fu_nvme_device_get_guid_safe(buf, 127);
 	if (gu != NULL)
-		fu_device_add_guid(FU_DEVICE(self), gu);
+		fu_device_add_instance_id(FU_DEVICE(self), gu);
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the

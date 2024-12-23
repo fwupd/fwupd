@@ -464,7 +464,7 @@ static void
 fu_vbe_simple_device_constructed(GObject *obj)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(obj);
-	fu_device_add_guid(FU_DEVICE(self), "bb3b05a8-ebef-11ec-be98-d3a15278be95");
+	fu_device_add_instance_id(FU_DEVICE(self), "bb3b05a8-ebef-11ec-be98-d3a15278be95");
 }
 
 static void

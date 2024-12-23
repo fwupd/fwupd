@@ -2737,6 +2737,7 @@ fu_engine_device_check_power(FuEngine *self,
 
 	/* not enough just in case */
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
 	    fu_context_get_battery_level(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FWUPD_BATTERY_LEVEL_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
@@ -4336,8 +4337,9 @@ fu_engine_get_result_from_component(FuEngine *self,
 		}
 
 		/* add GUID */
-		fu_device_add_guid(dev, guid);
+		fu_device_add_instance_id(dev, guid);
 	}
+	fu_device_convert_instance_ids(dev);
 	if (fu_device_get_guids(dev)->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -6013,8 +6015,12 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	GPtrArray *device_guids;
 	g_autoptr(XbNode) component = NULL;
 
-	/* device has no GUIDs set! */
+	/* make tests easier */
 	device_guids = fu_device_get_guids(device);
+	if (device_guids->len == 0)
+		fu_device_convert_instance_ids(device);
+
+	/* device still has no GUIDs set! */
 	if (device_guids->len == 0) {
 		g_warning("no GUIDs for device %s [%s]",
 			  fu_device_get_name(device),
@@ -7386,6 +7392,8 @@ fu_engine_backend_device_changed_cb(FuBackend *backend, FuDevice *device, FuEngi
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED))
+			continue;
+		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG))
 			continue;
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
