@@ -1,7 +1,7 @@
 # 5171 devboard connected via USB
 [USB\VID_0A12&PID_4007]
 Plugin = qc_s5gen2
-Flags = enforce-requires
+Flags = no-generic-guids
 ProxyGType = FuQcS5gen2HidDevice
 
 # 5171 devboard connected via BT
