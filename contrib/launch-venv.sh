@@ -41,7 +41,8 @@ for var in $(env | grep FWUPD | cut -d= -f1); do
         ENV="${ENV} ${var}=${!var}"
 done
 SUDO=$(which sudo)
-if [ "${BIN}" = "fwupd" ] && \
+if [ "${BIN}" = "fwupd-binder" ] || \
+   [ "${BIN}" = "fwupd" ] && \
    [ -d "$(dirname ${DBUSPOLICY})" ] && \
    [ ! -f ${DBUSPOLICY} ]; then
         echo "Missing D-Bus policy in ${DBUSPOLICY}"

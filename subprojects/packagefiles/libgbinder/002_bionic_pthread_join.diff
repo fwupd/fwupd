@@ -1,0 +1,13 @@
+diff --git a/src/gbinder_ipc.c b/src/gbinder_ipc.c
+index c43fb81..edb4657 100644
+--- a/src/gbinder_ipc.c
++++ b/src/gbinder_ipc.c
+@@ -982,7 +982,7 @@ gbinder_ipc_looper_join(
+ 
+             ts.tv_sec += ns / sec;
+             ts.tv_nsec = ns % sec;
+-            err = pthread_timedjoin_np(looper->thread, NULL, &ts);
++            err = pthread_join(looper->thread, NULL);
+         }
+ 
+         if (err) {
