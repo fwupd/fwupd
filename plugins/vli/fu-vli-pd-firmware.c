@@ -80,7 +80,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 
 	/* check CRC */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint16 crc_actual = 0x0;
+		guint16 crc_actual = 0xFFFF;
 		guint16 crc_file = 0x0;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
