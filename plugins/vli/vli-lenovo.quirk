@@ -220,6 +220,18 @@ GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_722A
 
+# Lenovo USB-C 7-in-1 WWCB Dock
+[USB\VID_17EF&PID_10CA]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3,has-shared-spi-pd
+CounterpartGuid = USB\VID_17EF&PID_10CB
+[USB\VID_17EF&PID_10CB]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_17EF&PID_10CA
+
 # Lenovo USB-C to 4 USB-A Hub
 [USB\VID_17EF&PID_1039]
 Plugin = vli
