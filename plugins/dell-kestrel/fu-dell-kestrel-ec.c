@@ -449,6 +449,7 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 gboolean
 fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 {
+	guint max_tries = 2;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* ec included in cmd, set bit2 in data for tbt */
@@ -456,8 +457,15 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	fu_byte_array_append_uint8(req, 1); // length of data
 	fu_byte_array_append_uint8(req, 0x02);
 
-	g_debug("registered passive update (uod) flow");
-	return fu_dell_kestrel_ec_write(self, req, error);
+	for (guint i = 1; i <= max_tries; i++) {
+		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
+		if (!fu_dell_kestrel_ec_write(self, req, error)) {
+			g_prefix_error(error, "failed to register uod flow: ");
+			return FALSE;
+		}
+		fu_device_sleep(FU_DEVICE(self), 100);
+	}
+	return TRUE;
 }
 
 static gboolean
