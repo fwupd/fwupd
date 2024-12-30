@@ -13,6 +13,7 @@ cp fwupd-test-firmware/installed-tests/* /usr/share/installed-tests/fwupd/ -LRv
 
 # gnome-desktop-testing is missing, so manually run these tests
 export G_TEST_SRCDIR=/usr/share/installed-tests/fwupd G_TEST_BUILDDIR=/usr/share/installed-tests/fwupd
+mkdir -p /run/dbus
 /usr/bin/dbus-daemon --system
 /usr/lib/polkit-1/polkitd &
 sleep 5
