@@ -40,7 +40,7 @@ fu_dell_kestrel_ec_get_dpmux_version(FuDellKestrelEc *self);
 guint32
 fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self);
 gboolean
-fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GBytes *blob_fw, GError **error);
+fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error);
 FuDellDockBaseType
 fu_dell_kestrel_ec_get_dock_type(FuDellKestrelEc *self);
 FuDellKestrelDockSku

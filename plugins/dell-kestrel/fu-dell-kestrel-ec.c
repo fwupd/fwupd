@@ -575,26 +575,35 @@ fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 }
 
 gboolean
-fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GBytes *blob_fw, GError **error)
+fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
-	gsize length = g_bytes_get_size(blob_fw);
-
-	g_return_val_if_fail(blob_fw != NULL, FALSE);
+	g_autoptr(GBytes) bytes = NULL;
+	gsize streamsz = 0;
 
 	/* verify package length */
-	if (length != FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+
+	if (streamsz != FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "Invalid package size %" G_GSIZE_FORMAT,
-			    length);
+			    streamsz);
 		return FALSE;
 	}
 
+	/* get the data bytes */
+	bytes = fu_input_stream_read_bytes(stream,
+					   0,
+					   FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE,
+					   NULL,
+					   error);
+
 	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_DOCK_PKG);
-	fu_byte_array_append_uint8(req, length); // length of data
-	fu_byte_array_append_bytes(req, blob_fw);
+	fu_byte_array_append_uint8(req, streamsz); // length of data
+	fu_byte_array_append_bytes(req, bytes);
 	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", req->data, req->len);
 
 	if (!fu_dell_kestrel_ec_write(self, req, error)) {
