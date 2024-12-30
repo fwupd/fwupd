@@ -10,8 +10,6 @@
 #include "fu-dell-kestrel-ec-struct.h"
 #include "fu-dell-kestrel-package.h"
 
-#define FU_DELL_KESTREL_PACKAGE_VERSION_OFFSET 0x14
-
 struct _FuDellKestrelPackage {
 	FuDevice parent_instance;
 };
@@ -53,8 +51,8 @@ fu_dell_kestrel_package_write(FuDevice *device,
 			      GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	gsize length = 0;
-	guint32 status_version = 0;
+	gsize data_sz = 0;
+	guint32 buf_pkg = 0;
 	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -66,20 +64,12 @@ fu_dell_kestrel_package_write(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	data = g_bytes_get_data(fw, &length);
-	if (!fu_memcpy_safe((guint8 *)&status_version,
-			    sizeof(status_version),
-			    0x0,
-			    data,
-			    length,
-			    FU_DELL_KESTREL_PACKAGE_VERSION_OFFSET,
-			    sizeof(status_version),
-			    error))
-		return FALSE;
+	data = g_bytes_get_data(fw, &data_sz);
 
 	/* new version */
-	dynamic_version =
-	    fu_version_from_uint32_hex(status_version, fu_device_get_version_format(device));
+	if (!fu_memread_uint32_safe(data, data_sz, 0x0, &buf_pkg, G_BIG_ENDIAN, error))
+		return FALSE;
+	dynamic_version = fu_version_from_uint32_hex(buf_pkg, fu_device_get_version_format(device));
 
 	g_debug("writing firmware: %s, %s -> %s",
 		fu_device_get_name(device),
