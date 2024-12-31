@@ -415,6 +415,7 @@ fu_vli_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **err
 						    NULL,
 						    &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 				g_debug("ignoring %s", error_local->message);
