@@ -231,6 +231,23 @@ fu_daemon_start(FuDaemon *self, GError **error)
 	g_return_val_if_fail(FU_IS_DAEMON(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* super useful for debugging */
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		GHashTableIter iter;
+		const gchar *key;
+		const gchar *value;
+		g_autoptr(GHashTable) metadata = NULL;
+		g_autoptr(GString) str = g_string_new("report metadata:");
+
+		metadata = fu_engine_get_report_metadata(priv->engine, error);
+		if (metadata == NULL)
+			return FALSE;
+		g_hash_table_iter_init(&iter, metadata);
+		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
+			g_string_append_printf(str, "\n - %s=%s", key, value);
+		g_debug("%s", str->str);
+	}
+
 	/* optional */
 	if (klass->start != NULL && !klass->start(self, error))
 		return FALSE;
