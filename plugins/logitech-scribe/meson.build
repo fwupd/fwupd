@@ -6,6 +6,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('logitech-scribe.quirk')
 
 plugin_builtins += static_library('fu_plugin_logitech_scribe',
+  rustgen.process('fu-logitech-scribe.rs'),
   sources: [
     'fu-logitech-scribe-device.c',
     'fu-logitech-scribe-plugin.c',
