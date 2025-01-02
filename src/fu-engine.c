@@ -6965,6 +6965,8 @@ fu_engine_load_plugins_builtins(FuEngine *self, FuProgress *progress)
 	/* count possible steps */
 	for (guint i = 0; fu_plugin_externals[i] != NULL; i++)
 		steps++;
+	if (steps == 0)
+		return;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
