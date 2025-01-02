@@ -526,7 +526,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUID first, as quirks may set the version format */
-	fu_device_add_guid(device, priv->fw_class);
+	fu_device_add_instance_id(device, priv->fw_class);
 
 	/* set versions */
 	fu_device_set_version_raw(device, priv->fw_version);

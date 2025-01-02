@@ -485,6 +485,9 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	g_return_if_fail(FU_IS_PLUGIN(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
 
+	/* make tests easier */
+	fu_device_convert_instance_ids(device);
+
 	/* ensure the device ID is set from the physical and logical IDs */
 	if (!fu_device_ensure_id(device, &error)) {
 		g_warning("ignoring add: %s", error->message);

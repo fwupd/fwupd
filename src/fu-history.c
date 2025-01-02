@@ -119,7 +119,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	/* guid_default */
 	tmp = (const gchar *)sqlite3_column_text(stmt, 9);
 	if (tmp != NULL)
-		fu_device_add_guid_full(device, tmp, FU_DEVICE_INSTANCE_FLAG_VISIBLE);
+		fu_device_add_instance_id_full(device, tmp, FU_DEVICE_INSTANCE_FLAG_VISIBLE);
 
 	/* update_state */
 	fu_device_set_update_state(device, sqlite3_column_int(stmt, 10));
@@ -168,6 +168,7 @@ fu_history_device_from_stmt(sqlite3_stmt *stmt)
 	fu_release_set_flags(release, sqlite3_column_int(stmt, 20));
 
 	/* success */
+	fu_device_convert_instance_ids(device);
 	return device;
 }
 
@@ -886,6 +887,9 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	/* lazy load */
 	if (!fu_history_load(self, error))
 		return FALSE;
+
+	/* make tests easier */
+	fu_device_convert_instance_ids(device);
 
 	/* ensure all old device(s) with this ID are removed */
 	if (!fu_history_remove_device(self, device, error))
