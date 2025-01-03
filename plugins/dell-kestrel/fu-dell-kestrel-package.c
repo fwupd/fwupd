@@ -10,8 +10,6 @@
 #include "fu-dell-kestrel-ec-struct.h"
 #include "fu-dell-kestrel-package.h"
 
-#define FU_DELL_KESTREL_PACKAGE_VERSION_OFFSET 0x14
-
 struct _FuDellKestrelPackage {
 	FuDevice parent_instance;
 };
@@ -53,40 +51,32 @@ fu_dell_kestrel_package_write(FuDevice *device,
 			      GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	gsize length = 0;
-	guint32 status_version = 0;
-	const guint8 *data;
+	guint32 pkg_version = 0;
+	g_autoptr(GInputStream) stream = NULL;
 	g_autofree gchar *dynamic_version = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
 
 	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-	data = g_bytes_get_data(fw, &length);
-	if (!fu_memcpy_safe((guint8 *)&status_version,
-			    sizeof(status_version),
-			    0x0,
-			    data,
-			    length,
-			    FU_DELL_KESTREL_PACKAGE_VERSION_OFFSET,
-			    sizeof(status_version),
-			    error))
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
 		return FALSE;
 
-	/* new version */
+	/* get the new package version */
+	if (!fu_input_stream_read_u32(stream, 0, &pkg_version, G_BIG_ENDIAN, error))
+		return FALSE;
+
+	/* print the package version */
 	dynamic_version =
-	    fu_version_from_uint32_hex(status_version, fu_device_get_version_format(device));
-
+	    fu_version_from_uint32_hex(pkg_version, fu_device_get_version_format(device));
 	g_debug("writing firmware: %s, %s -> %s",
 		fu_device_get_name(device),
 		fu_device_get_version(device),
 		dynamic_version);
 
-	if (!fu_dell_kestrel_ec_commit_package(FU_DELL_KESTREL_EC(proxy), fw, error))
+	/* write to device */
+	if (!fu_dell_kestrel_ec_commit_package(FU_DELL_KESTREL_EC(proxy), stream, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */

@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DE
 #define FU_DELL_KESTREL_HID_EXT_FWUPDATE     0x80
 #define FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE  0x00
 #define FU_DELL_KESTREL_HID_DEV_EC_CHUNK_SZ  160000
+#define FU_DELL_KESTREL_HID_DEV_PD_CHUNK_SZ  190000
 #define FU_DELL_KESTREL_HID_DEV_ANY_CHUNK_SZ 180000
 #define FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ  G_MAXSIZE
 #define FU_DELL_KESTREL_HID_DATA_PAGE_SZ     192
@@ -113,11 +114,12 @@ fu_dell_kestrel_hid_device_get_report(FuDellKestrelHidDevice *self,
 				      guint8 *inbuffer,
 				      GError **error)
 {
-	return fu_device_retry(FU_DEVICE(self),
-			       fu_dell_kestrel_hid_device_get_report_cb,
-			       FU_DELL_KESTREL_HID_MAX_RETRIES,
-			       inbuffer,
-			       error);
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_dell_kestrel_hid_device_get_report_cb,
+				    FU_DELL_KESTREL_HID_MAX_RETRIES,
+				    2000,
+				    inbuffer,
+				    error);
 }
 
 gboolean
@@ -193,6 +195,8 @@ fu_dell_kestrel_hid_device_get_chunk_size(FuDellKestrelEcDevType dev_type)
 	switch (dev_type) {
 	case FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC:
 		return FU_DELL_KESTREL_HID_DEV_EC_CHUNK_SZ;
+	case FU_DELL_KESTREL_EC_DEV_TYPE_PD:
+		return FU_DELL_KESTREL_HID_DEV_PD_CHUNK_SZ;
 	case FU_DELL_KESTREL_EC_DEV_TYPE_RMM:
 		return FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ;
 	default:

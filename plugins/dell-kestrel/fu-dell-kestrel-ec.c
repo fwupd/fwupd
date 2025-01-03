@@ -449,6 +449,7 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 gboolean
 fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 {
+	guint max_tries = 2;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* ec included in cmd, set bit2 in data for tbt */
@@ -456,8 +457,15 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	fu_byte_array_append_uint8(req, 1); // length of data
 	fu_byte_array_append_uint8(req, 0x02);
 
-	g_debug("registered passive update (uod) flow");
-	return fu_dell_kestrel_ec_write(self, req, error);
+	for (guint i = 1; i <= max_tries; i++) {
+		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
+		if (!fu_dell_kestrel_ec_write(self, req, error)) {
+			g_prefix_error(error, "failed to register uod flow: ");
+			return FALSE;
+		}
+		fu_device_sleep(FU_DEVICE(self), 100);
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -575,26 +583,35 @@ fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 }
 
 gboolean
-fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GBytes *blob_fw, GError **error)
+fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new();
-	gsize length = g_bytes_get_size(blob_fw);
-
-	g_return_val_if_fail(blob_fw != NULL, FALSE);
+	g_autoptr(GBytes) bytes = NULL;
+	gsize streamsz = 0;
 
 	/* verify package length */
-	if (length != FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE) {
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+
+	if (streamsz != FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "Invalid package size %" G_GSIZE_FORMAT,
-			    length);
+			    streamsz);
 		return FALSE;
 	}
 
+	/* get the data bytes */
+	bytes = fu_input_stream_read_bytes(stream,
+					   0,
+					   FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE,
+					   NULL,
+					   error);
+
 	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_DOCK_PKG);
-	fu_byte_array_append_uint8(req, length); // length of data
-	fu_byte_array_append_bytes(req, blob_fw);
+	fu_byte_array_append_uint8(req, streamsz); // length of data
+	fu_byte_array_append_bytes(req, bytes);
 	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", req->data, req->len);
 
 	if (!fu_dell_kestrel_ec_write(self, req, error)) {
