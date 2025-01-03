@@ -1,0 +1,46 @@
+{
+  "name": "Lenovo 7in1 Dock WWCB [VL822+VL105]",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "placeholder",
+      "emulation-url": "placeholder",
+      "components": [
+        {
+          "name": "tier1",
+          "version": "49.34",
+          "guids": [
+            "3f7f4e9e-9fda-5066-93c4-e3ea8cc63480"
+          ]
+        },
+        {
+          "name": "tier3",
+          "version": "12.84.38.50",
+          "guids": [
+            "bbd87765-6316-5c61-9cce-b90353304b47"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "placeholder",
+      "emulation-url": "placeholder",
+      "components": [
+        {
+          "name": "tier1",
+          "version": "8.64",
+          "guids": [
+            "3f7f4e9e-9fda-5066-93c4-e3ea8cc63480"
+          ]
+        },
+        {
+          "name": "tier3",
+          "version": "12.84.32.50",
+          "guids": [
+            "bbd87765-6316-5c61-9cce-b90353304b47"
+          ]
+        }
+      ]
+    }
+  ]
+}
