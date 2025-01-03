@@ -916,6 +916,12 @@ fu_nordic_hid_cfg_channel_get_hwid(FuNordicHidCfgChannel *self, GError **error)
 				      hw_id[7]);
 	fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 
+	/* Devices connected via a dongle use physical ID as name to avoid inheriting name from the
+	 * dongle.
+	 */
+	if (self->peer_id != 0)
+		fu_device_set_name(FU_DEVICE(self), physical_id);
+
 	/* success */
 	return TRUE;
 }
