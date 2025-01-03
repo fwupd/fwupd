@@ -919,6 +919,12 @@ fu_nordic_hid_cfg_channel_get_hwid(FuNordicHidCfgChannel *self, GError **error)
 				      hw_id[7]);
 	fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 
+	/* Devices connected via a dongle use physical ID as name to avoid inheriting name from the
+	 * dongle.
+	 */
+	if (self->peer_id != 0)
+		fu_device_set_name(FU_DEVICE(self), physical_id);
+
 	/* success */
 	return TRUE;
 }
@@ -1355,6 +1361,13 @@ fu_nordic_hid_cfg_channel_direct_discovery(FuNordicHidCfgChannel *self, GError *
 	if (!fu_nordic_hid_cfg_channel_get_modinfo(self, error))
 		return FALSE;
 
+	/* generate the custom visible name for the device if absent */
+	if (fu_device_get_name(device) == NULL) {
+		const gchar *physical_id = NULL;
+		physical_id = fu_device_get_physical_id(device);
+		fu_device_set_name(device, physical_id);
+	}
+
 	/* get device info and version */
 	if (!fu_nordic_hid_cfg_channel_dfu_fwinfo(self, &error_fwinfo))
 		/* lack of firmware info support indicates that device does not support DFU. */
@@ -1668,7 +1681,6 @@ fu_nordic_hid_cfg_channel_init(FuNordicHidCfgChannel *self)
 	self->modules =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_nordic_hid_cfg_channel_module_free);
 
-	fu_device_set_name(FU_DEVICE(self), "HID nRF Desktop");
 	fu_device_set_vendor(FU_DEVICE(self), "Nordic");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.nordic.hidcfgchannel");
