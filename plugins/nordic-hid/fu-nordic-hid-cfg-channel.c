@@ -1688,6 +1688,9 @@ fu_nordic_hid_cfg_channel_new(guint8 id, FuNordicHidCfgChannel *parent)
 						   "context",
 						   fu_device_get_context(FU_DEVICE(parent)),
 						   NULL);
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(parent),
+			      FU_DEVICE_INCORPORATE_FLAG_BACKEND_ID);
 	self->peer_id = id;
 	self->parent_udev = FU_UDEV_DEVICE(parent);
 	return self;
