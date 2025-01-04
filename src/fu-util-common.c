@@ -1249,11 +1249,11 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		if (fwupd_client_get_battery_level(client) == FWUPD_BATTERY_LEVEL_INVALID ||
 		    fwupd_client_get_battery_threshold(client) == FWUPD_BATTERY_LEVEL_INVALID) {
 			/* TRANSLATORS: as in laptop battery power */
-			return g_strdup(_("System power is too low to perform the update"));
+			return g_strdup(_("System power is too low"));
 		}
 		return g_strdup_printf(
 		    /* TRANSLATORS: as in laptop battery power */
-		    _("System power is too low to perform the update (%u%%, requires %u%%)"),
+		    _("System power is too low (%u%%, requires %u%%)"),
 		    fwupd_client_get_battery_level(client),
 		    fwupd_client_get_battery_threshold(client));
 	}
