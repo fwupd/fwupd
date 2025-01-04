@@ -3398,11 +3398,10 @@ fu_device_problem_to_inhibit_reason(FuDevice *self, guint64 device_problem)
 		return g_strdup("Device does not have the necessary license installed");
 	if (device_problem == FWUPD_DEVICE_PROBLEM_SYSTEM_POWER_TOO_LOW) {
 		if (priv->ctx == NULL)
-			return g_strdup("System power is too low to perform the update");
-		return g_strdup_printf(
-		    "System power is too low to perform the update (%u%%, requires %u%%)",
-		    fu_context_get_battery_level(priv->ctx),
-		    fu_context_get_battery_threshold(priv->ctx));
+			return g_strdup("System power is too low");
+		return g_strdup_printf("System power is too low (%u%%, requires %u%%)",
+				       fu_context_get_battery_level(priv->ctx),
+				       fu_context_get_battery_threshold(priv->ctx));
 	}
 	if (device_problem == FWUPD_DEVICE_PROBLEM_POWER_TOO_LOW) {
 		if (fu_device_get_battery_level(self) == FWUPD_BATTERY_LEVEL_INVALID ||
