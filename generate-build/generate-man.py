@@ -128,7 +128,10 @@ def _convert_md_to_man(data: str) -> str:
 def _add_defines(defines: Dict[str, str], fn: str) -> None:
     with open(fn, "rb") as f:
         for line in f.read().decode().split("\n"):
-            if line.find("set_config_default") == -1:
+            if (
+                line.find("set_config_default") == -1
+                and line.find("config_set_default") == -1
+            ):
                 continue
             try:
                 _, wrapped_key, wrapped_value = line.split(",", maxsplit=2)
