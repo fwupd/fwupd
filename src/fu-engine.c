@@ -5167,7 +5167,8 @@ fu_engine_get_releases(FuEngine *self,
 
 	/* dedupe by container checksum */
 	if (fu_engine_config_get_release_dedupe(self->config)) {
-		g_autoptr(GHashTable) checksums = g_hash_table_new(g_str_hash, g_str_equal);
+		g_autoptr(GHashTable) checksums =
+		    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 		releases_deduped = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		for (guint i = 0; i < releases->len; i++) {
 			FuRelease *rel = g_ptr_array_index(releases, i);
@@ -5177,11 +5178,13 @@ fu_engine_get_releases(FuEngine *self,
 			/* find existing */
 			for (guint j = 0; j < csums->len; j++) {
 				const gchar *csum = g_ptr_array_index(csums, j);
-				if (g_hash_table_contains(checksums, csum)) {
+				g_autofree gchar *key =
+				    g_strdup_printf("%s:%s", csum, fu_release_get_version(rel));
+				if (g_hash_table_contains(checksums, key)) {
 					found = TRUE;
 					break;
 				}
-				g_hash_table_add(checksums, (gpointer)csum);
+				g_hash_table_add(checksums, g_steal_pointer(&key));
 			}
 			if (found) {
 				g_debug("found higher priority release for %s, skipping",
