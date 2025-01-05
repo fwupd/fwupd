@@ -2936,14 +2936,35 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			g_debug("%s", error_local->message);
 			continue;
 		}
-		for (guint j = 0; j < rels->len; j++) {
-			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
-			if (!fwupd_release_match_flags(rel_tmp,
-						       priv->filter_release_include,
-						       priv->filter_release_exclude))
-				continue;
-			rel = g_object_ref(rel_tmp);
-			break;
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
+			FwupdRelease *candidate = NULL;
+
+			for (guint j = 0; j < rels->len; j++) {
+				FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
+
+				if (!fwupd_release_match_flags(rel_tmp,
+							       priv->filter_release_include,
+							       priv->filter_release_exclude))
+					continue;
+
+				if (candidate == NULL ||
+				    fu_version_compare(fwupd_release_get_version(rel_tmp),
+						       fwupd_release_get_version(candidate),
+						       fu_device_get_version_format(dev)) > 0)
+					candidate = rel_tmp;
+			}
+			if (candidate != NULL)
+				rel = g_object_ref(candidate);
+		} else {
+			for (guint j = 0; j < rels->len; j++) {
+				FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
+				if (!fwupd_release_match_flags(rel_tmp,
+							       priv->filter_release_include,
+							       priv->filter_release_exclude))
+					continue;
+				rel = g_object_ref(rel_tmp);
+				break;
+			}
 		}
 		if (rel == NULL)
 			continue;
