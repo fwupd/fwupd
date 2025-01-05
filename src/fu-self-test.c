@@ -4983,6 +4983,110 @@ fu_plugin_composite_func(gconstpointer user_data)
 }
 
 static void
+fu_plugin_composite_multistep_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add the fake metadata */
+	ret = xb_builder_source_load_xml(
+	    source,
+	    "<?xml version=\"1.0\"?>\n"
+	    "<components>\n"
+	    "<component type=\"firmware\">\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <custom>\n"
+	    "    <value key=\"LVFS::VersionFormat\">triplet</value>\n"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.acme.test</value>\n"
+	    "  </custom>\n"
+	    "  <releases>\n"
+	    "    <release id=\"1\" version=\"1.2.3\">\n"
+	    "      <checksum type=\"sha1\" target=\"content\">aaa</checksum>\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"binary\">\n"
+	    "          <location>file://filename.cab</location>\n"
+	    "          <checksum type=\"sha1\">ccc</checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "    <release id=\"1\" version=\"1.2.4\">\n"
+	    "      <checksum type=\"sha1\" target=\"content\">bbb</checksum>\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"binary\">\n"
+	    "          <location>file://filename.cab</location>\n"
+	    "          <checksum type=\"sha1\">ccc</checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>\n"
+	    "</components>",
+	    XB_BUILDER_SOURCE_FLAG_NONE,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_engine_add_plugin(engine, plugin);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "device-added",
+			 G_CALLBACK(fu_test_plugin_composite_device_added_cb),
+			 devices);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add all the found devices  */
+	g_assert_cmpint(devices->len, ==, 1);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(devices, i);
+		fu_engine_add_device(engine, device_tmp);
+	}
+
+	/* check we did not dedupe the composite cab */
+	device = fu_engine_get_device(engine, "08d460be0f1f9f128413f816022a6439e0078018", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	releases = fu_engine_get_releases(engine,
+					  request,
+					  "08d460be0f1f9f128413f816022a6439e0078018",
+					  &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(releases);
+	g_assert_cmpint(releases->len, ==, 2);
+}
+
+static void
 fu_security_attr_func(gconstpointer user_data)
 {
 	gboolean ret;
@@ -7354,6 +7458,9 @@ main(int argc, char **argv)
 			     fu_engine_requirements_sibling_device_func);
 	g_test_add_data_func("/fwupd/engine{plugin-gtypes}", self, fu_engine_plugin_gtypes_func);
 	g_test_add_data_func("/fwupd/plugin{composite}", self, fu_plugin_composite_func);
+	g_test_add_data_func("/fwupd/plugin{composite-multistep}",
+			     self,
+			     fu_plugin_composite_multistep_func);
 	g_test_add_data_func("/fwupd/history", self, fu_history_func);
 	g_test_add_data_func("/fwupd/history{migrate-v1}", self, fu_history_migrate_v1_func);
 	g_test_add_data_func("/fwupd/history{migrate-v2}", self, fu_history_migrate_v2_func);
