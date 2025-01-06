@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/82b90b2614a9a4d0aced1ab8a4a99e228c95585c-Logitech-Unifying-RQ024.03_B0027.cab",
+      "emulation-url": "https://fwupd.org/downloads/a441bd637ef26e23f8ce2d184d8a88ea63a75123c1a8375fc41701231980c922-Logitech-Unifying-RQ024.03_B0027.zip",
       "components": [
         {
           "version": "RQR24.03_B0027",
@@ -16,6 +17,7 @@
     },
     {
       "url": "https://fwupd.org/downloads/4511b9b0d123bdbe8a2007233318ab215a59dfe6-Logitech-Unifying-RQR24.05_B0029.cab",
+      "emulation-url": "https://fwupd.org/downloads/56c390da7584e0beefc8d92171e3b16c5e8f9406ef00e5eff3ade4ddcd13d455-Logitech-Unifying-RQR24.05_B0029.zip",
       "components": [
         {
           "version": "RQR24.05_B0029",
