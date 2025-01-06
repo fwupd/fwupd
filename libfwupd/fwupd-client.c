@@ -5660,8 +5660,8 @@ fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url
 		if (!g_network_monitor_can_reach(monitor, address, NULL, &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "Failed to download, network is unreachable: %s",
+				    FWUPD_ERROR_NOT_REACHABLE,
+				    "network is unreachable: %s",
 				    error_local->message);
 			return NULL;
 		}
