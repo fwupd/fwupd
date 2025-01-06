@@ -1,9 +1,9 @@
 #!/bin/sh -e
 
+pacman -Sy --noconfirm qt5-base gcovr
 pacman -U --noconfirm dist/*.pkg.*
 
 #run the CI tests for Qt5
-pacman -S --noconfirm qt5-base gcovr
 meson qt5-thread-test contrib/ci/qt5-thread-test
 ninja -C qt5-thread-test test
 
