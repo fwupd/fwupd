@@ -67,6 +67,8 @@ fwupd_error_to_string(FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".TimedOut";
 	if (error == FWUPD_ERROR_BUSY)
 		return FWUPD_DBUS_INTERFACE ".Busy";
+	if (error == FWUPD_ERROR_NOT_REACHABLE)
+		return FWUPD_DBUS_INTERFACE ".NotReachable";
 	return NULL;
 }
 
@@ -125,6 +127,8 @@ fwupd_error_from_string(const gchar *error)
 		return FWUPD_ERROR_TIMED_OUT;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".Busy") == 0)
 		return FWUPD_ERROR_BUSY;
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NotReachable") == 0)
+		return FWUPD_ERROR_NOT_REACHABLE;
 	return FWUPD_ERROR_LAST;
 }
 

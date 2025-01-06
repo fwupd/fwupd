@@ -186,6 +186,14 @@ typedef enum {
 	 * Since: 2.0.0
 	 */
 	FWUPD_ERROR_BUSY,
+	/**
+	 * FWUPD_ERROR_NOT_REACHABLE:
+	 *
+	 * The network is not reachable.
+	 *
+	 * Since: 2.0.4
+	 */
+	FWUPD_ERROR_NOT_REACHABLE,
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;
