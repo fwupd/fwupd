@@ -19,5 +19,5 @@ ProtectHome=true
 ProtectHostname=true
 ProtectKernelTunables=true
 ProtectKernelLogs=true
-SuccessExitStatus=2
+SuccessExitStatus=2 101
 ExecStart=@bindir@/fwupdmgr refresh
