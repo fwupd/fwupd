@@ -35,10 +35,6 @@
 #include "fu-systemd.h"
 #endif
 
-/* custom return codes */
-#define EXIT_NOTHING_TO_DO 2
-#define EXIT_NOT_FOUND	   3
-
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
