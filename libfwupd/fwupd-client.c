@@ -5645,8 +5645,26 @@ fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	gulong delay_ms = 2500;
 	for (guint i = 0;; i++, delay_ms *= 2) {
+		GSocketConnectable *address;
+		GNetworkMonitor *monitor = g_network_monitor_get_default();
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GUri) uri = NULL;
+
+		uri = g_uri_parse(url, G_URI_FLAGS_NONE, error);
+		if (uri == NULL)
+			return NULL;
+		address = g_network_address_parse(g_uri_get_host(uri), g_uri_get_port(uri), error);
+		if (address == NULL)
+			return NULL;
+		if (!g_network_monitor_can_reach(monitor, address, NULL, &error_local)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Failed to download, network is unreachable: %s",
+				    error_local->message);
+			return NULL;
+		}
 
 		blob = fwupd_client_download_http(self, curl, url, &error_local);
 		if (blob != NULL)
