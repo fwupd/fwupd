@@ -5605,6 +5605,8 @@ main(int argc, char *argv[])
 			fu_console_print_literal(priv->console, str->str);
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return EXIT_NOTHING_TO_DO;
+		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE))
+			return EXIT_NOT_REACHABLE;
 		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			return EXIT_NOT_FOUND;
 		return EXIT_FAILURE;
