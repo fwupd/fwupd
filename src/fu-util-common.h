@@ -14,6 +14,10 @@
 
 #include "fu-console.h"
 
+/* custom return codes */
+#define EXIT_NOTHING_TO_DO 2
+#define EXIT_NOT_FOUND	   3
+
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
