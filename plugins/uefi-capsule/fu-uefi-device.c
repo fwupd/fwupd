@@ -107,7 +107,11 @@ fu_uefi_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 	if (priv->esp != NULL) {
 		g_autofree gchar *kind = fu_volume_get_partition_kind(priv->esp);
 		g_autofree gchar *mount_point = fu_volume_get_mount_point(priv->esp);
-		g_hash_table_insert(metadata, g_strdup("EspPath"), g_steal_pointer(&mount_point));
+		if (mount_point != NULL) {
+			g_hash_table_insert(metadata,
+					    g_strdup("EspPath"),
+					    g_steal_pointer(&mount_point));
+		}
 		if (kind != NULL)
 			g_hash_table_insert(metadata, g_strdup("EspKind"), g_steal_pointer(&kind));
 	}
