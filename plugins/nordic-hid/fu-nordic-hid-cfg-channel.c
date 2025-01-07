@@ -17,6 +17,7 @@
 #define PEERS_CACHE_LEN	     16
 #define END_OF_TRANSFER_CHAR 0x0a
 #define INVALID_PEER_ID	     0xFF
+#define SELF_PEER_ID	     0x00
 
 #define FU_NORDIC_HID_CFG_CHANNEL_RETRIES	      10
 #define FU_NORDIC_HID_CFG_CHANNEL_RETRY_DELAY	      50   /* ms */
@@ -132,7 +133,7 @@ static FuUdevDevice *
 fu_nordic_hid_cfg_channel_get_udev_device(FuNordicHidCfgChannel *self, GError **error)
 {
 	/* ourselves */
-	if (self->peer_id == 0)
+	if (self->peer_id == SELF_PEER_ID)
 		return FU_UDEV_DEVICE(self);
 
 	/* parent */
@@ -667,7 +668,7 @@ fu_nordic_hid_cfg_channel_setup_peers(FuNordicHidCfgChannel *self, GError **erro
 	gboolean peers_cache_supported = FALSE;
 	guint8 peers_cache[PEERS_CACHE_LEN] = {0x00};
 
-	if (self->peer_id != 0) {
+	if (self->peer_id != SELF_PEER_ID) {
 		/* device connected through dongle cannot support peers */
 		return TRUE;
 	}
@@ -917,7 +918,7 @@ fu_nordic_hid_cfg_channel_get_hwid(FuNordicHidCfgChannel *self, GError **error)
 	fu_device_set_physical_id(FU_DEVICE(self), physical_id);
 
 	/* avoid inheriting name from the dongle */
-	if (self->peer_id != 0)
+	if (self->peer_id != SELF_PEER_ID)
 		fu_device_set_name(FU_DEVICE(self), physical_id);
 
 	/* success */
@@ -1276,7 +1277,7 @@ fu_nordic_hid_cfg_channel_generate_ids(FuNordicHidCfgChannel *self, GError **err
 	 * 0x00 only for devices connected via dongle. This prevents from inheriting VID and PID of
 	 * the dongle.
 	 */
-	if ((self->vid != 0x00 && self->pid != 0x00) || (self->peer_id != 0)) {
+	if ((self->vid != 0x00 && self->pid != 0x00) || (self->peer_id != SELF_PEER_ID)) {
 		fu_device_add_instance_u16(device, "VEN", self->vid);
 		fu_device_add_instance_u16(device, "DEV", self->pid);
 	}
