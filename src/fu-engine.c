@@ -2073,8 +2073,8 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 	GInputStream *stream = fu_release_get_stream(release);
 
 	/* send to passimd, if enabled and running */
-	if (passim_client_get_version(self->passim_client) != NULL &&
-	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE) {
+	if (fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_FIRMWARE &&
+	    passim_client_get_version(self->passim_client) != NULL) {
 		gsize streamsz = 0;
 		g_autofree gchar *basename = g_path_get_basename(fu_release_get_filename(release));
 		g_autofree gchar *checksum = NULL;
@@ -4162,10 +4162,10 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 
 #ifdef HAVE_PASSIM
 	/* send to passimd, if enabled and running */
-	if (passim_client_get_version(self->passim_client) != NULL &&
+	if (fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_METADATA &&
+	    passim_client_get_version(self->passim_client) != NULL &&
 	    fwupd_remote_get_username(remote) == NULL &&
-	    fwupd_remote_get_password(remote) == NULL &&
-	    fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_METADATA) {
+	    fwupd_remote_get_password(remote) == NULL) {
 		g_autofree gchar *basename =
 		    g_path_get_basename(fwupd_remote_get_filename_cache(remote));
 		g_autoptr(GError) error_passim = NULL;
@@ -8243,12 +8243,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 
 #ifdef HAVE_PASSIM
 	/* connect to passimd */
-	if (!passim_client_load(self->passim_client, &error_passim))
-		g_debug("failed to load Passim: %s", error_passim->message);
-	if (passim_client_get_version(self->passim_client) != NULL) {
-		fu_engine_add_runtime_version(self,
-					      "org.freedesktop.Passim",
-					      passim_client_get_version(self->passim_client));
+	if (!(fu_engine_config_get_p2p_policy(self->config) & FU_P2P_POLICY_NOTHING)) {
+		if (!passim_client_load(self->passim_client, &error_passim))
+			g_debug("failed to load Passim: %s", error_passim->message);
+		if (passim_client_get_version(self->passim_client) != NULL) {
+			fu_engine_add_runtime_version(
+			    self,
+			    "org.freedesktop.Passim",
+			    passim_client_get_version(self->passim_client));
+		}
 	}
 #endif
 
