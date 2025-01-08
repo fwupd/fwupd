@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-cfi-struct.h"
 #include "fu-device.h"
 
 #define FU_TYPE_CFI_DEVICE (fu_cfi_device_get_type())
@@ -23,34 +24,6 @@ struct _FuCfiDeviceClass {
 				 GError **error);
 	gboolean (*read_jedec)(FuCfiDevice *self, GError **error);
 };
-
-/**
- * FuCfiDeviceCmd:
- * @FU_CFI_DEVICE_CMD_READ_ID:		Read the chip ID
- * @FU_CFI_DEVICE_CMD_PAGE_PROG:	Page program
- * @FU_CFI_DEVICE_CMD_CHIP_ERASE:	Whole chip erase
- * @FU_CFI_DEVICE_CMD_READ_DATA:	Read data
- * @FU_CFI_DEVICE_CMD_READ_STATUS:	Read status
- * @FU_CFI_DEVICE_CMD_SECTOR_ERASE:	Sector erase
- * @FU_CFI_DEVICE_CMD_WRITE_EN:		Write enable
- * @FU_CFI_DEVICE_CMD_WRITE_STATUS:	Write status
- * @FU_CFI_DEVICE_CMD_BLOCK_ERASE:	Block erase
- *
- * Commands used when calling fu_cfi_device_get_cmd().
- **/
-typedef enum {
-	FU_CFI_DEVICE_CMD_READ_ID,
-	FU_CFI_DEVICE_CMD_PAGE_PROG,
-	FU_CFI_DEVICE_CMD_CHIP_ERASE,
-	FU_CFI_DEVICE_CMD_READ_DATA,
-	FU_CFI_DEVICE_CMD_READ_STATUS,
-	FU_CFI_DEVICE_CMD_SECTOR_ERASE,
-	FU_CFI_DEVICE_CMD_WRITE_EN,
-	FU_CFI_DEVICE_CMD_WRITE_STATUS,
-	FU_CFI_DEVICE_CMD_BLOCK_ERASE,
-	/*< private >*/
-	FU_CFI_DEVICE_CMD_LAST
-} FuCfiDeviceCmd;
 
 FuCfiDevice *
 fu_cfi_device_new(FuContext *ctx, const gchar *flash_id) G_GNUC_NON_NULL(1);
