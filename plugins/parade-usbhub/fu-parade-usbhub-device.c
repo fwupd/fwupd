@@ -1267,7 +1267,6 @@ fu_parade_usbhub_device_init(FuParadeUsbhubDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0);
 }
 
 static void
