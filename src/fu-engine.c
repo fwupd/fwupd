@@ -1835,6 +1835,31 @@ fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean 
 	g_hash_table_insert(hash, g_strdup(key), g_strdup(value ? "True" : "False"));
 }
 
+#ifdef HAVE_PASSIM
+static void
+fu_engine_ensure_passim_client(FuEngine *self)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* disabled */
+	if (fu_engine_config_get_p2p_policy(self->config) == FU_P2P_POLICY_NOTHING)
+		return;
+
+	/* already loaded */
+	if (passim_client_get_version(self->passim_client) != NULL)
+		return;
+
+	/* connect to passimd */
+	if (!passim_client_load(self->passim_client, &error_local))
+		g_debug("failed to load Passim: %s", error_local->message);
+	if (passim_client_get_version(self->passim_client) != NULL) {
+		fu_engine_add_runtime_version(self,
+					      "org.freedesktop.Passim",
+					      passim_client_get_version(self->passim_client));
+	}
+}
+#endif
+
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error)
 {
@@ -1887,6 +1912,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 
 #ifdef HAVE_PASSIM
 	/* this is useful to know if passim support is actually helping bandwidth use */
+	fu_engine_ensure_passim_client(self);
 	g_hash_table_insert(
 	    hash,
 	    g_strdup("PassimDownloadSaving"),
@@ -2071,6 +2097,9 @@ fu_engine_publish_release(FuEngine *self, FuRelease *release, GError **error)
 #ifdef HAVE_PASSIM
 	FuDevice *device = fu_release_get_device(release);
 	GInputStream *stream = fu_release_get_stream(release);
+
+	/* lazy load */
+	fu_engine_ensure_passim_client(self);
 
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
@@ -4161,6 +4190,9 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 		return FALSE;
 
 #ifdef HAVE_PASSIM
+	/* lazy load */
+	fu_engine_ensure_passim_client(self);
+
 	/* send to passimd, if enabled and running */
 	if (passim_client_get_version(self->passim_client) != NULL &&
 	    fwupd_remote_get_username(remote) == NULL &&
@@ -7880,9 +7912,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_autoptr(GError) error_quirks = NULL;
 	g_autoptr(GError) error_json_devices = NULL;
 	g_autoptr(GError) error_local = NULL;
-#ifdef HAVE_PASSIM
-	g_autoptr(GError) error_passim = NULL;
-#endif
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -8240,17 +8269,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	/* update the devices JSON file */
 	if (!fu_engine_update_devices_file(self, &error_json_devices))
 		g_info("failed to update list of devices: %s", error_json_devices->message);
-
-#ifdef HAVE_PASSIM
-	/* connect to passimd */
-	if (!passim_client_load(self->passim_client, &error_passim))
-		g_debug("failed to load Passim: %s", error_passim->message);
-	if (passim_client_get_version(self->passim_client) != NULL) {
-		fu_engine_add_runtime_version(self,
-					      "org.freedesktop.Passim",
-					      passim_client_get_version(self->passim_client));
-	}
-#endif
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	self->loaded = TRUE;
