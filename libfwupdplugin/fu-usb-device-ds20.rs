@@ -18,3 +18,16 @@ struct FuStructMsDs20 {
     size: u16le,
     type: u16le,
 }
+
+#[derive(ToString)]
+enum FuUsbDeviceMsDs20Desc {
+    SetHeaderDescriptor,
+    SubsetHeaderConfiguration,
+    SubsetHeaderFunction,
+    FeatureCompatibleId,
+    FeatureRegProperty,
+    FeatureMinResumeTime,
+    FeatureModelId,
+    FeatureCcgpDevice,
+    FeatureVendorRevision,
+}
