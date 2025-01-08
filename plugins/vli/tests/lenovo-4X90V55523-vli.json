@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "placeholder",
+      "url": "https://fwupd.org/downloads/d3756f8f7083cda7fd487e30b13a3c2593139f1b87945242129e1632c8066139-Linxee-7_in_1_Dock-2025-01-08-150958_New.cab",
       "emulation-url": "placeholder",
       "components": [
         {
@@ -23,7 +23,7 @@
       ]
     },
     {
-      "url": "placeholder",
+      "url": "https://fwupd.org/downloads/e1a718a5c233179702c2631f289a4f4af40cae32807c12b1ecd30c1a6b4b71db-Linxee-7_in_1_Dock-2025-01-08-150953_Old.cab",
       "emulation-url": "placeholder",
       "components": [
         {
