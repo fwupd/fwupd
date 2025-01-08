@@ -18,6 +18,7 @@ fwupdplugin_structs = [
   'fu-hid.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
+  'fu-ihex.rs', # fuzzing
   'fu-intel-thunderbolt.rs', # fuzzing
   'fu-io-channel.rs', # fuzzing
   'fu-msgpack.rs', # fuzzing

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-firmware.h"
+#include "fu-ihex-struct.h"
 
 #define FU_TYPE_IHEX_FIRMWARE (fu_ihex_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIhexFirmware, fu_ihex_firmware, FU, IHEX_FIRMWARE, FuFirmware)
@@ -28,14 +29,6 @@ typedef struct {
 	guint8 record_type;
 	GByteArray *data;
 } FuIhexFirmwareRecord;
-
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_DATA	      0x00
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_EOF	      0x01
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT 0x02
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT    0x03
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR  0x04
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR     0x05
-#define FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE	      0xfd
 
 FuFirmware *
 fu_ihex_firmware_new(void);

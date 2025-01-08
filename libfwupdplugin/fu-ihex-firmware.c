@@ -166,26 +166,6 @@ fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags
 	return g_steal_pointer(&rcd);
 }
 
-static const gchar *
-fu_ihex_firmware_record_type_to_string(guint8 record_type)
-{
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_DATA)
-		return "DATA";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EOF)
-		return "EOF";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT)
-		return "EXTENDED_SEGMENT";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT)
-		return "START_SEGMENT";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR)
-		return "EXTENDED_LINEAR";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR)
-		return "ADDR32";
-	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE)
-		return "SIGNATURE";
-	return NULL;
-}
-
 typedef struct {
 	FuIhexFirmware *self;
 	FwupdInstallFlags flags;
