@@ -30,8 +30,8 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidppHidppMsg *msg)
 			g_string_append(flags_str, "ignore-fnct-id,");
 		if (msg->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SWID)
 			g_string_append(flags_str, "ignore-swid,");
-		if (str->len > 0)
-			g_string_truncate(str, str->len - 1);
+		if (flags_str->len > 0)
+			g_string_truncate(flags_str, flags_str->len - 1);
 	}
 	g_string_append_printf(str, "flags:       %02x   [%s]\n", msg->flags, flags_str->str);
 	g_string_append_printf(str,
