@@ -398,6 +398,13 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 }
 
 static void
+fu_logitech_hidpp_bootloader_replace(FuDevice *device, FuDevice *donor)
+{
+	fu_device_incorporate_flag(device, donor, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_incorporate_flag(device, donor, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+}
+
+static void
 fu_logitech_hidpp_bootloader_init(FuLogitechHidppBootloader *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -420,4 +427,5 @@ fu_logitech_hidpp_bootloader_class_init(FuLogitechHidppBootloaderClass *klass)
 	device_class->to_string = fu_logitech_hidpp_bootloader_to_string;
 	device_class->attach = fu_logitech_hidpp_bootloader_attach;
 	device_class->setup = fu_logitech_hidpp_bootloader_setup;
+	device_class->replace = fu_logitech_hidpp_bootloader_replace;
 }
