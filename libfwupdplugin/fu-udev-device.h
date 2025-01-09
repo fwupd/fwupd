@@ -69,6 +69,21 @@ gboolean
 fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
+fu_udev_device_write(FuUdevDevice *self,
+		     const guint8 *buf,
+		     gsize bufsz,
+		     guint timeout_ms,
+		     FuIOChannelFlags flags,
+		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
+fu_udev_device_read(FuUdevDevice *self,
+		    guint8 *buf,
+		    gsize bufsz,
+		    gsize *bytes_read,
+		    guint timeout_ms,
+		    FuIOChannelFlags flags,
+		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+gboolean
 fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 gchar *
