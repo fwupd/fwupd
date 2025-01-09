@@ -59,7 +59,7 @@ fu_logitech_hidpp_msg_to_string(FuLogitechHidppHidppMsg *msg)
 }
 
 gboolean
-fu_logitech_hidpp_send(FuIOChannel *io_channel,
+fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 		       FuLogitechHidppHidppMsg *msg,
 		       guint timeout,
 		       GError **error)
@@ -88,7 +88,12 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 		write_flags |= FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO;
 
 	/* HID */
-	if (!fu_io_channel_write_raw(io_channel, (guint8 *)msg, len, timeout, write_flags, error)) {
+	if (!fu_udev_device_write(udev_device,
+				  (const guint8 *)msg,
+				  len,
+				  timeout,
+				  write_flags,
+				  error)) {
 		g_prefix_error(error, "failed to send: ");
 		return FALSE;
 	}
@@ -98,7 +103,7 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 }
 
 gboolean
-fu_logitech_hidpp_receive(FuIOChannel *io_channel,
+fu_logitech_hidpp_receive(FuUdevDevice *udev_device,
 			  FuLogitechHidppHidppMsg *msg,
 			  guint timeout,
 			  GError **error)
@@ -106,13 +111,13 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 	gsize read_size = 0;
 	g_autofree gchar *str = NULL;
 
-	if (!fu_io_channel_read_raw(io_channel,
-				    (guint8 *)msg,
-				    sizeof(FuLogitechHidppHidppMsg),
-				    &read_size,
-				    timeout,
-				    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-				    error)) {
+	if (!fu_udev_device_read(udev_device,
+				 (guint8 *)msg,
+				 sizeof(FuLogitechHidppHidppMsg),
+				 &read_size,
+				 timeout,
+				 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+				 error)) {
 		g_prefix_error(error, "failed to receive: ");
 		return FALSE;
 	}
@@ -139,7 +144,7 @@ fu_logitech_hidpp_receive(FuIOChannel *io_channel,
 }
 
 gboolean
-fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg, GError **error)
+fu_logitech_hidpp_transfer(FuUdevDevice *udev_device, FuLogitechHidppHidppMsg *msg, GError **error)
 {
 	guint timeout = FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS;
 	guint ignore_cnt = 0;
@@ -150,7 +155,7 @@ fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg
 		timeout *= 10;
 
 	/* send request */
-	if (!fu_logitech_hidpp_send(io_channel, msg, timeout, error))
+	if (!fu_logitech_hidpp_send(udev_device, msg, timeout, error))
 		return FALSE;
 
 	/* keep trying to receive until we get a valid reply */
@@ -160,11 +165,10 @@ fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg
 		if (msg->flags & FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_RETRY_STUCK) {
 			g_autoptr(GError) error_local = NULL;
 			/* retry the send once case the device is "stuck" */
-			if (!fu_logitech_hidpp_receive(io_channel, msg_tmp, 1000, &error_local)) {
-				if (!fu_logitech_hidpp_send(io_channel, msg, timeout, error)) {
+			if (!fu_logitech_hidpp_receive(udev_device, msg_tmp, 1000, &error_local)) {
+				if (!fu_logitech_hidpp_send(udev_device, msg, timeout, error))
 					return FALSE;
-				}
-				if (!fu_logitech_hidpp_receive(io_channel,
+				if (!fu_logitech_hidpp_receive(udev_device,
 							       msg_tmp,
 							       timeout,
 							       error)) {
@@ -173,7 +177,7 @@ fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg
 				}
 			}
 		} else {
-			if (!fu_logitech_hidpp_receive(io_channel, msg_tmp, timeout, error)) {
+			if (!fu_logitech_hidpp_receive(udev_device, msg_tmp, timeout, error)) {
 				g_prefix_error(error, "failed to receive: ");
 				return FALSE;
 			}

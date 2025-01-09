@@ -32,14 +32,14 @@
 #include "fu-logitech-hidpp-hidpp-msg.h"
 
 gboolean
-fu_logitech_hidpp_send(FuIOChannel *io_channel,
+fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 		       FuLogitechHidppHidppMsg *msg,
 		       guint timeout,
 		       GError **error);
 gboolean
-fu_logitech_hidpp_receive(FuIOChannel *io_channel,
+fu_logitech_hidpp_receive(FuUdevDevice *udev_device,
 			  FuLogitechHidppHidppMsg *msg,
 			  guint timeout,
 			  GError **error);
 gboolean
-fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidppHidppMsg *msg, GError **error);
+fu_logitech_hidpp_transfer(FuUdevDevice *udev_device, FuLogitechHidppHidppMsg *msg, GError **error);
