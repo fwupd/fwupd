@@ -6089,19 +6089,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 			  fu_device_get_name(device));
 	}
 
-#ifndef SUPPORTED_BUILD
-	/* we don't know if this device has a signed or unsigned payload */
-	if (fu_device_is_updatable(device) &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
-	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
-	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED)) {
-		g_critical("%s [%s] does not declare signed/unsigned payload -- perhaps add "
-			   "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
-			   fu_device_get_plugin(device),
-			   fu_device_get_id(device));
-	}
-#endif
-
 	/* if this device is locked get some metadata from AppStream */
 	component = fu_engine_get_component_by_guids(self, device);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_LOCKED)) {
@@ -6159,6 +6146,19 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 
 	/* create new device */
 	fu_device_list_add(self->device_list, device);
+
+#ifndef SUPPORTED_BUILD
+	/* we don't know if this device has a signed or unsigned payload */
+	if (fu_device_is_updatable(device) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
+	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED)) {
+		g_critical("%s [%s] does not declare signed/unsigned payload -- perhaps add "
+			   "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
+			   fu_device_get_plugin(device),
+			   fu_device_get_id(device));
+	}
+#endif
 
 	/* clean up any state only valid for ->probe */
 	fu_device_probe_complete(device);
