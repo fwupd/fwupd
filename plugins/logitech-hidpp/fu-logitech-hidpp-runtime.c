@@ -41,9 +41,7 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GEr
 	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
 	msg->data[2] = 0x00;
 	msg->hidpp_version = 1;
-	return fu_logitech_hidpp_transfer(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)),
-					  msg,
-					  error);
+	return fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error);
 }
 
 static gboolean
