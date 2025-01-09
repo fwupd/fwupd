@@ -1439,6 +1439,154 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_read:
+ * @self: a #FuUdevDevice
+ * @buf: (in): data
+ * @bufsz: size of @buf
+ * @bytes_read: (out) (nullable): data written to @buf
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a buffer from a file descriptor.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.4
+ **/
+gboolean
+fu_udev_device_read(FuUdevDevice *self,
+		    guint8 *buf,
+		    gsize bufsz,
+		    gsize *bytes_read,
+		    guint timeout_ms,
+		    FuIOChannelFlags flags,
+		    GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	gsize buflen_tmp = 0;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_copy_data(event, "Data", buf, bufsz, bytes_read, error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* not open! */
+	if (priv->io_channel == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "%s [%s] has not been opened",
+			    fu_device_get_id(FU_DEVICE(self)),
+			    fu_device_get_name(FU_DEVICE(self)));
+		return FALSE;
+	}
+	if (!fu_io_channel_read_raw(priv->io_channel,
+				    buf,
+				    bufsz,
+				    &buflen_tmp,
+				    timeout_ms,
+				    flags,
+				    error))
+		return FALSE;
+	if (bytes_read != NULL)
+		*bytes_read = buflen_tmp;
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_data(event, "Data", buf, buflen_tmp);
+	return TRUE;
+}
+
+/**
+ * fu_udev_device_write:
+ * @self: a #FuUdevDevice
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Write a buffer to a file descriptor.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.4
+ **/
+gboolean
+fu_udev_device_write(FuUdevDevice *self,
+		     const guint8 *buf,
+		     gsize bufsz,
+		     guint timeout_ms,
+		     FuIOChannelFlags flags,
+		     GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *data_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("Write:Data=%s,Length=0x%x", data_base64, (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
+		return event != NULL;
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* not open! */
+	if (priv->io_channel == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "%s [%s] has not been opened",
+			    fu_device_get_id(FU_DEVICE(self)),
+			    fu_device_get_name(FU_DEVICE(self)));
+		return FALSE;
+	}
+	if (!fu_io_channel_write_raw(priv->io_channel, buf, bufsz, timeout_ms, flags, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_udev_device_read_sysfs:
  * @self: a #FuUdevDevice
  * @attr: sysfs attribute name
