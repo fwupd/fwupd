@@ -1263,12 +1263,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
 		fu_device_set_poll_interval(device, 0);
-		/*
-		 * Wait for device to become ready after flashing.
-		 * Possible race condition: after the device is reset, Linux might enumerate it as
-		 * a different hidraw device depending on timing.
-		 */
-		fu_device_sleep_full(FU_DEVICE(self), 1000, progress); /* ms */
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	} else {
 		/* device file hasn't been unbound/re-bound, just probe again */
 		if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 10, NULL, error))
