@@ -41,7 +41,8 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 				    msg,
 				    FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 				    &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
 		} else {
 			g_prefix_error(&error_local, "failed to detach to bootloader: ");
