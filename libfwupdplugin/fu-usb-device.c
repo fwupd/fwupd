@@ -908,7 +908,36 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 static GInputStream *
 fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *fn = NULL;
+
+	/* build event key either for load or save */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("LoadDescriptor:basename=%s", basename);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) data = NULL;
+
+		/* lots of old emulations don't have this, returning FWUPD_ERROR_NOT_FOUND */
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		data = fu_device_event_get_bytes(event, "Data", error);
+		if (data == NULL)
+			return NULL;
+		return g_memory_input_stream_new_from_bytes(data);
+	}
+
+	/* save */
+	if (fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+	}
 
 	/* kernel weirdness -- fseek(fd, 0L, SEEK_END) always gives us 0x10011 */
 	fn = g_build_filename(fu_device_get_backend_id(FU_DEVICE(self)), basename, NULL);
@@ -920,6 +949,16 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 			    fn);
 		return NULL;
 	}
+
+	/* save */
+	if (event != NULL) {
+		g_autoptr(GBytes) data = fu_bytes_get_contents(fn, error);
+		if (data == NULL)
+			return NULL;
+		fu_device_event_set_bytes(event, "Data", data);
+	}
+
+	/* success */
 	return fu_input_stream_from_path(fn, error);
 }
 
@@ -961,8 +1000,6 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 
 	/* already set */
 	if (priv->bos_descriptors_valid)
-		return TRUE;
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
 	/* libusb or kernel */
@@ -1013,7 +1050,8 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 		stream =
 		    fu_usb_device_load_descriptor_stream(self, "bos_descriptors", &error_local);
 		if (stream == NULL) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
+			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
 			}
@@ -1857,8 +1895,6 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 	/* sanity check */
 	if (priv->interfaces_valid)
 		return TRUE;
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
-		return TRUE;
 
 	/* libusb or kernel */
 	if (priv->usb_device != NULL) {
@@ -1879,11 +1915,18 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 		libusb_free_config_descriptor(config);
 	} else {
 		g_autoptr(GInputStream) stream = NULL;
-		stream = fu_usb_device_load_descriptor_stream(self, "descriptors", error);
-		if (stream == NULL)
-			return FALSE;
-		if (!fu_usb_device_parse_descriptor(self, stream, error))
-			return FALSE;
+		g_autoptr(GError) error_local = NULL;
+
+		stream = fu_usb_device_load_descriptor_stream(self, "descriptors", &error_local);
+		if (stream == NULL) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		} else {
+			if (!fu_usb_device_parse_descriptor(self, stream, error))
+				return FALSE;
+		}
 	}
 
 	priv->interfaces_valid = TRUE;
