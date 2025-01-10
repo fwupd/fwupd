@@ -937,124 +937,51 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 }
 
 static gboolean
-fu_logitech_hidpp_device_check_status(guint8 status, GError **error)
+fu_logitech_hidpp_device_check_status(guint8 status_raw, GError **error)
 {
-	switch (status & 0x7f) {
-	case 0x00:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid status value 0x%02x",
-			    status);
-		break;
-	case 0x01: /* packet success */
-	case 0x02: /* DFU success */
-	case 0x05: /* DFU success: entity restart required */
-	case 0x06: /* DFU success: system restart required */
+	FuLogitechHidppStatus status = status_raw & 0x7f;
+	const gchar *status_str = fu_logitech_hidpp_status_to_string(status);
+	switch (status) {
+	case FU_LOGITECH_HIDPP_STATUS_PACKET_SUCCESS:
+	case FU_LOGITECH_HIDPP_STATUS_DFU_SUCCESS:
+	case FU_LOGITECH_HIDPP_STATUS_DFU_SUCCESS_ENTITY_RESTART_REQUIRED:
+	case FU_LOGITECH_HIDPP_STATUS_DFU_SUCCESS_SYSTEM_RESTART_REQUIRED:
 		/* success */
+		g_debug("ignoring: %s", status_str);
 		return TRUE;
 		break;
-	case 0x03:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_BUSY,
-				    "wait for event (command in progress)");
+	case FU_LOGITECH_HIDPP_STATUS_COMMAND_IN_PROGRESS:
+	case FU_LOGITECH_HIDPP_STATUS_WAIT_FOR_EVENT:
+	case FU_LOGITECH_HIDPP_STATUS_BLOCKED_COMMAND:
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, status_str);
 		break;
-	case 0x04:
-	case 0x10: /* unknown */
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic error");
+	case FU_LOGITECH_HIDPP_STATUS_GENERIC_ERROR04:
+	case FU_LOGITECH_HIDPP_STATUS_GENERIC_ERROR10:
+	case FU_LOGITECH_HIDPP_STATUS_BAD_VOLTAGE:
+	case FU_LOGITECH_HIDPP_STATUS_DFU_NOT_STARTED:
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, status_str);
 		break;
-	case 0x11:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "bad voltage (power too low?)");
+	case FU_LOGITECH_HIDPP_STATUS_UNKNOWN12:
+	case FU_LOGITECH_HIDPP_STATUS_BAD_MAGIC_STRING:
+	case FU_LOGITECH_HIDPP_STATUS_BAD_FIRMWARE:
+	case FU_LOGITECH_HIDPP_STATUS_UNSUPPORTED_ENCRYPTION_MODE:
+	case FU_LOGITECH_HIDPP_STATUS_UNSUPPORTED_COMMAND:
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, status_str);
 		break;
-	case 0x12:
-	case 0x14: /* bad magic string */
-	case 0x21: /* bad firmware */
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unsupported firmware");
+	case FU_LOGITECH_HIDPP_STATUS_INVALID:
+	case FU_LOGITECH_HIDPP_STATUS_BAD_SEQUENCE_NUMBER:
+	case FU_LOGITECH_HIDPP_STATUS_ADDRESS_OUT_OF_RANGE:
+	case FU_LOGITECH_HIDPP_STATUS_UNALIGNED_ADDRESS:
+	case FU_LOGITECH_HIDPP_STATUS_BAD_SIZE:
+	case FU_LOGITECH_HIDPP_STATUS_MISSING_PROGRAM_DATA:
+	case FU_LOGITECH_HIDPP_STATUS_MISSING_CHECK_DATA:
+	case FU_LOGITECH_HIDPP_STATUS_FIRMWARE_CHECK_FAILURE:
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, status_str);
 		break;
-	case 0x13:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unsupported encryption mode");
-		break;
-	case 0x15:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "erase failure");
-		break;
-	case 0x16:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "DFU not started");
-		break;
-	case 0x17:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "bad sequence number");
-		break;
-	case 0x18:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "unsupported command");
-		break;
-	case 0x19:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "command in progress");
-		break;
-	case 0x1a:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "address out of range");
-		break;
-	case 0x1b:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "unaligned address");
-		break;
-	case 0x1c:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad size");
-		break;
-	case 0x1d:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "missing program data");
-		break;
-	case 0x1e:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "missing check data");
-		break;
-	case 0x1f:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "program failed to write");
-		break;
-	case 0x20:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "program failed to verify");
-		break;
-	case 0x22:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware check failure");
-		break;
-	case 0x23:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_BUSY,
-				    "blocked command (restart required)");
+	case FU_LOGITECH_HIDPP_STATUS_PROGRAM_FAILED_TO_WRITE:
+	case FU_LOGITECH_HIDPP_STATUS_PROGRAM_FAILED_TO_VERIFY:
+	case FU_LOGITECH_HIDPP_STATUS_ERASE_FAILURE:
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, status_str);
 		break;
 	default:
 		g_set_error(error,
