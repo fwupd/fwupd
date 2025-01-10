@@ -303,6 +303,7 @@ fu_device_register_flags(FuDevice *self)
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
+	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE);
 }
 
 static void
@@ -2600,6 +2601,13 @@ fu_device_add_instance_id_full(FuDevice *self, const gchar *instance_id, FuDevic
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(instance_id != NULL);
+
+	/* some devices in recovery mode expect this to work */
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_COUNTERPART) > 0 &&
+	    fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE)) {
+		g_debug("making %s also visible", instance_id);
+		flags |= FU_DEVICE_INSTANCE_FLAG_VISIBLE;
+	}
 
 	/* add to cache */
 	item = fu_device_get_instance_id(self, instance_id);

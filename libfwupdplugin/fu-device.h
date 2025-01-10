@@ -771,6 +771,17 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE:
+ *
+ * Add the counterpart instance IDs as visible GUID that can be matched in firmware.
+ *
+ * This was how the daemon worked in 1.9.x, and some devices in recovery mode still expect this.
+ *
+ * Since: 2.0.4
+ */
+#define FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE "counterpart-visible"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
