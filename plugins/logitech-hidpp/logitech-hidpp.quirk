@@ -20,7 +20,7 @@ Vendor = Logitech
 GType = FuLogitechHidppDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30
-Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio
+Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio,counterpart-visible
 LogitechHidppModelId = B601C5480000
 
 # Bolt receiver radio (bootloader)
