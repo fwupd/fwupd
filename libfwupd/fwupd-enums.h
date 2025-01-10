@@ -1136,6 +1136,7 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_DELL_BIOS,	     /* Since: 1.3.6 */
 	FWUPD_VERSION_FORMAT_HEX,	     /* Since: 1.4.0 */
 	FWUPD_VERSION_FORMAT_DELL_BIOS_MSB,  /* Since: 1.9.24 */
+	FWUPD_VERSION_FORMAT_INTEL_CSME19,   /* Since: 1.9.27 */
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;

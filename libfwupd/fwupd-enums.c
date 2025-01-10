@@ -920,6 +920,8 @@ fwupd_version_format_from_string(const gchar *str)
 		return FWUPD_VERSION_FORMAT_INTEL_ME;
 	if (g_strcmp0(str, "intel-me2") == 0)
 		return FWUPD_VERSION_FORMAT_INTEL_ME2;
+	if (g_strcmp0(str, "intel-csme19") == 0)
+		return FWUPD_VERSION_FORMAT_INTEL_CSME19;
 	if (g_strcmp0(str, "surface-legacy") == 0)
 		return FWUPD_VERSION_FORMAT_SURFACE_LEGACY;
 	if (g_strcmp0(str, "surface") == 0)
@@ -962,6 +964,8 @@ fwupd_version_format_to_string(FwupdVersionFormat kind)
 		return "intel-me";
 	if (kind == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return "intel-me2";
+	if (kind == FWUPD_VERSION_FORMAT_INTEL_CSME19)
+		return "intel-csme19";
 	if (kind == FWUPD_VERSION_FORMAT_SURFACE_LEGACY)
 		return "surface-legacy";
 	if (kind == FWUPD_VERSION_FORMAT_SURFACE)

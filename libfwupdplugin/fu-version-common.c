@@ -128,6 +128,14 @@ fu_version_from_uint32(guint32 val, FwupdVersionFormat kind)
 				       (val >> 16) & 0xff,
 				       val & 0xffff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_INTEL_CSME19) {
+		/* aaa+19.bbbbb.cccccccc.dddddddddddddddd */
+		return g_strdup_printf("%u.%u.%u.%u",
+				       ((val >> 29) & 0x07) + 19,
+				       (val >> 24) & 0x1f,
+				       (val >> 16) & 0xff,
+				       val & 0xffff);
+	}
 	if (kind == FWUPD_VERSION_FORMAT_SURFACE_LEGACY) {
 		/* 10b.12b.10b */
 		return g_strdup_printf("%u.%u.%u",
@@ -400,7 +408,7 @@ fu_version_format_number_sections(FwupdVersionFormat fmt)
 	    fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return 3;
 	if (fmt == FWUPD_VERSION_FORMAT_QUAD || fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
-	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
+	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2 || fmt == FWUPD_VERSION_FORMAT_INTEL_CSME19)
 		return 4;
 	return 0;
 }
@@ -625,7 +633,8 @@ fu_version_guess_format(const gchar *version)
 static FwupdVersionFormat
 fu_version_format_convert_base(FwupdVersionFormat fmt)
 {
-	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
+	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME || fmt == FWUPD_VERSION_FORMAT_INTEL_ME2 ||
+	    fmt == FWUPD_VERSION_FORMAT_INTEL_CSME19)
 		return FWUPD_VERSION_FORMAT_QUAD;
 	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS_MSB)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
