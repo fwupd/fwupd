@@ -3,6 +3,8 @@
 exec 2>&1
 device=08d460be0f1f9f128413f816022a6439e0078018
 
+CAB="@installedtestsdir@/fakedevice123.cab"
+
 error()
 {
         rc=$1
@@ -27,6 +29,38 @@ rc=$?; if [ $rc != 0 ]; then error $rc; fi
 # ---
 echo "Show version output"
 fwupdmgr --version
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting the list of plugins..."
+fwupdmgr get-plugins
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting the list of plugins (json)..."
+fwupdmgr get-plugins --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+if [ -f ${CAB} ]; then
+    # ---
+    echo "Examining ${CAB}..."
+    fwupdmgr get-details ${CAB}
+    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+    # ---
+    echo "Examining ${CAB} (json)..."
+    fwupdmgr get-details ${CAB} --json
+    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+    # ---
+    echo "Installing ${CAB} cabinet..."
+    fwupdmgr install ${CAB} --no-reboot-check
+    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+fi
+
+# ---
+echo "Update the device hash database..."
+fwupdmgr get-releases $device
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
@@ -85,6 +119,11 @@ rc=$?; if [ $rc != 0 ]; then error $rc; fi
 echo "Getting updates (should be none)..."
 fwupdmgr --no-unreported-check --no-metadata-check get-updates
 rc=$?; if [ $rc != 2 ]; then error $rc; fi
+
+# ---
+echo "Getting updates [json] (should be none)..."
+fwupdmgr --no-unreported-check --no-metadata-check get-updates --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
 echo "Testing the verification of firmware (again)..."
