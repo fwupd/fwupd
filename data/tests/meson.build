@@ -50,9 +50,16 @@ install_data([
     'fakedevice124.bin',
     'fakedevice124.jcat',
     'fakedevice124.metainfo.xml',
-    'fwupdmgr.sh',
     'fwupd-tests.xml',
   ],
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
+  input: 'fwupdmgr.sh',
+  output: 'fwupdmgr.sh',
+  configuration: con2,
+  install: true,
   install_dir: installed_test_datadir,
 )
 
