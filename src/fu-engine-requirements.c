@@ -703,6 +703,8 @@ fu_engine_requirements_check_hard(FuEngine *self,
 
 	/* ensure hardware requirement */
 	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0) {
+		if (device == NULL || fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+			return TRUE;
 		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 			return TRUE;
 		return fu_engine_requirements_check_hardware(self, req, fwupd_version, error);
