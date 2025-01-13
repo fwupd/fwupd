@@ -1,6 +1,7 @@
 comment: off
 
 coverage:
+  range: 40..60
   status:
     project:
       default:
