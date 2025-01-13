@@ -471,6 +471,200 @@ fwupd_device_filter_func(void)
 }
 
 static void
+fwupd_client_api_undefined_setter(void)
+{
+#if GLIB_CHECK_VERSION(2, 74, 0)
+	if (g_test_subprocess()) {
+		g_autoptr(FwupdClient) client = fwupd_client_new();
+		GValue value_bool = G_VALUE_INIT;
+
+		g_value_init(&value_bool, G_TYPE_BOOLEAN);
+		g_object_set_property(G_OBJECT(client), "battery-adapter", &value_bool);
+	} else {
+		g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+		g_test_trap_assert_failed();
+		g_test_trap_assert_stderr(
+		    "*GLib-GObject-CRITICAL*has no property named 'battery-adapter'*");
+	}
+#else
+	g_test_skip("Trap handling requires glib 2.74");
+#endif
+}
+
+static void
+fwupd_client_api_undefined_getter(void)
+{
+#if GLIB_CHECK_VERSION(2, 74, 0)
+	if (g_test_subprocess()) {
+		g_autoptr(FwupdClient) client = fwupd_client_new();
+		GValue value_bool = G_VALUE_INIT;
+
+		g_value_init(&value_bool, G_TYPE_BOOLEAN);
+		g_object_get_property(G_OBJECT(client), "battery-adapter", &value_bool);
+	} else {
+		g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+		g_test_trap_assert_failed();
+		g_test_trap_assert_stderr(
+		    "*GLib-GObject-CRITICAL*has no property named 'battery-adapter'*");
+	}
+#else
+	g_test_skip("Trap handling requires glib 2.74");
+#endif
+}
+
+static void
+fwupd_client_api_ro_props(void)
+{
+#if GLIB_CHECK_VERSION(2, 74, 0)
+	const gchar *props[] = {"daemon-version", "tainted", "interactive", "only-trusted", NULL};
+
+	for (guint i = 0; i < G_N_ELEMENTS(props); i++) {
+		if (g_test_subprocess()) {
+			g_autoptr(FwupdClient) client = fwupd_client_new();
+			GValue value_bool = G_VALUE_INIT;
+
+			g_value_init(&value_bool, G_TYPE_BOOLEAN);
+			g_object_set_property(G_OBJECT(client), props[i], &value_bool);
+		} else {
+			g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+			g_test_trap_assert_failed();
+			g_test_trap_assert_stderr(
+			    "*GLib-GObject-CRITICAL*property*is not writable*");
+		}
+	}
+#else
+	g_test_skip("Trap handling requires glib 2.74");
+#endif
+}
+
+static void
+fwupd_client_api(void)
+{
+	gboolean ret;
+	const gchar *tmp = "1234567890abcdef";
+	GValue value_str = G_VALUE_INIT;
+	GValue value_int = G_VALUE_INIT;
+	GValue value_bool = G_VALUE_INIT;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(GError) error = NULL;
+
+	g_value_init(&value_str, G_TYPE_STRING);
+	g_value_init(&value_int, G_TYPE_INT);
+	g_value_init(&value_bool, G_TYPE_BOOLEAN);
+	g_value_set_string(&value_str, tmp);
+
+	ret = fwupd_client_get_only_trusted(client);
+	g_assert_false(ret);
+	ret = fwupd_client_get_daemon_interactive(client);
+	g_assert_false(ret);
+	ret = fwupd_client_get_tainted(client);
+	g_assert_false(ret);
+
+	/* set the version multiple times */
+	fwupd_client_set_daemon_version(client, "1.2.3");
+	g_assert_cmpstr(fwupd_client_get_daemon_version(client), ==, "1.2.3");
+	fwupd_client_set_daemon_version(client, "1.2.4");
+	g_assert_cmpstr(fwupd_client_get_daemon_version(client), ==, "1.2.4");
+	fwupd_client_set_daemon_version(client, "1.2.4");
+
+	/* set host security ID multiple times */
+	g_object_set_property(G_OBJECT(client), "host-security-id", &value_str);
+	g_assert_cmpstr(fwupd_client_get_host_security_id(client), ==, tmp);
+	g_object_set_property(G_OBJECT(client), "host-security-id", &value_str);
+
+	/* set host machine ID multiple times */
+	g_object_set_property(G_OBJECT(client), "host-machine-id", &value_str);
+	g_assert_cmpstr(fwupd_client_get_host_machine_id(client), ==, tmp);
+	g_object_set_property(G_OBJECT(client), "host-machine-id", &value_str);
+
+	/* set host product ID and product vendor multiple times */
+	tmp = "Acme";
+	g_value_set_string(&value_str, tmp);
+	g_object_set_property(G_OBJECT(client), "host-vendor", &value_str);
+	g_assert_cmpstr(fwupd_client_get_host_vendor(client), ==, tmp);
+	g_object_set_property(G_OBJECT(client), "host-vendor", &value_str);
+
+	tmp = "Anvil";
+	g_value_set_string(&value_str, tmp);
+	g_object_set_property(G_OBJECT(client), "host-product", &value_str);
+	g_assert_cmpstr(fwupd_client_get_host_product(client), ==, tmp);
+	g_object_set_property(G_OBJECT(client), "host-product", &value_str);
+
+	/* set BKC */
+	tmp = "BKC-123";
+	g_value_set_string(&value_str, tmp);
+	g_object_set_property(G_OBJECT(client), "host-bkc", &value_str);
+	g_assert_cmpstr(fwupd_client_get_host_bkc(client), ==, tmp);
+	g_object_set_property(G_OBJECT(client), "host-bkc", &value_str);
+
+	/* verify experience with no user agent explicitly */
+	ret = fwupd_client_ensure_networking(client, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+
+	/* verify experience with a good user agent*/
+	fwupd_client_set_user_agent_for_package(client, "fwupd", "2.0.0");
+	ret = fwupd_client_ensure_networking(client, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+
+	/* set same battery level multiple times */
+	g_value_set_int(&value_int, 50);
+	g_object_set_property(G_OBJECT(client), "battery-level", &value_int);
+	g_assert_cmpint(fwupd_client_get_battery_level(client), ==, 50);
+	g_object_set_property(G_OBJECT(client), "battery-level", &value_int);
+
+	/* set same battery threshold multiple times */
+	g_value_set_int(&value_int, 20);
+	g_object_set_property(G_OBJECT(client), "battery-threshold", &value_int);
+	g_assert_cmpint(fwupd_client_get_battery_threshold(client), ==, 20);
+	g_object_set_property(G_OBJECT(client), "battery-threshold", &value_int);
+
+	/* set same status multiple times */
+	g_value_set_int(&value_int, FWUPD_STATUS_IDLE);
+	g_object_set_property(G_OBJECT(client), "status", &value_int);
+	g_assert_cmpint(fwupd_client_get_status(client), ==, FWUPD_STATUS_IDLE);
+	g_object_set_property(G_OBJECT(client), "status", &value_int);
+
+	/* set same percentage multiple times */
+	g_value_set_int(&value_int, 50);
+	g_object_set_property(G_OBJECT(client), "percentage", &value_int);
+	g_assert_cmpint(fwupd_client_get_percentage(client), ==, 50);
+	g_object_set_property(G_OBJECT(client), "percentage", &value_int);
+
+	/* set all properties */
+	g_value_set_int(&value_int, 0);
+	g_object_set_property(G_OBJECT(client), "status", &value_int);
+	g_object_set_property(G_OBJECT(client), "percentage", &value_int);
+	g_object_set_property(G_OBJECT(client), "host-bkc", &value_str);
+	g_object_set_property(G_OBJECT(client), "host-vendor", &value_str);
+	g_object_set_property(G_OBJECT(client), "host-product", &value_str);
+	g_object_set_property(G_OBJECT(client), "host-machine-id", &value_str);
+	g_object_set_property(G_OBJECT(client), "host-security-id", &value_str);
+	g_object_set_property(G_OBJECT(client), "battery-level", &value_int);
+	g_object_set_property(G_OBJECT(client), "battery-threshold", &value_int);
+
+	/* read all properties */
+	g_object_get_property(G_OBJECT(client), "status", &value_int);
+	g_object_get_property(G_OBJECT(client), "tainted", &value_bool);
+	g_object_get_property(G_OBJECT(client), "interactive", &value_bool);
+	g_object_get_property(G_OBJECT(client), "percentage", &value_int);
+	g_object_get_property(G_OBJECT(client), "daemon-version", &value_str);
+	g_object_get_property(G_OBJECT(client), "host-bkc", &value_str);
+	g_object_get_property(G_OBJECT(client), "host-vendor", &value_str);
+	g_object_get_property(G_OBJECT(client), "host-product", &value_str);
+	g_object_get_property(G_OBJECT(client), "host-machine-id", &value_str);
+	g_object_get_property(G_OBJECT(client), "host-security-id", &value_str);
+	g_object_get_property(G_OBJECT(client), "only-trusted", &value_bool);
+	g_object_get_property(G_OBJECT(client), "battery-level", &value_int);
+	g_object_get_property(G_OBJECT(client), "battery-threshold", &value_int);
+
+	g_value_unset(&value_str);
+	g_value_unset(&value_int);
+	g_value_unset(&value_bool);
+}
+
+static void
 fwupd_common_history_report_func(void)
 {
 	g_autofree gchar *json = NULL;
@@ -1239,6 +1433,15 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{filter}", fwupd_device_filter_func);
 	g_test_add_func("/fwupd/security-attr", fwupd_security_attr_func);
 	g_test_add_func("/fwupd/bios-attrs", fwupd_bios_settings_func);
+	g_test_add_func("/fwupd/client_api", fwupd_client_api);
+	if (g_test_undefined()) {
+		g_test_add_func("/fwupd/client_api{undefined_setter}",
+				fwupd_client_api_undefined_setter);
+		g_test_add_func("/fwupd/client_api{undefined_getter}",
+				fwupd_client_api_undefined_getter);
+		g_test_add_func("/fwupd/client_api{ro_props}", fwupd_client_api_ro_props);
+	}
+
 	if (fwupd_has_system_bus()) {
 		g_test_add_func("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func("/fwupd/client{devices}", fwupd_client_devices_func);
