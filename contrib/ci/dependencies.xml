@@ -716,6 +716,9 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="arch">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency id="libxmlb-dev">
     <distro id="arch">
