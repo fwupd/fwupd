@@ -4,7 +4,7 @@ pacman -Sy --noconfirm qt5-base gcovr
 pacman -U --noconfirm dist/*.pkg.*
 
 #run the CI tests for Qt5
-meson qt5-thread-test contrib/ci/qt5-thread-test
+meson qt5-thread-test contrib/ci/qt5-thread-test --werror -Db_coverage=true
 ninja -C qt5-thread-test test
 
 #get the test firmware
