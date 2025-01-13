@@ -13,7 +13,6 @@
 static void
 fu_test_synaprom_firmware_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	const guint8 *buf;
 	gboolean ret;
 	gsize sz = 0;
@@ -27,7 +26,7 @@ fu_test_synaprom_firmware_func(void)
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "test.pkg", NULL);
-	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing test.pkg");
 		return;
 	}

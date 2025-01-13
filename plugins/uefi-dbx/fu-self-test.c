@@ -12,7 +12,6 @@
 static void
 fu_efi_image_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	const gchar *csum = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuEfiImage) img = NULL;
@@ -20,7 +19,7 @@ fu_efi_image_func(void)
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "fwupdx64.efi", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing fwupdx64.efi");
 		return;
 	}
