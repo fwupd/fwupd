@@ -41,6 +41,31 @@ fwupdtool enable-test-devices
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
+echo "Checking device-flags"
+fwupdtool -vv get-device-flags
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Checking firmware-gtypes"
+fwupdtool -vv get-firmware-gtypes
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Checking firmware-types"
+fwupdtool -vv get-firmware-types
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Checking for updates"
+fwupdtool -vv get-updates
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
+echo "Checking for updates"
+fwupdtool -vv get-updates --json
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
 echo "Building ${CAB}..."
 fwupdtool build-cabinet ${CAB} ${INPUT} --force
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
