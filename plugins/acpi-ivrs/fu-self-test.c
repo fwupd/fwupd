@@ -12,7 +12,6 @@
 static void
 fu_acpi_ivrs_dma_remap_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	gboolean ret;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(GError) error = NULL;
@@ -20,7 +19,7 @@ fu_acpi_ivrs_dma_remap_func(void)
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "IVRS-REMAP", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing IVRS-REMAP");
 		return;
 	}
@@ -40,7 +39,6 @@ fu_acpi_ivrs_dma_remap_func(void)
 static void
 fu_acpi_ivrs_no_dma_remap_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	gboolean ret;
 	g_autoptr(FuAcpiIvrs) ivrs = fu_acpi_ivrs_new();
 	g_autoptr(GError) error = NULL;
@@ -48,7 +46,7 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "IVRS-NOREMAP", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing IVRS-NOREMAP");
 		return;
 	}

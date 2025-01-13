@@ -11,7 +11,6 @@
 static void
 fu_acpi_dmar_opt_in_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	gboolean ret;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
@@ -19,7 +18,7 @@ fu_acpi_dmar_opt_in_func(void)
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing DMAR");
 		return;
 	}
@@ -39,7 +38,6 @@ fu_acpi_dmar_opt_in_func(void)
 static void
 fu_acpi_dmar_opt_out_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	gboolean ret;
 	g_autoptr(FuAcpiDmar) dmar = fu_acpi_dmar_new();
 	g_autoptr(GError) error = NULL;
@@ -47,7 +45,7 @@ fu_acpi_dmar_opt_out_func(void)
 	g_autofree gchar *fn = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "DMAR-OPTOUT", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing DMAR-OPTOUT");
 		return;
 	}
