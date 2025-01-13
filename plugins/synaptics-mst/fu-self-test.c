@@ -82,7 +82,6 @@ static void
 fu_plugin_synaptics_mst_none_func(void)
 {
 	gboolean ret;
-	const gchar *ci = g_getenv("CI_NETWORK");
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -112,7 +111,7 @@ fu_plugin_synaptics_mst_none_func(void)
 	g_assert_true(ret);
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "no_devices", NULL);
-	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing no_devices");
 		return;
 	}
@@ -125,7 +124,6 @@ static void
 fu_plugin_synaptics_mst_tb16_func(void)
 {
 	gboolean ret;
-	const gchar *ci = g_getenv("CI_NETWORK");
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuPlugin) plugin = NULL;
@@ -156,7 +154,7 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	g_assert_true(ret);
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "tb16_dock", NULL);
-	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing tb16_dock");
 		return;
 	}

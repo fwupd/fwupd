@@ -13,14 +13,13 @@
 static void
 fu_acpi_facp_s2i_disabled_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiFacp) facp = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "FACP", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing FACP");
 		return;
 	}
@@ -36,14 +35,13 @@ fu_acpi_facp_s2i_disabled_func(void)
 static void
 fu_acpi_facp_s2i_enabled_func(void)
 {
-	const gchar *ci = g_getenv("CI_NETWORK");
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuAcpiFacp) facp = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "FACP-S2I", NULL);
-	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip("Missing FACP-S2I");
 		return;
 	}
