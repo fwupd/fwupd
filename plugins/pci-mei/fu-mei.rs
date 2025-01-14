@@ -316,7 +316,7 @@ struct FuMeiCsme18Hfsts5 {
 #[repr(C, packed)]
 struct FuMeiCsme18Hfsts6 {
     _reserved0: u21,
-    manufacturing_lock: u1,
+    _manufacturing_lock: u1,
     _reserved1: u8,
     fpf_soc_configuration_lock: u1,
     _sx_resume_type: u1,
