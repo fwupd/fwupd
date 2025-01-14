@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export NO_COLOR=1
+
 exec 2>&1
 device=08d460be0f1f9f128413f816022a6439e0078018
 
