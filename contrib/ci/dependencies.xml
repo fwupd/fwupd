@@ -30,9 +30,6 @@
     </distro>
   </dependency>
   <dependency id="bash">
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
   </dependency>
   <dependency id="bash-completion">
     <distro id="arch">
@@ -118,9 +115,6 @@
     </distro>
   </dependency>
   <dependency id="gcc">
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
     <distro id="fedora">
       <package variant="mingw64">mingw64-gcc</package>
     </distro>
@@ -151,9 +145,6 @@
     <distro id="fedora">
       <package variant="x86_64">cairo-devel</package>
       <package variant="aarch64">cairo-devel</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">cairo-devel</package>
     </distro>
     <distro id="debian">
       <control />
@@ -216,9 +207,6 @@
       <package variant="x86_64">json-glib-devel</package>
       <package variant="aarch64">json-glib-devel</package>
       <package variant="mingw64">mingw64-json-glib</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">json-glib-devel</package>
     </distro>
     <distro id="darwin">
       <package>json-glib</package>
@@ -292,9 +280,6 @@
     <distro id="fedora">
       <package variant="x86_64">google-noto-sans-cjk-ttc-fonts</package>
       <package variant="aarch64">google-noto-sans-cjk-ttc-fonts</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">noto-fonts-cjk</package>
     </distro>
     <distro id="debian">
       <control />
@@ -480,9 +465,6 @@
       <package variant="mingw64">gettext</package>
       <package variant="mingw64">mingw64-gettext</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
     <distro id="debian">
       <control>
         <version>(>= 0.19.8.1)</version>
@@ -519,9 +501,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">gnu-efi-libs</package>
-    </distro>
     <distro id="debian">
       <control>
         <inclusive>amd64</inclusive>
@@ -556,9 +535,6 @@
       <package variant="aarch64" />
       <package variant="mingw64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
     <distro id="debian">
       <package variant="x86_64" />
       <package variant="s390x" />
@@ -582,9 +558,6 @@
     </distro>
     <distro id="arch">
       <package variant="x86_64">gsettings-desktop-schemas</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">glib-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -618,9 +591,6 @@
     <distro id="fedora">
       <package variant="x86_64">gobject-introspection-devel</package>
       <package variant="aarch64">gobject-introspection-devel</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64" />
     </distro>
     <distro id="darwin">
       <package variant="x86_64" />
@@ -658,9 +628,6 @@
       <package variant="aarch64">gnutls-devel</package>
       <package variant="mingw64">mingw64-gnutls</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">gnutls-devel</package>
-    </distro>
     <distro id="darwin">
       <package>gnutls</package>
     </distro>
@@ -683,9 +650,6 @@
     <distro id="fedora">
       <package variant="x86_64">gnutls-utils</package>
       <package variant="aarch64">gnutls-utils</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">gnutls-tools</package>
     </distro>
     <distro id="debian">
       <control />
@@ -734,9 +698,6 @@
       <package variant="aarch64">libxmlb-devel</package>
       <package variant="mingw64">mingw64-libxmlb</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">libxmlb-devel</package>
-    </distro>
     <distro id="debian">
       <control>
         <version>(>= 0.1.13)</version>
@@ -772,9 +733,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">libjcat-devel</package>
-    </distro>
   </dependency>
   <dependency id="libblkid-dev">
     <distro id="arch">
@@ -794,9 +752,6 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libblkid-devel</package>
     </distro>
   </dependency>
   <dependency id="liblzma-dev">
@@ -847,9 +802,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">libarchive-devel</package>
-    </distro>
     <distro id="darwin">
       <package>libarchive</package>
     </distro>
@@ -876,9 +828,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">libcbor-devel</package>
-    </distro>
   </dependency>
   <dependency id="libgirepository1.0-dev">
     <distro id="debian">
@@ -904,9 +853,6 @@
       <package variant="x86_64">libusb1-devel</package>
       <package variant="aarch64">libusb1-devel</package>
       <package variant="mingw64">mingw64-libusbx</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libusb-devel</package>
     </distro>
     <distro id="darwin">
       <package>libusb</package>
@@ -950,9 +896,6 @@
       <package variant="x86_64">libcurl-devel</package>
       <package variant="aarch64">libcurl-devel</package>
       <package variant="mingw64">mingw64-curl</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">libcurl-devel</package>
     </distro>
     <distro id="darwin">
       <package>curl</package>
@@ -1054,9 +997,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
   </dependency>
   <dependency id="mingw-w64-tools">
     <distro id="fedora">
@@ -1090,9 +1030,6 @@
       <package variant="x86_64">pango-devel</package>
       <package variant="aarch64">pango-devel</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">pango-devel</package>
-    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -1118,9 +1055,6 @@
     <distro id="fedora">
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
   </dependency>
   <dependency id="polkitd">
     <distro id="arch">
@@ -1132,9 +1066,6 @@
     <distro id="fedora">
       <package variant="x86_64">polkit</package>
       <package variant="aarch64">polkit</package>
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">polkit</package>
     </distro>
     <distro id="debian">
       <package variant="x86_64" />
@@ -1234,9 +1165,6 @@
       <package variant="x86_64">polkit-devel</package>
       <package variant="aarch64">polkit-devel</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">polkit-devel</package>
-    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -1298,9 +1226,6 @@
       <package variant="aarch64" />
       <package variant="mingw64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
   </dependency>
   <dependency id="python3-gi-cairo">
     <distro id="arch">
@@ -1357,9 +1282,6 @@
     </distro>
   </dependency>
   <dependency id="gi-docgen">
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1453,9 +1375,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64" />
-    </distro>
   </dependency>
   <dependency id="python3-requests">
     <distro id="fedora">
@@ -1535,16 +1454,8 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">sqlite-devel</package>
-    </distro>
     <distro id="darwin">
       <package>sqlite</package>
-    </distro>
-  </dependency>
-  <dependency id="logind">
-    <distro id="void">
-      <package variant="x86_64">elogind-devel</package>
     </distro>
   </dependency>
   <dependency id="systemd">
@@ -1670,9 +1581,6 @@
       <package variant="x86_64">vala</package>
       <package variant="aarch64">vala</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">vala</package>
-    </distro>
     <distro id="darwin">
       <package>vala</package>
     </distro>
@@ -1750,9 +1658,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="void">
-      <package variant="x86_64">tpm2-tss-devel</package>
-    </distro>
   </dependency>
   <dependency id="libgcrypt-devel">
     <distro id="fedora">
@@ -1787,9 +1692,6 @@
       <package variant="x86_64">protobuf-c-devel</package>
       <package variant="aarch64">protobuf-c-devel</package>
     </distro>
-    <distro id="void">
-      <package variant="x86_64">protobuf-c-devel</package>
-    </distro>
     <distro id="darwin">
       <package>protobuf-c</package>
     </distro>
@@ -1808,9 +1710,6 @@
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-    <distro id="void">
-      <package variant="x86_64">protobuf</package>
     </distro>
   </dependency>
   <dependency id="sudo">
