@@ -9,75 +9,76 @@ INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.jcat \
        @installedtestsdir@/fakedevice124.metainfo.xml"
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
+FWUPDTOOL="fwupdtool -v"
 
 # ---
 echo "Show help output"
-fwupdtool --help
+${FWUPDTOOL} --help
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Show version output"
-fwupdtool --version
+${FWUPDTOOL} --version
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Showing hwids"
-fwupdtool hwids
+${FWUPDTOOL} hwids
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Showing plugins"
-fwupdtool -vv get-plugins
+${FWUPDTOOL} get-plugins
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Showing plugins (json)"
-fwupdtool get-plugins --json
+${FWUPDTOOL} get-plugins --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Enabling test device..."
-fwupdtool enable-test-devices
+${FWUPDTOOL} enable-test-devices
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Checking device-flags"
-fwupdtool -vv get-device-flags
+${FWUPDTOOL} get-device-flags
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Checking firmware-gtypes"
-fwupdtool -vv get-firmware-gtypes
+${FWUPDTOOL} get-firmware-gtypes
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Checking firmware-types"
-fwupdtool -vv get-firmware-types
+${FWUPDTOOL} get-firmware-types
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Checking for updates"
-fwupdtool -vv get-updates
+${FWUPDTOOL} get-updates
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Checking for updates"
-fwupdtool -vv get-updates --json
+${FWUPDTOOL} get-updates --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Building ${CAB}..."
-fwupdtool build-cabinet ${CAB} ${INPUT} --force
+${FWUPDTOOL} build-cabinet ${CAB} ${INPUT} --force
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Examining ${CAB}..."
-fwupdtool get-details ${CAB}
+${FWUPDTOOL} get-details ${CAB}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Installing ${CAB} cabinet..."
-fwupdtool install ${CAB}
+${FWUPDTOOL} install ${CAB}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
@@ -86,87 +87,87 @@ rm -f ${CAB}
 
 # ---
 echo "Verifying update..."
-fwupdtool verify-update ${DEVICE}
+${FWUPDTOOL} verify-update ${DEVICE}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Getting history (should be one)..."
-fwupdtool get-history
+${FWUPDTOOL} get-history
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Clearing history..."
-fwupdtool clear-history ${DEVICE}
+${FWUPDTOOL} clear-history ${DEVICE}
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Getting history (should be none)..."
-fwupdtool get-history
+${FWUPDTOOL} get-history
 rc=$?; if [ $rc != 2 ]; then exit $rc; fi
 
 # ---
 echo "Resetting config..."
-fwupdtool reset-config test
+${FWUPDTOOL} reset-config test
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Testing good version compare"
-fwupdtool vercmp 1.0.0 1.0.0 triplet
+${FWUPDTOOL} vercmp 1.0.0 1.0.0 triplet
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Testing bad version compare"
-fwupdtool vercmp 1.0.0 1.0.1 foo
+${FWUPDTOOL} vercmp 1.0.0 1.0.1 foo
 rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Getting supported version formats..."
-fwupdtool get-version-formats --json
+${FWUPDTOOL} get-version-formats --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Getting the list of remotes"
-fwupdtool get-remotes --json
+${FWUPDTOOL} get-remotes --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Disabling LVFS remote..."
-fwupdtool modify-remote lvfs Enabled false
+${FWUPDTOOL} modify-remote lvfs Enabled false
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Enabling LVFS remote..."
-fwupdtool modify-remote lvfs Enabled true
+${FWUPDTOOL} modify-remote lvfs Enabled true
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Modify unknown remote (should fail)..."
-fwupdtool modify-remote foo Enabled true
+${FWUPDTOOL} modify-remote foo Enabled true
 rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Modify known remote but unknown key (should fail)..."
-fwupdtool modify-remote lvfs bar true
+${FWUPDTOOL} modify-remote lvfs bar true
 rc=$?; if [ $rc != 3 ]; then exit $rc; fi
 
 # ---
 echo "Getting devices (should be one)..."
-fwupdtool get-devices --json
+${FWUPDTOOL} get-devices --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Changing VALID config on test device..."
-fwupdtool modify-config test AnotherWriteRequired true
+${FWUPDTOOL} modify-config test AnotherWriteRequired true
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
 echo "Changing INVALID config on test device...(should fail)"
-fwupdtool modify-config test Foo true
+${FWUPDTOOL} modify-config test Foo true
 rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
 # ---
 echo "Disabling test device..."
-fwupdtool disable-test-devices
+${FWUPDTOOL} disable-test-devices
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 BASEDIR=@installedtestsdir@/tests/bios-attrs/dell-xps13-9310/
@@ -176,37 +177,37 @@ if [ -d $BASEDIR ]; then
        export FWUPD_SYSFSFWATTRIBDIR=$WORKDIR/dell-xps13-9310/
        # ---
        echo "Get BIOS settings..."
-       fwupdtool get-bios-settings --json
+       ${FWUPDTOOL} get-bios-settings --json
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
        echo "Get BIOS setting as json..."
-       fwupdtool get-bios-settings WlanAutoSense --json
+       ${FWUPDTOOL} get-bios-settings WlanAutoSense --json
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
        echo "Get BIOS setting as a string..."
-       fwupdtool get-bios-settings WlanAutoSense
+       ${FWUPDTOOL} get-bios-settings WlanAutoSense
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
        echo "Modify BIOS setting to different value..."
-       fwupdtool set-bios-setting WlanAutoSense Enabled  --no-reboot-check
+       ${FWUPDTOOL} set-bios-setting WlanAutoSense Enabled  --no-reboot-check
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
        echo "Modify BIOS setting back to default..."
-       fwupdtool set-bios-setting WlanAutoSense Disabled  --no-reboot-check
+       ${FWUPDTOOL} set-bios-setting WlanAutoSense Disabled  --no-reboot-check
        rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
        # ---
        echo "Modify BIOS setting to bad value (should fail)..."
-       fwupdtool set-bios-setting WlanAutoSense foo  --no-reboot-check
+       ${FWUPDTOOL} set-bios-setting WlanAutoSense foo  --no-reboot-check
        rc=$?; if [ $rc != 1 ]; then exit $rc; fi
 
        # ---
        echo "Modify Unknown BIOS setting (should fail)..."
-       fwupdtool set-bios-setting foo bar  --no-reboot-check
+       ${FWUPDTOOL} set-bios-setting foo bar  --no-reboot-check
        rc=$?; if [ $rc != 3 ]; then exit $rc; fi
 fi
 
@@ -217,5 +218,5 @@ fi
 
 # ---
 echo "Refresh remotes"
-fwupdtool refresh --json
+${FWUPDTOOL} refresh --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
