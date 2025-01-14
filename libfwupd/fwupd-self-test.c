@@ -102,17 +102,12 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_device_problem_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_MEASURE_SYSTEM_INTEGRITY; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_PLUGIN_FLAG_TEST_ONLY; i *= 2) {
 		const gchar *tmp = fwupd_plugin_flag_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_plugin_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_SHOW_PROBLEMS; i *= 2) {
-		const gchar *tmp = fwupd_feature_flag_to_string(i);
-		g_assert_cmpstr(tmp, !=, NULL);
-		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
-	}
-	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_ALLOW_AUTHENTICATION; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC; i *= 2) {
 		const gchar *tmp = fwupd_feature_flag_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_feature_flag_from_string(tmp), ==, i);
@@ -122,7 +117,7 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_release_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_ALLOW_GENERIC_IMAGE; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_REQUEST_FLAG_NON_GENERIC_IMAGE; i *= 2) {
 		const gchar *tmp = fwupd_request_flag_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_request_flag_from_string(tmp), ==, i);
