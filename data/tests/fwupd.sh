@@ -52,6 +52,7 @@ run_test nvme-self-test
 run_test optionrom-self-test
 run_test redfish-self-test
 run_test synaptics-prometheus-self-test
+run_test tpm-self-test
 run_test uefi-dbx-self-test
 run_test vli-self-test
 run_test wacom-usb-self-test
