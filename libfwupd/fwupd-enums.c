@@ -191,8 +191,6 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "can-emulation-tag";
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK)
 		return "install-skip-version-check";
-	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
-		return "unknown";
 	return NULL;
 }
 
