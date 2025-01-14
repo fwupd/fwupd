@@ -8,8 +8,7 @@ meson qt5-thread-test contrib/ci/qt5-thread-test --werror -Db_coverage=true
 ninja -C qt5-thread-test test
 
 #get the test firmware
-./contrib/ci/get_test_firmware.sh
-cp fwupd-test-firmware/installed-tests/* /usr/share/installed-tests/fwupd/ -LRv
+./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
 
 # gnome-desktop-testing is missing, so manually run these tests
 export G_TEST_SRCDIR=/usr/share/installed-tests/fwupd G_TEST_BUILDDIR=/usr/share/installed-tests/fwupd
