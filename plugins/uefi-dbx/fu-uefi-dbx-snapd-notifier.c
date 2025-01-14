@@ -44,10 +44,10 @@ fu_uefi_dbx_snapd_notifier_init(FuUefiDbxSnapdNotifier *self)
 		snapd_snap_socket = snapd_snap_socket_override;
 
 	/* use snap dedicated socket when running inside a snap */
-	curl_easy_setopt(self->curl_template, CURLOPT_UNIX_SOCKET_PATH, snapd_snap_socket);
+	(void)curl_easy_setopt(self->curl_template, CURLOPT_UNIX_SOCKET_PATH, snapd_snap_socket);
 
 	self->req_hdrs = curl_slist_append(self->req_hdrs, "Content-Type: application/json");
-	curl_easy_setopt(self->curl_template, CURLOPT_HTTPHEADER, self->req_hdrs);
+	(void)curl_easy_setopt(self->curl_template, CURLOPT_HTTPHEADER, self->req_hdrs);
 }
 
 static void
@@ -94,14 +94,14 @@ fu_uefi_dbx_snapd_notifier_simple_req(FuUefiDbxSnapdNotifier *self,
 
 	endpoint_str = g_strdup_printf("http://localhost%s", endpoint);
 
-	curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
 
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 
 	/* collect response for debugging */
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, rsp_buf);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fu_uefi_dbx_snapd_notifier_rsp_cb);
+	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, rsp_buf);
+	(void)curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fu_uefi_dbx_snapd_notifier_rsp_cb);
 
 	res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
