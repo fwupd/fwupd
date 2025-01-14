@@ -91,6 +91,12 @@ fwupd_enums_func(void)
 	}
 
 	/* bitfield */
+	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK; i *= 2) {
+		const gchar *tmp = fwupd_device_flag_to_string(i);
+		if (tmp == NULL)
+			continue;
+		g_assert_cmpint(fwupd_device_flag_from_string(tmp), ==, i);
+	}
 	for (guint64 i = 1; i <= FWUPD_DEVICE_PROBLEM_IN_USE; i *= 2) {
 		const gchar *tmp = fwupd_device_problem_to_string(i);
 		g_assert_cmpstr(tmp, !=, NULL);
