@@ -274,7 +274,7 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fu_nvme_device_parse_cns_maybe_dell(self, buf);
 
 	/* fall back to the device description */
-	if (fu_device_get_guids(FU_DEVICE(self))->len == 0) {
+	if (mn != NULL && fu_device_get_guids(FU_DEVICE(self))->len == 0) {
 		g_debug("no vendor GUID, falling back to mn");
 		fu_device_add_instance_id(FU_DEVICE(self), mn);
 	}
