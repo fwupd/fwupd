@@ -348,6 +348,21 @@ fu_tpm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
 	g_autofree gchar *fn_pcrs = NULL;
 
+	/* look for TPM v2.0 via software TCTI */
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		self->tpm_device = fu_tpm_v2_device_new(fu_plugin_get_context(plugin));
+		fu_device_set_physical_id(FU_DEVICE(self->tpm_device), "TCTI");
+		locker = fu_device_locker_new(FU_DEVICE(self->tpm_device), error);
+		if (locker == NULL)
+			return FALSE;
+		if (!fu_device_setup(FU_DEVICE(self->tpm_device), error))
+			return FALSE;
+		fu_plugin_device_add(plugin, FU_DEVICE(self->tpm_device));
+		return TRUE;
+	}
+
 	/* look for TPM v1.2 */
 	fn_pcrs = fu_path_build(FU_PATH_KIND_SYSFSDIR_TPM, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {

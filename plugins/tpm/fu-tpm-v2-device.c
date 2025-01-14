@@ -23,12 +23,16 @@ fu_tpm_v2_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *physical_id = NULL;
 	g_autofree gchar *prop_devname = NULL;
 
-	/* we don't have anything better */
-	prop_devname = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "DEVNAME", error);
-	if (prop_devname == NULL)
-		return FALSE;
-	physical_id = g_strdup_printf("DEVNAME=%s", prop_devname);
-	fu_device_set_physical_id(device, physical_id);
+	/* physical ID may already be set when using software TPM */
+	if (fu_device_get_physical_id(device) == NULL) {
+		/* we don't have anything better */
+		prop_devname =
+		    fu_udev_device_read_property(FU_UDEV_DEVICE(device), "DEVNAME", error);
+		if (prop_devname == NULL)
+			return FALSE;
+		physical_id = g_strdup_printf("DEVNAME=%s", prop_devname);
+		fu_device_set_physical_id(device, physical_id);
+	}
 
 	/* fake something as we cannot talk to tpmd */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
@@ -258,11 +262,12 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 		(void)g_setenv("TSS2_LOG", "esys+none,tcti+none", FALSE);
 
 	rc = Esys_Startup(self->esys_context, TPM2_SU_CLEAR);
-	if (rc != TSS2_RC_SUCCESS) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to initialize TPM");
+	if (rc != TSS2_RC_SUCCESS && rc != TPM2_RC_INITIALIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to initialize TPM: 0x%x",
+			    rc);
 		return FALSE;
 	}
 
@@ -289,9 +294,9 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* these are not guaranteed by spec and may be NULL */
-	model2 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_2, error);
-	model3 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_3, error);
-	model4 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_4, error);
+	model2 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_2, NULL);
+	model3 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_3, NULL);
+	model4 = fu_tpm_v2_device_get_string(self, TPM2_PT_VENDOR_STRING_4, NULL);
 	model = g_strjoin("", model1, model2, model3, model4, NULL);
 
 	/* add GUIDs to daemon */
