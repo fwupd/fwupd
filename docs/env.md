@@ -31,7 +31,7 @@ with a non-standard filesystem layout.
 ## Self Tests
 
 * `CI_NETWORK` if CI is running with network access
-* `TPM_SERVER_RUNNING` if an emulated TPM is running
+* `TPM2TOOLS_TCTI` if a TPM2.0 TPM is available (even if emulated)
 * `UMOCKDEV_DIR` if set, running under umockdev
 
 Other variables, include:

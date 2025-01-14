@@ -10,14 +10,12 @@ plugins/redfish/tests/redfish.py &
 plugins/uefi-dbx/tests/snapd.py &
 
 # run TPM simulator
-#swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
-#trap 'kill $!' EXIT
+export TPM2TOOLS_TCTI=swtpm:host=127.0.0.1,port=2321
+swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init,startup-clear --tpmstate "dir=$PWD" &
+trap 'kill $!' EXIT
 # extend a PCR0 value for test suite
-#sleep 2
-#tpm2_startup -c
-#tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
-# mark as disabled until it is fixed
-#export TPM_SERVER_RUNNING=1
+sleep 2
+tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
 
 #run the CI tests for Qt5
 meson qt5-thread-test contrib/ci/qt5-thread-test --werror -Db_coverage=true
