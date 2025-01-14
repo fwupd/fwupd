@@ -1069,7 +1069,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 static gboolean
 fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 {
-	g_autofree gchar *esp_os_base = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(FuDeviceLocker) esp_locker = NULL;
@@ -1093,8 +1092,7 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 	files = fu_path_get_files(esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	esp_os_base = fu_uefi_get_esp_path_for_os(esp_path);
-	pattern = g_build_filename(esp_path, esp_os_base, "fw", "fwupd*.cap", NULL);
+	pattern = g_build_filename("*", "fw", "fwupd*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index(files, i);
 		if (g_pattern_match_simple(pattern, fn)) {
