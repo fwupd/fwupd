@@ -8020,6 +8020,11 @@ fu_test_engine_fake_tpm(gconstpointer user_data)
 		return;
 	}
 
+	if (g_getenv("TPM2TOOLS_TCTI") != NULL) {
+		g_test_skip("Using software TPM, skipping fake TPM test");
+		return;
+	}
+
 	/* load engine and check the device was found */
 	fu_engine_add_plugin_filter(engine, "tpm");
 	ret = fu_engine_load(engine,
