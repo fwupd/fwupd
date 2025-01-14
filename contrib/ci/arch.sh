@@ -3,9 +3,6 @@ set -e
 set -x
 shopt -s extglob
 
-#clone test firmware if necessary
-. ./contrib/ci/get_test_firmware.sh
-
 #refresh package cache and update image
 pacman -Syu --noconfirm
 
