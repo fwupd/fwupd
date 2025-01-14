@@ -92,11 +92,13 @@ hurt the fwupd/LVFS brand and standing much more than any legal recourse you mig
 The LVFS works with all levels of the ecosystem from ISV, to IHV, to ODM to OEM and we **rely** on
 these trust networks as without those the whole ecosystem collapses.
 
-Never Actually Used
--------------------
+Hardly Actually Used
+--------------------
 
-NDAs also don’t ever seem to actually get used; in 21 years of being a software engineer I’ve never
+NDAs very rarely ever seem to actually get used; in 21 years of being a software engineer I’ve never
 actually seen an NDA that I’ve been involved with, actually be used in a court of law.
+Almost always, NDAs will be used against former employees trying to compete with their former
+business, rather than between partners working together.
 You would be asking us to spend time and money on something that is likely never going to used.
 
 Organization structures also change; if your organization ever changes hands, so does the agreement.
