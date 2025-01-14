@@ -308,6 +308,7 @@ fu_test_mock_dbx_efivars(FuEfivars *efivars, GError **error)
 static GInputStream *
 fu_test_mock_dbx_update_stream(void)
 {
+	gboolean ret;
 	gchar *mock_blob = NULL;
 	gsize mock_blob_size = 0;
 	g_autoptr(GError) error = NULL;
@@ -315,8 +316,9 @@ fu_test_mock_dbx_update_stream(void)
 	g_autofree gchar *mock_dbx_update_path =
 	    g_test_build_filename(G_TEST_DIST, "tests/dbx-update.auth", NULL);
 
-	g_file_get_contents(mock_dbx_update_path, &mock_blob, &mock_blob_size, &error);
+	ret = g_file_get_contents(mock_dbx_update_path, &mock_blob, &mock_blob_size, &error);
 	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	mock_bytes = g_bytes_new_take(mock_blob, mock_blob_size);
 	return g_memory_input_stream_new_from_bytes(mock_bytes);
