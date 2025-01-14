@@ -69,6 +69,21 @@ fwupdmgr get-remotes
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Disabling vendor-directory remote..."
+fwupdmgr disable-remote vendor-directory
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting the list of remotes (json)..."
+fwupdmgr get-remotes --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Enable vendor-directory remote..."
+fwupdmgr enable-remote vendor-directory
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Update the device hash database..."
 fwupdmgr verify-update $device
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
