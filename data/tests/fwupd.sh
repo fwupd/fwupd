@@ -46,6 +46,7 @@ run_test ata-self-test
 run_test dfu-self-test
 run_test fwupdplugin-self-test
 run_test linux-swap-self-test
+run_test logitech-hidpp-self-test
 run_test mtd-self-test
 run_test nitrokey-self-test
 run_test nvme-self-test
