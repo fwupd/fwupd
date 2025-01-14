@@ -84,9 +84,9 @@ fu_self_test_mock_snapd_easy_post_request(FuTestFixture *fixture,
 	g_debug("mock snapd request to %s with data: '%s'", endpoint_str, data);
 
 	/* use snap dedicated socket when running inside a snap */
-	curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
+	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 	res = curl_easy_perform(curl);
 	g_debug("curl error: %u %s", res, curl_easy_strerror(res));
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
@@ -113,9 +113,9 @@ fu_self_test_mock_snapd_easy_get_request(FuTestFixture *fixture, const gchar *en
 	g_autofree gchar *endpoint_str = g_strdup_printf("http://localhost%s", endpoint);
 
 	/* use snap dedicated socket when running inside a snap */
-	curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fu_self_test_curl_write_callback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
+	(void)curl_easy_setopt(curl, CURLOPT_URL, endpoint_str);
+	(void)curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fu_self_test_curl_write_callback);
+	(void)curl_easy_setopt(curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform(curl);
 	g_debug("curl error: %u %s", res, curl_easy_strerror(res));
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
@@ -188,10 +188,10 @@ fu_self_test_mock_snapd_init(FuTestFixture *fixture)
 	g_assert_nonnull(mock_snapd_snap_socket);
 
 	/* use snap dedicated socket when running inside a snap */
-	curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, mock_snapd_snap_socket);
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	(void)curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, mock_snapd_snap_socket);
+	(void)curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 	req_hdrs = curl_slist_append(req_hdrs, "Content-Type: application/json");
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req_hdrs);
+	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req_hdrs);
 
 	fixture->mock_snapd_curl = curl;
 	fixture->mock_curl_hdrs = req_hdrs;
