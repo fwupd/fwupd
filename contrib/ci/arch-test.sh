@@ -7,7 +7,7 @@ pacman -U --noconfirm dist/*.pkg.*
 plugins/redfish/tests/redfish.py &
 
 # run custom snapd simulator
-plugins/uefi-dbx/tests/snapd.py &
+plugins/uefi-dbx/tests/snapd.py --datadir /usr/share/installed-tests/fwupd/tests &
 
 # run TPM simulator
 #swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
