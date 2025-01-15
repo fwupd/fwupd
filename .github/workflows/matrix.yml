@@ -34,7 +34,9 @@ jobs:
           CI: true
           VERSION: ${{ needs.library.outputs.version }}
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t \
+              -v $GITHUB_WORKSPACE:/github/workspace \
+              docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
@@ -46,7 +48,10 @@ jobs:
           CI_NETWORK: true
           CI: true
         run: |
-          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest contrib/ci/${{matrix.os}}-test.sh
+          docker run --privileged -e CI=true -t \
+              -v $GITHUB_WORKSPACE:/github/workspace \
+              docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
+              contrib/ci/${{matrix.os}}-test.sh
       - name: Save any coverage data
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
