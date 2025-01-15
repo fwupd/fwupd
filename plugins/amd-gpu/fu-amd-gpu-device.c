@@ -233,8 +233,8 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
 	struct drm_amdgpu_info_vbios vbios_info = {0};
 	g_autofree gchar *part = NULL;
-	g_autofree gchar *ver = NULL;
 	g_autofree gchar *model = NULL;
+	g_auto(GStrv) tokens = NULL;
 
 	fu_amd_gpu_device_set_marketing_name(self);
 
@@ -246,13 +246,27 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	self->vbios_pn = fu_strsafe((const gchar *)vbios_info.vbios_pn, PART_NUM_STR_SIZE);
 	part = g_strdup_printf("AMD\\%s", self->vbios_pn);
 	fu_device_add_instance_id(device, part);
-	fu_device_set_version_raw(device, vbios_info.version);
-	ver = fu_strsafe((const gchar *)vbios_info.vbios_ver_str, sizeof(vbios_info.vbios_ver_str));
-	fu_device_set_version(device, ver); /* nocheck:set-version */
+
+	tokens =
+	    fu_strsplit((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn), "-", -1);
+	if (g_strv_length(tokens) >= 3) {
+		guint64 ver;
+
+		if (!fu_strtoull(tokens[2], &ver, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		fu_device_set_version_raw(device, ver);
+	}
+
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
 
 	return TRUE;
+}
+
+static gchar *
+fu_amd_gpu_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static FuFirmware *
@@ -399,6 +413,7 @@ fu_amd_gpu_device_init(FuAmdGpuDevice *self)
 {
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -421,4 +436,5 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	device_class->write_firmware = fu_amd_gpu_device_write_firmware;
 	device_class->prepare_firmware = fu_amd_gpu_device_prepare_firmware;
 	device_class->to_string = fu_amd_gpu_device_to_string;
+	device_class->convert_version = fu_amd_gpu_device_convert_version;
 }
