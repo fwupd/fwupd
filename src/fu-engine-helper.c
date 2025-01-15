@@ -230,7 +230,6 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 		const gchar *guid;
 		const gchar *name;
 	} keys[] = {
-	    {FU_EFIVARS_GUID_EFI_GLOBAL, "BootOrder"},
 	    {FU_EFIVARS_GUID_EFI_GLOBAL, "BootCurrent"},
 	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"},
 	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEKDefault"},
