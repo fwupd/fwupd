@@ -24,15 +24,31 @@ def get_possible_profiles():
 def detect_profile():
     if os.path.exists("/Library/Apple"):
         return "darwin"
+
     try:
         import distro
 
         target = distro.id()
         if target not in get_possible_profiles():
             target = distro.like()
+        return target
     except ModuleNotFoundError:
-        target = ""
-    return target
+        pass
+
+    # fallback
+    try:
+        with open("/etc/os-release", "rb") as f:
+            for line in f.read().decode().split("\n"):
+                if line.startswith("ID="):
+                    target = line[3:].replace('"', "")
+                    if target == "rhel":
+                        return "centos"
+                    return target
+    except FileNotFoundError:
+        pass
+
+    # failed
+    return ""
 
 
 def pip_install_package(debug, name):
@@ -171,9 +187,9 @@ def get_build_dependencies(profile: str, variant: str):
 def _get_installer_cmd(profile: str, yes: bool):
     if profile == "darwin":
         return ["brew", "install"]
-    if profile == "debian" or profile == "ubuntu":
+    if profile in ["debian", "ubuntu"]:
         installer = ["apt", "install"]
-    elif profile == "fedora":
+    elif profile in ["fedora", "centos"]:
         installer = ["dnf", "install"]
     elif profile == "arch":
         installer = ["pacman", "-Syu", "--noconfirm", "--needed"]

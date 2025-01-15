@@ -13,6 +13,9 @@
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -20,6 +23,9 @@
     </distro>
   </dependency>
   <dependency id="pesign">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
@@ -39,6 +45,9 @@
       <control />
       <package variant="x86_64" />
       <package variant="i386" />
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">bash-completion</package>
     </distro>
     <distro id="fedora">
       <package variant="x86_64">bash-completion-devel</package>
@@ -115,11 +124,17 @@
     </distro>
   </dependency>
   <dependency id="gcc">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="mingw64">mingw64-gcc</package>
     </distro>
   </dependency>
   <dependency id="gdb">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
@@ -181,6 +196,9 @@
   <dependency id="libdrm-dev">
     <distro id="arch">
       <package variant="x86_64">libdrm</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">libdrm-devel</package>
     </distro>
     <distro id="fedora">
       <package variant="x86_64">libdrm-devel</package>
@@ -576,6 +594,9 @@
     </distro>
   </dependency>
   <dependency id="glibc-langpack-en">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">glibc-langpack-en</package>
       <package variant="aarch64">glibc-langpack-en</package>
@@ -718,6 +739,9 @@
     <distro id="arch">
       <package variant="x86_64">libjcat</package>
     </distro>
+    <distro id="centos">
+      <package variant="x86_64">libjcat-devel</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">libjcat-devel</package>
       <package variant="aarch64">libjcat-devel</package>
@@ -738,6 +762,9 @@
     <distro id="arch">
       <package variant="x86_64">util-linux-libs</package>
     </distro>
+    <distro id="centos">
+      <package variant="x86_64">libblkid-devel</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">libblkid-devel</package>
       <package variant="aarch64">libblkid-devel</package>
@@ -755,6 +782,9 @@
     </distro>
   </dependency>
   <dependency id="liblzma-dev">
+    <distro id="centos">
+      <package variant="x86_64">xz-devel</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">xz-devel</package>
       <package variant="aarch64">xz-devel</package>
@@ -809,9 +839,6 @@
   <dependency id="libcbor-dev">
     <distro id="arch">
       <package variant="x86_64">libcbor</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">libcbor-devel</package>
     </distro>
     <distro id="fedora">
       <package variant="x86_64">libcbor-devel</package>
@@ -944,6 +971,9 @@
     </distro>
   </dependency>
   <dependency id="linux-headers">
+    <distro id="centos">
+      <package variant="x86_64">kernel-headers</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">kernel-headers</package>
     </distro>
@@ -999,6 +1029,9 @@
     </distro>
   </dependency>
   <dependency id="mingw-w64-tools">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
     </distro>
@@ -1052,6 +1085,9 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
@@ -1101,9 +1137,6 @@
     </distro>
   </dependency>
   <dependency id="libqmi-glib-dev">
-    <distro id="centos">
-      <package variant="x86_64">libqmi-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">libqmi-devel</package>
       <package variant="aarch64">libqmi-devel</package>
@@ -1124,9 +1157,6 @@
     </distro>
   </dependency>
   <dependency id="libmbim-glib-dev">
-    <distro id="centos">
-      <package variant="x86_64">libmbim-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">libmbim-devel</package>
       <package variant="aarch64">libmbim-devel</package>
@@ -1178,9 +1208,6 @@
     </distro>
   </dependency>
   <dependency id="python34-pip">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
     <distro id="arch">
       <package variant="x86_64">python-pip</package>
     </distro>
@@ -1192,6 +1219,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
@@ -1219,7 +1249,7 @@
   </dependency>
   <dependency id="python3">
     <distro id="centos">
-      <package variant="x86_64">python34-devel</package>
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
@@ -1230,6 +1260,9 @@
   <dependency id="python3-gi-cairo">
     <distro id="arch">
       <package variant="x86_64">python-cairo</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">python3-cairo</package>
     </distro>
     <distro id="fedora">
       <package variant="x86_64">python3-cairo</package>
@@ -1250,6 +1283,9 @@
   <dependency id="python3-pefile">
     <distro id="arch">
       <package variant="x86_64">python-pefile</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64"></package>
@@ -1272,6 +1308,9 @@
     </distro>
   </dependency>
   <dependency id="python3-jinja2">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="mingw64" />
@@ -1282,6 +1321,9 @@
     </distro>
   </dependency>
   <dependency id="gi-docgen">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1290,9 +1332,6 @@
       <package variant="x86_64" />
     </distro>
     <distro id="darwin">
-      <package variant="x86_64" />
-    </distro>
-    <distro id="centos">
       <package variant="x86_64" />
     </distro>
     <distro id="debian">
@@ -1322,6 +1361,9 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1333,6 +1375,9 @@
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1343,6 +1388,9 @@
     </distro>
   </dependency>
   <dependency id="python3-markdown">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1358,6 +1406,9 @@
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1371,12 +1422,18 @@
     <distro id="arch">
       <package variant="x86_64">python-gobject</package>
     </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
   </dependency>
   <dependency id="python3-requests">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1393,6 +1450,9 @@
     </distro>
   </dependency>
   <dependency id="python3-packaging">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1435,6 +1495,9 @@
     </distro>
   </dependency>
   <dependency id="libsqlite3-dev">
+    <distro id="centos">
+      <package variant="x86_64">sqlite-devel</package>
+    </distro>
     <distro id="centos">
       <package variant="x86_64">sqlite-devel</package>
     </distro>
@@ -1552,9 +1615,6 @@
     <distro id="arch">
       <package variant="x86_64" />
     </distro>
-    <distro id="centos">
-      <package variant="x86_64">umockdev-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">umockdev-devel</package>
       <package variant="aarch64">umockdev-devel</package>
@@ -1660,6 +1720,9 @@
     </distro>
   </dependency>
   <dependency id="libgcrypt-devel">
+    <distro id="centos">
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1669,6 +1732,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64">ShellCheck</package>
@@ -1688,6 +1754,9 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
+    <distro id="centos">
+      <package variant="x86_64">protobuf-c-devel</package>
+    </distro>
     <distro id="fedora">
       <package variant="x86_64">protobuf-c-devel</package>
       <package variant="aarch64">protobuf-c-devel</package>
@@ -1706,6 +1775,9 @@
       <control />
       <package variant="x86_64" />
       <package variant="aarch64" />
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
