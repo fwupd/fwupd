@@ -204,9 +204,13 @@ static void
 fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 {
 	g_autofree gchar *path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	const gchar *tables[] = {"SLIC", "MSDM", "TPM2", NULL};
+	const gchar *tables[] = {
+	    "SLIC",
+	    "MSDM",
+	    "TPM2",
+	};
 
-	for (guint i = 0; tables[i] != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(tables); i++) {
 		g_autofree gchar *fn = g_build_filename(path, tables[i], NULL);
 		g_autoptr(GBytes) blob = NULL;
 
@@ -225,26 +229,27 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 	struct {
 		const gchar *guid;
 		const gchar *name;
-	} keys[] = {{FU_EFIVARS_GUID_EFI_GLOBAL, "BootOrder"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "BootCurrent"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEKDefault"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "OsIndications"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "OsIndicationsSupported"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "PK"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "PKDefault"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "SecureBoot"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "SetupMode"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "SignatureSupport"},
-		    {FU_EFIVARS_GUID_EFI_GLOBAL, "VendorKeys"},
-		    {FU_EFIVARS_GUID_SECURITY_DATABASE, "db"},
-		    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbDefault"},
-		    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbx"},
-		    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbxDefault"},
-		    {NULL, NULL}};
+	} keys[] = {
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "BootOrder"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "BootCurrent"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEK"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEKDefault"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "OsIndications"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "OsIndicationsSupported"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "PK"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "PKDefault"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "SecureBoot"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "SetupMode"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "SignatureSupport"},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "VendorKeys"},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "db"},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbDefault"},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbx"},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbxDefault"},
+	};
 
 	/* important keys */
-	for (guint i = 0; keys[i].guid != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(keys); i++) {
 		g_autoptr(GBytes) blob =
 		    fu_efivars_get_data_bytes(efivars, keys[i].guid, keys[i].name, NULL, NULL);
 		if (blob != NULL) {
