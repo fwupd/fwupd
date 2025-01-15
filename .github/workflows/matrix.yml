@@ -48,7 +48,7 @@ jobs:
           CI_NETWORK: true
           CI: true
         run: |
-          docker run --privileged -e CI=true -t \
+          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -t \
               -v $GITHUB_WORKSPACE:/github/workspace \
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
               contrib/ci/${{matrix.os}}-test.sh
