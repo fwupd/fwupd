@@ -118,8 +118,8 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	    .vbios_info.type = AMDGPU_INFO_VBIOS_INFO,
 	};
 	g_autofree gchar *part = NULL;
-	g_autofree gchar *ver = NULL;
 	g_autofree gchar *model = NULL;
+	g_auto(GStrv) tokens = NULL;
 
 	if (!fu_udev_device_ioctl(FU_UDEV_DEVICE(device),
 				  DRM_IOCTL_AMDGPU_INFO,
@@ -131,13 +131,27 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	self->vbios_pn = fu_strsafe((const gchar *)vbios_info.vbios_pn, PART_NUM_STR_SIZE);
 	part = g_strdup_printf("AMD\\%s", self->vbios_pn);
 	fu_device_add_instance_id(device, part);
-	fu_device_set_version_raw(device, vbios_info.version);
-	ver = fu_strsafe((const gchar *)vbios_info.vbios_ver_str, sizeof(vbios_info.vbios_ver_str));
-	fu_device_set_version(device, ver);
+
+	tokens =
+	    fu_strsplit((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn), "-", -1);
+	if (g_strv_length(tokens) >= 3) {
+		guint64 ver;
+
+		if (!fu_strtoull(tokens[2], &ver, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_version_raw(device, ver);
+	}
+
 	model = fu_strsafe((const gchar *)vbios_info.name, sizeof(vbios_info.name));
 	fu_device_set_summary(device, model);
 
 	return TRUE;
+}
+
+static gchar *
+fu_amd_gpu_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static FuFirmware *
@@ -271,6 +285,7 @@ fu_amd_gpu_device_init(FuAmdGpuDevice *self)
 {
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_GENERIC_GUIDS);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -292,4 +307,5 @@ fu_amd_gpu_device_class_init(FuAmdGpuDeviceClass *klass)
 	klass_device->set_progress = fu_amd_gpu_device_set_progress;
 	klass_device->write_firmware = fu_amd_gpu_device_write_firmware;
 	klass_device->prepare_firmware = fu_amd_gpu_device_prepare_firmware;
+	klass_device->convert_version = fu_amd_gpu_device_convert_version;
 }
