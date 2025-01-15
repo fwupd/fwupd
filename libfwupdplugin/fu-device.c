@@ -4803,6 +4803,22 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 }
 
+static GPtrArray *
+fu_device_get_common_class_parents(FuDevice *self, FuDevice *donor)
+{
+	g_autoptr(GPtrArray) array = g_ptr_array_new();
+	for (GType gtype = G_OBJECT_TYPE(self); gtype != FWUPD_TYPE_DEVICE;
+	     gtype = g_type_parent(gtype)) {
+		FuDeviceClass *device_class = g_type_class_peek(gtype);
+		for (GType gtype_donor = G_OBJECT_TYPE(donor); gtype_donor != FWUPD_TYPE_DEVICE;
+		     gtype_donor = g_type_parent(gtype_donor)) {
+			if (gtype == gtype_donor)
+				g_ptr_array_add(array, device_class);
+		}
+	}
+	return g_steal_pointer(&array);
+}
+
 /**
  * fu_device_add_string:
  * @self: a #FuDevice
@@ -6268,22 +6284,12 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_SUPERCLASS) {
 		gpointer device_class_incorporate_last = NULL;
-		g_autoptr(GList) device_class_list = NULL;
+		g_autoptr(GPtrArray) class_parents =
+		    fu_device_get_common_class_parents(self, donor);
 
 		/* run every unique ->incorporate() in each subclass */
-		for (GType gtype = G_OBJECT_TYPE(self); gtype != FWUPD_TYPE_DEVICE;
-		     gtype = g_type_parent(gtype)) {
-			FuDeviceClass *device_class = g_type_class_peek(gtype);
-			for (GType gtype_donor = G_OBJECT_TYPE(donor);
-			     gtype_donor != FWUPD_TYPE_DEVICE;
-			     gtype_donor = g_type_parent(gtype_donor)) {
-				if (gtype == gtype_donor)
-					device_class_list =
-					    g_list_prepend(device_class_list, device_class);
-			}
-		}
-		for (GList *l = device_class_list; l != NULL; l = l->next) {
-			FuDeviceClass *device_class = FU_DEVICE_CLASS(l->data);
+		for (guint i = 0; i < class_parents->len; i++) {
+			FuDeviceClass *device_class = g_ptr_array_index(class_parents, i);
 			if (device_class->incorporate != NULL &&
 			    device_class->incorporate != device_class_incorporate_last) {
 				device_class->incorporate(self, donor);
