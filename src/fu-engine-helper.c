@@ -227,8 +227,7 @@ fu_engine_integrity_measure_uefi(GHashTable *self)
 	struct {
 		const gchar *guid;
 		const gchar *name;
-	} keys[] = {{FU_EFIVAR_GUID_EFI_GLOBAL, "BootOrder"},
-		    {FU_EFIVAR_GUID_EFI_GLOBAL, "BootCurrent"},
+	} keys[] = {{FU_EFIVAR_GUID_EFI_GLOBAL, "BootCurrent"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "KEK"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "KEKDefault"},
 		    {FU_EFIVAR_GUID_EFI_GLOBAL, "OsIndications"},
