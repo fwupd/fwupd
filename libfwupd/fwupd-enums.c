@@ -831,6 +831,43 @@ fwupd_version_format_to_string(FwupdVersionFormat kind)
 }
 
 /**
+ * fwupd_install_flags_from_string:
+ * @str: (nullable): a string, e.g. `allow-reinstall`
+ *
+ * Converts text to an install flag
+ *
+ * Returns: an enumerated install flag, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ *
+ * Since: 2.0.4
+ **/
+FwupdInstallFlags
+fwupd_install_flags_from_string(const gchar *str)
+{
+	if (g_strcmp0(str, "none") == 0)
+		return FWUPD_INSTALL_FLAG_NONE;
+	if (g_strcmp0(str, "allow-reinstall") == 0)
+		return FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (g_strcmp0(str, "allow-older") == 0)
+		return FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (g_strcmp0(str, "force") == 0)
+		return FWUPD_INSTALL_FLAG_FORCE;
+	if (g_strcmp0(str, "no-history") == 0)
+		return FWUPD_INSTALL_FLAG_NO_HISTORY;
+	if (g_strcmp0(str, "allow-branch-switch") == 0)
+		return FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (g_strcmp0(str, "ignore-checksum") == 0)
+		return FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
+	if (g_strcmp0(str, "ignore-vid-pid") == 0)
+		return FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+	if (g_strcmp0(str, "no-search") == 0)
+		return FWUPD_INSTALL_FLAG_NO_SEARCH;
+	if (g_strcmp0(str, "ignore-requirements") == 0)
+		return FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+
+	return FWUPD_INSTALL_FLAG_UNKNOWN;
+}
+
+/**
  * fwupd_install_flags_to_string:
  * @install_flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  *

@@ -1395,6 +1395,8 @@ FwupdVersionFormat
 fwupd_version_format_from_string(const gchar *str);
 const gchar *
 fwupd_version_format_to_string(FwupdVersionFormat kind);
+FwupdInstallFlags
+fwupd_install_flags_from_string(const gchar *str);
 const gchar *
 fwupd_install_flags_to_string(FwupdInstallFlags install_flags);
 
