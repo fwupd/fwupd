@@ -5645,11 +5645,11 @@ fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	gulong delay_ms = 2500;
 	for (guint i = 0;; i++, delay_ms *= 2) {
-		GSocketConnectable *address;
 		GNetworkMonitor *monitor = g_network_monitor_get_default();
 		g_autoptr(GBytes) blob = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GUri) uri = NULL;
+		g_autoptr(GSocketConnectable) address = NULL;
 
 		uri = g_uri_parse(url, G_URI_FLAGS_NONE, error);
 		if (uri == NULL)
