@@ -1000,3 +1000,9 @@ LIBFWUPD_2.0.2 {
     fwupd_remote_set_firmware_base_uri;
   local: *;
 } LIBFWUPD_2.0.1;
+
+LIBFWUPD_2.0.4 {
+  global:
+    fwupd_install_flags_from_string;
+  local: *;
+} LIBFWUPD_2.0.2;
