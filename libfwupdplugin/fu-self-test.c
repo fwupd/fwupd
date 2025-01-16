@@ -1793,6 +1793,46 @@ fu_common_kernel_lockdown_func(void)
 	g_assert_false(ret);
 }
 
+static void
+fu_common_kernel_search_func(void)
+{
+	gboolean ret;
+	const gchar *expect = "/foo/bar";
+	g_autofree gchar *result1 = NULL;
+	g_autofree gchar *result2 = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef __linux__
+	g_test_skip("only works on Linux");
+	return;
+#endif
+
+	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/dev/null", TRUE);
+	result1 = fu_kernel_get_firmware_search_path(&error);
+	g_assert_null(result1);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_clear_error(&error);
+
+	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/tmp/fwupd-self-test/search_path", TRUE);
+	ret = fu_kernel_set_firmware_search_path(expect, &error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+
+	result1 = fu_kernel_get_firmware_search_path(&error);
+	g_assert_nonnull(result1);
+	g_assert_cmpstr(result1, ==, expect);
+	g_assert_no_error(error);
+
+	ret = fu_kernel_reset_firmware_search_path(&error);
+	g_assert_true(ret);
+	g_assert_no_error(error);
+
+	result2 = fu_kernel_get_firmware_search_path(&error);
+	g_assert_nonnull(result2);
+	g_assert_no_error(error);
+	g_assert_cmpstr(g_strchomp(result2), ==, "");
+}
+
 static gboolean
 fu_test_open_cb(GObject *device, GError **error)
 {
@@ -6369,6 +6409,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
+	g_test_add_func("/fwupd/common{kernel-search}", fu_common_kernel_search_func);
 	g_test_add_func("/fwupd/common{strsafe}", fu_strsafe_func);
 	g_test_add_func("/fwupd/msgpack", fu_msgpack_func);
 	g_test_add_func("/fwupd/msgpack{binary-stream}", fu_msgpack_binary_stream_func);
