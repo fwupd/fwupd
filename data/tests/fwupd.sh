@@ -38,6 +38,8 @@ run_umockdev_test()
 	fi
 }
 
+export LSAN_OPTIONS="suppressions=@installedtestsdatadir@/lsan-suppressions.txt"
+
 run_test acpi-dmar-self-test
 run_test acpi-facp-self-test
 run_test acpi-ivrs-self-test
