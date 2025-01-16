@@ -429,6 +429,25 @@ fu_common_crc_func(void)
 }
 
 static void
+fu_common_guid_func(void)
+{
+	gboolean ret;
+	guint8 buf[16] = {0};
+
+	ret = fu_common_guid_is_plausible(buf);
+	g_assert_false(ret);
+
+	buf[0] = 0x5;
+	ret = fu_common_guid_is_plausible(buf);
+	g_assert_false(ret);
+
+	for (guint i = 0; i < sizeof(buf); i++)
+		buf[i] = 0xFF;
+	ret = fu_common_guid_is_plausible(buf);
+	g_assert_true(ret);
+}
+
+static void
 fu_string_append_func(void)
 {
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -6338,6 +6357,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
 	g_test_add_func("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
+	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
 	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
