@@ -1,2 +1,3 @@
 leak:Esys_Initialize
 leak:OPENSSL_init_ssl
+leak:SSL_CTX_new_ex

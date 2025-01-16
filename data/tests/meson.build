@@ -51,6 +51,7 @@ install_data([
     'fakedevice124.jcat',
     'fakedevice124.metainfo.xml',
     'fwupd-tests.xml',
+    'lsan-suppressions.txt',
   ],
   install_dir: installed_test_datadir,
 )
