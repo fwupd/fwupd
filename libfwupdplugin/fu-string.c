@@ -72,17 +72,19 @@ fu_strtoull(const gchar *str,
 	/* convert */
 	value_tmp = g_ascii_strtoull(str, &endptr, base); /* nocheck:blocked */
 	if ((gsize)(endptr - str) != strlen(str) && *endptr != '\n') {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "cannot parse %s", str);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "cannot parse datastream");
 		return FALSE;
 	}
 
 	/* overflow check */
 	if (value_tmp == G_MAXUINT64) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "cannot parse %s as caused overflow",
-			    str);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "parsing datastream caused overflow");
 		return FALSE;
 	}
 
