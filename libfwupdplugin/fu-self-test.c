@@ -5775,13 +5775,13 @@ fu_strsplit_stream_func(void)
 	/* check includes NUL */
 	g_assert_cmpint(sizeof(str1), ==, 14);
 
-	stream1 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str1, sizeof(str1), NULL));
+	stream1 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str1, strlen(str1), NULL));
 	ret = fu_strsplit_stream(stream1, 0x0, " ", fu_strsplit_stream_cb, &cnt1, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(cnt1, ==, 2);
 
-	stream2 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str2, sizeof(str2), NULL));
+	stream2 = G_INPUT_STREAM(g_memory_input_stream_new_from_data(str2, strlen(str2), NULL));
 	ret = fu_strsplit_stream(stream2, 0x0, "123", fu_strsplit_stream_cb, &cnt2, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
