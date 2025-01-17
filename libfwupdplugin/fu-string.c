@@ -384,13 +384,14 @@ typedef struct {
 	const gchar *delimiter;
 	gsize delimiter_sz;
 	gboolean detected_nul;
+	gboolean more_chunks;
 } FuStrsplitHelper;
 
 static gboolean
 fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **error)
 {
 	gsize buf_offset = 0;
-	while (buf_offset < buf->len) {
+	while (buf_offset <= buf->len) {
 		gsize offset;
 		g_autoptr(GString) token = g_string_new(NULL);
 
@@ -407,7 +408,7 @@ fu_strsplit_buffer_drain(GByteArray *buf, FuStrsplitHelper *helper, GError **err
 		}
 
 		/* no token found, keep going */
-		if (offset == buf->len)
+		if (helper->more_chunks && offset == buf->len)
 			break;
 
 		/* sanity check is valid UTF-8 */
@@ -492,6 +493,7 @@ fu_strsplit_stream(GInputStream *stream,
 		if (chk == NULL)
 			return FALSE;
 		g_byte_array_append(buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		helper.more_chunks = i != fu_chunk_array_length(chunks) - 1;
 		if (!fu_strsplit_buffer_drain(buf, &helper, error))
 			return FALSE;
 		if (helper.detected_nul)
