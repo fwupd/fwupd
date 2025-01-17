@@ -162,7 +162,6 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 					fu_csv_firmware_parse_token_cb,
 					self,
 					error);
-		return TRUE;
 	}
 
 	/* parse entry */
