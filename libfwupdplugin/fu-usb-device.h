@@ -29,6 +29,15 @@ typedef enum {
 	FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER = 1 << 0,
 } FuUsbDeviceClaimFlags;
 
+/**
+ * FU_USB_DEVICE_PRIVATE_FLAG_ADD_ZERO_PACKET:
+ *
+ * Add a zero length packet "ZLP" to each bulk transfer.
+ *
+ * Since: 2.0.4
+ */
+#define FU_USB_DEVICE_PRIVATE_FLAG_ADD_ZERO_PACKET "add-zero-packet"
+
 guint8
 fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);
 guint8

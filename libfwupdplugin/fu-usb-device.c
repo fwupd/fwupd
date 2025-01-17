@@ -308,6 +308,8 @@ fu_usb_device_init(FuUsbDevice *self)
 			 "notify::pid",
 			 G_CALLBACK(fu_usb_device_pid_notify_cb),
 			 NULL);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_USB_DEVICE_PRIVATE_FLAG_ADD_ZERO_PACKET);
 }
 
 /**
@@ -1541,6 +1543,40 @@ fu_usb_device_control_transfer(FuUsbDevice *self,
 	return TRUE;
 }
 
+static void
+fu_usb_device_transfer_cb(struct libusb_transfer *transfer)
+{
+	gint *completed = transfer->user_data;
+	*completed = 1;
+}
+
+static void
+fu_usb_device_transfer_wait_for_completion(struct libusb_context *ctx,
+					   struct libusb_transfer *transfer)
+{
+	int r, *completed = transfer->user_data;
+
+	while (!*completed) {
+		r = libusb_handle_events_completed(ctx, completed);
+		if (r < 0) {
+			if (r == LIBUSB_ERROR_INTERRUPTED)
+				continue;
+			g_debug("libusb_handle_events failed: %s, canceling transfer and retrying",
+				libusb_error_name(r));
+			libusb_cancel_transfer(transfer);
+			continue;
+		}
+		if (transfer->dev_handle == NULL) {
+			/* transfer completion after libusb_close() */
+			transfer->status = LIBUSB_TRANSFER_NO_DEVICE;
+			*completed = 1;
+		}
+	}
+}
+
+typedef struct libusb_transfer LibusbTransfer;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(LibusbTransfer, libusb_free_transfer)
+
 /**
  * fu_usb_device_bulk_transfer:
  * @self: a #FuUsbDevice
@@ -1573,11 +1609,14 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	gint rc;
-	gint transferred = 0;
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuDeviceEvent *event = NULL;
+	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+	gint completed = 0;
+	gint rc;
+	libusb_context *usb_ctx = fu_context_get_data(ctx, "libusb_context");
 	g_autofree gchar *event_id = NULL;
+	g_autoptr(LibusbTransfer) transfer = NULL;
 
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -1623,18 +1662,40 @@ fu_usb_device_bulk_transfer(FuUsbDevice *self,
 	}
 
 	/* sync request */
-	rc = libusb_bulk_transfer(priv->handle, endpoint, data, length, &transferred, timeout);
+	transfer = libusb_alloc_transfer(0);
+	if (transfer == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to allocate transfer");
+		return FALSE;
+	}
+	libusb_fill_bulk_transfer(transfer,
+				  priv->handle,
+				  endpoint,
+				  data,
+				  length,
+				  fu_usb_device_transfer_cb,
+				  &completed,
+				  timeout);
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_USB_DEVICE_PRIVATE_FLAG_ADD_ZERO_PACKET))
+		transfer->flags |= LIBUSB_TRANSFER_ADD_ZERO_PACKET;
+	rc = libusb_submit_transfer(transfer);
 	if (!fu_usb_device_libusb_error_to_gerror(rc, error)) {
 		if (event != NULL)
 			fu_device_event_set_i64(event, "Error", rc);
 		return FALSE;
 	}
-	if (actual_length != NULL)
-		*actual_length = transferred;
+	fu_usb_device_transfer_wait_for_completion(usb_ctx, transfer);
+	if (!fu_usb_device_libusb_status_to_gerror(transfer->status, error)) {
+		if (event != NULL)
+			fu_device_event_set_i64(event, "Error", rc);
+		return FALSE;
+	}
 
 	/* save */
 	if (event != NULL)
-		fu_device_event_set_data(event, "Data", data, transferred);
+		fu_device_event_set_data(event, "Data", data, transfer->actual_length);
 
 	/* success */
 	return TRUE;
