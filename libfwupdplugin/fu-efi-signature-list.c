@@ -165,28 +165,6 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	return TRUE;
 }
 
-static gchar *
-fu_efi_signature_list_get_version(FuEfiSignatureList *self)
-{
-	guint csum_cnt = 0;
-	const gchar *valid_owners[] = {FU_EFI_SIGNATURE_GUID_MICROSOFT, NULL};
-	g_autoptr(GPtrArray) sigs = fu_firmware_get_images(FU_FIRMWARE(self));
-	for (guint i = 0; i < sigs->len; i++) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_SHA256) {
-			g_debug("ignoring dbx certificate in position %u", i);
-			continue;
-		}
-		if (!g_strv_contains(valid_owners, fu_efi_signature_get_owner(sig))) {
-			g_debug("ignoring non-Microsoft dbx hash: %s",
-				fu_efi_signature_get_owner(sig));
-			continue;
-		}
-		csum_cnt++;
-	}
-	return g_strdup_printf("%u", csum_cnt);
-}
-
 static gboolean
 fu_efi_signature_list_check_magic(FuFirmware *firmware, GBytes *fw, gsize offset, GError **error)
 {
@@ -229,18 +207,12 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
-	g_autofree gchar *version_str = NULL;
 
 	/* parse each EFI_SIGNATURE_LIST */
 	while (offset < bufsz) {
 		if (!fu_efi_signature_list_parse_list(self, buf, bufsz, &offset, error))
 			return FALSE;
 	}
-
-	/* set version */
-	version_str = fu_efi_signature_list_get_version(self);
-	if (version_str != NULL)
-		fu_firmware_set_version(firmware, version_str);
 
 	/* success */
 	return TRUE;
