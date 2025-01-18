@@ -50,8 +50,6 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	const guint8 *buf;
-	gsize bufsz = 0;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
@@ -64,18 +62,16 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 
 	/* write entire chunk to efivarsfs */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	buf = g_bytes_get_data(fw, &bufsz);
-	if (!fu_efivars_set_data(efivars,
-				 FU_EFIVARS_GUID_SECURITY_DATABASE,
-				 "dbx",
-				 buf,
-				 bufsz,
-				 FU_EFIVARS_ATTR_APPEND_WRITE |
-				     FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS |
-				     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_NON_VOLATILE,
-				 error)) {
+	if (!fu_efivars_set_data_bytes(efivars,
+				       FU_EFIVARS_GUID_SECURITY_DATABASE,
+				       "dbx",
+				       fw,
+				       FU_EFIVARS_ATTR_APPEND_WRITE |
+					   FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+					   FU_EFIVARS_ATTR_RUNTIME_ACCESS |
+					   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
+					   FU_EFIVARS_ATTR_NON_VOLATILE,
+				       error)) {
 		return FALSE;
 	}
 
@@ -84,9 +80,37 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
+fu_uefi_dbx_device_set_checksum(FuUefiDbxDevice *self, const gchar *csum, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	/* used for md-set-version, but only when the device is added to the daemon */
+	fu_device_add_checksum(FU_DEVICE(self), csum);
+
+	/* for operating offline, with no /usr/share/fwupd/remotes.d archives */
+	fu_device_add_instance_strup(FU_DEVICE(self), "CSUM", csum);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "UEFI",
+					      "CSUM",
+					      NULL))
+		return FALSE;
+
+	/* this makes debugging easier */
+	if (fu_device_get_version(FU_DEVICE(self)) == NULL) {
+		g_autofree gchar *csum_trunc = g_strndup(csum, 8);
+		g_autofree gchar *summary =
+		    g_strdup_printf("UEFI revocation database %s", csum_trunc);
+		fu_device_set_summary(FU_DEVICE(self), summary);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(GBytes) dbx_blob = NULL;
 	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new();
@@ -110,17 +134,20 @@ fu_uefi_dbx_device_set_version_number(FuDevice *device, GError **error)
 		FuEfiSignature *sig = g_ptr_array_index(sigs, sigs->len - 1);
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
-		if (csum != NULL)
-			fu_device_add_checksum(device, csum);
+		if (csum != NULL) {
+			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
+				return FALSE;
+		}
 	}
 
-	fu_device_set_version(device, fu_firmware_get_version(dbx));
+	/* success */
 	return TRUE;
 }
 
 static void
 fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_lowest(device, fu_device_get_version(device));
 }
 
@@ -164,6 +191,7 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
+	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(FuFirmware) kek = fu_efi_signature_list_new();
@@ -205,7 +233,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 	}
 
-	return fu_uefi_dbx_device_set_version_number(device, error);
+	return fu_uefi_dbx_device_ensure_checksum(self, error);
 }
 
 static void
@@ -249,7 +277,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "dbx");
 	fu_device_set_name(FU_DEVICE(self), "UEFI dbx");
 	fu_device_set_summary(FU_DEVICE(self), "UEFI revocation database");
-	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.dbx");
+	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.dbx2");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_install_duration(FU_DEVICE(self), 1);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
@@ -261,7 +289,6 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::version",
 			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
