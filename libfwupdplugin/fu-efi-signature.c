@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-efi-signature-private.h"
 
@@ -158,16 +159,8 @@ fu_efi_signature_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, GEr
 		return NULL;
 
 	/* special case: this is *literally* a hash */
-	if (self->kind == FU_EFI_SIGNATURE_KIND_SHA256 && csum_kind == G_CHECKSUM_SHA256) {
-		GString *str;
-		const guint8 *buf;
-		gsize bufsz = 0;
-		buf = g_bytes_get_data(data, &bufsz);
-		str = g_string_new(NULL);
-		for (gsize i = 0; i < bufsz; i++)
-			g_string_append_printf(str, "%02x", buf[i]);
-		return g_string_free(str, FALSE);
-	}
+	if (self->kind == FU_EFI_SIGNATURE_KIND_SHA256 && csum_kind == G_CHECKSUM_SHA256)
+		return fu_bytes_to_string(data);
 
 	/* fallback */
 	return g_compute_checksum_for_bytes(csum_kind, data);

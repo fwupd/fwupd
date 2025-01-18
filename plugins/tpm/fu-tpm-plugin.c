@@ -263,11 +263,11 @@ fu_tpm_plugin_eventlog_report_metadata(FuPlugin *plugin)
 		if (item->blob == NULL)
 			continue;
 		if (item->checksum_sha1 != NULL)
-			checksum = fu_tpm_eventlog_strhex(item->checksum_sha1);
+			checksum = fu_bytes_to_string(item->checksum_sha1);
 		else if (item->checksum_sha256 != NULL)
-			checksum = fu_tpm_eventlog_strhex(item->checksum_sha256);
+			checksum = fu_bytes_to_string(item->checksum_sha256);
 		else if (item->checksum_sha384 != NULL)
-			checksum = fu_tpm_eventlog_strhex(item->checksum_sha384);
+			checksum = fu_bytes_to_string(item->checksum_sha384);
 		else
 			continue;
 		g_string_append_printf(str, "0x%08x %s", item->kind, checksum);

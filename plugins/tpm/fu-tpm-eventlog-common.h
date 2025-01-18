@@ -26,8 +26,6 @@ fu_tpm_eventlog_pcr_to_string(gint pcr);
 guint32
 fu_tpm_eventlog_hash_get_size(TPM2_ALG_ID hash_kind);
 gchar *
-fu_tpm_eventlog_strhex(GBytes *blob);
-gchar *
 fu_tpm_eventlog_blobstr(GBytes *blob);
 GPtrArray *
 fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error);

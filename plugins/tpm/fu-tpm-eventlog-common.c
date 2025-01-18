@@ -57,17 +57,6 @@ fu_tpm_eventlog_hash_get_size(TPM2_ALG_ID hash_kind)
 }
 
 gchar *
-fu_tpm_eventlog_strhex(GBytes *blob)
-{
-	GString *csum = g_string_new(NULL);
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-	for (guint i = 0; i < bufsz; i++)
-		g_string_append_printf(csum, "%02x", buf[i]);
-	return g_string_free(csum, FALSE);
-}
-
-gchar *
 fu_tpm_eventlog_blobstr(GBytes *blob)
 {
 	g_return_val_if_fail(blob != NULL, NULL);
@@ -167,17 +156,17 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 	if (cnt_sha1 > 0) {
 		g_autoptr(GBytes) blob_sha1 = NULL;
 		blob_sha1 = g_bytes_new_static(digest_sha1, sizeof(digest_sha1));
-		g_ptr_array_add(csums, fu_tpm_eventlog_strhex(blob_sha1));
+		g_ptr_array_add(csums, fu_bytes_to_string(blob_sha1));
 	}
 	if (cnt_sha256 > 0) {
 		g_autoptr(GBytes) blob_sha256 = NULL;
 		blob_sha256 = g_bytes_new_static(digest_sha256, sizeof(digest_sha256));
-		g_ptr_array_add(csums, fu_tpm_eventlog_strhex(blob_sha256));
+		g_ptr_array_add(csums, fu_bytes_to_string(blob_sha256));
 	}
 	if (cnt_sha384 > 0) {
 		g_autoptr(GBytes) blob_sha384 = NULL;
 		blob_sha384 = g_bytes_new_static(digest_sha384, sizeof(digest_sha384));
-		g_ptr_array_add(csums, fu_tpm_eventlog_strhex(blob_sha384));
+		g_ptr_array_add(csums, fu_bytes_to_string(blob_sha384));
 	}
 	return g_steal_pointer(&csums);
 }
