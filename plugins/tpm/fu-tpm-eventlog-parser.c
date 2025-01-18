@@ -46,15 +46,15 @@ fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 	tmp = fu_tpm_eventlog_item_kind_to_string(item->kind);
 	fwupd_codec_string_append(str, idt, "Description", tmp);
 	if (item->checksum_sha1 != NULL) {
-		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha1);
+		g_autofree gchar *csum = fu_bytes_to_string(item->checksum_sha1);
 		fwupd_codec_string_append(str, idt, "ChecksumSha1", csum);
 	}
 	if (item->checksum_sha256 != NULL) {
-		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha256);
+		g_autofree gchar *csum = fu_bytes_to_string(item->checksum_sha256);
 		fwupd_codec_string_append(str, idt, "ChecksumSha256", csum);
 	}
 	if (item->checksum_sha384 != NULL) {
-		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha384);
+		g_autofree gchar *csum = fu_bytes_to_string(item->checksum_sha384);
 		fwupd_codec_string_append(str, idt, "ChecksumSha384", csum);
 	}
 	if (item->blob != NULL) {

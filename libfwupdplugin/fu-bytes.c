@@ -281,3 +281,28 @@ fu_bytes_get_data_safe(GBytes *bytes, gsize *bufsz, GError **error)
 	}
 	return buf;
 }
+
+/**
+ * fu_bytes_to_string:
+ * @bytes: data blob
+ *
+ * Converts @bytes to a lowercase hex string.
+ *
+ * Returns: (transfer full): a string, which may be zero length
+ *
+ * Since: 2.0.4
+ **/
+gchar *
+fu_bytes_to_string(GBytes *bytes)
+{
+	const guint8 *buf;
+	gsize bufsz = 0;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_return_val_if_fail(bytes != NULL, NULL);
+
+	buf = g_bytes_get_data(bytes, &bufsz);
+	for (gsize i = 0; i < bufsz; i++)
+		g_string_append_printf(str, "%02x", buf[i]);
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
