@@ -110,6 +110,7 @@
 #include <libfwupdplugin/fu-usb-bos-descriptor.h>
 #include <libfwupdplugin/fu-v4l-device.h>
 // #include <libfwupdplugin/fu-usb-common.h>
+#include <libfwupdplugin/fu-uefi-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
 #include <libfwupdplugin/fu-usb-endpoint.h>
 #include <libfwupdplugin/fu-usb-interface.h>

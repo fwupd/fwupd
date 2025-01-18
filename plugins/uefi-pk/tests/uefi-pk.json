@@ -1,0 +1,16 @@
+{
+  "name": "UEFI PK",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/uefi-pk-setup.json",
+      "components": [
+        {
+          "guids": [
+            "71599d14-9b31-5270-b3bd-74c494585820"
+          ]
+        }
+      ]
+    }
+  ]
+}

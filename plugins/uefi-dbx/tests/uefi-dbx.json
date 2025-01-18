@@ -1,0 +1,21 @@
+{
+  "name": "UEFI dbx",
+  "interactive": false,
+  "cpu-architectures": [
+    "x86_64"
+  ],
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/d661d4a0aaca09dfa9e56967ca2467b0575fc07cb704d182fa8c68225452957f-DBXUpdate-20241101-x64.cab",
+      "emulation-url": "https://fwupd.org/downloads/d6e6c3566479b4724d117107ef0d34012b96c8088f2bf9498194fdf1dc32c256-emulation.zip",
+      "components": [
+        {
+          "version": "20241101",
+          "guids": [
+            "f8ba2887-9411-5c36-9cee-88995bb39731"
+          ]
+        }
+      ]
+    }
+  ]
+}

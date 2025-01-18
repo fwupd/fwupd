@@ -66,6 +66,7 @@
 #include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
+#include "fu-uefi-backend.h"
 #include "fu-usb-backend.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
@@ -8612,6 +8613,10 @@ fu_engine_constructed(GObject *obj)
 	/* backends */
 	{
 		g_autoptr(FuBackend) backend = fu_usb_backend_new(self->ctx);
+		fu_context_add_backend(self->ctx, backend);
+	}
+	{
+		g_autoptr(FuBackend) backend = fu_uefi_backend_new(self->ctx);
 		fu_context_add_backend(self->ctx, backend);
 	}
 #ifdef HAVE_UDEV

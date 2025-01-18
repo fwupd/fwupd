@@ -29,7 +29,6 @@ plugins/acpi-facp/tests/
 plugins/nvme/tests/
 plugins/synaptics-prometheus/tests/
 plugins/tpm-eventlog/tests/
-plugins/uefi-dbx/tests/
 .buildconfig
 .ossfuzz
 *.rej

@@ -92,13 +92,19 @@ fu_uefi_dbx_signature_list_validate(FuContext *ctx,
 				    GError **error)
 {
 	g_autoptr(GPtrArray) files = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	files = fu_context_get_esp_files(ctx,
 					 FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE |
 					     FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE,
-					 error);
-	if (files == NULL)
+					 &error_local);
+	if (files == NULL) {
+		/* there is no BootOrder in CI */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			return TRUE;
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	for (guint i = 0; i < files->len; i++) {
 		FuFirmware *firmware = g_ptr_array_index(files, i);
 		if (!fu_uefi_dbx_signature_list_validate_filename(
