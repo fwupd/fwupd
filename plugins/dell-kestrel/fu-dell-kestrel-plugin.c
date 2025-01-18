@@ -391,6 +391,35 @@ fu_dell_kestrel_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, G
 }
 
 static gboolean
+fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuDevice *parent = fu_device_get_parent(device);
+	const gchar *cache_keys[] = {"ec", "mst", "usb4"};
+
+	if (parent == NULL)
+		return TRUE;
+	if (!FU_IS_DELL_KESTREL_EC(parent))
+		return TRUE;
+
+	if (FU_IS_USB_DEVICE(device)) {
+		guint16 vid = fu_usb_device_get_vid(FU_USB_DEVICE(device));
+		guint16 pid = fu_usb_device_get_pid(FU_USB_DEVICE(device));
+		g_autofree gchar *key = g_strdup_printf("USB\\VID_%04X&PID_%04X", vid, pid);
+
+		if (fu_plugin_cache_lookup(plugin, key))
+			fu_plugin_cache_remove(plugin, key);
+	}
+
+	for (gsize i = 0; i < G_N_ELEMENTS(cache_keys); i++) {
+		if (fu_plugin_cache_lookup(plugin, cache_keys[i]))
+			fu_plugin_cache_remove(plugin, cache_keys[i]);
+	}
+
+	fu_plugin_device_remove(plugin, parent);
+	return TRUE;
+}
+
+static gboolean
 fu_dell_kestrel_plugin_prepare(FuPlugin *plugin,
 			       FuDevice *device,
 			       FuProgress *progress,
@@ -440,6 +469,7 @@ fu_dell_kestrel_plugin_class_init(FuDellKestrelPluginClass *klass)
 	plugin_class->constructed = fu_dell_kestrel_plugin_constructed;
 	plugin_class->device_registered = fu_dell_kestrel_plugin_device_registered;
 	plugin_class->backend_device_added = fu_dell_kestrel_plugin_backend_device_added;
+	plugin_class->backend_device_removed = fu_dell_kestrel_plugin_backend_device_removed;
 	plugin_class->composite_prepare = fu_dell_kestrel_plugin_composite_prepare;
 	plugin_class->composite_cleanup = fu_dell_kestrel_plugin_composite_cleanup;
 	plugin_class->prepare = fu_dell_kestrel_plugin_prepare;
