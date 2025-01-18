@@ -162,6 +162,7 @@ fwupdplugin_src = [
   'fu-string.c', # fuzzing
   'fu-sum.c', # fuzzing
   'fu-udev-device.c', # fuzzing
+  'fu-uefi-device.c',
   'fu-usb-bos-descriptor.c',
   'fu-usb-config-descriptor.c',
   'fu-usb-descriptor.c',
@@ -303,6 +304,8 @@ fwupdplugin_headers = [
   'fu-sum.h',
   'fu-udev-device.h',
   'fu-udev-device-private.h',
+  'fu-uefi-device.h',
+  'fu-uefi-device-private.h',
   'fu-usb-device-ds20.h',
   'fu-usb-device-fw-ds20.h',
   'fu-usb-bos-descriptor.h',

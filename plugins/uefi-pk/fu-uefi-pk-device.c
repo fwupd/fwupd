@@ -12,11 +12,11 @@
 #include "fu-uefi-pk-device.h"
 
 struct _FuUefiPkDevice {
-	FuDevice parent_instance;
+	FuUefiDevice parent_instance;
 	gboolean has_pk_test_key;
 };
 
-G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_UEFI_DEVICE)
 
 static void
 fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -168,18 +168,14 @@ fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GEr
 static gboolean
 fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
-	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(device);
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(FuFirmware) pk = fu_efi_signature_list_new();
-	g_autoptr(GBytes) pk_blob = NULL;
+	g_autoptr(FuFirmware) pk = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
 
-	pk_blob = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "PK", NULL, error);
-	if (pk_blob == NULL)
-		return FALSE;
-	if (!fu_firmware_parse_bytes(pk, pk_blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error)) {
+	pk = fu_device_read_firmware(device, progress, error);
+	if (pk == NULL) {
 		g_prefix_error(error, "failed to parse PK: ");
 		return FALSE;
 	}
@@ -230,6 +226,7 @@ fu_uefi_pk_device_init(FuUefiPkDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "pk");
 	fu_device_set_name(FU_DEVICE(self), "UEFI Platform Key");
 	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 }
 
 static void
@@ -239,10 +236,4 @@ fu_uefi_pk_device_class_init(FuUefiPkDeviceClass *klass)
 	device_class->to_string = fu_uefi_pk_device_to_string;
 	device_class->add_security_attrs = fu_uefi_pk_device_add_security_attrs;
 	device_class->probe = fu_uefi_pk_device_probe;
-}
-
-FuUefiPkDevice *
-fu_uefi_pk_device_new(FuContext *ctx)
-{
-	return g_object_new(FU_TYPE_UEFI_PK_DEVICE, "context", ctx, NULL);
 }

@@ -20,25 +20,10 @@ struct _FuUefiDbxPlugin {
 G_DEFINE_TYPE(FuUefiDbxPlugin, fu_uefi_dbx_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
-fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
+fu_uefi_dbx_plugin_device_created(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
 	FuUefiDbxPlugin *self = FU_UEFI_DBX_PLUGIN(plugin);
 	gboolean inhibited = FALSE;
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 99, "probe");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup");
-
-	if (!fu_device_probe(FU_DEVICE(device), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_device_setup(FU_DEVICE(device), error))
-		return FALSE;
-	fu_progress_step_done(progress);
 
 	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "no-dbx-updates")) {
 		fu_device_inhibit(FU_DEVICE(device),
@@ -48,7 +33,8 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 	}
 
 	if (self->snapd_notifier != NULL) {
-		fu_uefi_dbx_device_set_snapd_notifier(device, self->snapd_notifier);
+		fu_uefi_dbx_device_set_snapd_notifier(FU_UEFI_DBX_DEVICE(device),
+						      self->snapd_notifier);
 	} else if (!inhibited && self->snapd_integration_supported && fu_snap_is_in_snap()) {
 		/* we're running inside a snap, the device is not inhibited and snapd
 		 * supports integration, in which case this is a hard error and we
@@ -62,7 +48,7 @@ fu_uefi_dbx_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **err
 				  "Snapd integration for DBX update is not available");
 	}
 
-	fu_plugin_device_add(plugin, FU_DEVICE(device));
+	/* success */
 	return TRUE;
 }
 
@@ -131,7 +117,7 @@ fu_uefi_dbx_plugin_class_init(FuUefiDbxPluginClass *klass)
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 
 	plugin_class->constructed = fu_uefi_dbx_plugin_constructed;
-	plugin_class->coldplug = fu_uefi_dbx_plugin_coldplug;
+	plugin_class->device_created = fu_uefi_dbx_plugin_device_created;
 
 	object_class->finalize = fu_uefi_dbx_plugin_finalize;
 }
