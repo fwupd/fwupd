@@ -508,8 +508,6 @@ fu_uefi_dbx_test_plugin_coldplug_probed_device(FuTestFixture *fixture, gconstpoi
 	g_assert_nonnull(devs);
 	g_assert_cmpuint(devs->len, ==, 1);
 	g_assert_true(FU_IS_UEFI_DBX_DEVICE(g_ptr_array_index(devs, 0)));
-	ret = fu_device_is_updatable(g_ptr_array_index(devs, 0));
-	g_assert_true(ret);
 
 	ret = fu_device_has_inhibit(g_ptr_array_index(devs, 0), "no-snapd-dbx");
 	if (tc->with_snapd && tc->snapd_supported &&

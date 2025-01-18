@@ -33,6 +33,15 @@ fu_efi_signature_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBui
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
 	fu_xmlb_builder_insert_kv(bn, "kind", fu_efi_signature_kind_to_string(self->kind));
 	fu_xmlb_builder_insert_kv(bn, "owner", self->owner);
+
+	/* special case: this is *literally* a hash */
+	if (self->kind == FU_EFI_SIGNATURE_KIND_SHA256) {
+		g_autoptr(GBytes) blob = fu_firmware_get_bytes(firmware, NULL);
+		if (blob != NULL) {
+			g_autofree gchar *str = fu_bytes_to_string(blob);
+			fu_xmlb_builder_insert_kv(bn, "checksum", str);
+		}
+	}
 }
 
 /**
