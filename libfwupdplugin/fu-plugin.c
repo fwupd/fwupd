@@ -221,7 +221,8 @@ fu_plugin_cache_remove(FuPlugin *self, const gchar *id)
 	g_return_if_fail(id != NULL);
 	if (priv->cache == NULL)
 		return;
-	g_hash_table_remove(priv->cache, id);
+	if (g_hash_table_remove(priv->cache, id))
+		g_debug("removed %s object %s", fu_plugin_get_name(self), id);
 }
 
 /**
