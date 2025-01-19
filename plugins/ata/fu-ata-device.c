@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <stddef.h>
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"
