@@ -94,8 +94,6 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
     G_GNUC_WARN_UNUSED_RESULT;
 FuCpuVendor
 fu_cpu_get_vendor(void);
-gboolean
-fu_common_is_live_media(void);
 guint64
 fu_common_get_memory_size(void);
 gchar *
