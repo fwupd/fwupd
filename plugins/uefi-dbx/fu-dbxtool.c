@@ -295,13 +295,6 @@ main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
-		/* check if on live media */
-		if (fu_common_is_live_media() && !force) {
-			/* TRANSLATORS: the user is using a LiveCD or LiveUSB install disk */
-			g_printerr("%s\n", _("Cannot apply updates on live media"));
-			return EXIT_FAILURE;
-		}
-
 		/* validate this is safe to apply */
 		if (!force) {
 			/* TRANSLATORS: ESP refers to the EFI System Partition */
