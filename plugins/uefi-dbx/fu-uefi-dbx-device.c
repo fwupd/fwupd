@@ -249,7 +249,6 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "dbx");
 	fu_device_set_name(FU_DEVICE(self), "UEFI dbx");
 	fu_device_set_summary(FU_DEVICE(self), "UEFI revocation database");
-	fu_device_build_vendor_id(FU_DEVICE(self), "UEFI", "Linux Foundation");
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.dbx");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_install_duration(FU_DEVICE(self), 1);
