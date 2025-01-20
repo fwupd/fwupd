@@ -5989,6 +5989,51 @@ fu_device_ensure_from_component(FuDevice *self, XbNode *component)
 }
 
 /**
+ * fu_device_ensure_from_release:
+ * @self: a #FuDevice
+ * @rel: (not nullable): a #XbNode
+ *
+ * Ensure all properties from the donor AppStream release as required.
+ *
+ * Since: 2.0.5, and backported to 1.9.28
+ **/
+void
+fu_device_ensure_from_release(FuDevice *self, XbNode *rel)
+{
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(XB_IS_NODE(rel));
+
+	/* optionally filter by device checksum */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM)) {
+		gboolean valid = FALSE;
+		g_autoptr(GPtrArray) device_checksums = NULL;
+
+		if (fu_device_get_checksums(self)->len == 0)
+			return;
+		device_checksums = xb_node_query(rel, "checksum[@target='device']", 0, NULL);
+		for (guint i = 0; device_checksums != NULL && i < device_checksums->len; i++) {
+			XbNode *device_checksum = g_ptr_array_index(device_checksums, i);
+			if (fu_device_has_checksum(self, xb_node_get_text(device_checksum))) {
+				valid = TRUE;
+				break;
+			}
+		}
+		if (!valid)
+			return;
+	}
+
+	/* set the version */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION)) {
+		const gchar *version = xb_node_get_attr(rel, "version");
+		if (version != NULL) {
+			fu_device_set_version(self, version);
+			fu_device_remove_internal_flag(self,
+						       FU_DEVICE_INTERNAL_FLAG_MD_SET_VERSION);
+		}
+	}
+}
+
+/**
  * fu_device_emit_request:
  * @self: a device
  * @request: a request
