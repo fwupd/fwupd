@@ -3095,7 +3095,11 @@ fu_device_set_version(FuDevice *self, const gchar *version)
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
 	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
+#ifdef SUPPORTED_BUILD
 		g_warning("%s", error->message);
+#else
+		g_critical("%s", error->message);
+#endif
 
 	/* if different */
 	if (g_strcmp0(fu_device_get_version(self), version_safe) != 0) {
@@ -3139,7 +3143,11 @@ fu_device_set_version_lowest(FuDevice *self, const gchar *version)
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
 	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
+#ifdef SUPPORTED_BUILD
 		g_warning("%s", error->message);
+#else
+		g_critical("%s", error->message);
+#endif
 
 	/* if different */
 	if (g_strcmp0(fu_device_get_version_lowest(self), version_safe) != 0) {
@@ -3183,7 +3191,11 @@ fu_device_set_version_bootloader(FuDevice *self, const gchar *version)
 	/* print a console warning for an invalid version, if semver */
 	if (version_safe != NULL &&
 	    !fu_version_verify_format(version_safe, fu_device_get_version_format(self), &error))
+#ifdef SUPPORTED_BUILD
 		g_warning("%s", error->message);
+#else
+		g_critical("%s", error->message);
+#endif
 
 	/* if different */
 	if (g_strcmp0(fu_device_get_version_bootloader(self), version_safe) != 0) {
