@@ -11,9 +11,9 @@
 
 #include "fu-acpi-uefi.h"
 #include "fu-bitmap-image.h"
-#include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
+#include "fu-uefi-capsule-backend.h"
 #include "fu-uefi-capsule-plugin.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
@@ -139,8 +139,8 @@ fu_uefi_capsule_plugin_fwupd_efi_probe(FuUefiCapsulePlugin *self, GError **error
 static gboolean
 fu_uefi_capsule_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
-	return fu_uefi_device_clear_status(device_uefi, error);
+	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
+	return fu_uefi_capsule_device_clear_status(device_uefi, error);
 }
 
 static gchar *
@@ -398,11 +398,11 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 		return FALSE;
 
 	/* write display capsule location as UPDATE_INFO */
-	return fu_uefi_device_write_update_info(FU_UEFI_DEVICE(device),
-						capsule_path,
-						"fwupd-ux-capsule",
-						FU_EFIVARS_GUID_UX_CAPSULE,
-						error);
+	return fu_uefi_capsule_device_write_update_info(FU_UEFI_CAPSULE_DEVICE(device),
+							capsule_path,
+							"fwupd-ux-capsule",
+							FU_EFIVARS_GUID_UX_CAPSULE,
+							error);
 }
 
 static gboolean
@@ -428,7 +428,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 		     {0, 0}};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE) &&
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE) &&
 	    fu_efivars_exists(efivars, FU_EFIVARS_GUID_FWUPDATE, "fwupd-ux-capsule")) {
 		g_info("not providing UX capsule");
 		return fu_efivars_delete(efivars,
@@ -547,15 +547,15 @@ fu_uefi_capsule_plugin_load_config(FuPlugin *plugin, FuDevice *device)
 			 &error_local)) {
 		g_warning("invalid ESP free space specified: %s", error_local->message);
 	}
-	fu_uefi_device_set_require_esp_free_space(FU_UEFI_DEVICE(device), sz_reqd);
+	fu_uefi_capsule_device_set_require_esp_free_space(FU_UEFI_CAPSULE_DEVICE(device), sz_reqd);
 
 	/* shim used for SB or not? */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableShimForSecureBoot"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
+		fu_device_add_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* enable the fwupd.efi debug log? */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableEfiDebugging"))
-		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_ENABLE_DEBUGGING);
+		fu_device_add_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
 }
 
 static void
@@ -584,11 +584,12 @@ static void
 fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
-	g_autoptr(FuUefiDevice) dev = NULL;
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* load all configuration variables */
-	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(self->backend), device);
+	dev = fu_uefi_capsule_backend_device_new_from_dev(FU_UEFI_CAPSULE_BACKEND(self->backend),
+							  device);
 	fu_uefi_capsule_plugin_load_config(plugin, FU_DEVICE(dev));
 	if (self->esp == NULL) {
 		self->esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_local);
@@ -599,7 +600,7 @@ fu_uefi_capsule_plugin_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	if (self->esp == NULL) {
 		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
-		fu_uefi_device_set_esp(dev, self->esp);
+		fu_uefi_capsule_device_set_esp(dev, self->esp);
 		fu_device_uninhibit(device, "no-esp");
 	}
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
@@ -619,39 +620,39 @@ fu_uefi_capsule_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 }
 
 static const gchar *
-fu_uefi_capsule_plugin_uefi_type_to_string(FuUefiDeviceKind device_kind)
+fu_uefi_capsule_plugin_uefi_type_to_string(FuUefiCapsuleDeviceKind device_kind)
 {
-	if (device_kind == FU_UEFI_DEVICE_KIND_UNKNOWN)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_UNKNOWN)
 		return "Unknown Firmware";
-	if (device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE)
 		return "System Firmware";
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE)
 		return "Device Firmware";
-	if (device_kind == FU_UEFI_DEVICE_KIND_UEFI_DRIVER)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_UEFI_DRIVER)
 		return "UEFI Driver";
-	if (device_kind == FU_UEFI_DEVICE_KIND_FMP)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_FMP)
 		return "Firmware Management Protocol";
 	return NULL;
 }
 
 static gchar *
-fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiDeviceKind device_kind)
+fu_uefi_capsule_plugin_get_name_for_type(FuPlugin *plugin, FuUefiCapsuleDeviceKind device_kind)
 {
 	GString *display_name;
 
 	/* set Display Name prefix for capsules that are not PCI cards */
 	display_name = g_string_new(fu_uefi_capsule_plugin_uefi_type_to_string(device_kind));
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
+	if (device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE)
 		g_string_prepend(display_name, "UEFI ");
 	return g_string_free(display_name, FALSE);
 }
 
 static gboolean
-fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GError **error)
+fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiCapsuleDevice *dev, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuUefiDeviceKind device_kind;
+	FuUefiCapsuleDeviceKind device_kind;
 	g_autoptr(GError) error_udisks2 = NULL;
 
 	/* probe to get add GUIDs (and hence any quirk fixups) */
@@ -663,53 +664,56 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	/* if not already set by quirks */
 	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	}
 	if (fu_context_has_hwid_flag(ctx, "supports-boot-order-lock")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
 	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED);
 	if (fu_context_has_hwid_flag(ctx, "display-required")) {
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED);
 	}
 	if (fu_context_has_hwid_flag(ctx, "modify-bootorder"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER);
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
 	if (fu_context_has_hwid_flag(ctx, "cod-dell-recovery"))
-		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY);
+		fu_device_add_private_flag(FU_DEVICE(dev),
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
 
 	/* detected InsydeH2O */
 	if (self->acpi_uefi != NULL &&
 	    fu_acpi_uefi_cod_indexed_filename(FU_ACPI_UEFI(self->acpi_uefi))) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
-					   FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME);
+					   FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
 	}
 
 	/* set fallback name if nothing else is set */
-	device_kind = fu_uefi_device_get_kind(dev);
+	device_kind = fu_uefi_capsule_device_get_kind(dev);
 	if (fu_device_get_name(FU_DEVICE(dev)) == NULL) {
 		g_autofree gchar *name = NULL;
 		name = fu_uefi_capsule_plugin_get_name_for_type(plugin, device_kind);
 		if (name != NULL)
 			fu_device_set_name(FU_DEVICE(dev), name);
-		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		if (device_kind != FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
 			fu_device_add_private_flag(FU_DEVICE(dev),
 						   FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
 		}
 	}
 	/* set fallback vendor if nothing else is set */
 	if (fu_device_get_vendor(FU_DEVICE(dev)) == NULL &&
-	    device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+	    device_kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		const gchar *vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 		if (vendor != NULL)
 			fu_device_set_vendor(FU_DEVICE(dev), vendor);
 	}
 
 	/* set vendor ID as the BIOS vendor */
-	if (device_kind != FU_UEFI_DEVICE_KIND_FMP) {
+	if (device_kind != FU_UEFI_CAPSULE_DEVICE_KIND_FMP) {
 		fu_device_build_vendor_id(FU_DEVICE(dev),
 					  "DMI",
 					  fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR));
@@ -725,7 +729,7 @@ fu_uefi_capsule_plugin_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		fu_uefi_capsule_plugin_validate_esp(self);
 	}
 	if (self->esp != NULL)
-		fu_uefi_device_set_esp(dev, self->esp);
+		fu_uefi_capsule_device_set_esp(dev, self->esp);
 
 	/* success */
 	return TRUE;
@@ -850,8 +854,8 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 
 	/* use GRUB to load updates */
 	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
-		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
-						 FU_TYPE_UEFI_GRUB_DEVICE);
+		fu_uefi_capsule_backend_set_device_gtype(FU_UEFI_CAPSULE_BACKEND(self->backend),
+							 FU_TYPE_UEFI_GRUB_DEVICE);
 	}
 
 	/* check we can use this backend */
@@ -899,9 +903,10 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 static gboolean
 fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
+	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
 
-	if (fu_uefi_device_get_kind(device_uefi) != FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE) {
+	if (fu_uefi_capsule_device_get_kind(device_uefi) !=
+	    FU_UEFI_CAPSULE_DEVICE_KIND_DELL_TPM_FIRMWARE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1003,8 +1008,9 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		if (!fu_uefi_capsule_plugin_check_cod_support(self, &error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
-			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(self->backend),
-							 FU_TYPE_UEFI_COD_DEVICE);
+			fu_uefi_capsule_backend_set_device_gtype(
+			    FU_UEFI_CAPSULE_BACKEND(self->backend),
+			    FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
 	fu_progress_step_done(progress);
@@ -1022,7 +1028,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 	devices = fu_backend_get_devices(self->backend);
 	for (guint i = 0; i < devices->len; i++) {
-		FuUefiDevice *dev = g_ptr_array_index(devices, i);
+		FuUefiCapsuleDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GError) error_device = NULL;
 
 		if (!fu_uefi_capsule_plugin_coldplug_device(plugin, dev, &error_device)) {
@@ -1038,7 +1044,9 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 
 		/* system firmware "BIOS" can change the PCRx registers */
-		if (fu_uefi_device_get_kind(dev) == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE && has_fde)
+		if (fu_uefi_capsule_device_get_kind(dev) ==
+			FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE &&
+		    has_fde)
 			fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 
 		/* load all configuration variables */
@@ -1232,7 +1240,7 @@ fu_uefi_capsule_plugin_constructed(GObject *obj)
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	g_autoptr(GError) error_local = NULL;
 
-	self->backend = fu_uefi_backend_new(ctx);
+	self->backend = fu_uefi_capsule_backend_new(ctx);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "dell");

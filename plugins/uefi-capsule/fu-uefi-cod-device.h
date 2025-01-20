@@ -8,7 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-uefi-device.h"
+#include "fu-uefi-capsule-device.h"
 
 #define FU_TYPE_UEFI_COD_DEVICE (fu_uefi_cod_device_get_type())
-G_DECLARE_FINAL_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU, UEFI_COD_DEVICE, FuUefiDevice)
+G_DECLARE_FINAL_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU, UEFI_COD_DEVICE, FuUefiCapsuleDevice)

@@ -11,10 +11,10 @@
 #include "fu-uefi-grub-device.h"
 
 struct _FuUefiGrubDevice {
-	FuUefiDevice parent_instance;
+	FuUefiCapsuleDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuUefiGrubDevice, fu_uefi_grub_device, FU_TYPE_UEFI_DEVICE)
+G_DEFINE_TYPE(FuUefiGrubDevice, fu_uefi_grub_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
 fu_uefi_grub_device_mkconfig(FuDevice *device,
@@ -120,9 +120,9 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
-	FuVolume *esp = fu_uefi_device_get_esp(self);
-	const gchar *fw_class = fu_uefi_device_get_guid(self);
+	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
+	const gchar *fw_class = fu_uefi_capsule_device_get_guid(self);
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *capsule_path = NULL;
 	g_autofree gchar *directory = NULL;
@@ -130,7 +130,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *source_app = NULL;
 	g_autofree gchar *target_app = NULL;
-	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
+	g_autofree gchar *varname = fu_uefi_capsule_device_build_varname(self);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -155,7 +155,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
-	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
+	fixed_fw = fu_uefi_capsule_device_fixup_firmware(self, fw, error);
 	if (fixed_fw == NULL)
 		return FALSE;
 	if (!fu_bytes_set_contents(fn, fixed_fw, error))
@@ -166,7 +166,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return TRUE;
 
 	/* enable debugging in the EFI binary */
-	if (!fu_uefi_device_perhaps_enable_debugging(self, error))
+	if (!fu_uefi_capsule_device_perhaps_enable_debugging(self, error))
 		return FALSE;
 
 	/* delete the old log to save space */
@@ -179,7 +179,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_device_write_update_info(self, capsule_path, varname, fw_class, error))
+	if (!fu_uefi_capsule_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* if secure boot was turned on this might need to be installed separately */
@@ -203,7 +203,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 static void
 fu_uefi_grub_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
-	/* FuUefiDevice */
+	/* FuUefiCapsuleDevice */
 	FU_DEVICE_CLASS(fu_uefi_grub_device_parent_class)->report_metadata_pre(device, metadata);
 	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("grub"));
 }
@@ -214,13 +214,13 @@ fu_uefi_grub_device_prepare(FuDevice *device,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-	/* FuUefiDevice->prepare */
+	/* FuUefiCapsuleDevice->prepare */
 	if (!FU_DEVICE_CLASS(fu_uefi_grub_device_parent_class)
 		 ->prepare(device, progress, flags, error))
 		return FALSE;
 
 	/* sanity checks */
-	return fu_uefi_device_check_asset(FU_UEFI_DEVICE(device), error);
+	return fu_uefi_capsule_device_check_asset(FU_UEFI_CAPSULE_DEVICE(device), error);
 }
 
 static void

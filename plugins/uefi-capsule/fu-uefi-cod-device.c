@@ -12,17 +12,17 @@
 #include "fu-uefi-common.h"
 
 struct _FuUefiCodDevice {
-	FuUefiDevice parent_instance;
+	FuUefiCapsuleDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU_TYPE_UEFI_DEVICE)
+G_DEFINE_TYPE(FuUefiCodDevice, fu_uefi_cod_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
 fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
+	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
 	fwupd_guid_t guid = {0x0};
 	gsize bufsz = 0;
 	guint32 status = 0;
@@ -66,12 +66,12 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 			    error))
 		return FALSE;
 	guidstr = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	if (g_strcmp0(guidstr, fu_uefi_device_get_guid(device_uefi)) != 0) {
+	if (g_strcmp0(guidstr, fu_uefi_capsule_device_get_guid(device_uefi)) != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
 			    "wrong GUID, expected %s, got %s",
-			    fu_uefi_device_get_guid(device_uefi),
+			    fu_uefi_capsule_device_get_guid(device_uefi),
 			    guidstr);
 		return FALSE;
 	}
@@ -79,7 +79,7 @@ fu_uefi_cod_device_get_results_for_idx(FuDevice *device, guint idx, GError **err
 	/* get status */
 	if (!fu_memread_uint32_safe(buf, bufsz, 0x28, &status, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_uefi_device_set_status(device_uefi, status);
+	fu_uefi_capsule_device_set_status(device_uefi, status);
 	return TRUE;
 }
 
@@ -153,9 +153,10 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 }
 
 static gchar *
-fu_uefi_cod_device_get_indexed_filename(FuUefiDevice *self, GError **error)
+fu_uefi_cod_device_get_indexed_filename(FuUefiCapsuleDevice *self, GError **error)
 {
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
+	g_autofree gchar *esp_path =
+	    fu_volume_get_mount_point(fu_uefi_capsule_device_get_esp(self));
 	for (guint i = 0; i < 0xFFFF; i++) {
 		gboolean exists_cod_path = FALSE;
 		g_autofree gchar *basename = g_strdup_printf("CapsuleUpdateFile%04X.bin", i);
@@ -177,17 +178,20 @@ fu_uefi_cod_device_get_indexed_filename(FuUefiDevice *self, GError **error)
 }
 
 static gchar *
-fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
+fu_uefi_cod_device_get_filename(FuUefiCapsuleDevice *self, GError **error)
 {
-	g_autofree gchar *esp_path = fu_volume_get_mount_point(fu_uefi_device_get_esp(self));
+	g_autofree gchar *esp_path =
+	    fu_volume_get_mount_point(fu_uefi_capsule_device_get_esp(self));
 	g_autofree gchar *basename = NULL;
 
 	/* InsydeH2O */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_INDEXED_FILENAME))
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME))
 		return fu_uefi_cod_device_get_indexed_filename(self, error);
 
 	/* Dell Inc. */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_DEVICE_FLAG_COD_DELL_RECOVERY)) {
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY)) {
 		return g_build_filename(esp_path,
 					"EFI",
 					"dell",
@@ -198,7 +202,7 @@ fu_uefi_cod_device_get_filename(FuUefiDevice *self, GError **error)
 	}
 
 	/* fallback */
-	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_device_get_guid(self));
+	basename = g_strdup_printf("fwupd-%s.cap", fu_uefi_capsule_device_get_guid(self));
 	return g_build_filename(esp_path, "EFI", "UpdateCapsule", basename, NULL);
 }
 
@@ -211,12 +215,12 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	g_autofree gchar *cod_path = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* ensure we have the existing state */
-	if (fu_uefi_device_get_guid(self) == NULL) {
+	if (fu_uefi_capsule_device_get_guid(self) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -243,7 +247,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	 * U-Boot, it applies the capsule even if OsIndications isn't set.
 	 * The capsule is then deleted by U-Boot after it has been deployed.
 	 */
-	if (!fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE)) {
+	if (!fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE)) {
 		gsize bufsz = 0;
 		guint64 os_indications = 0;
 		g_autofree guint8 *buf = NULL;
@@ -289,7 +293,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 static void
 fu_uefi_cod_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
-	/* FuUefiDevice */
+	/* FuUefiCapsuleDevice */
 	FU_DEVICE_CLASS(fu_uefi_cod_device_parent_class)->report_metadata_pre(device, metadata);
 	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("cod"));
 }

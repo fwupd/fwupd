@@ -12,10 +12,10 @@
 #include "fu-uefi-nvram-device.h"
 
 struct _FuUefiNvramDevice {
-	FuUefiDevice parent_instance;
+	FuUefiCapsuleDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuUefiNvramDevice, fu_uefi_nvram_device, FU_TYPE_UEFI_DEVICE)
+G_DEFINE_TYPE(FuUefiNvramDevice, fu_uefi_nvram_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
 fu_uefi_nvram_device_get_results(FuDevice *device, GError **error)
@@ -26,8 +26,9 @@ fu_uefi_nvram_device_get_results(FuDevice *device, GError **error)
 
 	/* check if something rudely removed our BOOTXXXX entry */
 	if (!fu_uefi_bootmgr_verify_fwupd(efivars, &error_local)) {
-		if (fu_device_has_private_flag(device,
-					       FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
+		if (fu_device_has_private_flag(
+			device,
+			FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
 			g_prefix_error(&error_local,
 				       "boot entry missing; "
 				       "perhaps 'Boot Order Lock' enabled in the BIOS: ");
@@ -53,11 +54,11 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiBootmgrFlags bootmgr_flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
-	const gchar *fw_class = fu_uefi_device_get_guid(self);
-	FuVolume *esp = fu_uefi_device_get_esp(self);
+	const gchar *fw_class = fu_uefi_capsule_device_get_guid(self);
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
 	g_autofree gchar *esp_path = fu_volume_get_mount_point(esp);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -65,7 +66,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *varname = fu_uefi_device_build_varname(self);
+	g_autofree gchar *varname = fu_uefi_capsule_device_build_varname(self);
 
 	/* ensure we have the existing state */
 	if (fw_class == NULL) {
@@ -88,14 +89,14 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
-	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
+	fixed_fw = fu_uefi_capsule_device_fixup_firmware(self, fw, error);
 	if (fixed_fw == NULL)
 		return FALSE;
 	if (!fu_bytes_set_contents(fn, fixed_fw, error))
 		return FALSE;
 
 	/* enable debugging in the EFI binary */
-	if (!fu_uefi_device_perhaps_enable_debugging(self, error))
+	if (!fu_uefi_capsule_device_perhaps_enable_debugging(self, error))
 		return FALSE;
 
 	/* delete the old log to save space */
@@ -108,19 +109,19 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	}
 
 	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_device_write_update_info(self, capsule_path, varname, fw_class, error))
+	if (!fu_uefi_capsule_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
 
 	/* update the firmware before the bootloader runs */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_MODIFY_BOOTORDER))
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER))
 		bootmgr_flags |= FU_UEFI_BOOTMGR_FLAG_MODIFY_BOOTORDER;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
 		bootmgr_desc = "Linux-Firmware-Updater";
 	if (!fu_uefi_bootmgr_bootnext(efivars, esp, bootmgr_desc, bootmgr_flags, error))
 		return FALSE;
@@ -132,7 +133,7 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 static void
 fu_uefi_nvram_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 {
-	/* FuUefiDevice */
+	/* FuUefiCapsuleDevice */
 	FU_DEVICE_CLASS(fu_uefi_nvram_device_parent_class)->report_metadata_pre(device, metadata);
 	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("nvram"));
 }
@@ -143,13 +144,13 @@ fu_uefi_nvram_device_prepare(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	/* FuUefiDevice->prepare */
+	/* FuUefiCapsuleDevice->prepare */
 	if (!FU_DEVICE_CLASS(fu_uefi_nvram_device_parent_class)
 		 ->prepare(device, progress, flags, error))
 		return FALSE;
 
 	/* sanity checks */
-	return fu_uefi_device_check_asset(FU_UEFI_DEVICE(device), error);
+	return fu_uefi_capsule_device_check_asset(FU_UEFI_CAPSULE_DEVICE(device), error);
 }
 
 static void

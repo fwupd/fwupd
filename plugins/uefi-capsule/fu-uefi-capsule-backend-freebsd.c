@@ -19,26 +19,28 @@
 
 #include <glib/gstdio.h>
 
-#include "fu-uefi-backend-freebsd.h"
+#include "fu-uefi-capsule-backend-freebsd.h"
+#include "fu-uefi-capsule-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-device.h"
 
-struct _FuUefiBackendFreebsd {
-	FuUefiBackend parent_instance;
+struct _FuUefiCapsuleBackendFreebsd {
+	FuUefiCapsuleBackend parent_instance;
 };
 
-G_DEFINE_TYPE(FuUefiBackendFreebsd, fu_uefi_backend_freebsd, FU_TYPE_UEFI_BACKEND)
+G_DEFINE_TYPE(FuUefiCapsuleBackendFreebsd,
+	      fu_uefi_capsule_backend_freebsd,
+	      FU_TYPE_UEFI_CAPSULE_BACKEND)
 
 #ifdef HAVE_FREEBSD_ESRT
 
-static FuUefiDevice *
-fu_uefi_backend_device_new(FuUefiBackend *self,
-			   const gchar *physical_id,
-			   struct efi_esrt_entry_v1 *entry,
-			   guint64 idx,
-			   GError **error)
+static FuUefiCapsuleDevice *
+fu_uefi_capsule_backend_device_new(FuUefiCapsuleBackend *self,
+				   const gchar *physical_id,
+				   struct efi_esrt_entry_v1 *entry,
+				   guint64 idx,
+				   GError **error)
 {
-	g_autoptr(FuUefiDevice) dev = NULL;
+	g_autoptr(FuUefiCapsuleDevice) dev = NULL;
 	g_autofree gchar *backend_id = NULL;
 	g_autofree gchar *fw_class = NULL;
 	uint32_t status;
@@ -53,7 +55,7 @@ fu_uefi_backend_device_new(FuUefiBackend *self,
 	}
 
 	/* create object */
-	dev = g_object_new(fu_uefi_backend_get_device_gtype(self),
+	dev = g_object_new(fu_uefi_capsule_backend_get_device_gtype(self),
 			   "fw-class",
 			   fw_class,
 			   "capsule-flags",
@@ -85,7 +87,7 @@ fu_uefi_backend_device_new(FuUefiBackend *self,
 #endif
 
 static gboolean
-fu_uefi_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags flags, GError **error)
+fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags flags, GError **error)
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string("efi-version", error);
 	if (efi_ver == NULL) {
@@ -104,10 +106,10 @@ fu_uefi_backend_freebsd_setup(FuBackend *backend, FuBackendSetupFlags flags, GEr
 }
 
 static gboolean
-fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
+fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 {
 #ifdef HAVE_FREEBSD_ESRT
-	FuUefiBackend *self = FU_UEFI_BACKEND(backend);
+	FuUefiCapsuleBackend *self = FU_UEFI_CAPSULE_BACKEND(backend);
 	const gchar *esrt_dev = "/dev/efi";
 	struct efi_get_table_ioc table = {.uuid = EFI_TABLE_ESRT};
 	gint efi_fd;
@@ -156,8 +158,8 @@ fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 
 	entries = (struct efi_esrt_entry_v1 *)esrt->entries;
 	for (guint i = 0; i < esrt->fw_resource_count; i++) {
-		g_autoptr(FuUefiDevice) dev = NULL;
-		dev = fu_uefi_backend_device_new(self, esrt_dev, &entries[i], i, error);
+		g_autoptr(FuUefiCapsuleDevice) dev = NULL;
+		dev = fu_uefi_capsule_backend_device_new(self, esrt_dev, &entries[i], i, error);
 		if (dev == NULL)
 			return FALSE;
 
@@ -176,25 +178,30 @@ fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 }
 
 void
-fu_uefi_backend_freebsd_set_device_gtype(FuBackend *backend, GType device_gtype)
+fu_uefi_capsule_backend_freebsd_set_device_gtype(FuBackend *backend, GType device_gtype)
 {
 }
 
 static void
-fu_uefi_backend_freebsd_init(FuUefiBackendFreebsd *self)
+fu_uefi_capsule_backend_freebsd_init(FuUefiCapsuleBackendFreebsd *self)
 {
 }
 
 static void
-fu_uefi_backend_freebsd_class_init(FuUefiBackendFreebsdClass *klass)
+fu_uefi_capsule_backend_freebsd_class_init(FuUefiCapsuleBackendFreebsdClass *klass)
 {
 	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
-	backend_class->setup = fu_uefi_backend_freebsd_setup;
-	backend_class->coldplug = fu_uefi_backend_freebsd_coldplug;
+	backend_class->setup = fu_uefi_capsule_backend_freebsd_setup;
+	backend_class->coldplug = fu_uefi_capsule_backend_freebsd_coldplug;
 }
 
 FuBackend *
-fu_uefi_backend_new(FuContext *ctx)
+fu_uefi_capsule_backend_new(FuContext *ctx)
 {
-	return g_object_new(FU_TYPE_UEFI_BACKEND_FREEBSD, "name", "uefi", "context", ctx, NULL);
+	return g_object_new(FU_TYPE_UEFI_CAPSULE_BACKEND_FREEBSD,
+			    "name",
+			    "uefi",
+			    "context",
+			    ctx,
+			    NULL);
 }
