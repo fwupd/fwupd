@@ -9,9 +9,9 @@ endif
 
 plugin_quirks += files('uefi-capsule.quirk')
 
-backend_srcs = ['fu-uefi-backend.c']
+backend_srcs = ['fu-uefi-capsule-backend.c']
 if host_machine.system() == 'linux'
-  backend_srcs += 'fu-uefi-backend-linux.c'
+  backend_srcs += 'fu-uefi-capsule-backend-linux.c'
   # replace @localstatedir@
   con2 = configuration_data()
   con2.set('localstatedir', localstatedir)
@@ -23,7 +23,7 @@ if host_machine.system() == 'linux'
     install_dir: join_paths(sysconfdir, 'grub.d')
   )
 elif host_machine.system() == 'freebsd'
-  backend_srcs += 'fu-uefi-backend-freebsd.c'
+  backend_srcs += 'fu-uefi-capsule-backend-freebsd.c'
 else
   error('no ESRT support for @0@'.format(host_machine.system()))
 endif
@@ -38,7 +38,7 @@ plugin_builtin_uefi_capsule = static_library('fu_plugin_uefi_capsule',
     'fu-uefi-cod-device.c',
     'fu-uefi-nvram-device.c',
     'fu-uefi-grub-device.c',
-    'fu-uefi-device.c',
+    'fu-uefi-capsule-device.c',
     'fu-uefi-update-info.c',
     'fu-acpi-uefi.c',
     'fu-bitmap-image.c',

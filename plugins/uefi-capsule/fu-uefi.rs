@@ -51,7 +51,7 @@ struct FuStructAcpiInsydeQuirk {
 }
 
 #[derive(ToString, FromString)]
-enum FuUefiDeviceKind {
+enum FuUefiCapsuleDeviceKind {
     Unknown,
     SystemFirmware,
     DeviceFirmware,
@@ -61,7 +61,7 @@ enum FuUefiDeviceKind {
 }
 
 #[derive(ToString)]
-enum FuUefiDeviceStatus {
+enum FuUefiCapsuleDeviceStatus {
     Success,
     ErrorUnsuccessful,
     ErrorInsufficientResources,

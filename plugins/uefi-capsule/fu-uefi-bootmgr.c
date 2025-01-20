@@ -9,8 +9,8 @@
 #include <stdio.h>
 
 #include "fu-uefi-bootmgr.h"
+#include "fu-uefi-capsule-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-device.h"
 
 static gboolean
 fu_uefi_bootmgr_add_to_boot_order(FuEfivars *efivars, guint16 boot_entry, GError **error)
@@ -434,7 +434,7 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	}
 
 	/* add DEVICE_PATH */
-	dp_buf = fu_uefi_device_build_dp_buf(esp, filepath, error);
+	dp_buf = fu_uefi_capsule_device_build_dp_buf(esp, filepath, error);
 	if (dp_buf == NULL)
 		return FALSE;
 	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(dp_buf));

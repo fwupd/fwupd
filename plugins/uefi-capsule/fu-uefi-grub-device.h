@@ -8,7 +8,11 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-uefi-device.h"
+#include "fu-uefi-capsule-device.h"
 
 #define FU_TYPE_UEFI_GRUB_DEVICE (fu_uefi_grub_device_get_type())
-G_DECLARE_FINAL_TYPE(FuUefiGrubDevice, fu_uefi_grub_device, FU, UEFI_GRUB_DEVICE, FuUefiDevice)
+G_DECLARE_FINAL_TYPE(FuUefiGrubDevice,
+		     fu_uefi_grub_device,
+		     FU,
+		     UEFI_GRUB_DEVICE,
+		     FuUefiCapsuleDevice)

@@ -8,8 +8,8 @@
 
 #include "fu-bitmap-image.h"
 #include "fu-context-private.h"
-#include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
+#include "fu-uefi-capsule-backend.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
 
@@ -84,7 +84,7 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 	g_byte_array_append(buf, guid, sizeof(guid));		/* CapsuleGuid */
 	g_byte_array_append(buf, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
 	fu_byte_array_append_uint32(buf,
-				    FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
+				    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
 				    G_LITTLE_ENDIAN); /* Status */
 	return g_bytes_new(buf->data, buf->len);
 }
@@ -170,18 +170,18 @@ fu_uefi_cod_device_func(void)
 	g_assert_cmpstr(fu_device_get_update_error(dev),
 			==,
 			"failed to update to 0: error-pwr-evt-batt");
-	g_assert_cmpint(fu_uefi_device_get_status(FU_UEFI_DEVICE(dev)),
+	g_assert_cmpint(fu_uefi_capsule_device_get_status(FU_UEFI_CAPSULE_DEVICE(dev)),
 			==,
-			FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT);
+			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT);
 }
 
 static void
 fu_uefi_plugin_func(void)
 {
-	FuUefiDevice *dev;
+	FuUefiCapsuleDevice *dev;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+	g_autoptr(FuBackend) backend = fu_uefi_capsule_backend_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -208,29 +208,39 @@ fu_uefi_plugin_func(void)
 	ret = fu_device_probe(FU_DEVICE(dev), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_uefi_device_get_kind(dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
-	g_assert_cmpstr(fu_uefi_device_get_guid(dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
-	g_assert_cmpint(fu_uefi_device_get_hardware_instance(dev), ==, 0x0);
-	g_assert_cmpint(fu_uefi_device_get_version(dev), ==, 65586);
-	g_assert_cmpint(fu_uefi_device_get_version_lowest(dev), ==, 65582);
-	g_assert_cmpint(fu_uefi_device_get_version_error(dev), ==, 18472960);
-	g_assert_cmpint(fu_uefi_device_get_capsule_flags(dev), ==, 0xfe);
-	g_assert_cmpint(fu_uefi_device_get_status(dev),
+	g_assert_cmpint(fu_uefi_capsule_device_get_kind(dev),
 			==,
-			FU_UEFI_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
+			FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE);
+	g_assert_cmpstr(fu_uefi_capsule_device_get_guid(dev),
+			==,
+			"ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	g_assert_cmpint(fu_uefi_capsule_device_get_hardware_instance(dev), ==, 0x0);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev), ==, 65586);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev), ==, 65582);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev), ==, 18472960);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev), ==, 0xfe);
+	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev),
+			==,
+			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
 
 	/* system firmware */
 	dev = g_ptr_array_index(devices, 1);
 	ret = fu_device_probe(FU_DEVICE(dev), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_uefi_device_get_kind(dev), ==, FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE);
-	g_assert_cmpstr(fu_uefi_device_get_guid(dev), ==, "671d19d0-d43c-4852-98d9-1ce16f9967e4");
-	g_assert_cmpint(fu_uefi_device_get_version(dev), ==, 3090287969);
-	g_assert_cmpint(fu_uefi_device_get_version_lowest(dev), ==, 1);
-	g_assert_cmpint(fu_uefi_device_get_version_error(dev), ==, 0);
-	g_assert_cmpint(fu_uefi_device_get_capsule_flags(dev), ==, 32784);
-	g_assert_cmpint(fu_uefi_device_get_status(dev), ==, FU_UEFI_DEVICE_STATUS_SUCCESS);
+	g_assert_cmpint(fu_uefi_capsule_device_get_kind(dev),
+			==,
+			FU_UEFI_CAPSULE_DEVICE_KIND_DEVICE_FIRMWARE);
+	g_assert_cmpstr(fu_uefi_capsule_device_get_guid(dev),
+			==,
+			"671d19d0-d43c-4852-98d9-1ce16f9967e4");
+	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev), ==, 3090287969);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev), ==, 1);
+	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev), ==, 0);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev), ==, 32784);
+	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev),
+			==,
+			FU_UEFI_CAPSULE_DEVICE_STATUS_SUCCESS);
 
 	/* invalid */
 	dev = g_ptr_array_index(devices, 2);
@@ -242,10 +252,10 @@ fu_uefi_plugin_func(void)
 static void
 fu_uefi_update_info_func(void)
 {
-	FuUefiDevice *dev;
+	FuUefiCapsuleDevice *dev;
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+	g_autoptr(FuBackend) backend = fu_uefi_capsule_backend_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuUefiUpdateInfo) info2 = fu_uefi_update_info_new();
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
@@ -282,9 +292,13 @@ fu_uefi_update_info_func(void)
 	devices = fu_backend_get_devices(backend);
 	g_assert_cmpint(devices->len, ==, 3);
 	dev = g_ptr_array_index(devices, 0);
-	g_assert_cmpint(fu_uefi_device_get_kind(dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
-	g_assert_cmpstr(fu_uefi_device_get_guid(dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
-	info = fu_uefi_device_load_update_info(dev, &error);
+	g_assert_cmpint(fu_uefi_capsule_device_get_kind(dev),
+			==,
+			FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE);
+	g_assert_cmpstr(fu_uefi_capsule_device_get_guid(dev),
+			==,
+			"ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	info = fu_uefi_capsule_device_load_update_info(dev, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(info);
 	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(info)), ==, 0x7);
