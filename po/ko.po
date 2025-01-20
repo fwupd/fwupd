@@ -601,10 +601,6 @@ msgstr "취소함"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "dbx 업데이트가 이미 적용되었기 때문에 적용할 수 없습니다."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "라이브 미디어에서 실행 중일 때는 업데이트를 적용할 수 없음"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "바뀜"
@@ -2508,15 +2504,6 @@ msgstr "장치의 펌웨어 브랜치 전환"
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "시스템 업데이트 동작을 억제했습니다"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "시스템 전원이 매우 부족하여 업데이트를 수행할 수 없습니다"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "시스템 전원이 매우 부족하여 업데이트를 수행할 수 없습니다 (%u%%, 필요 전원 백분율 %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

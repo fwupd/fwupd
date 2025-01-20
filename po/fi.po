@@ -655,10 +655,6 @@ msgstr "Peruttu"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Ei voida asentaa, koska dbx-päivitys on jo asennettu."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Päivityksiä ei voi asentaa live-medialla"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Muutettu"
@@ -2764,15 +2760,6 @@ msgstr "Synkronoi laiteohjelmistoversiot valittuun kokoonpanoon"
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Järjestelmäpäivitys on estetty"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Järjestelmän akun varaus ei riitä päivityksen toteuttamiseen"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Järjestelmän akussa on liian vähän virtaa päivityksen suorittamiseen (%u%%, tarvitaan %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

@@ -332,10 +332,6 @@ msgstr "İptal Edildi"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "dbx güncellemesi halihazırda uygulandığından uygulanamıyor."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Canlı ortamda güncellemeler uygulanamaz"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Değişti"

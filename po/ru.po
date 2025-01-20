@@ -386,10 +386,6 @@ msgstr "Отменено"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Не удалось применить, поскольку обновление dbx уже применено."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Не удалось применить обновления с портативного носителя"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Изменено"

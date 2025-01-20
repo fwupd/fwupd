@@ -644,10 +644,6 @@ msgstr "Dibatalkan"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Tidak dapat diterapkan karena pembaruan dbx telah diterapkan."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Tidak dapat menerapkan pembaruan di media live"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Diubah"
@@ -2753,15 +2749,6 @@ msgstr "Sinkronkan versi firmware ke konfigurasi yang dipilih"
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Pemutakhiran Sistem Dicegah"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Daya sistem terlalu lemah untuk melakukan pemutakhiran"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Daya sistem terlalu lemah untuk melakukan pemutakhiran (%u%%, membutuhkan %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

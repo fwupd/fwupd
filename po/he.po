@@ -371,10 +371,6 @@ msgstr "בוטל"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "לא ניתן להחיל כיוון שכבר חל עדכון dbx."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "לא ניתן להחיל עדכונים על מדיה להפעלה חיה"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "השתנה"

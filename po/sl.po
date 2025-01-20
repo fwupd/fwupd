@@ -677,10 +677,6 @@ msgstr "Preklicano"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Ni možno uveljaviti, ker je bila posodobitev dbx že uveljavljena."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Posodobitev ni možno uveljaviti na predstavnosti v živo"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Spremenjeno"
@@ -2818,15 +2814,6 @@ msgstr "Posodobitev sistema je preprečena"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Način upravljanja sistema uporablja programje strojne opreme za dostop do kode in podatkov rezidenčnega BIOS-a."
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Napolnjenost baterije je prenizka za izvedbo posodobitve"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Napolnjenost baterije je prenizka za izvedbo posodobitve (%u %%, zahtevano je vsaj %u %%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

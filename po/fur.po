@@ -270,10 +270,6 @@ msgstr "Anulât"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Impussibil aplicâ viodût che l'inzornament dbx al è za stât aplicât."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Impussibil aplicâ i inzornaments su supuarts “live”"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Modificât"

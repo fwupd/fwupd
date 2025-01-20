@@ -136,10 +136,6 @@ msgstr "Cancelar"
 msgid "Cancelled"
 msgstr "Cancelado"
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Non foi posíbel aplicar as actualizacións no soporte multimedia"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Cambiado"

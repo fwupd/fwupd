@@ -669,10 +669,6 @@ msgstr "Operația a fost anulată"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Nu se poate aplica deoarece actualizarea dbx a fost deja aplicată."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Nu se pot aplica actualizări pe suporturi „live”"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Modificat"
@@ -1335,6 +1331,10 @@ msgstr "Regiunea firmware BIOS"
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
 msgstr "Regiunea firmware BIOS protejează memoria firmware a dispozitivului împotriva modificărilor."
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Adresa URI de bază pentru firmware"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -2802,15 +2802,6 @@ msgstr "Actualizarea sistemului inhibată"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Modul de gestionare a sistemului este utilizat de firmware pentru a accesa codul și datele BIOS rezidente."
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Energia sistemului este prea scăzută pentru a efectua actualizarea"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Energia sistemului este prea scăzută pentru a efectua actualizarea (%u%%, necesită %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

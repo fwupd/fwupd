@@ -663,10 +663,6 @@ msgstr "Anulowano"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Nie można zastosować, ponieważ aktualizacja bazy dbx została już zastosowana."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Nie można stosować aktualizacji na nośnikach typu Live"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Zmieniono"
@@ -2693,15 +2689,6 @@ msgstr "Synchronizuje wersje oprogramowania sprzętowego do wybranej konfiguracj
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Aktualizacja systemu jest wstrzymana"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Poziom naładowania komputera jest za niski, aby wykonać aktualizację (%u%%, wymaga %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

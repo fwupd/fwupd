@@ -579,10 +579,6 @@ msgstr "Prekinuto"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Nemoguća primjena kao dbx nadopune jer je već primijenjeno."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Nemoguća primjena na live medij"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Promijenjeno"
@@ -2367,15 +2363,6 @@ msgstr "Prebaci ogranak sa %s na %s?"
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Zamijeni ogranak firmvera na uređaju"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Energija sustava je preniska za obavljanje nadopune"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "energija sustava je preniska za obavljanje nadopune (%u%%, zahtijeva %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

@@ -1608,15 +1608,6 @@ msgstr "將分支從 %s 切換到 %s？"
 msgid "Switch the firmware branch on the device"
 msgstr "切換裝置上使用的韌體的分支"
 
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "系統電量過低，無法執行更新"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "系統電量過低，無法執行更新（%u%%，要求為 %u%%）"
-
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "系統要求接上外部電源"

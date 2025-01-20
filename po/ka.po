@@ -1195,15 +1195,6 @@ msgstr "შეჩერება"
 msgid "Suspend-to-ram"
 msgstr "RAM-ში შეჩერება"
 
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "სისტემის კვების სიმძლავრე განახლებისთვის მეტისმეტად დაბალია"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "სისტემის კვების სიმძლავრე განახლებისთვის მეტისმეტად დაბალია(%u%%, საჭიროა %u%%)"
-
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "სისტემას კვების გარე წყარო ესაჭიროება"

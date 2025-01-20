@@ -485,10 +485,6 @@ msgstr "අවලංගු කෙරිණි"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "dbx යාවත්කාලීනය දැනටමත් යොදවා ඇති බැවින් අයදුම් කළ නොහැක."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "සජීවී මාධ්‍යවල යාවත්කාලීන යෙදිය නොහැක"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "වෙනස් විය"
@@ -1875,15 +1871,6 @@ msgstr "ශාඛාව %s සිට %sදක්වා මාරු කරන්
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "උපාංගයේ ස්ථිරාංග ශාඛාව මාරු කරන්න"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "යාවත්කාලීන කිරීම සිදු කිරීමට පද්ධතියේ බලය ඉතා අඩුය (%u%%, අවශ්‍ය වන්නේ %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

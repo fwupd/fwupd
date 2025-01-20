@@ -666,10 +666,6 @@ msgstr "Abgebrochen"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Eine bereits angewandte dbx-Aktualisierung kann nicht angewendet werden."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Aktualisierungen können nicht auf Live-Medien angewendet werden"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Geändert"
@@ -2799,15 +2795,6 @@ msgstr "Systemaktualisierung blockiert"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Der Systemverwaltungsmodus wird von der Firmware für den Zugriff auf speicherresidenten BIOS-Code und Daten verwendet."
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Systemleistung ist zu gering, um die Aktualisierung durchzuführen"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Systemleistung ist zu gering, um die Aktualisierung durchzuführen (%u%%, erfordert %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

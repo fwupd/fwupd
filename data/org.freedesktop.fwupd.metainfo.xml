@@ -38,6 +38,54 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.4" date="2025-01-20">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Record the entire USB descriptor in the emulation data</li>
+          <li>Return defined return code when network metadata refresh fails</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a new private flag of 'delayed-removal' to remove a footgun</li>
+          <li>Added a more specific instance ID for qc-s5gen2 USB devices</li>
+          <li>Add fadvise64 to the systemd syscall allowlist</li>
+          <li>Add the Unifying bootloader VID/PID as a full instance ID</li>
+          <li>Allow disabling zero-length packet for modem-manager devices</li>
+          <li>Allow recovering Logitech Bolt receiver in bootloader mode</li>
+          <li>Correctly parse CSV streams without trailing NULs</li>
+          <li>Detect if network is reachable before downloading metadata</li>
+          <li>Disabling reading the OptionROM device after dumping</li>
+          <li>Do not claim kernel interface to avoid Parade downstream port resets</li>
+          <li>Do not save BootOrder when measuring system integrity</li>
+          <li>Enumerate child nordic-hid devices correctly</li>
+          <li>Fix a possible critical warning for Mediatek scaler devices</li>
+          <li>Fix Firehose padding for some modem-manager devices</li>
+          <li>Fix UEFI capsule updates when using 4096 byte NVME blocksize</li>
+          <li>Get the Dell dock update package version correctly</li>
+          <li>Never read more of the composite stream from a partial stream</li>
+          <li>Notify snapd about DBX updates</li>
+          <li>Probe sd_mod before starting</li>
+          <li>Properly handle FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS</li>
+          <li>Remove the test for CSME 18 manufacturing lock</li>
+          <li>Restore the Logitech compatibility UFY instance IDs</li>
+          <li>Show the correct version when installing a same-device composite update</li>
+          <li>Show updates with problems when using 'fwupdmgr get-releases'</li>
+          <li>Split up the AMD GPU VBIOS P/N for the version</li>
+          <li>Use attr USB4_TYPE rather than guessing from thunderbolt_domain</li>
+          <li>Use the ISO date as a dbx version number for the Microsoft KEK</li>
+          <li>Use the KEK to set the dbx vendor ID</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Fibocom NL668-EAU</li>
+          <li>HP 400/405 Peripheral</li>
+          <li>Lenovo USB-C 7-in-1 Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.3" date="2024-12-06">
       <description>
         <p>

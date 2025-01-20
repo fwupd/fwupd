@@ -596,10 +596,6 @@ msgstr "Megszakítva"
 msgid "Cannot apply as dbx update has already been applied."
 msgstr "Nem lehet alkalmazni, mivel a dbx-frissítés már alkalmazva lett."
 
-#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
-msgid "Cannot apply updates on live media"
-msgstr "Nem lehet alkalmazni a frissítéseket élő médián"
-
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Megváltoztatva"
@@ -2500,15 +2496,6 @@ msgstr "A belsővezérlőprogram-ág váltása az eszközön"
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Rendszerfrissítés meggátolva"
-
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "A rendszer akkumulátorszintje túl alacsony a frissítés végrehajtásához"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "A rendszer akkumulátorszintje túl alacsony a frissítés végrehajtásához (%u%%, de %u%% szükséges)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

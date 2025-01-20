@@ -1463,15 +1463,6 @@ msgstr "Palaikomas procesorius"
 msgid "Supported on remote server"
 msgstr "Palaikomas nuotoliniame serveryje"
 
-#. TRANSLATORS: as in laptop battery power
-msgid "System power is too low to perform the update"
-msgstr "Sistemos įkrova per maža, kad galima būtų atlikti atnaujinimą"
-
-#. TRANSLATORS: as in laptop battery power
-#, c-format
-msgid "System power is too low to perform the update (%u%%, requires %u%%)"
-msgstr "Sistemos įkrova per maža, kad galima būtų atlikti atnaujinimą (%u%%, reikia %u%%)"
-
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Sistema reikalauja išorinio maitinimo šaltinio"

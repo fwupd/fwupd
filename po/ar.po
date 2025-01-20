@@ -1,0 +1,247 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# Omar TS <ots@duck.com>, 2024-2025
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Arabic (http://app.transifex.com/freedesktop/fwupd/language/ar/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Activate the new firmware on the device"
+msgstr "نشّط البرنامج الثابت الجديد على الجهاز"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "طبّق ملفات التحديث"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "المصادقة مطلوبة للرجوع إلى إصدار أقدم من البرنامج الثابت على جهاز قابل للإزالة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "المصادقة مطلوبة للرجوع إلى إصدار أقدم من البرنامج الثابت على هذا الجهاز"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "المصادقة مطلوبة لتمكين جمع بيانات المحاكاة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "المصادقة مطلوبة لإصلاح مشكلة أمان المضيف"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "المصادقة مطلوبة لتحميل بيانات محاكاة الأجهزة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "المصادقة مطلوبة لتعديل إعدادات البايوس"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "المصادقة مطلوبة لتعديل جهاز التحكم عن بعد المكوَّن والمستخدم لتحديثات البرامج الثابتة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "المصادقة مطلوبة لتعديل تكوين البرنامج الخفي"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "المصادقة مطلوبة لقراءة إعدادات البايوس"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "المصادقة مطلوبة لإعادة تعيين تكوين البرنامج الخفي إلى الإعدادات الافتراضية"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "المصادقة مطلوبة لحفظ بيانات محاكاة الأجهزة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "المصادقة مطلوبة لتعيين قائمة البرامج الثابتة المعتمدة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "المصادقة مطلوبة لتوقيع البيانات باستخدام شهادة العميل"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "المصادقة مطلوبة لإيقاف خدمة تحديث البرامج الثابتة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "المصادقة مطلوبة للتبديل إلى إصدار البرنامج الثابت الجديد"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "المصادقة مطلوبة للتراجع عن إصلاح مشكلة أمان المضيف"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "المصادقة مطلوبة لفتح الجهاز"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "المصادقة مطلوبة لتحديث البرنامج الثابت على جهاز قابل للإزالة"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "المصادقة مطلوبة لتحديث البرنامج الثابت على هذا الجهاز"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "المصادقة مطلوبة لتحديث المجموع الاختباري المخزن للجهاز"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "تُسلّم تحديثات البايوس عبر LVFS أو Windows Update"
+
+msgid "Enable"
+msgstr "يُمكَِن"
+
+msgid "Enable emulation data collection"
+msgstr "مكّن جمع بيانات المحاكاة"
+
+#. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Enabled"
+msgstr "ممكّن"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "تُمكّن هذه الوظيفة على مسؤوليتك الخاصة، مما يعني أنه يتعين عليك الاتصال بالشركة المصنعة للمعدات الأصلية بخصوص أي مشاكل ناجمة عن هذه التحديثات. يجب فقط تقديم المشكلات المتعلقة بعملية التحديث نفسها إلى $OS_RELEASE:BUG_REPORT_URL$"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "فشل في تحليل الحجج"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "فشل في تحليل الملف"
+
+msgid "Get BIOS settings"
+msgstr "احصل على إعدادات البايوس"
+
+msgid "Install old version of signed system firmware"
+msgstr "ثبّت الإصدار القديم من البرامج الثابتة للنظام الموقَّعة"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "ثبّت الإصدار القديم من البرامج الثابتة للنظام غير الموقَّعة"
+
+msgid "Install signed device firmware"
+msgstr "ثبّت البرامج الثابتة للجهاز الموقّعة"
+
+msgid "Install signed system firmware"
+msgstr "تثبيت البرامج الثابتة للنظام الموقَّعة"
+
+msgid "Install unsigned device firmware"
+msgstr "ثبّت البرامج الثابتة للجهاز غير الموقَّعة"
+
+msgid "Install unsigned system firmware"
+msgstr "تثبيت البرامج الثابتة للنظام غير الموقَّعة"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "جارٍ تثبيت تحديث البرنامج الثابت..."
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "خدمة البرامج الثابتة لموردي Linux (البرامج الثابتة المستقرة)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "خدمة البرامج الثابتة لمورد Linux (اختبار البرامج الثابتة)"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "قائمة الإدخالات في dbx"
+
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr "حمّل بيانات محاكاة الجهاز"
+
+msgid "Modify a configured remote"
+msgstr "عدّل جهاز التحكم عن بعد المكوَّن"
+
+msgid "Modify daemon configuration"
+msgstr "عدّل التكوين الخفي"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "أظهر قيمة PCR واحدة فقط"
+
+msgid "Reset daemon configuration"
+msgstr "أعد تعيين التكوين الخفي"
+
+#. TRANSLATORS: command description
+msgid "Save device emulation data"
+msgstr "حفظ بيانات محاكاة الجهاز"
+
+msgid "Security hardening for HSI"
+msgstr "التشديد الأمني ​​لـ HSI"
+
+msgid "Set one or more BIOS settings"
+msgstr "عيّن واحدًا أو أكثر من إعدادات البايوس"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "يضبط قائمة البرامج الثابتة المعتمدة"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "ستُطبّق الإعدادات بعد إعادة تشغيل النظام"
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "عرض معلومات التصحيح الإضافية"
+
+#. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "عرض النسخة المحسوبة من dbx"
+
+msgid "Sign data using the client certificate"
+msgstr "سجّل البيانات باستخدام شهادة العميل"
+
+#. TRANSLATORS: command description
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "سجّل البيانات باستخدام شهادة العميل"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "حدد ملف قاعدة بيانات dbx"
+
+msgid "Stop the fwupd service"
+msgstr "أوقف خدمة fwupd"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS هي خدمة مجانية تعمل ككيان قانوني مستقل وليس لها أي اتصال بـ $OS_RELEASE:NAME$. ربما لم يتحقق موزّعك من أيّ من تحديثات البرامج الثابتة للتأكد من توافقها مع نظامك أو الأجهزة المتصلة. تُوفّر كافة البرامج الثابتة فقط من قبل الشركة المصنعة للمعدات الأصلية."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "قد يعمل هذا البرنامج بشكل صحيح فقط كجذر"
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "يحتوي جهاز التحكم عن بعد هذا على برامج ثابتة غير محظورة، ولكنها لا تزال قيد الاختبار من قبل بائع الأجهزة. يجب عليك التأكد من أن لديك طريقة للرجوع إلى إصدار أقدم يدويًا في حالة فشل تحديث البرنامج الثابت."
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "ستقوم هذه الأداة بقراءة وتحليل سجل أحداث TPM من البرنامج الثابت للنظام."
+
+msgid "Unlock the device to allow access"
+msgstr "الغ قفل الجهاز للسماح بالوصول"
+
+msgid "Update the stored device verification information"
+msgstr "حدّث معلومات التحقق من الجهاز المخزن"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "الأداة المساعدة لسجل أحداث Fwupd TPM"
