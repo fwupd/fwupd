@@ -604,6 +604,8 @@ fu_device_new(FuContext *ctx);
  *
  * Only use the metadata *checksum* to set device attributes.
  *
+ * NOTE: This will only work if the release and the device both have the same update protocol.
+ *
  * Since: 1.9.1
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM "md-only-checksum"

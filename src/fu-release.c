@@ -843,6 +843,17 @@ fu_release_load(FuRelease *self,
 	g_return_val_if_fail(rel_optional == NULL || XB_IS_NODE(rel_optional), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* only update the device with the correct protocol */
+	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
+	if (tmp != NULL && !fu_device_has_protocol(self->device, tmp)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "update protocol %s does not match",
+			    tmp);
+		return FALSE;
+	}
+
 	/* set from the component */
 	tmp = xb_node_query_text(component, "id", NULL);
 	if (tmp != NULL)
