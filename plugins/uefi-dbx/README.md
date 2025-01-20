@@ -23,6 +23,44 @@ This plugin supports the following protocol ID:
 
 * `org.uefi.dbx2`
 
+## Comparing Versions
+
+Earlier versions of fwupd used the `org.uefi.dbx` protocol which counted the number of Microsoft
+hashes in the local `dbx` file and in the firmware payload.
+
+The equivalent versions are given below:
+
+### x64
+
+| Old Version | New Version |
+|-------------|-------------|
+| `9`         | `20100307`  |
+| `13`        | `20140413`  |
+| `77`        | `20160809`  |
+| `190`       | `20200701`  |
+| `211`       | `20210401`  |
+| `217`       | `20220801`  |
+| `220`       | `20230301`  |
+| `371`       | `20230501`  |
+
+### aarch64
+
+| Old Version | New Version |
+|-------------|-------------|
+| `19`        | `20200729`  |
+| `21`        | `20210401`  |
+| `22`        | `20220801`  |
+| `26`        | `20230501`  |
+
+### i386
+
+| Old Version | New Version |
+|-------------|-------------|
+| `41`        | `20200701`  |
+| `55`        | `20210401`  |
+| `57`        | `20230301`  |
+| `89`        | `20230501`  |
+
 ## GUID Generation
 
 These devices use the GUID constructed of the uppercase SHA256 of the X509
