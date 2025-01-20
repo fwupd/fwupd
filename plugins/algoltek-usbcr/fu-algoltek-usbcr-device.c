@@ -668,6 +668,7 @@ fu_algoltek_usbcr_device_init(FuAlgoltekUsbcrDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.algoltek.usbcr");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_set_name(FU_DEVICE(self), "USB Card Reader");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
 }
