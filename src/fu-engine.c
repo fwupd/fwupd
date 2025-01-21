@@ -103,6 +103,8 @@ static gboolean
 fu_engine_backends_save_phase(FuEngine *self, GError **error);
 static gboolean
 fu_engine_emulation_load_phase(FuEngine *self, GError **error);
+static void
+fu_engine_md_refresh_device(FuEngine *self, FuDevice *device);
 
 struct _FuEngine {
 	GObject parent_instance;
@@ -3276,6 +3278,9 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	}
 
+	/* match again any metadata-provided values */
+	fu_engine_md_refresh_device(self, device);
+
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
@@ -3952,20 +3957,26 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_md_refresh_device(FuEngine *self, FuDevice *device)
+{
+	g_autoptr(XbNode) component = fu_engine_get_component_by_guids(self, device);
+
+	/* set or clear the SUPPORTED flag */
+	fu_engine_ensure_device_supported(self, device);
+
+	/* fixup the name and format as needed */
+	if (component != NULL &&
+	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM))
+		fu_device_ensure_from_component(device, component);
+}
+
+static void
 fu_engine_md_refresh_devices(FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		g_autoptr(XbNode) component = fu_engine_get_component_by_guids(self, device);
-
-		/* set or clear the SUPPORTED flag */
-		fu_engine_ensure_device_supported(self, device);
-
-		/* fixup the name and format as needed */
-		if (component != NULL &&
-		    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_ONLY_CHECKSUM))
-			fu_device_ensure_from_component(device, component);
+		fu_engine_md_refresh_device(self, device);
 	}
 }
 
