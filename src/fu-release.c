@@ -769,35 +769,6 @@ fu_release_get_priority(FuRelease *self)
 	return self->priority;
 }
 
-static void
-fu_release_ensure_device_by_checksum(FuRelease *self, XbNode *component, XbNode *rel)
-{
-	g_autoptr(GPtrArray) device_checksums = NULL;
-
-	/* sanity check */
-	if (fu_device_get_checksums(self->device)->len == 0)
-		return;
-	device_checksums = xb_node_query(rel, "checksum[@target='device']", 0, NULL);
-	if (device_checksums == NULL)
-		return;
-	for (guint i = 0; i < device_checksums->len; i++) {
-		XbNode *device_checksum = g_ptr_array_index(device_checksums, i);
-		if (!fu_device_has_checksum(self->device, xb_node_get_text(device_checksum)))
-			continue;
-		fu_device_ensure_from_component(self->device, component);
-		if (fu_device_has_private_flag(self->device,
-					       FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION)) {
-			const gchar *rel_version = xb_node_get_attr(rel, "version");
-			if (rel_version == NULL)
-				continue;
-			fu_device_set_version(self->device, rel_version);
-			fu_device_remove_private_flag(self->device,
-						      FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
-		}
-		break;
-	}
-}
-
 /**
  * fu_release_load:
  * @self: a #FuRelease
@@ -842,17 +813,6 @@ fu_release_load(FuRelease *self,
 	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
 	g_return_val_if_fail(rel_optional == NULL || XB_IS_NODE(rel_optional), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* only update the device with the correct protocol */
-	tmp = xb_node_query_text(component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
-	if (tmp != NULL && !fu_device_has_protocol(self->device, tmp)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "update protocol %s does not match",
-			    tmp);
-		return FALSE;
-	}
 
 	/* set from the component */
 	tmp = xb_node_query_text(component, "id", NULL);
@@ -917,15 +877,6 @@ fu_release_load(FuRelease *self,
 	/* use the metadata to set the device attributes */
 	if (!fu_release_ensure_trust_flags(self, rel, error))
 		return FALSE;
-	if (self->device != NULL &&
-	    fu_release_has_flag(self, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
-		if (fu_device_has_private_flag(self->device,
-					       FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM)) {
-			fu_release_ensure_device_by_checksum(self, component, rel);
-		} else {
-			fu_device_ensure_from_component(self->device, component);
-		}
-	}
 
 	/* per-release priority wins, but fallback to per-component priority */
 	tmp64 = xb_node_get_attr_as_uint(rel, "priority");

@@ -710,6 +710,16 @@ fu_engine_load_release(FuEngine *self,
 	if (!fu_engine_requirements_check(self, release, install_flags, error))
 		return FALSE;
 
+	/* match component properties */
+	if (fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_METADATA)) {
+		FuDevice *device = fu_release_get_device(release);
+		if (device != NULL) {
+			fu_device_ensure_from_component(device, component);
+			if (rel != NULL)
+				fu_device_ensure_from_release(device, rel);
+		}
+	}
+
 	/* add any client-side BKC tags */
 	if (!fu_engine_add_local_release_metadata(self, release, error))
 		return FALSE;
