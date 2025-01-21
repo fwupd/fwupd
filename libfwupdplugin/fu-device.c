@@ -5174,6 +5174,12 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 	fw = fu_device_dump_firmware(self, progress, error);
 	if (fw == NULL)
 		return NULL;
+	if (priv->firmware_gtype != G_TYPE_INVALID) {
+		g_autoptr(FuFirmware) firmware = g_object_new(priv->firmware_gtype, NULL);
+		if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+			return NULL;
+		return g_steal_pointer(&firmware);
+	}
 	return fu_firmware_new_from_bytes(fw);
 }
 
