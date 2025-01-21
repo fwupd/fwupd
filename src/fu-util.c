@@ -701,10 +701,32 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 typedef struct {
 	guint nr_success;
 	guint nr_missing;
+	guint nr_skipped;
 	JsonBuilder *builder;
 	const gchar *name;
 	gboolean use_emulation;
+	GHashTable *report_metadata;
 } FuUtilDeviceTestHelper;
+
+static void
+fu_util_device_test_helper_free(FuUtilDeviceTestHelper *helper)
+{
+	if (helper->report_metadata != NULL)
+		g_hash_table_unref(helper->report_metadata);
+	if (helper->builder != NULL)
+		g_object_unref(helper->builder);
+	g_free(helper);
+}
+
+static FuUtilDeviceTestHelper *
+fu_util_device_test_helper_new(void)
+{
+	FuUtilDeviceTestHelper *helper = g_new0(FuUtilDeviceTestHelper, 1);
+	helper->builder = json_builder_new();
+	return helper;
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilDeviceTestHelper, fu_util_device_test_helper_free)
 
 static gboolean
 fu_util_device_test_component(FuUtilPrivate *priv,
@@ -1043,6 +1065,22 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 		json_builder_set_member_name(helper->builder, "interactive");
 		json_builder_add_boolean_value(helper->builder, interactive);
 	}
+	if (json_object_has_member(json_obj, "cpu-architectures")) {
+		JsonArray *json_array = json_object_get_array_member(json_obj, "cpu-architectures");
+		gboolean matched = FALSE;
+		const gchar *arch = g_hash_table_lookup(helper->report_metadata, "CpuArchitecture");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			const gchar *arch_tmp = json_array_get_string_element(json_array, i);
+			if (g_strcmp0(arch, arch_tmp) == 0) {
+				matched = TRUE;
+				break;
+			}
+		}
+		if (!matched) {
+			helper->nr_skipped++;
+			return TRUE;
+		}
+	}
 
 	/* process each step */
 	if (json_object_has_member(json_obj, "repeat")) {
@@ -1211,9 +1249,6 @@ fu_util_device_test_full(FuUtilPrivate *priv,
 			 FuUtilDeviceTestHelper *helper,
 			 GError **error)
 {
-	g_autoptr(JsonBuilder) builder = json_builder_new();
-	helper->builder = builder;
-
 	/* required for interactive devices */
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
 
@@ -1226,25 +1261,45 @@ fu_util_device_test_full(FuUtilPrivate *priv,
 		return FALSE;
 	}
 
+	/* get the report metadata */
+	helper->report_metadata =
+	    fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (helper->report_metadata == NULL)
+		return FALSE;
+
 	/* prepare to save the data as JSON */
-	json_builder_begin_object(builder);
+	json_builder_begin_object(helper->builder);
 
 	/* process all the files */
-	json_builder_set_member_name(builder, "results");
-	json_builder_begin_array(builder);
+	json_builder_set_member_name(helper->builder, "results");
+	json_builder_begin_array(helper->builder);
 	for (guint i = 0; values[i] != NULL; i++) {
-		json_builder_begin_object(builder);
+		json_builder_begin_object(helper->builder);
 		if (!fu_util_device_test_filename(priv, helper, values[i], error))
 			return FALSE;
-		json_builder_end_object(builder);
+		json_builder_end_object(helper->builder);
 	}
-	json_builder_end_array(builder);
+	json_builder_end_array(helper->builder);
 
 	/* dump to screen as JSON format */
-	json_builder_end_object(builder);
+	json_builder_end_object(helper->builder);
 	if (priv->as_json) {
-		if (!fu_util_print_builder(priv->console, builder, error))
+		if (!fu_util_print_builder(priv->console, helper->builder, error))
 			return FALSE;
+	}
+
+	/* just warning */
+	if (helper->nr_skipped > 0) {
+		g_autoptr(GString) str = g_string_new(NULL);
+		g_string_append_printf(
+		    str,
+		    /* TRANSLATORS: device tests can be specific to a CPU type */
+		    ngettext("%u test was skipped", "%u tests were skipped", helper->nr_skipped),
+		    helper->nr_skipped);
+		fu_console_print_full(priv->console,
+				      FU_CONSOLE_PRINT_FLAG_WARNING,
+				      "%s\n",
+				      str->str);
 	}
 
 	/* we need all to pass for a zero return code */
@@ -1276,15 +1331,16 @@ fu_util_device_test_full(FuUtilPrivate *priv,
 static gboolean
 fu_util_device_emulate(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilDeviceTestHelper helper = {.use_emulation = TRUE};
-	return fu_util_device_test_full(priv, values, &helper, error);
+	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
+	helper->use_emulation = TRUE;
+	return fu_util_device_test_full(priv, values, helper, error);
 }
 
 static gboolean
 fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilDeviceTestHelper helper = {.use_emulation = FALSE};
-	return fu_util_device_test_full(priv, values, &helper, error);
+	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
+	return fu_util_device_test_full(priv, values, helper, error);
 }
 
 static gboolean
