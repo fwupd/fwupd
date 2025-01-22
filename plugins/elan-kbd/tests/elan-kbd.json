@@ -1,0 +1,18 @@
+{
+  "name": "ELAN Keyboard",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/43cab4d273c9fff54abe4ddfb1ec3ac7d8a902f0119d575c0dfc591e305d188f-08D9.cab",
+      "emulation-url": "https://fwupd.org/downloads/1c7e5391bc51a6d0817ca7e1f22dfa966ef50b6b9a2914a335012a17c77c846b-08D9.zip",
+      "components": [
+        {
+          "version": "1.3",
+          "guids": [
+            "deea77a0-33e6-565b-94a4-4b20451ab094"
+          ]
+        }
+      ]
+    }
+  ]
+}

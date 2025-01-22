@@ -48,6 +48,7 @@ plugins = {
   'ebitdo': false,
   'elantp': false,
   'elanfp': false,
+  'elan-kbd': false,
   'emmc': false,
   'ep963x': false,
   'fastboot': false,
