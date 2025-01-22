@@ -36,7 +36,7 @@ sleep 5
 fwupdtool enable-test-devices
 # tag test device for emulation before starting daemon
 fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
-G_DEBUG=fatal-criticals /usr/lib/fwupd/fwupd --verbose &
+G_DEBUG=fatal-criticals /usr/lib/fwupd/fwupd --verbose >fwupd.txt 2>&1 &
 sleep 10
 /usr/share/installed-tests/fwupd/fwupdmgr.sh
 /usr/share/installed-tests/fwupd/fwupd.sh

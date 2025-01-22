@@ -9,9 +9,13 @@ CAB="@installedtestsdir@/fakedevice123.cab"
 
 error()
 {
-        rc=$1
+    rc=$1
+    if [ -f "fwupd.txt" ]; then
+        cat fwupd.txt
+    else
         journalctl -u fwupd -b || true
-        exit $rc
+    fi
+    exit $rc
 }
 
 # ---
