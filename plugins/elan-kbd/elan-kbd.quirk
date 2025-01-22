@@ -1,0 +1,17 @@
+# StarLite Magnetic Keyboard
+[USB\VID_1018&PID_1006]
+Plugin = elan_kbd
+
+# Pine Phone Keyboard
+[USB\VID_04F3&PID_1910]
+Plugin = elan_kbd
+
+# ELAN debugger
+[USB\VID_04F3&PID_B001]
+Plugin = elan_kbd
+GType = FuElanKbdDebugDevice
+
+# ELAN bootloader
+[USB\VID_04F3&PID_0905]
+Plugin = elan_kbd
+GType = FuElanKbdDevice
