@@ -6,7 +6,39 @@
 
 #include "config.h"
 
+#ifdef HAVE_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #include "fu-uefi-dbx-common.h"
+
+const gchar *
+fu_uefi_dbx_get_efi_arch(void)
+{
+#ifdef HAVE_UTSNAME_H
+	struct utsname name_tmp;
+	struct {
+		const gchar *arch;
+		const gchar *arch_efi;
+	} map[] = {
+	    {"x86", "ia32"},
+	    {"x86_64", "x64"},
+	    {"arm", "arm"},
+	    {"aarch64", "aa64"},
+	    {"loongarch64", "loongarch64"},
+	    {"riscv64", "riscv64"},
+	};
+
+	memset(&name_tmp, 0, sizeof(struct utsname));
+	if (uname(&name_tmp) < 0)
+		return NULL;
+	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
+		if (g_strcmp0(name_tmp.machine, map[i].arch) == 0)
+			return map[i].arch_efi;
+	}
+#endif
+	return NULL;
+}
 
 static gchar *
 fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
