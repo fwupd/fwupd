@@ -21,3 +21,9 @@ AudioS5gen2Gaia3VendorId = 0x001D
 [USB\VID_18D1&PID_800C]
 Plugin = qc_s5gen2
 ProxyGType = FuQcS5gen2HidDevice
+
+# Transitional GID8
+[USB\VID_0A12&PID_4007&MANUFACTURER_GID8&PRODUCT_GID8]
+Plugin = qc_s5gen2
+ProxyGType = FuQcS5gen2HidDevice
+CounterpartGuid = USB\VID_18D1&PID_800C
