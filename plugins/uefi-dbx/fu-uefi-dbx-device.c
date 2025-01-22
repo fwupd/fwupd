@@ -205,7 +205,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_firmware_parse_bytes(kek, kek_blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
-	fu_device_add_instance_strup(device, "ARCH", EFI_MACHINE_TYPE_NAME);
+	fu_device_add_instance_strup(device, "ARCH", fu_uefi_dbx_get_efi_arch());
 
 	sigs = fu_firmware_get_images(kek);
 	for (guint j = 0; j < sigs->len; j++) {
