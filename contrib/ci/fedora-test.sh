@@ -20,7 +20,7 @@ fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 /usr/libexec/fwupd/fwupd --immediate-exit --verbose
 
 # run the installed tests whilst the daemon debugging
-G_DEBUG=fatal-criticals /usr/libexec/fwupd/fwupd --verbose >fwupd.txt 2>&1 &
+G_DEBUG=fatal-criticals /usr/libexec/fwupd/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 sleep 10
 gnome-desktop-testing-runner fwupd
 
