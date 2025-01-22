@@ -20,7 +20,7 @@ A clear and concise description of what you expected to happen.
 Please provide the version of the daemon and client.
 
 ```shell
-fwupdmgr --version
+fwupdtool get-report-metadata
 ```
 
 Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):

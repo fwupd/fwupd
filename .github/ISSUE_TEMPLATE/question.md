@@ -14,5 +14,5 @@ A clear and concise description of what you are wondering about.
 Please provide the version of the daemon and client if applicable to your current installation of `fwupd`.
 
 ```shell
-fwupdmgr --version
+fwupdtool get-report-metadata
 ```
