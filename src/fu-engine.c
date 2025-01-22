@@ -21,6 +21,9 @@
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
 #endif
+#ifdef HAVE_AUXV_H
+#include <sys/auxv.h>
+#endif
 #include <errno.h>
 
 #ifdef _WIN32
@@ -1966,6 +1969,13 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("KernelName"), g_strdup(name_tmp.sysname));
 		g_hash_table_insert(hash, g_strdup("KernelVersion"), g_strdup(name_tmp.release));
 	}
+#endif
+#ifdef HAVE_AUXV_H
+	/* this is the architecture of the userspace, e.g. i686 would be returned for
+	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
+	g_hash_table_insert(hash,
+			    g_strdup("PlatformArchitecture"),
+			    g_strdup((const gchar *)getauxval(AT_PLATFORM)));
 #endif
 
 	/* add the kernel boot time so we can detect a reboot */

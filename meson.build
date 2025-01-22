@@ -358,6 +358,9 @@ endif
 libsystemd = dependency('libsystemd',
                         required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'))
 
+if cc.has_header('sys/auxv.h')
+  conf.set('HAVE_AUXV_H', '1')
+endif
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
 endif
