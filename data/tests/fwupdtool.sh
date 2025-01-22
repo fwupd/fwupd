@@ -126,6 +126,11 @@ ${FWUPDTOOL} get-version-formats --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
 
 # ---
+echo "Getting report metadata..."
+${FWUPDTOOL} get-report-metadata --json
+rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+
+# ---
 echo "Getting the list of remotes"
 ${FWUPDTOOL} get-remotes --json
 rc=$?; if [ $rc != 0 ]; then exit $rc; fi
