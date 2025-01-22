@@ -1,5 +1,4 @@
-#!/bin/sh
-set -e
+#!/bin/sh -e
 
 exec 2>&1
 
@@ -10,7 +9,7 @@ if [ "$(id -u)" -ne 0 ]; then exit 0; fi
 echo "Starting P2P daemon..."
 export FWUPD_DBUS_SOCKET="/run/fwupd.sock"
 rm -rf ${FWUPD_DBUS_SOCKET}
-@libexecdir@/fwupd/fwupd -vv --timed-exit --no-timestamp &
+@libexecdir@/fwupd/fwupd -v --timed-exit --no-timestamp &
 while [ ! -e ${FWUPD_DBUS_SOCKET} ]; do sleep 1; done
 
 # ---
