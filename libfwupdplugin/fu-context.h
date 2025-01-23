@@ -136,6 +136,14 @@ typedef enum {
 	 * Since: 2.0.5
 	 **/
 	FU_CONTEXT_FLAG_FDE_BITLOCKER = 1u << 4,
+	/**
+	 * FU_CONTEXT_FLAG_FDE_SNAPD:
+	 *
+	 * Snapd style full disk encryption is in use
+	 *
+	 * Since: 2.0.5
+	 **/
+	FU_CONTEXT_FLAG_FDE_SNAPD = 1u << 5,
 
 	/**
 	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:
