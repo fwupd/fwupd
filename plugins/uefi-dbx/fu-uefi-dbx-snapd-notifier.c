@@ -30,15 +30,12 @@ fu_uefi_dbx_snapd_notifier_new(void)
 static void
 fu_uefi_dbx_snapd_notifier_init(FuUefiDbxSnapdNotifier *self)
 {
-	/* default path for use inside the snap sandbox */
-	const char *snapd_snap_socket = "/run/snapd-snap.socket";
+	/* default path is different inside the snap sandbox vs out */
+	const char *snapd_snap_socket = fu_snap_is_in_snap() ? "/run/snapd-snap.socket"
+							     : "/run/snapd.socket";
 	const char *snapd_snap_socket_override = g_getenv("FWUPD_SNAPD_SNAP_SOCKET");
 
 	self->curl_template = curl_easy_init();
-
-	/* TODO support system wide snapd socket for outside of snap scenarios */
-	if (!fu_snap_is_in_snap())
-		g_warning("attempted use of snapd notifier outside of snap");
 
 	if (snapd_snap_socket_override != NULL)
 		snapd_snap_socket = snapd_snap_socket_override;
