@@ -2949,8 +2949,10 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		const gchar *device_id = fwupd_device_get_id(dev);
 		g_autoptr(FwupdRelease) rel = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
-		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GError) error_install = NULL;
+		g_autoptr(GError) error_report = NULL;
 		gboolean dev_skip_byid = TRUE;
+		gboolean ret;
 
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
@@ -2981,11 +2983,11 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		rels = fwupd_client_get_upgrades(priv->client,
 						 fwupd_device_get_id(dev),
 						 priv->cancellable,
-						 &error_local);
+						 &error_install);
 		if (rels == NULL) {
 			g_ptr_array_add(devices_latest, dev);
 			/* discard the actual reason from user, but leave for debugging */
-			g_debug("%s", error_local->message);
+			g_debug("%s", error_install->message);
 			continue;
 		}
 		for (guint j = 0; j < rels->len; j++) {
@@ -3006,22 +3008,32 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
-		if (!fu_util_update_device_with_release(priv, dev, rel, &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-				g_debug("ignoring %s: %s",
-					fwupd_device_get_id(dev),
-					error_local->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
+		ret = fu_util_update_device_with_release(priv, dev, rel, &error_install);
+		if (!ret &&
+		    g_error_matches(error_install, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug("ignoring %s: %s",
+				fwupd_device_get_id(dev),
+				error_install->message);
+			continue;
 		}
-
 		fu_util_display_current_message(priv);
 
 		/* send report if we're supposed to */
-		if (!fu_util_maybe_send_reports(priv, rel, error))
+		if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
+			/* install failed, report failed */
+			if (!ret) {
+				g_warning("%s", error_report->message);
+				/* install succeeded, but report failed */
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_report));
+				return FALSE;
+			}
+		}
+
+		if (!ret) {
+			g_propagate_error(error, g_steal_pointer(&error_install));
 			return FALSE;
+		}
 	}
 
 	/* show warnings */
@@ -3202,9 +3214,11 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GError) error_report = NULL;
 
 	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
 		g_set_error_literal(error,
@@ -3241,13 +3255,23 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-	if (!fu_util_update_device_with_release(priv, dev, rel, error))
-		return FALSE;
-
+	ret = fu_util_update_device_with_release(priv, dev, rel, error);
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	if (!fu_util_maybe_send_reports(priv, rel, error))
+	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
+		/* install failed, report failed */
+		if (!ret) {
+			g_warning("%s", error_report->message);
+			/* install succeeded, but report failed */
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_report));
+			return FALSE;
+		}
+	}
+
+	/* install failed */
+	if (!ret)
 		return FALSE;
 
 	/* we don't want to ask anything */
@@ -3262,8 +3286,10 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GError) error_report = NULL;
 
 	priv->filter_device_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt(priv, values, error);
@@ -3279,12 +3305,23 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-	if (!fu_util_update_device_with_release(priv, dev, rel, error))
-		return FALSE;
+	ret = fu_util_update_device_with_release(priv, dev, rel, error);
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	if (!fu_util_maybe_send_reports(priv, rel, error))
+	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
+		/* install failed, report failed */
+		if (!ret) {
+			g_warning("%s", error_report->message);
+			/* install succeeded, but report failed */
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_report));
+			return FALSE;
+		}
+	}
+
+	/* install failed */
+	if (!ret)
 		return FALSE;
 
 	/* we don't want to ask anything */
@@ -3299,8 +3336,10 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	gboolean ret;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GError) error_report = NULL;
 
 	/* fall back for CLI compatibility */
 	if (g_strv_length(values) >= 1) {
@@ -3336,12 +3375,23 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-	if (!fu_util_update_device_with_release(priv, dev, rel, error))
-		return FALSE;
+	ret = fu_util_update_device_with_release(priv, dev, rel, error);
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	if (!fu_util_maybe_send_reports(priv, rel, error))
+	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
+		/* install failed, report failed */
+		if (!ret) {
+			g_warning("%s", error_report->message);
+			/* install succeeded, but report failed */
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_report));
+			return FALSE;
+		}
+	}
+
+	/* install failed */
+	if (!ret)
 		return FALSE;
 
 	/* we don't want to ask anything */
@@ -3363,10 +3413,12 @@ static gboolean
 fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *branch;
+	gboolean ret;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(GPtrArray) branches = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GError) error_report = NULL;
 
 	/* find the device and check it has multiple branches */
 	priv->filter_device_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
@@ -3462,12 +3514,23 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (!fu_util_update_device_with_release(priv, dev, rel, error))
-		return FALSE;
+	ret = fu_util_update_device_with_release(priv, dev, rel, error);
 	fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
-	if (!fu_util_maybe_send_reports(priv, rel, error))
+	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
+		/* install failed, report failed */
+		if (!ret) {
+			g_warning("%s", error_report->message);
+			/* install succeeded, but report failed */
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_report));
+			return FALSE;
+		}
+	}
+
+	/* install failed */
+	if (!ret)
 		return FALSE;
 
 	/* we don't want to ask anything */
