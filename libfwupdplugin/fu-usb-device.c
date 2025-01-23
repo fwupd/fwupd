@@ -2694,8 +2694,15 @@ fu_usb_device_ensure_hid_descriptors(FuUsbDevice *self, GError **error)
 		return FALSE;
 	for (guint i = 0; i < priv->hid_descriptors->len; i++) {
 		FuUsbHidDescriptor *hid_descriptor = g_ptr_array_index(priv->hid_descriptors, i);
-		if (!fu_usb_device_ensure_hid_descriptor(self, hid_descriptor, error))
-			return FALSE;
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_usb_device_ensure_hid_descriptor(self, hid_descriptor, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		}
 	}
 	return TRUE;
 }
