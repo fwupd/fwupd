@@ -228,7 +228,7 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_signature_list_set_list_size(st,
 						   FU_STRUCT_EFI_SIGNATURE_LIST_SIZE +
 						       (images->len * (16 + 32)));
-	fu_struct_efi_signature_list_set_size(st, 32); /* SHA256 */
+	fu_struct_efi_signature_list_set_size(st, sizeof(fwupd_guid_t) + 32); /* SHA256 */
 
 	/* SignatureOwner + SignatureData */
 	for (guint i = 0; i < images->len; i++) {
@@ -237,11 +237,12 @@ fu_efi_signature_list_write(FuFirmware *firmware, GError **error)
 		img_blob = fu_firmware_write(img, error);
 		if (img_blob == NULL)
 			return NULL;
-		if (g_bytes_get_size(img_blob) != 16 + 32) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "expected SHA256 hash as signature data");
+		if (g_bytes_get_size(img_blob) != sizeof(fwupd_guid_t) + 32) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "expected SHA256 hash as signature data, got 0x%x",
+				    (guint)(g_bytes_get_size(img_blob) - sizeof(fwupd_guid_t)));
 			return NULL;
 		}
 		fu_byte_array_append_bytes(st, img_blob);
