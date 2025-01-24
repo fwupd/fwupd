@@ -4503,6 +4503,9 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	g_autoptr(GPtrArray) plugins = NULL;
 
+	if (priv->as_json)
+		return;
+
 	/* get plugins from daemon, ignoring if the daemon is too old */
 	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, NULL);
 	if (plugins == NULL)

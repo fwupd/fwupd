@@ -108,6 +108,9 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
 	GPtrArray *plugins;
 
+	if (priv->as_json)
+		return;
+
 	/* get a superset so we do not show the same message more than once */
 	plugins = fu_engine_get_plugins(priv->engine);
 	for (guint i = 0; i < plugins->len; i++) {
