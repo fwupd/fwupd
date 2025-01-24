@@ -21,6 +21,7 @@ run_device_tests()
 				--no-metadata-check \
 				"$f"
 		done
+		fwupdmgr quit
 	fi
 }
 
