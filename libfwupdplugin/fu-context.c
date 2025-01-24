@@ -1002,6 +1002,33 @@ fu_context_housekeeping(FuContext *self)
 typedef gboolean (*FuContextHwidsSetupFunc)(FuContext *self, FuHwids *hwids, GError **error);
 
 static void
+fu_context_detect_full_disk_encryption(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_if_fail(FU_IS_CONTEXT(self));
+
+	devices = fu_common_get_block_devices(&error_local);
+	if (devices == NULL) {
+		g_info("Failed to get block devices: %s", error_local->message);
+		return;
+	}
+
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy = g_ptr_array_index(devices, i);
+		g_autoptr(GVariant) id_type = g_dbus_proxy_get_cached_property(proxy, "IdType");
+		g_autoptr(GVariant) device = g_dbus_proxy_get_cached_property(proxy, "Device");
+		if (id_type == NULL || device == NULL)
+			continue;
+		if (g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0)
+			priv->flags |= FU_CONTEXT_FLAG_FDE_BITLOCKER;
+	}
+	/* TODO identify Ubuntu Core FDE volumes */
+}
+
+static void
 fu_context_hwid_quirk_cb(FuContext *self,
 			 const gchar *key,
 			 const gchar *value,
@@ -1059,7 +1086,8 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup-funcs");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 95, "reload-bios-settings");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-fde");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
 
 	/* required always */
 	if (!fu_config_load(priv->config, error))
@@ -1094,6 +1122,9 @@ fu_context_load_hwinfo(FuContext *self,
 						   fu_context_hwid_quirk_cb,
 						   NULL);
 	}
+	fu_progress_step_done(progress);
+
+	fu_context_detect_full_disk_encryption(self);
 	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);
