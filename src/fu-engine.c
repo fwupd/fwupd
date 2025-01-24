@@ -4746,6 +4746,8 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 				g_warning("failed to load component: %s", error_local->message);
 				continue;
 			}
+			fu_release_set_device(FU_RELEASE(release), device);
+
 			if (!fu_release_load(FU_RELEASE(release),
 					     NULL,
 					     component,
