@@ -36,6 +36,7 @@ install_data([
     'efi-lz77-legacy.bin',
     'efi-lz77-tiano.bin',
     'efi-section.builder.xml',
+    'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',
     'efi-volume.builder.xml',
     'elf.builder.xml',

@@ -9,4 +9,4 @@
 #include "fu-efi-signature.h"
 
 FuEfiSignature *
-fu_efi_signature_new(FuEfiSignatureKind kind, const gchar *owner);
+fu_efi_signature_new(FuEfiSignatureKind kind);

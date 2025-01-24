@@ -36,57 +36,6 @@ G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
 const guint8 FU_EFI_SIGLIST_HEADER_MAGIC[] = {0x26, 0x16, 0xC4, 0xC1, 0x4C};
 
 static gboolean
-fu_efi_signature_list_parse_item(FuEfiSignatureList *self,
-				 FuEfiSignatureKind sig_kind,
-				 GInputStream *stream,
-				 gsize offset,
-				 guint32 size,
-				 GError **error)
-{
-	fwupd_guid_t guid;
-	g_autofree gchar *sig_owner = NULL;
-	g_autoptr(FuEfiSignature) sig = NULL;
-	g_autoptr(GBytes) data = NULL;
-
-	/* allocate data buf */
-	if (size <= sizeof(fwupd_guid_t)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "SignatureSize invalid: 0x%x",
-			    (guint)size);
-		return FALSE;
-	}
-
-	/* read both blocks of data */
-	if (!fu_input_stream_read_safe(stream,
-				       (guint8 *)&guid,
-				       sizeof(guid),
-				       0x0,
-				       offset,
-				       sizeof(guid),
-				       error)) {
-		g_prefix_error(error, "failed to read signature GUID: ");
-		return FALSE;
-	}
-	data = fu_input_stream_read_bytes(stream,
-					  offset + sizeof(fwupd_guid_t),
-					  size - sizeof(fwupd_guid_t),
-					  NULL,
-					  error);
-	if (data == NULL) {
-		g_prefix_error(error, "failed to read signature data: ");
-		return FALSE;
-	}
-
-	/* create item */
-	sig_owner = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
-	sig = fu_efi_signature_new(sig_kind, sig_owner);
-	fu_firmware_set_bytes(FU_FIRMWARE(sig), data);
-	return fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error);
-}
-
-static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 				 GInputStream *stream,
 				 gsize *offset,
@@ -142,12 +91,15 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	/* header is typically unused */
 	offset_tmp = *offset + 0x1c + header_size;
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
-		if (!fu_efi_signature_list_parse_item(self,
-						      sig_kind,
-						      stream,
-						      offset_tmp,
-						      size,
-						      error))
+		g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(sig_kind);
+		fu_firmware_set_size(FU_FIRMWARE(sig), size);
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig),
+					      stream,
+					      offset_tmp,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      error))
+			return FALSE;
+		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
 		offset_tmp += size;
 	}
