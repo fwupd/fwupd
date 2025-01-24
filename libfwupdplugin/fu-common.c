@@ -124,47 +124,6 @@ fu_common_get_kernel_cmdline(GError **error)
 }
 
 /**
- * fu_common_check_full_disk_encryption:
- * @error: (nullable): optional return location for an error
- *
- * Checks that all FDE volumes are not going to be affected by a firmware update. If unsure,
- * return with failure and let the user decide.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.7.1
- **/
-gboolean
-fu_common_check_full_disk_encryption(GError **error)
-{
-	g_autoptr(GPtrArray) devices = NULL;
-
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	devices = fu_common_get_block_devices(error);
-	if (devices == NULL)
-		return FALSE;
-	for (guint i = 0; i < devices->len; i++) {
-		GDBusProxy *proxy = g_ptr_array_index(devices, i);
-		g_autoptr(GVariant) id_type = g_dbus_proxy_get_cached_property(proxy, "IdType");
-		g_autoptr(GVariant) device = g_dbus_proxy_get_cached_property(proxy, "Device");
-		if (id_type == NULL || device == NULL)
-			continue;
-		if (g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_AUTH_EXPIRED,
-				    "%s device %s is encrypted",
-				    g_variant_get_string(id_type, NULL),
-				    g_variant_get_bytestring(device));
-			return FALSE;
-		}
-		/* TODO identify Ubuntu Core FDE volumes */
-	}
-	return TRUE;
-}
-
-/**
  * fu_common_get_olson_timezone_id:
  * @error: (nullable): optional return location for an error
  *

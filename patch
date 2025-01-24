@@ -1,0 +1,24 @@
+diff --git a/data/tests/fwupd.sh b/data/tests/fwupd.sh
+index cbab49d31..4c23f3767 100755
+--- a/data/tests/fwupd.sh
++++ b/data/tests/fwupd.sh
+@@ -21,7 +21,6 @@ run_device_tests()
+                                --no-metadata-check \
+                                "$f"
+                done
+-               fwupdmgr quit
+        fi
+ }
+
+@@ -58,9 +57,10 @@ run_test tpm-self-test
+ run_test uefi-dbx-self-test
+ run_test vli-self-test
+ run_test wacom-usb-self-test
+-run_device_tests
+ run_umockdev_test fwupd_test.py
+ run_umockdev_test pci_psp_test.py
++run_device_tests
++fwupdmgr quit
+
+ # success!
+ exit 0

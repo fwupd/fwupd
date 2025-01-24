@@ -195,6 +195,7 @@ static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
+	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) kek = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_fde = NULL;
@@ -228,10 +229,8 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 
 	/* dbx changes are expected to change PCR7, warn the user that BitLocker might ask for
 	recovery key after fw update */
-	if (!fu_common_check_full_disk_encryption(&error_fde)) {
-		g_debug("FDE in use, set flag: %s", error_fde->message);
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
-	}
 
 	return fu_uefi_dbx_device_ensure_checksum(self, error);
 }

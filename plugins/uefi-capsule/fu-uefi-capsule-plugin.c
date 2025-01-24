@@ -988,6 +988,7 @@ static gboolean
 fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
 	gboolean has_fde = FALSE;
 	g_autoptr(GError) error_fde = NULL;
@@ -1016,10 +1017,8 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	fu_progress_step_done(progress);
 
 	/*  warn the user that BitLocker might ask for recovery key after fw update */
-	if (!fu_common_check_full_disk_encryption(&error_fde)) {
-		g_debug("FDE in use, set flag: %s", error_fde->message);
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER))
 		has_fde = TRUE;
-	}
 	fu_progress_step_done(progress);
 
 	/* add each device */
