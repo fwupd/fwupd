@@ -85,6 +85,9 @@ static void
 fu_uefi_dbx_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	g_autoptr(FuVolume) esp = NULL;
+	g_autoptr(GError) error_udisks2 = NULL;
+
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_capsule");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_DBX_DEVICE);
@@ -107,6 +110,15 @@ fu_uefi_dbx_plugin_constructed(GObject *obj)
 	} else {
 		/* TODO figure out non-snap scenarios */
 		g_info("snapd integration outside of snap is not supported");
+	}
+
+	/* ensure that an ESP was found */
+	esp = fu_context_get_default_esp(fu_plugin_get_context(plugin), &error_udisks2);
+	if (esp == NULL) {
+		g_info("cannot find default ESP: %s", error_udisks2->message);
+		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
+		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 	}
 }
 
