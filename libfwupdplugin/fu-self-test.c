@@ -4976,7 +4976,7 @@ fu_firmware_builder_round_trip_func(void)
 	     "d6fbadc1c303a3b4eede9db7fb0ddb353efffc86"},
 	    {FU_TYPE_EFI_SIGNATURE_LIST,
 	     "efi-signature-list.builder.xml",
-	     "b3a46ac55847336a7d74fdf6957fd86ca193b1d9"},
+	     "450111ea0f77a0ede5b6a6305cd2e02b44b5f1e9"},
 	    {FU_TYPE_EFI_VOLUME,
 	     "efi-volume.builder.xml",
 	     "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"},
