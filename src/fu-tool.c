@@ -5283,7 +5283,8 @@ main(int argc, char *argv[])
 		}
 #endif
 		fu_util_print_error(priv, error);
-		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
+		if (!priv->as_json &&
+		    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			fu_console_print(priv->console,
 					 /* TRANSLATORS: explain how to get help, %1 is
 					  * 'fwupdtool --help' */
