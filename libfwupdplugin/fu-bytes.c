@@ -10,6 +10,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
@@ -305,4 +306,29 @@ fu_bytes_to_string(GBytes *bytes)
 	for (gsize i = 0; i < bufsz; i++)
 		g_string_append_printf(str, "%02x", buf[i]);
 	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/**
+ * fu_bytes_from_string:
+ * @str: a hex string
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a lowercase hex string to a #GBytes.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL on error
+ *
+ * Since: 2.0.5
+ **/
+GBytes *
+fu_bytes_from_string(const gchar *str, GError **error)
+{
+	g_autoptr(GByteArray) buf = NULL;
+
+	g_return_val_if_fail(str != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = fu_byte_array_from_string(str, error);
+	if (buf == NULL)
+		return NULL;
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
 }
