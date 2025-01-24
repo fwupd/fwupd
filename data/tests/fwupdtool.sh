@@ -1,5 +1,6 @@
 #!/bin/sh
 
+exec 0>/dev/null
 exec 2>&1
 
 export NO_COLOR=1

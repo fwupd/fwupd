@@ -1,5 +1,6 @@
 #!/bin/sh -e
 
+exec 0>/dev/null
 exec 2>&1
 
 run_test()
