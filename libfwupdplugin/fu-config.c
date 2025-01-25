@@ -528,13 +528,24 @@ gboolean
 fu_config_reset_defaults(FuConfig *self, const gchar *section, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GError) error_keyfile = NULL;
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	g_return_val_if_fail(section != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* remove all keys, and save */
-	g_key_file_remove_group(priv->keyfile, section, NULL);
+	if (!g_key_file_remove_group(priv->keyfile, section, &error_keyfile)) {
+		/* allow user to reset config sections twice */
+		if (!g_error_matches(error_keyfile,
+				     G_KEY_FILE_ERROR,
+				     G_KEY_FILE_ERROR_GROUP_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_keyfile));
+			fwupd_error_convert(error);
+			return FALSE;
+		}
+	}
+
 	return fu_config_save(self, error);
 }
 
