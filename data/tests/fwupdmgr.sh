@@ -157,34 +157,48 @@ echo "Getting history (should be none)..."
 fwupdmgr get-history
 rc=$?; if [ $rc != 2 ]; then exit $rc; fi
 
-if [ -z "$CI_NETWORK" ]; then
-        echo "Skipping remaining tests due to CI_NETWORK not being set"
-        exit 0
+if [ -n "$CI_NETWORK" ]; then
+    # ---
+    echo "Downgrading to older release (requires network access)"
+    fwupdmgr --download-retries=5 downgrade $device -y
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # ---
+    echo "Downgrading to older release (should be none)"
+    fwupdmgr downgrade $device
+    rc=$?; if [ $rc != 2 ]; then error $rc; fi
+
+    # ---
+    echo "Updating all devices to latest release (requires network access)"
+    fwupdmgr --download-retries=5 --no-unreported-check --no-metadata-check --no-reboot-check update -y
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # ---
+    echo "Getting updates (should be none)..."
+    fwupdmgr --no-unreported-check --no-metadata-check get-updates
+    rc=$?; if [ $rc != 2 ]; then error $rc; fi
+
+    # ---
+    echo "Refreshing from the LVFS (requires network access)..."
+    fwupdmgr --download-retries=5 refresh
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+else
+        echo "Skipping network tests due to CI_NETWORK not being set"
 fi
 
 # ---
-echo "Downgrading to older release (requires network access)"
-fwupdmgr --download-retries=5 downgrade $device -y
+echo "Modifying config..."
+fwupdmgr modify-config fwupd UpdateMotd false --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
-echo "Downgrading to older release (should be none)"
-fwupdmgr downgrade $device
-rc=$?; if [ $rc != 2 ]; then error $rc; fi
-
-# ---
-echo "Updating all devices to latest release (requires network access)"
-fwupdmgr --download-retries=5 --no-unreported-check --no-metadata-check --no-reboot-check update -y
+echo "Resetting changed config..."
+fwupdmgr reset-config fwupd --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
-echo "Getting updates (should be none)..."
-fwupdmgr --no-unreported-check --no-metadata-check get-updates
-rc=$?; if [ $rc != 2 ]; then error $rc; fi
-
-# ---
-echo "Refreshing from the LVFS (requires network access)..."
-fwupdmgr --download-retries=5 refresh
+echo "Resetting empty config ..."
+fwupdmgr reset-config fwupd --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # success!
