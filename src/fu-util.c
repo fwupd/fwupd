@@ -910,6 +910,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		/* just ignore anything without emulation data */
 		if (json_object_has_member(json_obj, "emulation-url")) {
 			emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+
 			emulation_filename =
 			    fu_util_download_if_required(priv, emulation_url, error);
 			if (emulation_filename == NULL) {
@@ -922,6 +923,14 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		else
 			return TRUE;
 
+		/* log */
+		if (emulation_url != NULL) {
+			json_builder_set_member_name(helper->builder, "emulation-url");
+			json_builder_add_string_value(helper->builder, emulation_url);
+		} else if (emulation_filename != NULL) {
+			json_builder_set_member_name(helper->builder, "emulation-file");
+			json_builder_add_string_value(helper->builder, emulation_filename);
+		}
 		if (!fwupd_client_emulation_load(priv->client,
 						 emulation_filename,
 						 priv->cancellable,
