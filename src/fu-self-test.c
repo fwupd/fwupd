@@ -3113,7 +3113,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.4");
 
 	/* reset the config back to defaults */
-	ret = fu_engine_reset_config(engine, "test", &error);
+	ret = fu_engine_reset_config(engine, "fwupd", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 }
