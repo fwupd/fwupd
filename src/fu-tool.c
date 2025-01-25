@@ -248,8 +248,11 @@ fu_util_start_engine(FuUtilPrivate *priv,
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	if (!fu_engine_load(priv->engine, flags, progress, error))
 		return FALSE;
-	fu_util_show_plugin_warnings(priv);
-	fu_util_show_unsupported_warning(priv->console);
+
+	if (!priv->as_json) {
+		fu_util_show_plugin_warnings(priv);
+		fu_util_show_unsupported_warning(priv->console);
+	}
 
 	/* copy properties from engine to client */
 	g_object_set(priv->client,
