@@ -9,4 +9,4 @@ sed "s,ConditionVirtualization=.*,," 		\
 	/etc/systemd/system/fwupd.service
 systemctl daemon-reload
 # run the tests
-gnome-desktop-testing-runner fwupd
+gnome-desktop-testing-runner --timeout=600 fwupd

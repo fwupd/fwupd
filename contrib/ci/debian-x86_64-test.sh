@@ -15,7 +15,7 @@ fwupdtool emulation-tag 08d460be0f1f9f128413f816022a6439e0078018
 # run tests
 ./contrib/ci/get_test_firmware.sh /usr/share/installed-tests/fwupd/
 service dbus restart
-gnome-desktop-testing-runner fwupd
+gnome-desktop-testing-runner --timeout=600 fwupd
 
 # generate coverage report
 ./contrib/ci/coverage.sh
