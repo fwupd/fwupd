@@ -3754,7 +3754,7 @@ static gboolean
 fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	/* check args */
-	if (g_strv_length(values) != 2) {
+	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
