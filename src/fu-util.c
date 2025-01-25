@@ -3731,6 +3731,10 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments: [SECTION] KEY VALUE expected");
 		return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
+
 	if (!priv->assume_yes) {
 		if (!fu_console_input_bool(priv->console,
 					   FALSE,
@@ -3763,6 +3767,10 @@ fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	if (!fwupd_client_reset_config(priv->client, values[0], priv->cancellable, error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	if (!priv->assume_yes) {
 		if (!fu_console_input_bool(priv->console,
 					   FALSE,
