@@ -2041,6 +2041,9 @@ fu_util_modify_config(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: success message -- a per-system setting value */
 	fu_console_print_literal(priv->console, _("Successfully modified configuration value"));
 	return TRUE;
@@ -2064,6 +2067,9 @@ fu_util_reset_config(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fu_engine_reset_config(priv->engine, values[0], error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- a per-system setting value */
 	fu_console_print_literal(priv->console, _("Successfully reset configuration section"));
