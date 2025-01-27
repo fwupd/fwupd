@@ -215,6 +215,7 @@ fu_self_test_set_up(FuTestFixture *fixture, gconstpointer user_data)
 	}
 
 	fixture->ctx = fu_context_new();
+	fu_context_add_flag(fixture->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 	ret = fu_context_load_quirks(fixture->ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
 				     &error);
