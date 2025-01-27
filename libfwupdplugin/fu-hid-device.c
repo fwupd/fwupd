@@ -150,6 +150,39 @@ fu_hid_device_autodetect_eps(FuHidDevice *self, FuUsbInterface *iface, GError **
 }
 
 static gboolean
+fu_hid_device_setup(FuDevice *device, GError **error)
+{
+	FuHidDevice *self = FU_HID_DEVICE(device);
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_hid_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	/* best effort, from HID */
+	if (fu_device_get_vendor(device) == NULL) {
+		g_autofree gchar *manufacturer =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "manufacturer",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+		if (manufacturer != NULL)
+			fu_device_set_vendor(device, manufacturer);
+	}
+	if (fu_device_get_name(device) == NULL) {
+		g_autofree gchar *product =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "product",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      NULL);
+		if (product != NULL)
+			fu_device_set_name(device, product);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_hid_device_open(FuDevice *device, GError **error)
 {
 	FuHidDevice *self = FU_HID_DEVICE(device);
@@ -658,6 +691,7 @@ fu_hid_device_class_init(FuHidDeviceClass *klass)
 	object_class->get_property = fu_hid_device_get_property;
 	object_class->set_property = fu_hid_device_set_property;
 	device_class->open = fu_hid_device_open;
+	device_class->setup = fu_hid_device_setup;
 	device_class->close = fu_hid_device_close;
 	device_class->to_string = fu_hid_device_to_string;
 
