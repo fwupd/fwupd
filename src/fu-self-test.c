@@ -38,6 +38,7 @@
 #include "fu-remote.h"
 #include "fu-security-attr-common.h"
 #include "fu-smbios-private.h"
+#include "fu-udev-backend.h"
 #include "fu-usb-backend.h"
 
 #ifdef HAVE_GIO_UNIX
@@ -6919,11 +6920,10 @@ static void
 fu_test_engine_fake_hidraw(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
-	gboolean ret;
+	g_autofree gchar *backend_id = NULL;
 	g_autofree gchar *value2 = NULL;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuBackend) backend = fu_udev_backend_new(self->ctx);
 	g_autoptr(FuUdevDevice) udev_device2 = NULL;
 	g_autoptr(FuUdevDevice) udev_device3 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -6934,18 +6934,19 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 		return;
 	}
 
-	/* load engine and check the device was found */
-	fu_engine_add_plugin_filter(engine, "pixart_rf");
-	ret = fu_engine_load(engine,
-			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
-			     progress,
-			     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* hidraw -> pixart_rf */
-	device = fu_engine_get_device(engine, "6acd27f1feb25ba3b604063de4c13b604776b2f5", &error);
+	/* create device */
+	backend_id = g_build_filename(g_getenv("FWUPD_SYSFSDIR"),
+				      "devices",
+				      "pci0000:00",
+				      "0000:00:14.0",
+				      "usb1",
+				      "1-1",
+				      "1-1:1.1",
+				      "0003:093A:2862.0076",
+				      "hidraw",
+				      "hidraw1",
+				      NULL);
+	device = fu_backend_create_device(backend, backend_id, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "hidraw");
@@ -6953,7 +6954,6 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
 	g_assert_cmpint(fu_device_get_vid(device), ==, 0x093a);
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
-	g_assert_cmpstr(fu_device_get_plugin(device), ==, "pixart_rf");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "PIXART Pixart dual-mode mouse");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "usb-0000:00:14.0-1/input1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
