@@ -33,3 +33,5 @@ plugins/tpm-eventlog/tests/
 .ossfuzz
 *.rej
 /snap
+fwupd.txt
+fwupdtool.txt
