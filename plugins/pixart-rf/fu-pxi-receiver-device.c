@@ -12,12 +12,12 @@
 #include "fu-pxi-wireless-device.h"
 
 struct _FuPxiReceiverDevice {
-	FuHidrawDevice parent_instance;
+	FuHidDevice parent_instance;
 	struct ota_fw_state fwstate;
 	guint8 sn;
 };
 
-G_DEFINE_TYPE(FuPxiReceiverDevice, fu_pxi_receiver_device, FU_TYPE_HIDRAW_DEVICE)
+G_DEFINE_TYPE(FuPxiReceiverDevice, fu_pxi_receiver_device, FU_TYPE_HID_DEVICE)
 
 static void
 fu_pxi_receiver_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -86,11 +86,13 @@ fu_pxi_receiver_device_fw_ota_init_new(FuPxiReceiverDevice *device, gsize bufsz,
 					   error))
 		return FALSE;
 
-	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    receiver_device_cmd->data,
-					    receiver_device_cmd->len,
-					    FU_IOCTL_FLAG_NONE,
-					    error);
+	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+					receiver_device_cmd->data[0],
+					receiver_device_cmd->data,
+					receiver_device_cmd->len,
+					FU_PXI_DEVICE_HID_TIMEOUT,
+					FU_HID_DEVICE_FLAG_IS_FEATURE,
+					error);
 }
 
 static gboolean
@@ -116,21 +118,26 @@ fu_pxi_receiver_device_fw_ota_ini_new_check(FuPxiReceiverDevice *device, GError 
 					   error))
 		return FALSE;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	/* delay for wireless module device read command */
 	fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
-	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
-					  buf,
-					  sizeof(buf),
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      buf[0],
+				      buf,
+				      sizeof(buf),
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE |
+					  FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
+				      error))
 		return FALSE;
 
 	/* shared state */
@@ -151,11 +158,14 @@ fu_pxi_receiver_device_get_cmd_response(FuPxiReceiverDevice *self,
 
 		fu_device_sleep(FU_DEVICE(self), 5); /* ms */
 
-		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
-						  buf,
-						  bufsz,
-						  FU_IOCTL_FLAG_NONE,
-						  error))
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+					      buf[0],
+					      buf,
+					      bufsz,
+					      FU_PXI_DEVICE_HID_TIMEOUT,
+					      FU_HID_DEVICE_FLAG_IS_FEATURE |
+						  FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
+					      error))
 			return FALSE;
 
 		if (!fu_memread_uint8_safe(buf, bufsz, 0x4, &sn, error))
@@ -206,11 +216,13 @@ fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 					   error))
 		return FALSE;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	if (!fu_pxi_receiver_device_get_cmd_response(self, buf, sizeof(buf), error))
@@ -258,11 +270,13 @@ fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 					   error))
 		return FALSE;
 
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	if (!fu_pxi_receiver_device_get_cmd_response(self, buf, sizeof(buf), error))
@@ -310,11 +324,13 @@ fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 					   error))
 		return FALSE;
 
-	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    receiver_device_cmd->data,
-					    receiver_device_cmd->len,
-					    FU_IOCTL_FLAG_NONE,
-					    error);
+	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+					receiver_device_cmd->data[0],
+					receiver_device_cmd->data,
+					receiver_device_cmd->len,
+					FU_PXI_DEVICE_HID_TIMEOUT,
+					FU_HID_DEVICE_FLAG_IS_FEATURE,
+					error);
 }
 
 static gboolean
@@ -427,11 +443,13 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send ota fw upgrade command */
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	/* delay for wireless module device read command */
@@ -482,11 +500,13 @@ fu_pxi_receiver_device_reset(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* send ota mcu reset command */
-	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    receiver_device_cmd->data,
-					    receiver_device_cmd->len,
-					    FU_IOCTL_FLAG_NONE,
-					    error);
+	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+					receiver_device_cmd->data[0],
+					receiver_device_cmd->data,
+					receiver_device_cmd->len,
+					FU_PXI_DEVICE_HID_TIMEOUT,
+					FU_HID_DEVICE_FLAG_IS_FEATURE,
+					error);
 }
 
 static gboolean
@@ -590,21 +610,26 @@ fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *self,
 					   ota_cmd,
 					   error))
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 5); /* ms */
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
 
-	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
-					  buf,
-					  sizeof(buf),
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      buf[0],
+				      buf,
+				      sizeof(buf),
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE |
+					  FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
+				      error))
 		return FALSE;
 
 	fu_dump_raw(G_LOG_DOMAIN, "model_info", buf, sizeof(buf));
@@ -678,21 +703,26 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 					   ota_cmd,
 					   error))
 		return FALSE;
-	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  receiver_device_cmd->data,
-					  receiver_device_cmd->len,
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      receiver_device_cmd->data[0],
+				      receiver_device_cmd->data,
+				      receiver_device_cmd->len,
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE,
+				      error))
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(device), 5); /* ms */
 
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
-	if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
-					  buf,
-					  sizeof(buf),
-					  FU_IOCTL_FLAG_NONE,
-					  error))
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      buf[0],
+				      buf,
+				      sizeof(buf),
+				      FU_PXI_DEVICE_HID_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_IS_FEATURE |
+					  FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
+				      error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "buf from get model num", buf, sizeof(buf));
 	if (!fu_memread_uint8_safe(buf, sizeof(buf), 0xA, num_of_models, error))
@@ -803,6 +833,10 @@ fu_pxi_receiver_device_setup(FuDevice *device, GError **error)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 
+	/* FuHidDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_pxi_receiver_device_parent_class)->setup(device, error))
+		return FALSE;
+
 	if (!fu_pxi_receiver_device_setup_guid(self, error)) {
 		g_prefix_error(error, "failed to setup GUID: ");
 		return FALSE;
@@ -820,34 +854,6 @@ fu_pxi_receiver_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	return TRUE;
-}
-
-static gboolean
-fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
-{
-	g_autofree gchar *iface_nr = NULL;
-	g_autoptr(FuDevice) usb_parent = NULL;
-
-	/* check USB interface number */
-	usb_parent = fu_device_get_backend_parent_with_subsystem(device, "usb", error);
-	if (usb_parent == NULL)
-		return FALSE;
-	iface_nr = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(usb_parent),
-					     "bInterfaceNumber",
-					     FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
-					     error);
-	if (iface_nr == NULL)
-		return FALSE;
-	if (g_strcmp0(iface_nr, "01") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "only USB interface 1 supported");
-		return FALSE;
-	}
-
-	/* success */
 	return TRUE;
 }
 
@@ -883,7 +889,6 @@ fu_pxi_receiver_device_class_init(FuPxiReceiverDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_pxi_receiver_device_to_string;
 	device_class->setup = fu_pxi_receiver_device_setup;
-	device_class->probe = fu_pxi_receiver_device_probe;
 	device_class->write_firmware = fu_pxi_receiver_device_write_firmware;
 	device_class->prepare_firmware = fu_pxi_receiver_device_prepare_firmware;
 	device_class->set_progress = fu_pxi_receiver_device_set_progress;

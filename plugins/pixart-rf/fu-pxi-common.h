@@ -42,6 +42,7 @@
 #define FU_PXI_WIRELESS_DEVICE_RETRY_MAXIMUM 1000
 
 #define FU_PXI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_PXI_DEVICE_HID_TIMEOUT   500	 /* ms */
 
 /* pixart device model structure */
 struct ota_fw_dev_model {

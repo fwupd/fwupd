@@ -15,4 +15,4 @@ G_DECLARE_FINAL_TYPE(FuPxiReceiverDevice,
 		     fu_pxi_receiver_device,
 		     FU,
 		     PXI_RECEIVER_DEVICE,
-		     FuHidrawDevice)
+		     FuHidDevice)

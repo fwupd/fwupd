@@ -19,17 +19,17 @@ Plugin = pixart_rf
 GType = FuPxiBleDevice
 
 # Pixart 2861
-[HIDRAW\VEN_093A&DEV_2861]
+[USB\VID_093A&PID_2861]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 # Pixart 2862
-[HIDRAW\VEN_093A&DEV_2862]
+[USB\VID_093A&PID_2862]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 # Pixart 2452
-[HIDRAW\VEN_093A&DEV_2452]
+[USB\VID_093A&PID_2452]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
@@ -224,22 +224,22 @@ GType = FuPxiBleDevice
 Flags = is-hpac
 
 # Pixart 2404
-[HIDRAW\VEN_093A&DEV_2404]
+[USB\VID_093A&PID_2404]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 # Pixart 4206
-[HIDRAW\VEN_093A&DEV_4206]
+[USB\VID_093A&PID_4206]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 # Pixart 2440
-[HIDRAW\VEN_093A&DEV_2440]
+[USB\VID_093A&PID_2440]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 # Pixart 2418
-[HIDRAW\VEN_093A&DEV_2418]
+[USB\VID_093A&PID_2418]
 Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
