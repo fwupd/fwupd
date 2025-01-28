@@ -38,6 +38,32 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.28" date="2025-01-28">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add support for intel-csme19 version format</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Avoid downstream port resets of Parade USB hubs</li>
+          <li>Cleanup Dell dock devices when disconnected</li>
+          <li>Correctly parse PE files with zero sized sections</li>
+          <li>Correctly set the package version of the Dell dock</li>
+          <li>Run the FwupdClient::changed callback in the correct thread</li>
+          <li>Run the UEFI capsule reboot cleanup action when required</li>
+          <li>Split up the AMD GPU VBIOS P/N for the version</li>
+          <li>Use the ISO date as a dbx version number</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP 400/405</li>
+          <li>More ELAN fingerprint readers</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.27" date="2024-12-05">
       <description>
         <p>This release fixes the following bugs:</p>
