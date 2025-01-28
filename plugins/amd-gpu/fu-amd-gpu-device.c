@@ -110,7 +110,7 @@ static gboolean
 fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 {
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);
-	struct drm_amdgpu_info_vbios vbios_info;
+	struct drm_amdgpu_info_vbios vbios_info = {0};
 	struct drm_amdgpu_info request = {
 	    .query = AMDGPU_INFO_VBIOS,
 	    .return_pointer = GPOINTER_TO_SIZE(&vbios_info),
