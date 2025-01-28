@@ -924,6 +924,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	    "  <releases>"
 	    "    <release version=\"51H0AALB\">"
 	    "      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+	    "      <checksum type=\"sha1\" filename=\"bios.cab\" target=\"container\"/>"
 	    "    </release>"
 	    "  </releases>"
 	    "</component>";
@@ -950,6 +951,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	ret = fu_release_load(release, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_cmpstr(fu_release_get_filename(release), ==, "bios.cab");
 	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
