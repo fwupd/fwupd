@@ -195,9 +195,13 @@ fwupd_client_context_idle_cb(gpointer user_data)
 		if (g_strcmp0(helper->property_name, "FwupdRequest") == 0)
 			fwupd_request_emit_invalidate(FWUPD_REQUEST(helper->payload));
 
-		/* payload signal */
-		if (helper->signal_id != 0 && helper->payload != NULL)
-			g_signal_emit(self, signals[helper->signal_id], 0, helper->payload);
+		/* signal */
+		if (helper->signal_id != 0) {
+			if (helper->payload == NULL)
+				g_signal_emit(self, signals[helper->signal_id], 0);
+			else
+				g_signal_emit(self, signals[helper->signal_id], 0, helper->payload);
+		}
 	}
 
 	/* all done */
@@ -284,6 +288,26 @@ fwupd_client_signal_emit_object(FwupdClient *self, guint signal_id, GObject *pay
 	helper->self = g_object_ref(self);
 	helper->signal_id = signal_id;
 	helper->payload = g_object_ref(payload);
+	fwupd_client_context_helper(self, helper);
+}
+
+/* run callback in the correct thread */
+static void
+fwupd_client_signal_emit_changed(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	FwupdClientContextHelper *helper = NULL;
+
+	/* shortcut */
+	if (g_main_context_is_owner(priv->main_ctx)) {
+		g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
+		return;
+	}
+
+	/* run in the correct GMainContext and thread */
+	helper = g_new0(FwupdClientContextHelper, 1);
+	helper->self = g_object_ref(self);
+	helper->signal_id = SIGNAL_CHANGED;
 	fwupd_client_context_helper(self, helper);
 }
 
@@ -575,7 +599,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 	g_autoptr(FwupdDevice) dev = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
 		g_debug("Emitting ::changed()");
-		g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
+		fwupd_client_signal_emit_changed(self);
 		return;
 	}
 	if (g_strcmp0(signal_name, "DeviceAdded") == 0) {
