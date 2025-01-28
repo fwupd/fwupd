@@ -917,20 +917,20 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 				g_prefix_error(error, "failed to download %s: ", emulation_url);
 				return FALSE;
 			}
-		} else if (json_object_has_member(json_obj, "emulation-file"))
+		} else if (json_object_has_member(json_obj, "emulation-file")) {
 			emulation_filename =
 			    g_strdup(json_object_get_string_member(json_obj, "emulation-file"));
-		else
+		} else {
 			return TRUE;
+		}
 
 		/* log */
 		if (emulation_url != NULL) {
 			json_builder_set_member_name(helper->builder, "emulation-url");
 			json_builder_add_string_value(helper->builder, emulation_url);
-		} else if (emulation_filename != NULL) {
-			json_builder_set_member_name(helper->builder, "emulation-file");
-			json_builder_add_string_value(helper->builder, emulation_filename);
 		}
+		json_builder_set_member_name(helper->builder, "emulation-file");
+		json_builder_add_string_value(helper->builder, emulation_filename);
 		if (!fwupd_client_emulation_load(priv->client,
 						 emulation_filename,
 						 priv->cancellable,
