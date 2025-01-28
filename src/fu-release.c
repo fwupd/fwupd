@@ -971,7 +971,7 @@ fu_release_load(FuRelease *self,
 		}
 	}
 	if (fu_release_get_filename(self) == NULL) {
-		tmp = xb_node_query_text(rel, "checksum[@target='content']", NULL);
+		tmp = xb_node_query_attr(rel, "checksum[@target='container']", "filename", NULL);
 		if (tmp != NULL)
 			fu_release_set_filename(self, tmp);
 	}
