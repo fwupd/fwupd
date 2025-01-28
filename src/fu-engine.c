@@ -8101,6 +8101,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_warning("Failed to load quirks: %s", error_quirks->message);
 	fu_progress_step_done(progress);
 
+	/* do not mount disks if only loading readonly */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
+
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx,
