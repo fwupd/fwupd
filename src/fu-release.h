@@ -32,6 +32,8 @@ fu_release_new(void);
 #define fu_release_set_branch(r, v)   fwupd_release_set_branch(FWUPD_RELEASE(r), v)
 #define fu_release_set_flags(r, v)    fwupd_release_set_flags(FWUPD_RELEASE(r), v)
 #define fu_release_get_protocol(r)     fwupd_release_get_protocol(FWUPD_RELEASE(r))
+#define fu_release_set_filename(r, v)  fwupd_release_set_filename(FWUPD_RELEASE(r), v)
+
 gchar *
 fu_release_to_string(FuRelease *self);
 FuDevice *

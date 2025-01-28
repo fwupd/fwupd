@@ -405,7 +405,7 @@ fu_release_load_artifact(FuRelease *self, XbNode *artifact, GError **error)
 		return TRUE;
 	}
 	if (filename != NULL)
-		fwupd_release_set_filename(FWUPD_RELEASE(self), filename);
+		fu_release_set_filename(self, filename);
 
 	/* location */
 	locations = xb_node_query(artifact, "location", 0, NULL);
@@ -970,10 +970,10 @@ fu_release_load(FuRelease *self,
 			fwupd_release_add_location(FWUPD_RELEASE(self), uri);
 		}
 	}
-	if (fwupd_release_get_filename(FWUPD_RELEASE(self)) == NULL) {
+	if (fu_release_get_filename(self) == NULL) {
 		tmp = xb_node_query_text(rel, "checksum[@target='content']", NULL);
 		if (tmp != NULL)
-			fwupd_release_set_filename(FWUPD_RELEASE(self), tmp);
+			fu_release_set_filename(self, tmp);
 	}
 	tmp = xb_node_query_text(rel, "url[@type='details']", NULL);
 	if (tmp != NULL)
