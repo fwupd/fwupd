@@ -125,6 +125,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		if (!g_seekable_seek(G_SEEKABLE(istream1), 0, G_SEEK_SET, NULL, error))
 			return FALSE;
 		istream2 = g_converter_input_stream_new(istream1, conv);
+		g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(istream2), FALSE);
 		payload = fu_input_stream_read_bytes(istream2, 0, G_MAXSIZE, NULL, error);
 		if (payload == NULL)
 			return FALSE;
