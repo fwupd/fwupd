@@ -98,6 +98,7 @@ fu_pefile_firmware_region_sort_cb(gconstpointer a, gconstpointer b)
 static gboolean
 fu_pefile_firmware_parse_section(FuFirmware *firmware,
 				 GInputStream *stream,
+				 guint idx,
 				 gsize hdr_offset,
 				 gsize strtab_offset,
 				 GPtrArray *regions,
@@ -116,13 +117,8 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
 	if (sect_id_tmp == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid section name");
-		return FALSE;
-	}
-	if (sect_id_tmp[0] == '/') {
+		sect_id = g_strdup_printf(".nul%04x", idx);
+	} else if (sect_id_tmp[0] == '/') {
 		guint64 str_idx = 0x0;
 		guint8 buf[FU_PEFILE_SECTION_ID_STRTAB_SIZE] = {0};
 
@@ -174,6 +170,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		img = fu_firmware_new();
 	}
 	fu_firmware_set_id(img, sect_id);
+	fu_firmware_set_idx(img, idx);
 
 	/* add data */
 	if (fu_struct_pe_coff_section_get_size_of_raw_data(st) > 0) {
@@ -309,6 +306,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	for (guint idx = 0; idx < nr_sections; idx++) {
 		if (!fu_pefile_firmware_parse_section(firmware,
 						      stream,
+						      idx,
 						      offset,
 						      strtab_offset,
 						      regions,
