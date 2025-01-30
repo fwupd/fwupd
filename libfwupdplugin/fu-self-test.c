@@ -3781,7 +3781,7 @@ fu_firmware_csv_func(void)
 	entry_tmp = g_ptr_array_index(imgs, 1);
 
 	g_assert_cmpstr(fu_firmware_get_id(FU_FIRMWARE(entry_tmp)), ==, "grub");
-	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_tmp, 0), ==, NULL);
+	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_tmp, 0), ==, "grub");
 	g_assert_cmpstr(fu_csv_entry_get_value_by_idx(entry_tmp, 1), ==, "1");
 	g_assert_cmpstr(fu_csv_entry_get_value_by_column_id(entry_tmp, "vendor_version"),
 			==,
@@ -4964,7 +4964,7 @@ fu_firmware_builder_round_trip_func(void)
 		FU_TYPE_PEFILE_FIRMWARE,
 		"pefile.builder.xml",
 		"73b0e0dc9f6175b7bc27b77f20e0d9eca2d2d141",
-		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_LINEAR_FIRMWARE,
@@ -4988,7 +4988,7 @@ fu_firmware_builder_round_trip_func(void)
 		FU_TYPE_SBATLEVEL_SECTION,
 		"sbatlevel.builder.xml",
 		"8204ef9477b4305748a0de6e667547cb6ce5e426",
-		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_CSV_FIRMWARE,

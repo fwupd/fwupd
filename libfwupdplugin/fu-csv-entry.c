@@ -20,7 +20,7 @@
  */
 
 typedef struct {
-	GPtrArray *values;
+	GPtrArray *values; /* element-type utf-8 */
 } FuCsvEntryPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCsvEntry, fu_csv_entry, FU_TYPE_FIRMWARE)
@@ -165,32 +165,22 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 	}
 
 	if (g_strcmp0(column_id, "$id") == 0) {
-		g_ptr_array_add(priv->values, NULL);
 		fu_firmware_set_id(FU_FIRMWARE(self), token->str);
-		return TRUE;
-	}
-	if (g_strcmp0(column_id, "$idx") == 0) {
+	} else if (g_strcmp0(column_id, "$idx") == 0) {
 		guint64 value = 0;
 		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		g_ptr_array_add(priv->values, NULL);
 		fu_firmware_set_idx(FU_FIRMWARE(self), value);
-		return TRUE;
-	}
-	if (g_strcmp0(column_id, "$version") == 0) {
-		g_ptr_array_add(priv->values, NULL);
+	} else if (g_strcmp0(column_id, "$version") == 0) {
 		fu_firmware_set_version(FU_FIRMWARE(self), token->str); /* nocheck:set-version */
-		return TRUE;
-	}
-	if (g_strcmp0(column_id, "$version_raw") == 0) {
+	} else if (g_strcmp0(column_id, "$version_raw") == 0) {
 		guint64 value = 0;
 		if (!fu_strtoull(token->str, &value, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
-		g_ptr_array_add(priv->values, NULL);
 		fu_firmware_set_version_raw(FU_FIRMWARE(self), value);
-		return TRUE;
 	}
 
+	/* always save to value so we can write it back out */
 	g_ptr_array_add(priv->values, g_strdup(token->str));
 	return TRUE;
 }
