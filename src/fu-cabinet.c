@@ -677,7 +677,7 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 static gboolean
 fu_cabinet_sign_filename(FuCabinet *self,
 			 const gchar *filename,
-			 JcatEngine *jcat_engine,
+			 JcatContext *jcat_context,
 			 JcatFile *jcat_file,
 			 GBytes *cert,
 			 GBytes *privkey,
@@ -685,7 +685,10 @@ fu_cabinet_sign_filename(FuCabinet *self,
 {
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) source_blob = NULL;
-	g_autoptr(JcatBlob) jcat_blob = NULL;
+	g_autoptr(JcatBlob) jcat_blob_csum = NULL;
+	g_autoptr(JcatBlob) jcat_blob_sig = NULL;
+	g_autoptr(JcatEngine) jcat_engine_csum = NULL;
+	g_autoptr(JcatEngine) jcat_engine_sig = NULL;
 	g_autoptr(JcatItem) jcat_item = NULL;
 
 	/* sign the file using the engine */
@@ -700,15 +703,31 @@ fu_cabinet_sign_filename(FuCabinet *self,
 		jcat_item = jcat_item_new(filename);
 		jcat_file_add_item(jcat_file, jcat_item);
 	}
-	jcat_blob = jcat_engine_pubkey_sign(jcat_engine,
-					    source_blob,
-					    cert,
-					    privkey,
-					    JCAT_SIGN_FLAG_ADD_TIMESTAMP | JCAT_SIGN_FLAG_ADD_CERT,
-					    error);
-	if (jcat_blob == NULL)
+
+	/* add SHA256 checksum */
+	jcat_engine_csum = jcat_context_get_engine(jcat_context, JCAT_BLOB_KIND_SHA256, error);
+	if (jcat_engine_csum == NULL)
 		return FALSE;
-	jcat_item_add_blob(jcat_item, jcat_blob);
+	jcat_blob_csum =
+	    jcat_engine_self_sign(jcat_engine_csum, source_blob, JCAT_SIGN_FLAG_NONE, error);
+	if (jcat_blob_csum == NULL)
+		return FALSE;
+	jcat_item_add_blob(jcat_item, jcat_blob_csum);
+
+	/* sign using PKCS#7 */
+	jcat_engine_sig = jcat_context_get_engine(jcat_context, JCAT_BLOB_KIND_PKCS7, error);
+	if (jcat_engine_sig == NULL)
+		return FALSE;
+	jcat_blob_sig =
+	    jcat_engine_pubkey_sign(jcat_engine_sig,
+				    source_blob,
+				    cert,
+				    privkey,
+				    JCAT_SIGN_FLAG_ADD_TIMESTAMP | JCAT_SIGN_FLAG_ADD_CERT,
+				    error);
+	if (jcat_blob_sig == NULL)
+		return FALSE;
+	jcat_item_add_blob(jcat_item, jcat_blob_sig);
 	return TRUE;
 }
 
@@ -810,7 +829,6 @@ fu_cabinet_sign(FuCabinet *self,
 	g_autoptr(GOutputStream) ostr = NULL;
 	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(JcatContext) jcat_context = jcat_context_new();
-	g_autoptr(JcatEngine) jcat_engine = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
 	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
@@ -835,14 +853,11 @@ fu_cabinet_sign(FuCabinet *self,
 		return FALSE;
 
 	/* sign all the files */
-	jcat_engine = jcat_context_get_engine(jcat_context, JCAT_BLOB_KIND_PKCS7, error);
-	if (jcat_engine == NULL)
-		return FALSE;
 	for (guint i = 0; i < filenames->len; i++) {
 		const gchar *filename = g_ptr_array_index(filenames, i);
 		if (!fu_cabinet_sign_filename(self,
 					      filename,
-					      jcat_engine,
+					      jcat_context,
 					      jcat_file,
 					      cert,
 					      privkey,
