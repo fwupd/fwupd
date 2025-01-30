@@ -230,6 +230,26 @@ if [ -d $BASEDIR ]; then
        rc=$?; if [ $rc != 3 ]; then error $rc; fi
 fi
 
+if [ -x /usr/bin/certtool ]; then
+
+       # ---
+       echo "Building unsigned ${CAB}..."
+       INPUT="@installedtestsdir@/fakedevice124.bin \
+              @installedtestsdir@/fakedevice124.metainfo.xml"
+       run build-cabinet ${CAB} ${INPUT} --force
+       rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+       # ---
+       echo "Sign ${CAB}"
+       @installedtestsdir@/build-certs.py /tmp
+       run firmware-sign ${CAB} /tmp/testuser.pem /tmp/testuser.key --json
+       rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+       # ---
+       echo "Cleaning self-signed ${CAB}..."
+       rm -f ${CAB}
+fi
+
 if [ -z "$CI_NETWORK" ]; then
         echo "Skipping remaining tests due to CI_NETWORK not being set"
         exit 0

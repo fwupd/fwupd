@@ -47,6 +47,7 @@ configure_file(
 )
 
 install_data([
+    'build-certs.py',
     'fakedevice124.bin',
     'fakedevice124.jcat',
     'fakedevice124.metainfo.xml',
