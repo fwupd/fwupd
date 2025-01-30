@@ -167,6 +167,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_package_name");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "$version");
 		fu_csv_firmware_add_column_id(FU_CSV_FIRMWARE(img), "vendor_url");
+		fu_csv_firmware_set_write_column_ids(FU_CSV_FIRMWARE(img), FALSE);
 	} else if (g_strcmp0(sect_id, ".sbatlevel") == 0) {
 		img = fu_sbatlevel_section_new();
 	} else {
