@@ -1006,6 +1006,20 @@ fu_mm_device_qcdm_switch_to_edl(FuMmDevice *self, GError **error)
 }
 
 static gboolean
+fu_mm_device_ensure_edl_port(FuMmDevice *self, GError **error)
+{
+	fu_device_sleep(FU_DEVICE(self), 1000);
+	/* make sure the udev device is still present */
+	if (!fu_mm_device_ensure_udev_device(self, error))
+		return FALSE;
+
+	self->port_edl = g_strdup(fu_udev_device_get_device_file(self->udev_device));
+	g_debug("found edl port: %s", self->port_edl);
+
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_detach_sahara(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
@@ -1033,15 +1047,7 @@ fu_mm_device_detach_sahara(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	fu_device_sleep(device, 1000);
-
-	/* make sure the udev device is still present */
-	if (!fu_mm_device_ensure_udev_device(self, error))
-		return FALSE;
-
-	self->port_edl = g_strdup(fu_udev_device_get_device_file(self->udev_device));
-
-	return TRUE;
+	return fu_mm_device_ensure_edl_port(self, error);
 }
 
 static gboolean
@@ -1672,8 +1678,8 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 		 * (embedded downloader) execution environment */
 		if (!fu_mm_device_qcdm_switch_to_edl(self, error))
 			return FALSE;
-
-		g_debug("found edl port: %s", self->port_edl);
+		if (!fu_mm_device_ensure_edl_port(self, error))
+			return FALSE;
 	}
 #if MM_CHECK_VERSION(1, 19, 1)
 	else if (FU_MM_DEVICE(self)->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA) {
