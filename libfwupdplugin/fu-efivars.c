@@ -873,7 +873,7 @@ fu_efivars_get_boot_entries(FuEfivars *self, GError **error)
 
 		loadopt = fu_efivars_get_boot_entry(self, idx, error);
 		if (loadopt == NULL) {
-			g_prefix_error(error, "failed to load Boot%04X: ", i);
+			g_prefix_error(error, "failed to load Boot%04X: ", idx);
 			return NULL;
 		}
 		g_ptr_array_add(array, g_steal_pointer(&loadopt));
