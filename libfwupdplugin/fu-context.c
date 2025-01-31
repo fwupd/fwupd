@@ -1934,16 +1934,30 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	filename = g_build_filename(mount_point, dp_filename, NULL);
 	g_debug("check for 1st stage bootloader: %s", filename);
 	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE) {
-		g_autoptr(FuFirmware) firmware = fu_context_esp_load_pe_file(filename, error);
-		if (firmware == NULL)
-			return FALSE;
-		fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
-		g_ptr_array_add(files, g_steal_pointer(&firmware));
+		g_autoptr(FuFirmware) firmware = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* ignore if the file cannot be loaded as a PE file */
+		firmware = fu_context_esp_load_pe_file(filename, &error_local);
+		if (firmware == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
+			}
+		} else {
+			fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
+			g_ptr_array_add(files, g_steal_pointer(&firmware));
+		}
 	}
 
 	/* the 2nd stage bootloader, typically grub */
 	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE &&
 	    g_str_has_suffix(filename, shim_name)) {
+		g_autoptr(FuFirmware) firmware = NULL;
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GString) filename2 = g_string_new(filename);
 		const gchar *path;
 
@@ -1957,11 +1971,18 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 			g_string_replace(filename2, shim_name, grub_name, 1);
 		}
 		g_debug("check for 2nd stage bootloader: %s", filename2->str);
-		if (g_file_test(filename2->str, G_FILE_TEST_IS_REGULAR)) {
-			g_autoptr(FuFirmware) firmware =
-			    fu_context_esp_load_pe_file(filename2->str, error);
-			if (firmware == NULL)
+
+		/* ignore if the file cannot be loaded as a PE file */
+		firmware = fu_context_esp_load_pe_file(filename2->str, &error_local);
+		if (firmware == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
+			}
+		} else {
 			fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
 			g_ptr_array_add(files, g_steal_pointer(&firmware));
 		}
@@ -1971,13 +1992,23 @@ fu_context_get_esp_files_for_entry(FuContext *self,
 	if (flags & FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS &&
 	    g_str_has_suffix(filename, shim_name)) {
 		g_autoptr(GString) filename2 = g_string_new(filename);
+		g_autoptr(FuFirmware) firmware = NULL;
+		g_autoptr(GError) error_local = NULL;
+
 		g_string_replace(filename2, shim_name, "revocations.efi", 1);
 		g_debug("check for revocation: %s", filename2->str);
-		if (g_file_test(filename2->str, G_FILE_TEST_EXISTS)) {
-			g_autoptr(FuFirmware) firmware =
-			    fu_context_esp_load_pe_file(filename2->str, error);
-			if (firmware == NULL)
+
+		/* ignore if the file cannot be loaded as a PE file */
+		firmware = fu_context_esp_load_pe_file(filename2->str, &error_local);
+		if (firmware == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+				g_debug("ignoring: %s", error_local->message);
+			} else {
+				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
+			}
+		} else {
 			fu_firmware_set_idx(firmware, fu_firmware_get_idx(FU_FIRMWARE(entry)));
 			g_ptr_array_add(files, g_steal_pointer(&firmware));
 		}
