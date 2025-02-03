@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2024
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2025
 # Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -2791,6 +2791,15 @@ msgstr "S'ha inhibit l'actualització del sistema"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "El microprogramari empra el mode de gestió del sistema per a accedir al codi i a les dades residents al BIOS."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "L'energia del sistema és massa baixa"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "L'energia del sistema és massa baixa (%u%%, requereix un %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

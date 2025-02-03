@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2024
+# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2025
 # andhe <andreas@fatal.se>, 2017
 # Josef Andersson <janderssonse@proton.me>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
@@ -2796,6 +2796,15 @@ msgstr "Systemuppdatering hindrad."
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Systemhanteringsläge används av den fasta programvaran för att komma åt inbyggd BIOS-kod och data."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Systemet har för lite batteri"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Systemet har för lite batteri (%u%%, kräver %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

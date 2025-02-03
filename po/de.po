@@ -8,6 +8,7 @@
 # Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2024
 # F Bausch, 2024
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
+# Mario Blättermann <mario.blaettermann@gmail.com>, 2025
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
 msgid ""
 msgstr ""
@@ -2795,6 +2796,11 @@ msgstr "Systemaktualisierung blockiert"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Der Systemverwaltungsmodus wird von der Firmware für den Zugriff auf speicherresidenten BIOS-Code und Daten verwendet."
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Das System ist zu schwach (%u%%, erfordert %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

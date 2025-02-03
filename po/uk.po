@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2024
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -2814,6 +2814,15 @@ msgstr "Оновлення системи заборонено"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Режим керування системою використовується мікропрограмою для доступу до поточного коду BIOS та даних."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Живлення системи є надто низьким"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Рівень живлення системи є надто низьким (%u%%, потрібно %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

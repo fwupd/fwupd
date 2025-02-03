@@ -4,7 +4,7 @@
 #
 # Translators:
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020-2022
-# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2022,2024
+# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2022,2024-2025
 # Ricky Tigg, 2024
 # Timo Jyrinki <timo.jyrinki@gmail.com>, 2021
 # Ville-Pekka Vainio <vpvainio@iki.fi>, 2021,2023
@@ -124,6 +124,16 @@ msgstr "Näytönohjaimen %s päivitys"
 #, c-format
 msgid "%s Graphics Tablet Update"
 msgstr "Piirtopöydän %s päivitys"
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "%s kuulokkeiden päivitys"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s kuulokemikrofoni päivitys"
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
@@ -2413,6 +2423,10 @@ msgstr "ASETUS1 ARVO1 [ASETUS2] [ARVO2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM lukittu"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "SPI-BIOS-tunnus"
@@ -2757,9 +2771,26 @@ msgstr "Vaihda laitteen laiteohjelmiston haaraa"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Synkronoi laiteohjelmistoversiot valittuun kokoonpanoon"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "System Management Mode"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Järjestelmäpäivitys on estetty"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Firmware laiteohjelmisto käyttää järjestelmän hallintatilaa BIOS:in koodin ja tietojen käyttämiseen."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Laitteen virta on liian alhainen"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Laitteen virta on alhainen (%u%%, vaatii %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

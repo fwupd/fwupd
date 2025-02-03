@@ -8,7 +8,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # F Bausch, 2024
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
-# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2024
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -2807,6 +2807,15 @@ msgstr "Atualização do sistema inibida"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "O modo de gerenciamento do sistema é usado pelo firmware para acessar o código e os dados residentes da BIOS."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "A energia do sistema está muito baixa"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "A energia do sistema está muito baixa (%u%%, requer %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

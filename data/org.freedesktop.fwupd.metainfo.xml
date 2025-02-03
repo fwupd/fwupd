@@ -38,6 +38,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.5" date="2025-02-03">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow emulating devices reading EFI keys</li>
+          <li>Allow skipping device tests by CPU architecture</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Cleanup Dell kestrel devices when disconnected</li>
+          <li>Correctly build binary EFI_SIGNATURE_LIST objects</li>
+          <li>Do not allow dbx updates when no ESP was found</li>
+          <li>Ignore BootXXXX entries that do not exist when checking the dbx</li>
+          <li>Ignore EFI binaries that are zero-sized, or not well formed</li>
+          <li>Inhibit dbx updates if snapd is not available when using Ubuntu-style FDE</li>
+          <li>Only match the device checksum if the protocol matches</li>
+          <li>Raise authentication requirements for emulation-load</li>
+          <li>Request to upload failed reports for install/downgrade too</li>
+          <li>Use the kernel architecture when building the dbx instance ID</li>
+          <li>Write sbatlevel to PE/COFF files correctly</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>More ELAN Fingerprint readers</li>
+          <li>Star Labs StarLite Magnetic Keyboard</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.4" date="2025-01-20">
       <description>
         <p>

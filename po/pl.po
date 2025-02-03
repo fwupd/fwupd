@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2015-2024
+# Piotr Drąg <piotrdrag@gmail.com>, 2015-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -122,6 +122,16 @@ msgstr "Aktualizacja karty graficznej %s"
 #, c-format
 msgid "%s Graphics Tablet Update"
 msgstr "Aktualizacja tabletu graficznego %s"
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Aktualizacja słuchawek %s"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "Aktualizacja słuchawek z mikrofonem %s"
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
@@ -708,6 +718,10 @@ msgstr "Nie odnaleziono polecenia"
 #. TRANSLATORS: is not supported by the vendor
 msgid "Community supported"
 msgstr "Wspierane przez społeczność"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Porównuje dwie wersje pod względem równości"
 
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
@@ -1425,6 +1439,10 @@ msgstr "Uzyskuje wszystkie urządzenia obsługujące aktualizacje oprogramowania
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
 msgstr "Uzyskuje wszystkie włączone wtyczki zarejestrowane na komputerze"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Uzyskuje wszystkie znane formaty wersji"
 
 #. TRANSLATORS: command description
 msgid "Get device report metadata"
@@ -2352,6 +2370,10 @@ msgstr "USTAWIENIE1 WARTOŚĆ1 [USTAWIENIE2] [WARTOŚĆ2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM jest zablokowane"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Deskryptor BIOS-u SPI"
@@ -2686,9 +2708,22 @@ msgstr "Przełącza gałąź oprogramowania sprzętowego na urządzeniu"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Synchronizuje wersje oprogramowania sprzętowego do wybranej konfiguracji"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Tryb zarządzania komputerem"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Aktualizacja systemu jest wstrzymana"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Poziom naładowania komputera jest za niski"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Poziom naładowania komputera jest za niski (%u%%, wymaga %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
@@ -3136,6 +3171,10 @@ msgstr "Użytkownik został powiadomiony"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Nazwa użytkownika"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "WERSJA1 WERSJA2 [FORMAT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"

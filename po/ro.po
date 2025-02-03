@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2024
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2024-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -2802,6 +2802,15 @@ msgstr "Actualizarea sistemului inhibată"
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "Modul de gestionare a sistemului este utilizat de firmware pentru a accesa codul și datele BIOS rezidente."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Energia sistemului este prea scăzută"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Energia sistemului este prea scăzută (%u%%, necesită %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
