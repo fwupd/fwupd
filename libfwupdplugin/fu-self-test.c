@@ -5128,6 +5128,12 @@ fu_firmware_builder_round_trip_func(void)
 		"b3a73baf05078dfdd833b407a0a6afb239ec2f23",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
+	    {
+		FU_TYPE_USB_BOS_DESCRIPTOR,
+		"usb-bos-descriptor.builder.xml",
+		"a305749853781c6899c4b28039cb4c7d9059b910",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
 #ifdef HAVE_CBOR
 	    {
 		FU_TYPE_USWID_FIRMWARE,

@@ -63,6 +63,7 @@ install_data([
     'sbatlevel.builder.xml',
     'srec.builder.xml',
     'sys_vendor',
+    'usb-bos-descriptor.builder.xml',
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',
   ],
