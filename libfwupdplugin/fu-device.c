@@ -6325,6 +6325,19 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_INSTANCE_IDS)
 		fu_device_incorporate_instance_ids(self, donor);
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_GTYPE) {
+		if (priv->specialized_gtype == G_TYPE_INVALID &&
+		    priv_donor->specialized_gtype != G_TYPE_INVALID) {
+			fu_device_set_specialized_gtype(self, priv_donor->specialized_gtype);
+		}
+	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS) {
+		for (guint i = 0; i < priv_donor->possible_plugins->len; i++) {
+			const gchar *possible_plugin =
+			    g_ptr_array_index(priv_donor->possible_plugins, i);
+			fu_device_add_possible_plugin(self, possible_plugin);
+		}
+	}
 
 	/* everything else */
 	if (flag == FU_DEVICE_INCORPORATE_FLAG_ALL) {
@@ -6387,13 +6400,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 				if (fu_device_get_metadata(self, key) == NULL)
 					fu_device_set_metadata(self, key, value);
 			}
-		}
-
-		/* probably not required, but seems safer */
-		for (guint i = 0; i < priv_donor->possible_plugins->len; i++) {
-			const gchar *possible_plugin =
-			    g_ptr_array_index(priv_donor->possible_plugins, i);
-			fu_device_add_possible_plugin(self, possible_plugin);
 		}
 
 		/* copy all instance ID keys if not already set */

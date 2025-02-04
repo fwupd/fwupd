@@ -30,6 +30,24 @@ G_DEFINE_TYPE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
 #define FU_HIDRAW_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
 
 static gboolean
+fu_hidraw_device_probe_usb(FuHidrawDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) usb_device = NULL;
+
+	usb_device =
+	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb:usb_device", error);
+	if (usb_device == NULL)
+		return FALSE;
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(usb_device),
+			      FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS |
+				  FU_DEVICE_INCORPORATE_FLAG_GTYPE);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_hidraw_device_probe(FuDevice *device, GError **error)
 {
 	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
@@ -104,6 +122,12 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 		if (physical_id == NULL)
 			return FALSE;
 		fu_device_set_physical_id(FU_DEVICE(self), physical_id);
+
+		/* this is from a USB device, so try to use the DS-20 descriptor */
+		if (g_str_has_prefix(physical_id, "usb")) {
+			if (!fu_hidraw_device_probe_usb(self, error))
+				return FALSE;
+		}
 	}
 
 	/* set the hidraw device */
