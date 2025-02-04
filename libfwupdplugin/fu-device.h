@@ -244,6 +244,22 @@ typedef enum {
 	 * Since: 2.0.4
 	 **/
 	FU_DEVICE_INCORPORATE_FLAG_INSTANCE_IDS = 1ull << 17,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS:
+	 *
+	 * Set the possible plugins.
+	 *
+	 * Since: 2.0.6
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_POSSIBLE_PLUGINS = 1ull << 18,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_GTYPE:
+	 *
+	 * Set the device GType.
+	 *
+	 * Since: 2.0.6
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_GTYPE = 1ull << 19,
 	/*< private >*/
 	FU_DEVICE_INCORPORATE_FLAG_ALL = G_MAXUINT64,
 } FuDeviceIncorporateFlags;
