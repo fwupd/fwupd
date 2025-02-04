@@ -72,9 +72,9 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 	FuWacModule *self = FU_WAC_MODULE(device);
 	const guint8 *data;
 	gsize len = 0;
-	const guint8 buf_start[] = {FU_WAC_MODULE_SCALER_START_NORMAL};
+	guint8 buf_start[4] = {0};
 	g_autoptr(GPtrArray) blocks = NULL;
-	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, 1);
+	g_autoptr(GBytes) blob_start = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* progress */
@@ -92,7 +92,10 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 
 	/* build each data packet */
 	data = g_bytes_get_data(fw, &len);
+	fu_memwrite_uint32(buf_start, len, G_LITTLE_ENDIAN);
+	blob_start = g_bytes_new_static(buf_start, 4);
 	blocks = fu_wac_module_scaler_parse_blocks(data, len, error);
+
 	if (blocks == NULL) {
 		g_prefix_error(error, "wacom scaler module failed to parse blocks: ");
 		return FALSE;
