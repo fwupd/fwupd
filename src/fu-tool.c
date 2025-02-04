@@ -4400,6 +4400,115 @@ fu_util_efiboot_delete(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_efiboot_hive_check_loadopt_is_shim(FuEfiLoadOption *loadopt, GError **error)
+{
+	gboolean seen_shim = FALSE;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GPtrArray) dps = NULL;
+
+	/* get FuEfiDevicePathList */
+	firmware = fu_firmware_get_image_by_idx(FU_FIRMWARE(loadopt), 0x0, error);
+	if (firmware == NULL)
+		return FALSE;
+	dps = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < dps->len; i++) {
+		FuFirmware *dp = g_ptr_array_index(dps, i);
+		if (FU_IS_EFI_FILE_PATH_DEVICE_PATH(dp)) {
+			g_autofree gchar *name =
+			    fu_efi_file_path_device_path_get_name(FU_EFI_FILE_PATH_DEVICE_PATH(dp),
+								  error);
+			if (name == NULL)
+				return FALSE;
+			if (g_pattern_match_simple("*shim*.efi", name)) {
+				seen_shim = TRUE;
+				break;
+			}
+		}
+	}
+	if (!seen_shim) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Only the shim bootloader supports the hive format");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_efiboot_hive(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
+	g_autoptr(FuEfiLoadOption) loadopt = NULL;
+	guint64 idx = 0;
+
+	/* check args */
+	if (g_strv_length(values) < 2) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: error message */
+				    _("Invalid arguments, expected INDEX KEY [VALUE]"));
+		return FALSE;
+	}
+
+	/* load the boot entry */
+	if (!fu_strtoull(values[0], &idx, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+		return FALSE;
+	loadopt = fu_efivars_get_boot_entry(efivars, (guint16)idx, error);
+	if (loadopt == NULL)
+		return FALSE;
+
+	/* get value */
+	if (values[2] == NULL) {
+		const gchar *value;
+		fu_console_print_full(priv->console,
+				      FU_CONSOLE_PRINT_FLAG_WARNING,
+				      "%s\n",
+				      /* TRANSLATORS: try to treat the legacy format as a hive */
+				      _("The EFI boot entry was not in hive format, falling back"));
+		value = fu_efi_load_option_get_metadata(loadopt, values[1], error);
+		if (value == NULL)
+			return FALSE;
+		fu_console_print_literal(priv->console, value);
+		return TRUE;
+	}
+
+	/* check this is actually shim */
+	if (!fu_util_efiboot_hive_check_loadopt_is_shim(loadopt, error))
+		return FALSE;
+
+	/* change the format if required */
+	if (fu_efi_load_option_get_kind(loadopt) != FU_EFI_LOAD_OPTION_KIND_HIVE) {
+		fu_console_print_full(priv->console,
+				      FU_CONSOLE_PRINT_FLAG_WARNING,
+				      "%s\n",
+				      /* TRANSLATORS: the boot entry was in a legacy format */
+				      _("The EFI boot entry is not in hive format, "
+					"and shim may not be new enough to read it."));
+		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+		    !fu_console_input_bool(priv->console,
+					   FALSE,
+					   "%s",
+					   /* TRANSLATORS: ask the user if it's okay to convert */
+					   _("Do you want to convert it now?"))) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_PERMISSION_DENIED,
+					    "User declined action");
+			return FALSE;
+		}
+		fu_efi_load_option_set_kind(loadopt, FU_EFI_LOAD_OPTION_KIND_HIVE);
+	}
+
+	/* set value */
+	fu_efi_load_option_set_metadata(loadopt, values[1], values[2]);
+	return fu_efivars_set_boot_entry(efivars, (guint16)idx, loadopt, error);
+}
+
+static gboolean
 fu_util_efiboot_info(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
@@ -5266,6 +5375,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Create an EFI boot entry"),
 			      fu_util_efiboot_create);
+	fu_util_cmd_array_add(cmd_array,
+			      "efiboot-hive",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("INDEX KEY [VALUE]"),
+			      /* TRANSLATORS: command description */
+			      _("Set or remove an EFI boot hive entry"),
+			      fu_util_efiboot_hive);
 	fu_util_cmd_array_add(cmd_array,
 			      "efiboot-files,efivar-files",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
