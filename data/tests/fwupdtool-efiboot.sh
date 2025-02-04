@@ -70,6 +70,31 @@ run efiboot-next
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Getting hive cmdline (should fail)"
+run efiboot-hive 0001 cmdline
+rc=$?; if [ $rc != 1 ]; then error $rc; fi
+
+# ---
+echo "Setting hive cmdline"
+run efiboot-hive --force 0001 cmdline acpi=off
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting hive cmdline"
+run efiboot-hive 0001 cmdline
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Creating Boot0002 as Win10"
+run efiboot-create 0002 Win10 bootmgfw.efi ${FWUPD_UEFI_ESP_PATH}
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Setting hive cmdline for Win10 (should fail)"
+run efiboot-hive --force 0002 cmdline acpi=off
+rc=$?; if [ $rc != 1 ]; then error $rc; fi
+
+# ---
 echo "Showing EFI boot info"
 run efiboot-info
 rc=$?; if [ $rc != 0 ]; then error $rc; fi

@@ -6,6 +6,7 @@ _fwupdtool_cmd_list=(
 	'disable-test-devices'
 	'efiboot-create'
 	'efiboot-delete'
+	'efiboot-hive'
 	'efiboot-info'
 	'efiboot-next'
 	'efiboot-order'

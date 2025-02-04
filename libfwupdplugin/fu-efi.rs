@@ -202,6 +202,14 @@ enum FuEfiLoadOptionAttrs {
     CategoryAp = 0x100,
 }
 
+#[derive(ToString, FromString)]
+enum FuEfiLoadOptionKind {
+    Unknown,
+    Path,
+    Hive,
+    Data,
+}
+
 #[derive(ParseStream, New)]
 #[repr(C, packed)]
 struct FuStructEfiLoadOption {

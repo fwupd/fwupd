@@ -1,6 +1,7 @@
 <firmware gtype="FuEfiLoadOption">
   <id>Linux-Firmware-Updater</id>
   <attrs>0x1</attrs>
+  <kind>hive</kind>
   <metadata>
     <path>/foo/bar/baz</path>
     <cmdline>acpi=off</cmdline>
