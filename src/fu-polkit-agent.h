@@ -8,9 +8,12 @@
 
 #pragma once
 
-#include <glib.h>
+#include <glib-object.h>
 
+#define FU_TYPE_POLKIT_AGENT (fu_polkit_agent_get_type())
+G_DECLARE_FINAL_TYPE(FuPolkitAgent, fu_polkit_agent, FU, POLKIT_AGENT, GObject)
+
+FuPolkitAgent *
+fu_polkit_agent_new(void);
 gboolean
-fu_polkit_agent_open(GError **error);
-void
-fu_polkit_agent_close(void);
+fu_polkit_agent_open(FuPolkitAgent *self, GError **error);

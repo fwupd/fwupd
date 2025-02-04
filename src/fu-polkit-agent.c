@@ -6,14 +6,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
+#define G_LOG_DOMAIN "FuPolkitAgent"
+
 #include "config.h"
 
+#include <fwupd.h>
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef __linux__
 #include <sys/prctl.h>
 #endif
-#include <fwupdplugin.h>
 
 #include <dirent.h>
 #include <errno.h>
@@ -28,10 +30,15 @@
 
 #include "fu-polkit-agent.h"
 
-static pid_t agent_pid = 0;
+struct _FuPolkitAgent {
+	GObject parent_instance;
+	pid_t agent_pid;
+};
+
+G_DEFINE_TYPE(FuPolkitAgent, fu_polkit_agent, G_TYPE_OBJECT)
 
 static int
-fu_polkit_agent_fork_agent(pid_t *pid, const char *path, ...)
+fu_polkit_agent_fork_agent(FuPolkitAgent *self, const char *path, ...)
 {
 	char **l;
 	gboolean stderr_is_tty;
@@ -42,7 +49,6 @@ fu_polkit_agent_fork_agent(pid_t *pid, const char *path, ...)
 	unsigned n, i;
 	va_list ap;
 
-	g_return_val_if_fail(pid != 0, 0);
 	g_return_val_if_fail(path != NULL, 0);
 
 	parent_pid = getpid();
@@ -54,7 +60,7 @@ fu_polkit_agent_fork_agent(pid_t *pid, const char *path, ...)
 		return -errno;
 
 	if (n_agent_pid != 0) {
-		*pid = n_agent_pid;
+		self->agent_pid = n_agent_pid;
 		return 0;
 	}
 
@@ -172,20 +178,28 @@ fu_polkit_agent_wait_for_terminate(pid_t pid)
 }
 
 gboolean
-fu_polkit_agent_open(GError **error)
+fu_polkit_agent_open(FuPolkitAgent *self, GError **error)
 {
 	int r;
 	int pipe_fd[2];
 	g_autofree gchar *notify_fd = NULL;
 	g_autofree gchar *pkttyagent_fn = NULL;
 
-	if (agent_pid > 0)
+	g_return_val_if_fail(FU_IS_POLKIT_AGENT(self), FALSE);
+
+	/* already open */
+	if (self->agent_pid > 0)
 		return TRUE;
 
 	/* find binary */
-	pkttyagent_fn = fu_path_find_program("pkttyagent", error);
-	if (pkttyagent_fn == NULL)
+	pkttyagent_fn = g_find_program_in_path("pkttyagent");
+	if (pkttyagent_fn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "missing pkttyagent");
 		return FALSE;
+	}
 
 	/* check STDIN here, not STDOUT, since this is about input, not output */
 	if (!isatty(STDIN_FILENO))
@@ -201,7 +215,7 @@ fu_polkit_agent_open(GError **error)
 
 	/* fork pkttyagent */
 	notify_fd = g_strdup_printf("%i", pipe_fd[1]);
-	r = fu_polkit_agent_fork_agent(&agent_pid,
+	r = fu_polkit_agent_fork_agent(self,
 				       pkttyagent_fn,
 				       pkttyagent_fn,
 				       "--notify-fd",
@@ -229,15 +243,37 @@ fu_polkit_agent_open(GError **error)
 	return TRUE;
 }
 
-void
-fu_polkit_agent_close(void)
+static void
+fu_polkit_agent_init(FuPolkitAgent *self)
 {
-	if (agent_pid <= 0)
-		return;
+}
+
+static void
+fu_polkit_agent_finalize(GObject *obj)
+{
+	FuPolkitAgent *self = FU_POLKIT_AGENT(obj);
 
 	/* inform agent that we are done */
-	kill(agent_pid, SIGTERM);
-	kill(agent_pid, SIGCONT);
-	fu_polkit_agent_wait_for_terminate(agent_pid);
-	agent_pid = 0;
+	if (self->agent_pid > 0) {
+		kill(self->agent_pid, SIGTERM);
+		kill(self->agent_pid, SIGCONT);
+		fu_polkit_agent_wait_for_terminate(self->agent_pid);
+	}
+
+	G_OBJECT_CLASS(fu_polkit_agent_parent_class)->finalize(obj);
+}
+
+static void
+fu_polkit_agent_class_init(FuPolkitAgentClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_polkit_agent_finalize;
+}
+
+FuPolkitAgent *
+fu_polkit_agent_new(void)
+{
+	FuPolkitAgent *self;
+	self = g_object_new(FU_TYPE_POLKIT_AGENT, NULL);
+	return FU_POLKIT_AGENT(self);
 }

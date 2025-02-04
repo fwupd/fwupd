@@ -372,4 +372,25 @@ if get_option('tests')
     ],
   )
   test('fu-self-test', e, is_parallel: false, timeout: 180, env: env)
+
+  if polkit.found()
+    e = executable(
+      'fu-polkit-test',
+      sources: [
+        'fu-polkit-test.c',
+        'fu-polkit-agent.c',
+      ],
+      include_directories: [
+        root_incdir,
+        fwupd_incdir,
+      ],
+      dependencies: [
+        libfwupd_deps,
+      ],
+      link_with: [
+        fwupd,
+      ],
+    )
+    test('fu-self-test', e, env: {'G_DEBUG': 'fatal-criticals'})
+  endif
 endif
