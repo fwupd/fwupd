@@ -36,6 +36,11 @@ run --version
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Show version output (json)"
+run --version --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Showing hwids"
 run hwids
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
