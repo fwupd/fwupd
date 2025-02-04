@@ -46,6 +46,11 @@ run hwids
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Showing security"
+run security
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Showing plugins"
 run get-plugins
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
