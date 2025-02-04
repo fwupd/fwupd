@@ -8,6 +8,7 @@
 #pragma once
 
 #include "fu-efi-load-option.h"
+#include "fu-volume.h"
 
 #define FU_TYPE_EFIVARS (fu_efivars_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuEfivars, fu_efivars, FU, EFIVARS, GObject)
@@ -131,7 +132,7 @@ GBytes *
 fu_efivars_get_boot_data(FuEfivars *self, guint16 idx, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_efivars_set_boot_data(FuEfivars *self, guint16 idx, GBytes *blob, GError **error)
-    G_GNUC_NON_NULL(1, 3);
+    G_GNUC_NON_NULL(1);
 FuEfiLoadOption *
 fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error) G_GNUC_NON_NULL(1);
 gboolean
@@ -139,3 +140,10 @@ fu_efivars_set_boot_entry(FuEfivars *self, guint16 idx, FuEfiLoadOption *entry, 
     G_GNUC_NON_NULL(1, 3);
 GPtrArray *
 fu_efivars_get_boot_entries(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
+					guint16 idx,
+					FuVolume *volume,
+					const gchar *name,
+					const gchar *target,
+					GError **error) G_GNUC_NON_NULL(1, 3, 4, 5);
