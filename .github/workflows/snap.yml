@@ -70,6 +70,10 @@ jobs:
       run: |
         sudo TMPDIR="$SNAP_TEST_TMPDIR" \
             /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool.sh
+    - name: Run fwupdtool efiboot specific tests
+      run: |
+        sudo TMPDIR="$SNAP_TEST_TMPDIR" \
+            /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool-efiboot.sh
 
   deploy-store:
     needs: [build-snap, test-snap]
