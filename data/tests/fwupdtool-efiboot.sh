@@ -40,6 +40,11 @@ run efiboot-create 0001 Fedora shimx64.efi ${FWUPD_UEFI_ESP_PATH}
 rc=$?; if [ $rc != 2 ]; then error $rc; fi
 
 # ---
+echo "Creating Boot0002 with invalid path (should fail)..."
+run efiboot-create 0002 Fedora shimx64.efi /mnt/dave
+rc=$?; if [ $rc != 3 ]; then error $rc; fi
+
+# ---
 echo "Setting BootOrder"
 run efiboot-order 0001
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
