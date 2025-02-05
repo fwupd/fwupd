@@ -55,8 +55,18 @@ run efiboot-order 0001
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Getting BootOrder"
+run efiboot-order
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Setting BootNext"
 run efiboot-next 0001
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting BootNext"
+run efiboot-next
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
