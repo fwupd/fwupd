@@ -13,6 +13,11 @@
 enum { EP_OUT, EP_IN, EP_LAST };
 #define HUDDLY_USB_RECEIVE_BUFFER_SIZE 1024
 
+#if !GLIB_CHECK_VERSION(2, 74, 0)
+#define G_REGEX_DEFAULT	      0
+#define G_REGEX_MATCH_DEFAULT 0
+#endif
+
 struct _FuHuddlyUsbDevice {
 	FuUsbDevice parent_instance;
 	guint bulk_ep[EP_LAST];
@@ -242,7 +247,10 @@ fu_huddly_usb_device_ensure_product_info(FuHuddlyUsbDevice *self, GError **error
 		g_prefix_error(error, "failed to read product info: ");
 		return FALSE;
 	}
-	version_split = g_strsplit(fu_msgpack_item_get_string(item_version)->str, "-", 2);
+	version_split = g_regex_split_simple("[-+]",
+					     fu_msgpack_item_get_string(item_version)->str,
+					     G_REGEX_DEFAULT,
+					     G_REGEX_MATCH_DEFAULT);
 	fu_device_set_version(FU_DEVICE(self), version_split[0]);
 
 	/* state */
