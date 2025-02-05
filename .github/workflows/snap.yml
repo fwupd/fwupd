@@ -51,12 +51,29 @@ jobs:
         sudo snap install --dangerous ${{ needs.build-snap.outputs.snap_name }}
         sudo snap connect fwupd:polkit :polkit
         sudo fwupd.fwupdtool enable-test-devices
+    - name: Set up snap specific environment
+      run: |
+        # location which can be used as TMPDIR and is accessible from both snap
+        # sandbox and from the host
+        SNAP_TEST_TMPDIR=/var/snap/fwupd/common/fwupd-tests
+        sudo mkdir -p "$SNAP_TEST_TMPDIR"
+        echo "SNAP_TEST_TMPDIR=$SNAP_TEST_TMPDIR" >> "$GITHUB_ENV"
     - name: Run fwupdmgr tests
-      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupdmgr.sh
+      run: |
+        sudo TMPDIR="$SNAP_TEST_TMPDIR" \
+            /snap/fwupd/current/share/installed-tests/fwupd/fwupdmgr.sh
     - name: Run fwupd tests
-      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupd.sh
+      run: |
+        sudo TMPDIR="$SNAP_TEST_TMPDIR" \
+            /snap/fwupd/current/share/installed-tests/fwupd/fwupd.sh
     - name: Run fwupdtool tests
-      run: sudo /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool.sh
+      run: |
+        sudo TMPDIR="$SNAP_TEST_TMPDIR" \
+            /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool.sh
+    - name: Run fwupdtool efiboot specific tests
+      run: |
+        sudo TMPDIR="$SNAP_TEST_TMPDIR" \
+            /snap/fwupd/current/share/installed-tests/fwupd/fwupdtool-efiboot.sh
 
   deploy-store:
     needs: [build-snap, test-snap]
