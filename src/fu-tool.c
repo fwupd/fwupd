@@ -4261,18 +4261,18 @@ fu_util_efiboot_next(FuUtilPrivate *priv, gchar **values, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(priv->ctx);
 	guint64 value = 0;
 
+	/* just show */
 	if (values[0] == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    /* TRANSLATORS: error message */
-				    _("Invalid arguments, expected base-16 integer"));
-		return FALSE;
+		guint16 idx = 0;
+		if (!fu_efivars_get_boot_next(efivars, &idx, error))
+			return FALSE;
+		fu_console_print(priv->console, "Boot%04X", idx);
+		return TRUE;
 	}
+
+	/* modify */
 	if (!fu_strtoull(values[0], &value, 0x0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
-
-	/* success */
 	return fu_efivars_set_boot_next(efivars, (guint16)value, error);
 }
 
@@ -4290,11 +4290,12 @@ fu_util_efiboot_order(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		for (guint i = 0; i < order->len; i++) {
 			guint16 idx = g_array_index(order, guint16, i);
-			fu_console_print(priv->console, "Boot%04X\n", idx);
+			fu_console_print(priv->console, "Boot%04X", idx);
 		}
 		return TRUE;
 	}
 
+	/* modify */
 	order = g_array_new(FALSE, FALSE, sizeof(guint16));
 	split = g_strsplit(values[0], ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
@@ -4305,8 +4306,6 @@ fu_util_efiboot_order(FuUtilPrivate *priv, gchar **values, GError **error)
 		value_as_u16 = (guint16)value;
 		g_array_append_val(order, value_as_u16);
 	}
-
-	/* success */
 	return fu_efivars_set_boot_order(efivars, order, error);
 }
 
