@@ -60,6 +60,11 @@ run efiboot-info
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Showing EFI boot info (json)"
+run efiboot-info --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Showing EFI files"
 run efiboot-files
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
