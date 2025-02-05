@@ -13,6 +13,11 @@
 enum { EP_OUT, EP_IN, EP_LAST };
 #define HUDDLY_USB_RECEIVE_BUFFER_SIZE 1024
 
+#if !GLIB_CHECK_VERSION(2, 74, 0)
+#define G_REGEX_DEFAULT	      0
+#define G_REGEX_MATCH_DEFAULT 0
+#endif
+
 struct _FuHuddlyUsbDevice {
 	FuUsbDevice parent_instance;
 	guint bulk_ep[EP_LAST];
