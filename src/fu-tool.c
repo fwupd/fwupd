@@ -5357,7 +5357,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "efiboot-order",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("order INDEX1,INDEX2"),
+			      _("INDEX1,INDEX2"),
 			      /* TRANSLATORS: command description */
 			      _("Set the EFI boot order"),
 			      fu_util_efiboot_order);
