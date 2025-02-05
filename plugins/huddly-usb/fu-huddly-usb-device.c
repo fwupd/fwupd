@@ -242,8 +242,10 @@ fu_huddly_usb_device_ensure_product_info(FuHuddlyUsbDevice *self, GError **error
 		g_prefix_error(error, "failed to read product info: ");
 		return FALSE;
 	}
-	version_split =
-	    g_regex_split_simple("[-+]", fu_msgpack_item_get_string(item_version)->str, 0, 0);
+	version_split = g_regex_split_simple("[-+]",
+					     fu_msgpack_item_get_string(item_version)->str,
+					     G_REGEX_DEFAULT,
+					     G_REGEX_MATCH_DEFAULT);
 	fu_device_set_version(FU_DEVICE(self), version_split[0]);
 
 	/* state */
