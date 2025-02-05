@@ -120,7 +120,7 @@
         <p>This release adds support for the following hardware:</p>
         <ul>
           <li>Algoltek devices supporting sector erase</li>
-          <li>Dell K2 dock</li>
+          <li>Dell kestrel dock</li>
           <li>Intel USB4 hub 5787</li>
           <li>More MediaTek scaler devices</li>
           <li>Nordic HID devices supporting DFUv1</li>
