@@ -45,6 +45,11 @@ run efiboot-create 0002 Fedora shimx64.efi /mnt/dave
 rc=$?; if [ $rc != 3 ]; then error $rc; fi
 
 # ---
+echo "Getting BootOrder (should fail)"
+run efiboot-order
+rc=$?; if [ $rc != 3 ]; then error $rc; fi
+
+# ---
 echo "Setting BootOrder"
 run efiboot-order 0001
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
