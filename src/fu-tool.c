@@ -4318,11 +4318,12 @@ fu_util_efiboot_create(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* check args */
 	if (g_strv_length(values) < 3) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    /* TRANSLATORS: error message */
-				    _("Invalid arguments, expected IDX NAME TARGET [MOUNTPOINT]"));
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOTHING_TO_DO,
+		    /* TRANSLATORS: error message */
+		    _("Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"));
 		return FALSE;
 	}
 
@@ -5261,7 +5262,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "efiboot-create",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("create INDEX NAME TARGET [MOUNTPOINT]"),
+			      _("INDEX NAME TARGET [MOUNTPOINT]"),
 			      /* TRANSLATORS: command description */
 			      _("Create an EFI boot entry"),
 			      fu_util_efiboot_create);
