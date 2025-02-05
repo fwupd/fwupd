@@ -31,6 +31,14 @@ configure_file(
 )
 
 configure_file(
+  input: 'fwupdtool-efiboot.test.in',
+  output: 'fwupdtool-efiboot.test',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
   input: 'fwupd.test.in',
   output: 'fwupd.test',
   configuration: con2,
@@ -68,6 +76,14 @@ configure_file(
 configure_file(
   input: 'fwupdtool.sh',
   output: 'fwupdtool.sh',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
+  input: 'fwupdtool-efiboot.sh',
+  output: 'fwupdtool-efiboot.sh',
   configuration: con2,
   install: true,
   install_dir: installed_test_datadir,

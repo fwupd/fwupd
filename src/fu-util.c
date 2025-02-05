@@ -4910,6 +4910,9 @@ main(int argc, char *argv[])
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
+#ifdef HAVE_POLKIT
+	g_autoptr(FuPolkitAgent) polkit_agent = fu_polkit_agent_new();
+#endif
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter_device = NULL;
 	g_autofree gchar *filter_release = NULL;
@@ -5622,7 +5625,7 @@ main(int argc, char *argv[])
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
 		g_autoptr(GError) error_polkit = NULL;
-		if (!fu_polkit_agent_open(&error_polkit)) {
+		if (!fu_polkit_agent_open(polkit_agent, &error_polkit)) {
 			fu_console_print(priv->console,
 					 "Failed to open polkit agent: %s",
 					 error_polkit->message);
@@ -5753,11 +5756,6 @@ main(int argc, char *argv[])
 			return EXIT_NOT_FOUND;
 		return EXIT_FAILURE;
 	}
-
-#ifdef HAVE_POLKIT
-	/* stop listening for polkit questions */
-	fu_polkit_agent_close();
-#endif
 
 	/* success */
 	return EXIT_SUCCESS;

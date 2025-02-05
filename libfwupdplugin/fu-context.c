@@ -1553,6 +1553,8 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 	path_tmp = g_getenv("FWUPD_UEFI_ESP_PATH");
 	if (path_tmp != NULL) {
 		g_autoptr(FuVolume) vol = fu_volume_new_from_mount_path(path_tmp);
+		fu_volume_set_partition_kind(vol, FU_VOLUME_KIND_ESP);
+		fu_volume_set_partition_uuid(vol, "00000000-0000-0000-0000-000000000000");
 		fu_context_add_esp_volume(self, vol);
 		return g_ptr_array_ref(priv->esp_volumes);
 	}

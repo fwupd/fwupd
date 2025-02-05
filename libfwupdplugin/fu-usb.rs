@@ -51,9 +51,10 @@ enum FuUsbLangid {
     EnglishUnitedStates = 0x0409,
 }
 
-#[derive(ToString)]
+#[derive(ToString, FromString)]
 #[repr(u8)]
 enum FuUsbDescriptorKind {
+    Invalid = 0x00,
     Device = 0x01,
     Config = 0x02,
     String = 0x03,
@@ -157,10 +158,10 @@ struct FuUsbEndpointHdr {
     interval: u8,
 }
 
-#[derive(ParseStream)]
+#[derive(New, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuUsbBosHdr {
-    length: u8,
-    descriptor_type: FuUsbDescriptorKind,
+    length: u8 = $struct_size,
+    descriptor_type: FuUsbDescriptorKind = Bos,
     dev_capability_type: u8,
 }

@@ -17,6 +17,8 @@
 
 #include <string.h>
 
+#include "fu-byte-array.h"
+#include "fu-common.h"
 #include "fu-partial-input-stream.h"
 #include "fu-usb-bos-descriptor-private.h"
 
@@ -34,6 +36,40 @@ G_DEFINE_TYPE_EXTENDED(FuUsbBosDescriptor,
 		       0,
 		       G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
 					     fu_usb_bos_descriptor_codec_iface_init));
+
+static void
+fu_usb_bos_descriptor_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
+	fu_xmlb_builder_insert_kv(
+	    bn,
+	    "dev_capability_type",
+	    fu_usb_descriptor_kind_to_string(self->bos_cap.bDevCapabilityType));
+}
+
+static gboolean
+fu_usb_bos_descriptor_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
+	const gchar *str;
+
+	/* simple properties */
+	str = xb_node_query_text(n, "dev_capability_type", NULL);
+	if (str != NULL) {
+		self->bos_cap.bDevCapabilityType = fu_usb_descriptor_kind_from_string(str);
+		if (self->bos_cap.bDevCapabilityType == FU_USB_DESCRIPTOR_KIND_INVALID) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid DevCapabilityType %s",
+				    str);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
 
 static gboolean
 fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
@@ -159,6 +195,24 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static GByteArray *
+fu_usb_bos_descriptor_write(FuFirmware *firmware, GError **error)
+{
+	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
+	g_autoptr(FuUsbBosHdr) st = fu_usb_bos_hdr_new();
+	g_autoptr(GBytes) blob = NULL;
+
+	fu_usb_bos_hdr_set_dev_capability_type(st, self->bos_cap.bDevCapabilityType);
+	blob = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, NULL);
+	if (blob != NULL) {
+		fu_byte_array_append_bytes(st, blob);
+		fu_usb_bos_hdr_set_length(st, st->len);
+	}
+
+	/* success */
+	return g_steal_pointer(&st);
+}
+
 static void
 fu_usb_bos_descriptor_codec_iface_init(FwupdCodecInterface *iface)
 {
@@ -171,6 +225,9 @@ fu_usb_bos_descriptor_class_init(FuUsbBosDescriptorClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_usb_bos_descriptor_parse;
+	firmware_class->write = fu_usb_bos_descriptor_write;
+	firmware_class->build = fu_usb_bos_descriptor_build;
+	firmware_class->export = fu_usb_bos_descriptor_export;
 }
 
 static void
