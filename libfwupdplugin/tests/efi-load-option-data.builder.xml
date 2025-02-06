@@ -1,0 +1,21 @@
+<firmware gtype="FuEfiLoadOption">
+  <id>Fedora</id>
+  <attrs>0x1</attrs>
+  <kind>data</kind>
+  <optional_data>AABCTwo=</optional_data>
+  <firmware gtype="FuEfiDevicePathList">
+    <firmware gtype="FuEfiHardDriveDevicePath">
+      <idx>0x4</idx>
+      <partition_number>0x1</partition_number>
+      <partition_start>0x800</partition_start>
+      <partition_size>0x12c000</partition_size>
+      <partition_signature>9ed1b2b2-5c29-4b62-a329-84d462b47ce7</partition_signature>
+      <partition_format>guid-partition-table</partition_format>
+      <signature_type>guid</signature_type>
+    </firmware>
+    <firmware gtype="FuEfiFilePathDevicePath">
+      <idx>0x4</idx>
+      <name>/EFI/fedora/shimx64.efi</name>
+    </firmware>
+  </firmware>
+</firmware>

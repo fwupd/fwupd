@@ -5039,6 +5039,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_LOAD_OPTION,
+		"efi-load-option-data.builder.xml",
+		"6e6190dc6b1bf45bc6e30ba7a6a98d891d692dd0",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_EDID,
 		"edid.builder.xml",
 		"64cef10b75ccce684a483d576dd4a4ce6bef8165",
