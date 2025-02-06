@@ -605,32 +605,6 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 	return TRUE;
 }
 
-static gboolean
-fu_logitech_bulkcontroller_device_compute_hash_cb(const guint8 *buf,
-						  gsize bufsz,
-						  gpointer user_data,
-						  GError **error)
-{
-	GChecksum *checksum = (GChecksum *)user_data;
-	g_checksum_update(checksum, buf, bufsz);
-	return TRUE;
-}
-
-static gchar *
-fu_logitech_bulkcontroller_device_compute_hash(GInputStream *stream, GError **error)
-{
-	guint8 md5buf[HASH_VALUE_SIZE] = {0};
-	gsize data_len = sizeof(md5buf);
-	g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_MD5);
-	if (!fu_input_stream_chunkify(stream,
-				      fu_logitech_bulkcontroller_device_compute_hash_cb,
-				      checksum,
-				      error))
-		return NULL;
-	g_checksum_get_digest(checksum, (guint8 *)&md5buf, &data_len);
-	return g_base64_encode(md5buf, sizeof(md5buf));
-}
-
 static FwupdStatus
 fu_logitech_bulkcontroller_device_update_state_to_status(
     FuLogitechBulkcontrollerUpdateState update_state)
@@ -1004,6 +978,8 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	gsize streamsz = 0;
 	g_autofree gchar *base64hash = NULL;
+	g_autofree gchar *md5_str = NULL;
+	g_autoptr(GByteArray) md5_buf = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GInputStream) stream = NULL;
@@ -1019,13 +995,17 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "uninit");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 40, NULL);
 
-	/* get default image and calculate checksum */
+	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
-	base64hash = fu_logitech_bulkcontroller_device_compute_hash(stream, error);
-	if (base64hash == NULL)
+
+	/* calculate firmware checksum, weirdly as a base64 string */
+	md5_str = fu_firmware_get_checksum(firmware, G_CHECKSUM_MD5, error);
+	md5_buf = fu_byte_array_from_string(md5_str, error);
+	if (md5_buf == NULL)
 		return FALSE;
+	base64hash = g_base64_encode(md5_buf->data, md5_buf->len);
 	fu_progress_step_done(progress);
 
 	/* sending INIT. Retry if device is not in IDLE state to receive the file */
