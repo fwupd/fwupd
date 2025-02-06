@@ -4492,7 +4492,8 @@ fu_util_efiboot_hive(FuUtilPrivate *priv, gchar **values, GError **error)
 		    !fu_console_input_bool(priv->console,
 					   FALSE,
 					   "%s",
-					   /* TRANSLATORS: ask the user if it's okay to convert */
+					   /* TRANSLATORS: ask the user if it's okay to convert,
+					    * "it" being the data contained in the EFI boot entry */
 					   _("Do you want to convert it now?"))) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
