@@ -561,6 +561,11 @@ fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecF
 	g_autoptr(FuFirmware) dp_list = NULL;
 
 	fwupd_codec_json_append(builder, "Name", fu_firmware_get_id(FU_FIRMWARE(self)));
+	if (self->kind != FU_EFI_LOAD_OPTION_KIND_UNKNOWN) {
+		fwupd_codec_json_append(builder,
+					"Kind",
+					fu_efi_load_option_kind_to_string(self->kind));
+	}
 	g_hash_table_iter_init(&iter, self->metadata);
 	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
 		fwupd_codec_json_append(builder, key, value);
