@@ -226,7 +226,7 @@ fu_efi_load_option_parse_optional_path(FuEfiLoadOption *self, GBytes *opt_blob, 
 		return FALSE;
 
 	/* check is ASCII */
-	if (!g_str_is_ascii(optional_path)) {
+	if (optional_path[0] == '\0' || !g_str_is_ascii(optional_path)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
