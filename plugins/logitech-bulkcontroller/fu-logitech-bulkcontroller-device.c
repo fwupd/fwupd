@@ -1012,16 +1012,21 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 4, "checksum-stream");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "init");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 55, "device-write-blocks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 51, "device-write-blocks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "end-transfer");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, "uninit");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 40, NULL);
 
-	/* get default image */
+	/* get default image and calculate checksum */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL)
 		return FALSE;
+	base64hash = fu_logitech_bulkcontroller_device_compute_hash(stream, error);
+	if (base64hash == NULL)
+		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* sending INIT. Retry if device is not in IDLE state to receive the file */
 	if (!fu_device_retry(device,
@@ -1062,9 +1067,6 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 
 	/* sending end transfer -- extend the bulk transfer timeout value, as android device takes
 	 * some time to calculate the hash and respond */
-	base64hash = fu_logitech_bulkcontroller_device_compute_hash(stream, error);
-	if (base64hash == NULL)
-		return FALSE;
 	fu_byte_array_append_uint32(end_pkt, 1, G_LITTLE_ENDIAN); /* update */
 	fu_byte_array_append_uint32(end_pkt, 0, G_LITTLE_ENDIAN); /* force */
 	fu_byte_array_append_uint32(end_pkt,
