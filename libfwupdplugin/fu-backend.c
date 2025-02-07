@@ -202,6 +202,7 @@ FuDevice *
 fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
 	g_return_val_if_fail(backend_id != NULL, NULL);
@@ -215,7 +216,13 @@ fu_backend_create_device(FuBackend *self, const gchar *backend_id, GError **erro
 			    G_OBJECT_TYPE_NAME(self));
 		return NULL;
 	}
-	return klass->create_device(self, backend_id, error);
+	device = klass->create_device(self, backend_id, error);
+	if (device == NULL)
+		return NULL;
+	fu_device_set_backend(device, self);
+
+	/* success */
+	return g_steal_pointer(&device);
 }
 
 /**
@@ -234,14 +241,24 @@ FuDevice *
 fu_backend_create_device_for_donor(FuBackend *self, FuDevice *donor, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_BACKEND(self), NULL);
 	g_return_val_if_fail(FU_IS_DEVICE(donor), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* no impl */
 	if (klass->create_device_for_donor == NULL)
 		return g_object_ref(donor);
-	return klass->create_device_for_donor(self, donor, error);
+
+	/* impl */
+	device = klass->create_device_for_donor(self, donor, error);
+	if (device == NULL)
+		return NULL;
+	fu_device_set_backend(device, self);
+
+	/* success */
+	return g_steal_pointer(&device);
 }
 
 /**
