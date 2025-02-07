@@ -81,6 +81,13 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 				    "no JSON root node");
 		return FALSE;
 	}
+	if (!JSON_NODE_HOLDS_OBJECT(json_root)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no JSON root object");
+		return FALSE;
+	}
 	self->json_obj = json_node_get_object(json_root);
 	if (self->json_obj == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no JSON object");
