@@ -116,6 +116,15 @@ def firmware_inventory_bmc():
         "Id": "BMC",
         "LowestSupportedVersion": "11A-0.12",
         "Name": "Lenovo BMC Firmware",
+        "Oem": {
+            "Hpe": {
+                "DeviceClass": "aa148d2e-6e09-453e-bc6f-63baa5f5ccc4",
+                "Targets": [
+                    "00000000-0000-0000-0000-000000000229",
+                    "00000000-0000-0000-0000-000001413436",
+                ],
+            }
+        },
         "RelatedItem": [{"@odata.id": "/redfish/v1/Managers/BMC"}],
         "SoftwareId": "UEFI-AFE1-6",
         "UefiDevicePaths": ["BMC(0x1,0x0ABCDEF)"],
