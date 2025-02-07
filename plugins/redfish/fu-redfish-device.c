@@ -387,13 +387,31 @@ fu_redfish_device_smc_license_check(FuRedfishDevice *self)
 }
 
 static gboolean
+fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, JsonObject *json_object, GError **error)
+{
+	if (json_object_has_member(json_object, "DeviceClass")) {
+		const gchar *guid = json_object_get_string_member(json_object, "DeviceClass");
+		if (guid != NULL)
+			fu_device_add_instance_id(FU_DEVICE(self), guid);
+	}
+	if (json_object_has_member(json_object, "Targets")) {
+		JsonArray *json_array = json_object_get_array_member(json_object, "Targets");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			const gchar *guid = json_array_get_string_element(json_array, i);
+			if (guid != NULL)
+				fu_device_add_instance_id(FU_DEVICE(self), guid);
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(dev);
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	JsonObject *member = priv->member;
-	const gchar *guid = NULL;
-	g_autofree gchar *guid_lower = NULL;
+	const gchar *software_id = NULL;
 
 	/* sanity check */
 	if (priv->member == NULL) {
@@ -416,27 +434,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (tmp != NULL)
 			fu_device_set_backend_id(dev, tmp);
 	}
-
-	/* get SoftwareId, falling back to vendor-specific versions */
-	if (json_object_has_member(member, "SoftwareId")) {
-		guid = json_object_get_string_member(member, "SoftwareId");
-	} else if (json_object_has_member(member, "Oem")) {
-		JsonObject *oem = json_object_get_object_member(member, "Oem");
-		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
-			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
-			if (hpe != NULL && json_object_has_member(hpe, "DeviceClass"))
-				guid = json_object_get_string_member(hpe, "DeviceClass");
-		}
-	}
-
-	/* GUID is required */
-	if (guid == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no GUID for device");
-		return FALSE;
-	}
+	fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
 
 	/* device properties */
 	if (json_object_has_member(member, "Manufacturer")) {
@@ -444,6 +442,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (tmp != NULL && tmp[0] != '\0')
 			fu_redfish_device_set_vendor(self, tmp);
 	}
+	fu_device_add_instance_strsafe(dev, "VENDOR", fu_device_get_vendor(dev));
 
 	/* the version can encode the instance ID suffix */
 	if (json_object_has_member(member, "Version")) {
@@ -468,27 +467,35 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		}
 	}
 
-	/* add IDs */
-	fu_device_add_instance_strsafe(dev, "VENDOR", fu_device_get_vendor(dev));
-	fu_device_add_instance_str(dev, "SOFTWAREID", guid);
-	fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
-
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
-	guid_lower = g_ascii_strdown(guid, -1);
-	if (fwupd_guid_is_valid(guid_lower)) {
-		fu_device_add_instance_id(dev, guid_lower);
-	} else {
-		if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
-			fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");
+	if (json_object_has_member(member, "SoftwareId"))
+		software_id = json_object_get_string_member(member, "SoftwareId");
+	if (software_id != NULL) {
+		g_autofree gchar *software_id_lower = g_ascii_strdown(software_id, -1);
+		if (fwupd_guid_is_valid(software_id_lower)) {
+			fu_device_add_instance_id(dev, software_id_lower);
+		} else {
+			fu_device_add_instance_str(dev, "SOFTWAREID", software_id);
+			if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
+				fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");
+			fu_device_build_instance_id(dev,
+						    NULL,
+						    "REDFISH",
+						    "VENDOR",
+						    "SOFTWAREID",
+						    "TYPE",
+						    NULL);
+		}
+	}
 
-		fu_device_build_instance_id(dev,
-					    NULL,
-					    "REDFISH",
-					    "VENDOR",
-					    "SOFTWAREID",
-					    "TYPE",
-					    NULL);
-		fu_device_build_instance_id(dev, NULL, "REDFISH", "VENDOR", "SOFTWAREID", NULL);
+	/* get vendor-specific properties too */
+	if (json_object_has_member(member, "Oem")) {
+		JsonObject *oem = json_object_get_object_member(member, "Oem");
+		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
+			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
+			if (!fu_redfish_device_probe_oem_hpe(self, hpe, error))
+				return FALSE;
+		}
 	}
 
 	/* used for quirking and parenting */
