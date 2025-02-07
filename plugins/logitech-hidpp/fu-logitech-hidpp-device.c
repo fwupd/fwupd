@@ -801,6 +801,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UPDATABLE);
 		if (fu_device_get_version(device) == NULL) {
 			g_info("repairing device in bootloader mode");
