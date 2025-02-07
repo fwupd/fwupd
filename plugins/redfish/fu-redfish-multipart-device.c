@@ -86,7 +86,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	part = curl_mime_addpart(mime);
 	curl_mime_name(part, "UpdateFile");
 	(void)curl_mime_type(part, "application/octet-stream");
-	(void)curl_mime_filedata(part, "firmware.bin");
+	(void)curl_mime_filename(part, "firmware.bin");
 	(void)curl_mime_data(part, g_bytes_get_data(fw, NULL), g_bytes_get_size(fw));
 
 	(void)curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
