@@ -255,8 +255,7 @@ fu_redfish_device_set_version_lenovo(FuRedfishDevice *self, const gchar *version
 		return FALSE;
 
 	/* split out milestone */
-	if (!fu_strtoull(out_build, &priv->milestone, 0, G_MAXUINT64, FU_INTEGER_BASE_10, error))
-		return FALSE;
+	priv->milestone = g_ascii_strtoull(out_build, NULL, 10); /* nocheck:blocked */
 
 	/* odd numbered builds are unsigned */
 	if (priv->milestone % 2 != 0) {
