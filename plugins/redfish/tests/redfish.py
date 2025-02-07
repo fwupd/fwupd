@@ -24,7 +24,9 @@ def _failure(msg: str, status=400):
     res = {
         "error": {"message": msg},
     }
-    return Response(response=json.dumps(res), status=401, mimetype="application/json")
+    return Response(
+        response=json.dumps(res), status=status, mimetype="application/json"
+    )
 
 
 @app.route("/redfish/v1/")
