@@ -335,6 +335,12 @@ def fwupdate_unlicensed():
     return Response(json.dumps(res), status=405, mimetype="application/json")
 
 
+@app.route("/FWUpdate-smc", methods=["GET"])
+def fwupdate_smc_query():
+    res = {"Accepted": {"code": "Base.v1_4_0.Accepted"}}
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
 @app.route("/FWUpdate-smc", methods=["POST"])
 def fwupdate_smc():
 
