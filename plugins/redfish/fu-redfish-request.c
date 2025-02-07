@@ -217,6 +217,7 @@ fu_redfish_request_reset(FuRedfishRequest *self)
 {
 	self->status_code = 0;
 	self->json_obj = NULL;
+	g_byte_array_set_size(self->buf, 0);
 }
 
 gboolean
