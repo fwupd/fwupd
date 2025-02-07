@@ -326,39 +326,13 @@ def fwupdate_unlicensed():
             "@Message.ExtendedInfo": [
                 {
                     "MessageId": "SMC.1.0.OemLicenseNotPassed",
-                    "Severity": "Warning",
-                    "Resolution": "Please check if there was the next step with respective API to execute.",
-                    "Message": "The BIOS firmware update was already in update mode.",
+                    "Message": "Feature not available.",
                     "MessageArgs": ["BIOS"],
-                    "RelatedProperties": ["EnterUpdateMode_StatusCheck"],
                 }
             ],
         }
     }
     return Response(json.dumps(res), status=405, mimetype="application/json")
-    data = json.loads(request.form["UpdateParameters"])
-    if data["@Redfish.OperationApplyTime"] != "Immediate":
-        return _failure("apply invalid")
-    if data["Targets"][0] != "/redfish/v1/UpdateService/FirmwareInventory/BMC":
-        return _failure("id invalid")
-    fileitem = request.files["UpdateFile"]
-    if not fileitem.filename.endswith(".bin"):
-        return _failure("filename invalid")
-    if fileitem.read().decode() != "hello":
-        return _failure("data invalid")
-    res = {
-        "Version": "P79 v1.45",
-        "@odata.id": "/redfish/v1/TaskService/Tasks/545",
-        "@odata.etag": "653b835e9ee4af9ea7ea",
-        "TaskMonitor": "/redfish/v1/TaskService/999",
-    }
-    # Location set to the URI of a task monitor.
-    return Response(
-        json.dumps(res),
-        status=202,
-        mimetype="application/json",
-        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/545"},
-    )
 
 
 @app.route("/FWUpdate-smc", methods=["POST"])
