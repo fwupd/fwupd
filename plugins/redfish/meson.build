@@ -41,7 +41,7 @@ plugin_builtins += plugin_builtin_redfish
 if get_option('tests')
   install_data(['tests/redfish-smbios.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
-  install_data(['tests/redfish.conf'],
+  install_data(['tests/fwupd.conf'],
     install_dir: join_paths(installed_test_datadir, 'tests'),
     install_mode: 'rw-r-----',
   )

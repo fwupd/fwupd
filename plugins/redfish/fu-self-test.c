@@ -38,6 +38,11 @@ fu_test_self_init(FuTest *self)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* load the config file */
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* generic BMC */
 	self->plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
 	ret = fu_plugin_runner_startup(self->plugin, progress, &error);
