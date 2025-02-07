@@ -57,6 +57,7 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 	if (helper->vid != 0x0 && helper->pid != 0x0) {
 		g_autoptr(FuBackend) udev_backend = NULL;
 		g_autoptr(FuDevice) udev_device = NULL;
+		g_autoptr(FuDevice) phys_device = NULL;
 		g_autoptr(GVariant) udi = NULL;
 
 		udi = g_dbus_proxy_get_cached_property(proxy, "Udi");
@@ -70,13 +71,30 @@ fu_redfish_network_device_match_device(FuRedfishNetworkMatchHelper *helper,
 		if (udev_device == NULL)
 			return FALSE;
 
+		/* get the deepest USB parent device, falling back to the PCI device */
+		phys_device = fu_device_get_backend_parent_with_subsystem(udev_device,
+									  "usb:usb_device",
+									  NULL);
+		if (phys_device == NULL) {
+			phys_device =
+			    fu_device_get_backend_parent_with_subsystem(udev_device, "pci", NULL);
+		}
+		if (phys_device == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no physical device found for %s",
+				    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(udev_device)));
+			return FALSE;
+		}
+
 		/* verify */
 		g_debug("%s: 0x%04x, 0x%04x",
 			g_variant_get_string(udi, NULL),
-			fu_device_get_vid(udev_device),
-			fu_device_get_pid(udev_device));
-		if (fu_device_get_vid(udev_device) == helper->vid &&
-		    fu_device_get_pid(udev_device) == helper->pid)
+			fu_device_get_vid(phys_device),
+			fu_device_get_pid(phys_device));
+		if (fu_device_get_vid(phys_device) == helper->vid &&
+		    fu_device_get_pid(phys_device) == helper->pid)
 			helper->device = fu_redfish_network_device_new(object_path);
 	}
 
@@ -144,9 +162,17 @@ fu_redfish_network_device_match(FuRedfishNetworkMatchHelper *helper, GError **er
 	/* look at each device */
 	g_variant_get(devices, "(^ao)", &paths);
 	for (guint i = 0; paths[i] != NULL; i++) {
+		g_autoptr(GError) error_loop = NULL;
+
 		g_debug("device %u: %s", i, paths[i]);
-		if (!fu_redfish_network_device_match_device(helper, paths[i], error))
+		if (!fu_redfish_network_device_match_device(helper, paths[i], &error_loop)) {
+			if (g_error_matches(error_loop, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug("ignoring: %s", error_loop->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_loop));
 			return FALSE;
+		}
 		if (helper->device != NULL)
 			break;
 	}
