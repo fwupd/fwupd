@@ -231,5 +231,15 @@ echo "Remove blocked firmware (again)..."
 fwupdmgr unblock-firmware foo
 rc=$?; if [ $rc != 2 ]; then error $rc; fi
 
+# ---
+echo "Setting approved firmware..."
+fwupdmgr set-approved-firmware foo,bar,baz
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Getting approved firmware..."
+fwupdmgr get-approved-firmware
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
 # success!
 exit 0
