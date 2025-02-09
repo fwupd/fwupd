@@ -201,5 +201,10 @@ echo "Resetting empty config ..."
 fwupdmgr reset-config fwupd --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+# ---
+echo "Inhibiting for 100ms..."
+fwupdmgr inhibit test 100
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
 # success!
 exit 0

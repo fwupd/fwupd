@@ -1116,24 +1116,81 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 	return TRUE;
 }
 
+typedef struct {
+	FuUtilPrivate *priv;
+	gchar *inhibit_id;
+} FuUtilInhibitHelper;
+
+static void
+fu_util_inhibit_helper_free(FuUtilInhibitHelper *helper)
+{
+	g_free(helper->inhibit_id);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilInhibitHelper, fu_util_inhibit_helper_free)
+
+static gboolean
+fu_util_inhibit_timeout_cb(FuUtilInhibitHelper *helper)
+{
+	FuUtilPrivate *priv = helper->priv;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fwupd_client_uninhibit(priv->client,
+				    helper->inhibit_id,
+				    priv->cancellable,
+				    &error_local)) {
+		g_warning("failed to auto-uninhibit: %s", error_local->message);
+	}
+	g_main_loop_quit(priv->loop);
+	return G_SOURCE_REMOVE;
+}
+
 static gboolean
 fu_util_inhibit(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *reason = "not set";
+	guint64 timeout_ms = 0;
+	g_autoptr(FuUtilInhibitHelper) helper = g_new0(FuUtilInhibitHelper, 1);
 	g_autofree gchar *inhibit_id = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	if (g_strv_length(values) > 0)
-		reason = values[1];
+		reason = values[0];
+	if (g_strv_length(values) > 1) {
+		if (!fu_strtoull(values[1],
+				 &timeout_ms,
+				 0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
+	}
 
 	/* inhibit then wait */
-	inhibit_id = fwupd_client_inhibit(priv->client, reason, priv->cancellable, error);
-	if (inhibit_id == NULL)
+	helper->priv = priv;
+	helper->inhibit_id = fwupd_client_inhibit(priv->client, reason, priv->cancellable, error);
+	if (helper->inhibit_id == NULL)
 		return FALSE;
+	if (timeout_ms > 0) {
+		g_autoptr(GSource) source = g_timeout_source_new(timeout_ms);
+		g_source_set_callback(source,
+				      (GSourceFunc)fu_util_inhibit_timeout_cb,
+				      helper,
+				      NULL);
+		g_source_attach(source, priv->main_ctx);
+	}
 
 	/* TRANSLATORS: the inhibit ID is a short string like dbus-123456 */
-	g_string_append_printf(str, _("Inhibit ID is %s."), inhibit_id);
+	g_string_append_printf(str, _("Inhibit ID is %s."), helper->inhibit_id);
 	g_string_append(str, "\n");
+	if (timeout_ms > 0) {
+		g_string_append_printf(str,
+				       /* TRANSLATORS: we can auto-uninhibit after a timeout */
+				       _("Automatically uninhibiting in %ums…"),
+				       (guint)timeout_ms);
+		g_string_append(str, "\n");
+	}
 	/* TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program */
 	g_string_append(str, _("Use CTRL^C to cancel."));
 	/* TRANSLATORS: this CLI tool is now preventing system updates */
@@ -5401,7 +5458,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "inhibit",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("[REASON]"),
+			      _("[REASON] [TIMEOUT]"),
 			      /* TRANSLATORS: command description */
 			      _("Inhibit the system to prevent upgrades"),
 			      fu_util_inhibit);
