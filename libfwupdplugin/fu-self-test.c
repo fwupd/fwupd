@@ -871,6 +871,65 @@ fu_context_hwids_dmi_func(void)
 	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, 16);
 }
 
+static void
+fu_context_hwids_fdt_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *dump = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuFirmware) fdt_tmp = fu_fdt_firmware_new();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file =
+	    g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/system.dtb");
+
+	/* write file */
+	ret = fu_firmware_build_from_xml(
+	    FU_FIRMWARE(fdt_tmp),
+	    "<firmware gtype=\"FuFdtFirmware\">\n"
+	    "  <firmware gtype=\"FuFdtImage\">\n"
+	    "    <metadata key=\"compatible\" format=\"str\">pine64,rockpro64-v2.1</metadata>\n"
+	    "    <metadata key=\"chassis-type\" format=\"str\">tablet</metadata>\n"
+	    "    <metadata key=\"vendor\" format=\"str\">fwupd</metadata>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>ibm,firmware-versions</id>\n"
+	    "      <metadata key=\"version\" format=\"str\">1.2.3</metadata>\n"
+	    "    </firmware>\n"
+	    "    <firmware gtype=\"FuFdtImage\">\n"
+	    "      <id>vpd</id>\n"
+	    "      <firmware gtype=\"FuFdtImage\">\n"
+	    "        <id>root-node-vpd@a000</id>\n"
+	    "        <firmware gtype=\"FuFdtImage\">\n"
+	    "          <id>enclosure@1e00</id>\n"
+	    "          <firmware gtype=\"FuFdtImage\">\n"
+	    "            <id>backplane@800</id>\n"
+	    "            <metadata key=\"part-number\" format=\"str\">Tablet</metadata>\n"
+	    "          </firmware>\n"
+	    "        </firmware>\n"
+	    "      </firmware>\n"
+	    "    </firmware>\n"
+	    "  </firmware>\n"
+	    "</firmware>\n",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_write_file(FU_FIRMWARE(fdt_tmp), file, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_FDT, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	dump = fu_firmware_to_string(FU_FIRMWARE(fu_context_get_smbios(ctx)));
+	g_debug("%s", dump);
+
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER), ==, "fwupd");
+	g_assert_cmpstr(fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BASEBOARD_PRODUCT),
+			==,
+			"Tablet");
+	g_assert_cmpuint(fu_context_get_chassis_kind(ctx), ==, FU_SMBIOS_CHASSIS_KIND_TABLET);
+}
+
 static gboolean
 fu_test_strnsplit_add_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
 {
@@ -6588,6 +6647,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
+	g_test_add_func("/fwupd/context{hwids-fdt}", fu_context_hwids_fdt_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
 	g_test_add_func("/fwupd/context{udev-subsystems}", fu_context_udev_subsystems_func);
