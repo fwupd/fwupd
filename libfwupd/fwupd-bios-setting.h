@@ -32,6 +32,7 @@ struct _FwupdBiosSettingClass {
 #define FWUPD_BIOS_SETTING_PENDING_REBOOT "pending_reboot"
 #define FWUPD_BIOS_SETTING_RESET_BIOS	  "reset_bios"
 #define FWUPD_BIOS_SETTING_DEBUG_CMD	  "debug_cmd"
+#define FWUPD_BIOS_SETTING_SELF_TEST	  "fwupd_self_test"
 
 /**
  * FwupdBiosSettingKind:

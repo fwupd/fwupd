@@ -43,6 +43,33 @@ echo "Getting the list of plugins..."
 fwupdmgr get-plugins
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+if [ -n "$CI" ]; then
+    # ---
+    echo "Setting BIOS setting..."
+    fwupdmgr set-bios-setting fwupd_self_test value
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # ---
+    echo "Getting BIOS settings..."
+    fwupdmgr get-bios-setting
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # ---
+    echo "Getting BIOS settings (json)..."
+    fwupdmgr get-bios-setting --json
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # ---
+    echo "Getting BIOS settings (unfound)..."
+    fwupdmgr get-bios-setting foo
+    rc=$?; if [ $rc != 3 ]; then error $rc; fi
+
+    # ---
+    echo "Setting BIOS setting (unfound)..."
+    fwupdmgr set-bios-setting unfound value
+    rc=$?; if [ $rc != 3 ]; then error $rc; fi
+fi
+
 # ---
 echo "Getting the list of plugins (json)..."
 fwupdmgr get-plugins --json

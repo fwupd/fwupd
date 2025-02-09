@@ -22,10 +22,12 @@ G_DEFINE_TYPE(FuBiosSetting, fu_bios_setting, FWUPD_TYPE_BIOS_SETTING)
 static gboolean
 fu_bios_setting_write_value(FwupdBiosSetting *self, const gchar *value, GError **error)
 {
-	g_autofree gchar *fn =
-	    g_build_filename(fwupd_bios_setting_get_path(self), "current_value", NULL);
+	g_autofree gchar *fn = NULL;
 	g_autoptr(FuIOChannel) io = NULL;
 
+	if (fwupd_bios_setting_get_path(self) == NULL)
+		return TRUE;
+	fn = g_build_filename(fwupd_bios_setting_get_path(self), "current_value", NULL);
 	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io == NULL)
 		return FALSE;

@@ -272,6 +272,14 @@ fu_bios_settings_set_folder_attributes(FuBiosSettings *self, FwupdBiosSetting *a
 	return TRUE;
 }
 
+void
+fu_bios_settings_add_attribute(FuBiosSettings *self, FwupdBiosSetting *attr)
+{
+	g_return_if_fail(FU_IS_BIOS_SETTINGS(self));
+	g_return_if_fail(FU_IS_BIOS_SETTING(attr));
+	g_ptr_array_add(self->attrs, g_object_ref(attr));
+}
+
 static gboolean
 fu_bios_settings_populate_attribute(FuBiosSettings *self,
 				    const gchar *driver,
@@ -302,8 +310,7 @@ fu_bios_settings_populate_attribute(FuBiosSettings *self,
 			return FALSE;
 	}
 
-	g_ptr_array_add(self->attrs, g_object_ref(attr));
-
+	fu_bios_settings_add_attribute(self, attr);
 	return TRUE;
 }
 
