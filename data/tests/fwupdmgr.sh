@@ -206,5 +206,30 @@ echo "Inhibiting for 100ms..."
 fwupdmgr inhibit test 100
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+# ---
+echo "Add blocked firmware..."
+fwupdmgr block-firmware foo
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Add blocked firmware (again)..."
+fwupdmgr block-firmware foo
+rc=$?; if [ $rc != 2 ]; then error $rc; fi
+
+# ---
+echo "Getting blocked firmware..."
+fwupdmgr get-blocked-firmware
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Remove blocked firmware..."
+fwupdmgr unblock-firmware foo
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
+echo "Remove blocked firmware (again)..."
+fwupdmgr unblock-firmware foo
+rc=$?; if [ $rc != 2 ]; then error $rc; fi
+
 # success!
 exit 0
