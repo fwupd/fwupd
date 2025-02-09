@@ -241,5 +241,15 @@ echo "Getting approved firmware..."
 fwupdmgr get-approved-firmware
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+# ---
+echo "Run security tests..."
+fwupdmgr security
+rc=$?; if [ $rc = 1 ]; then error $rc; fi
+
+# ---
+echo "Run security tests (json)..."
+fwupdmgr security --json
+rc=$?; if [ $rc = 1 ]; then error $rc; fi
+
 # success!
 exit 0
