@@ -18,3 +18,5 @@ fu_bios_settings_get_all(FuBiosSettings *self) G_GNUC_NON_NULL(1);
 
 GHashTable *
 fu_bios_settings_to_hash_kv(FuBiosSettings *self) G_GNUC_NON_NULL(1);
+void
+fu_bios_settings_add_attribute(FuBiosSettings *self, FwupdBiosSetting *attr) G_GNUC_NON_NULL(1, 2);

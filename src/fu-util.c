@@ -4637,7 +4637,7 @@ fu_util_get_bios_setting(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!found) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
+				    FWUPD_ERROR_NOT_FOUND,
 				    /* TRANSLATORS: error message */
 				    _("Unable to find attribute"));
 		return FALSE;

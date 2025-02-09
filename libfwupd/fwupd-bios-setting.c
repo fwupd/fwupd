@@ -803,7 +803,8 @@ fwupd_bios_setting_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwup
 			      "{sv}",
 			      FWUPD_RESULT_KEY_BIOS_SETTING_READ_ONLY,
 			      g_variant_new_boolean(priv->read_only));
-	if (fwupd_bios_setting_trusted(self, flags & FWUPD_CODEC_FLAG_TRUSTED)) {
+	if (priv->current_value != NULL &&
+	    fwupd_bios_setting_trusted(self, flags & FWUPD_CODEC_FLAG_TRUSTED)) {
 		g_variant_builder_add(builder,
 				      "{sv}",
 				      FWUPD_RESULT_KEY_BIOS_SETTING_CURRENT_VALUE,

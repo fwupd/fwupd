@@ -42,6 +42,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-backend-private.h"
+#include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
@@ -1001,6 +1002,15 @@ fu_engine_modify_bios_settings(FuEngine *self,
 				    (const gchar *)key);
 			return FALSE;
 		}
+		if (g_strcmp0(key, FWUPD_BIOS_SETTING_SELF_TEST) == 0) {
+			if (fu_bios_settings_get_attr(bios_settings, key) == NULL) {
+				g_autoptr(FwupdBiosSetting) attr = fu_bios_setting_new();
+				fwupd_bios_setting_set_name(attr, key);
+				fu_bios_settings_add_attribute(bios_settings, attr);
+			}
+			changed = TRUE;
+			continue;
+		}
 		if (!fu_engine_modify_single_bios_setting(self,
 							  key,
 							  value,
@@ -1023,10 +1033,11 @@ fu_engine_modify_bios_settings(FuEngine *self,
 				    "no BIOS settings needed to be changed");
 		return FALSE;
 	}
-
-	if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, error))
-		return FALSE;
-	g_info("pending_reboot is now %d", changed);
+	if (fu_bios_settings_get_attr(bios_settings, FWUPD_BIOS_SETTING_PENDING_REBOOT) != NULL) {
+		if (!fu_bios_settings_get_pending_reboot(bios_settings, &changed, error))
+			return FALSE;
+		g_info("pending_reboot is now %d", changed);
+	}
 	return TRUE;
 }
 
