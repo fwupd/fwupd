@@ -8,22 +8,12 @@
 #include "config.h"
 
 #include "fu-system76-launch-device.h"
+#include "fu-system76-launch-struct.h"
 
 #define SYSTEM76_LAUNCH_CMD_VERSION	 3
 #define SYSTEM76_LAUNCH_CMD_RESET	 6
 #define SYSTEM76_LAUNCH_CMD_SECURITY_SET 21
 #define SYSTEM76_LAUNCH_TIMEOUT		 1000
-
-enum SecurityState {
-	/* Default value, flashing is prevented, cannot be set with CMD_SECURITY_SET */
-	SECURITY_STATE_LOCK = 0,
-	/* Flashing is allowed, cannot be set with CMD_SECURITY_SET */
-	SECURITY_STATE_UNLOCK = 1,
-	/* Flashing will be prevented on the next reboot */
-	SECURITY_STATE_PREPARE_LOCK = 2,
-	/* Flashing will be allowed on the next reboot */
-	SECURITY_STATE_PREPARE_UNLOCK = 3,
-};
 
 struct _FuSystem76LaunchDevice {
 	FuUsbDevice parent_instance;
@@ -149,7 +139,7 @@ fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
 
 static gboolean
 fu_system76_launch_device_security_set(FuDevice *device,
-				       enum SecurityState state,
+				       FuSystem76LaunchSecurityState state,
 				       guint8 *rc,
 				       GError **error)
 {
@@ -183,10 +173,11 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 	}
 
 	/* notify device of desire to unlock */
-	if (!fu_system76_launch_device_security_set(device,
-						    SECURITY_STATE_PREPARE_UNLOCK,
-						    &rc,
-						    error))
+	if (!fu_system76_launch_device_security_set(
+		device,
+		FU_SYSTEM76_LAUNCH_SECURITY_STATE_PREPARE_UNLOCK,
+		&rc,
+		error))
 		return FALSE;
 
 	/* generate a message if not already set */
