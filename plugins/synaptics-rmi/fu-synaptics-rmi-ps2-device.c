@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include "fu-synaptics-rmi-ps2-device.h"
+#include "fu-synaptics-rmi-struct.h"
 #include "fu-synaptics-rmi-v5-device.h"
 #include "fu-synaptics-rmi-v7-device.h"
 
@@ -16,89 +17,6 @@ struct _FuSynapticsRmiPs2Device {
 };
 
 G_DEFINE_TYPE(FuSynapticsRmiPs2Device, fu_synaptics_rmi_ps2_device, FU_TYPE_SYNAPTICS_RMI_DEVICE)
-
-enum EPS2DataPortCommand {
-	edpAuxFullRMIBackDoor = 0x7F,
-	edpAuxAccessModeByte1 = 0xE0,
-	edpAuxAccessModeByte2 = 0xE1,
-	edpAuxIBMReadSecondaryID = 0xE1,
-	edpAuxSetScaling1To1 = 0xE6,
-	edpAuxSetScaling2To1 = 0xE7,
-	edpAuxSetResolution = 0xE8,
-	edpAuxStatusRequest = 0xE9,
-	edpAuxSetStreamMode = 0xEA,
-	edpAuxReadData = 0xEB,
-	edpAuxResetWrapMode = 0xEC,
-	edpAuxSetWrapMode = 0xEE,
-	edpAuxSetRemoteMode = 0xF0,
-	edpAuxReadDeviceType = 0xF2,
-	edpAuxSetSampleRate = 0xF3,
-	edpAuxEnable = 0xF4,
-	edpAuxDisable = 0xF5,
-	edpAuxSetDefault = 0xF6,
-	edpAuxResend = 0xFE,
-	edpAuxReset = 0xFF,
-};
-
-typedef enum {
-	esdrTouchPad = 0x47,
-	esdrStyk = 0x46,
-	esdrControlBar = 0x44,
-	esdrRGBControlBar = 0x43,
-} ESynapticsDeviceResponse;
-
-enum EStatusRequestSequence {
-	esrIdentifySynaptics = 0x00,
-	esrReadTouchPadModes = 0x01,
-	esrReadModeByte = 0x01,
-	esrReadEdgeMargins = 0x02,
-	esrReadCapabilities = 0x02,
-	esrReadModelID = 0x03,
-	esrReadCompilationDate = 0x04,
-	esrReadSerialNumberPrefix = 0x06,
-	esrReadSerialNumberSuffix = 0x07,
-	esrReadResolutions = 0x08,
-	esrReadExtraCapabilities1 = 0x09,
-	esrReadExtraCapabilities2 = 0x0A,
-	esrReadExtraCapabilities3 = 0x0B,
-	esrReadExtraCapabilities4 = 0x0C,
-	esrReadExtraCapabilities5 = 0x0D,
-	esrReadCoordinates = 0x0D,
-	esrReadExtraCapabilities6 = 0x0E,
-	esrReadExtraCapabilities7 = 0x0F,
-};
-
-enum EPS2DataPortStatus {
-	edpsAcknowledge = 0xFA,
-	edpsError = 0xFC,
-	edpsResend = 0xFE,
-	edpsTimeOut = 0x100
-};
-
-enum ESetSampleRateSequence {
-	essrSetModeByte1 = 0x0A,
-	essrSetModeByte2 = 0x14,
-	essrSetModeByte3 = 0x28,
-	essrSetModeByte4 = 0x3C,
-	essrSetDeluxeModeByte1 = 0x0A,
-	essrSetDeluxeModeByte2 = 0x3C,
-	essrSetDeluxeModeByte3 = 0xC8,
-	essrFastRecalibrate = 0x50,
-	essrPassThroughCommandTunnel = 0x28
-};
-
-enum EDeviceType {
-	edtUnknown,
-	edtTouchPad,
-};
-
-enum EStickDeviceType {
-	esdtNone = 0,
-	esdtIBM,
-	esdtJYTSyna = 5,
-	esdtSynaptics = 6,
-	esdtUnknown = 0xFFFFFFFF
-};
 
 #define FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT 1000 /* ms */
 
@@ -185,15 +103,15 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 				g_warning("read ack failed: %s, retrying", error_local->message);
 				break;
 			}
-			if (res == edpsAcknowledge)
+			if (res == FU_RMI_DATA_PORT_STATUS_ACKNOWLEDGE)
 				return TRUE;
-			if (res == edpsResend) {
+			if (res == FU_RMI_DATA_PORT_STATUS_RESEND) {
 				do_write = TRUE;
 				g_debug("resend");
 				fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 				break;
 			}
-			if (res == edpsError) {
+			if (res == FU_RMI_DATA_PORT_STATUS_ERROR) {
 				do_write = TRUE;
 				g_debug("error");
 				fu_device_sleep(FU_DEVICE(self), 10); /* ms */
@@ -229,7 +147,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 	/* send set scaling twice if send_e6s */
 	for (gint i = send_e6s ? 2 : 1; i > 0; --i) {
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetScaling1To1,
+							    FU_RMI_EDP_COMMAND_AUX_SET_SCALING1_TO1,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error))
@@ -238,7 +156,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 	for (gint i = 3; i >= 0; --i) {
 		guint8 ucTwoBitArg = (arg >> (i * 2)) & 0x3;
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetResolution,
+							    FU_RMI_EDP_COMMAND_AUX_SET_RESOLUTION,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
@@ -257,10 +175,10 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_status_request_sequence(FuSynapticsRmiPs2Device *self,
-						    guint8 ucArgument,
-						    guint32 *buf,
-						    GError **error)
+fu_synaptics_rmi_ps2_device_status_request(FuSynapticsRmiPs2Device *self,
+					   FuRmiStatusRequest ucArgument,
+					   guint32 *buf,
+					   GError **error)
 {
 	gboolean success = FALSE;
 
@@ -275,7 +193,7 @@ fu_synaptics_rmi_ps2_device_status_request_sequence(FuSynapticsRmiPs2Device *sel
 			continue;
 		}
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxStatusRequest,
+							    FU_RMI_EDP_COMMAND_AUX_STATUS_REQUEST,
 							    10,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    &error_local)) {
@@ -304,11 +222,11 @@ fu_synaptics_rmi_ps2_device_status_request_sequence(FuSynapticsRmiPs2Device *sel
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_sample_rate_sequence(FuSynapticsRmiPs2Device *self,
-						 guint8 param,
-						 guint8 arg,
-						 gboolean send_e6s,
-						 GError **error)
+fu_synaptics_rmi_ps2_device_sample_rate(FuSynapticsRmiPs2Device *self,
+					FuRmiSetSampleRate param,
+					FuRmiEdpCommand arg,
+					gboolean send_e6s,
+					GError **error)
 {
 	/* allow 3 retries */
 	for (guint i = 0;; i++) {
@@ -322,7 +240,7 @@ fu_synaptics_rmi_ps2_device_sample_rate_sequence(FuSynapticsRmiPs2Device *self,
 									 send_e6s,
 									 &error_local) ||
 		    !fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetSampleRate,
+							    FU_RMI_EDP_COMMAND_AUX_SET_SAMPLE_RATE,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    &error_local) ||
@@ -351,7 +269,7 @@ fu_synaptics_rmi_ps2_device_detect_synaptics_styk(FuSynapticsRmiPs2Device *self,
 {
 	guint8 buf;
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxIBMReadSecondaryID,
+						    FU_RMI_EDP_COMMAND_AUX_IBM_READ_SECONDARY_ID,
 						    10,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
@@ -362,7 +280,7 @@ fu_synaptics_rmi_ps2_device_detect_synaptics_styk(FuSynapticsRmiPs2Device *self,
 		g_prefix_error(error, "failed to receive IBMReadSecondaryID: ");
 		return FALSE;
 	}
-	if (buf == esdtJYTSyna || buf == esdtSynaptics)
+	if (buf == FU_RMI_STICK_DEVICE_TYPE_JYT_SYNA || buf == FU_RMI_STICK_DEVICE_TYPE_SYNAPTICS)
 		*result = TRUE;
 	return TRUE;
 }
@@ -375,12 +293,12 @@ fu_synaptics_rmi_ps2_device_query_build_id(FuSynapticsRmiDevice *rmi_device,
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE(rmi_device);
 	guint32 buf = 0;
 	gboolean is_synaptics_styk = FALSE;
-	ESynapticsDeviceResponse esdr;
+	FuRmiDeviceResponse esdr;
 
-	if (!fu_synaptics_rmi_ps2_device_status_request_sequence(self,
-								 esrIdentifySynaptics,
-								 &buf,
-								 error)) {
+	if (!fu_synaptics_rmi_ps2_device_status_request(self,
+							FU_RMI_STATUS_REQUEST_IDENTIFY_SYNAPTICS,
+							&buf,
+							error)) {
 		g_prefix_error(error, "failed to request IdentifySynaptics: ");
 		return FALSE;
 	}
@@ -392,13 +310,14 @@ fu_synaptics_rmi_ps2_device_query_build_id(FuSynapticsRmiDevice *rmi_device,
 		return FALSE;
 	}
 	fu_synaptics_rmi_device_set_iepmode(rmi_device, FALSE);
-	if (esdr == esdrTouchPad || is_synaptics_styk) {
+	if (esdr == FU_RMI_DEVICE_RESPONSE_TOUCH_PAD || is_synaptics_styk) {
 		/* Get the firmware id from the Extra Capabilities 2 Byte
 		 * The firmware id is located in bits 0 - 23 */
-		if (!fu_synaptics_rmi_ps2_device_status_request_sequence(self,
-									 esrReadExtraCapabilities2,
-									 build_id,
-									 error)) {
+		if (!fu_synaptics_rmi_ps2_device_status_request(
+			self,
+			FU_RMI_STATUS_REQUEST_READ_EXTRA_CAPABILITIES2,
+			build_id,
+			error)) {
 			g_prefix_error(error, "failed to read extraCapabilities2: ");
 			return FALSE;
 		}
@@ -413,10 +332,10 @@ fu_synaptics_rmi_ps2_device_query_product_sub_id(FuSynapticsRmiDevice *rmi_devic
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE(rmi_device);
 	guint32 buf = 0;
-	if (!fu_synaptics_rmi_ps2_device_status_request_sequence(self,
-								 esrReadCapabilities,
-								 &buf,
-								 error)) {
+	if (!fu_synaptics_rmi_ps2_device_status_request(self,
+							FU_RMI_STATUS_REQUEST_READ_CAPABILITIES,
+							&buf,
+							error)) {
 		g_prefix_error(error,
 			       "failed to status_request_sequence read esrReadCapabilities: ");
 		return FALSE;
@@ -432,7 +351,7 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode(FuSynapticsRmiDevice *rmi_device, GEr
 
 	/* disable stream */
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxDisable,
+						    FU_RMI_EDP_COMMAND_AUX_DISABLE,
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
@@ -441,11 +360,11 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode(FuSynapticsRmiDevice *rmi_device, GEr
 	}
 
 	/* enable RMI mode */
-	if (!fu_synaptics_rmi_ps2_device_sample_rate_sequence(self,
-							      essrSetModeByte2,
-							      edpAuxFullRMIBackDoor,
-							      FALSE,
-							      error)) {
+	if (!fu_synaptics_rmi_ps2_device_sample_rate(self,
+						     FU_RMI_SET_SAMPLE_RATE_SET_MODE_BYTE2,
+						     FU_RMI_EDP_COMMAND_AUX_FULL_RMI_BACK_DOOR,
+						     FALSE,
+						     error)) {
 		g_prefix_error(error, "failed to enter RMI mode: ");
 		return FALSE;
 	}
@@ -470,7 +389,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 						    error))
 		return FALSE;
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxSetScaling2To1,
+						    FU_RMI_EDP_COMMAND_AUX_SET_SCALING2_TO1,
 						    timeout,
 						    flags,
 						    error)) {
@@ -478,7 +397,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxSetSampleRate,
+						    FU_RMI_EDP_COMMAND_AUX_SET_SAMPLE_RATE,
 						    timeout,
 						    flags,
 						    error)) {
@@ -491,7 +410,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 	}
 	for (guint8 i = 0; i < buflen; i++) {
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetSampleRate,
+							    FU_RMI_EDP_COMMAND_AUX_SET_SAMPLE_RATE,
 							    timeout,
 							    flags,
 							    error)) {
@@ -524,12 +443,12 @@ fu_synaptics_rmi_ps2_device_read_rmi_register(FuSynapticsRmiPs2Device *self,
 	for (guint retries = 0;; retries++) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetScaling2To1,
+							    FU_RMI_EDP_COMMAND_AUX_SET_SCALING2_TO1,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error) ||
 		    !fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxSetSampleRate,
+							    FU_RMI_EDP_COMMAND_AUX_SET_SAMPLE_RATE,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error) ||
@@ -539,7 +458,7 @@ fu_synaptics_rmi_ps2_device_read_rmi_register(FuSynapticsRmiPs2Device *self,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error) ||
 		    !fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxStatusRequest,
+							    FU_RMI_EDP_COMMAND_AUX_STATUS_REQUEST,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
@@ -582,12 +501,12 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register(FuSynapticsRmiPs2Device *se
 						    error))
 		return NULL;
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxSetScaling2To1,
+						    FU_RMI_EDP_COMMAND_AUX_SET_SCALING2_TO1,
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error) ||
 	    !fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxSetSampleRate,
+						    FU_RMI_EDP_COMMAND_AUX_SET_SAMPLE_RATE,
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error) ||
@@ -597,7 +516,7 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register(FuSynapticsRmiPs2Device *se
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error) ||
 	    !fu_synaptics_rmi_ps2_device_write_byte(self,
-						    edpAuxStatusRequest,
+						    FU_RMI_EDP_COMMAND_AUX_STATUS_REQUEST,
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
@@ -809,7 +728,7 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 
 		/* send reset -- may take 300-500ms */
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxReset,
+							    FU_RMI_EDP_COMMAND_AUX_RESET,
 							    600,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
@@ -835,7 +754,7 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 
 		/* disable the device so that it stops reporting finger data */
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    edpAuxDisable,
+							    FU_RMI_EDP_COMMAND_AUX_DISABLE,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
