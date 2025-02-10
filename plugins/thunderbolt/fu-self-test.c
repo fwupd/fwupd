@@ -633,18 +633,18 @@ mock_tree_detach(MockTree *node)
 	node->bed = NULL;
 }
 
-typedef enum UpdateResult {
+typedef enum FuThunderboltTestUpdateResult {
 	UPDATE_SUCCESS = 0,
 	/* nvm_authenticate will report error condition */
 	UPDATE_FAIL_DEVICE_INTERNAL = 1,
 	/* device to be updated will NOT re-appear */
 	UPDATE_FAIL_DEVICE_NOSHOW = 2
-} UpdateResult;
+} FuThunderboltTestUpdateResult;
 
 typedef struct UpdateContext {
 	GFileMonitor *monitor;
 
-	UpdateResult result;
+	FuThunderboltTestUpdateResult result;
 	guint timeout;
 	GBytes *data;
 	UMockdevTestbed *bed;
@@ -833,13 +833,13 @@ typedef struct TestParam {
 	const char *firmware_file;
 } TestParam;
 
-typedef enum TestFlags {
+typedef enum FuThunderboltTestFlags {
 	TEST_INITIALIZE_TREE = 1 << 0,
 	TEST_ATTACH = 1 << 1,
 	TEST_PREPARE_FIRMWARE = 1 << 2,
 
 	TEST_PREPARE_ALL = TEST_INITIALIZE_TREE | TEST_ATTACH | TEST_PREPARE_FIRMWARE
-} TestFlags;
+} FuThunderboltTestFlags;
 
 #define TEST_INIT_FULL (GUINT_TO_POINTER(TEST_PREPARE_ALL))
 #define TEST_INIT_NONE (GUINT_TO_POINTER(0))
@@ -899,7 +899,7 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 static void
 test_set_up(ThunderboltTest *tt, gconstpointer params)
 {
-	TestFlags flags = GPOINTER_TO_UINT(params);
+	FuThunderboltTestFlags flags = GPOINTER_TO_UINT(params);
 	gboolean ret;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;

@@ -155,6 +155,28 @@ class Checker:
             return
         self._test_line_function_names_valid(func_name)
 
+    def _test_line_enums(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:prefix"
+        if line.find(self._current_nocheck) != -1:
+            return
+
+        # needs Fu prefix
+        enum_name = None
+        valid_prefixes = ["Fwupd", "Fu"]
+        if line.startswith("enum ") and line.endswith("{"):
+            enum_name = line[5:-2]
+        elif line.startswith("typedef enum ") and line.endswith("{"):
+            enum_name = line[13:-2]
+        if not enum_name:
+            return
+        for prefix in valid_prefixes:
+            if enum_name.startswith(prefix):
+                return
+        self.add_failure(
+            f"invalid enum name {enum_name} should have {'|'.join(valid_prefixes)} prefix"
+        )
+
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
         self._current_nocheck = "nocheck:print"
@@ -395,6 +417,9 @@ class Checker:
 
             # test for function names
             self._test_line_function_names(line)
+
+            # test for invalid enum names
+            self._test_line_enums(line)
 
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
