@@ -74,9 +74,9 @@ struct FuStructEfiSectionCompression {
 
 #[derive(ToString)]
 enum FuEfiLz77DecompressorVersion {
-    None = 0,
-    Legacy = 1,
-    Tiano = 2,
+    None,
+    Legacy,
+    Tiano,
 }
 
 #[derive(ParseStream)]

@@ -121,8 +121,8 @@ struct FuStructQcSync {
 #[derive(ToString)]
 #[repr(u8)]
 enum FuQcStartStatus {
-    Success = 0,
-    Failure = 1,
+    Success,
+    Failure,
 }
 #[derive(New, Default)]
 #[repr(C, packed)]
@@ -148,8 +148,8 @@ struct FuStructQcStartDataReq {
 
 #[repr(u8)]
 enum FuQcMoreData {
-    More = 0,
-    Last = 1,
+    More,
+    Last,
 }
 #[derive(Parse, Default)]
 #[repr(C, packed)]
@@ -189,9 +189,9 @@ struct FuStructQcTransferCompleteInd {
 
 #[repr(u8)]
 enum FuQcTransferAction {
-    Interactive = 0,
-    Abort = 1,
-    Silent = 2,
+    Interactive,
+    Abort,
+    Silent,
 }
 #[derive(New, Default)]
 #[repr(C, packed)]
@@ -203,8 +203,8 @@ struct FuStructQcTransferComplete {
 
 #[repr(u8)]
 enum FuQcCommitAction {
-    Proceed = 0,
-    NotProceed = 1,
+    Proceed,
+    NotProceed,
 }
 #[derive(New, Default)]
 #[repr(C, packed)]
@@ -222,8 +222,8 @@ struct FuStructQcCommitReq {
 
 #[repr(u8)]
 enum FuQcCommitCfmAction {
-    Upgrade = 0,
-    Rollback = 1,
+    Upgrade,
+    Rollback,
 }
 #[derive(New, Default)]
 #[repr(C, packed)]

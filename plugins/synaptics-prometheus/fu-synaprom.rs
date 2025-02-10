@@ -70,16 +70,16 @@ enum FuSynapromResult {
 }
 
 enum FuSynapromProductType {
-    Denali      = 0,
-    Hayes       = 1,
-    Shasta      = 2,
-    Steller     = 3,
-    Whitney     = 4,
-    Prometheus  = 5,
-    PacificPeak = 6,
-    Morgan      = 7,
-    Ox6101      = 8,
-    Triton      = 9,
+    Denali,
+    Hayes,
+    Shasta,
+    Steller,
+    Whitney,
+    Prometheus,
+    PacificPeak,
+    Morgan,
+    Ox6101,
+    Triton,
 }
 
 #[derive(New, ParseStream, Default)]

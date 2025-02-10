@@ -92,6 +92,16 @@ class EnumObj:
                 return True
         return False
 
+    def check(self):
+        # check we'd not just done ZERO=0, ONE=1, TWO=2, etc
+        indexed = True
+        for i, item in enumerate(self.items):
+            if str(i) != item.default:
+                indexed = False
+                break
+        if indexed:
+            raise ValueError(f"enum {self.name} does not need explicit defaults")
+
     def item(self, name: str) -> Optional["EnumItem"]:
         for item in self.items:
             if item.name == name:
@@ -638,6 +648,7 @@ class Generator:
                         if item.constant == "$struct_size":
                             item.constant = str(offset)
                 if enum_cur:
+                    enum_cur.check()
                     for derive in derives:
                         enum_cur.add_public_export(derive)
                 struct_cur = None

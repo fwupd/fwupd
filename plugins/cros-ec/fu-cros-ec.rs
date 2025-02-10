@@ -3,8 +3,8 @@
 
 #[repr(u16be)]
 enum FuStructCrosEcFirstResponsePduHeaderType {
-    Cr50 = 0, // must be 0 for backwards compatibility
-    Common = 1,
+    Cr50, // must be 0 for backwards compatibility
+    Common,
 }
 
 enum FuCrosEcUpdateExtraCmd {

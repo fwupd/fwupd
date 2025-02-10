@@ -11,24 +11,24 @@ enum FuKineticDpFamily {
 
 #[derive(ToString)]
 enum FuKineticDpChip {
-    None = 0,
-    Bobcat_2800 = 1,
-    Bobcat_2850 = 2,
-    Pegasus = 3,
-    Mystique = 4,
-    Dp2vga = 5,
-    Puma_2900 = 6,
-    Puma_2920 = 7,
-    Jaguar_5000 = 8,
-    Mustang_5200 = 9,
+    None,
+    Bobcat_2800,
+    Bobcat_2850,
+    Pegasus,
+    Mystique,
+    Dp2vga,
+    Puma_2900,
+    Puma_2920,
+    Jaguar_5000,
+    Mustang_5200,
 }
 
 enum FuKineticDpDev {
-    Host = 0,
-    Port1 = 1,
-    Port2 = 2,
-    Port3 = 3,
-    MaxNum = 4,
+    Host,
+    Port1,
+    Port2,
+    Port3,
+//    MaxNum,
 }
 
 #[derive(ToString)]
@@ -39,16 +39,16 @@ enum FuKineticDpBank {
 }
 
 enum FuKineticDpFirmwareIdx {
-    IspDrv = 0,
-    AppFw = 1,
+    IspDrv,
+    AppFw,
 }
 
 #[derive(ToString)]
 enum FuKineticDpFwState {
-    None = 0,
-    Irom = 1,
-    BootCode = 2,
-    App = 3,
+    None,
+    Irom,
+    BootCode,
+    App,
 }
 
 #[derive(ParseStream, Default)]
