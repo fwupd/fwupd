@@ -296,6 +296,10 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 					       &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT))
 				break;
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("ignoring: %s", error_local->message);
+				break;
+			}
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "error polling Bolt receiver: ");
