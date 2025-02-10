@@ -1155,9 +1155,16 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GArray) firmware_gtypes = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	const gchar *plugin_names_safe[] = {
+	    "linux_lockdown",
+	    "linux_sleep",
+	    "linux_swap",
+	    "linux_tainted",
+	};
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -1169,6 +1176,22 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	plugins = fu_engine_get_plugins(engine);
 	g_assert_nonnull(plugins);
 	g_assert_cmpint(plugins->len, >, 5);
+
+	/* start up some "safe" plugins */
+	for (guint i = 0; i < G_N_ELEMENTS(plugin_names_safe); i++) {
+		FuPlugin *plugin = fu_engine_get_plugin_by_name(engine, plugin_names_safe[i], NULL);
+		if (plugin != NULL) {
+			ret = fu_plugin_runner_startup(plugin, progress, &error);
+			g_assert_no_error(error);
+			g_assert_true(ret);
+		}
+	}
+
+	/* add security attrs where possible */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		fu_plugin_runner_add_security_attrs(plugin, attrs);
+	}
 
 	/* create each custom device with a context only */
 	for (guint i = 0; i < plugins->len; i++) {
@@ -7378,6 +7401,7 @@ main(int argc, char **argv)
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
+	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
 	sysfsdir = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
 	(void)g_setenv("FWUPD_SYSFSDIR", sysfsdir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
