@@ -79,7 +79,7 @@ fu_igsc_device_get_ssdid(FuIgscDevice *self)
 static gboolean
 fu_igsc_device_heci_validate_response_header(FuIgscDevice *self,
 					     struct gsc_fwu_heci_response *resp_header,
-					     enum gsc_fwu_heci_command_id command_id,
+					     FuIgscFwuHeciCommandId command_id,
 					     GError **error)
 {
 	if (resp_header->header.command_id != command_id) {
@@ -174,13 +174,13 @@ fu_igsc_device_command(FuIgscDevice *self,
 
 gboolean
 fu_igsc_device_get_version_raw(FuIgscDevice *self,
-			       enum gsc_fwu_heci_partition_version partition,
+			       FuIgscFwuHeciPartitionVersion partition,
 			       guint8 *buf,
 			       gsize bufsz,
 			       GError **error)
 {
 	struct gsc_fwu_heci_version_req req = {.header.command_id =
-						   GSC_FWU_HECI_COMMAND_ID_GET_IP_VERSION,
+						   FU_IGSC_FWU_HECI_COMMAND_ID_GET_IP_VERSION,
 					       .partition = partition};
 	guint8 res_buf[100];
 	struct gsc_fwu_heci_version_resp *res = (struct gsc_fwu_heci_version_resp *)res_buf;
@@ -241,7 +241,7 @@ fu_igsc_device_get_aux_version(FuIgscDevice *self,
 			       GError **error)
 {
 	struct gsc_fw_data_heci_version_req req = {
-	    .header.command_id = GSC_FWU_HECI_COMMAND_ID_GET_GFX_DATA_UPDATE_INFO};
+	    .header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_GET_GFX_DATA_UPDATE_INFO};
 	struct gsc_fw_data_heci_version_resp res = {0x0};
 
 	if (!fu_igsc_device_command(self,
@@ -272,7 +272,7 @@ static gboolean
 fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 {
 	struct gsc_fwu_heci_get_subsystem_ids_message_req req = {
-	    .header.command_id = GSC_FWU_HECI_COMMAND_ID_GET_SUBSYSTEM_IDS};
+	    .header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_GET_SUBSYSTEM_IDS};
 	struct gsc_fwu_heci_get_subsystem_ids_message_resp res = {0x0};
 
 	if (!fu_igsc_device_command(self,
@@ -306,7 +306,7 @@ static gboolean
 fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 {
 	struct gsc_fwu_heci_get_config_message_req req = {
-	    .header.command_id = GSC_FWU_HECI_COMMAND_ID_GET_CONFIG,
+	    .header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_GET_CONFIG,
 	};
 	struct gsc_fwu_heci_get_config_message_resp res = {0x0};
 
@@ -375,7 +375,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 
 	/* get current version */
 	if (!fu_igsc_device_get_version_raw(self,
-					    GSC_FWU_HECI_PART_VERSION_GFX_FW,
+					    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
 					    fw_code_version->data,
 					    fw_code_version->len,
 					    error)) {
@@ -413,8 +413,10 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_OPROM)) {
 		g_autoptr(FuIgscOpromDevice) device_code = NULL;
 		g_autoptr(FuIgscOpromDevice) device_data = NULL;
-		device_code = fu_igsc_oprom_device_new(ctx, GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE);
-		device_data = fu_igsc_oprom_device_new(ctx, GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA);
+		device_code =
+		    fu_igsc_oprom_device_new(ctx, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE);
+		device_data =
+		    fu_igsc_oprom_device_new(ctx, FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_code));
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_data));
 	}
@@ -513,7 +515,7 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 {
-	struct gsc_fwu_heci_end_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_END};
+	struct gsc_fwu_heci_end_req req = {.header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_END};
 	return fu_mei_device_write(FU_MEI_DEVICE(self),
 				   (const guint8 *)&req,
 				   sizeof(req),
@@ -524,7 +526,7 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 static gboolean
 fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, gsize length, GError **error)
 {
-	struct gsc_fwu_heci_data_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_DATA,
+	struct gsc_fwu_heci_data_req req = {.header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_DATA,
 					    .data_length = length};
 	struct gsc_fwu_heci_data_resp res = {0x0};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -547,7 +549,7 @@ fu_igsc_device_update_start(FuIgscDevice *self,
 			    GError **error)
 {
 	gsize streamsz = 0;
-	struct gsc_fwu_heci_start_req req = {.header.command_id = GSC_FWU_HECI_COMMAND_ID_START,
+	struct gsc_fwu_heci_start_req req = {.header.command_id = FU_IGSC_FWU_HECI_COMMAND_ID_START,
 					     .payload_type = payload_type,
 					     .flags = {0}};
 	struct gsc_fwu_heci_start_resp res = {0x0};
@@ -572,7 +574,7 @@ static gboolean
 fu_igsc_device_no_update(FuIgscDevice *self, GError **error)
 {
 	struct gsc_fwu_heci_no_update_req req = {.header.command_id =
-						     GSC_FWU_HECI_COMMAND_ID_NO_UPDATE};
+						     FU_IGSC_FWU_HECI_COMMAND_ID_NO_UPDATE};
 	return fu_mei_device_write(FU_MEI_DEVICE(self),
 				   (const guint8 *)&req,
 				   sizeof(req),
@@ -617,7 +619,7 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 	g_autoptr(GByteArray) fw_code_version = fu_struct_igsc_fw_version_new();
 	for (guint i = 0; i < 20; i++) {
 		if (!fu_igsc_device_get_version_raw(self,
-						    GSC_FWU_HECI_PART_VERSION_GFX_FW,
+						    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
 						    fw_code_version->data,
 						    fw_code_version->len,
 						    NULL))
@@ -636,7 +638,7 @@ fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
 
 gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
-			  enum gsc_fwu_heci_payload_type payload_type,
+			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
 			  GInputStream *fw,
 			  FuProgress *progress,
@@ -649,7 +651,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
-	if (payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
 		fu_progress_set_id(progress, G_STRLOC);
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "get-status");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
@@ -700,15 +702,15 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* detect a firmware reboot */
-	if (payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
-	    payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
+	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
 		if (!fu_igsc_device_wait_for_reset(self, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);
 
 	/* after Gfx FW update there is a FW reset so driver reconnect is needed */
-	if (payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
 		if (cp_mode) {
 			if (!fu_igsc_device_wait_for_reset(self, error))
 				return FALSE;
@@ -753,7 +755,7 @@ fu_igsc_device_write_firmware(FuDevice *device,
 	if (stream_payload == NULL)
 		return FALSE;
 	return fu_igsc_device_write_blob(self,
-					 GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
+					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
 					 fw_info,
 					 stream_payload,
 					 progress,

@@ -15,4 +15,4 @@
 G_DECLARE_FINAL_TYPE(FuIgscOpromDevice, fu_igsc_oprom_device, FU, IGSC_OPROM_DEVICE, FuDevice)
 
 FuIgscOpromDevice *
-fu_igsc_oprom_device_new(FuContext *ctx, enum gsc_fwu_heci_payload_type payload_type);
+fu_igsc_oprom_device_new(FuContext *ctx, FuIgscFwuHeciPayloadType payload_type);

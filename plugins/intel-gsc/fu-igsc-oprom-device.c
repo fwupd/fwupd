@@ -14,8 +14,8 @@
 
 struct _FuIgscOpromDevice {
 	FuDevice parent_instance;
-	enum gsc_fwu_heci_payload_type payload_type;
-	enum gsc_fwu_heci_partition_version partition_version;
+	FuIgscFwuHeciPayloadType payload_type;
+	FuIgscFwuHeciPartitionVersion partition_version;
 	guint16 major_version;
 };
 
@@ -37,16 +37,16 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 	g_autofree gchar *name = NULL;
 
 	/* set strings now we know the type */
-	if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
-		self->partition_version = GSC_FWU_HECI_PART_VERSION_OPROM_CODE;
+	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
+		self->partition_version = FU_IGSC_FWU_HECI_PARTITION_VERSION_OPROM_CODE;
 		fu_device_add_instance_str(device, "PART", "OPROMCODE");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-code");
 		if (parent != NULL) {
 			name = g_strdup_printf("%s OptionROM Code", fu_device_get_name(parent));
 			fu_device_set_name(FU_DEVICE(self), name);
 		}
-	} else if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
-		self->partition_version = GSC_FWU_HECI_PART_VERSION_OPROM_DATA;
+	} else if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
+		self->partition_version = FU_IGSC_FWU_HECI_PARTITION_VERSION_OPROM_DATA;
 		fu_device_add_instance_str(device, "PART", "OPROMDATA");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-data");
 		if (parent != NULL) {
@@ -147,7 +147,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	 * If the flag doesn't exist or is False:
 	 *    The update is accepted only if the update file does not contain a Device ID allowlist
 	 */
-	if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
+	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
 		if (fu_igsc_device_get_oprom_code_devid_enforcement(igsc_parent)) {
 			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
 								 vid,
@@ -175,7 +175,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	 * If the Device IDs allowlist (0x37) doesn't exist in the update image:
 	 *    The update is accepted only if the card's SSVID and SSDID are zero.
 	 */
-	if (self->payload_type == GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
+	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
 		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware))) {
 			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
 								 vid,
@@ -270,7 +270,7 @@ fu_igsc_oprom_device_class_init(FuIgscOpromDeviceClass *klass)
 }
 
 FuIgscOpromDevice *
-fu_igsc_oprom_device_new(FuContext *ctx, enum gsc_fwu_heci_payload_type payload_type)
+fu_igsc_oprom_device_new(FuContext *ctx, FuIgscFwuHeciPayloadType payload_type)
 {
 	FuIgscOpromDevice *self = g_object_new(FU_TYPE_IGSC_OPROM_DEVICE, "context", ctx, NULL);
 	self->payload_type = payload_type;
