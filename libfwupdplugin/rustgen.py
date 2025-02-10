@@ -93,6 +93,10 @@ class EnumObj:
         return False
 
     def check(self):
+        # check we're prefixed with something sane
+        if not self.name.startswith("Fu"):
+            raise ValueError(f"enum {self.name} does not have 'Fu' prefix")
+
         # check we'd not just done ZERO=0, ONE=1, TWO=2, etc
         indexed = True
         for i, item in enumerate(self.items):
@@ -202,6 +206,11 @@ class StructObj:
             if item.constant:
                 return True
         return False
+
+    def check(self):
+        # check we're prefixed with something sane
+        if not self.name.startswith("Fu"):
+            raise ValueError(f"struct {self.name} does not have 'Fu' prefix")
 
     def add_private_export(self, derive: str) -> None:
         if self._exports[derive] == Export.PUBLIC:
@@ -640,6 +649,7 @@ class Generator:
             # end of structure
             if line.startswith("}"):
                 if struct_cur:
+                    struct_cur.check()
                     for derive in derives:
                         struct_cur.add_public_export(derive)
                     for item in struct_cur.items:
