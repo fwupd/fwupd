@@ -28,8 +28,8 @@ struct FuStructBoardInfo {
 
 #[repr(u8)]
 enum TypeCode {
-    Binary = 0,
-    BcdPlus = 1,
-    Acsii6 = 2,
-    LangCodeDep = 3,
+    Binary,
+    BcdPlus,
+    Acsii6,
+    LangCodeDep,
 }
