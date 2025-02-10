@@ -286,7 +286,7 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* drain all the pending messages into the array */
-	while (TRUE) {
+	for (guint i = 0; i < 50; i++) {
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 		g_autoptr(GError) error_local = NULL;
 		msg->hidpp_version = 1;
