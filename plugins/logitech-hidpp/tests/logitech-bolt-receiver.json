@@ -3,13 +3,13 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/003dcc6c2c5437ab093e0c5c5fc1c4e5ab6274d3060505fe0ef843fd13e7200c-Logitech-MPR05-MPR05.00_B0008.cab",
+      "emulation-file": "@enumeration_datadir@/logitech-bolt-receiver-setup.json",
       "components": [
         {
           "version": "MPR05.00_B0008",
           "protocol": "com.logitech.unifyingsigned",
           "guids": [
-            "af1404c4-f038-5b3e-92b0-09bf4aa84f1c"
+            "f70d9241-2656-546b-a8e4-211bac348667"
           ]
         }
       ]
@@ -21,7 +21,7 @@
           "version": "MPR05.00_B0009",
           "protocol": "com.logitech.unifyingsigned",
           "guids": [
-            "af1404c4-f038-5b3e-92b0-09bf4aa84f1c"
+            "f70d9241-2656-546b-a8e4-211bac348667"
           ]
         }
       ]
@@ -33,7 +33,7 @@
           "version": "MPR05.01_B0010",
           "protocol": "com.logitech.unifyingsigned",
           "guids": [
-            "af1404c4-f038-5b3e-92b0-09bf4aa84f1c"
+            "f70d9241-2656-546b-a8e4-211bac348667"
           ]
         }
       ]
