@@ -21,8 +21,6 @@ G_DEFINE_TYPE(FuWacModuleScaler, fu_wac_module_scaler, FU_TYPE_WAC_MODULE)
 
 #define FU_WAC_MODULE_SCALER_CRC8_POLYNOMIAL 0x07
 #define FU_WAC_MODULE_SCALER_PAYLOAD_SZ	     256
-#define FU_WAC_MODULE_SCALER_START_NORMAL    0x00
-#define FU_WAC_MODULE_SCALER_START_FULLERASE 0xFE
 
 typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 	guint8 addr[3];
