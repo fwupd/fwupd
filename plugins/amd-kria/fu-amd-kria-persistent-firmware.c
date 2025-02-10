@@ -16,7 +16,7 @@
 
 struct _FuAmdKriaPersistentFirmware {
 	FuFirmwareClass parent_instance;
-	BootImageId last_booted;
+	FuAmdKriaBootImageId last_booted;
 };
 
 G_DEFINE_TYPE(FuAmdKriaPersistentFirmware, fu_amd_kria_persistent_firmware, FU_TYPE_FIRMWARE)
@@ -41,7 +41,7 @@ fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
 gboolean
 fu_amd_kria_persistent_firmware_booted_image_a(FuAmdKriaPersistentFirmware *self)
 {
-	return self->last_booted == BOOT_IMAGE_ID_A;
+	return self->last_booted == FU_AMD_KRIA_BOOT_IMAGE_ID_A;
 }
 
 static void
@@ -58,7 +58,7 @@ fu_amd_kria_persistent_firmware_export(FuFirmware *firmware,
 
 	fu_xmlb_builder_insert_kv(bn,
 				  "last_booted",
-				  self->last_booted == BOOT_IMAGE_ID_A ? "A" : "B");
+				  self->last_booted == FU_AMD_KRIA_BOOT_IMAGE_ID_A ? "A" : "B");
 }
 
 static void

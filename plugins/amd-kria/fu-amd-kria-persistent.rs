@@ -19,7 +19,7 @@ struct FuStructAmdKriaPersistReg {
 
 
 #[repr(u8)]
-enum BootImageId {
-    A = 0x00,
-    B = 0x01,
+enum FuAmdKriaBootImageId {
+    A,
+    B,
 }

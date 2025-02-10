@@ -27,7 +27,7 @@ struct FuStructBoardInfo {
 }
 
 #[repr(u8)]
-enum TypeCode {
+enum FuAmdKriaTypeCode {
     Binary,
     BcdPlus,
     Acsii6,
