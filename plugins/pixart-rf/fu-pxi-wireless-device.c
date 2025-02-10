@@ -642,7 +642,9 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 	fu_byte_array_append_uint8(
 	    ota_cmd,
 	    FU_PXI_DEVICE_CMD_FW_MCU_RESET);		/* ota mcu reset command op code */
-	fu_byte_array_append_uint8(ota_cmd, OTA_RESET); /* ota mcu reset command reason */
+	fu_byte_array_append_uint8(
+	    ota_cmd,
+	    FU_PXI_OTA_DISCONNECT_REASON_RESET); /* ota mcu reset command reason */
 
 	self->sn++;
 	/* get pixart wireless module ota command */
