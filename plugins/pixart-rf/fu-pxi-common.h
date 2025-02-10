@@ -13,22 +13,6 @@
 
 #define PXI_HID_WIRELESS_DEV_OTA_REPORT_ID 0x03
 
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT		   0x10u
-#define FU_PXI_DEVICE_CMD_FW_WRITE		   0x17u
-#define FU_PXI_DEVICE_CMD_FW_UPGRADE		   0x18u
-#define FU_PXI_DEVICE_CMD_FW_MCU_RESET		   0x22u
-#define FU_PXI_DEVICE_CMD_FW_GET_INFO		   0x23u
-#define FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE	   0x25u
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW	   0x27u
-#define FU_PXI_DEVICE_CMD_FW_OTA_RETRANSMIT	   0x28u
-#define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	   0x29u
-#define FU_PXI_DEVICE_CMD_FW_OTA_GET_NUM_OF_MODELS 0x2au
-#define FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL	   0x2bu
-#define FU_PXI_DEVICE_CMD_FW_OTA_PAYLOAD_CONTENT   0x40u
-#define FU_PXI_DEVICE_CMD_FW_OTA_CHECK_CRC	   0x41u
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW_CHECK	   0x42u
-#define FU_PXI_DEVICE_CMD_FW_OTA_PRECEDING	   0x44u
-
 #define FU_PXI_BLE_DEVICE_RF_CMD_CODE	0x65u
 #define FU_PXI_BLE_DEVICE_RF_CMD_HID_SN 0x0
 #define FU_PXI_BLE_DEVICE_RF_CMD_HID_SN 0x0
@@ -58,20 +42,6 @@ struct ota_fw_info {
 	guint8 status;
 	guint8 version[5];
 	guint16 checksum;
-};
-
-/* ota disconnect reason */
-enum ota_disconnect_reason {
-	OTA_CODE_JUMP = 1,   /* OTA code jump */
-	OTA_UPDATE_DONE = 2, /* OTA update done */
-	OTA_RESET,	     /* OTA reset */
-};
-
-/* ota rsp code for wireless module */
-enum wireless_module_type {
-	OTA_WIRELESS_MODULE_TYPE_MOUSE,
-	OTA_WIRELESS_MODULE_TYPE_KEYBOARD,
-	OTA_WIRELESS_MODULE_TYPE_RECEIVER,
 };
 
 struct ota_fw_state {

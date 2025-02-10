@@ -36,13 +36,6 @@
 
 #define FU_PXI_BLE_DEVICE_SET_REPORT_RETRIES 30
 
-/* OTA target selection */
-enum ota_process_setting {
-	OTA_MAIN_FW,	       /* Main firmware */
-	OTA_HELPER_FW,	       /* Helper firmware */
-	OTA_EXTERNAL_RESOURCE, /* External resource */
-};
-
 struct _FuPxiBleDevice {
 	FuHidrawDevice parent_instance;
 	struct ota_fw_state fwstate;
@@ -504,7 +497,7 @@ fu_pxi_ble_device_fw_object_create(FuPxiBleDevice *self, FuChunk *chk, GError **
 			    FWUPD_ERROR_READ,
 			    "FwObjectCreate opcode got 0x%02x, expected 0x%02x",
 			    opcode,
-			    FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
+			    (guint)FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
 		return FALSE;
 	}
 
@@ -594,7 +587,7 @@ fu_pxi_ble_device_reset(FuPxiBleDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new();
 	fu_byte_array_append_uint8(req, self->feature_report_id);
 	fu_byte_array_append_uint8(req, FU_PXI_DEVICE_CMD_FW_MCU_RESET); /* OTA reset command */
-	fu_byte_array_append_uint8(req, OTA_RESET);			 /* OTA reset reason  */
+	fu_byte_array_append_uint8(req, FU_PXI_OTA_DISCONNECT_REASON_RESET);
 
 	if (!fu_pxi_ble_device_set_feature(self, req, error)) {
 		g_prefix_error(error, "failed to reset: ");
