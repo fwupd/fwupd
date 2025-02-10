@@ -38,3 +38,7 @@ fu_device_event_copy_data(FuDeviceEvent *self,
 			  gsize bufsz,
 			  gsize *actual_length,
 			  GError **error) G_GNUC_NON_NULL(1, 2);
+void
+fu_device_event_set_error(FuDeviceEvent *self, const GError *error) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_device_event_check_error(FuDeviceEvent *self, GError **error) G_GNUC_NON_NULL(1, 2);

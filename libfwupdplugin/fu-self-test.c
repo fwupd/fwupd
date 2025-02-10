@@ -2128,11 +2128,17 @@ fu_device_event_func(void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) blob3 = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_copy = NULL;
 
 	fu_device_event_set_str(event1, "Name", "Richard");
 	fu_device_event_set_i64(event1, "Age", 123);
 	fu_device_event_set_bytes(event1, "Blob", blob1);
 	fu_device_event_set_data(event1, "Data", NULL, 0);
+
+	/* no event set */
+	ret = fu_device_event_check_error(event1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(event1), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
@@ -2163,6 +2169,13 @@ fu_device_event_func(void)
 	str = fu_device_event_get_str(event2, "Age", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(str);
+
+	/* set error */
+	fu_device_event_set_error(event2, error);
+	ret = fu_device_event_check_error(event2, &error_copy);
+	g_assert_error(error_copy, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_cmpstr(error_copy->message, ==, "invalid event type for key Age");
+	g_assert_false(ret);
 }
 
 static void
