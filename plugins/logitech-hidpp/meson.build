@@ -37,6 +37,9 @@ device_tests += files(
   'tests/logitech-rqr24.json',
   'tests/logitech-rqr24-signed.json',
 )
+enumeration_data += files(
+  'tests/logitech-bolt-receiver-setup.json',
+)
 
 if get_option('tests')
   env = environment()
