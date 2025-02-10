@@ -1467,6 +1467,7 @@ fu_udev_device_read(FuUdevDevice *self,
 	FuDeviceEvent *event = NULL;
 	gsize buflen_tmp = 0;
 	g_autofree gchar *event_id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
@@ -1483,6 +1484,8 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
+			return FALSE;
+		if (!fu_device_event_check_error(event, error))
 			return FALSE;
 		return fu_device_event_copy_data(event, "Data", buf, bufsz, bytes_read, error);
 	}
@@ -1507,8 +1510,12 @@ fu_udev_device_read(FuUdevDevice *self,
 				    &buflen_tmp,
 				    timeout_ms,
 				    flags,
-				    error))
+				    &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (bytes_read != NULL)
 		*bytes_read = buflen_tmp;
 

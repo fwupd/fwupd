@@ -61,7 +61,13 @@ static FuDeviceEventBlob *
 fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyNotify data_destroy)
 {
 	FuDeviceEventBlob *blob = g_new0(FuDeviceEventBlob, 1);
-	const gchar *known_keys[] = {"Data", "DataOut", "Error", "Rc"};
+	const gchar *known_keys[] = {
+	    "Data",
+	    "DataOut",
+	    "Error",
+	    "ErrorMsg",
+	    "Rc",
+	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(known_keys); i++) {
 		if (g_strcmp0(key, known_keys[i]) == 0) {
@@ -210,6 +216,58 @@ fu_device_event_set_data(FuDeviceEvent *self, const gchar *key, const guint8 *bu
 	g_ptr_array_add(
 	    self->values,
 	    fu_device_event_blob_new(G_TYPE_STRING, key, g_base64_encode(buf, bufsz), g_free));
+}
+
+/**
+ * fu_device_event_set_error:
+ * @self: a #FuDeviceEvent
+ * @error: (not nullable): a #GError with domain #FwupdError
+ *
+ * Sets an error on the event.
+ *
+ * Since: 2.0.6
+ **/
+void
+fu_device_event_set_error(FuDeviceEvent *self, const GError *error)
+{
+	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
+	g_return_if_fail(error != NULL);
+	g_return_if_fail(error->domain == FWUPD_ERROR);
+	fu_device_event_set_i64(self, "Error", error->code);
+	fu_device_event_set_str(self, "ErrorMsg", error->message);
+}
+
+/**
+ * fu_device_event_check_error:
+ * @self: a #FuDeviceEvent
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets an error from the event if possible.
+ *
+ * Returns: %FALSE if @error was set
+ *
+ * Since: 2.0.6
+ **/
+gboolean
+fu_device_event_check_error(FuDeviceEvent *self, GError **error)
+{
+	gint64 code;
+	const gchar *message;
+
+	g_return_val_if_fail(FU_IS_DEVICE_EVENT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* anything set */
+	code = fu_device_event_get_i64(self, "Error", NULL);
+	if (code == G_MAXINT64)
+		return TRUE;
+	message = fu_device_event_get_str(self, "ErrorMsg", NULL);
+	if (message == NULL)
+		message = fwupd_error_to_string(code);
+
+	/* success, in a way */
+	g_set_error_literal(error, FWUPD_ERROR, code, message);
+	return FALSE;
 }
 
 static gpointer
