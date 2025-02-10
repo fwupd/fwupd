@@ -19,9 +19,11 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	g_autofree gchar *fn = g_build_filename(sysfsdir, "power", "mem_sleep", NULL);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GFile) file = g_file_new_for_path("/sys/power/mem_sleep");
+	g_autoptr(GFile) file = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM);
@@ -29,8 +31,8 @@ fu_linux_sleep_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attr
 	fu_security_attrs_append(attrs, attr);
 
 	/* load file */
+	file = g_file_new_for_path(fn);
 	if (!g_file_load_contents(file, NULL, &buf, &bufsz, NULL, &error_local)) {
-		g_autofree gchar *fn = g_file_get_path(file);
 		g_warning("could not open %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

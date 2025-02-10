@@ -32,17 +32,17 @@ fu_linux_swap_verify_partition(FuLinuxSwap *self, const gchar *fn, GError **erro
 {
 	g_autoptr(FuVolume) volume = NULL;
 
-	/* find the device */
-	volume = fu_volume_new_by_device(fn, error);
-	if (volume == NULL)
-		return FALSE;
-
 	/* this isn't technically encrypted, but isn't on disk in plaintext */
 	if (g_str_has_prefix(fn, "/dev/zram")) {
 		g_debug("%s is zram, assuming encrypted", fn);
 		self->encrypted_cnt++;
 		return TRUE;
 	}
+
+	/* find the device */
+	volume = fu_volume_new_by_device(fn, error);
+	if (volume == NULL)
+		return FALSE;
 
 	/* is this mount point encrypted */
 	if (fu_volume_is_encrypted(volume)) {
