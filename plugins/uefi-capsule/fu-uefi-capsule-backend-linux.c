@@ -87,14 +87,19 @@ fu_uefi_capsule_backend_linux_device_new(FuUefiCapsuleBackendLinux *self,
 static gboolean
 fu_uefi_capsule_backend_linux_check_efivarfs(FuUefiCapsuleBackendLinux *self, GError **error)
 {
+	gboolean is_readonly;
 	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	g_autofree gchar *sysfsefivardir = g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
-	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at(sysfsefivardir, NULL);
+	g_autoptr(GUnixMountEntry) mount = NULL;
 
 	/* in the self tests */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
-
+#if GLIB_CHECK_VERSION(2, 83, 1)
+	mount = g_unix_mount_entry_at(sysfsefivardir, NULL);
+#else
+	mount = g_unix_mount_at(sysfsefivardir, NULL);
+#endif
 	if (mount == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -103,7 +108,12 @@ fu_uefi_capsule_backend_linux_check_efivarfs(FuUefiCapsuleBackendLinux *self, GE
 			    sysfsefivardir);
 		return FALSE;
 	}
-	if (g_unix_mount_is_readonly(mount)) {
+#if GLIB_CHECK_VERSION(2, 83, 1)
+	is_readonly = g_unix_mount_entry_is_readonly(mount);
+#else
+	is_readonly = g_unix_mount_is_readonly(mount);
+#endif
+	if (is_readonly) {
 		GType gtype =
 		    fu_uefi_capsule_backend_get_device_gtype(FU_UEFI_CAPSULE_BACKEND(self));
 		if (gtype != FU_TYPE_UEFI_COD_DEVICE) {
