@@ -157,7 +157,7 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 	if (stream_payload == NULL)
 		return FALSE;
 	return fu_igsc_device_write_blob(igsc_parent,
-					 GSC_FWU_HECI_PAYLOAD_TYPE_FWDATA,
+					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA,
 					 fw_info,
 					 stream_payload,
 					 progress,

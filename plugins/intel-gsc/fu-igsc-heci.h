@@ -18,36 +18,6 @@
 #define HECI1_CSE_FS_MODE_MASK		     0x3
 #define HECI1_CSE_FS_CP_MODE		     0x3
 
-enum gsc_fwu_heci_partition_version {
-	GSC_FWU_HECI_PART_VERSION_INVALID = 0,
-	GSC_FWU_HECI_PART_VERSION_GFX_FW = 1,
-	GSC_FWU_HECI_PART_VERSION_OPROM_DATA = 2,
-	GSC_FWU_HECI_PART_VERSION_OPROM_CODE = 3,
-};
-
-enum gsc_fwu_heci_payload_type {
-	GSC_FWU_HECI_PAYLOAD_TYPE_INVALID = 0,
-	GSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW = 1,
-	GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA = 2,
-	GSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE = 3,
-	GSC_FWU_HECI_PAYLOAD_TYPE_FWDATA = 5,
-};
-
-enum gsc_fwu_heci_command_id {
-	GSC_FWU_HECI_COMMAND_ID_INVALID = 0,
-	GSC_FWU_HECI_COMMAND_ID_START,			  /* start firmware updated flow      */
-	GSC_FWU_HECI_COMMAND_ID_DATA,			  /* send firmware data to device     */
-	GSC_FWU_HECI_COMMAND_ID_END,			  /* last command in update           */
-	GSC_FWU_HECI_COMMAND_ID_GET_VERSION,		  /* retrieve version of a firmware   */
-	GSC_FWU_HECI_COMMAND_ID_NO_UPDATE,		  /* do not wait for firmware update  */
-	GSC_FWU_HECI_COMMAND_ID_GET_IP_VERSION,		  /* retrieve version of a partition  */
-	GSC_FWU_HECI_COMMAND_ID_GET_CONFIG,		  /* get hardware config               */
-	GSC_FWU_HECI_COMMAND_ID_STATUS,			  /* get status of most recent update */
-	GSC_FWU_HECI_COMMAND_ID_GET_GFX_DATA_UPDATE_INFO, /* get signed firmware data info    */
-	GSC_FWU_HECI_COMMAND_ID_GET_SUBSYSTEM_IDS,	  /* get subsystem ids (vid/did)      */
-	GSC_FWU_HECI_COMMAND_MAX
-};
-
 struct gsc_fwu_heci_header {
 	guint8 command_id;
 	guint8 is_response : 1;

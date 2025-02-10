@@ -41,7 +41,7 @@ struct FuStructIgscFwuGwsImageInfo {
     instance_id: u32le,
     _reserved: [u32; 14],
 }
-/* represents a GSC FW sub-partition such as FTPR, RBEP */
+// represents a GSC FW sub-partition such as FTPR, RBEP
 #[derive(Getters)]
 #[repr(C, packed)]
 struct FuStructIgscFwuFwImageData {
@@ -82,4 +82,33 @@ struct FuStructIgscFwuImageMetadataV1 {
     version_build: u16le,
     // struct FuStructIgscFwuFwImageData
     // struct FuStructIgscFwuIupData
+}
+
+enum FuIgscFwuHeciPartitionVersion {
+    Invalid,
+    GfxFw,
+    OpromData,
+    OpromCode,
+}
+
+enum FuIgscFwuHeciPayloadType {
+    Invalid,
+    GfxFw,
+    OpromData,
+    OpromCode,
+    Fwdata = 5,
+}
+
+enum FuIgscFwuHeciCommandId {
+    Invalid,
+    Start,                  // start firmware updated flow
+    Data,                   // send firmware data to device
+    End,                    // last command in update
+    GetVersion,             // retrieve version of a firmware
+    NoUpdate,               // do not wait for firmware update
+    GetIpVersion,           // retrieve version of a partition
+    GetConfig,              // get hardware config
+    Status,                 // get status of most recent update
+    GetGfxDataUpdateInfo,   // get signed firmware data info
+    GetSubsystemIds,        // get subsystem ids (VID/DID)
 }

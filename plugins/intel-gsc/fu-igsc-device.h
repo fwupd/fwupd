@@ -10,6 +10,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-igsc-heci.h"
+#include "fu-igsc-struct.h"
 
 #define FU_TYPE_IGSC_DEVICE (fu_igsc_device_get_type())
 G_DECLARE_FINAL_TYPE(FuIgscDevice, fu_igsc_device, FU, IGSC_DEVICE, FuMeiDevice)
@@ -24,7 +25,7 @@ fu_igsc_device_get_ssdid(FuIgscDevice *self);
 
 gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
-			  enum gsc_fwu_heci_payload_type payload_type,
+			  FuIgscFwuHeciPayloadType payload_type,
 			  GBytes *fw_info,
 			  GInputStream *stream_payload,
 			  FuProgress *progress,
@@ -38,7 +39,7 @@ fu_igsc_device_get_aux_version(FuIgscDevice *self,
 			       GError **error);
 gboolean
 fu_igsc_device_get_version_raw(FuIgscDevice *self,
-			       enum gsc_fwu_heci_partition_version partition,
+			       FuIgscFwuHeciPartitionVersion partition,
 			       guint8 *buf,
 			       gsize bufsz,
 			       GError **error);
