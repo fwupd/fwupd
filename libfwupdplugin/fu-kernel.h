@@ -12,12 +12,6 @@ gboolean
 fu_kernel_locked_down(void);
 gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error) G_GNUC_NON_NULL(1);
-gchar *
-fu_kernel_get_firmware_search_path(GError **error);
-gboolean
-fu_kernel_set_firmware_search_path(const gchar *path, GError **error) G_GNUC_NON_NULL(1);
-gboolean
-fu_kernel_reset_firmware_search_path(GError **error);
 GHashTable *
 fu_kernel_get_config(GError **error);
 GHashTable *

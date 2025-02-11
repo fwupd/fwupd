@@ -86,7 +86,6 @@ struct _FuMmDevice {
 
 	/* firmware path */
 	gchar *firmware_path;
-	gchar *restore_firmware_path;
 };
 
 enum { SIGNAL_ATTACH_FINISHED, SIGNAL_LAST };
@@ -1528,11 +1527,12 @@ fu_mm_device_sahara_close(FuMmDevice *self, GError **error)
 }
 #endif // MM_CHECK_VERSION(1, 19, 1)
 
-static gboolean
-fu_mm_device_setup_firmware_dir(FuMmDevice *self, GError **error)
+static FuKernelSearchPathLocker *
+fu_mm_device_search_path_locker_new(FuMmDevice *self, GError **error)
 {
 	g_autofree gchar *cachedir = NULL;
 	g_autofree gchar *mm_fw_dir = NULL;
+	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 
 	/* create a directory to store firmware files for modem-manager plugin */
 	cachedir = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
@@ -1544,15 +1544,13 @@ fu_mm_device_setup_firmware_dir(FuMmDevice *self, GError **error)
 			    "Failed to create '%s': %s",
 			    mm_fw_dir,
 			    g_strerror(errno));
-		return FALSE;
+		return NULL;
 	}
-
-	if (!fu_kernel_set_firmware_search_path(mm_fw_dir, error))
-		return FALSE;
-
+	locker = fu_kernel_search_path_locker_new(mm_fw_dir, error);
+	if (locker == NULL)
+		return NULL;
 	self->firmware_path = g_steal_pointer(&mm_fw_dir);
-
-	return TRUE;
+	return g_steal_pointer(&locker);
 }
 
 static gboolean
@@ -1582,23 +1580,6 @@ fu_mm_device_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 }
 
 static gboolean
-fu_mm_device_prepare_firmware_search_path(FuMmDevice *self, GError **error)
-{
-	self->restore_firmware_path = fu_kernel_get_firmware_search_path(NULL);
-
-	return fu_mm_device_setup_firmware_dir(self, error);
-}
-
-static gboolean
-fu_mm_device_restore_firmware_search_path(FuMmDevice *self, GError **error)
-{
-	if (self->restore_firmware_path != NULL && strlen(self->restore_firmware_path) > 0)
-		return fu_kernel_set_firmware_search_path(self->restore_firmware_path, error);
-
-	return fu_kernel_reset_firmware_search_path(error);
-}
-
-static gboolean
 fu_mm_device_write_firmware_firehose(FuDevice *device,
 				     GBytes *fw,
 				     FuProgress *progress,
@@ -1607,6 +1588,7 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	MMModem *modem = mm_object_peek_modem(self->omodem);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuKernelSearchPathLocker) search_path_locker = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(XbSilo) firehose_rawprogram_silo = NULL;
 	g_autoptr(GBytes) firehose_prog = NULL;
@@ -1652,13 +1634,9 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	 **/
 	if (g_strv_contains(mm_modem_get_drivers(modem), "mhi-pci-generic") &&
 	    self->port_qcdm != NULL) {
-		/* modify firmware search path and restore it before function returns */
-		locker = fu_device_locker_new_full(
-		    self,
-		    (FuDeviceLockerFunc)fu_mm_device_prepare_firmware_search_path,
-		    (FuDeviceLockerFunc)fu_mm_device_restore_firmware_search_path,
-		    error);
-		if (locker == NULL)
+		/* modify firmware search path */
+		search_path_locker = fu_mm_device_search_path_locker_new(self, error);
+		if (search_path_locker == NULL)
 			return FALSE;
 
 		/* firehose modems that use mhi_pci drivers require firehose binary
@@ -2162,7 +2140,6 @@ fu_mm_device_finalize(GObject *object)
 	g_free(self->port_qcdm);
 	g_free(self->inhibition_uid);
 	g_free(self->firmware_path);
-	g_free(self->restore_firmware_path);
 	g_free(self->firehose_prog_file);
 	G_OBJECT_CLASS(fu_mm_device_parent_class)->finalize(object);
 }

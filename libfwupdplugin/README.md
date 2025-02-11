@@ -161,3 +161,9 @@ Remember: Plugins should be upstream!
 * `fu_chunk_array_new_from_stream()`: Add a page size, typically `FU_CHUNK_PAGESZ_NONE`
 * `fu_udev_device_ioctl()`: Use `fu_udev_device_ioctl_new()` instead
 * `FuUdevDeviceIoctlFlags`: Use `FuIoctlFlags` instead
+
+## 2.0.6
+
+* `fu_kernel_get_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
+* `fu_kernel_set_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
+* `fu_kernel_reset_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
