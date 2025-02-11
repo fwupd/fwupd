@@ -138,6 +138,7 @@ fwupdplugin_src = [
   'fu-ioctl.c', # fuzzing
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
+  'fu-kernel-search-path.c', # fuzzing
   'fu-linear-firmware.c',
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
@@ -276,6 +277,7 @@ fwupdplugin_headers = [
   'fu-ioctl.h',
   'fu-kenv.h',
   'fu-kernel.h',
+  'fu-kernel-search-path.h',
   'fu-linear-firmware.h',
   'fu-mei-device.h',
   'fu-mem.h',

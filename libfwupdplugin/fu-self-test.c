@@ -29,6 +29,7 @@
 #include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-efivars-private.h"
+#include "fu-kernel-search-path-private.h"
 #include "fu-lzma-common.h"
 #include "fu-plugin-private.h"
 #include "fu-progress-private.h"
@@ -1856,9 +1857,9 @@ static void
 fu_common_kernel_search_func(void)
 {
 	gboolean ret;
-	const gchar *expect = "/foo/bar";
 	g_autofree gchar *result1 = NULL;
 	g_autofree gchar *result2 = NULL;
+	g_autoptr(FuKernelSearchPathLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __linux__
@@ -1867,29 +1868,30 @@ fu_common_kernel_search_func(void)
 #endif
 
 	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/dev/null", TRUE);
-	result1 = fu_kernel_get_firmware_search_path(&error);
+	result1 = fu_kernel_search_path_get_current(&error);
 	g_assert_null(result1);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_clear_error(&error);
 
+	ret = g_file_set_contents("/tmp/fwupd-self-test/search_path", "oldvalue", -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	(void)g_setenv("FWUPD_FIRMWARESEARCH", "/tmp/fwupd-self-test/search_path", TRUE);
-	ret = fu_kernel_set_firmware_search_path(expect, &error);
-	g_assert_true(ret);
+	locker = fu_kernel_search_path_locker_new("/foo/bar", &error);
 	g_assert_no_error(error);
+	g_assert_nonnull(locker);
 
-	result1 = fu_kernel_get_firmware_search_path(&error);
+	result1 = fu_kernel_search_path_get_current(&error);
 	g_assert_nonnull(result1);
-	g_assert_cmpstr(result1, ==, expect);
+	g_assert_cmpstr(result1, ==, "/foo/bar");
 	g_assert_no_error(error);
+	g_clear_object(&locker);
 
-	ret = fu_kernel_reset_firmware_search_path(&error);
-	g_assert_true(ret);
-	g_assert_no_error(error);
-
-	result2 = fu_kernel_get_firmware_search_path(&error);
+	result2 = fu_kernel_search_path_get_current(&error);
 	g_assert_nonnull(result2);
+	g_assert_cmpstr(result2, ==, "oldvalue");
 	g_assert_no_error(error);
-	g_assert_cmpstr(g_strchomp(result2), ==, "");
 }
 
 static gboolean
