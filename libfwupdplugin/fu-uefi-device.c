@@ -184,7 +184,6 @@ fu_uefi_device_get_efivar_bytes(FuUefiDevice *self,
 	guint32 attr_tmp = 0;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GInputStream) istr = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_DEVICE(self), NULL);
 	g_return_val_if_fail(guid != NULL, NULL);

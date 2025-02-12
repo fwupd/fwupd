@@ -1152,7 +1152,6 @@ fu_util_inhibit(FuUtilPrivate *priv, gchar **values, GError **error)
 	const gchar *reason = "not set";
 	guint64 timeout_ms = 0;
 	g_autoptr(FuUtilInhibitHelper) helper = g_new0(FuUtilInhibitHelper, 1);
-	g_autofree gchar *inhibit_id = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	if (g_strv_length(values) > 0)

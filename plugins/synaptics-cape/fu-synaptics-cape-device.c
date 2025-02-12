@@ -284,8 +284,6 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT)) {
 		if (!fu_synaptics_cape_device_get_report_intr(self, st_report, &error_local)) {
-			g_autoptr(FuSynapticsCapeMsg) st_msg2 =
-			    fu_synaptics_cape_cmd_hid_report_get_msg(st_report);
 			/* ignoring io error for software reset command */
 			if ((fu_synaptics_cape_msg_get_cmd_id(st_msg_req) ==
 			     FU_SYNAPTICS_CAPE_CMD_MCU_SOFT_RESET) &&

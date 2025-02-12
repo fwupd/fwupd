@@ -198,7 +198,6 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) kek = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
