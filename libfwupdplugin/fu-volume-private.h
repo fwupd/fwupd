@@ -18,3 +18,7 @@ void
 fu_volume_set_partition_kind(FuVolume *self, const gchar *partition_kind) G_GNUC_NON_NULL(1, 2);
 void
 fu_volume_set_partition_uuid(FuVolume *self, const gchar *partition_uuid) G_GNUC_NON_NULL(1, 2);
+
+/* for tests */
+void
+fu_volume_set_filesystem_free(FuVolume *self, guint64 filesystem_free) G_GNUC_NON_NULL(1);

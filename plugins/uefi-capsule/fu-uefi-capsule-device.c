@@ -35,6 +35,9 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiCapsuleDevice, fu_uefi_capsule_device, FU_TYPE_
 
 #define FU_EFI_FMP_CAPSULE_GUID "6dcbd5ed-e82d-4c44-bda1-7194199ad92a"
 
+/* the size of the fwupd*.efi binary plus any logs the firmware updater might generate */
+#define FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED (1024 * 1024) /* bytes */
+
 enum {
 	PROP_0,
 	PROP_FW_CLASS,
@@ -673,13 +676,30 @@ fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 	gsize sz_reqd = priv->require_esp_free_space;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
 
+	/* sanity check */
+	if (priv->esp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no ESP set");
+		return NULL;
+	}
+
 	/* check there is enough space in the ESP */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
 	if (sz_reqd == 0) {
-		g_info("required ESP free space is not configured, using 2 x %uMB + 20MB",
-		       (guint)fu_firmware_get_size(firmware) / (1024 * 1024));
-		sz_reqd = fu_firmware_get_size(firmware) * 2 + (20u * 1024 * 1024);
+		if (fu_device_has_private_flag(FU_DEVICE(self),
+					       FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP)) {
+			g_info("minimal additional ESP free space required, using %uMB + %uMB",
+			       (guint)fu_firmware_get_size(firmware) / (1024 * 1024),
+			       (guint)FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / ((1024 * 1024)));
+			sz_reqd =
+			    fu_firmware_get_size(firmware) + FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED;
+		} else {
+			g_info("required ESP free space is not configured, using (2 x %uMB) + %uMB",
+			       (guint)fu_firmware_get_size(firmware) / (1024 * 1024),
+			       (guint)FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED / ((1024 * 1024)));
+			sz_reqd = fu_firmware_get_size(firmware) * 2 +
+				  FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED;
+		}
 	}
 	if (!fu_volume_check_free_space(priv->esp, sz_reqd, error))
 		return NULL;
@@ -765,6 +785,7 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 					FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
 }
 
 static void

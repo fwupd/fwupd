@@ -12,6 +12,80 @@
 #include "fu-uefi-capsule-backend.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
+#include "fu-volume-private.h"
+
+static void
+fu_uefi_update_esp_valid_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
+	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
+
+	/* enough to fit the firmware */
+	fu_volume_set_filesystem_free(volume_esp, 10 * 1024 * 1024);
+
+	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
+	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
+	firmware =
+	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+}
+
+static void
+fu_uefi_update_esp_invalid_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
+	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
+
+	/* enough to fit the firmware */
+	fu_volume_set_filesystem_free(volume_esp, 1024 * 1024);
+
+	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
+	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
+	firmware =
+	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(firmware);
+}
+
+static void
+fu_uefi_update_esp_no_backup_func(void)
+{
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuVolume) volume_esp = fu_volume_new_from_mount_path("/tmp");
+	g_autoptr(GBytes) blob = g_bytes_new_static((const guint8 *)"BOB", 3);
+	g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, 4 * 1024 * 1024, 0xFF);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) stream = g_memory_input_stream_new_from_bytes(blob_padded);
+
+	/* enough to fit the firmware */
+	fu_volume_set_filesystem_free(volume_esp, 6 * 1024 * 1024);
+
+	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
+	fu_device_add_private_flag(device, "no-esp-backup");
+	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
+	firmware =
+	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(firmware);
+}
 
 static void
 fu_uefi_bgrt_func(void)
@@ -335,6 +409,9 @@ main(int argc, char **argv)
 	(void)g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
+	g_test_add_func("/uefi/update-esp-valid", fu_uefi_update_esp_valid_func);
+	g_test_add_func("/uefi/update-esp-invalid", fu_uefi_update_esp_invalid_func);
+	g_test_add_func("/uefi/update-esp-no-backup", fu_uefi_update_esp_no_backup_func);
 	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func("/uefi/bitmap", fu_uefi_bitmap_func);
