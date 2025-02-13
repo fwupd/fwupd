@@ -77,6 +77,10 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	if (fu_device_get_backend_id(device) == NULL)
 		fu_device_set_backend_id(device, priv->name);
 
+	/* set created to *now* */
+	if (fu_device_get_created_usec(device) == 0)
+		fu_device_set_created_usec(device, g_get_real_time());
+
 	/* sanity check */
 	if ((g_getenv("FWUPD_UEFI_TEST") == NULL) &&
 	    g_hash_table_contains(priv->devices, fu_device_get_backend_id(device))) {

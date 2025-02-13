@@ -4,6 +4,7 @@
       "GType": "FuUefiDevice",
       "BackendId": "8be4df61-93ca-11d2-aa0d-00e098032b8c-PK",
       "Guid": "8be4df61-93ca-11d2-aa0d-00e098032b8c",
+      "Created": "2025-02-13T00:00:00Z",
       "Name": "PK",
       "Events": [
         {
