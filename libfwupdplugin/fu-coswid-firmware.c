@@ -474,6 +474,22 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 		}
 	}
 
+	/* sanity check */
+	if (entity->name == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "entity does not have a name");
+		return FALSE;
+	}
+	if (entity->roles == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "entity has no roles");
+		return FALSE;
+	}
+
 	/* success */
 	g_ptr_array_add(priv->entities, g_steal_pointer(&entity));
 	return TRUE;
