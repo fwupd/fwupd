@@ -728,6 +728,29 @@ fu_util_device_test_helper_new(void)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilDeviceTestHelper, fu_util_device_test_helper_free)
 
+static GPtrArray *
+fu_util_filter_devices(FuUtilPrivate *priv, GPtrArray *devices, GError **error)
+{
+	g_autoptr(GPtrArray) devices_filtered =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		if (!fwupd_device_match_flags(dev,
+					      priv->filter_device_include,
+					      priv->filter_device_exclude))
+			continue;
+		g_ptr_array_add(devices_filtered, g_object_ref(dev));
+	}
+	if (devices_filtered->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "failed to find any devices");
+		return NULL;
+	}
+	return g_steal_pointer(&devices_filtered);
+}
+
 static gboolean
 fu_util_device_test_component(FuUtilPrivate *priv,
 			      FuUtilDeviceTestHelper *helper,
@@ -767,13 +790,17 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 		FwupdDevice *device_tmp;
 		const gchar *guid = json_node_get_string(json_node);
 		g_autoptr(GPtrArray) devices = NULL;
+		g_autoptr(GPtrArray) devices_filtered = NULL;
 
 		g_debug("looking for guid %s", guid);
 		devices =
 		    fwupd_client_get_devices_by_guid(priv->client, guid, priv->cancellable, NULL);
 		if (devices == NULL)
 			continue;
-		if (devices->len > 1) {
+		devices_filtered = fu_util_filter_devices(priv, devices, NULL);
+		if (devices_filtered == NULL)
+			continue;
+		if (devices_filtered->len > 1) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -781,7 +808,7 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 				    guid);
 			return FALSE;
 		}
-		device_tmp = g_ptr_array_index(devices, 0);
+		device_tmp = g_ptr_array_index(devices_filtered, 0);
 		if (protocol != NULL && !fwupd_device_has_protocol(device_tmp, protocol))
 			continue;
 		device = g_object_ref(device_tmp);
@@ -1398,6 +1425,7 @@ fu_util_device_emulate(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
 	helper->use_emulation = TRUE;
+	priv->filter_device_include |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_util_device_test_full(priv, values, helper, error);
 }
 
@@ -1405,6 +1433,7 @@ static gboolean
 fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
+	priv->filter_device_exclude |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_util_device_test_full(priv, values, helper, error);
 }
 
