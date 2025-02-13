@@ -363,6 +363,15 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
 		fu_device_inhibit(self, "unconnected", "Device has been removed");
 
+	/* add counterpart GUIDs already added */
+	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE) == 0) {
+		for (guint i = 0; priv->instance_ids != NULL && i < priv->instance_ids->len; i++) {
+			FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
+			if (item->flags & FU_DEVICE_INSTANCE_FLAG_COUNTERPART)
+				item->flags |= FU_DEVICE_INSTANCE_FLAG_VISIBLE;
+		}
+	}
+
 	/* reset this back to the default */
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER) == 0) {
 		GPtrArray *children = fu_device_get_children(self);
