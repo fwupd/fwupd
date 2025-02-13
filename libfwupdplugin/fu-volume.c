@@ -37,6 +37,7 @@ struct _FuVolume {
 	gchar *mount_path;     /* only when mounted ourselves */
 	gchar *partition_kind; /* only for tests */
 	gchar *partition_uuid; /* only for tests */
+	guint64 fs_free;       /* only for tests */
 };
 
 enum {
@@ -636,6 +637,14 @@ fu_volume_get_mount_point(FuVolume *self)
 	return g_strdup(mountpoints[0]);
 }
 
+/* private: for self tests only */
+void
+fu_volume_set_filesystem_free(FuVolume *self, guint64 fs_free)
+{
+	g_return_if_fail(FU_IS_VOLUME(self));
+	self->fs_free = fs_free;
+}
+
 /**
  * fu_volume_check_free_space:
  * @self: a @FuVolume
@@ -653,8 +662,6 @@ fu_volume_check_free_space(FuVolume *self, guint64 required, GError **error)
 {
 	guint64 fs_free;
 	g_autofree gchar *path = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileInfo) info = NULL;
 
 	g_return_val_if_fail(FU_IS_VOLUME(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -664,18 +671,26 @@ fu_volume_check_free_space(FuVolume *self, guint64 required, GError **error)
 	if (path == NULL)
 		return TRUE;
 
-	file = g_file_new_for_path(path);
-	info = g_file_query_filesystem_info(file, G_FILE_ATTRIBUTE_FILESYSTEM_FREE, NULL, error);
-	if (info == NULL)
-		return FALSE;
-	fs_free = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
+	if (self->fs_free > 0) {
+		fs_free = self->fs_free;
+	} else {
+		g_autoptr(GFile) file = g_file_new_for_path(path);
+		g_autoptr(GFileInfo) info =
+		    g_file_query_filesystem_info(file,
+						 G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+						 NULL,
+						 error);
+		if (info == NULL)
+			return FALSE;
+		fs_free = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
+	}
 	if (fs_free < required) {
-		g_autofree gchar *str_free = g_format_size(fs_free);
-		g_autofree gchar *str_reqd = g_format_size(required);
+		g_autofree gchar *str_free = g_format_size(required - fs_free);
+		g_autofree gchar *str_reqd = g_format_size(fs_free);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "%s does not have sufficient space, required %s, got %s",
+			    "%s does not have sufficient space, required %s, need additional %s",
 			    path,
 			    str_reqd,
 			    str_free);

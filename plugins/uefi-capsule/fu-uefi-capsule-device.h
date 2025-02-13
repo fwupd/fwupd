@@ -34,6 +34,7 @@ struct _FuUefiCapsuleDeviceClass {
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME     "cod-indexed-filename"
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER	     "modify-bootorder"
 #define FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY	     "cod-dell-recovery"
+#define FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP	     "no-esp-backup"
 
 void
 fu_uefi_capsule_device_set_esp(FuUefiCapsuleDevice *self, FuVolume *esp);

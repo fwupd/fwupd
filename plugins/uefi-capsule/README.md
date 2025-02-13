@@ -183,6 +183,13 @@ Modify `BootOrder` as well as `BootNext` to work around BIOS bugs.
 
 Use Dell customized file location for the capsule on disk.
 
+### `Flags=no-esp-backup`
+
+The UEFI ESRT entry does not need extra ESP space to write a backup ROM.
+If this flag is set then the `RequireESPFreeSpace` config file option is ignored.
+
+Since: 2.0.7
+
 ## External Interface Access
 
 This plugin requires:
