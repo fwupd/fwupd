@@ -38,6 +38,36 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.6" date="2025-02-14">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add 'fwupdtool efiboot-hive' to allow setting the nmbl cmdline</li>
+          <li>Allow setting the inhibit reason from fwupdmgr</li>
+          <li>Allow USB-provided hidraw devices to use DS-20 descriptors</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly deploy the dbx on MSI hardware</li>
+          <li>Correctly extract the milestone from Lenovo version numbers</li>
+          <li>Do not add invalid CoSWID entities to fix a fuzzing hang</li>
+          <li>Fix Logitech HID++ child device detection</li>
+          <li>Get the correct internal network VID and PID from Redfish</li>
+          <li>Include the payload length in the Wacom scaler update start command</li>
+          <li>Only use emulated devices when using device-emulate</li>
+          <li>Reload the thunderbolt retimer version after the payload is deployed</li>
+          <li>Speed up startup by ~1% by limiting the precision of percentage updates</li>
+          <li>Support new version formats for future Huddly devices</li>
+          <li>Updating the Logitech Rallybar in a more reliable way</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HPE Gen10/Gen10+ devices using Redfish</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.5" date="2025-02-03">
       <description>
         <p>

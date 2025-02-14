@@ -3175,10 +3175,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[फाइलनाम1] [फाइलनाम2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[कारण]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[सेटिंग1] [सेटिंग2] [--no-authenticate]"
 

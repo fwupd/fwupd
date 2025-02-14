@@ -2866,10 +2866,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZIV DATOTEKE1] [NAZIV DATOTEKE2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[RAZLOG]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[POSTAVKA1] [POSTAVKA2] [--no-authenticate]"
 

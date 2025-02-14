@@ -3039,10 +3039,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[<파일이름1>] [<파일이름2>]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[<이유>]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[<설정1>] [<설정2>] [--no-authenticate]"
 

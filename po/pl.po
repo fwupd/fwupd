@@ -337,6 +337,15 @@ msgstr[1] "%u sekundy"
 msgstr[2] "%u sekund"
 msgstr[3] "%u sekund"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "Pominięto %u test"
+msgstr[1] "Pominięto %u testy"
+msgstr[2] "Pominięto %u testów"
+msgstr[3] "Pominięto %u testów"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -436,6 +445,10 @@ msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprz
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Umożliwia przełączanie gałęzi oprogramowania sprzętowego"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Już istnieje i nie podano --force"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -739,6 +752,10 @@ msgstr "Technologia egzekwowania przepływu sterowania"
 msgid "Convert a firmware file"
 msgstr "Konwertuje plik oprogramowania sprzętowego"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Tworzy wpis uruchamiania EFI"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Utworzono"
@@ -770,6 +787,10 @@ msgstr "Opcje debugowania"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Dekompresowanie…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Usuwa wpis uruchamiania EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1019,6 +1040,11 @@ msgstr "Bez zapisywania do bazy danych historii"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Czy rozumiesz konsekwencje zmiany gałęzi oprogramowania sprzętowego?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Przekonwertować teraz?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1510,6 +1536,22 @@ msgid "Host Security ID:"
 msgstr "Identyfikator zabezpieczeń komputera:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEKS"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEKS KLUCZ [WARTOŚĆ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEKS NAZWA CEL [PUNKT-MONTOWANIA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEKS1,INDEKS2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "IDENTYFIKATOR-WSTRZYMANIA"
 
@@ -1631,7 +1673,7 @@ msgstr "Zainstalowanie tej aktualizacji może także spowodować utratę wszelki
 
 #. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
 msgid "Integer"
-msgstr "Liczba stała"
+msgstr "Liczba całkowita"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
@@ -1716,6 +1758,14 @@ msgstr "Nieprawidłowe parametry"
 msgid "Invalid arguments, expected GUID"
 msgstr "Nieprawidłowe parametry, oczekiwano GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Nieprawidłowe parametry, oczekiwano INDEKS KLUCZ [WARTOŚĆ]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Nieprawidłowe parametry, oczekiwano INDEKS NAZWA CEL [PUNKT-MONTOWANIA]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1724,6 +1774,10 @@ msgstr "Nieprawidłowe parametry, oczekiwano identyfikatora AppStream"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Nieprawidłowe parametry, oczekiwano co najmniej ARCHIWUM OPROGRAMOWANIE-SPRZĘTOWE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Nieprawidłowe parametry, oczekiwano szesnastkowej liczby całkowitej"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2015,6 +2069,11 @@ msgstr "Brak dostępnych aktualizacji"
 
 msgid "No updates available for remaining devices"
 msgstr "Brak dostępnych aktualizacji dla pozostałych urządzeń"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Żaden wolumin nie pasuje do %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2467,6 +2526,18 @@ msgstr "Ustawia ustawienie BIOS-u"
 msgid "Set one or more BIOS settings"
 msgstr "Ustawienie co najmniej jednego ustawienia BIOS-u"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Ustawia lub usuwa wpis „hive” uruchamiania EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Ustawia uruchamianie EFI jako następne"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Ustawia kolejność uruchamiania EFI"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Ustawia liczbę prób pobrania w przypadku przejściowych błędów"
@@ -2799,6 +2870,14 @@ msgstr "Przetestowane przez: %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Przetestowane przez zaufanego dostawcę"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Wpis uruchamiania EFI nie jest w formacie „hive”, a program shim może nie być wystarczająco nowy, aby go odczytać."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Wpis uruchamiania EFI nie jest w formacie „hive”, używanie zapasowego"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -3288,10 +3367,6 @@ msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[POWÓD]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

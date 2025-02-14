@@ -3032,10 +3032,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FÁJLNÉV1] [FÁJLNÉV2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[INDOK]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[BEÁLLÍTÁS1] [BEÁLLÍTÁS2] [--no-authenticate]"
 

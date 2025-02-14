@@ -5,7 +5,7 @@
 # Translators:
 # Moo, 2019,2023
 # Moo, 2020-2021
-# Moo, 2023-2024
+# Moo, 2023-2025
 # Rimas Kudelis <rimas@kudelis.lt>, 2023
 msgid ""
 msgstr ""
@@ -1186,6 +1186,10 @@ msgstr "Įveskite %s arba %s: "
 msgid "Plugin dependencies missing"
 msgstr "Trūksta įskiepio priklausomybių"
 
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr "Įskiepis yra tik testavimui"
+
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
 msgstr "Galimos reikšmės"
@@ -1204,6 +1208,10 @@ msgstr "Problemos"
 
 msgid "Proceed with upload?"
 msgstr "Tęsti išsiuntimą?"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "Procesoriaus saugumo patikros"
 
 #. TRANSLATORS: a non-free software license
 msgid "Proprietary"

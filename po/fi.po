@@ -3381,10 +3381,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[TIEDOSTONIMI1] [TIEDOSTONIMI2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[SYY]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[ASETUS1] [ASETUS2] [--no-authenticate]"
 

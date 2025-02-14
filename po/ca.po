@@ -324,6 +324,13 @@ msgid_plural "%u seconds"
 msgstr[0] "%u segon"
 msgstr[1] "%u segons"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "S'ha omès %u prova"
+msgstr[1] "S'han omès %u proves"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -3392,10 +3399,6 @@ msgstr "[FITXER SIGNATURA_FITXER ID_REMOT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NOM_FITXER_1] [NOM_FITXER_2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[RAÓ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

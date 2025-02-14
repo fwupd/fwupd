@@ -337,6 +337,15 @@ msgstr[1] "%u секунди"
 msgstr[2] "%u секунд"
 msgstr[3] "%u секунда"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u перевірку пропущено"
+msgstr[1] "%u перевірки пропущено"
+msgstr[2] "%u перевірок пропущено"
+msgstr[3] "%u перевірку пропущено"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -436,6 +445,10 @@ msgstr "Дозволити перевстановлення наявних ве�
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Дозволити перемикання гілок мікропрограми"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Вже існує, а --force не вказано"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -747,6 +760,10 @@ msgstr "Технологія примусового керування пото�
 msgid "Convert a firmware file"
 msgstr "Перетворити файл мікропрограми"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Створити запис завантаження EFI"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Створено"
@@ -778,6 +795,10 @@ msgstr "Параметри діагностики"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Розпаковування…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Вилучити запис завантаження EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1031,6 +1052,11 @@ msgstr "Не записувати дані до бази даних журнал
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Чи розумієте ви наслідки зміни гілки мікропрограми?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Хочете виконати перетворення зараз?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1552,6 +1578,22 @@ msgid "Host Security ID:"
 msgstr "Ід. захисту основної системи:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "ІНДЕКС"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "ІНДЕКС КЛЮЧ [ЗНАЧЕННЯ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "ІНДЕКС НАЗВА ПРИЗНАЧЕННЯ [ТОЧКА МОНТУВАННЯ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "ІНДЕКС1,ІНДЕКС2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "ІД-ЗАБОРОНИ"
 
@@ -1773,6 +1815,14 @@ msgstr "Некоректні аргументи"
 msgid "Invalid arguments, expected GUID"
 msgstr "Некоректні аргументи, мало бути вказано GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Некоректні аргументи, мало бути ІНДЕКС КЛЮЧ [ЗНАЧЕННЯ]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Некоректні аргументи, мало бути ІНДЕКС НАЗВА ПРИЗНАЧЕННЯ [ТОЧКА МОНТУВАННЯ]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1781,6 +1831,10 @@ msgstr "Некоректні аргументи, мало бути вказан�
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Некоректні аргументи. Мало бути вказано принаймні АРХІВ МІКРОПРОГРАМА МЕТАІНФО"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Некоректні аргументи, мало бути вказано ціле число за основою 16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2086,6 +2140,11 @@ msgstr "Немає доступних оновлень"
 
 msgid "No updates available for remaining devices"
 msgstr "Для решти пристроїв немає доступних оновлень"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Немає відповідного тому %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2550,6 +2609,18 @@ msgstr "Встановити параметр BIOS"
 msgid "Set one or more BIOS settings"
 msgstr "Встановити один або декілька параметрів BIOS"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Встановити або вилучити запис завантаження hive EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Встановити наступне завантаження EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Встановити порядок завантаження EFI"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Встановити кількість повторних спроб отримання при тимчасових помилках"
@@ -2902,6 +2973,14 @@ msgstr "Перевірено %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Перевірено надійним постачальником"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Запис завантаження EFI не форматований для hive, і shim може бути недостатньо для його читання."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Запис завантаження EFI не форматований для hive, використовуємо резервний варіант"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3419,10 +3498,6 @@ msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[ПРИЧИНА]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

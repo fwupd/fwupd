@@ -329,6 +329,13 @@ msgid_plural "%u seconds"
 msgstr[0] "%u sekund"
 msgstr[1] "%u sekunder"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u test hoppades över"
+msgstr[1] "%u test hoppades över"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -428,6 +435,10 @@ msgstr "Tillåt ominstallation av befintliga versioner av fast programvara"
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Tillåt att byta gren för fast programvara"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Finns redan, och --force angavs inte"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -737,6 +748,10 @@ msgstr "Control-flow Enforcement Technology"
 msgid "Convert a firmware file"
 msgstr "Konvertera en fast programvarufil"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Skapa en EFI-uppstartspost"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Skapad"
@@ -768,6 +783,10 @@ msgstr "Felsökningsalternativ"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Dekomprimerar…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Ta bort en EFI-uppstartspost"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1021,6 +1040,11 @@ msgstr "Skriv inte till historikdatabasen"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Förstår du konsekvenserna av att byta gren av fast programvara?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Vill du konvertera den nu?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1538,6 +1562,22 @@ msgid "Host Security ID:"
 msgstr "Säkerhets-ID för värd:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEX NYCKEL [VÄRDE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEX NAMN MÅL [MONTERINGSPUNKT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "HINDRANDE-ID"
 
@@ -1759,6 +1799,14 @@ msgstr "Ogiltiga argument"
 msgid "Invalid arguments, expected GUID"
 msgstr "Ogiltiga argument, GUID förväntades"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Ogiltiga argument, INDEX NYCKEL [VÄRDE] förväntades"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Ogiltiga argument, INDEX NAMN MÅL [MONTERINGSPUNKT] förväntades"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1767,6 +1815,10 @@ msgstr "Ogiltiga argument, ett AppStream-ID förväntades"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Ogiltiga argument, förväntade åtminstone ARKIV FAST_PROGRAMVARA METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Ogiltiga argument, heltal i bas 16 förväntades"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2070,6 +2122,11 @@ msgstr "Inga uppdateringar tillgängliga"
 
 msgid "No updates available for remaining devices"
 msgstr "Inga uppdateringar tillgängliga för kvarvarande enheter"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Ingen volym matchade %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2534,6 +2591,18 @@ msgstr "Ställ in en BIOS-inställning"
 msgid "Set one or more BIOS settings"
 msgstr "Ställ in en eller flera BIOS-inställningar"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Ställ in eller ta bort en EFI-uppstartskupepost"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Ställ in EFI-uppstarten härnäst"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Ställ in EFI-uppstartsordningen"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Ställ in antalet försök att hämta igen för tillfälliga fel"
@@ -2882,6 +2951,14 @@ msgstr "Testad av %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Testad av en betrodd leverantör"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "EFI-uppstartsposten är inte i kupformat, och mellanlägg kanske inte är nytt nog för att läsa den."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "EFI-uppstartsposten var inte i kupformat, använder reserv"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3397,10 +3474,6 @@ msgstr "[FIL FILSIG FJÄRR-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILNAMN1] [FILNAMN2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[ORSAK]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -7,7 +7,7 @@
 # Adolfo Jayme-Barrientos, 2021
 # César Enrique García <cquike@gmail.com>, 2023
 # D Marzal, 2024
-# Francisco Serrador, 2022-2024
+# Francisco Serrador, 2022-2025
 # Francisco Serrador <serrador@protonmail.com>, 2022
 # Giovanni Alfredo Garciliano Diaz <giobeatle10@gmail.com>, 2024
 # Santiago FN, 2024
@@ -128,6 +128,16 @@ msgstr "Actualización de GPU %s"
 #, c-format
 msgid "%s Graphics Tablet Update"
 msgstr "%s Tabla de Gráficos de Actualización"
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Actualizar %s auriculares"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s Actualización del conjunto de cabeceras"
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
@@ -327,6 +337,14 @@ msgstr[0] "%u segundo"
 msgstr[1] "%u segundos"
 msgstr[2] "%u segundos"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "Fue omitida %u prueba"
+msgstr[1] "Fueron omitidas %u pruebas"
+msgstr[2] "Fueron omitidas %u pruebas"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -426,6 +444,10 @@ msgstr "Permitir reinstalar versiones de firmware existentes"
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Permitir intercambiar rama de firmware"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Ya existe, y sin especificar --force"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -712,6 +734,10 @@ msgstr "No se encontró la orden"
 msgid "Community supported"
 msgstr "Comunitariamente mantenido"
 
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Compara dos versiones para igualdad"
+
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Cambio Sugerido de Configuración"
@@ -731,6 +757,10 @@ msgstr "Tecnología de Mejora de Flujo-Controlado"
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Convierta un archivo firmware"
+
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Crea un apunte de arranque EFI"
 
 #. TRANSLATORS: when the update was built
 msgid "Created"
@@ -763,6 +793,10 @@ msgstr "Opciones de depuración"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Descomprimiendo…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Borra un apunte de arranque EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -957,6 +991,10 @@ msgstr "Deshabilitado"
 msgid "Disables a given remote"
 msgstr "Desactiva un remoto proporcionado"
 
+#. TRANSLATORS: command description
+msgid "Disables virtual testing devices"
+msgstr "Desactiva dispositivos de pruebas virtuales"
+
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
 msgstr "Distribución"
@@ -1012,6 +1050,11 @@ msgstr "No se lee a la base de datos histórica"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "¿Comprende las consecuencias de cambiar la rama del firmware?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "¿Desea convertirlo ahora?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1246,6 +1289,16 @@ msgstr "No se pudieron procesar los argumentos"
 msgid "Failed to parse file"
 msgstr "No se pudo procesar el archivo"
 
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Ha fallado al interpretar indicadores para %s"
+
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
 msgstr "Intérprete erróneo del dbx local"
@@ -1452,6 +1505,10 @@ msgid "Get all enabled plugins registered with the system"
 msgstr "Obtiene todos los complementos registrados activados con el sistema"
 
 #. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Obtiene todos los formatos de versión conocidos"
+
+#. TRANSLATORS: command description
 msgid "Get device report metadata"
 msgstr "Obtenga el informe de metadatos del dispositivo"
 
@@ -1515,6 +1572,22 @@ msgstr "Atributos de ID de seguridad del anfitrión correctamente subido, ¡grac
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguridad de hospedaje:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "ÍNDICE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "ÍNDICE LLAVE [VALOR]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "ÍNDICE NOMBRE DESTINO [PUNTO_MONTAJE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "ÍNDICE1,ÍNDICE2"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
@@ -1738,6 +1811,14 @@ msgstr "Argumentos no válidos"
 msgid "Invalid arguments, expected GUID"
 msgstr "Argumentos no válidos, se esperaba GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Argumentos no válidos, se esperaba INDEX KEY [VALOR]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Argumentos no válidos, se esperaba INDEX NAME TARGET [PUNTO-MONTAJE]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1746,6 +1827,10 @@ msgstr "Argumentos no válidos, se esperaba un ID de AppStream"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Argumentos no válidos, esperados al menos ARCHIVE FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Argumentos no válidos, se esperaba entero con base-16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2050,6 +2135,11 @@ msgstr "No hay actualizaciones disponibles"
 
 msgid "No updates available for remaining devices"
 msgstr "No hay actualizaciones disponibles para dispositivos restantes"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "No coincidía ningún %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2417,6 +2507,10 @@ msgstr "PARÁMETRO1 VALOR1 [PARÁMETRO2] [VALOR2]"
 msgid "SMAP"
 msgstr "SMAP"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM bloqueado"
+
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
 msgstr "Descriptor BIOS SPI"
@@ -2509,6 +2603,18 @@ msgstr "Fije un parámetro de la BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Fije uno o más parámetros de BIOS"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Pone o quita un apunte de arranque EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Establece el siguiente arranque de EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Ponga el orden de arranque de EFI"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2762,9 +2868,26 @@ msgstr "Intercambiar rama firmware en el dispositivo"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Sincroniza versiones del firmware para la configuración deseada"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Modo de Gestión del Sistema"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Actualización de Sistema Inhibido"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "El firmware se utiliza en el modo de gestión del sistema para acceder al código BIOS residente y los datos."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "La energía del sistema es muy baja"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "La energía del sistema es muy escasa (%u%%, requiere %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
@@ -2843,6 +2966,14 @@ msgstr "Probado por %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Probado por proveedor confiado"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "El apunte de arranque EFI no es un formato colmena, y es posible que la cuña no sea suficiente nueva para leerla."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "El apunte EFI no estaba en el formato hive, retrocede"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3173,6 +3304,14 @@ msgstr "Actualiza los metadatos almacenados con contenido actual"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualiza todos los dispositivos especificados a la última versión del firmware, o todos los dispositivos si no especificados"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Ha sido publicada %u actualización de dispositivo local"
+msgstr[1] "Han sido publicadas %u actualizaciones de %u dispositivos locales"
+msgstr[2] "Han sido publicadas %u actualizaciones de %u dispositivos locales"
+
 msgid "Updating"
 msgstr "Actualizando"
 
@@ -3202,6 +3341,11 @@ msgid "Upload these anonymous results to the %s to help other users?"
 msgstr "¿Subo estos resultados anónimos al %s para ayudar a otros usuarios?"
 
 #. TRANSLATORS: explain why we want to upload
+#, c-format
+msgid "Uploading a device list allows the %s team to know what hardware exists, and allows us to put pressure on vendors that do not upload firmware updates for their hardware."
+msgstr "Cargar un listado de dispositivos permite que el equipo %s conozca qué hardware existe, y nos permite poner presión en los proveedores que no suban actualizaciones del firmware para su hardware."
+
+#. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Subiendo comunicados firmware ayuda proveedores de hardware para identificar rápidamente fallos y actualizaciones correctas en dispositivos reales."
 
@@ -3229,6 +3373,10 @@ msgstr "El usuario ha sido notificado"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Nombre del usuario"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSIÓN1 VERSIÓN2 [FORMATO]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -3342,10 +3490,6 @@ msgstr "[ARCHIVO FIRMA_ARCH ID-REMOTO]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[ARCHIVO-NOMBRE1] [ARCHIVO-NOMBRE2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[RAZÓN]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

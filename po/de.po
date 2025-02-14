@@ -5,7 +5,7 @@
 # Translators:
 # Alexander Barton, 2024
 # Christian <Christian.Kirbach@googlemail.com>, 2023
-# Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2024
+# Ettore Atalan <atalanttore@googlemail.com>, 2018,2021-2025
 # F Bausch, 2024
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
@@ -328,6 +328,13 @@ msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u Sekunde"
 msgstr[1] "%u Sekunden"
+
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u Test wurde übersprungen"
+msgstr[1] "%u Tests wurden übersprungen"
 
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
@@ -2798,6 +2805,10 @@ msgid "System management mode is used by the firmware to access resident BIOS co
 msgstr "Der Systemverwaltungsmodus wird von der Firmware für den Zugriff auf speicherresidenten BIOS-Code und Daten verwendet."
 
 #. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Stromversorgung des Systems ist zu niedrig"
+
+#. TRANSLATORS: as in laptop battery power
 #, c-format
 msgid "System power is too low (%u%%, requires %u%%)"
 msgstr "Das System ist zu schwach (%u%%, erfordert %u%%)"
@@ -3393,10 +3404,6 @@ msgstr "[DATEI DATEI_SIG GEGENSTELLENKENNUNG]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[DATEINAME1] [DATEINAME2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[GRUND]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -337,6 +337,15 @@ msgstr[1] "%u s"
 msgstr[2] "%u s"
 msgstr[3] "%u s"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u  preizkusov je preskočenih"
+msgstr[1] "%u  preizkus je preskočen"
+msgstr[2] "%u  preizkusa sta preskočena"
+msgstr[3] "%u preizkusi so preskočeni"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -436,6 +445,10 @@ msgstr "Dovoli vnovično namestitev obstoječih različic vdelane programske opr
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Dovoli preklapljanje veje vdelane programske opreme"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Že obstaja, parameter --force ni naveden"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -747,6 +760,10 @@ msgstr "Tehnologija nadzora in nadzora pretoka"
 msgid "Convert a firmware file"
 msgstr "Pretvori datoteko vdelane programske opreme"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Ustvari zagonski vnos za EFI"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Ustvarjeno"
@@ -778,6 +795,10 @@ msgstr "Možnosti razhroščevanja"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Razširjanje ..."
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Izbriše zagonski vnos za EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1031,6 +1052,11 @@ msgstr "Ne piši v zbirko podatkov zgodovine"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Ali razumete posledice spremembe veje vdelane programske opreme?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Ali ga želite zdaj pretvoriti?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1552,6 +1578,22 @@ msgid "Host Security ID:"
 msgstr "Varnostni ID gostitelja:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEKS"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEKS KLJUČ [VREDNOST]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEKS IME CILJ  [TOČKAPRIKLOPA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEKS1,INDEKS2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "ID-PREPREČI"
 
@@ -1773,6 +1815,14 @@ msgstr "Neveljavni argumenti"
 msgid "Invalid arguments, expected GUID"
 msgstr "Neveljavni argumenti, pričakovan GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Neveljavni argumenti, pričakovano je INDEKS KLJUČ [VREDNOST]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Neveljavni argumenti, pričakovano je INDEKS IME CILJ [TOČKAPRIKLOPA]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1781,6 +1831,10 @@ msgstr "Neveljavni argumenti, pričakovan je ID AppStream"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Neveljavni argumenti, pričakovani vsaj ARHIV VDELANAPROGRAMSKAOPREMA METAPODATKI"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Neveljavni argumenti, pričakovano je celo število base-16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2086,6 +2140,11 @@ msgstr "Posodobitve niso na voljo"
 
 msgid "No updates available for remaining devices"
 msgstr "Za preostale naprave ni na voljo nobenih posodobitev"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Noben pogon se ne ujema s/z %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2550,6 +2609,18 @@ msgstr "Določite nastavitev BIOS-a"
 msgid "Set one or more BIOS settings"
 msgstr "Nastavite eno ali več nastavitev BIOS-a"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Nastavite ali odstranite zagonski vnos satovja za EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Nadalje nastavite zagon EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Nastavite zaporedje zagona EFI"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Nastavite število ponovnih poskusov za občasne napake"
@@ -2902,6 +2973,14 @@ msgstr "Preizkušeno s strani %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Preizkušeno s strani zaupanja vrednega proizvajalca"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Zagonski vnos za EFI ni v obliki satovja, povezovalni element morda ni dovolj nov, da bi ga lahko prebral."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Zagonski vnos za EFI ni v obliki satovja, povrnitev v prejšnje stanje"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3419,10 +3498,6 @@ msgstr "[DATOTEKA PODP_DATOTEKE ID-ODDALJENEGA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[IMEDATOTEKE1] [IMEDATOTEKE2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[RAZLOG]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

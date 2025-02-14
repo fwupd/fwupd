@@ -3337,10 +3337,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAMABERKAS1] [NAMABERKAS2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[ALASAN]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"
 msgstr "[BAGIAN] KUNCI NILAI"
 

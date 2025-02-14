@@ -2776,10 +2776,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NOMEFILE1] [NOMEFILE2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[MOTIVO]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"
 msgstr "[FILE-SMBIOS|FILE-HWIDS]"
 

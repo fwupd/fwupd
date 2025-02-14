@@ -5,7 +5,7 @@
 # Translators:
 # Andi Chandler <andi@gowling.com>, 2019-2020,2022
 # Bruce Cowan <bruce@bcowan.me.uk>, 2024
-# Richard Hughes <richard@hughsie.com>, 2015,2017-2024
+# Richard Hughes <richard@hughsie.com>, 2015,2017-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -325,6 +325,13 @@ msgid_plural "%u seconds"
 msgstr[0] "%u second"
 msgstr[1] "%u seconds"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u test was skipped"
+msgstr[1] "%u tests were skipped"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -424,6 +431,10 @@ msgstr "Allow reinstalling existing firmware versions"
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Allow switching firmware branch"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Already exists, and no --force specified"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -733,6 +744,10 @@ msgstr "Control-flow Enforcement Technology"
 msgid "Convert a firmware file"
 msgstr "Convert a firmware file"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Create an EFI boot entry"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Created"
@@ -764,6 +779,10 @@ msgstr "Debugging Options"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Decompressing…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Delete an EFI boot entry"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1017,6 +1036,11 @@ msgstr "Do not write to the history database"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Do you understand the consequences of changing the firmware branch?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Do you want to convert it now?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1534,6 +1558,22 @@ msgid "Host Security ID:"
 msgstr "Host Security ID:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEX KEY [VALUE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEX NAME TARGET [MOUNTPOINT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "INHIBIT-ID"
 
@@ -1755,6 +1795,14 @@ msgstr "Invalid arguments"
 msgid "Invalid arguments, expected GUID"
 msgstr "Invalid arguments, expected GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Invalid arguments, expected INDEX KEY [VALUE]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1763,6 +1811,10 @@ msgstr "Invalid arguments, expected an AppStream ID"
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Invalid arguments, expected base-16 integer"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2066,6 +2118,11 @@ msgstr "No updates available"
 
 msgid "No updates available for remaining devices"
 msgstr "No updates available for remaining devices"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "No volume matched %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2530,6 +2587,18 @@ msgstr "Set a BIOS setting"
 msgid "Set one or more BIOS settings"
 msgstr "Set one or more BIOS settings"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Set or remove an EFI boot hive entry"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Set the EFI boot next"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Set the EFI boot order"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Set the download retries for transient errors"
@@ -2793,6 +2862,15 @@ msgstr "System Update Inhibited"
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
 msgstr "System management mode is used by the firmware to access resident BIOS code and data."
 
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "System power is too low"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "System power is too low (%u%%, requires %u%%)"
+
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "System requires external power source"
@@ -2869,6 +2947,14 @@ msgstr "Tested by %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Tested by trusted vendor"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "The EFI boot entry was not in hive format, falling back"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3384,10 +3470,6 @@ msgstr "[FILE FILE_SIG REMOTE-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILENAME1] [FILENAME2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[REASON]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

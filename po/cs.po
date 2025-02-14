@@ -3165,10 +3165,6 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[SOUBOR1] [SOUBOR2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[REASON]"
-msgstr "[DŮVOD]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[NASTAVENÍ1] [NASTAVENÍ2] [--no-authenticate]"
 
