@@ -1172,6 +1172,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	};
 	const gchar *external_plugins[] = {
 	    "flashrom",
+	    "modem-manager",
 	};
 	g_autoptr(GPtrArray) external_plugin_dirs = g_ptr_array_new_with_free_func(g_free);
 	g_autofree gchar *external_plugindir = NULL;

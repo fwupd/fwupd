@@ -25,3 +25,21 @@ fu_mm_device_port_type_to_string(MMModemPortType port_type)
 		return "mbim";
 	return NULL;
 }
+
+MMModemPortType
+fu_mm_device_port_type_from_string(const gchar *port_type)
+{
+	if (g_strcmp0(port_type, "net") == 0)
+		return MM_MODEM_PORT_TYPE_NET;
+	if (g_strcmp0(port_type, "at") == 0)
+		return MM_MODEM_PORT_TYPE_AT;
+	if (g_strcmp0(port_type, "qcdm") == 0)
+		return MM_MODEM_PORT_TYPE_QCDM;
+	if (g_strcmp0(port_type, "gps") == 0)
+		return MM_MODEM_PORT_TYPE_GPS;
+	if (g_strcmp0(port_type, "qmi") == 0)
+		return MM_MODEM_PORT_TYPE_QMI;
+	if (g_strcmp0(port_type, "mbim") == 0)
+		return MM_MODEM_PORT_TYPE_MBIM;
+	return MM_MODEM_PORT_TYPE_UNKNOWN;
+}
