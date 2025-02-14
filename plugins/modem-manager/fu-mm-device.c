@@ -159,7 +159,8 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 		fu_device_add_instance_id_full(dev, device_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 		return;
 	}
-	if (g_pattern_match_simple("???\\VID_????&PID_????", device_id)) {
+	if (g_pattern_match_simple("???\\VID_????&PID_????", device_id) ||
+	    g_pattern_match_simple("???\\VID_????&PID_????&NAME_*", device_id)) {
 		fu_device_add_instance_id(dev, device_id);
 		return;
 	}
