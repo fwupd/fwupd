@@ -1526,6 +1526,40 @@ fu_udev_device_read(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_read_bytes:
+ * @self: a #FuUdevDevice
+ * @count: bytes to read
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Read a buffer from a file descriptor.
+ *
+ * Returns: (transfer full): A #GBytes, or %NULL
+ *
+ * Since: 2.0.7
+ **/
+GBytes *
+fu_udev_device_read_bytes(FuUdevDevice *self,
+			  gsize count,
+			  guint timeout_ms,
+			  FuIOChannelFlags flags,
+			  GError **error)
+{
+	gsize bytes_read = 0;
+	g_autofree guint8 *buf = NULL;
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(count > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	buf = g_malloc0(count);
+	if (!fu_udev_device_read(self, buf, count, &bytes_read, timeout_ms, flags, error))
+		return NULL;
+	return g_bytes_new(buf, bytes_read);
+}
+
+/**
  * fu_udev_device_write:
  * @self: a #FuUdevDevice
  * @buf: (out): data
@@ -1591,6 +1625,38 @@ fu_udev_device_write(FuUdevDevice *self,
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_udev_device_write_bytes:
+ * @self: a #FuUdevDevice
+ * @blob: a #GBytes
+ * @timeout_ms: timeout in ms
+ * @flags: channel flags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Write a buffer to a file descriptor.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.7
+ **/
+gboolean
+fu_udev_device_write_bytes(FuUdevDevice *self,
+			   GBytes *blob,
+			   guint timeout_ms,
+			   FuIOChannelFlags flags,
+			   GError **error)
+{
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(blob != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_udev_device_write(self,
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    timeout_ms,
+				    flags,
+				    error);
 }
 
 /**
