@@ -377,6 +377,30 @@ fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens)
 	return g_strsplit(str, delimiter, max_tokens);
 }
 
+/**
+ * fu_strsplit_bytes:
+ * @blob: (not nullable): a #GBytes
+ * @delimiter: a string which specifies the places at which to split the string
+ * @max_tokens: the maximum number of pieces to split @str into
+ *
+ * Splits a string into a maximum of @max_tokens pieces, using the given
+ * delimiter. If @max_tokens is reached, the remainder of string is appended
+ * to the last token.
+ *
+ * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
+ *
+ * Since: 2.0.7
+ **/
+gchar **
+fu_strsplit_bytes(GBytes *blob, const gchar *delimiter, gint max_tokens)
+{
+	g_return_val_if_fail(blob != NULL, NULL);
+	return fu_strsplit(g_bytes_get_data(blob, NULL),
+			   g_bytes_get_size(blob),
+			   delimiter,
+			   max_tokens);
+}
+
 typedef struct {
 	FuStrsplitFunc callback;
 	gpointer user_data;
