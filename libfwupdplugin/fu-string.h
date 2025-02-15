@@ -44,6 +44,8 @@ gsize
 fu_strwidth(const gchar *text) G_GNUC_NON_NULL(1);
 gchar **
 fu_strsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens) G_GNUC_NON_NULL(1);
+gchar **
+fu_strsplit_bytes(GBytes *blob, const gchar *delimiter, gint max_tokens) G_GNUC_NON_NULL(1);
 gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array) G_GNUC_NON_NULL(1, 2);
 GString *

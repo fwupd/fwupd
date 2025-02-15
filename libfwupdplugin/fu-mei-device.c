@@ -205,10 +205,7 @@ fu_mei_device_get_parent_attr(FuMeiDevice *self, const gchar *basename, guint id
 	blob = fu_bytes_get_contents(fn, error);
 	if (blob == NULL)
 		return NULL;
-	lines = fu_strsplit((const gchar *)g_bytes_get_data(blob, NULL),
-			    g_bytes_get_size(blob),
-			    "\n",
-			    -1);
+	lines = fu_strsplit_bytes(blob, "\n", -1);
 	if (g_strv_length(lines) <= idx) {
 		g_set_error(error,
 			    FWUPD_ERROR,
