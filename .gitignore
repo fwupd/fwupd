@@ -35,3 +35,4 @@ plugins/tpm-eventlog/tests/
 /snap
 fwupd.txt
 fwupdtool.txt
+*.efi
