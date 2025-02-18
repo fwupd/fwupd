@@ -30,13 +30,16 @@ G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DE
 #define FU_DELL_KESTREL_HID_I2C_MAX_WRITE 128
 
 static gboolean
-fu_dell_kestrel_hid_device_write(FuDellKestrelHidDevice *self, GByteArray *buf, GError **error)
+fu_dell_kestrel_hid_device_write(FuDellKestrelHidDevice *self,
+				 GByteArray *buf,
+				 guint delay_ms,
+				 GError **error)
 {
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					0x0,
 					buf->data,
 					buf->len,
-					FU_DELL_KESTREL_HID_TIMEOUT,
+					delay_ms,
 					FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 					error);
 }
@@ -204,12 +207,6 @@ fu_dell_kestrel_hid_device_get_chunk_size(FuDellKestrelEcDevType dev_type)
 	}
 }
 
-static guint
-fu_dell_kestrel_hid_device_get_first_page_delaytime(FuDellKestrelEcDevType dev_type)
-{
-	return (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_RMM) ? 75 * 1000 : 0;
-}
-
 static gboolean
 fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 						FuChunkArray *pages,
@@ -218,8 +215,6 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 						guint chunk_idx,
 						GError **error)
 {
-	guint first_page_delay = fu_dell_kestrel_hid_device_get_first_page_delaytime(dev_type);
-
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(pages));
@@ -228,6 +223,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 		g_autoptr(GByteArray) page_aligned = g_byte_array_new();
 		g_autoptr(FuChunk) page = NULL;
 		g_autoptr(GError) error_local = NULL;
+		guint page_ack_time = FU_DELL_KESTREL_HID_TIMEOUT;
 
 		page = fu_chunk_array_index(pages, j, error);
 		if (page == NULL)
@@ -244,8 +240,15 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 				    fu_chunk_get_data_sz(page));
 		fu_byte_array_set_size(page_aligned, FU_DELL_KESTREL_HID_DATA_PAGE_SZ, 0xFF);
 
+		/* rmm needs extra time to ack the first page */
+		if (j == 0 && dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_RMM)
+			page_ack_time = 75 * 1000;
+
 		/* send to ec */
-		if (!fu_dell_kestrel_hid_device_write(self, page_aligned, &error_local)) {
+		if (!fu_dell_kestrel_hid_device_write(self,
+						      page_aligned,
+						      page_ack_time,
+						      &error_local)) {
 			/* A buggy device may fail to send an acknowledgment receipt
 			   after the last page write, resulting in a timeout error.
 
@@ -258,14 +261,23 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 				fu_progress_step_done(progress);
 				continue;
 			}
-			g_propagate_error(error, g_steal_pointer(&error_local));
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "%s failed to write page: ",
+						   fu_device_get_name(FU_DEVICE(self)));
 			return FALSE;
 		}
 
-		/* device needs time to process incoming pages */
-		if (j == 0) {
-			g_debug("wait %u ms before the next page", first_page_delay);
-			fu_device_sleep(FU_DEVICE(self), first_page_delay);
+		/* rmm needs extra time to accept incoming pages */
+		if (j == 0 && dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_RMM) {
+			FuDevice *dev = FU_DEVICE(self);
+			if (fu_version_compare(fu_device_get_version(dev),
+					       "1.8.6.0",
+					       fu_device_get_version_format(dev)) < 0) {
+				guint delay_ms = 75 * 1000;
+				g_debug("wait %u ms before the next page", delay_ms);
+				fu_device_sleep(FU_DEVICE(self), delay_ms);
+			}
 		}
 		fu_progress_step_done(progress);
 	}
@@ -386,7 +398,8 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
-				    "failed to write chunk[%u]: %s",
+				    "%s failed to write chunk[%u]: %s",
+				    fu_device_get_name(FU_DEVICE(self)),
 				    i,
 				    fu_dell_kestrel_hid_ec_chunk_response_to_string(resp));
 			return FALSE;
