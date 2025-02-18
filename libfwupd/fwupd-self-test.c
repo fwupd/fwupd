@@ -488,7 +488,9 @@ fwupd_client_api_undefined_setter(void)
 		g_value_init(&value_bool, G_TYPE_BOOLEAN);
 		g_object_set_property(G_OBJECT(client), "battery-adapter", &value_bool);
 	} else {
-		g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+		g_test_trap_subprocess("/fwupd/client_api{undefined_setter}",
+				       0,
+				       G_TEST_SUBPROCESS_DEFAULT);
 		g_test_trap_assert_failed();
 		g_test_trap_assert_stderr(
 		    "*GLib-GObject-CRITICAL*has no property named 'battery-adapter'*");
@@ -509,7 +511,9 @@ fwupd_client_api_undefined_getter(void)
 		g_value_init(&value_bool, G_TYPE_BOOLEAN);
 		g_object_get_property(G_OBJECT(client), "battery-adapter", &value_bool);
 	} else {
-		g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+		g_test_trap_subprocess("/fwupd/client_api{undefined_getter}",
+				       0,
+				       G_TEST_SUBPROCESS_DEFAULT);
 		g_test_trap_assert_failed();
 		g_test_trap_assert_stderr(
 		    "*GLib-GObject-CRITICAL*has no property named 'battery-adapter'*");
@@ -533,7 +537,9 @@ fwupd_client_api_ro_props(void)
 			g_value_init(&value_bool, G_TYPE_BOOLEAN);
 			g_object_set_property(G_OBJECT(client), props[i], &value_bool);
 		} else {
-			g_test_trap_subprocess(NULL, 0, G_TEST_SUBPROCESS_DEFAULT);
+			g_test_trap_subprocess("/fwupd/client_api{ro_props}",
+					       0,
+					       G_TEST_SUBPROCESS_DEFAULT);
 			g_test_trap_assert_failed();
 			g_test_trap_assert_stderr(
 			    "*GLib-GObject-CRITICAL*property*is not writable*");
