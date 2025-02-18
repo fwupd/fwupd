@@ -45,10 +45,16 @@ echo "Showing hwids"
 run hwids
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+UNAME=$(uname -m)
+if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "x86" ]; then
+       EXPECTED=0
+else
+       EXPECTED=1
+fi
 # ---
 echo "Showing security"
 run security
-rc=$?; if [ $rc != 0 ]; then error $rc; fi
+rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
 # ---
 echo "Showing plugins"

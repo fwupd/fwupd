@@ -268,15 +268,21 @@ echo "Getting approved firmware..."
 fwupdmgr get-approved-firmware
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
+UNAME=$(uname -m)
+if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "x86" ]; then
+       EXPECTED=0
+else
+       EXPECTED=1
+fi
 # ---
 echo "Run security tests..."
 fwupdmgr security
-rc=$?; if [ $rc = 1 ]; then error $rc; fi
+rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
 # ---
 echo "Run security tests (json)..."
 fwupdmgr security --json
-rc=$?; if [ $rc = 1 ]; then error $rc; fi
+rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
 # success!
 exit 0
