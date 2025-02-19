@@ -317,7 +317,6 @@ static void
 fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 {
 	/* run though an update */
-
 	FuTestCase *tc = (FuTestCase *)user_data;
 	gboolean ret;
 	FuContext *ctx = fixture->ctx;
@@ -328,6 +327,12 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_uefi_dbx_plugin_get_type(), ctx);
 	g_autoptr(FuUefiDbxDevice) uefi_device = NULL;
 	gboolean expect_snapd_calls = tc->running_in_snap || tc->snapd_fde_detected;
+
+	/* progress */
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 33, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 33, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 33, NULL);
 
 	if (expect_snapd_calls && !fixture->mock_snapd_available) {
 		g_test_skip("mock snapd not available");
@@ -341,9 +346,10 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	}
 	g_assert_no_error(error);
 
-	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	ret = fu_plugin_runner_startup(plugin, fu_progress_get_child(progress), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	fu_progress_step_done(progress);
 
 	uefi_device = g_object_new(FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	fu_uefi_device_set_guid(FU_UEFI_DEVICE(uefi_device), FU_EFIVARS_GUID_EFI_GLOBAL);
@@ -356,18 +362,20 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      FU_DEVICE(uefi_device),
 					      stream_fw,
-					      progress,
+					      fu_progress_get_child(progress),
 					      /* skip verification of ESP binaries*/
 					      FWUPD_INSTALL_FLAG_FORCE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_true(fu_device_has_flag(FU_DEVICE(uefi_device), FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+	fu_progress_step_done(progress);
 
 	/* this is normally invoked by FuEngine */
-	ret = fu_device_cleanup(FU_DEVICE(uefi_device), progress, 0, &error);
+	ret = fu_device_cleanup(FU_DEVICE(uefi_device), fu_progress_get_child(progress), 0, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
+	fu_progress_step_done(progress);
 
 	if (expect_snapd_calls) {
 		fu_self_test_mock_snapd_assert_calls(fixture,
@@ -392,6 +400,7 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream_fw = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuProgress) progress_write = fu_progress_new(G_STRLOC);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_uefi_dbx_plugin_get_type(), ctx);
 	g_autoptr(FuUefiDbxDevice) uefi_device = NULL;
 
@@ -427,7 +436,7 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      FU_DEVICE(uefi_device),
 					      stream_fw,
-					      progress,
+					      progress_write,
 					      /* skip verification of ESP binaries*/
 					      FWUPD_INSTALL_FLAG_FORCE,
 					      &error);
