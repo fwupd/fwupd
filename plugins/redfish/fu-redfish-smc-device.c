@@ -139,12 +139,12 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	JsonObject *json_obj;
 	curl_mimepart *part;
 	const gchar *location = NULL;
-	gboolean ret;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GString) params = NULL;
 
+	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 50, "apply");
@@ -212,9 +212,10 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	ret = fu_redfish_smc_device_start_update(device, fu_progress_get_child(progress), error);
+	if (!fu_redfish_smc_device_start_update(device, fu_progress_get_child(progress), error))
+		return FALSE;
 	fu_progress_step_done(progress);
-	return ret;
+	return TRUE;
 }
 
 static void
