@@ -777,8 +777,10 @@ fu_redfish_device_poll_task(FuRedfishDevice *self,
 		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 		if (!fu_redfish_device_poll_task_once(self, ctx, error))
 			return FALSE;
-		if (ctx->completed)
+		if (ctx->completed) {
+			fu_progress_finished(progress);
 			return TRUE;
+		}
 	} while (g_timer_elapsed(timer, NULL) < timeout);
 
 	/* success */
