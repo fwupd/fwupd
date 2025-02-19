@@ -395,6 +395,11 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	g_autoptr(GInputStream) stream_fw = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
+	/* progress */
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+
 	devices = fu_plugin_get_devices(self->plugin);
 	g_assert_nonnull(devices);
 	if (devices->len == 0) {
@@ -410,18 +415,19 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      stream_fw,
-					      progress,
+					      fu_progress_get_child(progress),
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+	fu_progress_step_done(progress);
 
 	/* try again */
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      stream_fw,
-					      progress,
+					      fu_progress_get_child(progress),
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
@@ -442,6 +448,11 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 	g_autoptr(GInputStream) stream_fw2 = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
+	/* progress */
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+
 	devices = fu_plugin_get_devices(self->smc_plugin);
 	g_assert_nonnull(devices);
 	if (devices->len == 0) {
@@ -457,11 +468,12 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      stream_fw1,
-					      progress,
+					      fu_progress_get_child(progress),
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	fu_progress_step_done(progress);
 
 	/* stuck update */
 	blob_fw2 = g_bytes_new_static("stuck", 5);
@@ -469,7 +481,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      stream_fw2,
-					      progress,
+					      fu_progress_get_child(progress),
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_false(ret);
