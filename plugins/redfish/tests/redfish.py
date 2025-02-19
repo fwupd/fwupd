@@ -13,11 +13,18 @@ app = Flask(__name__)
 
 HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
-HARDCODED_USERNAMES = {"username2", HARDCODED_SMC_USERNAME, HARDCODED_UNL_USERNAME}
+HARDCODED_HPE_USERNAME = "hpe_username"
+HARDCODED_USERNAMES = {
+    "username2",
+    HARDCODED_SMC_USERNAME,
+    HARDCODED_UNL_USERNAME,
+    HARDCODED_HPE_USERNAME,
+}
 HARDCODED_PASSWORD = "password2"
 
 app._percentage545: int = 0
 app._percentage546: int = 0
+app._hpeupdatestate: str = "Idle"
 
 
 def _failure(msg: str, status=400):
@@ -34,6 +41,7 @@ def index():
     # reset counter
     app._percentage545 = 0
     app._percentage546 = 0
+    app._hpeupdatestate = "Idle"
 
     # check password from the config file
     try:
@@ -52,6 +60,10 @@ def index():
         "UUID": "92384634-2938-2342-8820-489239905423",
         "UpdateService": {"@odata.id": "/redfish/v1/UpdateService"},
     }
+
+    if request.authorization["username"] == HARDCODED_HPE_USERNAME:
+        res["Vendor"] = "HPE"
+
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -88,6 +100,9 @@ def update_service():
                 "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
             }
         }
+    elif request.authorization["username"] == HARDCODED_HPE_USERNAME:
+        res["Oem"] = {"Hpe": {"State": app._hpeupdatestate}}
+        res["HttpPushUri"] = "/FWUpdate-hpe"
     else:
         res["MultipartHttpPushUri"] = "/FWUpdate"
 
@@ -214,6 +229,31 @@ def firmware_inventory_bios():
     else:
         res["Manufacturer"] = "Contoso"
     return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/SessionService/Sessions", methods=["POST"])
+def session_service_sessions():
+    username = request.authorization["username"]
+
+    if username not in HARDCODED_USERNAMES:
+        return _failure("unauthorised")
+    if request.authorization["password"] != HARDCODED_PASSWORD:
+        return _failure("invalid password")
+
+    res = {
+        "@odata.id": "/redfish/v1/SessionService/Sessions/1",
+        "@odata.type": "#Session.v1_0_0.Session",
+        "@odata.etag": "653b835e9ee4af9ea7ea",
+        "Id": "1",
+        "Name": "Session 1",
+        "UserName": username,
+    }
+    return Response(
+        json.dumps(res),
+        status=200,
+        mimetype="application/json",
+        headers={"X-Auth-Token": "1234eabcdeabcdeabcdeabcdeabc1234"},
+    )
 
 
 @app.route("/redfish/v1/TaskService/999")
@@ -397,6 +437,27 @@ def fwupdate_smc():
         return Response(json.dumps(res), status=405, mimetype="application/json")
     else:
         return _failure("data invalid")
+
+
+@app.route("/FWUpdate-hpe", methods=["POST"])
+def fwupdate_hpe():
+    print(request.form)
+    if not request.form["sessionKey"]:
+        return _failure("no sessionKey", status=401)
+
+    data = json.loads(request.form["parameters"])
+
+    if not data["UpdateTarget"]:
+        return _failure("payload will not update the target")
+    if data["UpdateRepository"]:
+        return _failure("payload will update the repository")
+
+    fileitem = request.files["files[]"]
+    if not fileitem:
+        return _failure("no file supplied")
+
+    app._hpeupdatestate = "Complete"
+    return Response(status=200)
 
 
 @app.route("/FWUpdate", methods=["POST"])
