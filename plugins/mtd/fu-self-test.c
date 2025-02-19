@@ -18,12 +18,12 @@ fu_test_mtd_device_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GRand) rand = g_rand_new_with_seed(0);
 
 	/* do not save silo */
@@ -68,8 +68,8 @@ fu_test_mtd_device_func(void)
 	fw = g_bytes_new(buf->data, buf->len);
 
 	/* write with a verify */
-	stream = g_memory_input_stream_new_from_bytes(fw);
-	ret = fu_device_write_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	firmware = fu_firmware_new_from_bytes(fw);
+	ret = fu_device_write_firmware(device, firmware, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

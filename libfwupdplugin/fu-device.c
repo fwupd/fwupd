@@ -304,6 +304,7 @@ fu_device_register_flags(FuDevice *self)
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE);
+	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 }
 
 static void
@@ -4988,7 +4989,7 @@ fu_device_get_results(FuDevice *self, GError **error)
 /**
  * fu_device_write_firmware:
  * @self: a #FuDevice
- * @stream: #GInputStream firmware
+ * @firmware: a #FuFirmware
  * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
@@ -4997,22 +4998,21 @@ fu_device_get_results(FuDevice *self, GError **error)
  *
  * Returns: %TRUE on success
  *
- * Since: 1.0.8
+ * Since: 2.0.7
  **/
 gboolean
 fu_device_write_firmware(FuDevice *self,
-			 GInputStream *stream,
+			 FuFirmware *firmware,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuFirmware) firmware = NULL;
 	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -5025,25 +5025,12 @@ fu_device_write_firmware(FuDevice *self,
 		return FALSE;
 	}
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1, "prepare-firmware");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, "write-firmware");
-
-	/* prepare (e.g. decompress) firmware */
-	firmware =
-	    fu_device_prepare_firmware(self, stream, fu_progress_get_child(progress), flags, error);
-	if (firmware == NULL)
-		return FALSE;
+	/* call vfunc */
 	str = fu_firmware_to_string(firmware);
 	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
-	fu_progress_step_done(progress);
-
-	/* call vfunc */
-	g_set_object(&priv->progress, fu_progress_get_child(progress));
+	g_set_object(&priv->progress, progress);
 	if (!device_class->write_firmware(self, firmware, priv->progress, flags, error))
 		return FALSE;
-	fu_progress_step_done(progress);
 
 	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
 	 * but did not do an event; guess something */

@@ -402,6 +402,7 @@ static void
 fu_amd_gpu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, NULL); /* detach */
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, NULL); /* write */
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, NULL); /* attach */

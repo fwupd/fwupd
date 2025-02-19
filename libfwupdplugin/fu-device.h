@@ -800,6 +800,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE "counterpart-visible"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE:
+ *
+ * Detach, then prepare firmware rather than parsing firmware from the runtime device.
+ * For some devices the firmware GType isn't known until the bootloader gets added.
+ *
+ * Since: 2.0.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE "detach-prepare-firmware"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
@@ -985,7 +995,7 @@ gboolean
 fu_device_get_results(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_device_write_firmware(FuDevice *self,
-			 GInputStream *stream,
+			 FuFirmware *firmware,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);

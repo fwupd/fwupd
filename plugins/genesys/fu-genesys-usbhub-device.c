@@ -2989,11 +2989,13 @@ fu_genesys_usbhub_device_set_progress(FuDevice *device, FuProgress *progress)
 
 	fu_progress_set_id(progress, G_STRLOC);
 	if (self->backup_hub_fw_bank1) {
+		fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 30, "write");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 70, "reload");
 	} else {
+		fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 15, "write");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");

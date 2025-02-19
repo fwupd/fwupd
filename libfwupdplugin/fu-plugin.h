@@ -239,18 +239,18 @@ struct _FuPluginClass {
 	 * write_firmware:
 	 * @self: a #FuPlugin
 	 * @dev: a device
-	 * @stream: a #GInputStream
+	 * @firmware: a #FuFirmware
 	 * @progress: a #FuProgress
 	 * @flags: install flags
 	 * @error: (nullable): optional return location for an error
 	 *
-	 * Updates the firmware on the device with blob_fw
+	 * Updates the firmware on the device.
 	 *
-	 * Since: 1.7.2
+	 * Since: 2.0.7
 	 **/
 	gboolean (*write_firmware)(FuPlugin *self,
 				   FuDevice *device,
-				   GInputStream *stream,
+				   FuFirmware *firmware,
 				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error);

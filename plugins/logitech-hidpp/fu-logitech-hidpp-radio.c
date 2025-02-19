@@ -67,23 +67,19 @@ fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-
-	stream = fu_firmware_get_stream(firmware, error);
-	if (stream == NULL)
-		return FALSE;
 
 	/* open */
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware(parent, stream, progress, flags, error);
+	return fu_device_write_firmware(parent, firmware, progress, flags, error);
 }
 
 static void
 fu_logitech_hidpp_radio_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");

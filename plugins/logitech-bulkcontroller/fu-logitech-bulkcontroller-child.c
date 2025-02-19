@@ -22,18 +22,14 @@ fu_logitech_bulkcontroller_child_write_firmware(FuDevice *device,
 						GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autoptr(GInputStream) stream = NULL;
-
-	stream = fu_firmware_get_stream(firmware, error);
-	if (stream == NULL)
-		return FALSE;
-	return fu_device_write_firmware(proxy, stream, progress, flags, error);
+	return fu_device_write_firmware(proxy, firmware, progress, flags, error);
 }
 
 static void
 fu_logitech_bulkcontroller_child_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");

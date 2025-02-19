@@ -294,8 +294,8 @@ fu_test_mock_dbx_efivars(FuEfivars *efivars, GError **error)
 					   error);
 }
 
-static GInputStream *
-fu_test_mock_dbx_update_stream(void)
+static FuFirmware *
+fu_test_mock_dbx_update_firmware(void)
 {
 	gboolean ret;
 	gchar *mock_blob = NULL;
@@ -310,7 +310,7 @@ fu_test_mock_dbx_update_stream(void)
 	g_assert_true(ret);
 
 	mock_bytes = g_bytes_new_take(mock_blob, mock_blob_size);
-	return g_memory_input_stream_new_from_bytes(mock_bytes);
+	return fu_firmware_new_from_bytes(mock_bytes);
 }
 
 static void
@@ -322,7 +322,7 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	FuContext *ctx = fixture->ctx;
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_uefi_dbx_plugin_get_type(), ctx);
 	g_autoptr(FuUefiDbxDevice) uefi_device = NULL;
@@ -358,10 +358,10 @@ fu_uefi_dbx_test_plugin_update(FuTestFixture *fixture, gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	stream_fw = fu_test_mock_dbx_update_stream();
+	firmware = fu_test_mock_dbx_update_firmware();
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      FU_DEVICE(uefi_device),
-					      stream_fw,
+					      firmware,
 					      fu_progress_get_child(progress),
 					      /* skip verification of ESP binaries*/
 					      FWUPD_INSTALL_FLAG_FORCE,
@@ -398,7 +398,7 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	FuContext *ctx = fixture->ctx;
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) stream_fw = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuProgress) progress_write = fu_progress_new(G_STRLOC);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_uefi_dbx_plugin_get_type(), ctx);
@@ -432,10 +432,10 @@ fu_uefi_dbx_test_plugin_failed_update(FuTestFixture *fixture, gconstpointer user
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	stream_fw = fu_test_mock_dbx_update_stream();
+	firmware = fu_test_mock_dbx_update_firmware();
 	ret = fu_plugin_runner_write_firmware(plugin,
 					      FU_DEVICE(uefi_device),
-					      stream_fw,
+					      firmware,
 					      progress_write,
 					      /* skip verification of ESP binaries*/
 					      FWUPD_INSTALL_FLAG_FORCE,
