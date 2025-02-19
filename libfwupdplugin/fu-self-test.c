@@ -2187,7 +2187,7 @@ fu_device_vfuncs_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GInputStream) istream = g_memory_input_stream_new();
+	g_autoptr(FuFirmware) firmware_dummy = fu_firmware_new();
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2198,7 +2198,11 @@ fu_device_vfuncs_func(void)
 	g_assert_false(ret);
 	g_clear_error(&error);
 
-	ret = fu_device_write_firmware(device, istream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_device_write_firmware(device,
+				       firmware_dummy,
+				       progress,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_clear_error(&error);

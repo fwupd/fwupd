@@ -180,7 +180,7 @@ fu_test_plugin_get_version(GBytes *blob_fw)
 static gboolean
 fu_test_plugin_write_firmware(FuPlugin *plugin,
 			      FuDevice *device,
-			      GInputStream *stream,
+			      FuFirmware *firmware,
 			      FuProgress *progress,
 			      FwupdInstallFlags flags,
 			      GError **error)
@@ -301,14 +301,10 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	} else if (fu_plugin_get_config_value_boolean(plugin, "NeedsReboot")) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
-		gsize streamsz = 0;
 		g_autofree gchar *ver = NULL;
 		g_autoptr(GBytes) blob_fw = NULL;
 
-		/* this should not be required! */
-		if (!fu_input_stream_size(stream, &streamsz, error))
-			return FALSE;
-		blob_fw = fu_input_stream_read_bytes(stream, 0, streamsz, NULL, error);
+		blob_fw = fu_firmware_get_bytes(firmware, error);
 		if (blob_fw == NULL)
 			return FALSE;
 		ver = fu_test_plugin_get_version(blob_fw);

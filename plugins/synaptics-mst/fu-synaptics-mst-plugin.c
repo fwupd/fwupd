@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuSynapticsMstPlugin, fu_synaptics_mst_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_synaptics_mst_plugin_write_firmware(FuPlugin *plugin,
 				       FuDevice *device,
-				       GInputStream *stream,
+				       FuFirmware *firmware,
 				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
@@ -30,7 +30,7 @@ fu_synaptics_mst_plugin_write_firmware(FuPlugin *plugin,
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware(device, stream, progress, flags, error))
+	if (!fu_device_write_firmware(device, firmware, progress, flags, error))
 		return FALSE;
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART))
 		fu_plugin_device_remove(plugin, device);

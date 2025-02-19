@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-elan-kbd-firmware.h"
 #include "fu-elan-kbd-runtime.h"
 #include "fu-elan-kbd-struct.h"
 
@@ -49,6 +50,7 @@ static void
 fu_elan_kbd_runtime_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 19, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 47, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 30, "attach");
@@ -65,6 +67,7 @@ fu_elan_kbd_runtime_init(FuElanKbdRuntime *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_icon(FU_DEVICE(self), "input-keyboard");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELAN_KBD_FIRMWARE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "USB\\VID_04F3&PID_0905",
 				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);

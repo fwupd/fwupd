@@ -718,7 +718,7 @@ fu_plugin_device_activate(FuPlugin *self, FuDevice *device, FuProgress *progress
 static gboolean
 fu_plugin_device_write_firmware(FuPlugin *self,
 				FuDevice *device,
-				GInputStream *stream,
+				FuFirmware *firmware,
 				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error)
@@ -763,7 +763,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		if (!fu_bytes_set_contents(path, fw_old, error))
 			return FALSE;
 		if (!fu_device_write_firmware(device,
-					      stream,
+					      firmware,
 					      fu_progress_get_child(progress),
 					      flags,
 					      error))
@@ -772,7 +772,7 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		return TRUE;
 	}
 
-	return fu_device_write_firmware(device, stream, progress, flags, error);
+	return fu_device_write_firmware(device, firmware, progress, flags, error);
 }
 
 static gboolean
@@ -2185,7 +2185,7 @@ fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
  * fu_plugin_runner_write_firmware:
  * @self: a #FuPlugin
  * @device: a device
- * @stream: a #GInputStream
+ * @firmware: a #FuFirmware
  * @progress: a #FuProgress
  * @flags: install flags
  * @error: (nullable): optional return location for an error
@@ -2194,12 +2194,12 @@ fu_plugin_runner_unlock(FuPlugin *self, FuDevice *device, GError **error)
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.7.0
+ * Since: 2.0.7
  **/
 gboolean
 fu_plugin_runner_write_firmware(FuPlugin *self,
 				FuDevice *device,
-				GInputStream *stream,
+				FuFirmware *firmware,
 				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error)
@@ -2209,7 +2209,7 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(FU_IS_DEVICE(device), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
+	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -2221,7 +2221,8 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 
 	/* optional */
 	if (vfuncs->write_firmware != NULL) {
-		if (!vfuncs->write_firmware(self, device, stream, progress, flags, &error_local)) {
+		if (!vfuncs
+			 ->write_firmware(self, device, firmware, progress, flags, &error_local)) {
 			if (error_local == NULL) {
 				g_critical("unset plugin error in update(%s)",
 					   fu_plugin_get_name(self));
@@ -2239,7 +2240,7 @@ fu_plugin_runner_write_firmware(FuPlugin *self,
 		g_debug("superclassed write_firmware(%s)", fu_plugin_get_name(self));
 		return fu_plugin_device_write_firmware(self,
 						       device,
-						       stream,
+						       firmware,
 						       progress,
 						       flags,
 						       error);

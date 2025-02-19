@@ -387,19 +387,13 @@ fu_corsair_device_write_firmware(FuDevice *device,
 				 GError **error)
 {
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
-	g_autoptr(GInputStream) stream = fu_firmware_get_stream(firmware, error);
-
-	if (stream == NULL) {
-		g_prefix_error(error, "cannot get firmware stream: ");
-		return FALSE;
-	}
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5, NULL);
 
 	if (!fu_device_write_firmware(FU_DEVICE(self->bp),
-				      stream,
+				      firmware,
 				      fu_progress_get_child(progress),
 				      flags,
 				      error)) {
@@ -438,6 +432,7 @@ static void
 fu_corsair_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 92, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4, "attach");

@@ -167,3 +167,7 @@ Remember: Plugins should be upstream!
 * `fu_kernel_get_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
 * `fu_kernel_set_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
 * `fu_kernel_reset_firmware_search_path()`: Use `FuKernelSearchPathLocker` instead.
+
+## 2.0.7
+
+* `fu_device_write_firmware()`: Use `FuFirmware` rather than a `GInputStream`.

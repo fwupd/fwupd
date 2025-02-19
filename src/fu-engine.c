@@ -2818,6 +2818,25 @@ fu_engine_device_check_power(FuEngine *self,
 	return TRUE;
 }
 
+static FuFirmware *
+fu_engine_prepare_firmware(FuEngine *self,
+			   const gchar *device_id,
+			   GInputStream *stream,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device(self, device_id, error);
+	if (device == NULL) {
+		g_prefix_error(error, "failed to get device before prepare firmware: ");
+		return NULL;
+	}
+	return fu_device_prepare_firmware(device, stream, progress, flags, error);
+}
+
 static gboolean
 fu_engine_prepare(FuEngine *self,
 		  const gchar *device_id,
@@ -3133,7 +3152,7 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
-			 GInputStream *stream_fw,
+			 FuFirmware *firmware,
 			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -3167,7 +3186,7 @@ fu_engine_write_firmware(FuEngine *self,
 		return FALSE;
 	if (!fu_plugin_runner_write_firmware(plugin,
 					     device,
-					     stream_fw,
+					     firmware,
 					     progress,
 					     flags,
 					     &error_write)) {
@@ -3324,6 +3343,7 @@ fu_engine_install_blob(FuEngine *self,
 	 * must return TRUE rather than an error */
 	do {
 		g_autoptr(FuDevice) device_tmp = NULL;
+		g_autoptr(FuFirmware) firmware = NULL;
 		FuProgress *progress_local = fu_progress_get_child(progress);
 
 		/* check for a loop */
@@ -3341,43 +3361,96 @@ fu_engine_install_blob(FuEngine *self,
 		if (fu_progress_get_steps(progress_local) == 0) {
 			fu_progress_set_id(progress_local, G_STRLOC);
 			fu_progress_add_flag(progress_local, FU_PROGRESS_FLAG_GUESSED);
+			fu_progress_add_step(progress_local, FWUPD_STATUS_DECOMPRESSING, 1, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_WRITE, 94, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_RESTART, 2, NULL);
 			fu_progress_add_step(progress_local, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
-		} else if (fu_progress_get_steps(progress_local) != 4) {
+		} else if (fu_progress_get_steps(progress_local) != 5) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
 					    "FuDevice->set_progress did not set "
-					    "detach,write,attach,reload steps");
+					    "prepare-firmware,detach,write,attach,reload steps");
 			return FALSE;
 		}
 
-		/* detach to bootloader mode */
-		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
-		if (!fu_engine_detach(self,
-				      device_id,
-				      fu_progress_get_child(progress_local),
-				      feature_flags,
-				      error)) {
-			g_prefix_error(error, "failed to detach: ");
-			return FALSE;
-		}
-		fu_progress_step_done(progress_local);
+		/* some emulations are storing events on the bootloader device */
+		if (fu_device_has_private_flag(device,
+					       FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE)) {
 
-		/* install */
-		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_INSTALL);
-		if (!fu_engine_write_firmware(self,
+			/* detach to bootloader mode */
+			fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
+			if (!fu_engine_detach(self,
 					      device_id,
-					      stream_fw,
 					      fu_progress_get_child(progress_local),
-					      flags,
+					      feature_flags,
 					      error)) {
-			g_prefix_error(error, "failed to write-firmware: ");
-			return FALSE;
+				g_prefix_error(error, "failed to detach: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress_local);
+
+			/* parse firmware */
+			fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_INSTALL);
+			firmware = fu_engine_prepare_firmware(self,
+							      device_id,
+							      stream_fw,
+							      fu_progress_get_child(progress_local),
+							      flags,
+							      error);
+			if (firmware == NULL)
+				return FALSE;
+			fu_progress_step_done(progress_local);
+
+			/* install */
+			if (!fu_engine_write_firmware(self,
+						      device_id,
+						      firmware,
+						      fu_progress_get_child(progress_local),
+						      flags,
+						      error)) {
+				g_prefix_error(error, "failed to write-firmware: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress_local);
+		} else {
+			/* parse firmware */
+			firmware = fu_engine_prepare_firmware(self,
+							      device_id,
+							      stream_fw,
+							      fu_progress_get_child(progress_local),
+							      flags,
+							      error);
+			if (firmware == NULL)
+				return FALSE;
+			fu_progress_step_done(progress_local);
+
+			/* detach to bootloader mode */
+			fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
+			if (!fu_engine_detach(self,
+					      device_id,
+					      fu_progress_get_child(progress_local),
+					      feature_flags,
+					      error)) {
+				g_prefix_error(error, "failed to detach: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress_local);
+
+			/* install */
+			fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_INSTALL);
+			if (!fu_engine_write_firmware(self,
+						      device_id,
+						      firmware,
+						      fu_progress_get_child(progress_local),
+						      flags,
+						      error)) {
+				g_prefix_error(error, "failed to write-firmware: ");
+				return FALSE;
+			}
+			fu_progress_step_done(progress_local);
 		}
-		fu_progress_step_done(progress_local);
 
 		/* attach into runtime mode */
 		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_ATTACH);

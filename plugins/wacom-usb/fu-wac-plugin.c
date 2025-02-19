@@ -27,7 +27,7 @@ G_DEFINE_TYPE(FuWacPlugin, fu_wac_plugin, FU_TYPE_PLUGIN)
 static gboolean
 fu_wac_plugin_write_firmware(FuPlugin *plugin,
 			     FuDevice *device,
-			     GInputStream *stream,
+			     FuFirmware *firmware,
 			     FuProgress *progress,
 			     FwupdInstallFlags flags,
 			     GError **error)
@@ -37,7 +37,7 @@ fu_wac_plugin_write_firmware(FuPlugin *plugin,
 	locker = fu_device_locker_new(parent != NULL ? parent : device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware(device, stream, progress, flags, error);
+	return fu_device_write_firmware(device, firmware, progress, flags, error);
 }
 
 static gboolean
