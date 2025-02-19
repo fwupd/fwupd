@@ -10,6 +10,7 @@
 
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-hpe-device.h"
 #include "fu-redfish-legacy-device.h"
 #include "fu-redfish-multipart-device.h"
 #include "fu-redfish-request.h"
@@ -349,7 +350,10 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	if (self->push_uri_path == NULL && json_object_has_member(json_obj, "HttpPushUri")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "HttpPushUri");
 		if (tmp != NULL) {
-			self->device_gtype = FU_TYPE_REDFISH_LEGACY_DEVICE;
+			if (self->vendor != NULL && g_str_equal(self->vendor, "HPE"))
+				self->device_gtype = FU_TYPE_REDFISH_HPE_DEVICE;
+			else
+				self->device_gtype = FU_TYPE_REDFISH_LEGACY_DEVICE;
 			fu_redfish_backend_set_push_uri_path(self, tmp);
 		}
 	}
