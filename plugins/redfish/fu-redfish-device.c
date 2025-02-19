@@ -441,6 +441,8 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		const gchar *tmp = json_object_get_string_member(member, "Manufacturer");
 		if (tmp != NULL && tmp[0] != '\0')
 			fu_redfish_device_set_vendor(self, tmp);
+	} else {
+		fu_redfish_device_set_vendor(self, fu_redfish_backend_get_vendor(priv->backend));
 	}
 	fu_device_add_instance_strsafe(dev, "VENDOR", fu_device_get_vendor(dev));
 
