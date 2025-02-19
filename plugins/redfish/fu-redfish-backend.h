@@ -40,5 +40,9 @@ void
 fu_redfish_backend_set_wildcard_targets(FuRedfishBackend *self, gboolean wildcard_targets);
 const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
+const gchar *
+fu_redfish_backend_get_session_key(FuRedfishBackend *self);
+gboolean
+fu_redfish_backend_init_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *
 fu_redfish_backend_request_new(FuRedfishBackend *self);
