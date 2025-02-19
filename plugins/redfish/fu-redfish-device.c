@@ -560,15 +560,7 @@ fu_redfish_device_get_backend(FuRedfishDevice *self)
 	return priv->backend;
 }
 
-typedef struct {
-	FwupdError error_code;
-	gchar *location;
-	gboolean completed;
-	GHashTable *messages_seen;
-	FuProgress *progress;
-} FuRedfishDevicePollCtx;
-
-static void
+void
 fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
 				      FuRedfishDevicePollCtx *ctx,
 				      const gchar *message_id)
@@ -605,7 +597,8 @@ fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
 		ctx->error_code = FWUPD_ERROR_INVALID_FILE;
 		return;
 	}
-	if (g_pattern_match_simple("Update.*.ApplyFailed", message_id)) {
+	if (g_pattern_match_simple("Update.*.ApplyFailed", message_id) ||
+	    g_pattern_match_simple("iLO.*.UpdateFailed", message_id)) {
 		ctx->error_code = FWUPD_ERROR_WRITE;
 		return;
 	}
@@ -656,8 +649,10 @@ fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
 	}
 }
 
-static gboolean
-fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *ctx, GError **error)
+gboolean
+fu_redfish_device_generic_poll_task_once(FuRedfishDevice *self,
+					 FuRedfishDevicePollCtx *ctx,
+					 GError **error)
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	JsonObject *json_obj;
@@ -766,6 +761,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuRedfishDevicePollCtx, fu_redfish_device_poll_ctx
 
 gboolean
 fu_redfish_device_poll_task(FuRedfishDevice *self,
+			    gboolean (*poller_func)(FuRedfishDevice *self,
+						    FuRedfishDevicePollCtx *ctx,
+						    GError **error),
 			    const gchar *location,
 			    FuProgress *progress,
 			    GError **error)
@@ -777,7 +775,7 @@ fu_redfish_device_poll_task(FuRedfishDevice *self,
 	/* sleep and then reprobe hardware */
 	do {
 		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
-		if (!fu_redfish_device_poll_task_once(self, ctx, error))
+		if (!poller_func(self, ctx, error))
 			return FALSE;
 		if (ctx->completed) {
 			fu_progress_finished(progress);

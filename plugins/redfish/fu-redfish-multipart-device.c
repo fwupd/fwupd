@@ -8,6 +8,7 @@
 
 #include <curl/curl.h>
 
+#include "fu-redfish-device.h"
 #include "fu-redfish-multipart-device.h"
 #include "fu-redfish-request.h"
 
@@ -123,7 +124,11 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	location = json_object_get_string_member(json_obj, "@odata.id");
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self),
+					   fu_redfish_device_generic_poll_task_once,
+					   location,
+					   progress,
+					   error);
 }
 
 static void

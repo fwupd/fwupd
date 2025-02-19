@@ -23,10 +23,29 @@ struct _FuRedfishDeviceClass {
 #define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS		"wildcard-targets"
 #define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST "no-manager-reset-request"
 
+typedef struct {
+	FwupdError error_code;
+	gchar *location;
+	gboolean completed;
+	GHashTable *messages_seen;
+	FuProgress *progress;
+} FuRedfishDevicePollCtx;
+
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);
 gboolean
+fu_redfish_device_generic_poll_task_once(FuRedfishDevice *self,
+					 FuRedfishDevicePollCtx *ctx,
+					 GError **error);
+void
+fu_redfish_device_poll_set_message_id(FuRedfishDevice *self,
+				      FuRedfishDevicePollCtx *ctx,
+				      const gchar *message_id);
+gboolean
 fu_redfish_device_poll_task(FuRedfishDevice *self,
+			    gboolean (*poller_func)(FuRedfishDevice *self,
+						    FuRedfishDevicePollCtx *ctx,
+						    GError **error),
 			    const gchar *location,
 			    FuProgress *progress,
 			    GError **error);

@@ -8,6 +8,7 @@
 
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-device.h"
 #include "fu-redfish-smc-device.h"
 
 struct _FuRedfishSmcDevice {
@@ -126,7 +127,11 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 			    fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device), location, progress, error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device),
+					   fu_redfish_device_generic_poll_task_once,
+					   location,
+					   progress,
+					   error);
 }
 
 static gboolean
@@ -210,6 +215,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 	}
 
 	if (!fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self),
+					 fu_redfish_device_generic_poll_task_once,
 					 location,
 					 fu_progress_get_child(progress),
 					 error))
