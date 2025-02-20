@@ -338,7 +338,7 @@ option('systemd_unit_user',
 )
 option('systemd_syscall_filter',
   type: 'boolean',
-  value: 'true',
+  value: true,
   description: 'Enable systemd syscall filter',
 )
 option('tests',
