@@ -1,0 +1,73 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUsbDevice",
+      "PlatformId": "1-2",
+      "Created": "2025-02-24T10:37:23.997079Z",
+      "IdVendor": 1478,
+      "IdProduct": 36872,
+      "USB": 512,
+      "Manufacturer": 1,
+      "Product": 2,
+      "UsbConfigDescriptors": [
+        {
+          "ConfigurationValue": 1
+        }
+      ],
+      "UsbInterfaces": [
+        {
+          "Length": 9,
+          "DescriptorType": 4,
+          "InterfaceClass": 255,
+          "InterfaceSubClass": 255,
+          "InterfaceProtocol": 255,
+          "UsbEndpoints": [
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 129,
+              "MaxPacketSize": 512
+            },
+            {
+              "DescriptorType": 5,
+              "EndpointAddress": 1,
+              "MaxPacketSize": 512
+            }
+          ]
+        }
+      ],
+      "UsbEvents": [
+        {
+          "Id": "#4693935e",
+          "Data": "001"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=63\nDEVNAME=bus/usb/001/064\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=5c6/9008/0\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=064"
+        },
+        {
+          "Id": "#1ab3ae0a",
+          "Data": "064"
+        },
+        {
+          "Id": "#9a347f1f",
+          "Data": "EgEAAgAAAEDGBQiQAAABAgABCQIgAAEBAIABCQQAAAL///8ABwWBAgACAAcFAQIAAgA="
+        },
+        {
+          "Id": "#624d3a4d"
+        },
+        {
+          "Id": "#4693935e",
+          "Data": "001"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=189\nMINOR=63\nDEVNAME=bus/usb/001/064\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=5c6/9008/0\nTYPE=0/0/0\nBUSNUM=001\nDEVNUM=064"
+        },
+        {
+          "Id": "#1ab3ae0a",
+          "Data": "064"
+        }
+      ]
+    }
+  ]
+}
