@@ -35,6 +35,44 @@ repos:
     - id: black
 -   repo: local
     hooks:
+    - id: no-binaries
+      name: prevent committing binaries to tree
+      language: script
+      entry: /usr/bin/false
+      types: [binary]
+      exclude: |
+            (?x)^(
+              contrib/qubes/doc/img/\w+\.(png|jpg)|
+              data/fwupd\.ico|
+              data/icons/(128x128|64x64)/org\.freedesktop.fwupd\.png|
+              docs/device-emulation-(gnome-firmware-record|assets)\.png|
+              docs/debug_(attached|tool_selector|breakpoint|task)\.png|
+              docs/test_task\.png|
+              docs/win32-(start-menu|run-anyway|term1|term2|uac|uac2)\.png|
+              data/org\.freedesktop\.fwupd\.png|
+              data/tests/fakedevice\d{3}\.(bin|jcat)|
+              libfwupdplugin/tests/dmi/tables(?:64)?/(DMI|smbios_entry_point)|
+              libfwupdplugin/tests/efi-lz77-(legacy|tiano)\.bin|
+              libfwupdplugin/tests/efi/efivars/(Boot\d{4}-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                  BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                  OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
+                  fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
+              plugins/ch341a/ch341a-vmod\.png|
+              plugins/ebitdo/data/update\.tdc|
+              plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
+                  OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
+              plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
+              plugins/optionrom/fuzzing/(header-data-payload|header-no-data|ifr-header-data-payload|naked-ifr)\.rom|
+              plugins/pci-bcr/config|
+              plugins/redfish/tests/efi/efivars/(RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70|
+                  RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70)|
+              plugins/uefi-capsule/tests/test\.bmp|
+              src/tests/auth/firmware\.xml\.gz|
+              src/tests/colorhug/colorhug-als-3\.0\.2\.cab|
+              src/tests/history_v[12]\.db|
+              src/tests/missing-hwid/firmware\.bin|
+              src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
+            )$
     - id: check-null-false-returns
       name: check for null / false return mismatch
       language: script
