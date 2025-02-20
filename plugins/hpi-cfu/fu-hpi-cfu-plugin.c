@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Pena Christian <christian.a.pena@hp.com>
+ * Copyright 2024 HP Development Company, L.P.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
