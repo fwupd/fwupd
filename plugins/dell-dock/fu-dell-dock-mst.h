@@ -21,4 +21,4 @@
 G_DECLARE_FINAL_TYPE(FuDellDockMst, fu_dell_dock_mst, FU, DELL_DOCK_MST, FuDevice)
 
 FuDellDockMst *
-fu_dell_dock_mst_new(FuContext *ctx);
+fu_dell_dock_mst_new(FuContext *ctx, guint8 dock_type);

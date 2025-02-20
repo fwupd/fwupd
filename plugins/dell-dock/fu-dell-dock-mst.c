@@ -138,6 +138,8 @@ struct _FuDellDockMst {
 	guint32 mst_rc_command_addr;
 	guint32 mst_rc_data_addr;
 	guint32 mst_core_mcu_bootloader_addr;
+	guint8 dock_type;
+	MSTType mst_type;
 };
 
 G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
@@ -400,20 +402,10 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 }
 
 static MSTType
-fu_dell_dock_mst_check_type(FuDevice *device)
+fu_dell_dock_mst_get_module_type(FuDevice *device)
 {
-	GPtrArray *instance_ids;
-	const gchar *tmp = NULL;
-
-	instance_ids = fu_device_get_instance_ids(device);
-	for (guint i = 0; i < instance_ids->len; i++) {
-		tmp = g_ptr_array_index(instance_ids, i);
-		if (g_strcmp0(tmp, DELL_DOCK_VMM6210_INSTANCE_ID) == 0)
-			return Cayenne_mst;
-		if (g_strcmp0(tmp, DELL_DOCK_VM5331_INSTANCE_ID) == 0)
-			return Panamera_mst;
-	}
-	return Unknown;
+	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	return self->mst_type;
 }
 
 static gboolean
@@ -1074,7 +1066,7 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 	if (!fu_dell_dock_mst_enable_remote_control(device, error))
 		return FALSE;
 
-	type = fu_dell_dock_mst_check_type(device);
+	type = fu_dell_dock_mst_get_module_type(device);
 	if (type == Panamera_mst) {
 		if (!fu_dell_dock_mst_write_panamera(device, fw, flags, progress, error))
 			return FALSE;
@@ -1166,33 +1158,37 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 {
-	MSTType type;
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 
+	/* logical id */
 	fu_device_set_logical_id(FU_DEVICE(device), "mst");
 
-	/* confige mst register via instance id*/
-	type = fu_dell_dock_mst_check_type(device);
-	switch (type) {
-	case Cayenne_mst:
+	/* instance id */
+	if (self->dock_type == DOCK_BASE_TYPE_ATOMIC) {
+		self->mst_type = Cayenne_mst;
 		self->mst_rc_trigger_addr = CAYENNE_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = CAYENNE_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = CAYENNE_MST_RC_DATA_ADDR;
 		self->mst_core_mcu_bootloader_addr = CAYENNE_MST_CORE_MCU_BOOTLOADER_STS;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-		return TRUE;
-	case Panamera_mst:
+		fu_device_add_instance_id(device, DELL_DOCK_VMM6210_INSTANCE_ID);
+	} else if (self->dock_type == DOCK_BASE_TYPE_SALOMON) {
+		self->mst_type = Panamera_mst;
 		self->mst_rc_trigger_addr = PANAMERA_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = PANAMERA_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = PANAMERA_MST_RC_DATA_ADDR;
 		self->mst_core_mcu_bootloader_addr = PANAMERA_MST_CORE_MCU_BOOTLOADER_STS;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-		return TRUE;
-	case Unknown:
-	default:
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Unknown mst found");
+		fu_device_add_instance_id(device, DELL_DOCK_VM5331_INSTANCE_ID);
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown dock type 0x%x",
+			    self->dock_type);
 		return FALSE;
 	}
+
 	return TRUE;
 }
 
@@ -1261,9 +1257,10 @@ fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 }
 
 FuDellDockMst *
-fu_dell_dock_mst_new(FuContext *ctx)
+fu_dell_dock_mst_new(FuContext *ctx, guint8 dock_type)
 {
-	FuDellDockMst *device = NULL;
-	device = g_object_new(FU_TYPE_DELL_DOCK_MST, "context", ctx, NULL);
-	return device;
+	FuDellDockMst *self = NULL;
+	self = g_object_new(FU_TYPE_DELL_DOCK_MST, "context", ctx, NULL);
+	self->dock_type = dock_type;
+	return self;
 }

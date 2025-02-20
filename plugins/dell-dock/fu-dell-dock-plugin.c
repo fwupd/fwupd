@@ -48,6 +48,8 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 	g_autoptr(FuDellDockEc) ec_device = NULL;
 	g_autoptr(FuDellDockMst) mst_device = NULL;
 	g_autoptr(FuDellDockStatus) status_device = NULL;
+	guint8 dock_type = DOCK_BASE_TYPE_UNKNOWN;
+	gboolean dock_usb4_present;
 	FuContext *ctx = fu_plugin_get_context(plugin);
 
 	/* create ec endpoint */
@@ -59,12 +61,11 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 	if (!fu_dell_dock_hid_get_hub_version(proxy, error))
 		return FALSE;
 
+	/* determine the dock type */
+	dock_type = fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device));
+
 	/* create mst endpoint */
-	mst_device = fu_dell_dock_mst_new(ctx);
-	if (fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC)
-		fu_device_add_instance_id(FU_DEVICE(mst_device), DELL_DOCK_VMM6210_INSTANCE_ID);
-	else
-		fu_device_add_instance_id(FU_DEVICE(mst_device), DELL_DOCK_VM5331_INSTANCE_ID);
+	mst_device = fu_dell_dock_mst_new(ctx, dock_type);
 	if (!fu_device_probe(FU_DEVICE(mst_device), error))
 		return FALSE;
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
@@ -72,15 +73,10 @@ fu_dell_dock_plugin_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* create package version endpoint */
-	status_device = fu_dell_dock_status_new(ctx);
-	if (fu_dell_dock_ec_get_dock_type(FU_DEVICE(ec_device)) == DOCK_BASE_TYPE_ATOMIC) {
-		fu_device_add_instance_id(FU_DEVICE(status_device),
-					  DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID);
-	} else if (fu_dell_dock_ec_module_is_usb4(FU_DEVICE(ec_device))) {
-		fu_device_add_instance_id(FU_DEVICE(status_device), DELL_DOCK_DOCK2_INSTANCE_ID);
-	} else {
-		fu_device_add_instance_id(FU_DEVICE(status_device), DELL_DOCK_DOCK1_INSTANCE_ID);
-	}
+	dock_usb4_present = fu_dell_dock_ec_module_is_usb4(FU_DEVICE(ec_device));
+	status_device = fu_dell_dock_status_new(ctx, dock_type, dock_usb4_present);
+	if (!fu_device_probe(FU_DEVICE(status_device), error))
+		return FALSE;
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
 	if (!fu_dell_dock_plugin_create_node(plugin, FU_DEVICE(status_device), error))
 		return FALSE;
