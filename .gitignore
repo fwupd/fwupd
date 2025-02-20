@@ -36,3 +36,4 @@ plugins/tpm-eventlog/tests/
 fwupd.txt
 fwupdtool.txt
 *.efi
+*.zip
