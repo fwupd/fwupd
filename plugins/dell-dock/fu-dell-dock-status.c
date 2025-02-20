@@ -22,6 +22,8 @@
 struct _FuDellDockStatus {
 	FuDevice parent_instance;
 	guint64 blob_version_offset;
+	guint8 dock_type;
+	gboolean dock_usb4_present;
 };
 
 G_DEFINE_TYPE(FuDellDockStatus, fu_dell_dock_status, FU_TYPE_DEVICE)
@@ -98,6 +100,30 @@ fu_dell_dock_status_write(FuDevice *device,
 }
 
 static gboolean
+fu_dell_dock_status_probe(FuDevice *device, GError **error)
+{
+	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
+
+	if (self->dock_type == DOCK_BASE_TYPE_ATOMIC) {
+		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID);
+	} else if (self->dock_type == DOCK_BASE_TYPE_SALOMON) {
+		if (self->dock_usb4_present)
+			fu_device_add_instance_id(device, DELL_DOCK_DOCK2_INSTANCE_ID);
+		else
+			fu_device_add_instance_id(device, DELL_DOCK_DOCK1_INSTANCE_ID);
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown supported dock type 0x%x",
+			    self->dock_type);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_dell_dock_status_open(FuDevice *device, GError **error)
 {
 	if (fu_device_get_proxy(device) == NULL) {
@@ -166,6 +192,7 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->write_firmware = fu_dell_dock_status_write;
+	device_class->probe = fu_dell_dock_status_probe;
 	device_class->setup = fu_dell_dock_status_setup;
 	device_class->open = fu_dell_dock_status_open;
 	device_class->close = fu_dell_dock_status_close;
@@ -174,9 +201,11 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 }
 
 FuDellDockStatus *
-fu_dell_dock_status_new(FuContext *ctx)
+fu_dell_dock_status_new(FuContext *ctx, guint8 dock_type, gboolean dock_usb4_present)
 {
 	FuDellDockStatus *self = NULL;
 	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, "context", ctx, NULL);
+	self->dock_type = dock_type;
+	self->dock_usb4_present = dock_usb4_present;
 	return self;
 }

@@ -21,4 +21,4 @@
 G_DECLARE_FINAL_TYPE(FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATUS, FuDevice)
 
 FuDellDockStatus *
-fu_dell_dock_status_new(FuContext *ctx);
+fu_dell_dock_status_new(FuContext *ctx, guint8 dock_type, gboolean dock_usb4_present);
