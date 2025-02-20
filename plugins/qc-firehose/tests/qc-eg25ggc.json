@@ -1,0 +1,18 @@
+{
+  "name": "Qualcomm EG25GGC",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/b1cd72c75053f5c29e55784ef30e5d4be722c1aacc2400995b1ee248f07be7d6-EG25GGC-0.0.cab",
+      "emulation-url": "https://fwupd.org/downloads/e7697987b10173ec94b98624ab31a0f16433e3c36cecc7aee53c3fc593b90209-emulation.zip",
+      "components": [
+        {
+          "version": "0.0",
+          "guids": [
+            "9d5ddb63-31c7-55cc-a11e-67b5fd871113"
+          ]
+        }
+      ]
+    }
+  ]
+}

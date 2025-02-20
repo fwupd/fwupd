@@ -99,6 +99,7 @@ plugins = {
   'pci-psp': false,
   'pixart-rf': false,
   'powerd': false,
+  'qc-firehose': false,
   'qc-s5gen2': false,
   'qsi-dock': false,
   'realtek-mst': false,
