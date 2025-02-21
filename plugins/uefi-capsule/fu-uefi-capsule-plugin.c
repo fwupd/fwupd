@@ -993,12 +993,34 @@ fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **err
 }
 
 static gboolean
+fu_uefi_capsule_plugin_bootloader_supports_fwupd(FuContext *ctx)
+{
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	gsize data_sz = 0;
+	g_autofree guint8 *data = NULL;
+
+	/* if the bootloader supports installing the capsule updates provided by fwupd, it sets this
+	 * runtime-accessible UEFI variable with a one-byte value of 1 */
+	if (!fu_efivars_get_data(efivars,
+				 FU_EFIVARS_GUID_FWUPDATE,
+				 "BootloaderSupportsFwupd",
+				 &data,
+				 &data_sz,
+				 NULL,
+				 NULL)) {
+		return FALSE;
+	}
+	return data_sz == 1 && data[0] == 1;
+}
+
+static gboolean
 fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
 	gboolean has_fde = FALSE;
+	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
 	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1049,6 +1071,13 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 		}
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+
+		/* if the bootloader doesn't know how to install capsules provided by fwupd,
+		 * enable fwupd-efi */
+		if (!bootloader_supports_fwupd) {
+			fu_device_add_private_flag(FU_DEVICE(dev),
+						   FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
+		}
 
 		/* system firmware "BIOS" can change the PCRx registers */
 		if (fu_uefi_capsule_device_get_kind(dev) ==

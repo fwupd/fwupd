@@ -25,7 +25,8 @@ fu_uefi_nvram_device_get_results(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* check if something rudely removed our BOOTXXXX entry */
-	if (!fu_uefi_bootmgr_verify_fwupd(efivars, &error_local)) {
+	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI) &&
+	    !fu_uefi_bootmgr_verify_fwupd(efivars, &error_local)) {
 		if (fu_device_has_private_flag(
 			device,
 			FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
@@ -111,6 +112,10 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 	/* set the blob header shared with fwupd.efi */
 	if (!fu_uefi_capsule_device_write_update_info(self, capsule_path, varname, fw_class, error))
 		return FALSE;
+
+	/* if fwupd-efi is not in use, no need to change boot order or copy bootloader files */
+	if (!fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
+		return TRUE;
 
 	/* update the firmware before the bootloader runs */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB))
