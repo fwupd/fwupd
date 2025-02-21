@@ -1990,7 +1990,7 @@ fu_firmware_get_images(FuFirmware *self)
 /**
  * fu_firmware_get_image_by_id:
  * @self: a #FuPlugin
- * @id: (nullable): image ID, e.g. `config`
+ * @id: (nullable): image ID, e.g. `config` or `*.mfg`
  * @error: (nullable): optional return location for an error
  *
  * Gets the firmware image using the image ID.
@@ -2009,7 +2009,9 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(priv->images, i);
-		if (g_strcmp0(fu_firmware_get_id(img), id) == 0)
+		if (id == NULL && fu_firmware_get_id(img) == NULL)
+			return g_object_ref(img);
+		if (id != NULL && g_pattern_match_simple(id, fu_firmware_get_id(img)))
 			return g_object_ref(img);
 	}
 	g_set_error(error,
