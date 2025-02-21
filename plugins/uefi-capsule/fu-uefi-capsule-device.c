@@ -469,6 +469,11 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 
 	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
 		return FALSE;
+
+	/* if fwupd-efi isn't in use, skip checks for the signed binary */
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))
+		return TRUE;
+
 	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL && secureboot_enabled) {
 		g_prefix_error(error, "missing signed bootloader for secure boot: ");
@@ -786,6 +791,7 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 }
 
 static void
