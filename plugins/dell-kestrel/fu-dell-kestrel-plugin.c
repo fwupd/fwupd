@@ -295,6 +295,8 @@ fu_dell_kestrel_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 			fu_device_inhibit(device, "hidden", msg);
 			return;
 		}
+		/* activation should already done when device is added */
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 		fu_plugin_cache_add(plugin, "usb4", device);
 	}
@@ -441,7 +443,10 @@ fu_dell_kestrel_plugin_prepare(FuPlugin *plugin,
 	/* usb4 device reboot is suppressed, let ec handle it in passive update */
 	if (fu_device_has_guid(device, DELL_KESTREL_T4_DEVID) ||
 	    fu_device_has_guid(device, DELL_KESTREL_T5_DEVID)) {
-		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
+		/* uod requires needs-activate from intel-usb4 plugin */
+		if (fu_plugin_get_config_value_boolean(plugin,
+						       FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD))
+			fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	}
 
 	return TRUE;
