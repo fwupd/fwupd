@@ -223,12 +223,14 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 		return FALSE;
 	}
 	if (streamsz != FU_BNR_DP_FIRMWARE_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "unexpected firmware payload length (must be: %d, actual: %lu)",
-			    FU_BNR_DP_FIRMWARE_SIZE,
-			    streamsz);
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "unexpected firmware payload length (must be: %d, actual: %" G_GUINT64_FORMAT
+		    ")",
+		    FU_BNR_DP_FIRMWARE_SIZE,
+		    streamsz);
 		return FALSE;
 	}
 
@@ -363,11 +365,13 @@ fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(XbBuilderNode) bn = NULL;
 	g_autofree gchar *xml = NULL;
 
-	g_autofree gchar *device_id = g_strdup_printf("%lu", self->device_id);
-	g_autofree gchar *version = g_strdup_printf("%lu", fu_firmware_get_version_raw(firmware));
+	g_autofree gchar *device_id = g_strdup_printf("%" G_GUINT64_FORMAT, self->device_id);
+	g_autofree gchar *version =
+	    g_strdup_printf("%" G_GUINT64_FORMAT, fu_firmware_get_version_raw(firmware));
 	g_autofree gchar *function = g_strdup_printf("%c", self->function);
-	g_autofree gchar *variant = g_strdup_printf("%lu", self->variant);
-	g_autofree gchar *payload_length = g_strdup_printf("%lu", self->payload_length);
+	g_autofree gchar *variant = g_strdup_printf("%" G_GUINT64_FORMAT, self->variant);
+	g_autofree gchar *payload_length =
+	    g_strdup_printf("%" G_GUINT64_FORMAT, self->payload_length);
 	g_autofree gchar *payload_checksum = g_strdup_printf("0x%X", self->payload_checksum);
 	g_autoptr(GDateTime) now = g_date_time_new_now_local();
 	g_autofree gchar *date = g_date_time_format(now, "%d.%m.%Y");
