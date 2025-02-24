@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 B&R Industrial Automation GmbH
+ * Copyright 2024-2025 B&R Industrial Automation GmbH
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
