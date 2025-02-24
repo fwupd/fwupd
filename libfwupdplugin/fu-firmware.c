@@ -2316,6 +2316,8 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 			}
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
+	} else if (priv->bytes != NULL && g_bytes_get_size(priv->bytes) == 0) {
+		xb_builder_node_insert_text(bn, "data", NULL, NULL);
 	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
