@@ -489,12 +489,12 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpFactoryData *factory_data,
 			 const FuStructBnrDpPayloadHeader *active_header,
 			 const FuStructBnrDpPayloadHeader *fw_header,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	FuFirmware *firmware = FU_FIRMWARE(self);
 	guint64 active_version = 0;
 	guint64 fw_version = 0;
-	g_autofree gchar *active_version_str = NULL;
 	g_autofree gchar *fw_version_str = NULL;
 	guint32 product_num;
 	guint16 compat_id;
@@ -504,26 +504,23 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 		return FALSE;
 	if (!fu_bnr_dp_version_from_header(fw_header, &fw_version, error))
 		return FALSE;
-	active_version_str = fu_bnr_dp_version_to_string(active_version);
 	fw_version_str = fu_bnr_dp_version_to_string(fw_version);
 	if (fu_firmware_get_version_raw(firmware) != fw_version) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_DATA,
-		    "versions in firmware XML header (%s) and binary payload (%s) are inconsistent",
-		    fu_firmware_get_version(firmware),
-		    fw_version_str);
-		return FALSE;
-	}
-	if (active_version > fw_version)
-		g_warning("downgrading firmware version: '%s' => '%s'",
-			  active_version_str,
+		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "versions in firmware XML header (%s) and binary payload (%s) "
+				    "are inconsistent",
+				    fu_firmware_get_version(firmware),
+				    fw_version_str);
+			return FALSE;
+		}
+		g_warning("forcing installation of firmware with inconsistent XML header (%s) and "
+			  "binary payload (%s) versions",
+			  fu_firmware_get_version(firmware),
 			  fw_version_str);
-	else
-		g_info("upgrading firmware version: '%s' => '%s'",
-		       active_version_str,
-		       fw_version_str);
+	}
 
 	/* check for compatibility of device/firmware combination. customized products use separate
 	 * product numbers but set the parent product number to the original stock product. since

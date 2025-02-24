@@ -39,4 +39,5 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpFactoryData *factory_data,
 			 const FuStructBnrDpPayloadHeader *active_header,
 			 const FuStructBnrDpPayloadHeader *fw_header,
+			 FwupdInstallFlags flags,
 			 GError **error);

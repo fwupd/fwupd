@@ -318,9 +318,10 @@ fu_bnr_dp_device_can_skip_chunk(const guint8 *buf, gsize cur_offset)
 		return FALSE;
 
 	/* can't skip if any byte in the chunk is not 0xff */
-	for (gsize i = cur_offset; i < cur_offset + FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE; i++)
+	for (gsize i = cur_offset; i < cur_offset + FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE; i++) {
 		if (buf[i] != 0xff)
 			return FALSE;
+	}
 
 	/* can skip */
 	return TRUE;
@@ -620,6 +621,7 @@ fu_bnr_dp_device_prepare_firmware(FuDevice *device,
 				      factory_data,
 				      active_header,
 				      fw_header,
+				      flags,
 				      error))
 		return NULL;
 

@@ -17,7 +17,7 @@ fu_bnr_dp_version_to_string(guint64 version)
 	guint64 major = version / 100;
 	guint64 minor = version % 100;
 
-	return g_strdup_printf("%lu.%02lu", major, minor);
+	return g_strdup_printf("%" G_GUINT64_FORMAT ".%02" G_GUINT64_FORMAT, major, minor);
 }
 
 /* read, convert and validate the version from `header` to an integer */
