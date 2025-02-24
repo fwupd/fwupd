@@ -8,12 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include <glib-object.h>
-#include <glib.h>
-#include <glib/gtypes.h>
-
 #include "fu-bnr-dp-struct.h"
-#include "fu-firmware.h"
 
 #define FU_TYPE_BNR_DP_FIRMWARE (fu_bnr_dp_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU, BNR_DP_FIRMWARE, FuFirmware)

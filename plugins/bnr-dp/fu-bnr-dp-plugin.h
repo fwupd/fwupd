@@ -8,8 +8,4 @@
 
 #include <fwupdplugin.h>
 
-#include <glib-object.h>
-
-#include "fu-plugin.h"
-
 G_DECLARE_FINAL_TYPE(FuBnrDpPlugin, fu_bnr_dp_plugin, FU, BNR_DP_PLUGIN, FuPlugin)

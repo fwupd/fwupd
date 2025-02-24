@@ -7,24 +7,14 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <glib.h>
 #include <glib/gtypes.h>
 #include <stddef.h>
-
-#include "fwupd-enums.h"
-#include "fwupd-error.h"
 
 #include "fu-bnr-dp-common.h"
 #include "fu-bnr-dp-device.h"
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-struct.h"
-#include "fu-crc.h"
-#include "fu-device.h"
-#include "fu-dpaux-device.h"
-#include "fu-firmware.h"
-#include "fu-mem.h"
 #include "fu-progress-struct.h"
-#include "fu-progress.h"
 
 #define FU_BNR_DP_DEVICE_HEADER_OFFSET 0x00A00
 #define FU_BNR_DP_DEVICE_DATA_OFFSET   0x00900

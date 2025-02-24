@@ -6,11 +6,10 @@
 
 #include "config.h"
 
-#include <glib.h>
+#include "fwupdplugin.h"
 
 #include "fu-bnr-dp-common.h"
 #include "fu-bnr-dp-struct.h"
-#include "fu-string.h"
 
 gchar *
 fu_bnr_dp_version_to_string(guint64 version)

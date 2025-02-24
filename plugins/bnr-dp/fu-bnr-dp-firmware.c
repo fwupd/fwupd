@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <glib.h>
 #include <libxmlb/xb-builder-node.h>
 #include <libxmlb/xb-builder-source.h>
 #include <libxmlb/xb-builder.h>
@@ -15,19 +14,9 @@
 #include <libxmlb/xb-silo.h>
 #include <string.h>
 
-#include "fwupd-enums.h"
-#include "fwupd-error.h"
-
 #include "fu-bnr-dp-common.h"
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-struct.h"
-#include "fu-byte-array.h"
-#include "fu-common.h"
-#include "fu-crc.h"
-#include "fu-firmware.h"
-#include "fu-input-stream.h"
-#include "fu-partial-input-stream.h"
-#include "fu-sum.h"
 
 struct _FuBnrDpFirmware {
 	FuFirmwareClass parent_instance;
