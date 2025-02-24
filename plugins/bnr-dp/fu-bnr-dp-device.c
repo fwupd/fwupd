@@ -293,6 +293,8 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
 	g_assert_cmpint(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
 
+	fu_progress_set_steps(progress, end - start);
+
 	for (guint16 idx = start; idx < end; idx++) {
 		g_autoptr(GByteArray) chunk = NULL;
 
@@ -301,7 +303,7 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 			return NULL;
 		g_byte_array_append(r, chunk->data, chunk->len);
 
-		fu_progress_set_percentage_full(progress, idx - start, end - start);
+		fu_progress_step_done(progress);
 	}
 
 	return g_steal_pointer(&r);
@@ -352,11 +354,15 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	if (request == NULL)
 		return FALSE;
 
+	fu_progress_set_steps(progress, end - start);
+
 	for (guint16 idx = start; idx < end; idx++) {
 		const gsize cur_offset = idx * FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 
-		if (fu_bnr_dp_device_can_skip_chunk(buf, cur_offset))
+		if (fu_bnr_dp_device_can_skip_chunk(buf, cur_offset)) {
+			fu_progress_step_done(progress);
 			continue;
+		}
 
 		fu_struct_bnr_dp_aux_request_set_offset(request, idx);
 		if (!fu_bnr_dp_device_write_request(self,
@@ -375,7 +381,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 			return FALSE;
 		}
 
-		fu_progress_set_percentage_full(progress, idx - start, end - start);
+		fu_progress_step_done(progress);
 	}
 
 	return TRUE;
