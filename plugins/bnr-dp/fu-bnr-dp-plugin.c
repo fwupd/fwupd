@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <stddef.h>
-
 #include "fu-bnr-dp-device.h"
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-plugin.h"

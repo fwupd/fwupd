@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-#include <glib/gtypes.h>
-#include <stddef.h>
+#include <fwupdplugin.h>
 
 #include "fu-bnr-dp-common.h"
 #include "fu-bnr-dp-device.h"
