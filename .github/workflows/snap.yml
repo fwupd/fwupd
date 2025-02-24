@@ -32,7 +32,7 @@ jobs:
         ln -s ../contrib/snap/snapcraft.yaml snap/snapcraft.yaml
     - uses: snapcore/action-build@3bdaa03e1ba6bf59a65f84a751d943d549a54e79 # v1.3.0
       id: snapcraft
-    - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+    - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: snap
         path: ${{ steps.snapcraft.outputs.snap }}

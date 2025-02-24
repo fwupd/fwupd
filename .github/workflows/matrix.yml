@@ -38,7 +38,7 @@ jobs:
               -v $GITHUB_WORKSPACE:/github/workspace \
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: ${{ matrix.os }}
           path: ${{ github.workspace }}/dist/*
@@ -53,7 +53,7 @@ jobs:
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
               contrib/ci/${{matrix.os}}-test.sh
       - name: Save any coverage data
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
       - name: Save tarball
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: tarball
           path: ${{ github.workspace }}/build/meson-dist/*xz
@@ -137,7 +137,7 @@ jobs:
     - name: configure
       run: ./contrib/ci/build_windows.sh
     - name: upload-artifact
-      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: windows
         path: |
