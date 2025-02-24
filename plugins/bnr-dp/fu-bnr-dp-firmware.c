@@ -94,7 +94,6 @@ fu_bnr_dp_firmware_attribute_parse_string(XbNode *root, const gchar *attribute, 
 static gboolean
 fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **error)
 {
-	gboolean r;
 	XbNode *root;
 	g_autofree gchar *tmp_str = NULL;
 	guint64 tmp_u64 = 0;
@@ -109,12 +108,10 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 				    "invalid or missing firmware header element");
 	}
 
-	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Dev", &self->device_id, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Dev", &self->device_id, error))
 		return FALSE;
 
-	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Ver", &tmp_u64, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Ver", &tmp_u64, error))
 		return FALSE;
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), tmp_u64);
 
@@ -145,12 +142,10 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 		return FALSE;
 	}
 
-	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Var", &self->variant, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Var", &self->variant, error))
 		return FALSE;
 
-	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Len", &self->payload_length, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Len", &self->payload_length, error))
 		return FALSE;
 
 	g_free(tmp_str);
@@ -158,8 +153,7 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 	if (tmp_str == NULL ||
 	    !(g_str_has_prefix(tmp_str, "0x") || g_str_has_prefix(tmp_str, "0X")))
 		return FALSE;
-	r = g_ascii_string_to_unsigned(tmp_str + 2, 16, 0, G_MAXUINT16, &tmp_u64, error);
-	if (!r)
+	if (!g_ascii_string_to_unsigned(tmp_str + 2, 16, 0, G_MAXUINT16, &tmp_u64, error))
 		return FALSE;
 	self->payload_checksum = (guint16)tmp_u64;
 
@@ -175,7 +169,7 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 	if (fw_comment != NULL && strlen(fw_comment) > 0)
 		g_info("firmware comment: %s", fw_comment);
 
-	return r;
+	return TRUE;
 }
 
 static guint16
@@ -187,12 +181,11 @@ fu_bnr_dp_firmware_checksum_finish(guint16 csum)
 static gboolean
 fu_bnr_dp_firmware_stream_checksum(GInputStream *stream, guint16 *csum, GError **error)
 {
-	gboolean r;
-
-	r = fu_input_stream_compute_sum16(stream, csum, error);
+	if (!fu_input_stream_compute_sum16(stream, csum, error))
+		return FALSE;
 	*csum = fu_bnr_dp_firmware_checksum_finish(*csum);
 
-	return r;
+	return TRUE;
 }
 
 static guint16
@@ -283,7 +276,6 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 			 GError **error)
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
-	gboolean r;
 	guint8 byte = 0;
 	guint8 header_separator[] = {'\0'};
 	gsize separator_idx = 0;
@@ -304,12 +296,11 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* find the index of the first null byte, indicating the end of the XML header */
-	r = fu_input_stream_find(stream,
-				 header_separator,
-				 sizeof(header_separator),
-				 &separator_idx,
-				 error);
-	if (!r)
+	if (!fu_input_stream_find(stream,
+				  header_separator,
+				  sizeof(header_separator),
+				  &separator_idx,
+				  error))
 		return FALSE;
 
 	/* read XML header */
@@ -317,11 +308,10 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	if (header == NULL)
 		return FALSE;
 
-	r = xb_builder_source_load_bytes(builder_source,
-					 header,
-					 XB_BUILDER_SOURCE_FLAG_NONE,
-					 error);
-	if (!r)
+	if (!xb_builder_source_load_bytes(builder_source,
+					  header,
+					  XB_BUILDER_SOURCE_FLAG_NONE,
+					  error))
 		return FALSE;
 
 	xb_builder_import_source(builder, builder_source);
@@ -329,12 +319,10 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	if (silo == NULL)
 		return FALSE;
 
-	r = fu_bnr_dp_firmware_header_parse(self, silo, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_header_parse(self, silo, error))
 		return FALSE;
 
-	r = fu_bnr_dp_firmware_payload_parse(self, stream, separator_idx + 1, error);
-	if (!r)
+	if (!fu_bnr_dp_firmware_payload_parse(self, stream, separator_idx + 1, error))
 		return FALSE;
 
 	return TRUE;

@@ -103,7 +103,6 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 			       gsize bufsz,
 			       GError **error)
 {
-	gboolean r;
 	guint8 checksum =
 	    fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_TX, request->data, request->len);
 	g_autoptr(FuStructBnrDpAuxTxHeader) header = fu_struct_bnr_dp_aux_tx_header_new();
@@ -113,13 +112,12 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 
 	/* write optional data */
 	if (buf != NULL && bufsz > 0) {
-		r = fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
-					  FU_BNR_DP_DEVICE_DATA_OFFSET,
-					  buf,
-					  bufsz,
-					  FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
-					  error);
-		if (!r)
+		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
+					   FU_BNR_DP_DEVICE_DATA_OFFSET,
+					   buf,
+					   bufsz,
+					   FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+					   error))
 			return FALSE;
 
 		checksum = fu_bnr_dp_device_xor_checksum(checksum, buf, bufsz);
@@ -201,18 +199,16 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 static FuStructBnrDpAuxStatus *
 fu_bnr_dp_device_read_status(FuBnrDpDevice *self, GError **error)
 {
-	gboolean r;
 	guint8 buf[FU_STRUCT_BNR_DP_AUX_STATUS_SIZE] = {0};
 	g_autoptr(FuStructBnrDpAuxStatus) status = NULL;
 
 	/* only read the first 2 bytes of the header to check status bits. */
-	r = fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
-				 FU_BNR_DP_DEVICE_HEADER_OFFSET,
-				 buf,
-				 sizeof(buf),
-				 FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
-				 error);
-	if (!r)
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+				  FU_BNR_DP_DEVICE_HEADER_OFFSET,
+				  buf,
+				  sizeof(buf),
+				  FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+				  error))
 		return NULL;
 
 	status = fu_struct_bnr_dp_aux_status_parse(buf, sizeof(buf), 0, error);
