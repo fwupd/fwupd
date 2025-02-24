@@ -32,6 +32,7 @@ plugins = {
   'aver-hid': false,
   'bcm57xx': false,
   'bios': false,
+  'bnr-dp': false,
   'ccgx': false,
   'ccgx-dmc': false,
   'cfu': false,
