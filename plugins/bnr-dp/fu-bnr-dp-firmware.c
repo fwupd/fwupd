@@ -6,13 +6,8 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-#include <libxmlb/xb-builder-node.h>
-#include <libxmlb/xb-builder-source.h>
-#include <libxmlb/xb-builder.h>
-#include <libxmlb/xb-node.h>
-#include <libxmlb/xb-silo.h>
 #include <string.h>
+#include <xmlb.h>
 
 #include "fu-bnr-dp-common.h"
 #include "fu-bnr-dp-firmware.h"
