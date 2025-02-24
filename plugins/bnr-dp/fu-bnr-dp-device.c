@@ -1,0 +1,756 @@
+/*
+ * Copyright 2024 B&R Industrial Automation GmbH
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include <gio/gio.h>
+#include <glib.h>
+#include <glib/gtypes.h>
+#include <stddef.h>
+
+#include "fwupd-enums.h"
+#include "fwupd-error.h"
+
+#include "fu-bnr-dp-common.h"
+#include "fu-bnr-dp-device.h"
+#include "fu-bnr-dp-firmware.h"
+#include "fu-bnr-dp-struct.h"
+#include "fu-crc.h"
+#include "fu-device.h"
+#include "fu-dpaux-device.h"
+#include "fu-firmware.h"
+#include "fu-mem.h"
+#include "fu-progress-struct.h"
+#include "fu-progress.h"
+
+#define FU_BNR_DP_DEVICE_HEADER_OFFSET 0x00A00
+#define FU_BNR_DP_DEVICE_DATA_OFFSET   0x00900
+
+#define FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE 256
+#define FU_BNR_DP_DEVICE_FLASH_PAGE_SIZE 65536
+
+/* timeout in ms for aux reads/writes */
+#define FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC 3000
+
+/* maximum number of polls to attempt without delay and in total. some commands will finish pretty
+ * quickly, but more elaborate commands can take some time and a delay becomes appropriate when
+ * polling */
+#define FU_BNR_DP_DEVICE_POLL_MAX_FAST	    10
+#define FU_BNR_DP_DEVICE_POLL_MAX_TOTAL	    100
+#define FU_BNR_DP_DEVICE_POLL_INTERVAL_USEC 5000
+
+struct _FuBnrDpDevice {
+	FuDpauxDevice parent_instance;
+};
+
+G_DEFINE_TYPE(FuBnrDpDevice, fu_bnr_dp_device, FU_TYPE_DPAUX_DEVICE)
+
+static guint8
+fu_bnr_dp_device_xor_checksum(guint8 init, const guint8 *buf, gsize bufsz)
+{
+	for (gsize i = 0; i < bufsz; i++)
+		init ^= buf[i];
+
+	return init;
+}
+
+static FuStructBnrDpAuxRequest *
+fu_bnr_dp_device_build_request(FuBnrDpOpcodes opcode,
+			       FuBnrDpModuleNumber module_number,
+			       guint16 offset,
+			       guint16 data_len,
+			       GError **error)
+{
+	g_autoptr(FuStructBnrDpAuxRequest) request = fu_struct_bnr_dp_aux_request_new();
+	g_autoptr(FuStructBnrDpAuxCommand) command = fu_struct_bnr_dp_aux_command_new();
+
+	fu_struct_bnr_dp_aux_command_set_module_number(command, module_number);
+	fu_struct_bnr_dp_aux_command_set_opcode(command, opcode);
+
+	if (!fu_struct_bnr_dp_aux_request_set_command(request, command, error))
+		return NULL;
+	fu_struct_bnr_dp_aux_request_set_data_len(request, data_len);
+	fu_struct_bnr_dp_aux_request_set_offset(request, offset);
+
+	return g_steal_pointer(&request);
+}
+
+/* evaluate the status from a response from the controller into an appropriate bool/GError */
+static gboolean
+fu_bnr_dp_device_eval_result(const FuStructBnrDpAuxStatus *status, GError **error)
+{
+	guint8 error_byte = fu_struct_bnr_dp_aux_status_get_error(status);
+	guint8 error_code = error_byte & 0x0F;
+
+	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_ERROR) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "device command failed with error '%s'",
+			    fu_bnr_dp_aux_error_to_string(error_code) ?: "(invalid error code)");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_bnr_dp_device_is_busy(const FuStructBnrDpAuxStatus *status)
+{
+	guint8 error_byte = fu_struct_bnr_dp_aux_status_get_error(status);
+
+	return error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_BUSY;
+}
+
+/* Write a single `request` and some optional data to the device. */
+static gboolean
+fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
+			       const FuStructBnrDpAuxRequest *request,
+			       const guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	gboolean r;
+	guint8 checksum =
+	    fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_TX, request->data, request->len);
+	g_autoptr(FuStructBnrDpAuxTxHeader) header = fu_struct_bnr_dp_aux_tx_header_new();
+
+	if (!fu_struct_bnr_dp_aux_tx_header_set_request(header, request, error))
+		return FALSE;
+
+	/* write optional data */
+	if (buf != NULL && bufsz > 0) {
+		r = fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
+					  FU_BNR_DP_DEVICE_DATA_OFFSET,
+					  buf,
+					  bufsz,
+					  FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+					  error);
+		if (!r)
+			return FALSE;
+
+		checksum = fu_bnr_dp_device_xor_checksum(checksum, buf, bufsz);
+	}
+
+	fu_struct_bnr_dp_aux_tx_header_set_checksum(header, checksum);
+
+	/* write header to kick off processing by the device */
+	return fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
+				     FU_BNR_DP_DEVICE_HEADER_OFFSET,
+				     header->data,
+				     header->len,
+				     FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+				     error);
+}
+
+/* read a single `response` and some optional data from the device after a finished command. reading
+ * the full 7 byte header from the header offset returns a different structure than when reading
+ * only 2 bytes */
+static gboolean
+fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **error)
+{
+	guint8 actual_checksum;
+	guint8 tmp[FU_STRUCT_BNR_DP_AUX_RX_HEADER_SIZE] = {0};
+	g_autoptr(FuStructBnrDpAuxRxHeader) header = NULL;
+	g_autoptr(FuStructBnrDpAuxResponse) response = NULL;
+
+	/* read full header once command has finished */
+	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+				  FU_BNR_DP_DEVICE_HEADER_OFFSET,
+				  tmp,
+				  sizeof(tmp),
+				  FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+				  error))
+		return FALSE;
+
+	header = fu_struct_bnr_dp_aux_rx_header_parse(tmp, sizeof(tmp), 0, error);
+	if (header == NULL)
+		return FALSE;
+
+	response = fu_struct_bnr_dp_aux_rx_header_get_response(header);
+	if (response == NULL)
+		return FALSE;
+
+	actual_checksum = fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_RX,
+							response->data,
+							response->len);
+
+	/* read command output data */
+	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(response));
+	if (data->len > 0) {
+		if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+					  FU_BNR_DP_DEVICE_DATA_OFFSET,
+					  data->data,
+					  data->len,
+					  FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+					  error))
+			return FALSE;
+
+		actual_checksum =
+		    fu_bnr_dp_device_xor_checksum(actual_checksum, data->data, data->len);
+	}
+
+	if (actual_checksum != fu_struct_bnr_dp_aux_rx_header_get_checksum(header)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "checksum mismatch in device response header (header specified: 0x%X, "
+			    "actual: 0x%X)",
+			    fu_struct_bnr_dp_aux_rx_header_get_checksum(header),
+			    actual_checksum);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/* read only 2 bytes from the header offset to receive the status */
+static FuStructBnrDpAuxStatus *
+fu_bnr_dp_device_read_status(FuBnrDpDevice *self, GError **error)
+{
+	gboolean r;
+	guint8 buf[FU_STRUCT_BNR_DP_AUX_STATUS_SIZE] = {0};
+	g_autoptr(FuStructBnrDpAuxStatus) status = NULL;
+
+	/* only read the first 2 bytes of the header to check status bits. */
+	r = fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
+				 FU_BNR_DP_DEVICE_HEADER_OFFSET,
+				 buf,
+				 sizeof(buf),
+				 FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
+				 error);
+	if (!r)
+		return NULL;
+
+	status = fu_struct_bnr_dp_aux_status_parse(buf, sizeof(buf), 0, error);
+	if (status == NULL)
+		return NULL;
+
+	return g_steal_pointer(&status);
+}
+
+static gboolean
+fu_bnr_dp_device_poll_status(FuBnrDpDevice *self, GError **error)
+{
+	for (gint i = 0;; i++) {
+		g_autoptr(FuStructBnrDpAuxStatus) status = NULL;
+
+		status = fu_bnr_dp_device_read_status(self, error);
+		if (status == NULL)
+			return FALSE;
+
+		if (!fu_bnr_dp_device_eval_result(status, error))
+			return FALSE;
+		if (!fu_bnr_dp_device_is_busy(status))
+			return TRUE;
+
+		if (i > FU_BNR_DP_DEVICE_POLL_MAX_TOTAL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_BUSY,
+					    "polling device reached timeout");
+			return FALSE;
+		}
+		if (i > FU_BNR_DP_DEVICE_POLL_MAX_FAST)
+			g_usleep(FU_BNR_DP_DEVICE_POLL_INTERVAL_USEC);
+	}
+}
+
+static GByteArray *
+fu_bnr_dp_device_exec_cmd(FuBnrDpDevice *self,
+			  FuBnrDpOpcodes opcode,
+			  FuBnrDpModuleNumber module_number,
+			  guint16 offset,
+			  GError **error)
+{
+	g_autoptr(GByteArray) r = g_byte_array_new();
+	g_autoptr(FuStructBnrDpAuxRequest) request = NULL;
+
+	request = fu_bnr_dp_device_build_request(opcode, module_number, offset, 0, error);
+	if (request == NULL)
+		return NULL;
+
+	if (!fu_bnr_dp_device_write_request(self, request, NULL, 0, error))
+		return NULL;
+
+	if (!fu_bnr_dp_device_poll_status(self, error)) {
+		g_prefix_error(error,
+			       "command %s to module %s at offset 0x%X: ",
+			       fu_bnr_dp_opcodes_to_string(opcode),
+			       fu_bnr_dp_module_number_to_string(module_number),
+			       offset);
+		return NULL;
+	}
+
+	if (!fu_bnr_dp_device_read_response(self, r, error))
+		return NULL;
+
+	return g_steal_pointer(&r);
+}
+
+static GByteArray *
+fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
+			   FuBnrDpOpcodes opcode,
+			   FuBnrDpModuleNumber module_number,
+			   gsize offset,
+			   gsize size,
+			   FuProgress *progress,
+			   GError **error)
+{
+	g_autoptr(GByteArray) r = g_byte_array_sized_new(size);
+	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	const guint16 end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+
+	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+	g_assert_cmpint(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+
+	for (guint16 idx = start; idx < end; idx++) {
+		g_autoptr(GByteArray) chunk = NULL;
+
+		chunk = fu_bnr_dp_device_exec_cmd(self, opcode, module_number, idx, error);
+		if (chunk == NULL)
+			return NULL;
+		g_byte_array_append(r, chunk->data, chunk->len);
+
+		fu_progress_set_percentage_full(progress, idx - start, end - start);
+	}
+
+	return g_steal_pointer(&r);
+}
+
+/* check if the current chunk can be skipped. this is a flash optimization. writing to start of page
+ * erases full block and allows us to skip further writes to that page if the chunk is entirely
+ * 0xff */
+static gboolean
+fu_bnr_dp_device_can_skip_chunk(const guint8 *buf, gsize cur_offset)
+{
+	/* can't skip the first chunk in a flash page */
+	if ((cur_offset % FU_BNR_DP_DEVICE_FLASH_PAGE_SIZE) == 0)
+		return FALSE;
+
+	/* can't skip if any byte in the chunk is not 0xff */
+	for (gsize i = cur_offset; i < cur_offset + FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE; i++)
+		if (buf[i] != 0xff)
+			return FALSE;
+
+	/* can skip */
+	return TRUE;
+}
+
+static gboolean
+fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
+			    FuBnrDpOpcodes opcode,
+			    FuBnrDpModuleNumber module_number,
+			    gsize offset,
+			    const guint8 *buf,
+			    gsize bufsz,
+			    FuProgress *progress,
+			    GError **error)
+{
+	g_autoptr(FuStructBnrDpAuxRequest) request = NULL;
+	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	const guint16 end = (offset + bufsz) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+
+	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+	g_assert_cmpint(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+
+	request = fu_bnr_dp_device_build_request(opcode,
+						 module_number,
+						 0,
+						 FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE,
+						 error);
+	if (request == NULL)
+		return FALSE;
+
+	for (guint16 idx = start; idx < end; idx++) {
+		const gsize cur_offset = idx * FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+
+		if (fu_bnr_dp_device_can_skip_chunk(buf, cur_offset))
+			continue;
+
+		fu_struct_bnr_dp_aux_request_set_offset(request, idx);
+		if (!fu_bnr_dp_device_write_request(self,
+						    request,
+						    &buf[cur_offset],
+						    FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE,
+						    error))
+			return FALSE;
+
+		if (!fu_bnr_dp_device_poll_status(self, error)) {
+			g_prefix_error(error,
+				       "command %s to module %s at offset 0x%X: ",
+				       fu_bnr_dp_opcodes_to_string(opcode),
+				       fu_bnr_dp_module_number_to_string(module_number),
+				       idx);
+			return FALSE;
+		}
+
+		fu_progress_set_percentage_full(progress, idx - start, end - start);
+	}
+
+	return TRUE;
+}
+
+static FuStructBnrDpPayloadHeader *
+fu_bnr_dp_device_factory_data(FuBnrDpDevice *self,
+			      FuBnrDpModuleNumber module_number,
+			      GError **error)
+{
+	g_autoptr(GByteArray) output = NULL;
+
+	output = fu_bnr_dp_device_exec_cmd(self,
+					   FU_BNR_DP_OPCODES_FACTORY_DATA,
+					   module_number,
+					   0x0,
+					   error);
+	if (output == NULL)
+		return NULL;
+
+	return fu_struct_bnr_dp_factory_data_parse(output->data, output->len, 0, error);
+}
+
+/* read the fw header for the currently active firmware */
+static FuStructBnrDpPayloadHeader *
+fu_bnr_dp_device_fw_header(FuBnrDpDevice *self, FuBnrDpModuleNumber module_number, GError **error)
+{
+	g_autoptr(GByteArray) output = NULL;
+
+	output = fu_bnr_dp_device_exec_cmd(self,
+					   FU_BNR_DP_OPCODES_FLASH_SAVE_HEADER_INFO,
+					   module_number,
+					   0x0,
+					   error);
+	if (output == NULL)
+		return NULL;
+
+	return fu_struct_bnr_dp_payload_header_parse(output->data, output->len, 0, error);
+}
+
+static gboolean
+fu_bnr_dp_device_reset(FuBnrDpDevice *self, FuBnrDpModuleNumber module_number, GError **error)
+{
+	g_autoptr(FuStructBnrDpAuxRequest) request = NULL;
+
+	request = fu_bnr_dp_device_build_request(FU_BNR_DP_OPCODES_RESET,
+						 module_number,
+						 0xDEAD,
+						 0,
+						 error);
+	if (request == NULL)
+		return FALSE;
+
+	return fu_bnr_dp_device_write_request(self, request, NULL, 0, error);
+}
+
+static gboolean
+fu_bnr_dp_device_setup(FuDevice *device, GError **error)
+{
+	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	guint64 version = 0;
+	g_autofree gchar *version_str = NULL;
+	g_autofree gchar *id_str = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) header = NULL;
+	g_autoptr(FuStructBnrDpFactoryData) factory_data = NULL;
+	g_autofree gchar *serial = NULL;
+	g_autofree gchar *hw_rev = NULL;
+	g_autofree gchar *oui = NULL;
+
+	/* DpauxDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_bnr_dp_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	header = fu_bnr_dp_device_fw_header(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (header == NULL)
+		return FALSE;
+	factory_data = fu_bnr_dp_device_factory_data(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (factory_data == NULL)
+		return FALSE;
+
+	/* convert from string encoded version to integer and back to a nicer string format */
+	if (!fu_bnr_dp_version_from_header(header, &version, error))
+		return FALSE;
+	version_str = fu_bnr_dp_version_to_string(version);
+	fu_device_set_version(device, version_str);
+
+	id_str = fu_struct_bnr_dp_factory_data_get_identification(factory_data);
+	if (id_str == NULL)
+		return FALSE;
+	fu_device_set_name(FU_DEVICE(self), id_str);
+
+	serial = fu_struct_bnr_dp_factory_data_get_serial(factory_data);
+	if (serial == NULL)
+		return FALSE;
+	fu_device_set_serial(device, serial);
+
+	fu_device_add_instance_u32(device, "DEV", fu_bnr_dp_effective_product_num(factory_data));
+	fu_device_add_instance_u32(device, "VARIANT", fu_bnr_dp_effective_compat_id(factory_data));
+
+	hw_rev = fu_struct_bnr_dp_factory_data_get_hw_rev(factory_data);
+	if (hw_rev == NULL)
+		return FALSE;
+	fu_device_add_instance_str(device, "HW_REV", hw_rev);
+
+	oui = g_strdup_printf("%06X", fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
+	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", oui);
+	return fu_device_build_instance_id(device,
+					   error,
+					   "DPAUX",
+					   "OUI",
+					   "DEV",
+					   "VARIANT",
+					   "HW_REV",
+					   NULL);
+}
+
+static FuFirmware *
+fu_bnr_dp_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_bnr_dp_firmware_new();
+	g_autoptr(GByteArray) image = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) factory_data = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) header = NULL;
+	FuBnrDpPayloadFlags flags;
+	gsize offset = FU_BNR_DP_FIRMWARE_SIZE;
+	guint16 crc;
+
+	factory_data = fu_bnr_dp_device_factory_data(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (factory_data == NULL)
+		return NULL;
+	header = fu_bnr_dp_device_fw_header(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (header == NULL)
+		return NULL;
+
+	flags = fu_struct_bnr_dp_payload_header_get_flags(header);
+
+	/* the flash is 3 * `FU_BNR_DP_FW_SIZE`; first third is boot loader, then low and high
+	 * images */
+	if ((flags & FU_BNR_DP_PAYLOAD_FLAGS_BOOT_AREA) == FU_BNR_DP_BOOT_AREA_HIGH)
+		offset *= 2;
+
+	image = fu_bnr_dp_device_read_data(self,
+					   FU_BNR_DP_OPCODES_FLASH_SERVICE,
+					   FU_BNR_DP_MODULE_NUMBER_RECEIVER,
+					   offset,
+					   FU_BNR_DP_FIRMWARE_SIZE,
+					   progress,
+					   error);
+	if (image == NULL)
+		return NULL;
+
+	crc = fu_crc16(FU_CRC_KIND_B16_BNR, image->data, image->len);
+	if (crc != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "CRC mismatch in read firmware image: 0x%Xu",
+			    crc);
+		return NULL;
+	}
+
+	bytes = g_bytes_new(image->data, image->len);
+	if (bytes == NULL)
+		return NULL;
+	fu_firmware_set_bytes(firmware, bytes);
+
+	/* populate private data to be able to build an XML header if `firmware->write()` is used */
+	if (!fu_bnr_dp_firmware_parse_from_device(FU_BNR_DP_FIRMWARE(firmware),
+						  factory_data,
+						  header,
+						  error))
+		return NULL;
+
+	return g_steal_pointer(&firmware);
+}
+
+static GBytes *
+fu_bnr_dp_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	g_autoptr(GByteArray) dump = NULL;
+
+	dump = fu_bnr_dp_device_read_data(self,
+					  FU_BNR_DP_OPCODES_FLASH_SERVICE,
+					  FU_BNR_DP_MODULE_NUMBER_RECEIVER,
+					  0,
+					  FU_BNR_DP_FIRMWARE_SIZE * 3,
+					  progress,
+					  error);
+	if (dump == NULL)
+		return NULL;
+
+	return g_bytes_new(dump->data, dump->len);
+}
+
+static FuFirmware *
+fu_bnr_dp_device_prepare_firmware(FuDevice *device,
+				  GInputStream *stream,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_bnr_dp_firmware_new();
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(FuStructBnrDpFactoryData) factory_data = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) active_header = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) fw_header = NULL;
+
+	/* parse to bnr-dp firmware */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+
+	/* use bytes instead of stream to make patching work */
+	bytes = fu_firmware_get_bytes(firmware, error);
+	if (bytes == NULL)
+		return NULL;
+	fu_firmware_set_bytes(firmware, bytes);
+
+	/* patch firmware boot counter to be higher than active image */
+	active_header = fu_bnr_dp_device_fw_header(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (active_header == NULL)
+		return NULL;
+	if (!fu_bnr_dp_firmware_patch_boot_counter(
+		FU_BNR_DP_FIRMWARE(firmware),
+		fu_struct_bnr_dp_payload_header_get_counter(active_header),
+		error))
+		return NULL;
+
+	/* check fw image */
+	factory_data = fu_bnr_dp_device_factory_data(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
+	if (factory_data == NULL)
+		return NULL;
+	fw_header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(bytes, NULL),
+							  g_bytes_get_size(bytes),
+							  FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
+							  error);
+	if (fw_header == NULL)
+		return NULL;
+	if (!fu_bnr_dp_firmware_check(FU_BNR_DP_FIRMWARE(firmware),
+				      factory_data,
+				      active_header,
+				      fw_header,
+				      error))
+		return NULL;
+
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
+fu_bnr_dp_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
+{
+	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GByteArray) read_back = NULL;
+
+	/* progress, values based on dev tests with -vv */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 34, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 65, "verify");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "activate");
+
+	/* get payload bytes including patched boot counter */
+	bytes = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (bytes == NULL)
+		return FALSE;
+
+	/* write new firmware to inactive area */
+	if (!fu_bnr_dp_device_write_data(self,
+					 FU_BNR_DP_OPCODES_FLASH_USER,
+					 FU_BNR_DP_MODULE_NUMBER_RECEIVER,
+					 0,
+					 g_bytes_get_data(bytes, NULL),
+					 g_bytes_get_size(bytes),
+					 fu_progress_get_child(progress),
+					 error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* verify written data */
+	read_back = fu_bnr_dp_device_read_data(self,
+					       FU_BNR_DP_OPCODES_FLASH_USER,
+					       FU_BNR_DP_MODULE_NUMBER_RECEIVER,
+					       0,
+					       FU_BNR_DP_FIRMWARE_SIZE,
+					       fu_progress_get_child(progress),
+					       error);
+	if (read_back == NULL)
+		return FALSE;
+	if (!fu_memcmp_safe(g_bytes_get_data(bytes, NULL),
+			    g_bytes_get_size(bytes),
+			    0,
+			    read_back->data,
+			    read_back->len,
+			    0,
+			    FU_BNR_DP_FIRMWARE_SIZE,
+			    error)) {
+		g_prefix_error_literal(error, "verification of written firmware failed: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* apply new firmware by resetting the device */
+	if (!fu_bnr_dp_device_reset(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error))
+		return FALSE;
+	/* give controller some time before ->reload() tries to read info again */
+	fu_device_sleep(device, 3000);
+	fu_progress_step_done(progress);
+
+	return TRUE;
+}
+
+static gchar *
+fu_bnr_dp_device_convert_version(FuDevice *self, guint64 version_raw)
+{
+	return fu_bnr_dp_version_to_string(version_raw);
+}
+
+static void
+fu_bnr_dp_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
+fu_bnr_dp_device_init(FuBnrDpDevice *self)
+{
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_vendor(FU_DEVICE(self), "B&R Industrial Automation GmbH");
+	fu_device_add_protocol(FU_DEVICE(self), "com.br-automation.dpaux");
+	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_BNR_DP_FIRMWARE_SIZE_MAX);
+
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+}
+
+static void
+fu_bnr_dp_device_class_init(FuBnrDpDeviceClass *klass)
+{
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+
+	device_class->convert_version = fu_bnr_dp_device_convert_version;
+	device_class->dump_firmware = fu_bnr_dp_device_dump_firmware;
+	device_class->prepare_firmware = fu_bnr_dp_device_prepare_firmware;
+	device_class->read_firmware = fu_bnr_dp_device_read_firmware;
+	device_class->reload = fu_bnr_dp_device_setup;
+	device_class->set_progress = fu_bnr_dp_device_set_progress;
+	device_class->setup = fu_bnr_dp_device_setup;
+	device_class->write_firmware = fu_bnr_dp_device_write_firmware;
+}

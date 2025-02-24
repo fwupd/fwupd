@@ -1,0 +1,622 @@
+/*
+ * Copyright 2024 B&R Industrial Automation GmbH
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#include "config.h"
+
+#include <gio/gio.h>
+#include <glib.h>
+#include <libxmlb/xb-builder-node.h>
+#include <libxmlb/xb-builder-source.h>
+#include <libxmlb/xb-builder.h>
+#include <libxmlb/xb-node.h>
+#include <libxmlb/xb-silo.h>
+#include <string.h>
+
+#include "fwupd-enums.h"
+#include "fwupd-error.h"
+
+#include "fu-bnr-dp-common.h"
+#include "fu-bnr-dp-firmware.h"
+#include "fu-bnr-dp-struct.h"
+#include "fu-byte-array.h"
+#include "fu-common.h"
+#include "fu-crc.h"
+#include "fu-firmware.h"
+#include "fu-input-stream.h"
+#include "fu-partial-input-stream.h"
+#include "fu-sum.h"
+
+struct _FuBnrDpFirmware {
+	FuFirmwareClass parent_instance;
+
+	/* mandatory XML header attributes, not part of payload. additionally, "Ver" (version) is
+	 * also mandatory */
+	guint64 device_id;	  /* Dev */
+	gchar *usage;		  /* Use */
+	gchar function;		  /* Fct */
+	guint64 variant;	  /* Var */
+	guint64 payload_length;	  /* Len */
+	guint16 payload_checksum; /* Chk */
+	gchar *material;	  /* Mat */
+};
+
+G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)
+
+static void
+fu_bnr_dp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
+
+	fu_xmlb_builder_insert_kx(bn, "device_id", self->device_id);
+	fu_xmlb_builder_insert_kv(bn, "usage", self->usage);
+	fu_xmlb_builder_insert_kx(bn, "function", self->function);
+	fu_xmlb_builder_insert_kx(bn, "variant", self->variant);
+	fu_xmlb_builder_insert_kx(bn, "payload_length", self->payload_length);
+	fu_xmlb_builder_insert_kx(bn, "payload_checksum", self->payload_checksum);
+	fu_xmlb_builder_insert_kv(bn, "material", self->material);
+}
+
+static gchar *
+fu_bnr_dp_firmware_convert_version(FuFirmware *self, guint64 version_raw)
+{
+	return fu_bnr_dp_version_to_string(version_raw);
+}
+
+static gboolean
+fu_bnr_dp_firmware_attribute_parse_u64(XbNode *root,
+				       const gchar *attribute,
+				       guint64 *value,
+				       GError **error)
+{
+	*value = xb_node_get_attr_as_uint(root, attribute);
+	if (*value == G_MAXUINT64) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "missing or invalid header attribute: '%s'",
+			    attribute);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gchar *
+fu_bnr_dp_firmware_attribute_parse_string(XbNode *root, const gchar *attribute, GError **error)
+{
+	const gchar *r;
+
+	r = xb_node_get_attr(root, attribute);
+	if (r == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "missing or invalid header attribute: '%s'",
+			    attribute);
+		return NULL;
+	}
+
+	return g_strdup(r);
+}
+
+static gboolean
+fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **error)
+{
+	gboolean r;
+	XbNode *root;
+	g_autofree gchar *tmp_str = NULL;
+	guint64 tmp_u64 = 0;
+	g_autofree gchar *fw_creation_date = NULL;
+	g_autofree gchar *fw_comment = NULL;
+
+	root = xb_silo_get_root(silo);
+	if (root == NULL || g_strcmp0(xb_node_get_element(root), "Firmware") != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid or missing firmware header element");
+	}
+
+	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Dev", &self->device_id, error);
+	if (!r)
+		return FALSE;
+
+	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Ver", &tmp_u64, error);
+	if (!r)
+		return FALSE;
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), tmp_u64);
+
+	self->usage = fu_bnr_dp_firmware_attribute_parse_string(root, "Use", error);
+	if (self->usage == NULL)
+		return FALSE;
+	if (g_strcmp0(self->usage, "fw") != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported usage string in XML header: '%s'",
+			    self->usage);
+		return FALSE;
+	}
+
+	tmp_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Fct", error);
+	if (tmp_str == NULL || strlen(tmp_str) != 1)
+		return FALSE;
+	self->function = tmp_str[0];
+	/* function compatibility check */
+	if (self->function != '_') {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unexpected function (Fct) value in XML header: '%c' (0x%hX)",
+			    self->function,
+			    self->function);
+		return FALSE;
+	}
+
+	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Var", &self->variant, error);
+	if (!r)
+		return FALSE;
+
+	r = fu_bnr_dp_firmware_attribute_parse_u64(root, "Len", &self->payload_length, error);
+	if (!r)
+		return FALSE;
+
+	g_free(tmp_str);
+	tmp_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Chk", error);
+	if (tmp_str == NULL ||
+	    !(g_str_has_prefix(tmp_str, "0x") || g_str_has_prefix(tmp_str, "0X")))
+		return FALSE;
+	r = g_ascii_string_to_unsigned(tmp_str + 2, 16, 0, G_MAXUINT16, &tmp_u64, error);
+	if (!r)
+		return FALSE;
+	self->payload_checksum = (guint16)tmp_u64;
+
+	self->material = fu_bnr_dp_firmware_attribute_parse_string(root, "Mat", error);
+	if (self->material == NULL)
+		return FALSE;
+
+	fw_creation_date = fu_bnr_dp_firmware_attribute_parse_string(root, "Date", error);
+	if (fw_creation_date != NULL)
+		g_info("firmware creation date (dd.mm.yyyy): %s", fw_creation_date);
+
+	fw_comment = fu_bnr_dp_firmware_attribute_parse_string(root, "Rem", error);
+	if (fw_comment != NULL && strlen(fw_comment) > 0)
+		g_info("firmware comment: %s", fw_comment);
+
+	return r;
+}
+
+static guint16
+fu_bnr_dp_firmware_checksum_finish(guint16 csum)
+{
+	return ~csum + 1;
+}
+
+static gboolean
+fu_bnr_dp_firmware_stream_checksum(GInputStream *stream, guint16 *csum, GError **error)
+{
+	gboolean r;
+
+	r = fu_input_stream_compute_sum16(stream, csum, error);
+	*csum = fu_bnr_dp_firmware_checksum_finish(*csum);
+
+	return r;
+}
+
+static guint16
+fu_bnr_dp_firmware_buf_checksum(const guint8 *buf, gsize bufsz)
+{
+	guint16 csum;
+
+	csum = fu_sum16(buf, bufsz);
+	csum = fu_bnr_dp_firmware_checksum_finish(csum);
+
+	return csum;
+}
+
+static gboolean
+fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
+				 GInputStream *stream,
+				 gsize payload_offset,
+				 GError **error)
+{
+	g_autoptr(GInputStream) payload_stream = NULL;
+	gsize streamsz = 0;
+	guint16 xml_checksum = 0;
+	guint16 crc = G_MAXUINT16;
+
+	payload_stream = fu_partial_input_stream_new(stream, payload_offset, G_MAXSIZE, error);
+	if (payload_stream == NULL)
+		return FALSE;
+
+	if (!fu_input_stream_size(payload_stream, &streamsz, error))
+		return FALSE;
+	if (self->payload_length != streamsz) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "unexpected firmware payload length (header specified: %lu, actual: %lu)",
+		    self->payload_length,
+		    streamsz);
+		return FALSE;
+	}
+	if (streamsz != FU_BNR_DP_FIRMWARE_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "unexpected firmware payload length (must be: %d, actual: %lu)",
+			    FU_BNR_DP_FIRMWARE_SIZE,
+			    streamsz);
+		return FALSE;
+	}
+
+	/* the XML header has a simple sum checksum for the payload */
+	if (!fu_bnr_dp_firmware_stream_checksum(payload_stream, &xml_checksum, error))
+		return FALSE;
+	if (self->payload_checksum != xml_checksum) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "checksum mismatch in firmware payload (XML header specified: 0x%X, "
+			    "actual: 0x%X)",
+			    self->payload_checksum,
+			    xml_checksum);
+		return FALSE;
+	}
+
+	/* we can do a CRC16 check on this type of payload as well */
+	if (!fu_input_stream_compute_crc16(payload_stream, FU_CRC_KIND_B16_BNR, &crc, error))
+		return FALSE;
+	if (crc != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "CRC mismatch in firmware payload: 0x%X",
+			    crc);
+		return FALSE;
+	}
+
+	/* discard the XML header and keep only the payload */
+	if (!fu_firmware_set_stream(FU_FIRMWARE(self), payload_stream, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_bnr_dp_firmware_parse(FuFirmware *firmware,
+			 GInputStream *stream,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
+	gboolean r;
+	guint8 byte = 0;
+	guint8 header_separator[] = {'\0'};
+	gsize separator_idx = 0;
+	g_autoptr(GBytes) header = NULL;
+	g_autoptr(XbBuilderSource) builder_source = xb_builder_source_new();
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbSilo) silo = NULL;
+
+	if (!fu_input_stream_read_u8(stream, 0, &byte, error))
+		return FALSE;
+	/* simplistic but should generally be good enough to identify if a header is present */
+	if (byte != '<') {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware file is missing XML header");
+		return FALSE;
+	}
+
+	/* find the index of the first null byte, indicating the end of the XML header */
+	r = fu_input_stream_find(stream,
+				 header_separator,
+				 sizeof(header_separator),
+				 &separator_idx,
+				 error);
+	if (!r)
+		return FALSE;
+
+	/* read XML header */
+	header = fu_input_stream_read_bytes(stream, 0, separator_idx, NULL, error);
+	if (header == NULL)
+		return FALSE;
+
+	r = xb_builder_source_load_bytes(builder_source,
+					 header,
+					 XB_BUILDER_SOURCE_FLAG_NONE,
+					 error);
+	if (!r)
+		return FALSE;
+
+	xb_builder_import_source(builder, builder_source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
+	if (silo == NULL)
+		return FALSE;
+
+	r = fu_bnr_dp_firmware_header_parse(self, silo, error);
+	if (!r)
+		return FALSE;
+
+	r = fu_bnr_dp_firmware_payload_parse(self, stream, separator_idx + 1, error);
+	if (!r)
+		return FALSE;
+
+	return TRUE;
+}
+
+/* set FuBnrDpFirmware private data to information from device */
+gboolean
+fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
+				     const FuStructBnrDpFactoryData *factory_data,
+				     const FuStructBnrDpPayloadHeader *fw_header,
+				     GError **error)
+{
+	g_autoptr(GBytes) bytes = NULL;
+	guint64 version = 0;
+
+	bytes = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
+	if (bytes == NULL)
+		return FALSE;
+
+	self->device_id = fu_bnr_dp_effective_product_num(factory_data);
+	self->usage = g_strdup("fw");
+	self->function = '_';
+	self->variant = fu_bnr_dp_effective_compat_id(factory_data);
+	self->payload_length = g_bytes_get_size(bytes);
+	self->payload_checksum =
+	    fu_bnr_dp_firmware_buf_checksum(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
+	self->material = fu_struct_bnr_dp_factory_data_get_identification(factory_data);
+
+	if (!fu_bnr_dp_version_from_header(fw_header, &version, error))
+		return FALSE;
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
+
+	return TRUE;
+}
+
+static GByteArray *
+fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
+{
+	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
+	g_autoptr(GByteArray) r = g_byte_array_new();
+	g_autoptr(GBytes) payload = NULL;
+	g_autoptr(XbBuilderNode) bn = NULL;
+	g_autofree gchar *xml = NULL;
+
+	g_autofree gchar *device_id = g_strdup_printf("%lu", self->device_id);
+	g_autofree gchar *version = g_strdup_printf("%lu", fu_firmware_get_version_raw(firmware));
+	g_autofree gchar *function = g_strdup_printf("%c", self->function);
+	g_autofree gchar *variant = g_strdup_printf("%lu", self->variant);
+	g_autofree gchar *payload_length = g_strdup_printf("%lu", self->payload_length);
+	g_autofree gchar *payload_checksum = g_strdup_printf("0x%X", self->payload_checksum);
+	g_autoptr(GDateTime) now = g_date_time_new_now_local();
+	g_autofree gchar *date = g_date_time_format(now, "%d.%m.%Y");
+
+	bn = xb_builder_node_insert(NULL,
+				    "Firmware",
+				    "Dev",
+				    device_id,
+				    "Ver",
+				    version,
+				    "Use",
+				    self->usage,
+				    "Fct",
+				    function,
+				    "Var",
+				    variant,
+				    "Len",
+				    payload_length,
+				    "Chk",
+				    payload_checksum,
+				    "Mat",
+				    self->material,
+				    "Date",
+				    date,
+				    "Rem",
+				    "created by " PACKAGE_NAME " " PACKAGE_VERSION,
+				    NULL);
+	if (bn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to build firmware XML header");
+		return NULL;
+	}
+
+	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_NONE, error);
+	if (xml == NULL)
+		return NULL;
+
+	/* start with xml header including null byte */
+	g_byte_array_append(r, (guint8 *)xml, strlen(xml) + 1);
+
+	/* append payload after null byte */
+	payload = fu_firmware_get_bytes_with_patches(firmware, error);
+	if (payload == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(r, payload);
+
+	return g_steal_pointer(&r);
+}
+
+/* add firmware patch that increments the boot counter embedded in the firmware */
+gboolean
+fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
+				      guint32 active_boot_counter,
+				      GError **error)
+{
+	FuFirmware *firmware = FU_FIRMWARE(self);
+	g_autoptr(GBytes) image = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) header = NULL;
+	g_autoptr(GBytes) patch = NULL;
+	guint16 crc;
+
+	/* practically impossible under normal conditions, would indicate some form of corruption.
+	 * could technically be worked around by resetting the active boot counter */
+	if (active_boot_counter == G_MAXUINT32) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "update count exhausted");
+		return FALSE;
+	}
+
+	image = fu_firmware_get_bytes(firmware, error);
+	header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(image, NULL),
+						       g_bytes_get_size(image),
+						       FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
+						       error);
+
+	/* check that the current CRC was correct */
+	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
+		       header->data,
+		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
+	if (fu_struct_bnr_dp_payload_header_get_crc(header) != crc) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_FILE,
+		    "CRC mismatch in firmware binary header (header specified: 0x%X, actual: 0x%X)",
+		    fu_struct_bnr_dp_payload_header_get_crc(header),
+		    crc);
+		return FALSE;
+	}
+
+	/* set new counter */
+	g_info("incrementing boot counter: %u => %u", active_boot_counter, active_boot_counter + 1);
+	fu_struct_bnr_dp_payload_header_set_counter(header, active_boot_counter + 1);
+
+	/* clear CRC error flag if set for some reason */
+	fu_struct_bnr_dp_payload_header_set_flags(
+	    header,
+	    fu_struct_bnr_dp_payload_header_get_flags(header) & ~FU_BNR_DP_PAYLOAD_FLAGS_CRC_ERROR);
+
+	/* update checksum */
+	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
+		       header->data,
+		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
+
+	fu_struct_bnr_dp_payload_header_set_crc(header, crc);
+
+	patch = g_bytes_new(header->data, header->len);
+	fu_firmware_add_patch(firmware, FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
+
+	return TRUE;
+}
+
+/* do checks that can only be done with data from an opened device */
+gboolean
+fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
+			 const FuStructBnrDpFactoryData *factory_data,
+			 const FuStructBnrDpPayloadHeader *active_header,
+			 const FuStructBnrDpPayloadHeader *fw_header,
+			 GError **error)
+{
+	FuFirmware *firmware = FU_FIRMWARE(self);
+	guint64 active_version = 0;
+	guint64 fw_version = 0;
+	g_autofree gchar *active_version_str = NULL;
+	g_autofree gchar *fw_version_str = NULL;
+	guint32 product_num;
+	guint16 compat_id;
+
+	/* compare versions */
+	if (!fu_bnr_dp_version_from_header(active_header, &active_version, error))
+		return FALSE;
+	if (!fu_bnr_dp_version_from_header(fw_header, &fw_version, error))
+		return FALSE;
+	active_version_str = fu_bnr_dp_version_to_string(active_version);
+	fw_version_str = fu_bnr_dp_version_to_string(fw_version);
+	if (fu_firmware_get_version_raw(firmware) != fw_version) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INVALID_DATA,
+		    "versions in firmware XML header (%s) and binary payload (%s) are inconsistent",
+		    fu_firmware_get_version(firmware),
+		    fw_version_str);
+		return FALSE;
+	}
+	if (active_version > fw_version)
+		g_warning("downgrading firmware version: '%s' => '%s'",
+			  active_version_str,
+			  fw_version_str);
+	else
+		g_info("upgrading firmware version: '%s' => '%s'",
+		       active_version_str,
+		       fw_version_str);
+
+	/* check for compatibility of device/firmware combination. customized products use separate
+	 * product numbers but set the parent product number to the original stock product. since
+	 * these customizations are generally mechanical, they shall not make the firmware
+	 * incompatible */
+	product_num = fu_bnr_dp_effective_product_num(factory_data);
+	if (product_num != G_MAXUINT32 && product_num != self->device_id) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "firmware file is not for a compatible device (expected id: 0x%X, "
+			    "received id: 0x%lX)",
+			    product_num,
+			    self->device_id);
+		return FALSE;
+	}
+
+	/* variant compatibility check, similar to device id check */
+	compat_id = fu_bnr_dp_effective_compat_id(factory_data);
+	if (compat_id != G_MAXUINT16 && compat_id != self->variant) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "firmware file is not for a compatible variant (expected: 0x%X, "
+			    "received: 0x%lX)",
+			    compat_id,
+			    self->variant);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+fu_bnr_dp_firmware_init(FuBnrDpFirmware *self)
+{
+}
+
+static void
+fu_bnr_dp_firmware_finalize(GObject *object)
+{
+	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(object);
+
+	g_free(self->usage);
+	g_free(self->material);
+
+	G_OBJECT_CLASS(fu_bnr_dp_firmware_parent_class)->finalize(object);
+}
+
+static void
+fu_bnr_dp_firmware_class_init(FuBnrDpFirmwareClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+
+	object_class->finalize = fu_bnr_dp_firmware_finalize;
+
+	firmware_class->convert_version = fu_bnr_dp_firmware_convert_version;
+	firmware_class->export = fu_bnr_dp_firmware_export;
+	firmware_class->parse = fu_bnr_dp_firmware_parse;
+	firmware_class->write = fu_bnr_dp_firmware_write;
+}
+
+FuFirmware *
+fu_bnr_dp_firmware_new(void)
+{
+	return FU_FIRMWARE(g_object_new(FU_TYPE_BNR_DP_FIRMWARE, NULL));
+}
