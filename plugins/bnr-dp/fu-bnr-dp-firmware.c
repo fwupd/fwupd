@@ -217,7 +217,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_FILE,
 		    "unexpected firmware payload length (header specified: %" G_GUINT64_FORMAT
-		    ", actual: %" G_GUINT64_FORMAT ")",
+		    ", actual: %" G_GSIZE_FORMAT ")",
 		    self->payload_length,
 		    streamsz);
 		return FALSE;
