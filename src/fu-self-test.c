@@ -4533,11 +4533,6 @@ fu_backend_usb_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
-#if !GLIB_CHECK_VERSION(2, 80, 0)
-	g_test_skip("GLib version too old");
-	return;
-#endif
-
 	/* check there were events */
 	g_object_set(backend, "device-gtype", FU_TYPE_USB_DEVICE, NULL);
 	g_signal_connect(backend,
