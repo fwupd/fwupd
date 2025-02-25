@@ -389,34 +389,24 @@ fu_efivar_set_data_impl(const gchar *guid,
 			GError **error)
 {
 	int fd;
-	int open_wflags;
-	gboolean was_immutable;
+	int open_wflags = O_WRONLY;
+	gboolean was_immutable = TRUE;
 	g_autofree gchar *fn = fu_efivar_get_filename(guid, name);
 	g_autofree guint8 *buf = g_malloc0(sizeof(guint32) + sz);
-	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GOutputStream) ostr = NULL;
 
-	/* create empty file so we can clear the immutable bit before writing */
-	if (!g_file_query_exists(file, NULL)) {
-		g_autoptr(GFileOutputStream) ostr_tmp = NULL;
-		ostr_tmp = g_file_create(file, G_FILE_CREATE_NONE, NULL, error);
-		if (ostr_tmp == NULL)
-			return FALSE;
-		if (!g_output_stream_close(G_OUTPUT_STREAM(ostr_tmp), NULL, error)) {
-			g_prefix_error(error, "failed to touch efivarfs: ");
+	/* clear the immutable bit before writing if required */
+	if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		if (!fu_efivar_set_immutable(fn, FALSE, &was_immutable, error)) {
+			g_prefix_error(error, "failed to set %s as mutable: ", fn);
 			return FALSE;
 		}
+	} else {
+		open_wflags |= O_CREAT;
 	}
-	if (!fu_efivar_set_immutable(fn, FALSE, &was_immutable, error)) {
-		g_prefix_error(error, "failed to set %s as mutable: ", fn);
-		return FALSE;
-	}
-
-	/* open file for writing, optionally append */
-	open_wflags = O_WRONLY;
 	if (attr & FU_EFIVAR_ATTR_APPEND_WRITE)
 		open_wflags |= O_APPEND;
-	fd = open(fn, open_wflags);
+	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (fd < 0) {
 		g_set_error(error,
 			    G_IO_ERROR,
