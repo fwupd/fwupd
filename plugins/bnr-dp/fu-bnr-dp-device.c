@@ -12,7 +12,6 @@
 #include "fu-bnr-dp-device.h"
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-struct.h"
-#include "fu-progress-struct.h"
 
 #define FU_BNR_DP_DEVICE_HEADER_OFFSET 0x00A00
 #define FU_BNR_DP_DEVICE_DATA_OFFSET   0x00900
@@ -291,6 +290,7 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
 	g_assert_cmpint(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
 
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
 
 	for (guint16 idx = start; idx < end; idx++) {
@@ -352,6 +352,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	if (request == NULL)
 		return FALSE;
 
+	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
 
 	for (guint16 idx = start; idx < end; idx++) {
