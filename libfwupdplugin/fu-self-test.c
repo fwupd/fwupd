@@ -1953,7 +1953,11 @@ fu_chunk_func(void)
 	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4);
 	g_assert_cmpint(chunked5->len, ==, 0);
 	chunked5_str = fu_chunk_array_to_string(chunked5);
+#if LIBXMLB_CHECK_VERSION(0, 3, 22)
+	g_assert_cmpstr(chunked5_str, ==, "<chunks />\n");
+#else
 	g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
+#endif
 
 	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4);
 	chunked1_str = fu_chunk_array_to_string(chunked1);
