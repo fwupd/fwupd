@@ -113,14 +113,15 @@ fu_algoltek_aux_firmware_write(FuFirmware *firmware, GError **error)
 	blob_isp = fu_firmware_get_image_by_id_bytes(firmware, "isp", error);
 	if (blob_isp == NULL)
 		return NULL;
-	blob_isp_padded = fu_bytes_pad(blob_isp, FU_ALGOLTEK_AUX_FIRMWARE_ISP_SIZE);
+	blob_isp_padded = fu_bytes_pad(blob_isp, FU_ALGOLTEK_AUX_FIRMWARE_ISP_SIZE, 0xFF);
 	fu_byte_array_append_bytes(buf, blob_isp_padded);
 
 	/* payload */
 	blob_payload = fu_firmware_get_bytes(img_payload, error);
 	if (blob_payload == NULL)
 		return NULL;
-	blob_payload_padded = fu_bytes_pad(blob_payload, FU_ALGOLTEK_AUX_FIRMWARE_PAYLOAD_SIZE);
+	blob_payload_padded =
+	    fu_bytes_pad(blob_payload, FU_ALGOLTEK_AUX_FIRMWARE_PAYLOAD_SIZE, 0xFF);
 	fu_byte_array_append_bytes(buf, blob_payload_padded);
 
 	/* success */

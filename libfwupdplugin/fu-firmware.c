@@ -1349,7 +1349,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		if (sz == 0 || sz == G_MAXUINT64) {
 			fu_firmware_set_bytes(self, blob);
 		} else {
-			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)sz);
+			g_autoptr(GBytes) blob_padded = fu_bytes_pad(blob, (gsize)sz, 0xFF);
 			fu_firmware_set_bytes(self, blob_padded);
 		}
 	}

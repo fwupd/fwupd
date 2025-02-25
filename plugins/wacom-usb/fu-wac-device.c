@@ -505,7 +505,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		blob_tmp = fu_firmware_write_chunk(img, fd->start_addr, fd->block_sz, NULL);
 		if (blob_tmp == NULL)
 			break;
-		blob_block = fu_bytes_pad(blob_tmp, fd->block_sz);
+		blob_block = fu_bytes_pad(blob_tmp, fd->block_sz, 0xFF);
 		g_hash_table_insert(fd_blobs, fd, blob_block);
 	}
 

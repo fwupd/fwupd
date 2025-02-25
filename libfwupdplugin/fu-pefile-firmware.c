@@ -470,7 +470,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < sections->len; i++) {
 		FuPefileSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GBytes) blob_aligned =
-		    fu_bytes_pad(section->blob, section->blobsz_aligned);
+		    fu_bytes_pad(section->blob, section->blobsz_aligned, 0xFF);
 		fu_byte_array_append_bytes(st, blob_aligned);
 	}
 

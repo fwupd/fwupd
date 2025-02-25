@@ -171,3 +171,4 @@ Remember: Plugins should be upstream!
 ## 2.0.7
 
 * `fu_device_write_firmware()`: Use `FuFirmware` rather than a `GInputStream`.
+* `fu_bytes_pad()`: Add a data byte, typically `0xFF`.

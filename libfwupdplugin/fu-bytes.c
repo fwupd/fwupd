@@ -186,15 +186,16 @@ fu_bytes_compare(GBytes *bytes1, GBytes *bytes2, GError **error)
  * fu_bytes_pad:
  * @bytes: data blob
  * @sz: the desired size in bytes
+ * @data: the byte used to pad the array
  *
  * Pads a GBytes to a minimum @sz with `0xff`.
  *
  * Returns: (transfer full): a data blob
  *
- * Since: 1.8.2
+ * Since: 2.0.7
  **/
 GBytes *
-fu_bytes_pad(GBytes *bytes, gsize sz)
+fu_bytes_pad(GBytes *bytes, gsize sz, guint8 data)
 {
 	gsize bytes_sz;
 
@@ -204,11 +205,11 @@ fu_bytes_pad(GBytes *bytes, gsize sz)
 	/* pad */
 	bytes_sz = g_bytes_get_size(bytes);
 	if (bytes_sz < sz) {
-		const guint8 *data = g_bytes_get_data(bytes, NULL);
+		const guint8 *data_old = g_bytes_get_data(bytes, NULL);
 		guint8 *data_new = g_malloc(sz);
-		if (data != NULL)
-			memcpy(data_new, data, bytes_sz); /* nocheck:blocked */
-		memset(data_new + bytes_sz, 0xff, sz - bytes_sz);
+		if (data_old != NULL)
+			memcpy(data_new, data_old, bytes_sz); /* nocheck:blocked */
+		memset(data_new + bytes_sz, data, sz - bytes_sz);
 		return g_bytes_new_take(data_new, sz);
 	}
 
