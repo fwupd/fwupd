@@ -567,7 +567,7 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 		 * so that we always send full sectors */
 		block_padded_sz =
 		    ((g_bytes_get_size(block) + sector_size - 1) / sector_size) * sector_size;
-		block_padded = fu_bytes_pad(block, block_padded_sz);
+		block_padded = fu_bytes_pad(block, block_padded_sz, 0xFF);
 
 		/* log only in blocks of 250 plus first/last */
 		if (i == 0 || i == (fu_chunk_array_length(chunks) - 1) || (i + 1) % 250 == 0)

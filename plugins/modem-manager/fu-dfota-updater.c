@@ -58,7 +58,7 @@ fu_dfota_updater_upload_chunk(FuDfotaUpdater *self, FuChunk *chk, GError **error
 	/* expect one byte as response for every 1024 bytes sent */
 	acks_expected = chunk_size / 1024;
 	/* pad every chunk to 2048 bytes to received correct amount of ACKs */
-	chunk_bytes = fu_bytes_pad(fu_chunk_get_bytes(chk), 0x800);
+	chunk_bytes = fu_bytes_pad(fu_chunk_get_bytes(chk), 0x800, 0xFF);
 
 	if (!fu_io_channel_write_bytes(self->io_channel,
 				       chunk_bytes,

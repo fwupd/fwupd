@@ -401,7 +401,8 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 						       FU_CHUNK_ADDR_OFFSET_NONE,
 						       FU_CHUNK_PAGESZ_NONE,
 						       64);
-		img_padded = fu_bytes_pad(img_bytes, MAX(fu_chunk_array_length(chunks), 1) * 64);
+		img_padded =
+		    fu_bytes_pad(img_bytes, MAX(fu_chunk_array_length(chunks), 1) * 64, 0xFF);
 		fu_byte_array_append_bytes(buf, img_padded);
 		g_checksum_update(csum,
 				  (const guchar *)g_bytes_get_data(img_padded, NULL),
