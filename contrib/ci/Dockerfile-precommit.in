@@ -1,5 +1,5 @@
 FROM debian:testing
-ENV SKIP no-commit-to-branch
+ENV SKIP=no-commit-to-branch
 RUN apt update && apt install -yq --no-install-recommends \
         git \
         patch \

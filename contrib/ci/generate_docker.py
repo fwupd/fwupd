@@ -77,7 +77,7 @@ with open("Dockerfile", "w") as wfd:
                 # add new architecture
                 wfd.write(f"RUN dpkg --add-architecture {SUBOS}\n")
         elif line == "%%%OS%%%\n":
-            wfd.write(f"ENV OS {TARGET}\n")
+            wfd.write(f"ENV OS={TARGET}\n")
         else:
             wfd.write(line)
     wfd.flush()
