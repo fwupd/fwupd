@@ -34,7 +34,7 @@ jobs:
           CI: true
           VERSION: ${{ needs.library.outputs.version }}
         run: |
-          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION -t \
+          docker run --privileged -e CI_NETWORK=$CI_NETWORK -e CI=$CI -e VERSION=$VERSION \
               -v $GITHUB_WORKSPACE:/github/workspace \
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
