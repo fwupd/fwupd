@@ -656,7 +656,25 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 					   error))
 		return FALSE;
 
-	/* send ota mcu reset command */
+	/* send ota mcu reset command to device*/
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
+					  receiver_cmd->data,
+					  receiver_cmd->len,
+					  FU_IOCTL_FLAG_NONE,
+					  error))
+		return FALSE;
+
+	self->sn++;
+	/* send ota mcu reset command to receiver */
+	g_byte_array_set_size(receiver_cmd, 0);
+	if (!fu_pxi_composite_receiver_cmd(FU_PXI_DEVICE_CMD_FW_MCU_RESET,
+					   self->sn,
+					   FU_PXI_WIRELESS_DEVICE_TARGET_RECEIVER,
+					   receiver_cmd,
+					   ota_cmd,
+					   error))
+		return FALSE;
+
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(parent),
 					    receiver_cmd->data,
 					    receiver_cmd->len,
@@ -671,6 +689,7 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
+	FuPxiReceiverDevice *parent;
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -733,7 +752,13 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 	fu_device_sleep(device, FU_PXI_WIRELESS_DEV_DELAY_MS);
 	if (!fu_pxi_wireless_device_reset(device, error))
 		return FALSE;
+
+	parent = fu_pxi_wireless_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+
 	fu_progress_step_done(progress);
+	fu_device_add_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -760,6 +785,7 @@ fu_pxi_wireless_device_init(FuPxiWirelessDevice *self)
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
