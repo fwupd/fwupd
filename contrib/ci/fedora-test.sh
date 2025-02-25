@@ -1,4 +1,8 @@
 #!/bin/sh -e
+
+# workaround dnf bug
+dnf update -y dnf5
+
 #install RPM packages
 dnf install -y dist/*.rpm
 dnf install -y gcovr
