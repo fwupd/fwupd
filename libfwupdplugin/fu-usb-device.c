@@ -2765,7 +2765,6 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp = json_object_get_string_member_with_default(json_object, "PlatformId", NULL);
 	if (tmp != NULL)
 		fu_device_set_physical_id(FU_DEVICE(self), tmp);
-#if GLIB_CHECK_VERSION(2, 80, 0)
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) created_new = g_date_time_new_from_iso8601(tmp, NULL);
@@ -2777,9 +2776,14 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 				    tmp);
 			return FALSE;
 		}
+#if GLIB_CHECK_VERSION(2, 80, 0)
 		fu_device_set_created_usec(FU_DEVICE(self), g_date_time_to_unix_usec(created_new));
-	}
+#else
+		fu_device_set_created_usec(FU_DEVICE(self),
+					   (g_date_time_to_unix(created_new) * G_USEC_PER_SEC) +
+					       g_date_time_get_microsecond(created_new));
 #endif
+	}
 	fu_device_set_vid(FU_DEVICE(self),
 			  json_object_get_int_member_with_default(json_object, "IdVendor", 0x0));
 	fu_device_set_pid(FU_DEVICE(self),
@@ -2884,14 +2888,17 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	/* optional properties */
 	fwupd_codec_json_append(builder, "GType", "FuUsbDevice");
 	fwupd_codec_json_append(builder, "PlatformId", fu_device_get_physical_id(FU_DEVICE(self)));
-#if GLIB_CHECK_VERSION(2, 80, 0)
 	if (fu_device_get_created_usec(FU_DEVICE(self)) != 0) {
+#if GLIB_CHECK_VERSION(2, 80, 0)
 		g_autoptr(GDateTime) dt =
 		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(FU_DEVICE(self)));
+#else
+		g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(
+		    fu_device_get_created_usec(FU_DEVICE(self)) / G_USEC_PER_SEC);
+#endif
 		g_autofree gchar *str = g_date_time_format_iso8601(dt);
 		fwupd_codec_json_append(builder, "Created", str);
 	}
-#endif
 	if (fu_device_get_vid(FU_DEVICE(self)) != 0) {
 		fwupd_codec_json_append_int(builder,
 					    "IdVendor",

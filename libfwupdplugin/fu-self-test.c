@@ -2708,12 +2708,8 @@ fu_backend_emulate_func(void)
 			     "  \"UsbDevices\" : [\n"
 			     "    {\n"
 			     "      \"GType\" : \"FuUdevDevice\",\n"
-#if GLIB_CHECK_VERSION(2, 80, 0)
 			     "      \"BackendId\" : \"usb:FF:FF:06\",\n"
 			     "      \"Created\" : \"2099-02-01T16:35:03Z\"\n"
-#else
-			     "      \"BackendId\" : \"usb:FF:FF:06\"\n"
-#endif
 			     "    }\n"
 			     "  ]\n"
 			     "}";
