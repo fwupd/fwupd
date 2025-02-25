@@ -2,6 +2,7 @@
 
 # workaround dnf bug
 dnf update -y dnf5
+export FORCE_COLUMNS=100
 
 #install RPM packages
 dnf install -y dist/*.rpm
