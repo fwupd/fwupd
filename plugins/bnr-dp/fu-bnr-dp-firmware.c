@@ -536,7 +536,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware file is not for a compatible device (expected id: 0x%X, "
-			    "received id: 0x%lX)",
+			    "received id: 0x%" G_GUINT64_FORMAT "X)",
 			    product_num,
 			    self->device_id);
 		return FALSE;
@@ -549,7 +549,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware file is not for a compatible variant (expected: 0x%X, "
-			    "received: 0x%lX)",
+			    "received: 0x%" G_GUINT64_FORMAT "X)",
 			    compat_id,
 			    self->variant);
 		return FALSE;

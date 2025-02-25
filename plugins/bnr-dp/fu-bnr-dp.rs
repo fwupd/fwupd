@@ -13,7 +13,7 @@ enum FuBnrDpPayloadFlags {
     CrcError = 1 << 1,
 }
 
-#[derive(Default, New, Parse)]
+#[derive(Default, Setters, Parse)]
 #[repr(C, packed)]
 struct FuStructBnrDpPayloadHeader {
     id: [char; 4] == "DP0R",
@@ -93,7 +93,6 @@ struct FuStructBnrDpAuxStatus {
     error: u8,
 }
 
-#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructBnrDpAuxResponse {
     data_len: u16le,
