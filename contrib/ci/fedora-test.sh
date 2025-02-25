@@ -1,4 +1,8 @@
 #!/bin/sh -e
+
+# workaround dnf bug
+export FORCE_COLUMNS=100
+
 #install RPM packages
 dnf install -y dist/*.rpm
 dnf install -y gcovr
