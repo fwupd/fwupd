@@ -27,12 +27,12 @@ gboolean
 fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
 				     const FuStructBnrDpFactoryData *factory_data,
 				     const FuStructBnrDpPayloadHeader *fw_header,
-				     GError **error);
+				     GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 gboolean
 fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 				      guint32 active_boot_counter,
-				      GError **error);
+				      GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
@@ -40,4 +40,4 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpPayloadHeader *active_header,
 			 const FuStructBnrDpPayloadHeader *fw_header,
 			 FwupdInstallFlags flags,
-			 GError **error);
+			 GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
