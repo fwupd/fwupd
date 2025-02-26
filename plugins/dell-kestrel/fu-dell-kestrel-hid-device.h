@@ -28,7 +28,7 @@ fu_dell_kestrel_hid_device_i2c_write(FuDellKestrelHidDevice *self,
 				     GError **error);
 gboolean
 fu_dell_kestrel_hid_device_i2c_read(FuDellKestrelHidDevice *self,
-				    FuDellKestrelEcHidCmd cmd,
+				    FuDellKestrelEcCmd cmd,
 				    GByteArray *res,
 				    guint delayms,
 				    GError **error);
