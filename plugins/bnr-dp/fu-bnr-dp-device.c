@@ -288,8 +288,9 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	const guint16 end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 
-	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
-	g_assert_cmpint(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+	g_return_val_if_fail(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+	g_return_val_if_fail(start < end, FALSE);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
@@ -312,8 +313,10 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
  * erases full block and allows us to skip further writes to that page if the chunk is entirely
  * 0xff */
 static gboolean
-fu_bnr_dp_device_can_skip_chunk(const guint8 *buf, gsize cur_offset)
+fu_bnr_dp_device_can_skip_chunk(const guint8 *buf, gsize bufsz, gsize cur_offset)
 {
+	g_return_val_if_fail(cur_offset + FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE <= bufsz, FALSE);
+
 	/* can't skip the first chunk in a flash page */
 	if ((cur_offset % FU_BNR_DP_DEVICE_FLASH_PAGE_SIZE) == 0)
 		return FALSE;
@@ -342,8 +345,9 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	const guint16 end = (offset + bufsz) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 
-	g_assert_cmpint(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
-	g_assert_cmpint(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE, ==, 0);
+	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+	g_return_val_if_fail(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
+	g_return_val_if_fail(start < end, FALSE);
 
 	st_request = fu_bnr_dp_device_build_request(opcode,
 						    module_number,
@@ -359,7 +363,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	for (guint16 idx = start; idx < end; idx++) {
 		const gsize cur_offset = idx * FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 
-		if (fu_bnr_dp_device_can_skip_chunk(buf, cur_offset)) {
+		if (fu_bnr_dp_device_can_skip_chunk(buf, bufsz, cur_offset)) {
 			fu_progress_step_done(progress);
 			continue;
 		}
@@ -568,19 +572,19 @@ static GBytes *
 fu_bnr_dp_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
-	g_autoptr(GByteArray) dump = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 
-	dump = fu_bnr_dp_device_read_data(self,
-					  FU_BNR_DP_OPCODES_FLASH_SERVICE,
-					  FU_BNR_DP_MODULE_NUMBER_RECEIVER,
-					  0,
-					  FU_BNR_DP_FIRMWARE_SIZE * 3,
-					  progress,
-					  error);
-	if (dump == NULL)
+	buf = fu_bnr_dp_device_read_data(self,
+					 FU_BNR_DP_OPCODES_FLASH_SERVICE,
+					 FU_BNR_DP_MODULE_NUMBER_RECEIVER,
+					 0,
+					 FU_BNR_DP_FIRMWARE_SIZE * 3,
+					 progress,
+					 error);
+	if (buf == NULL)
 		return NULL;
 
-	return g_bytes_new(dump->data, dump->len);
+	return g_bytes_new(buf->data, buf->len);
 }
 
 static FuFirmware *
@@ -719,6 +723,7 @@ fu_bnr_dp_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");

@@ -145,10 +145,9 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 
 	g_free(tmp_str);
 	tmp_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Chk", error);
-	if (tmp_str == NULL ||
-	    !(g_str_has_prefix(tmp_str, "0x") || g_str_has_prefix(tmp_str, "0X")))
+	if (tmp_str == NULL)
 		return FALSE;
-	if (!g_ascii_string_to_unsigned(tmp_str + 2, 16, 0, G_MAXUINT16, &tmp_u64, error))
+	if (!fu_strtoull(tmp_str, &tmp_u64, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
 	self->payload_checksum = (guint16)tmp_u64;
 
@@ -274,7 +273,7 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
 	guint8 byte = 0;
-	guint8 header_separator[] = {'\0'};
+	guint8 header_separator[] = {0x0};
 	gsize separator_idx = 0;
 	g_autoptr(GBytes) header = NULL;
 	g_autoptr(XbBuilderSource) builder_source = xb_builder_source_new();
@@ -283,14 +282,6 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_read_u8(stream, 0, &byte, error))
 		return FALSE;
-	/* simplistic but should generally be good enough to identify if a header is present */
-	if (byte != '<') {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware file is missing XML header");
-		return FALSE;
-	}
 
 	/* find the index of the first null byte, indicating the end of the XML header */
 	if (!fu_input_stream_find(stream,
