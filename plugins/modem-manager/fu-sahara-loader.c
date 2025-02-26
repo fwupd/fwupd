@@ -51,26 +51,45 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 
 	/* parse usb interfaces and find suitable endpoints */
 	intfs = fu_usb_device_get_interfaces(usb_device, error);
-	if (intfs == NULL)
+	if (intfs == NULL || intfs->len == 0) {
+		g_debug("no usb interfaces found");
 		return FALSE;
+	}
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 		FuUsbEndpoint *ep;
 		g_autoptr(GPtrArray) endpoints = NULL;
 
-		if (fu_usb_interface_get_class(intf) != 0xFF)
+		if (intf == NULL) {
+			g_debug("failed to get interface index: %u", i);
 			continue;
-		if (fu_usb_interface_get_subclass(intf) != 0xFF)
+		}
+
+		if (fu_usb_interface_get_class(intf) != 0xFF) {
+			g_debug("wrong class detected: %x", fu_usb_interface_get_class(intf));
 			continue;
+		}
+		if (fu_usb_interface_get_subclass(intf) != 0xFF) {
+			g_debug("wrong subclass detected: %x", fu_usb_interface_get_subclass(intf));
+			continue;
+		}
 		if (fu_usb_interface_get_protocol(intf) != 0xFF)
+			g_debug("wrong protocol detected: %x", fu_usb_interface_get_protocol(intf));
 			continue;
+		}
 
 		endpoints = fu_usb_interface_get_endpoints(intf);
-		if (endpoints == NULL || endpoints->len == 0)
+		if (endpoints == NULL || endpoints->len == 0) {
+			g_debug("no usb endpoints found");
 			continue;
+		}
 
 		for (guint j = 0; j < endpoints->len; j++) {
 			ep = g_ptr_array_index(endpoints, j);
+			if (ep == NULL) {
+				g_debug("failed to get endpoint index: %u", j);
+				continue;
+			}
 			if (fu_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST) {
 				self->ep_in = fu_usb_endpoint_get_address(ep);
 				self->maxpktsize_in = fu_usb_endpoint_get_maximum_packet_size(ep);
