@@ -328,8 +328,8 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 /* set FuBnrDpFirmware private data to information from device */
 gboolean
 fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
-				     const FuStructBnrDpFactoryData *factory_data,
-				     const FuStructBnrDpPayloadHeader *fw_header,
+				     const FuStructBnrDpFactoryData *st_factory_data,
+				     const FuStructBnrDpPayloadHeader *st_fw_header,
 				     GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
@@ -339,16 +339,16 @@ fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
 	if (bytes == NULL)
 		return FALSE;
 
-	self->device_id = fu_bnr_dp_effective_product_num(factory_data);
+	self->device_id = fu_bnr_dp_effective_product_num(st_factory_data);
 	self->usage = g_strdup("fw");
 	self->function = '_';
-	self->variant = fu_bnr_dp_effective_compat_id(factory_data);
+	self->variant = fu_bnr_dp_effective_compat_id(st_factory_data);
 	self->payload_length = g_bytes_get_size(bytes);
 	self->payload_checksum =
 	    fu_bnr_dp_firmware_buf_checksum(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-	self->material = fu_struct_bnr_dp_factory_data_get_identification(factory_data);
+	self->material = fu_struct_bnr_dp_factory_data_get_identification(st_factory_data);
 
-	if (!fu_bnr_dp_version_from_header(fw_header, &version, error))
+	if (!fu_bnr_dp_version_from_header(st_fw_header, &version, error))
 		return FALSE;
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
 
@@ -430,7 +430,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 {
 	FuFirmware *firmware = FU_FIRMWARE(self);
 	g_autoptr(GBytes) image = NULL;
-	g_autoptr(FuStructBnrDpPayloadHeader) header = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
 	g_autoptr(GBytes) patch = NULL;
 	guint16 crc;
 
@@ -445,43 +445,44 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 	}
 
 	image = fu_firmware_get_bytes(firmware, error);
-	header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(image, NULL),
-						       g_bytes_get_size(image),
-						       FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
-						       error);
+	st_header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(image, NULL),
+							  g_bytes_get_size(image),
+							  FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
+							  error);
 
 	/* check that the current CRC was correct */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       header->data,
+		       st_header->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
-	if (fu_struct_bnr_dp_payload_header_get_crc(header) != crc) {
+	if (fu_struct_bnr_dp_payload_header_get_crc(st_header) != crc) {
 		g_set_error(
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_INVALID_FILE,
 		    "CRC mismatch in firmware binary header (header specified: 0x%X, actual: 0x%X)",
-		    fu_struct_bnr_dp_payload_header_get_crc(header),
+		    fu_struct_bnr_dp_payload_header_get_crc(st_header),
 		    crc);
 		return FALSE;
 	}
 
 	/* set new counter */
 	g_info("incrementing boot counter: %u => %u", active_boot_counter, active_boot_counter + 1);
-	fu_struct_bnr_dp_payload_header_set_counter(header, active_boot_counter + 1);
+	fu_struct_bnr_dp_payload_header_set_counter(st_header, active_boot_counter + 1);
 
 	/* clear CRC error flag if set for some reason */
 	fu_struct_bnr_dp_payload_header_set_flags(
-	    header,
-	    fu_struct_bnr_dp_payload_header_get_flags(header) & ~FU_BNR_DP_PAYLOAD_FLAGS_CRC_ERROR);
+	    st_header,
+	    fu_struct_bnr_dp_payload_header_get_flags(st_header) &
+		~FU_BNR_DP_PAYLOAD_FLAGS_CRC_ERROR);
 
 	/* update checksum */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       header->data,
+		       st_header->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
 
-	fu_struct_bnr_dp_payload_header_set_crc(header, crc);
+	fu_struct_bnr_dp_payload_header_set_crc(st_header, crc);
 
-	patch = g_bytes_new(header->data, header->len);
+	patch = g_bytes_new(st_header->data, st_header->len);
 	fu_firmware_add_patch(firmware, FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
 
 	return TRUE;
@@ -490,9 +491,9 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 /* do checks that can only be done with data from an opened device */
 gboolean
 fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
-			 const FuStructBnrDpFactoryData *factory_data,
-			 const FuStructBnrDpPayloadHeader *active_header,
-			 const FuStructBnrDpPayloadHeader *fw_header,
+			 const FuStructBnrDpFactoryData *st_factory_data,
+			 const FuStructBnrDpPayloadHeader *st_active_header,
+			 const FuStructBnrDpPayloadHeader *st_fw_header,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -504,9 +505,9 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 	guint16 compat_id;
 
 	/* compare versions */
-	if (!fu_bnr_dp_version_from_header(active_header, &active_version, error))
+	if (!fu_bnr_dp_version_from_header(st_active_header, &active_version, error))
 		return FALSE;
-	if (!fu_bnr_dp_version_from_header(fw_header, &fw_version, error))
+	if (!fu_bnr_dp_version_from_header(st_fw_header, &fw_version, error))
 		return FALSE;
 	fw_version_str = fu_bnr_dp_version_to_string(fw_version);
 	if (fu_firmware_get_version_raw(firmware) != fw_version) {
@@ -530,7 +531,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 	 * product numbers but set the parent product number to the original stock product. since
 	 * these customizations are generally mechanical, they shall not make the firmware
 	 * incompatible */
-	product_num = fu_bnr_dp_effective_product_num(factory_data);
+	product_num = fu_bnr_dp_effective_product_num(st_factory_data);
 	if (product_num != G_MAXUINT32 && product_num != self->device_id) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -543,7 +544,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 	}
 
 	/* variant compatibility check, similar to device id check */
-	compat_id = fu_bnr_dp_effective_compat_id(factory_data);
+	compat_id = fu_bnr_dp_effective_compat_id(st_factory_data);
 	if (compat_id != G_MAXUINT16 && compat_id != self->variant) {
 		g_set_error(error,
 			    FWUPD_ERROR,

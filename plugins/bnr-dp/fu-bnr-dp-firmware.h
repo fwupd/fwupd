@@ -25,8 +25,8 @@ fu_bnr_dp_firmware_new(void);
 
 gboolean
 fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
-				     const FuStructBnrDpFactoryData *factory_data,
-				     const FuStructBnrDpPayloadHeader *fw_header,
+				     const FuStructBnrDpFactoryData *st_factory_data,
+				     const FuStructBnrDpPayloadHeader *st_fw_header,
 				     GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 gboolean
@@ -36,8 +36,8 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 gboolean
 fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
-			 const FuStructBnrDpFactoryData *factory_data,
-			 const FuStructBnrDpPayloadHeader *active_header,
-			 const FuStructBnrDpPayloadHeader *fw_header,
+			 const FuStructBnrDpFactoryData *st_factory_data,
+			 const FuStructBnrDpPayloadHeader *st_active_header,
+			 const FuStructBnrDpPayloadHeader *st_fw_header,
 			 FwupdInstallFlags flags,
 			 GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
