@@ -142,7 +142,7 @@ fu_dell_kestrel_ec_get_dock_sku(FuDellKestrelEc *self)
 
 static gboolean
 fu_dell_kestrel_ec_read(FuDellKestrelEc *self,
-			FuDellKestrelEcHidCmd cmd,
+			FuDellKestrelEcCmd cmd,
 			GByteArray *res,
 			GError **error)
 {
@@ -315,7 +315,7 @@ fu_dell_kestrel_ec_dock_type_extract(FuDellKestrelEc *self, GError **error)
 static gboolean
 fu_dell_kestrel_ec_dock_type_cmd(FuDellKestrelEc *self, GError **error)
 {
-	FuDellKestrelEcHidCmd cmd = FU_DELL_KESTREL_EC_HID_CMD_GET_DOCK_TYPE;
+	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_TYPE;
 	gsize length = 1;
 	g_autoptr(GByteArray) res = g_byte_array_new_take(g_malloc0(length), length);
 
@@ -334,7 +334,7 @@ fu_dell_kestrel_ec_dock_type_cmd(FuDellKestrelEc *self, GError **error)
 static gboolean
 fu_dell_kestrel_ec_dock_info_cmd(FuDellKestrelEc *self, GError **error)
 {
-	FuDellKestrelEcHidCmd cmd = FU_DELL_KESTREL_EC_HID_CMD_GET_DOCK_INFO;
+	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_INFO;
 	g_autoptr(GByteArray) res = fu_struct_dell_kestrel_dock_info_new();
 
 	/* get dock info over HID */
@@ -371,7 +371,7 @@ fu_dell_kestrel_ec_dock_data_extract(FuDellKestrelEc *self, GError **error)
 static gboolean
 fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 {
-	FuDellKestrelEcHidCmd cmd = FU_DELL_KESTREL_EC_HID_CMD_GET_DOCK_DATA;
+	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_DATA;
 	g_autoptr(GByteArray) res = fu_struct_dell_kestrel_dock_data_new();
 
 	/* get dock data over HID */
@@ -416,23 +416,29 @@ fu_dell_kestrel_ec_is_dock_ready4update(FuDevice *device, GError **error)
 gboolean
 fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error)
 {
-	g_autoptr(GByteArray) req = g_byte_array_new();
+	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *msg = NULL;
+	guint16 bitmask = 0x0;
 
-	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_MODIFY_LOCK);
-	fu_byte_array_append_uint8(req, 2); // length of data
+	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_MODIFY_LOCK);
+	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, 2);
 
 	if (lock) {
 		msg = g_strdup("own the dock");
-		fu_byte_array_append_uint16(req, 0xFFFF, G_LITTLE_ENDIAN);
+		bitmask = 0xFFFF;
 	} else {
 		msg = g_strdup("relesae the dock");
-		fu_byte_array_append_uint16(req, 0x0000, G_LITTLE_ENDIAN);
+		bitmask = 0x0000;
 	}
+	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req,
+							  (const guint8 *)&bitmask,
+							  sizeof(bitmask),
+							  error))
+		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
-	if (!fu_dell_kestrel_ec_write(self, req, &error_local)) {
+	if (!fu_dell_kestrel_ec_write(self, st_req, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			g_debug("ignoring: %s", error_local->message);
 		else {
@@ -450,16 +456,21 @@ gboolean
 fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 {
 	guint max_tries = 2;
-	g_autoptr(GByteArray) req = g_byte_array_new();
+	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
+	const guint8 bitmap = 0x07;
 
 	/* ec included in cmd, set bit2 in data for tbt */
-	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_PASSIVE);
-	fu_byte_array_append_uint8(req, 1); // length of data
-	fu_byte_array_append_uint8(req, 0x02);
+	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_PASSIVE);
+	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, 1);
+	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req,
+							  (const guint8 *)&bitmap,
+							  sizeof(bitmap),
+							  error))
+		return FALSE;
 
 	for (guint i = 1; i <= max_tries; i++) {
 		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
-		if (!fu_dell_kestrel_ec_write(self, req, error)) {
+		if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
 			g_prefix_error(error, "failed to register uod flow: ");
 			return FALSE;
 		}
@@ -585,8 +596,8 @@ fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 gboolean
 fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error)
 {
-	g_autoptr(GByteArray) req = g_byte_array_new();
-	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
+	g_autoptr(GByteArray) buf = NULL;
 	gsize streamsz = 0;
 
 	/* verify package length */
@@ -603,18 +614,20 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 	}
 
 	/* get the data bytes */
-	bytes = fu_input_stream_read_bytes(stream,
-					   0,
-					   FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE,
-					   NULL,
-					   error);
+	buf = fu_input_stream_read_byte_array(stream,
+					      0,
+					      FU_STRUCT_DELL_KESTREL_PACKAGE_FW_VERSIONS_SIZE,
+					      NULL,
+					      error);
 
-	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_DOCK_PKG);
-	fu_byte_array_append_uint8(req, streamsz); // length of data
-	fu_byte_array_append_bytes(req, bytes);
-	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", req->data, req->len);
+	fu_struct_dell_kestrel_ec_databytes_set_cmd(st_req, FU_DELL_KESTREL_EC_CMD_SET_DOCK_PKG);
+	fu_struct_dell_kestrel_ec_databytes_set_data_sz(st_req, streamsz);
+	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req, buf->data, buf->len, error))
+		return FALSE;
 
-	if (!fu_dell_kestrel_ec_write(self, req, error)) {
+	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", st_req->data, st_req->len);
+
+	if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
 		g_prefix_error(error, "Failed to commit package: ");
 		return FALSE;
 	}
