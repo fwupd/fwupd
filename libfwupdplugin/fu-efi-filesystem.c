@@ -58,8 +58,10 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 			break;
 		}
 		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
-		if (stream_tmp == NULL)
+		if (stream_tmp == NULL) {
+			g_prefix_error(error, "failed to cut EFI file: ");
 			return FALSE;
+		}
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
 					      0x0,

@@ -1140,8 +1140,10 @@ fu_firmware_parse_stream(FuFirmware *self,
 	} else {
 		g_autoptr(GInputStream) partial_stream =
 		    fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
-		if (partial_stream == NULL)
+		if (partial_stream == NULL) {
+			g_prefix_error(error, "failed to cut firmware: ");
 			return FALSE;
+		}
 		g_set_object(&priv->stream, partial_stream);
 	}
 

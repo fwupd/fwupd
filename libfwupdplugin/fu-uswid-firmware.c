@@ -120,8 +120,10 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GInputStream) istream2 = NULL;
 		conv = G_CONVERTER(g_zlib_decompressor_new(G_ZLIB_COMPRESSOR_FORMAT_ZLIB));
 		istream1 = fu_partial_input_stream_new(stream, hdrsz, payloadsz, error);
-		if (istream1 == NULL)
+		if (istream1 == NULL) {
+			g_prefix_error(error, "failed to cut uSWID payload: ");
 			return FALSE;
+		}
 		if (!g_seekable_seek(G_SEEKABLE(istream1), 0, G_SEEK_SET, NULL, error))
 			return FALSE;
 		istream2 = g_converter_input_stream_new(istream1, conv);

@@ -182,8 +182,10 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 							 st->len,
 							 self->bos_cap.bLength - st->len,
 							 error);
-		if (img_stream == NULL)
+		if (img_stream == NULL) {
+			g_prefix_error(error, "failed to cut BOS descriptor: ");
 			return FALSE;
+		}
 		if (!fu_firmware_set_stream(img, img_stream, error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);

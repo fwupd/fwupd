@@ -169,8 +169,10 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	/* add image */
 	partial_stream =
 	    fu_partial_input_stream_new(stream, hdr_length, fv_length - hdr_length, error);
-	if (partial_stream == NULL)
+	if (partial_stream == NULL) {
+		g_prefix_error(error, "failed to cut EFI volume: ");
 		return FALSE;
+	}
 	fu_firmware_set_id(firmware, guid_str);
 	fu_firmware_set_size(firmware, fv_length);
 

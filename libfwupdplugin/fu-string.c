@@ -500,8 +500,10 @@ fu_strsplit_stream(GInputStream *stream,
 	helper.delimiter_sz = strlen(delimiter);
 	if (offset > 0) {
 		stream_partial = fu_partial_input_stream_new(stream, offset, G_MAXSIZE, error);
-		if (stream_partial == NULL)
+		if (stream_partial == NULL) {
+			g_prefix_error(error, "failed to cut string: ");
 			return FALSE;
+		}
 	} else {
 		stream_partial = g_object_ref(stream);
 	}

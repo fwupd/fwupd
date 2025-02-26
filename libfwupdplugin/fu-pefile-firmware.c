@@ -183,8 +183,10 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 						sect_offset,
 						fu_struct_pe_coff_section_get_size_of_raw_data(st),
 						error);
-		if (img_stream == NULL)
+		if (img_stream == NULL) {
+			g_prefix_error(error, "failed to cut raw PE data: ");
 			return FALSE;
+		}
 		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error)) {
 			g_prefix_error(error, "failed to parse raw data %s: ", sect_id);
 			return FALSE;
@@ -344,8 +346,10 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			(guint)(r->offset + r->size),
 			(guint)r->size);
 		partial_stream = fu_partial_input_stream_new(stream, r->offset, r->size, error);
-		if (partial_stream == NULL)
+		if (partial_stream == NULL) {
+			g_prefix_error(error, "failed to cut Authenticode region: ");
 			return FALSE;
+		}
 		fu_composite_input_stream_add_partial_stream(
 		    FU_COMPOSITE_INPUT_STREAM(composite_stream),
 		    FU_PARTIAL_INPUT_STREAM(partial_stream));

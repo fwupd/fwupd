@@ -101,8 +101,10 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		g_autoptr(GInputStream) stream_tmp = NULL;
 
 		stream_tmp = fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
-		if (stream_tmp == NULL)
+		if (stream_tmp == NULL) {
+			g_prefix_error(error, "failed to cut linear image: ");
 			return FALSE;
+		}
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
 					      0x0,
