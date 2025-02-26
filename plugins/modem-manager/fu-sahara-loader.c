@@ -55,34 +55,34 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (fu_usb_interface_get_class(intf) == 0xFF &&
-		    fu_usb_interface_get_subclass(intf) == 0xFF &&
-		    fu_usb_interface_get_protocol(intf) == 0xFF) {
-			FuUsbEndpoint *ep;
-			g_autoptr(GPtrArray) endpoints = NULL;
+		FuUsbEndpoint *ep;
+		g_autoptr(GPtrArray) endpoints = NULL;
 
-			endpoints = fu_usb_interface_get_endpoints(intf);
-			if (endpoints == NULL || endpoints->len == 0)
-				continue;
+		if (fu_usb_interface_get_class(intf) != 0xFF)
+			continue;
+		if (fu_usb_interface_get_subclass(intf) != 0xFF)
+			continue;
+		if (fu_usb_interface_get_protocol(intf) != 0xFF)
+			continue;
 
-			for (guint j = 0; j < endpoints->len; j++) {
-				ep = g_ptr_array_index(endpoints, j);
-				if (fu_usb_endpoint_get_direction(ep) ==
-				    FU_USB_DIRECTION_DEVICE_TO_HOST) {
-					self->ep_in = fu_usb_endpoint_get_address(ep);
-					self->maxpktsize_in =
-					    fu_usb_endpoint_get_maximum_packet_size(ep);
-				} else {
-					self->ep_out = fu_usb_endpoint_get_address(ep);
-					self->maxpktsize_out =
-					    fu_usb_endpoint_get_maximum_packet_size(ep);
-				}
+		endpoints = fu_usb_interface_get_endpoints(intf);
+		if (endpoints == NULL || endpoints->len == 0)
+			continue;
+
+		for (guint j = 0; j < endpoints->len; j++) {
+			ep = g_ptr_array_index(endpoints, j);
+			if (fu_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST) {
+				self->ep_in = fu_usb_endpoint_get_address(ep);
+				self->maxpktsize_in = fu_usb_endpoint_get_maximum_packet_size(ep);
+			} else {
+				self->ep_out = fu_usb_endpoint_get_address(ep);
+				self->maxpktsize_out = fu_usb_endpoint_get_maximum_packet_size(ep);
 			}
-
-			fu_usb_device_add_interface(usb_device, fu_usb_interface_get_number(intf));
-
-			return TRUE;
 		}
+
+		fu_usb_device_add_interface(usb_device, fu_usb_interface_get_number(intf));
+
+		return TRUE;
 	}
 
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
