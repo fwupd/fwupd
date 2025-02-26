@@ -896,7 +896,7 @@ static void
 fu_cabinet_init(FuCabinet *self)
 {
 	fu_cab_firmware_set_only_basename(FU_CAB_FIRMWARE(self), TRUE);
-	fu_firmware_set_size_max(FU_FIRMWARE(self), 1024 * 1024 * 100);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x80000000); /* 2GB */
 	self->builder = xb_builder_new();
 	self->jcat_file = jcat_file_new();
 	self->jcat_context = jcat_context_new();
