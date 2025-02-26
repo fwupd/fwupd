@@ -11,7 +11,7 @@ enum FuDellDockBaseType {
 }
 
 #[repr(u8)]
-enum FuDellKestrelEcHidCmd {
+enum FuDellKestrelEcCmd {
     SetDockPkg = 0x01,
     GetDockInfo = 0x02,
     GetDockData = 0x03,
@@ -19,6 +19,14 @@ enum FuDellKestrelEcHidCmd {
     SetModifyLock = 0x0a,
     SetFwupMode = 0x0b,
     SetPassive = 0x0d,
+}
+
+#[repr(C, packed)]
+#[derive(New)]
+struct FuStructDellKestrelEcDatabytes {
+    cmd: FuDellKestrelEcCmd,
+    data_sz: u8,
+    data: [u8; 126],
 }
 
 #[repr(u8)]
