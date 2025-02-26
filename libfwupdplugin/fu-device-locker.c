@@ -189,6 +189,7 @@ fu_device_locker_new_full(gpointer device,
 				}
 			}
 		}
+		g_object_unref(device);
 		return NULL;
 	}
 
