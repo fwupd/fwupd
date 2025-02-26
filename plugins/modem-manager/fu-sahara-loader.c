@@ -73,7 +73,8 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 			g_debug("wrong subclass detected: %x", fu_usb_interface_get_subclass(intf));
 			continue;
 		}
-		if (fu_usb_interface_get_protocol(intf) != 0xFF)
+		if ((fu_usb_interface_get_protocol(intf) != 0xFF) &&
+		    (fu_usb_interface_get_protocol(intf) != 0x11)) {
 			g_debug("wrong protocol detected: %x", fu_usb_interface_get_protocol(intf));
 			continue;
 		}
