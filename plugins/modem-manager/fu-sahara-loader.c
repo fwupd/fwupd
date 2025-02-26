@@ -57,7 +57,8 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 		if (fu_usb_interface_get_class(intf) == 0xFF &&
 		    fu_usb_interface_get_subclass(intf) == 0xFF &&
-		    fu_usb_interface_get_protocol(intf) == 0xFF) {
+		    (fu_usb_interface_get_protocol(intf) == 0xFF ||
+		     fu_usb_interface_get_protocol(intf) == 0x11)) {
 			FuUsbEndpoint *ep;
 			g_autoptr(GPtrArray) endpoints = NULL;
 
