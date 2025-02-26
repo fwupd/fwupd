@@ -455,7 +455,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	/* ec included in cmd, set bit2 in data for tbt */
 	fu_byte_array_append_uint8(req, FU_DELL_KESTREL_EC_HID_CMD_SET_PASSIVE);
 	fu_byte_array_append_uint8(req, 1); // length of data
-	fu_byte_array_append_uint8(req, 0x02);
+	fu_byte_array_append_uint8(req, 0x07);
 
 	for (guint i = 1; i <= max_tries; i++) {
 		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
