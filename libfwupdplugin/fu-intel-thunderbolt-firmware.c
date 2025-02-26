@@ -72,8 +72,10 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 
 	/* FuIntelThunderboltNvm->parse */
 	partial_stream = fu_partial_input_stream_new(stream, farb_pointer, G_MAXSIZE, error);
-	if (partial_stream == NULL)
+	if (partial_stream == NULL) {
+		g_prefix_error(error, "failed to cut from NVM: ");
 		return FALSE;
+	}
 	return FU_FIRMWARE_CLASS(fu_intel_thunderbolt_firmware_parent_class)
 	    ->parse(firmware, partial_stream, flags, error);
 }

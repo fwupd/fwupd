@@ -321,8 +321,10 @@ fu_efi_section_parse(FuFirmware *firmware,
 	/* create blob */
 	offset += st->len;
 	partial_stream = fu_partial_input_stream_new(stream, offset, size - offset, error);
-	if (partial_stream == NULL)
+	if (partial_stream == NULL) {
+		g_prefix_error(error, "failed to cut data: ");
 		return FALSE;
+	}
 	fu_firmware_set_offset(firmware, offset);
 	fu_firmware_set_size(firmware, size);
 	if (!fu_firmware_set_stream(firmware, partial_stream, error))

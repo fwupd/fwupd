@@ -27,8 +27,10 @@ fu_usb_descriptor_parse(FuFirmware *firmware,
 		return FALSE;
 	stream_partial =
 	    fu_partial_input_stream_new(stream, 0x0, fu_usb_base_hdr_get_length(st), error);
-	if (stream_partial == NULL)
+	if (stream_partial == NULL) {
+		g_prefix_error(error, "failed to cut USB descriptor: ");
 		return FALSE;
+	}
 	if (!fu_firmware_set_stream(firmware, stream_partial, error))
 		return FALSE;
 	fu_firmware_set_idx(FU_FIRMWARE(self), fu_usb_base_hdr_get_descriptor_type(st));
