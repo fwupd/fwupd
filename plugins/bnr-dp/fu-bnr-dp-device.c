@@ -508,7 +508,7 @@ fu_bnr_dp_device_read_firmware(FuDevice *device, FuProgress *progress, GError **
 	g_autoptr(FuFirmware) firmware = fu_bnr_dp_firmware_new();
 	g_autoptr(GByteArray) image = NULL;
 	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(FuStructBnrDpPayloadHeader) st_factory_data = NULL;
+	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
 	FuBnrDpPayloadFlags flags;
 	gsize offset = FU_BNR_DP_FIRMWARE_SIZE;
