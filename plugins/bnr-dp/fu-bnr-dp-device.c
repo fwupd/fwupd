@@ -27,7 +27,7 @@
  * polling */
 #define FU_BNR_DP_DEVICE_POLL_MAX_FAST	    10
 #define FU_BNR_DP_DEVICE_POLL_MAX_TOTAL	    100
-#define FU_BNR_DP_DEVICE_POLL_INTERVAL_USEC 5000
+#define FU_BNR_DP_DEVICE_POLL_INTERVAL_MSEC 5
 
 struct _FuBnrDpDevice {
 	FuDpauxDevice parent_instance;
@@ -85,11 +85,16 @@ fu_bnr_dp_device_eval_result(const FuStructBnrDpAuxStatus *st_status, GError **e
 }
 
 static gboolean
-fu_bnr_dp_device_is_busy(const FuStructBnrDpAuxStatus *st_status)
+fu_bnr_dp_device_is_done(const FuStructBnrDpAuxStatus *st_status, GError **error)
 {
 	guint8 error_byte = fu_struct_bnr_dp_aux_status_get_error(st_status);
 
-	return error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_BUSY;
+	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_BUSY) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 /* Write a single `request` and some optional data to the device. */
@@ -217,30 +222,36 @@ fu_bnr_dp_device_read_status(FuBnrDpDevice *self, GError **error)
 }
 
 static gboolean
+fu_bnr_dp_device_poll_status_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	g_autoptr(FuStructBnrDpAuxStatus) st_status = NULL;
+
+	st_status = fu_bnr_dp_device_read_status(FU_BNR_DP_DEVICE(device), error);
+	if (st_status == NULL)
+		return FALSE;
+
+	if (!fu_bnr_dp_device_eval_result(st_status, error))
+		return FALSE;
+
+	return fu_bnr_dp_device_is_done(st_status, error);
+}
+
+static gboolean
 fu_bnr_dp_device_poll_status(FuBnrDpDevice *self, GError **error)
 {
-	for (gint i = 0;; i++) {
-		g_autoptr(FuStructBnrDpAuxStatus) st_status = NULL;
-
-		st_status = fu_bnr_dp_device_read_status(self, error);
-		if (st_status == NULL)
-			return FALSE;
-
-		if (!fu_bnr_dp_device_eval_result(st_status, error))
-			return FALSE;
-		if (!fu_bnr_dp_device_is_busy(st_status))
-			return TRUE;
-
-		if (i > FU_BNR_DP_DEVICE_POLL_MAX_TOTAL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_BUSY,
-					    "polling device reached timeout");
-			return FALSE;
-		}
-		if (i > FU_BNR_DP_DEVICE_POLL_MAX_FAST)
-			g_usleep(FU_BNR_DP_DEVICE_POLL_INTERVAL_USEC);
-	}
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_bnr_dp_device_poll_status_cb,
+				    FU_BNR_DP_DEVICE_POLL_MAX_FAST,
+				    0,
+				    NULL,
+				    NULL) ||
+	       fu_device_retry_full(FU_DEVICE(self),
+				    fu_bnr_dp_device_poll_status_cb,
+				    FU_BNR_DP_DEVICE_POLL_MAX_TOTAL -
+					FU_BNR_DP_DEVICE_POLL_MAX_FAST,
+				    FU_BNR_DP_DEVICE_POLL_INTERVAL_MSEC,
+				    NULL,
+				    error);
 }
 
 static GByteArray *
@@ -743,6 +754,8 @@ fu_bnr_dp_device_init(FuBnrDpDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_READ, NULL);
 }
 
 static void
