@@ -494,6 +494,25 @@ fu_device_version_format_func(void)
 }
 
 static void
+fu_device_version_format_raw_func(void)
+{
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_USB_DEVICE, NULL);
+
+	/* like normal */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_BCD);
+	fu_device_set_version_raw(device, 256);
+	fu_device_set_version_lowest_raw(device, 257);
+
+	g_assert_cmpstr(fu_device_get_version(device), ==, "1.0");
+	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "1.1");
+
+	/* ensure both are changed */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "256");
+	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "257");
+}
+
+static void
 fu_device_open_refcount_func(void)
 {
 	gboolean ret;
@@ -6729,6 +6748,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func("/fwupd/device{version-format}", fu_device_version_format_func);
+	g_test_add_func("/fwupd/device{version-format-raw}", fu_device_version_format_raw_func);
 	g_test_add_func("/fwupd/device{retry-success}", fu_device_retry_success_func);
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
