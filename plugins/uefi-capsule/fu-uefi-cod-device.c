@@ -187,6 +187,7 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	g_autofree gchar *cod_path = NULL;
+	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* ensure we have the existing state */
@@ -202,13 +203,16 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
+	fixed_fw = fu_uefi_device_fixup_firmware(self, fw, error);
+	if (fixed_fw == NULL)
+		return FALSE;
 	cod_path = fu_uefi_cod_device_get_filename(self, error);
 	if (cod_path == NULL)
 		return FALSE;
 	g_info("using %s", cod_path);
 	if (!fu_path_mkdir_parent(cod_path, error))
 		return FALSE;
-	if (!fu_bytes_set_contents(cod_path, fw, error))
+	if (!fu_bytes_set_contents(cod_path, fixed_fw, error))
 		return FALSE;
 
 	/*
