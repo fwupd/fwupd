@@ -284,9 +284,9 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 			   FuProgress *progress,
 			   GError **error)
 {
-	g_autoptr(GByteArray) r = g_byte_array_sized_new(size);
 	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	const guint16 end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	g_autoptr(GByteArray) r = g_byte_array_sized_new(size);
 
 	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
 	g_return_val_if_fail(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
@@ -341,9 +341,9 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
-	g_autoptr(FuStructBnrDpAuxRequest) st_request = NULL;
 	const guint16 start = offset / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	const guint16 end = (offset + bufsz) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
+	g_autoptr(FuStructBnrDpAuxRequest) st_request = NULL;
 
 	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
 	g_return_val_if_fail(bufsz % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
@@ -449,11 +449,11 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 	guint64 version = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autofree gchar *id_str = NULL;
-	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
-	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 	g_autofree gchar *serial = NULL;
 	g_autofree gchar *hw_rev = NULL;
 	g_autofree gchar *oui = NULL;
+	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
+	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 
 	/* DpauxDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_bnr_dp_device_parent_class)->setup(device, error))
@@ -509,14 +509,14 @@ static FuFirmware *
 fu_bnr_dp_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);
+	FuBnrDpPayloadFlags flags;
+	gsize offset = FU_BNR_DP_FIRMWARE_SIZE;
+	guint16 crc;
 	g_autoptr(FuFirmware) firmware = fu_bnr_dp_firmware_new();
 	g_autoptr(GByteArray) image = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
-	FuBnrDpPayloadFlags flags;
-	gsize offset = FU_BNR_DP_FIRMWARE_SIZE;
-	guint16 crc;
 
 	st_factory_data =
 	    fu_bnr_dp_device_factory_data(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);

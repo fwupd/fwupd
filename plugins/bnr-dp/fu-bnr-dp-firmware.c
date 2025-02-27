@@ -201,10 +201,10 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 				 gsize payload_offset,
 				 GError **error)
 {
-	g_autoptr(GInputStream) payload_stream = NULL;
 	gsize streamsz = 0;
 	guint16 xml_checksum = 0;
 	guint16 crc = G_MAXUINT16;
+	g_autoptr(GInputStream) payload_stream = NULL;
 
 	payload_stream = fu_partial_input_stream_new(stream, payload_offset, G_MAXSIZE, error);
 	if (payload_stream == NULL)
@@ -325,8 +325,8 @@ fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
 				     const FuStructBnrDpPayloadHeader *st_fw_header,
 				     GError **error)
 {
-	g_autoptr(GBytes) bytes = NULL;
 	guint64 version = 0;
+	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GDateTime) now = g_date_time_new_now_local();
 
 	bytes = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
@@ -355,10 +355,10 @@ static GByteArray *
 fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
+	g_autofree gchar *xml = NULL;
 	g_autoptr(GByteArray) r = g_byte_array_new();
 	g_autoptr(GBytes) payload = NULL;
 	g_autoptr(XbBuilderNode) bn = NULL;
-	g_autofree gchar *xml = NULL;
 
 	g_autofree gchar *device_id = g_strdup_printf("%" G_GUINT64_FORMAT, self->device_id);
 	g_autofree gchar *version =
@@ -423,10 +423,10 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 				      GError **error)
 {
 	FuFirmware *firmware = FU_FIRMWARE(self);
+	guint16 crc;
 	g_autoptr(GBytes) image = NULL;
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
 	g_autoptr(GBytes) patch = NULL;
-	guint16 crc;
 
 	/* practically impossible under normal conditions, would indicate some form of corruption.
 	 * could technically be worked around by resetting the active boot counter */
