@@ -170,8 +170,6 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_update_error(d, v)   fwupd_device_set_update_error(FWUPD_DEVICE(d), v)
 #define fu_device_add_vendor_id(d, v)	   fwupd_device_add_vendor_id(FWUPD_DEVICE(d), v)
 #define fu_device_add_protocol(d, v)	   fwupd_device_add_protocol(FWUPD_DEVICE(d), v)
-#define fu_device_set_version_lowest_raw(d, v)                                                     \
-	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(d), v)
 #define fu_device_set_version_bootloader_raw(d, v)                                                 \
 	fwupd_device_set_version_bootloader_raw(FWUPD_DEVICE(d), v)
 #define fu_device_set_version_build_date(d, v)                                                     \
@@ -751,6 +749,8 @@ void
 fu_device_set_version_u32(FuDevice *self, guint32 version_raw) G_GNUC_NON_NULL(1);
 void
 fu_device_set_version_u64(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
+void
+fu_device_set_version_lowest_raw(FuDevice *self, guint64 version_raw) G_GNUC_NON_NULL(1);
 void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason)
     G_GNUC_NON_NULL(1, 2);
