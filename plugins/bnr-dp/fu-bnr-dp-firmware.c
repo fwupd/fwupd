@@ -25,6 +25,8 @@ struct _FuBnrDpFirmware {
 	guint64 payload_length;	  /* Len */
 	guint16 payload_checksum; /* Chk */
 	gchar *material;	  /* Mat */
+	gchar *creation_date;	  /* Date */
+	gchar *comment;		  /* Rem */
 };
 
 G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)
@@ -41,6 +43,8 @@ fu_bnr_dp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 	fu_xmlb_builder_insert_kx(bn, "payload_length", self->payload_length);
 	fu_xmlb_builder_insert_kx(bn, "payload_checksum", self->payload_checksum);
 	fu_xmlb_builder_insert_kv(bn, "material", self->material);
+	fu_xmlb_builder_insert_kv(bn, "creation_date", self->creation_date);
+	fu_xmlb_builder_insert_kv(bn, "comment", self->comment);
 }
 
 static gchar *
@@ -92,8 +96,6 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 	XbNode *root;
 	g_autofree gchar *tmp_str = NULL;
 	guint64 tmp_u64 = 0;
-	g_autofree gchar *fw_creation_date = NULL;
-	g_autofree gchar *fw_comment = NULL;
 
 	root = xb_silo_get_root(silo);
 	if (root == NULL || g_strcmp0(xb_node_get_element(root), "Firmware") != 0) {
@@ -155,13 +157,13 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 	if (self->material == NULL)
 		return FALSE;
 
-	fw_creation_date = fu_bnr_dp_firmware_attribute_parse_string(root, "Date", error);
-	if (fw_creation_date != NULL)
-		g_info("firmware creation date (dd.mm.yyyy): %s", fw_creation_date);
+	self->creation_date = fu_bnr_dp_firmware_attribute_parse_string(root, "Date", error);
+	if (self->creation_date != NULL)
+		g_info("firmware creation date (dd.mm.yyyy): %s", self->creation_date);
 
-	fw_comment = fu_bnr_dp_firmware_attribute_parse_string(root, "Rem", error);
-	if (fw_comment != NULL && strlen(fw_comment) > 0)
-		g_info("firmware comment: %s", fw_comment);
+	self->comment = fu_bnr_dp_firmware_attribute_parse_string(root, "Rem", error);
+	if (self->comment != NULL && strlen(self->comment) > 0)
+		g_info("firmware comment: %s", self->comment);
 
 	return TRUE;
 }
@@ -325,6 +327,7 @@ fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
 {
 	g_autoptr(GBytes) bytes = NULL;
 	guint64 version = 0;
+	g_autoptr(GDateTime) now = g_date_time_new_now_local();
 
 	bytes = fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
 	if (bytes == NULL)
@@ -338,6 +341,8 @@ fu_bnr_dp_firmware_parse_from_device(FuBnrDpFirmware *self,
 	self->payload_checksum =
 	    fu_bnr_dp_firmware_buf_checksum(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
 	self->material = fu_struct_bnr_dp_factory_data_get_identification(st_factory_data);
+	self->creation_date = g_date_time_format(now, "%d.%m.%Y");
+	self->comment = g_strdup("created by " PACKAGE_NAME " " PACKAGE_VERSION);
 
 	if (!fu_bnr_dp_version_from_header(st_fw_header, &version, error))
 		return FALSE;
@@ -363,8 +368,6 @@ fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 	g_autofree gchar *payload_length =
 	    g_strdup_printf("%" G_GUINT64_FORMAT, self->payload_length);
 	g_autofree gchar *payload_checksum = g_strdup_printf("0x%X", self->payload_checksum);
-	g_autoptr(GDateTime) now = g_date_time_new_now_local();
-	g_autofree gchar *date = g_date_time_format(now, "%d.%m.%Y");
 
 	bn = xb_builder_node_insert(NULL,
 				    "Firmware",
@@ -385,9 +388,9 @@ fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 				    "Mat",
 				    self->material,
 				    "Date",
-				    date,
+				    self->creation_date,
 				    "Rem",
-				    "created by " PACKAGE_NAME " " PACKAGE_VERSION,
+				    self->comment,
 				    NULL);
 	if (bn == NULL) {
 		g_set_error_literal(error,
@@ -562,6 +565,8 @@ fu_bnr_dp_firmware_finalize(GObject *object)
 
 	g_free(self->usage);
 	g_free(self->material);
+	g_free(self->creation_date);
+	g_free(self->comment);
 
 	G_OBJECT_CLASS(fu_bnr_dp_firmware_parent_class)->finalize(object);
 }
