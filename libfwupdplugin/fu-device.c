@@ -3067,11 +3067,18 @@ fu_device_set_version_format(FuDevice *self, FwupdVersionFormat fmt)
 	fwupd_device_set_version_format(FWUPD_DEVICE(self), fmt);
 
 	/* convert this, now we know */
-	if (device_class->convert_version != NULL && fu_device_get_version(self) != NULL &&
-	    fu_device_get_version_raw(self) != 0) {
-		g_autofree gchar *version =
-		    device_class->convert_version(self, fu_device_get_version_raw(self));
-		fu_device_set_version(self, version);
+	if (device_class->convert_version != NULL) {
+		if (fu_device_get_version_raw(self) != 0) {
+			g_autofree gchar *version =
+			    device_class->convert_version(self, fu_device_get_version_raw(self));
+			fu_device_set_version(self, version);
+		}
+		if (fu_device_get_version_lowest_raw(self) != 0) {
+			g_autofree gchar *version =
+			    device_class->convert_version(self,
+							  fu_device_get_version_lowest_raw(self));
+			fu_device_set_version_lowest(self, version);
+		}
 	}
 }
 
@@ -3239,6 +3246,29 @@ fu_device_set_version_raw(FuDevice *self, guint64 version_raw)
 		g_autofree gchar *version = device_class->convert_version(self, version_raw);
 		if (version != NULL)
 			fu_device_set_version(self, version);
+	}
+}
+
+/**
+ * fu_device_set_version_lowest_raw:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ *
+ * Sets the raw device version from a integer value and the device version format.
+ *
+ * Since: 2.0.7
+ **/
+void
+fu_device_set_version_lowest_raw(FuDevice *self, guint64 version_raw)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+
+	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(self), version_raw);
+	if (device_class->convert_version != NULL) {
+		g_autofree gchar *version = device_class->convert_version(self, version_raw);
+		if (version != NULL)
+			fu_device_set_version_lowest(self, version);
 	}
 }
 
