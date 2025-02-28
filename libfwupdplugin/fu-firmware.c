@@ -1992,7 +1992,7 @@ fu_firmware_get_images(FuFirmware *self)
 /**
  * fu_firmware_get_image_by_id:
  * @self: a #FuPlugin
- * @id: (nullable): image ID, e.g. `config` or `*.mfg`
+ * @id: (nullable): image ID, e.g. `config` or `*.mfg|*.elf`
  * @error: (nullable): optional return location for an error
  *
  * Gets the firmware image using the image ID.
@@ -2009,12 +2009,21 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	for (guint i = 0; i < priv->images->len; i++) {
-		FuFirmware *img = g_ptr_array_index(priv->images, i);
-		if (id == NULL && fu_firmware_get_id(img) == NULL)
-			return g_object_ref(img);
-		if (id != NULL && g_pattern_match_simple(id, fu_firmware_get_id(img)))
-			return g_object_ref(img);
+	if (id == NULL) {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(priv->images, i);
+			if (fu_firmware_get_id(img) == NULL)
+				return g_object_ref(img);
+		}
+	} else {
+		g_auto(GStrv) split = g_strsplit(id, "|", 0);
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(priv->images, i);
+			for (guint j = 0; split[j] != NULL; j++) {
+				if (g_pattern_match_simple(split[j], fu_firmware_get_id(img)))
+					return g_object_ref(img);
+			}
+		}
 	}
 	g_set_error(error,
 		    FWUPD_ERROR,

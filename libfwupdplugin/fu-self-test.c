@@ -3666,7 +3666,7 @@ fu_firmware_build_func(void)
 	g_assert_cmpstr(fu_firmware_get_version(firmware), ==, "1.2.3");
 
 	/* verify image */
-	img = fu_firmware_get_image_by_id(firmware, "h?ad*", &error);
+	img = fu_firmware_get_image_by_id(firmware, "xxx|h?ad*", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(img);
 	g_assert_cmpstr(fu_firmware_get_version(img), ==, "4.5.6");
