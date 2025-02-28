@@ -304,35 +304,22 @@ fu_dpaux_device_write(FuDpauxDevice *self,
 		      guint timeout_ms,
 		      GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autofree gchar *title = g_strdup_printf("DPAUX write @0x%x", (guint)offset);
 
 	g_return_val_if_fail(FU_IS_DPAUX_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* sanity check */
-	if (io_channel == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device is not open");
-		return FALSE;
-	}
-
 	/* seek, then write */
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
-	if (lseek(fu_io_channel_unix_get_fd(io_channel), offset, SEEK_SET) != offset) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to lseek to 0x%x",
-			    (guint)offset);
+	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), offset, error))
 		return FALSE;
-	}
-	return fu_io_channel_write_raw(io_channel,
-				       buf,
-				       bufsz,
-				       timeout_ms,
-				       FU_IO_CHANNEL_FLAG_NONE,
-				       error);
+	return fu_udev_device_write(FU_UDEV_DEVICE(self),
+				    buf,
+				    bufsz,
+				    timeout_ms,
+				    FU_IO_CHANNEL_FLAG_NONE,
+				    error);
 }
 
 /**
@@ -356,34 +343,22 @@ fu_dpaux_device_read(FuDpauxDevice *self,
 		     guint timeout_ms,
 		     GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_autofree gchar *title = g_strdup_printf("DPAUX read @0x%x", (guint)offset);
 
 	g_return_val_if_fail(FU_IS_DPAUX_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* sanity check */
-	if (io_channel == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device is not open");
-		return FALSE;
-	}
 	/* seek, then read */
-	if (lseek(fu_io_channel_unix_get_fd(io_channel), offset, SEEK_SET) != offset) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to lseek to 0x%x",
-			    (guint)offset);
+	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), offset, error))
 		return FALSE;
-	}
-	if (!fu_io_channel_read_raw(io_channel,
-				    buf,
-				    bufsz,
-				    NULL,
-				    timeout_ms,
-				    FU_IO_CHANNEL_FLAG_NONE,
-				    error))
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+				 buf,
+				 bufsz,
+				 NULL,
+				 timeout_ms,
+				 FU_IO_CHANNEL_FLAG_NONE,
+				 error))
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, title, buf, bufsz);
 
