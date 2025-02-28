@@ -299,9 +299,9 @@ fu_bnr_dp_device_read_data(FuBnrDpDevice *self,
 	const guint16 end = (offset + size) / FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE;
 	g_autoptr(GByteArray) r = g_byte_array_sized_new(size);
 
-	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
-	g_return_val_if_fail(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, FALSE);
-	g_return_val_if_fail(start < end, FALSE);
+	g_return_val_if_fail(offset % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, NULL);
+	g_return_val_if_fail(size % FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE == 0, NULL);
+	g_return_val_if_fail(start < end, NULL);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, end - start);
