@@ -26,6 +26,12 @@ struct _FuRedfishDeviceClass {
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);
 gboolean
+fu_redfish_device_parse_message_id(FuRedfishDevice *self,
+				   const gchar *message_id,
+				   const gchar *message,
+				   FuProgress *progress,
+				   GError **error);
+gboolean
 fu_redfish_device_poll_task(FuRedfishDevice *self,
 			    const gchar *location,
 			    FuProgress *progress,
