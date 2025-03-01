@@ -1,0 +1,17 @@
+{
+  "name": "Qualcomm EC25AU",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/qc-ec25au-setup.json",
+      "components": [
+        {
+          "version": "0.0",
+          "guids": [
+            "9d5ddb63-31c7-55cc-a11e-67b5fd871113"
+          ]
+        }
+      ]
+    }
+  ]
+}
