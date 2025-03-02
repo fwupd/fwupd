@@ -56,7 +56,6 @@ repos:
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
               plugins/ch341a/ch341a-vmod\.png|
-              plugins/ebitdo/data/update\.tdc|
               plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
               plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
