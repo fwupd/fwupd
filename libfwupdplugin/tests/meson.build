@@ -34,8 +34,6 @@ install_data([
     'efi-load-option.builder.xml',
     'efi-load-option-data.builder.xml',
     'efi-load-option-hive.builder.xml',
-    'efi-lz77-legacy.bin',
-    'efi-lz77-tiano.bin',
     'efi-section.builder.xml',
     'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',

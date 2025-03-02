@@ -52,7 +52,6 @@ repos:
               data/org\.freedesktop\.fwupd\.png|
               data/tests/fakedevice\d{3}\.(bin|jcat)|
               libfwupdplugin/tests/dmi/tables(?:64)?/(DMI|smbios_entry_point)|
-              libfwupdplugin/tests/efi-lz77-(legacy|tiano)\.bin|
               libfwupdplugin/tests/efi/efivars/(Boot\d{4}-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
