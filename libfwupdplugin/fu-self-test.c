@@ -679,6 +679,7 @@ fu_smbios_func(void)
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *full_path = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -690,6 +691,12 @@ fu_smbios_func(void)
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+
+	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
+	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -761,6 +768,12 @@ fu_smbios3_func(void)
 	g_autoptr(GError) error = NULL;
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables64", NULL);
+
+	if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
+
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
@@ -1114,6 +1127,7 @@ static void
 fu_hwids_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *full_path = NULL;
 	g_autoptr(FuContext) context = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1148,6 +1162,13 @@ fu_hwids_func(void)
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+
+	/* DMI */
+	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
+	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
 
 	context = fu_context_new();
 	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
@@ -6232,6 +6253,10 @@ fu_efi_lz77_decompressor_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename_tiano = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-tiano.bin", NULL);
+	if (!g_file_test(filename_tiano, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing efi-lz77-tiano.bin");
+		return;
+	}
 	blob_tiano = fu_bytes_get_contents(filename_tiano, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_tiano);
@@ -6251,6 +6276,10 @@ fu_efi_lz77_decompressor_func(void)
 	g_assert_cmpstr(csum_tiano, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
 
 	filename_legacy = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-legacy.bin", NULL);
+	if (!g_file_test(filename_tiano, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing efi-lz77-legacy.bin");
+		return;
+	}
 	blob_legacy = fu_bytes_get_contents(filename_legacy, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_legacy);

@@ -34,8 +34,6 @@ install_data([
     'efi-load-option.builder.xml',
     'efi-load-option-data.builder.xml',
     'efi-load-option-hive.builder.xml',
-    'efi-lz77-legacy.bin',
-    'efi-lz77-tiano.bin',
     'efi-section.builder.xml',
     'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',
@@ -82,18 +80,6 @@ if sqlite.found()
   )
 endif
 
-install_data([
-    'dmi/tables/DMI',
-    'dmi/tables/smbios_entry_point',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables'),
-)
-install_data([
-    'dmi/tables64/DMI',
-    'dmi/tables64/smbios_entry_point',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'tests/dmi/tables64'),
-)
 install_data([
     'lockdown/locked/lockdown',
   ],

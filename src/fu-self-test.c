@@ -218,8 +218,13 @@ fu_engine_generate_md_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 
 	/* put cab file somewhere we can parse it */
-	filename =
-	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "colorhug-als-3.0.2.cab", NULL);
+	filename = g_test_build_filename(G_TEST_BUILT,
+					 "..",
+					 "libfwupdplugin",
+					 "tests",
+					 "colorhug",
+					 "colorhug-als-3.0.2.cab",
+					 NULL);
 	data = fu_bytes_get_contents(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -246,7 +251,7 @@ fu_engine_generate_md_func(gconstpointer user_data)
 
 	/* verify checksums */
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='container']", NULL);
-	g_assert_cmpstr(tmp, ==, "3da49ddd961144a79336b3ac3b0e469cb2531d0e");
+	g_assert_cmpstr(tmp, ==, "71aefb2a9b412833d8c519d5816ef4c5668e5e76");
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr(tmp, ==, NULL);
 }
