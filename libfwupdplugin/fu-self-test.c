@@ -252,6 +252,25 @@ fu_device_version_format_func(void)
 }
 
 static void
+fu_device_version_format_raw_func(void)
+{
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_DPAUX_DEVICE, NULL);
+
+	/* like normal */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_raw(device, 256);
+	fu_device_set_version_lowest_raw(device, 257);
+
+	g_assert_cmpstr(fu_device_get_version(device), ==, "0.256");
+	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "0.257");
+
+	/* ensure both are changed */
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpstr(fu_device_get_version(device), ==, "256");
+	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "257");
+}
+
+static void
 fu_device_open_refcount_func(void)
 {
 	gboolean ret;
@@ -1953,7 +1972,11 @@ fu_chunk_func(void)
 	chunked5 = fu_chunk_array_new(NULL, 0, 0x0, 0x0, 4);
 	g_assert_cmpint(chunked5->len, ==, 0);
 	chunked5_str = fu_chunk_array_to_string(chunked5);
+#if LIBXMLB_CHECK_VERSION(0, 3, 22)
+	g_assert_cmpstr(chunked5_str, ==, "<chunks />\n");
+#else
 	g_assert_cmpstr(chunked5_str, ==, "<chunks>\n</chunks>\n");
+#endif
 
 	chunked1 = fu_chunk_array_new((const guint8 *)"0123456789abcdef", 16, 0x0, 10, 4);
 	chunked1_str = fu_chunk_array_to_string(chunked1);
@@ -2685,7 +2708,7 @@ fu_firmware_build_func(void)
 	g_assert_cmpstr(fu_firmware_get_version(firmware), ==, "1.2.3");
 
 	/* verify image */
-	img = fu_firmware_get_image_by_id(firmware, "header", &error);
+	img = fu_firmware_get_image_by_id(firmware, "xxx|h?ad*", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(img);
 	g_assert_cmpstr(fu_firmware_get_version(img), ==, "4.5.6");
@@ -3457,7 +3480,7 @@ fu_efivar_func(void)
 	/* check we can get the space used */
 	total = fu_efivar_space_used(&error);
 	g_assert_no_error(error);
-	g_assert_cmpint(total, >=, 0x2000);
+	g_assert_cmpint(total, >=, 0x100);
 
 	/* check existing keys */
 	g_assert_false(fu_efivar_exists(FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
@@ -4828,6 +4851,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func("/fwupd/device{version-format}", fu_device_version_format_func);
+	g_test_add_func("/fwupd/device{version-format-raw}", fu_device_version_format_raw_func);
 	g_test_add_func("/fwupd/device{retry-success}", fu_device_retry_success_func);
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);

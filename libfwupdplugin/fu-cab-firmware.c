@@ -113,6 +113,7 @@ typedef struct {
 	z_stream zstrm;
 	guint8 *decompress_buf;
 	gsize decompress_bufsz;
+	gsize ndatabsz;
 } FuCabFirmwareParseHelper;
 
 static void
@@ -328,7 +329,6 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 			     GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize offset_folder;
 	g_autoptr(GByteArray) st = NULL;
 
 	/* parse header */
@@ -357,11 +357,18 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 		return FALSE;
 	}
 
-	/* parse CDATA */
-	offset_folder = fu_struct_cab_folder_get_offset(st);
-	for (guint i = 0; i < fu_struct_cab_folder_get_ndatab(st); i++) {
-		if (!fu_cab_firmware_parse_data(self, helper, &offset_folder, folder_data, error))
-			return FALSE;
+	/* parse CDATA, either using the stream offset or the per-spec FuStructCabFolder.ndatab */
+	if (helper->ndatabsz > 0) {
+		for (gsize off = fu_struct_cab_folder_get_offset(st); off < helper->ndatabsz;) {
+			if (!fu_cab_firmware_parse_data(self, helper, &off, folder_data, error))
+				return FALSE;
+		}
+	} else {
+		gsize off = fu_struct_cab_folder_get_offset(st);
+		for (guint16 i = 0; i < fu_struct_cab_folder_get_ndatab(st); i++) {
+			if (!fu_cab_firmware_parse_data(self, helper, &off, folder_data, error))
+				return FALSE;
+		}
 	}
 
 	/* success */
@@ -565,6 +572,10 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	helper = fu_cab_firmware_parse_helper_new(fw, flags, error);
 	if (helper == NULL)
 		return FALSE;
+
+	/* if the only folder is >= 2GB then FuStructCabFolder.ndatab will overflow */
+	if (g_bytes_get_size(fw) >= 0x8000 * 0xFFFF && fu_struct_cab_header_get_nr_folders(st) == 1)
+		helper->ndatabsz = g_bytes_get_size(fw);
 
 	/* reserved sizes */
 	offset += st->len;

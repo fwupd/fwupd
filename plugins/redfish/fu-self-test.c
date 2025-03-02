@@ -456,6 +456,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 					      FWUPD_INSTALL_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_false(ret);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_ALREADY_PENDING);
 	g_assert_true(fu_device_has_inhibit(
 	    dev,
 	    fwupd_device_problem_to_string(FWUPD_DEVICE_PROBLEM_UPDATE_PENDING)));
