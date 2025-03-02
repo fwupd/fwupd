@@ -679,6 +679,7 @@ fu_smbios_func(void)
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
 	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *full_path = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -690,6 +691,12 @@ fu_smbios_func(void)
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+
+	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
+	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -761,6 +768,12 @@ fu_smbios3_func(void)
 	g_autoptr(GError) error = NULL;
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables64", NULL);
+
+	if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
+
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
