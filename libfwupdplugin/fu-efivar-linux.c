@@ -109,6 +109,10 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 	gint fd;
 	g_autoptr(GInputStream) istr = NULL;
 
+	/* not bare-metal */
+	if (!g_str_has_prefix(fn, "/sys"))
+		return TRUE;
+
 	/* open file readonly */
 	fd = open(fn, O_RDONLY);
 	if (fd < 0) {
