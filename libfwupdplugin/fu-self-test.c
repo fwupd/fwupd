@@ -537,6 +537,19 @@ fu_device_open_refcount_func(void)
 }
 
 static void
+fu_device_rescan_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(GError) error = NULL;
+
+	/* no GUIDs! */
+	ret = fu_device_rescan(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_device_name_func(void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new(NULL);
@@ -6745,6 +6758,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func("/fwupd/device{name}", fu_device_name_func);
+	g_test_add_func("/fwupd/device{rescan}", fu_device_rescan_func);
 	g_test_add_func("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func("/fwupd/device{version-format}", fu_device_version_format_func);

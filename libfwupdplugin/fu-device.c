@@ -5771,7 +5771,8 @@ fu_device_rescan(FuDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* remove all GUIDs */
-	g_ptr_array_set_size(priv->instance_ids, 0);
+	if (priv->instance_ids != NULL)
+		g_ptr_array_set_size(priv->instance_ids, 0);
 	g_ptr_array_set_size(fu_device_get_instance_ids(self), 0);
 	g_ptr_array_set_size(fu_device_get_guids(self), 0);
 
