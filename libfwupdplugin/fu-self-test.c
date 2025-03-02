@@ -1114,6 +1114,7 @@ static void
 fu_hwids_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *full_path = NULL;
 	g_autoptr(FuContext) context = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -1148,6 +1149,13 @@ fu_hwids_func(void)
 	/* these tests will not write */
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+
+	/* DMI */
+	full_path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables", NULL);
+	if (!g_file_test(full_path, G_FILE_TEST_IS_DIR)) {
+		g_test_skip("no DMI tables found");
+		return;
+	}
 
 	context = fu_context_new();
 	ret = fu_context_load_hwinfo(context, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
