@@ -65,7 +65,6 @@ repos:
                   RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70)|
               plugins/uefi-capsule/tests/test\.bmp|
               src/tests/auth/firmware\.xml\.gz|
-              src/tests/colorhug/colorhug-als-3\.0\.2\.cab|
               src/tests/history_v[12]\.db|
               src/tests/missing-hwid/firmware\.bin|
               src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
