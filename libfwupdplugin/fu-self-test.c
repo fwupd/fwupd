@@ -6232,6 +6232,10 @@ fu_efi_lz77_decompressor_func(void)
 	g_autoptr(GError) error = NULL;
 
 	filename_tiano = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-tiano.bin", NULL);
+	if (!g_file_test(filename_tiano, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing efi-lz77-tiano.bin");
+		return;
+	}
 	blob_tiano = fu_bytes_get_contents(filename_tiano, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_tiano);
@@ -6251,6 +6255,10 @@ fu_efi_lz77_decompressor_func(void)
 	g_assert_cmpstr(csum_tiano, ==, "40f7fbaff684a6bcf67c81b3079422c2529741e1");
 
 	filename_legacy = g_test_build_filename(G_TEST_DIST, "tests", "efi-lz77-legacy.bin", NULL);
+	if (!g_file_test(filename_tiano, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing efi-lz77-legacy.bin");
+		return;
+	}
 	blob_legacy = fu_bytes_get_contents(filename_legacy, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_legacy);
