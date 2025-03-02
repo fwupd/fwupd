@@ -2,6 +2,9 @@
 set -e
 set -x
 
+# workaround dnf bug
+export FORCE_COLUMNS=100
+
 #get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
