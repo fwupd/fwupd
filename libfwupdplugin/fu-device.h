@@ -1128,6 +1128,8 @@ fu_device_get_contents_bytes(FuDevice *self,
 gboolean
 fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exists, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
+void
+fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
 
 const gchar *
 fu_device_get_instance_str(FuDevice *self, const gchar *key) G_GNUC_NON_NULL(1, 2);
