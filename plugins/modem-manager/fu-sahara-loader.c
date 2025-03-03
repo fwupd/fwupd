@@ -105,6 +105,13 @@ fu_sahara_loader_open(FuSaharaLoader *self, FuUsbDevice *usb_device, GError **er
 gboolean
 fu_sahara_loader_close(FuSaharaLoader *self, GError **error)
 {
+	if (self->usb_device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "usb device interface was not found");
+		return FALSE;
+	}
 	if (!fu_device_close(FU_DEVICE(self->usb_device), error))
 		return FALSE;
 	g_clear_object(&self->usb_device);
