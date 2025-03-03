@@ -4403,6 +4403,10 @@ fu_history_migrate_v1_func(gconstpointer user_data)
 
 	/* load old version */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+		g_test_message("history_v1.db not found, skipping test");
+		return;
+	}
 	file_src = g_file_new_for_path(filename);
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
@@ -4441,6 +4445,10 @@ fu_history_migrate_v2_func(gconstpointer user_data)
 
 	/* load old version */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v2.db", NULL);
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+		g_test_message("history_v2.db not found, skipping test");
+		return;
+	}
 	file_src = g_file_new_for_path(filename);
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
