@@ -51,8 +51,6 @@ void
 fu_device_convert_instance_ids(FuDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_possible_plugins(FuDevice *self) G_GNUC_NON_NULL(1);
-void
-fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
 guint
 fu_device_get_request_cnt(FuDevice *self, FwupdRequestKind request_kind) G_GNUC_NON_NULL(1);
 void
