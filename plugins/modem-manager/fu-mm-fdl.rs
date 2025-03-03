@@ -5,7 +5,7 @@
  */
 
 #[repr(u8)]
-enum FuCinterionFdlResponse {
+enum FuMmCinterionFdlResponse {
     Ok = 0x01,
     Retry = 0x02,
     Unknown = 0x03,

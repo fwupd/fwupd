@@ -260,7 +260,6 @@ fwupd wrapper for Qubes OS
     -Dqubes=true \
 %endif
     -Dman=true \
-    -Dplugin_qc_firehose=true \
     -Dsystemd_unit_user="" \
     -Dbluez=enabled
 

@@ -1,4 +1,3 @@
-if get_option('plugin_qc_firehose')
 cargs = ['-DG_LOG_DOMAIN="FuPluginQcFirehose"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -55,6 +54,4 @@ if get_option('tests')
     ],
   )
   test('qc-firehose-self-test', e, env: env)
-endif
-
 endif
