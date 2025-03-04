@@ -101,7 +101,6 @@ RemoveDelay = 162000
 Plugin = ccgx_dmc
 Summary = Dock Management Controller Device
 Name = ThinkPad Thunderbolt 4 Smart Dock Gen2 7500
-Flags = has-manual-replug
 CcgxDmcTriggerCode = 0x01
 InstallDuration = 300
 RemoveDelay = 732000
