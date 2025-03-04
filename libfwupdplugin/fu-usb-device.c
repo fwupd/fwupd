@@ -16,6 +16,7 @@
 #include "fu-device-private.h"
 #include "fu-dump.h"
 #include "fu-input-stream.h"
+#include "fu-linear-firmware.h"
 #include "fu-mem.h"
 #include "fu-string.h"
 #include "fu-usb-bos-descriptor-private.h"
@@ -966,30 +967,32 @@ static gboolean
 fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	gsize offset = 0;
-	gsize streamsz = 0;
+	g_autoptr(FuFirmware) firmware = fu_linear_firmware_new(FU_TYPE_USB_BOS_DESCRIPTOR);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
 
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	while (offset < streamsz) {
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(FuUsbBosDescriptor) bos_descriptor =
-		    g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
-		if (!fu_firmware_parse_stream(FU_FIRMWARE(bos_descriptor),
-					      stream,
-					      offset,
-					      FWUPD_INSTALL_FLAG_NONE,
-					      &error_local)) {
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
-				break;
-			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA))
-				break;
+	if (!fu_firmware_parse_stream(firmware,
+				      stream,
+				      0x0,
+				      FWUPD_INSTALL_FLAG_NONE,
+				      &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		offset += fu_firmware_get_size(FU_FIRMWARE(bos_descriptor));
-		g_ptr_array_add(priv->bos_descriptors, g_steal_pointer(&bos_descriptor));
 	}
+
+	/* copy from container */
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		g_ptr_array_add(priv->bos_descriptors, g_object_ref(img));
+	}
+
+	/* success */
 	return TRUE;
 }
 
