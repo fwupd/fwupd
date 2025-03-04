@@ -1,0 +1,293 @@
+{
+  "UsbDevices": [
+    {
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.0/drm/card1/card1-DP-3/drm_dp_aux3",
+      "DeviceFile": "/dev/drm_dp_aux3",
+      "Subsystem": "drm_dp_aux_dev",
+      "Created": "2025-03-04T14:31:58.001138Z",
+      "Events": [
+        {
+          "Id": "#d5a801ad",
+          "Data": "drm_dp_aux_dev"
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=236\nMINOR=3\nDEVNAME=drm_dp_aux3"
+        },
+        {
+          "Id": "#d432c663",
+          "Data": "drm_dp_aux3"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=236\nMINOR=3\nDEVNAME=drm_dp_aux3"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#fbe018fe"
+        },
+        {
+          "Id": "#285d9a88",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:c5:00.0"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "pci"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "amdgpu"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=amdgpu\nPCI_CLASS=30000\nPCI_ID=1002:15BF\nPCI_SUBSYS_ID=17AA:231C\nPCI_SLOT_NAME=0000:c5:00.0\nMODALIAS=pci:v00001002d000015BFsv000017AAsd0000231Cbc03sc00i00"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2",
+          "Data": "0x1002"
+        },
+        {
+          "Id": "#66f3e150",
+          "Data": "0x15bf"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=amdgpu\nPCI_CLASS=30000\nPCI_ID=1002:15BF\nPCI_SUBSYS_ID=17AA:231C\nPCI_SLOT_NAME=0000:c5:00.0\nMODALIAS=pci:v00001002d000015BFsv000017AAsd0000231Cbc03sc00i00"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2",
+          "Data": "0x1002"
+        },
+        {
+          "Id": "#66f3e150",
+          "Data": "0x15bf"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#fbe018fe"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "#41bc32d8",
+          "Data": "113-PHXGENERIC-001"
+        },
+        {
+          "Id": "#bf29d2f6",
+          "Data": "0xd4"
+        },
+        {
+          "Id": "#269abd81",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "#360cec38",
+          "Data": "0x231c"
+        },
+        {
+          "Id": "#d2629d83",
+          "Data": "0000:c5:00.0"
+        },
+        {
+          "Id": "#d2629d83",
+          "Data": "0000:c5:00.0"
+        },
+        {
+          "Id": "#e371a663",
+          "Data": "AMDGPU DM aux hw bus 4"
+        },
+        {
+          "Id": "#506aff56",
+          "Data": "kMwkU1lOQVMyEAUHBQ=="
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=236\nMINOR=3\nDEVNAME=drm_dp_aux3"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#fbe018fe"
+        },
+        {
+          "Id": "#e371a663",
+          "Data": "AMDGPU DM aux hw bus 4"
+        },
+        {
+          "Id": "#2f2bb69f",
+          "Data": "lA=="
+        },
+        {
+          "Id": "#73c075ab"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "AgQ="
+        },
+        {
+          "Id": "#b3afdf0d"
+        },
+        {
+          "Id": "#6ecc6fe7"
+        },
+        {
+          "Id": "#62e0f0ae"
+        },
+        {
+          "Id": "#5f872044"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "AQA="
+        },
+        {
+          "Id": "#db76a894",
+          "Data": "BQcF"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "UzI="
+        },
+        {
+          "Id": "#2cc68095"
+        },
+        {
+          "Id": "#9af06bdb"
+        },
+        {
+          "Id": "#a6746544"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "MQA="
+        },
+        {
+          "Id": "#271d05ea",
+          "Data": "DwAAJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "#a2224be6"
+        },
+        {
+          "Id": "#9af06bdb"
+        },
+        {
+          "Id": "#a6746544"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "MQA="
+        },
+        {
+          "Id": "#271d05ea",
+          "Data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "#d196e2e5"
+        },
+        {
+          "Id": "#b112b173"
+        },
+        {
+          "Id": "#a6746544"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "MQA="
+        },
+        {
+          "Id": "#1adc030f",
+          "Data": "AloF5A=="
+        },
+        {
+          "Id": "#73c075ab"
+        },
+        {
+          "Id": "#292d9db7",
+          "Data": "AgA="
+        }
+      ]
+    }
+  ]
+}

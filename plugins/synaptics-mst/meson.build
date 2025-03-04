@@ -24,6 +24,13 @@ plugin_builtin_synaptics_mst = static_library('fu_plugin_synaptics_mst',
 )
 plugin_builtins += plugin_builtin_synaptics_mst
 
+device_tests += files(
+  'tests/synaptics-panamera.json',
+)
+enumeration_data += files(
+  'tests/synaptics-panamera-setup.json',
+)
+
 if get_option('tests')
   install_data(['tests/synaptics-mst.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
