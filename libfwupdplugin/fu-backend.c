@@ -492,6 +492,15 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		if (device == NULL)
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
+
+		/* some devices only add plugin-matching instance IDs in FuDevice->setup() */
+		if (fu_device_has_private_flag(device,
+					       FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP)) {
+			g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
+			if (locker == NULL)
+				return FALSE;
+		}
+
 		fu_backend_device_added(self, device);
 	}
 
