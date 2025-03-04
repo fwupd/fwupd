@@ -89,3 +89,16 @@ struct FuStructBitmapInfoHeader {
     width: u32le,
     height: u32le,
 }
+
+#[repr(u32le)]
+enum FuAbIndicationsValue {
+    Unknown,
+    Revert,
+    Accept,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructAbIndications {
+    value: FuAbIndicationsValue = Accept,
+}
