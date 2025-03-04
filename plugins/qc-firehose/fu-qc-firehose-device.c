@@ -798,7 +798,8 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	fu_progress_step_done(progress);
 
 	/* find the bootable partition */
-	if (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_SETBOOTABLESTORAGEDRIVE) {
+	if (xns_program != NULL &&
+	    (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_SETBOOTABLESTORAGEDRIVE) > 0) {
 		guint64 bootable = fu_qc_firehose_device_find_bootable(self, xns_program);
 		if (bootable != G_MAXUINT64) {
 			g_debug("setting partition %u bootable", (guint)bootable);
