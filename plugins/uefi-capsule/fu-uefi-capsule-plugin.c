@@ -751,19 +751,21 @@ fu_uefi_capsule_plugin_test_secure_boot(FuPlugin *plugin)
 				      secureboot_enabled ? "Enabled" : "Disabled");
 }
 
-static gboolean
+static FuFirmware *
 fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuFirmware) firmware = fu_acpi_uefi_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
 	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "UEFI", NULL);
 	file = g_file_new_for_path(fn);
-	self->acpi_uefi = fu_acpi_uefi_new();
-	return fu_firmware_parse_file(self->acpi_uefi, file, FWUPD_INSTALL_FLAG_NONE, error);
+	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
@@ -892,8 +894,14 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	fu_plugin_add_report_metadata(plugin, "EfivarsNvramUsed", nvram_total_str);
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
-	if (!fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi))
+	self->acpi_uefi = fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi);
+	if (self->acpi_uefi == NULL) {
 		g_debug("failed to load ACPI UEFI table: %s", error_acpi_uefi->message);
+	} else {
+		/* we do not need to read from this again */
+		if (!fu_firmware_set_stream(self->acpi_uefi, NULL, error))
+			return FALSE;
+	}
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
