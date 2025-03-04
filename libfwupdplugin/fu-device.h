@@ -808,6 +808,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE "detach-prepare-firmware"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP:
+ *
+ * The device requires `FuDevice->setup()` rather than `FuDevice->probe()` to add instance IDs
+ * during emulated device enumeration.
+ *
+ * Since: 2.0.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP "emulated-require-setup"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
