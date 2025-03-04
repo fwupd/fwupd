@@ -1046,7 +1046,7 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 		}
 		libusb_free_bos_descriptor(bos);
 	} else {
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(FuInputStreamLocker) stream = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* this is optional */
@@ -1917,7 +1917,7 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 		}
 		libusb_free_config_descriptor(config);
 	} else {
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(FuInputStreamLocker) stream = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		stream = fu_usb_device_load_descriptor_stream(self, "descriptors", &error_local);
