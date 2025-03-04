@@ -96,3 +96,11 @@ CcgxImageKind = dmc-composite
 InstallDuration = 180
 RemoveDelay = 162000
 
+# Lenovo ThinkPad Thunderbolt 4 Smart Dock Gen2 7500
+[USB\VID_17EF&PID_A5D9]
+Plugin = ccgx_dmc
+Summary = Dock Management Controller Device
+Name = ThinkPad Thunderbolt 4 Smart Dock Gen2 7500
+CcgxDmcTriggerCode = 0x01
+InstallDuration = 300
+RemoveDelay = 732000
