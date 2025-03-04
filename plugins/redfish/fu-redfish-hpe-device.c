@@ -200,6 +200,7 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	CURL *curl;
 	const gchar *sessionkey;
 	curl_mimepart *part;
+	g_autofree gchar *sessionkey_kv = NULL;
 	g_autoptr(curl_mime) mime = NULL;
 	g_autoptr(_curl_slist) hs = NULL;
 	g_autoptr(FuRedfishRequest) request = NULL;
@@ -265,7 +266,9 @@ fu_redfish_hpe_device_write_firmware(FuDevice *device,
 	(void)curl_mime_data(part, g_bytes_get_data(fw, NULL), g_bytes_get_size(fw));
 
 	(void)curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
-	(void)curl_easy_setopt(curl, CURLOPT_COOKIE, g_strconcat("sessionKey=", sessionkey, NULL));
+
+	sessionkey_kv = g_strconcat("sessionKey=", sessionkey, NULL);
+	(void)curl_easy_setopt(curl, CURLOPT_COOKIE, sessionkey_kv);
 
 	hs = curl_slist_append(hs, g_strconcat("X-Auth-Token: ", sessionkey, NULL));
 	(void)curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
