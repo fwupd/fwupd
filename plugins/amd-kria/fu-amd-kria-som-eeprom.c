@@ -114,6 +114,7 @@ fu_amd_kria_som_eeprom_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 static void
 fu_amd_kria_som_eeprom_init(FuAmdKriaSomEeprom *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void
