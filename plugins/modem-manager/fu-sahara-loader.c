@@ -51,41 +51,64 @@ fu_sahara_loader_find_interface(FuSaharaLoader *self, FuUsbDevice *usb_device, G
 
 	/* parse usb interfaces and find suitable endpoints */
 	intfs = fu_usb_device_get_interfaces(usb_device, error);
-	if (intfs == NULL)
+	if (intfs == NULL || intfs->len == 0) {
+		g_debug("no usb interfaces found");
 		return FALSE;
+	}
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (fu_usb_interface_get_class(intf) == 0xFF &&
-		    fu_usb_interface_get_subclass(intf) == 0xFF &&
-		    fu_usb_interface_get_protocol(intf) == 0xFF) {
-			FuUsbEndpoint *ep;
-			g_autoptr(GPtrArray) endpoints = NULL;
+		FuUsbEndpoint *ep;
+		g_autoptr(GPtrArray) endpoints = NULL;
 
-			endpoints = fu_usb_interface_get_endpoints(intf);
-			if (endpoints == NULL || endpoints->len == 0)
-				continue;
-
-			for (guint j = 0; j < endpoints->len; j++) {
-				ep = g_ptr_array_index(endpoints, j);
-				if (fu_usb_endpoint_get_direction(ep) ==
-				    FU_USB_DIRECTION_DEVICE_TO_HOST) {
-					self->ep_in = fu_usb_endpoint_get_address(ep);
-					self->maxpktsize_in =
-					    fu_usb_endpoint_get_maximum_packet_size(ep);
-				} else {
-					self->ep_out = fu_usb_endpoint_get_address(ep);
-					self->maxpktsize_out =
-					    fu_usb_endpoint_get_maximum_packet_size(ep);
-				}
-			}
-
-			fu_usb_device_add_interface(usb_device, fu_usb_interface_get_number(intf));
-
-			return TRUE;
+		if (intf == NULL) {
+			g_debug("failed to get interface index: %u", i);
+			continue;
 		}
+
+		if (fu_usb_interface_get_class(intf) != 0xFF) {
+			g_debug("wrong class detected: %x", fu_usb_interface_get_class(intf));
+			continue;
+		}
+		if (fu_usb_interface_get_subclass(intf) != 0xFF) {
+			g_debug("wrong subclass detected: %x", fu_usb_interface_get_subclass(intf));
+			continue;
+		}
+		if ((fu_usb_interface_get_protocol(intf) != 0xFF) &&
+		    (fu_usb_interface_get_protocol(intf) != 0x11)) {
+			g_debug("wrong protocol detected: %x", fu_usb_interface_get_protocol(intf));
+			continue;
+		}
+
+		endpoints = fu_usb_interface_get_endpoints(intf);
+		if (endpoints == NULL || endpoints->len == 0) {
+			g_debug("no usb endpoints found");
+			continue;
+		}
+
+		for (guint j = 0; j < endpoints->len; j++) {
+			ep = g_ptr_array_index(endpoints, j);
+			if (ep == NULL) {
+				g_debug("failed to get endpoint index: %u", j);
+				continue;
+			}
+			if (fu_usb_endpoint_get_direction(ep) == FU_USB_DIRECTION_DEVICE_TO_HOST) {
+				self->ep_in = fu_usb_endpoint_get_address(ep);
+				self->maxpktsize_in = fu_usb_endpoint_get_maximum_packet_size(ep);
+			} else {
+				self->ep_out = fu_usb_endpoint_get_address(ep);
+				self->maxpktsize_out = fu_usb_endpoint_get_maximum_packet_size(ep);
+			}
+		}
+
+		fu_usb_device_add_interface(usb_device, fu_usb_interface_get_number(intf));
+
+		return TRUE;
 	}
 
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no valid usb interface found");
 	return FALSE;
 }
 
@@ -105,6 +128,13 @@ fu_sahara_loader_open(FuSaharaLoader *self, FuUsbDevice *usb_device, GError **er
 gboolean
 fu_sahara_loader_close(FuSaharaLoader *self, GError **error)
 {
+	if (!self->usb_device) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "usb device interface was not found");
+		return FALSE;
+	}
 	if (!fu_device_close(FU_DEVICE(self->usb_device), error))
 		return FALSE;
 	g_clear_object(&self->usb_device);

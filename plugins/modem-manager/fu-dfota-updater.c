@@ -173,7 +173,10 @@ fu_dfota_updater_parse_upload_result(FuDfotaUpdater *self,
 gboolean
 fu_dfota_updater_upload_firmware(FuDfotaUpdater *self, GBytes *fw, GError **error)
 {
-	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x800);
+	g_autoptr(FuChunkArray) chunks = fu_chunk_array_new_from_bytes(fw,
+								       FU_CHUNK_ADDR_OFFSET_NONE,
+								       FU_CHUNK_PAGESZ_NONE,
+								       0x800);
 	guint chunk_count = fu_chunk_array_length(chunks);
 	g_autofree gchar *checksum = fu_dfota_updater_compute_checksum(fw);
 	g_autofree gchar *checksum_parsed = NULL;
