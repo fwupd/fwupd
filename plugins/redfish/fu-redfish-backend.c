@@ -259,10 +259,10 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 	json_builder_add_string_value(builder, self->password);
 	json_builder_end_object(builder);
 
-	curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, self);
-	curl_easy_setopt(fu_redfish_request_get_curl(request),
-			 CURLOPT_HEADERFUNCTION,
-			 fu_redfish_backend_session_headers_callback);
+	(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, self);
+	(void)curl_easy_setopt(fu_redfish_request_get_curl(request),
+			       CURLOPT_HEADERFUNCTION,
+			       fu_redfish_backend_session_headers_callback);
 
 	/* create URI and poll */
 	if (!fu_redfish_request_perform_full(request,
