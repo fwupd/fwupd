@@ -263,4 +263,9 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
+# HP Dongle
+[HIDRAW\VEN_03F0&DEV_9F4A]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+
 
