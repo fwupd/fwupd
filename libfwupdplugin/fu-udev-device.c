@@ -50,16 +50,7 @@ typedef struct {
 	gboolean properties_valid;
 } FuUdevDevicePrivate;
 
-static void
-fu_udev_device_codec_iface_init(FwupdCodecInterface *iface);
-
-G_DEFINE_TYPE_EXTENDED(FuUdevDevice,
-		       fu_udev_device,
-		       FU_TYPE_DEVICE,
-		       0,
-		       G_ADD_PRIVATE(FuUdevDevice)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						 fu_udev_device_codec_iface_init));
+G_DEFINE_TYPE_WITH_PRIVATE(FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE);
 
 enum {
 	PROP_0,
@@ -2167,10 +2158,9 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 }
 
 static void
-fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_udev_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUdevDevice *self = FU_UDEV_DEVICE(codec);
+	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(device);
 
@@ -2193,19 +2183,6 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 	if (fu_device_get_pid(device) != 0)
 		fwupd_codec_json_append_int(builder, "Model", fu_device_get_pid(device));
 
-	if (fu_device_get_created_usec(device) != 0) {
-#if GLIB_CHECK_VERSION(2, 80, 0)
-		g_autoptr(GDateTime) dt =
-		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(device));
-#else
-		g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(
-		    fu_device_get_created_usec(FU_DEVICE(self)) / G_USEC_PER_SEC);
-#endif
-		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		json_builder_set_member_name(builder, "Created");
-		json_builder_add_string_value(builder, str);
-	}
-
 	/* events */
 	if (events->len > 0) {
 		json_builder_set_member_name(builder, "Events");
@@ -2221,11 +2198,9 @@ fu_udev_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 }
 
 static gboolean
-fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_udev_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUdevDevice *self = FU_UDEV_DEVICE(codec);
-	JsonObject *json_object = json_node_get_object(json_node);
+	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	const gchar *tmp;
 	gint64 tmp64;
 
@@ -2253,19 +2228,6 @@ fu_udev_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	tmp64 = json_object_get_int_member_with_default(json_object, "Model", 0);
 	if (tmp64 != 0)
 		fu_device_set_pid(device, tmp64);
-	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
-	if (tmp != NULL) {
-		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
-#if GLIB_CHECK_VERSION(2, 80, 0)
-		if (dt != NULL)
-			fu_device_set_created_usec(device, g_date_time_to_unix_usec(dt));
-#else
-		if (dt != NULL) {
-			fu_device_set_created_usec(device,
-						   g_date_time_to_unix(dt) * G_USEC_PER_SEC);
-		}
-#endif
-	}
 
 	/* array of events */
 	if (json_object_has_member(json_object, "Events")) {
@@ -2403,6 +2365,8 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 	device_class->probe_complete = fu_udev_device_probe_complete;
+	device_class->from_json = fu_udev_device_from_json;
+	device_class->add_json = fu_udev_device_add_json;
 
 	/**
 	 * FuUdevDevice::changed:
@@ -2491,13 +2455,6 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DEVTYPE, pspec);
-}
-
-static void
-fu_udev_device_codec_iface_init(FwupdCodecInterface *iface)
-{
-	iface->add_json = fu_udev_device_add_json;
-	iface->from_json = fu_udev_device_from_json;
 }
 
 /**

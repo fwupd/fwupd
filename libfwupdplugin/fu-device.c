@@ -139,7 +139,16 @@ enum { SIGNAL_CHILD_ADDED, SIGNAL_CHILD_REMOVED, SIGNAL_REQUEST, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE(FuDevice, fu_device, FWUPD_TYPE_DEVICE)
+static void
+fu_device_codec_iface_init(FwupdCodecInterface *iface);
+
+G_DEFINE_TYPE_EXTENDED(FuDevice,
+		       fu_device,
+		       FWUPD_TYPE_DEVICE,
+		       0,
+		       G_ADD_PRIVATE(FuDevice)
+			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_codec_iface_init));
+
 #define GET_PRIVATE(o) (fu_device_get_instance_private(o))
 
 static void
@@ -7559,6 +7568,78 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 
 	fu_device_incorporate(target, self, FU_DEVICE_INCORPORATE_FLAG_EVENTS);
 	g_set_object(&priv->target, target);
+}
+
+static void
+fu_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuDevice *self = FU_DEVICE(codec);
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+
+	if (fu_device_get_created_usec(self) != 0) {
+#if GLIB_CHECK_VERSION(2, 80, 0)
+		g_autoptr(GDateTime) dt =
+		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(self));
+#else
+		g_autoptr(GDateTime) dt = g_date_time_new_from_unix_utc(
+		    fu_device_get_created_usec(self) / G_USEC_PER_SEC);
+#endif
+		g_autofree gchar *str = g_date_time_format_iso8601(dt);
+		json_builder_set_member_name(builder, "Created");
+		json_builder_add_string_value(builder, str);
+	}
+
+	/* subclassed */
+	if (device_class->add_json != NULL)
+		device_class->add_json(self, builder, flags);
+}
+
+static gboolean
+fu_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+{
+	FuDevice *self = FU_DEVICE(codec);
+	JsonObject *json_object;
+	const gchar *tmp;
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "not JSON object");
+		return FALSE;
+	}
+	json_object = json_node_get_object(json_node);
+
+	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
+	if (tmp != NULL) {
+		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
+#if GLIB_CHECK_VERSION(2, 80, 0)
+		if (dt != NULL)
+			fu_device_set_created_usec(self, g_date_time_to_unix_usec(dt));
+#else
+		if (dt != NULL) {
+			fu_device_set_created_usec(self, g_date_time_to_unix(dt) * G_USEC_PER_SEC);
+		}
+#endif
+	}
+
+	/* subclassed */
+	if (device_class->from_json != NULL) {
+		if (!device_class->from_json(self, json_object, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_device_codec_iface_init(FwupdCodecInterface *iface)
+{
+	iface->add_json = fu_device_add_json;
+	iface->from_json = fu_device_from_json;
 }
 
 static void

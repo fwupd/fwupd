@@ -57,17 +57,10 @@ typedef struct {
 	gboolean claimed;
 } FuUsbDeviceInterface;
 
-static void
-fu_usb_device_codec_iface_init(FwupdCodecInterface *iface);
 static gboolean
 fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error);
 
-G_DEFINE_TYPE_EXTENDED(FuUsbDevice,
-		       fu_usb_device,
-		       FU_TYPE_UDEV_DEVICE,
-		       0,
-		       G_ADD_PRIVATE(FuUsbDevice)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_usb_device_codec_iface_init));
+G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_UDEV_DEVICE);
 
 enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
@@ -2747,46 +2740,16 @@ fu_usb_device_get_hid_descriptors(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
 {
-	FuUsbDevice *self = FU_USB_DEVICE(codec);
+	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *tmp;
-	JsonObject *json_object;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
 
 	/* optional properties */
 	tmp = json_object_get_string_member_with_default(json_object, "PlatformId", NULL);
 	if (tmp != NULL)
 		fu_device_set_physical_id(FU_DEVICE(self), tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
-	if (tmp != NULL) {
-		g_autoptr(GDateTime) created_new = g_date_time_new_from_iso8601(tmp, NULL);
-		if (created_new == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "cannot parse ISO8601 date: %s",
-				    tmp);
-			return FALSE;
-		}
-#if GLIB_CHECK_VERSION(2, 80, 0)
-		fu_device_set_created_usec(FU_DEVICE(self), g_date_time_to_unix_usec(created_new));
-#else
-		fu_device_set_created_usec(FU_DEVICE(self),
-					   (g_date_time_to_unix(created_new) * G_USEC_PER_SEC) +
-					       g_date_time_get_microsecond(created_new));
-#endif
-	}
 	fu_device_set_vid(FU_DEVICE(self),
 			  json_object_get_int_member_with_default(json_object, "IdVendor", 0x0));
 	fu_device_set_pid(FU_DEVICE(self),
@@ -2878,11 +2841,11 @@ fu_usb_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 }
 
 static void
-fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuUsbDevice *self = FU_USB_DEVICE(codec);
+	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	GPtrArray *events = fu_device_get_events(FU_DEVICE(self));
+	GPtrArray *events = fu_device_get_events(device);
 	g_autoptr(GPtrArray) interfaces = NULL;
 	g_autoptr(GError) error_bos = NULL;
 	g_autoptr(GError) error_hid = NULL;
@@ -3003,13 +2966,6 @@ fu_usb_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	}
 }
 
-static void
-fu_usb_device_codec_iface_init(FwupdCodecInterface *iface)
-{
-	iface->add_json = fu_usb_device_add_json;
-	iface->from_json = fu_usb_device_from_json;
-}
-
 /**
  * fu_usb_device_new: (skip):
  * @ctx: (nullable): a #FuContext
@@ -3103,6 +3059,8 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->to_string = fu_usb_device_to_string;
 	device_class->incorporate = fu_usb_device_incorporate;
 	device_class->convert_version = fu_usb_device_convert_version;
+	device_class->from_json = fu_usb_device_from_json;
+	device_class->add_json = fu_usb_device_add_json;
 
 	/**
 	 * FuUsbDevice:libusb-device:
