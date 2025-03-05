@@ -1170,12 +1170,35 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	    "linux_swap",
 	    "linux_tainted",
 	};
+	const gchar *external_plugins[] = {
+	    "flashrom",
+	};
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
 
-	/* load all internal plugins */
-	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS, progress, &error);
+	/* load these from the build directory, not the install directory */
+	if (g_getenv("G_TEST_BUILDDIR") != NULL) {
+		g_autoptr(GPtrArray) external_plugin_dirs = g_ptr_array_new_with_free_func(g_free);
+		g_autofree gchar *external_plugindir = NULL;
+		for (guint i = 0; i < G_N_ELEMENTS(external_plugins); i++) {
+			g_ptr_array_add(external_plugin_dirs,
+					g_test_build_filename(G_TEST_BUILT,
+							      "..",
+							      "plugins",
+							      external_plugins[i],
+							      NULL));
+		}
+		external_plugindir = fu_strjoin(",", external_plugin_dirs);
+		g_setenv("FWUPD_LIBDIR_PKG", external_plugindir, TRUE);
+	}
+
+	/* load all plugins */
+	ret = fu_engine_load(engine,
+			     FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
+				 FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS,
+			     progress,
+			     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	plugins = fu_engine_get_plugins(engine);
