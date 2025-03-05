@@ -3,7 +3,7 @@ Plugin = pixart_rf
 GType = FuPxiReceiverDevice
 
 [USB\VID_093A&PID_2862]
-Plugin = colorhug
+Plugin = hughski_colorhug
 
 [VIDEO4LINUX\VEN_093A&DEV_2862]
 Plugin = logitech_tap

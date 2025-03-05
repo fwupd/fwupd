@@ -693,7 +693,7 @@ fwupd_common_history_report_func(void)
 	fwupd_device_add_checksum(dev, "beefdead");
 	fwupd_device_add_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad");
 	fwupd_device_add_protocol(dev, "org.hughski.colorhug");
-	fwupd_device_set_plugin(dev, "colorhug");
+	fwupd_device_set_plugin(dev, "hughski_colorhug");
 	fwupd_device_set_update_error(dev, "device dead");
 	fwupd_device_set_version(dev, "1.2.3");
 	fwupd_release_add_checksum(rel, "beefdead");
@@ -734,7 +734,7 @@ fwupd_common_history_report_func(void)
 			"      \"Guid\" : [\n"
 			"        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
 			"      ],\n"
-			"      \"Plugin\" : \"colorhug\",\n"
+			"      \"Plugin\" : \"hughski_colorhug\",\n"
 			"      \"VersionOld\" : \"1.2.3\",\n"
 			"      \"VersionNew\" : \"1.2.4\",\n"
 			"      \"Flags\" : 0,\n"

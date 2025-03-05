@@ -7024,7 +7024,7 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	}
 
 	/* load engine and check the device was found */
-	fu_engine_add_plugin_filter(engine, "colorhug");
+	fu_engine_add_plugin_filter(engine, "hughski_colorhug");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
 				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
@@ -7042,7 +7042,7 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, "usb");
 	g_assert_cmpint(fu_device_get_vid(device), ==, 0x093a);
 	g_assert_cmpint(fu_device_get_pid(device), ==, 0x2862);
-	g_assert_cmpstr(fu_device_get_plugin(device), ==, "colorhug");
+	g_assert_cmpstr(fu_device_get_plugin(device), ==, "hughski_colorhug");
 	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "1-1");
 	g_assert_cmpstr(fu_device_get_logical_id(device), ==, NULL);
 }

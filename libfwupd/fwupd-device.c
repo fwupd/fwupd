@@ -1490,7 +1490,7 @@ fwupd_device_get_plugin(FwupdDevice *self)
 /**
  * fwupd_device_set_plugin:
  * @self: a #FwupdDevice
- * @plugin: (nullable): the plugin name, e.g. `colorhug`
+ * @plugin: (nullable): the plugin name, e.g. `hughski_colorhug`
  *
  * Sets the plugin that created the device.
  *
