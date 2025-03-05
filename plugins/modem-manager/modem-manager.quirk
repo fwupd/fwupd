@@ -83,40 +83,30 @@ Plugin = modem_manager
 [USB\VID_2C7C&PID_0125&REV_0318&NAME_EG25GGB]
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
-# Qualcomm Sahara device
-[USB\VID_05C6&PID_9008]
-Summary = Qualcomm based modems in EDL (sahara)
-Plugin = modem_manager
-
 # Quectel EM120 firehose prog file
 [PCI\VID_1EAC&PID_1001]
-Summary = Quectel EM120 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_1002]
-Summary = Quectel EM160 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_100D]
-Summary = Quectel EM160 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1004]
-Summary = Quectel RM520 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1007]
-Summary = Quectel RM520 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom FM101
 [USB\VID_2CB7&PID_01A2]
 Summary = Fibocom FM101-GL Module
-Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
+Flags = detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_2CB7&PID_D00D
 
 # Cinterion PLS8
@@ -126,16 +116,13 @@ Plugin = modem_manager
 
 # Netprisma LCUR57 firehose prog file
 [PCI\VID_203E&PID_1000]
-Summary = Netprisma LCUR57 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Netprisma FCUN69 firehose prog file
 [PCI\VID_203E&PID_1001]
-Summary = Netprisma FCUN69 firehose prog file
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom NL668-EAU
 [USB\VID_1508&PID_1001]
-Summary = Fibocom NL668-EAU LTE Module
 ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
 Flags = disable-zlp
