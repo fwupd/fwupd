@@ -69,6 +69,12 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 {
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
 
+	/* sanity check */
+	if (self->flashctx == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no flashctx");
+		return FALSE;
+	}
+
 	/* get the flash size from the device if not already been quirked */
 	if (fu_device_get_firmware_size_max(device) == 0) {
 		gsize flash_size = flashrom_flash_getsize(self->flashctx);
