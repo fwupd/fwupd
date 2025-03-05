@@ -79,8 +79,9 @@ CounterpartGuid = PCI\VID_105B&PID_E0F9
 Summary = Quectel EG25-G/EC25 modem
 CounterpartGuid = USB\VID_18D1&PID_D00D
 Flags = detach-at-fastboot-has-no-response
-ModemManagerBranchAtCommand = AT+GETFWBRANCH
 Plugin = modem_manager
+[USB\VID_2C7C&PID_0125&REV_0318&NAME_EG25GGB]
+ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
 # Qualcomm Sahara device
 [USB\VID_05C6&PID_9008]
