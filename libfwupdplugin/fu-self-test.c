@@ -1934,6 +1934,7 @@ fu_common_kernel_search_func(void)
 	locker = fu_kernel_search_path_locker_new("/foo/bar", &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
+	g_assert_cmpstr(fu_kernel_search_path_locker_get_path(locker), ==, "/foo/bar");
 
 	result1 = fu_kernel_search_path_get_current(&error);
 	g_assert_nonnull(result1);
