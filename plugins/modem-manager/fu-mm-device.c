@@ -174,6 +174,11 @@ fu_mm_device_add_instance_id(FuDevice *dev, const gchar *device_id)
 			fu_device_add_instance_id(dev, device_id);
 		return;
 	}
+	if (g_pattern_match_simple("???\\SSVID_????&SSPID_????&REV_????&CARRIER_*", device_id)) {
+		if (!fu_device_has_private_flag(dev, FU_MM_DEVICE_FLAG_USE_BRANCH))
+			fu_device_add_instance_id(dev, device_id);
+		return;
+	}
 	g_warning("failed to add instance ID %s", device_id);
 }
 
