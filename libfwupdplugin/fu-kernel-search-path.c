@@ -94,6 +94,8 @@ fu_kernel_search_path_locker_close(FuKernelSearchPathLocker *self, GError **erro
  * This object is typically called using g_autoptr() but the device can also be
  * manually closed using g_clear_object().
  *
+ * Returns: (transfer full): a #FuKernelSearchPathLocker, or %NULL on error
+ *
  * Since: 2.0.6
  **/
 FuKernelSearchPathLocker *
