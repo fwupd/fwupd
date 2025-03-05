@@ -130,6 +130,17 @@ if cc.get_id() == 'msvc'
   error('MSVC is not supported as it does not support __attribute__((cleanup))')
 endif
 
+# ensure tests do not fail because of locale specific decimal separators (e.g. when comparing
+# outputs with `diff`)
+add_test_setup(
+  'default',
+  env: {
+    'LANG': 'C.UTF-8',
+    'LC_ALL': 'C.UTF-8',
+  },
+  is_default: true,
+)
+
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
 global_link_args = []
