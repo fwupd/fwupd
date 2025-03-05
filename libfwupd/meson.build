@@ -192,6 +192,8 @@ if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  # ensure `diff` does not fail because of locale specific decimal separator
+  env.set('LANG', 'C')
   e = executable(
     'fwupd-self-test',
     sources: [
