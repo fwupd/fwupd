@@ -19,7 +19,7 @@ UPDATE_INFO = """{
                            "2fa8891f-3ece-53a4-adc4-0dd875685f30"
                        ],
                        "Summary" : "An open source display colorimeter",
-                       "Plugin" : "colorhug",
+                       "Plugin" : "hughski_colorhug",
                        "Protocol" : "com.hughski.colorhug",
                        "Flags" : [
                            "updatable",
@@ -118,7 +118,7 @@ GET_DEVICES = """{
         "2fa8891f-3ece-53a4-adc4-0dd875685f30"
       ],
       "Summary" : "An open source display colorimeter",
-      "Plugin" : "colorhug",
+      "Plugin" : "hughski_colorhug",
       "Protocol" : "com.hughski.colorhug",
       "Flags" : [
         "updatable",
@@ -307,7 +307,7 @@ GET_DEVICES_NO_UPDATES = """{
                 "2fa8891f-3ece-53a4-adc4-0dd875685f30"
             ],
             "Summary" : "An open source display colorimeter",
-            "Plugin" : "colorhug",
+            "Plugin" : "hughski_colorhug",
             "Protocol" : "com.hughski.colorhug",
             "Flags" : [
                 "updatable",
@@ -498,7 +498,7 @@ GET_DEVICES_NO_VERSION = """{
                 "2fa8891f-3ece-53a4-adc4-0dd875685f30"
             ],
             "Summary" : "An open source display colorimeter",
-            "Plugin" : "colorhug",
+            "Plugin" : "hughski_colorhug",
             "Protocol" : "com.hughski.colorhug",
             "Flags" : [
                 "updatable",
@@ -616,7 +616,7 @@ GET_DEVICES_NO_VERSION = """{
                 "2fa8891f-3ece-53a4-adc4-0dd875685f30"
             ],
             "Summary" : "An open source display colorimeter",
-            "Plugin" : "colorhug",
+            "Plugin" : "hughski_colorhug",
             "Protocol" : "com.hughski.colorhug",
             "Flags" : [
                 "updatable",

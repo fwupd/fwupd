@@ -1,12 +1,12 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginHughskiColorhug"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-plugin_quirks += files('colorhug.quirk')
-plugin_builtins += static_library('fu_plugin_colorhug',
-  rustgen.process('fu-colorhug.rs'),
+plugin_quirks += files('hughski-colorhug.quirk')
+plugin_builtins += static_library('fu_plugin_hughski_colorhug',
+  rustgen.process('fu-hughski-colorhug.rs'),
   sources: [
-    'fu-colorhug-device.c',
-    'fu-colorhug-plugin.c',
+    'fu-hughski-colorhug-device.c',
+    'fu-hughski-colorhug-plugin.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

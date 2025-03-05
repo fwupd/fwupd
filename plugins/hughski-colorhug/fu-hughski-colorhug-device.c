@@ -8,17 +8,17 @@
 
 #include <string.h>
 
-#include "fu-colorhug-device.h"
-#include "fu-colorhug-struct.h"
+#include "fu-hughski-colorhug-device.h"
+#include "fu-hughski-colorhug-struct.h"
 
-#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE "halfsize"
+#define FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE "halfsize"
 
-struct _FuColorhugDevice {
+struct _FuHughskiColorhugDevice {
 	FuUsbDevice parent_instance;
 	guint16 start_addr;
 };
 
-G_DEFINE_TYPE(FuColorhugDevice, fu_colorhug_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuHughskiColorhugDevice, fu_hughski_colorhug_device, FU_TYPE_USB_DEVICE)
 
 #define CH_CMD_GET_FIRMWARE_VERSION 0x07
 #define CH_CMD_RESET		    0x24
@@ -41,13 +41,13 @@ G_DEFINE_TYPE(FuColorhugDevice, fu_colorhug_device, FU_TYPE_USB_DEVICE)
 #define CH_FLASH_TRANSFER_BLOCK_SIZE 0x020 /* 32 */
 
 static gboolean
-fu_colorhug_device_msg(FuColorhugDevice *self,
-		       guint8 cmd,
-		       guint8 *ibuf,
-		       gsize ibufsz,
-		       guint8 *obuf,
-		       gsize obufsz,
-		       GError **error)
+fu_hughski_colorhug_device_msg(FuHughskiColorhugDevice *self,
+			       guint8 cmd,
+			       guint8 *ibuf,
+			       gsize ibufsz,
+			       guint8 *obuf,
+			       gsize obufsz,
+			       GError **error)
 {
 	guint8 buf[] = {[0] = cmd, [1 ... CH_USB_HID_EP_SIZE - 1] = 0x00};
 	gsize actual_length = 0;
@@ -146,8 +146,8 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 	}
 
 	/* check error code */
-	if (buf[0] != FU_COLORHUG_ERROR_NONE) {
-		const gchar *msg = fu_colorhug_error_to_string(buf[0]);
+	if (buf[0] != FU_HUGHSKI_COLORHUG_ERROR_NONE) {
+		const gchar *msg = fu_hughski_colorhug_error_to_string(buf[0]);
 		if (msg == NULL)
 			msg = "unknown error";
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, msg);
@@ -181,9 +181,9 @@ fu_colorhug_device_msg(FuColorhugDevice *self,
 }
 
 static gboolean
-fu_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_hughski_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
@@ -191,13 +191,13 @@ fu_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError **error
 		g_debug("already in bootloader mode, skipping");
 		return TRUE;
 	}
-	if (!fu_colorhug_device_msg(self,
-				    CH_CMD_RESET,
-				    NULL,
-				    0, /* in */
-				    NULL,
-				    0, /* out */
-				    &error_local)) {
+	if (!fu_hughski_colorhug_device_msg(self,
+					    CH_CMD_RESET,
+					    NULL,
+					    0, /* in */
+					    NULL,
+					    0, /* out */
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -210,9 +210,9 @@ fu_colorhug_device_detach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static gboolean
-fu_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_hughski_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
@@ -220,13 +220,13 @@ fu_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		g_debug("already in runtime mode, skipping");
 		return TRUE;
 	}
-	if (!fu_colorhug_device_msg(self,
-				    CH_CMD_BOOT_FLASH,
-				    NULL,
-				    0, /* in */
-				    NULL,
-				    0, /* out */
-				    &error_local)) {
+	if (!fu_hughski_colorhug_device_msg(self,
+					    CH_CMD_BOOT_FLASH,
+					    NULL,
+					    0, /* in */
+					    NULL,
+					    0, /* out */
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -239,19 +239,21 @@ fu_colorhug_device_attach(FuDevice *device, FuProgress *progress, GError **error
 }
 
 static gboolean
-fu_colorhug_device_set_flash_success(FuColorhugDevice *self, gboolean val, GError **error)
+fu_hughski_colorhug_device_set_flash_success(FuHughskiColorhugDevice *self,
+					     gboolean val,
+					     GError **error)
 {
 	guint8 buf[] = {[0] = val ? 0x01 : 0x00};
 	g_autoptr(GError) error_local = NULL;
 
 	g_debug("setting flash success %s", val ? "true" : "false");
-	if (!fu_colorhug_device_msg(self,
-				    CH_CMD_SET_FLASH_SUCCESS,
-				    buf,
-				    sizeof(buf), /* in */
-				    NULL,
-				    0, /* out */
-				    &error_local)) {
+	if (!fu_hughski_colorhug_device_msg(self,
+					    CH_CMD_SET_FLASH_SUCCESS,
+					    buf,
+					    sizeof(buf), /* in */
+					    NULL,
+					    0, /* out */
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -263,27 +265,30 @@ fu_colorhug_device_set_flash_success(FuColorhugDevice *self, gboolean val, GErro
 }
 
 static gboolean
-fu_colorhug_device_reload(FuDevice *device, GError **error)
+fu_hughski_colorhug_device_reload(FuDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
-	return fu_colorhug_device_set_flash_success(self, TRUE, error);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
+	return fu_hughski_colorhug_device_set_flash_success(self, TRUE, error);
 }
 
 static gboolean
-fu_colorhug_device_erase(FuColorhugDevice *self, guint16 addr, gsize sz, GError **error)
+fu_hughski_colorhug_device_erase(FuHughskiColorhugDevice *self,
+				 guint16 addr,
+				 gsize sz,
+				 GError **error)
 {
 	guint8 buf[4];
 	g_autoptr(GError) error_local = NULL;
 
 	fu_memwrite_uint16(buf + 0, addr, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 2, sz, G_LITTLE_ENDIAN);
-	if (!fu_colorhug_device_msg(self,
-				    CH_CMD_ERASE_FLASH,
-				    buf,
-				    sizeof(buf), /* in */
-				    NULL,
-				    0, /* out */
-				    &error_local)) {
+	if (!fu_hughski_colorhug_device_msg(self,
+					    CH_CMD_ERASE_FLASH,
+					    buf,
+					    sizeof(buf), /* in */
+					    NULL,
+					    0, /* out */
+					    &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -295,16 +300,16 @@ fu_colorhug_device_erase(FuColorhugDevice *self, guint16 addr, gsize sz, GError 
 }
 
 static gchar *
-fu_colorhug_device_get_version(FuColorhugDevice *self, GError **error)
+fu_hughski_colorhug_device_get_version(FuHughskiColorhugDevice *self, GError **error)
 {
 	guint8 buf[6];
-	if (!fu_colorhug_device_msg(self,
-				    CH_CMD_GET_FIRMWARE_VERSION,
-				    NULL,
-				    0, /* in */
-				    buf,
-				    sizeof(buf), /* out */
-				    error)) {
+	if (!fu_hughski_colorhug_device_msg(self,
+					    CH_CMD_GET_FIRMWARE_VERSION,
+					    NULL,
+					    0, /* in */
+					    buf,
+					    sizeof(buf), /* out */
+					    error)) {
 		return NULL;
 	}
 	return g_strdup_printf("%i.%i.%i",
@@ -314,12 +319,12 @@ fu_colorhug_device_get_version(FuColorhugDevice *self, GError **error)
 }
 
 static gboolean
-fu_colorhug_device_probe(FuDevice *device, GError **error)
+fu_hughski_colorhug_device_probe(FuDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
 
 	/* compact memory layout */
-	if (fu_device_has_private_flag(device, FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
+	if (fu_device_has_private_flag(device, FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE))
 		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 
 	/* add hardcoded bits */
@@ -330,13 +335,13 @@ fu_colorhug_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_colorhug_device_setup(FuDevice *device, GError **error)
+fu_hughski_colorhug_device_setup(FuDevice *device, GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
 	guint idx;
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_colorhug_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_hughski_colorhug_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get version number, falling back to the USB device release */
@@ -373,7 +378,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_BCD) {
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
-		version = fu_colorhug_device_get_version(self, &error_local);
+		version = fu_hughski_colorhug_device_get_version(self, &error_local);
 		if (version != NULL) {
 			g_debug("obtained fwver using API '%s'", version);
 			fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -388,7 +393,7 @@ fu_colorhug_device_setup(FuDevice *device, GError **error)
 }
 
 static guint8
-fu_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
+fu_hughski_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
 {
 	guint8 checksum = 0xff;
 	for (guint32 i = 0; i < len; i++)
@@ -397,10 +402,10 @@ fu_colorhug_device_calculate_checksum(const guint8 *data, gsize len)
 }
 
 static gboolean
-fu_colorhug_device_write_blocks(FuColorhugDevice *self,
-				FuChunkArray *chunks,
-				FuProgress *progress,
-				GError **error)
+fu_hughski_colorhug_device_write_blocks(FuHughskiColorhugDevice *self,
+					FuChunkArray *chunks,
+					FuProgress *progress,
+					GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -418,8 +423,8 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 		/* set address, length, checksum, data */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
-		buf[3] = fu_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
-							       fu_chunk_get_data_sz(chk));
+		buf[3] = fu_hughski_colorhug_device_calculate_checksum(fu_chunk_get_data(chk),
+								       fu_chunk_get_data_sz(chk));
 		if (!fu_memcpy_safe(buf,
 				    sizeof(buf),
 				    0x4, /* dst */
@@ -429,13 +434,13 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 				    fu_chunk_get_data_sz(chk),
 				    error))
 			return FALSE;
-		if (!fu_colorhug_device_msg(self,
-					    CH_CMD_WRITE_FLASH,
-					    buf,
-					    sizeof(buf), /* in */
-					    NULL,
-					    0, /* out */
-					    &error_local)) {
+		if (!fu_hughski_colorhug_device_msg(self,
+						    CH_CMD_WRITE_FLASH,
+						    buf,
+						    sizeof(buf), /* in */
+						    NULL,
+						    0, /* out */
+						    &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -453,10 +458,10 @@ fu_colorhug_device_write_blocks(FuColorhugDevice *self,
 }
 
 static gboolean
-fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
-				 FuChunkArray *chunks,
-				 FuProgress *progress,
-				 GError **error)
+fu_hughski_colorhug_device_verify_blocks(FuHughskiColorhugDevice *self,
+					 FuChunkArray *chunks,
+					 FuProgress *progress,
+					 GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -475,13 +480,13 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 		/* set address */
 		fu_memwrite_uint16(buf + 0, fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[2] = fu_chunk_get_data_sz(chk);
-		if (!fu_colorhug_device_msg(self,
-					    CH_CMD_READ_FLASH,
-					    buf,
-					    sizeof(buf), /* in */
-					    buf_out,
-					    sizeof(buf_out), /* out */
-					    &error_local)) {
+		if (!fu_hughski_colorhug_device_msg(self,
+						    CH_CMD_READ_FLASH,
+						    buf,
+						    sizeof(buf), /* in */
+						    buf_out,
+						    sizeof(buf_out), /* out */
+						    &error_local)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
@@ -512,13 +517,13 @@ fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
 }
 
 static gboolean
-fu_colorhug_device_write_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_hughski_colorhug_device_write_firmware(FuDevice *device,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	FuHughskiColorhugDevice *self = FU_HUGHSKI_COLORHUG_DEVICE(device);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -535,15 +540,15 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* don't auto-boot firmware */
-	if (!fu_colorhug_device_set_flash_success(self, FALSE, error))
+	if (!fu_hughski_colorhug_device_set_flash_success(self, FALSE, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* erase flash */
-	if (!fu_colorhug_device_erase(self,
-				      self->start_addr,
-				      fu_firmware_get_size(firmware),
-				      error))
+	if (!fu_hughski_colorhug_device_erase(self,
+					      self->start_addr,
+					      fu_firmware_get_size(firmware),
+					      error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -555,12 +560,18 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 						error);
 	if (chunks == NULL)
 		return FALSE;
-	if (!fu_colorhug_device_write_blocks(self, chunks, fu_progress_get_child(progress), error))
+	if (!fu_hughski_colorhug_device_write_blocks(self,
+						     chunks,
+						     fu_progress_get_child(progress),
+						     error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* verify each block */
-	if (!fu_colorhug_device_verify_blocks(self, chunks, fu_progress_get_child(progress), error))
+	if (!fu_hughski_colorhug_device_verify_blocks(self,
+						      chunks,
+						      fu_progress_get_child(progress),
+						      error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -569,7 +580,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_colorhug_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_hughski_colorhug_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -580,7 +591,7 @@ fu_colorhug_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_colorhug_device_init(FuColorhugDevice *self)
+fu_hughski_colorhug_device_init(FuHughskiColorhugDevice *self)
 {
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
@@ -589,20 +600,20 @@ fu_colorhug_device_init(FuColorhugDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_COLORHUG_DEVICE_FLAG_HALFSIZE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_HUGHSKI_COLORHUG_DEVICE_FLAG_HALFSIZE);
 	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }
 
 static void
-fu_colorhug_device_class_init(FuColorhugDeviceClass *klass)
+fu_hughski_colorhug_device_class_init(FuHughskiColorhugDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_colorhug_device_write_firmware;
-	device_class->attach = fu_colorhug_device_attach;
-	device_class->detach = fu_colorhug_device_detach;
-	device_class->reload = fu_colorhug_device_reload;
-	device_class->setup = fu_colorhug_device_setup;
-	device_class->probe = fu_colorhug_device_probe;
-	device_class->set_progress = fu_colorhug_device_set_progress;
+	device_class->write_firmware = fu_hughski_colorhug_device_write_firmware;
+	device_class->attach = fu_hughski_colorhug_device_attach;
+	device_class->detach = fu_hughski_colorhug_device_detach;
+	device_class->reload = fu_hughski_colorhug_device_reload;
+	device_class->setup = fu_hughski_colorhug_device_setup;
+	device_class->probe = fu_hughski_colorhug_device_probe;
+	device_class->set_progress = fu_hughski_colorhug_device_set_progress;
 }

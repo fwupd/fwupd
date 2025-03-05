@@ -8,4 +8,8 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuColorhugPlugin, fu_colorhug_plugin, FU, COLORHUG_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuHughskiColorhugPlugin,
+		     fu_hughski_colorhug_plugin,
+		     FU,
+		     HUGHSKI_COLORHUG_PLUGIN,
+		     FuPlugin)
