@@ -7147,8 +7147,7 @@ fu_engine_load_plugins(FuEngine *self,
 		       GError **error)
 {
 	g_autofree gchar *plugin_path = NULL;
-	g_autoptr(GPtrArray) filenames = NULL;
-	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -7160,9 +7159,24 @@ fu_engine_load_plugins(FuEngine *self,
 	/* search */
 	plugin_path = fu_path_from_kind(FU_PATH_KIND_LIBDIR_PKG);
 	if (flags & FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS) {
-		filenames = fu_path_get_files(plugin_path, &error_local);
-		if (filenames == NULL)
-			g_debug("no external plugins found: %s", error_local->message);
+		g_auto(GStrv) plugin_paths = g_strsplit(plugin_path, ",", 0);
+		for (guint i = 0; plugin_paths[i] != NULL; i++) {
+			g_autoptr(GPtrArray) filenames_tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
+			filenames_tmp = fu_path_get_files(plugin_paths[i], &error_local);
+			if (filenames_tmp == NULL) {
+				g_debug("no external plugins found in %s: %s",
+					plugin_paths[i],
+					error_local->message);
+				continue;
+			}
+			for (guint j = 0; j < filenames_tmp->len; j++) {
+				const gchar *filename = g_ptr_array_index(filenames_tmp, j);
+				if (!g_str_has_suffix(filename, ".so"))
+					continue;
+				g_ptr_array_add(filenames, g_strdup(filename));
+			}
+		}
 	}
 	fu_progress_step_done(progress);
 
