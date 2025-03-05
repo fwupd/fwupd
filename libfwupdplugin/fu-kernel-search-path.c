@@ -19,10 +19,28 @@
 
 struct _FuKernelSearchPathLocker {
 	GObject parent_instance;
+	gchar *path;
 	gchar *old_path;
 };
 
 G_DEFINE_TYPE(FuKernelSearchPathLocker, fu_kernel_search_path_locker, G_TYPE_OBJECT)
+
+/**
+ * fu_kernel_search_path_locker_get_path:
+ * @self: a #FuDfuFirmware
+ *
+ * Gets the kernel search path set using this locker.
+ *
+ * Returns: the path set with fu_kernel_search_path_locker_new()
+ *
+ * Since: 2.0.7
+ **/
+const gchar *
+fu_kernel_search_path_locker_get_path(FuKernelSearchPathLocker *self)
+{
+	g_return_val_if_fail(FU_IS_KERNEL_SEARCH_PATH_LOCKER(self), NULL);
+	return self->path;
+}
 
 /* private */
 gchar *
@@ -109,6 +127,7 @@ fu_kernel_search_path_locker_new(const gchar *path, GError **error)
 
 	/* create object */
 	self = g_object_new(FU_TYPE_KERNEL_SEARCH_PATH_LOCKER, NULL);
+	self->path = g_strdup(path);
 	old_path = fu_kernel_search_path_get_current(error);
 	if (old_path == NULL)
 		return NULL;
@@ -140,6 +159,7 @@ static void
 fu_kernel_search_path_locker_finalize(GObject *obj)
 {
 	FuKernelSearchPathLocker *self = FU_KERNEL_SEARCH_PATH_LOCKER(obj);
+	g_free(self->path);
 	g_free(self->old_path);
 	G_OBJECT_CLASS(fu_kernel_search_path_locker_parent_class)->finalize(obj);
 }
