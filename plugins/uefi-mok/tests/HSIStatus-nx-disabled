@@ -1,0 +1,8 @@
+shim-has-nx-compat-set: 0
+heap-is-executable: 0
+stack-is-executable: 0
+ro-sections-are-writable: 0
+has-memory-attribute-protocol: 0
+has-dxe-services-table: 0
+has-get-memory-space-descriptor: 0
+has-set-memory-space-attributes: 0
