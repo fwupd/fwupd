@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <glib.h>
-
 #include "fu-bnr-dp-struct.h"
 
 gchar *

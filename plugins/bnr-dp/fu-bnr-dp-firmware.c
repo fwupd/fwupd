@@ -75,10 +75,10 @@ fu_bnr_dp_firmware_attribute_parse_u64(XbNode *root,
 static gchar *
 fu_bnr_dp_firmware_attribute_parse_string(XbNode *root, const gchar *attribute, GError **error)
 {
-	const gchar *r;
+	const gchar *value;
 
-	r = xb_node_get_attr(root, attribute);
-	if (r == NULL) {
+	value = xb_node_get_attr(root, attribute);
+	if (value == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -87,15 +87,16 @@ fu_bnr_dp_firmware_attribute_parse_string(XbNode *root, const gchar *attribute, 
 		return NULL;
 	}
 
-	return g_strdup(r);
+	return g_strdup(value);
 }
 
 static gboolean
 fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **error)
 {
-	XbNode *root;
-	g_autofree gchar *tmp_str = NULL;
 	guint64 tmp_u64 = 0;
+	g_autofree gchar *chk_str = NULL;
+	g_autofree gchar *fct_str = NULL;
+	g_autoptr(XbNode) root = NULL;
 
 	root = xb_silo_get_root(silo);
 	if (root == NULL || g_strcmp0(xb_node_get_element(root), "Firmware") != 0) {
@@ -103,6 +104,7 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "invalid or missing firmware header element");
+		return FALSE;
 	}
 
 	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Dev", &self->device_id, error))
@@ -124,11 +126,20 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 		return FALSE;
 	}
 
-	tmp_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Fct", error);
-	if (tmp_str == NULL || strlen(tmp_str) != 1)
+	fct_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Fct", error);
+	if (fct_str == NULL)
 		return FALSE;
-	self->function = tmp_str[0];
+	if (strlen(fct_str) != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unsupported Fct: '%s'",
+			    fct_str);
+		return FALSE;
+	}
+
 	/* function compatibility check */
+	self->function = fct_str[0];
 	if (self->function != '_') {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -141,15 +152,13 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 
 	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Var", &self->variant, error))
 		return FALSE;
-
 	if (!fu_bnr_dp_firmware_attribute_parse_u64(root, "Len", &self->payload_length, error))
 		return FALSE;
 
-	g_free(tmp_str);
-	tmp_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Chk", error);
-	if (tmp_str == NULL)
+	chk_str = fu_bnr_dp_firmware_attribute_parse_string(root, "Chk", error);
+	if (chk_str == NULL)
 		return FALSE;
-	if (!fu_strtoull(tmp_str, &tmp_u64, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
+	if (!fu_strtoull(chk_str, &tmp_u64, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
 	self->payload_checksum = (guint16)tmp_u64;
 
@@ -158,13 +167,14 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 		return FALSE;
 
 	self->creation_date = fu_bnr_dp_firmware_attribute_parse_string(root, "Date", error);
-	if (self->creation_date != NULL)
-		g_info("firmware creation date (dd.mm.yyyy): %s", self->creation_date);
+	if (self->creation_date == NULL)
+		return FALSE;
 
 	self->comment = fu_bnr_dp_firmware_attribute_parse_string(root, "Rem", error);
-	if (self->comment != NULL && strlen(self->comment) > 0)
-		g_info("firmware comment: %s", self->comment);
+	if (self->comment == NULL)
+		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -180,19 +190,13 @@ fu_bnr_dp_firmware_stream_checksum(GInputStream *stream, guint16 *csum, GError *
 	if (!fu_input_stream_compute_sum16(stream, csum, error))
 		return FALSE;
 	*csum = fu_bnr_dp_firmware_checksum_finish(*csum);
-
 	return TRUE;
 }
 
 static guint16
 fu_bnr_dp_firmware_buf_checksum(const guint8 *buf, gsize bufsz)
 {
-	guint16 csum;
-
-	csum = fu_sum16(buf, bufsz);
-	csum = fu_bnr_dp_firmware_checksum_finish(csum);
-
-	return csum;
+	return fu_bnr_dp_firmware_checksum_finish(fu_sum16(buf, bufsz));
 }
 
 static gboolean
@@ -264,6 +268,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 	if (!fu_firmware_set_stream(FU_FIRMWARE(self), payload_stream, error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -297,24 +302,21 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	header = fu_input_stream_read_bytes(stream, 0, separator_idx, NULL, error);
 	if (header == NULL)
 		return FALSE;
-
 	if (!xb_builder_source_load_bytes(builder_source,
 					  header,
 					  XB_BUILDER_SOURCE_FLAG_NONE,
 					  error))
 		return FALSE;
-
 	xb_builder_import_source(builder, builder_source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
 	if (silo == NULL)
 		return FALSE;
-
 	if (!fu_bnr_dp_firmware_header_parse(self, silo, error))
 		return FALSE;
-
 	if (!fu_bnr_dp_firmware_payload_parse(self, stream, separator_idx + 1, error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -399,7 +401,6 @@ fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 				    "failed to build firmware XML header");
 		return NULL;
 	}
-
 	xml = xb_builder_node_export(bn, XB_NODE_EXPORT_FLAG_NONE, error);
 	if (xml == NULL)
 		return NULL;
@@ -413,6 +414,7 @@ fu_bnr_dp_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	fu_byte_array_append_bytes(buf, payload);
 
+	/* success */
 	return g_steal_pointer(&buf);
 }
 
@@ -422,10 +424,9 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 				      guint32 active_boot_counter,
 				      GError **error)
 {
-	FuFirmware *firmware = FU_FIRMWARE(self);
 	guint16 crc;
-	g_autoptr(GBytes) image = NULL;
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
+	g_autoptr(GBytes) image = NULL;
 	g_autoptr(GBytes) patch = NULL;
 
 	/* practically impossible under normal conditions, would indicate some form of corruption.
@@ -438,11 +439,13 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 		return FALSE;
 	}
 
-	image = fu_firmware_get_bytes(firmware, error);
+	image = fu_firmware_get_bytes(FU_FIRMWARE(self), error);
 	st_header = fu_struct_bnr_dp_payload_header_parse(g_bytes_get_data(image, NULL),
 							  g_bytes_get_size(image),
 							  FU_BNR_DP_FIRMWARE_HEADER_OFFSET,
 							  error);
+	if (st_header == NULL)
+		return FALSE;
 
 	/* check that the current CRC was correct */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
@@ -477,7 +480,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 	fu_struct_bnr_dp_payload_header_set_crc(st_header, crc);
 
 	patch = g_bytes_new(st_header->data, st_header->len);
-	fu_firmware_add_patch(firmware, FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
+	fu_firmware_add_patch(FU_FIRMWARE(self), FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
 
 	return TRUE;
 }
@@ -491,12 +494,11 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-	FuFirmware *firmware = FU_FIRMWARE(self);
 	guint64 active_version = 0;
 	guint64 fw_version = 0;
-	g_autofree gchar *fw_version_str = NULL;
 	guint32 product_num;
 	guint16 compat_id;
+	g_autofree gchar *fw_version_str = NULL;
 
 	/* compare versions */
 	if (!fu_bnr_dp_version_from_header(st_active_header, &active_version, error))
@@ -504,20 +506,20 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 	if (!fu_bnr_dp_version_from_header(st_fw_header, &fw_version, error))
 		return FALSE;
 	fw_version_str = fu_bnr_dp_version_to_string(fw_version);
-	if (fu_firmware_get_version_raw(firmware) != fw_version) {
+	if (fu_firmware_get_version_raw(FU_FIRMWARE(self)) != fw_version) {
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
 				    "versions in firmware XML header (%s) and binary payload (%s) "
 				    "are inconsistent",
-				    fu_firmware_get_version(firmware),
+				    fu_firmware_get_version(FU_FIRMWARE(self)),
 				    fw_version_str);
 			return FALSE;
 		}
 		g_warning("forcing installation of firmware with inconsistent XML header (%s) and "
 			  "binary payload (%s) versions",
-			  fu_firmware_get_version(firmware),
+			  fu_firmware_get_version(FU_FIRMWARE(self)),
 			  fw_version_str);
 	}
 
