@@ -1,0 +1,10 @@
+# this is a comment
+this-property-does-not-exist: 1
+shim-has-nx-compat-set: 1
+heap-is-executable: 1
+stack-is-executable: 1
+ro-sections-are-writable: 1
+has-memory-attribute-protocol: 0
+has-dxe-services-table: 1
+has-get-memory-space-descriptor: 0
+has-set-memory-space-attributes: 0

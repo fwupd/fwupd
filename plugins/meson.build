@@ -125,6 +125,7 @@ plugins = {
   'tpm': false,
   'uefi-dbx': false,
   'uefi-esrt': false,
+  'uefi-mok': false,
   'uefi-pk': false,
   'uefi-recovery': false,
   'uefi-sbat': false,

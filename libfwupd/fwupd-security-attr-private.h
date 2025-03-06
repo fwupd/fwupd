@@ -388,6 +388,14 @@ G_BEGIN_DECLS
  * Since: 2.0.2
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED "org.fwupd.hsi.Amd.SmmLocked"
+/**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION:
+ *
+ * Host Security ID attribute for UEFI memory protection
+ *
+ * Since: 2.0.7
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION "org.fwupd.hsi.Uefi.MemoryProtection"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
