@@ -1943,6 +1943,11 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 				  fwupd_release_get_source_url(rel));
 	fwupd_codec_string_append(str,
 				  idt + 1,
+				  /* TRANSLATORS: Software Bill of Materials link */
+				  _("SBOM"),
+				  fwupd_release_get_sbom_url(rel));
+	fwupd_codec_string_append(str,
+				  idt + 1,
 				  /* TRANSLATORS: manufacturer of hardware */
 				  _("Vendor"),
 				  fwupd_release_get_vendor(rel));

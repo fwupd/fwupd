@@ -139,6 +139,10 @@ const gchar *
 fwupd_release_get_source_url(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void
 fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_release_get_sbom_url(FwupdRelease *self) G_GNUC_NON_NULL(1);
+void
+fwupd_release_set_sbom_url(FwupdRelease *self, const gchar *sbom_url) G_GNUC_NON_NULL(1);
 guint64
 fwupd_release_get_size(FwupdRelease *self) G_GNUC_NON_NULL(1);
 void

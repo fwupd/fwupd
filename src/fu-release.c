@@ -973,6 +973,9 @@ fu_release_load(FuRelease *self,
 	tmp = xb_node_query_text(rel, "url[@type='source']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_source_url(FWUPD_RELEASE(self), tmp);
+	tmp = xb_node_query_text(rel, "url[@type='sbom']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_sbom_url(FWUPD_RELEASE(self), tmp);
 	if (fwupd_release_get_checksums(FWUPD_RELEASE(self))->len == 0) {
 		g_autoptr(GPtrArray) checksums = NULL;
 		checksums = xb_node_query(rel, "checksum[@target='container']", 0, NULL);

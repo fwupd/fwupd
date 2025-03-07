@@ -169,6 +169,7 @@ fwupd_release_func(void)
 	fwupd_release_set_homepage(release1, "homepage");
 	fwupd_release_set_details_url(release1, "details_url");
 	fwupd_release_set_source_url(release1, "source_url");
+	fwupd_release_set_sbom_url(release1, "sbom_url");
 	fwupd_release_set_version(release1, "version");
 	fwupd_release_set_vendor(release1, "vendor");
 	fwupd_release_set_size(release1, 1234);
@@ -213,6 +214,7 @@ fwupd_release_func(void)
 	g_assert_cmpstr(fwupd_release_get_homepage(release2), ==, "homepage");
 	g_assert_cmpstr(fwupd_release_get_details_url(release2), ==, "details_url");
 	g_assert_cmpstr(fwupd_release_get_source_url(release2), ==, "source_url");
+	g_assert_cmpstr(fwupd_release_get_sbom_url(release2), ==, "sbom_url");
 	g_assert_cmpstr(fwupd_release_get_version(release2), ==, "version");
 	g_assert_cmpstr(fwupd_release_get_vendor(release2), ==, "vendor");
 	g_assert_cmpint(fwupd_release_get_size(release2), ==, 1234);
@@ -267,6 +269,7 @@ fwupd_release_func(void)
 				    "  Homepage:             homepage\n"
 				    "  DetailsUrl:           details_url\n"
 				    "  SourceUrl:            source_url\n"
+				    "  SbomUrl:              sbom_url\n"
 				    "  Urgency:              medium\n"
 				    "  Vendor:               vendor\n"
 				    "  Flags:                is-upgrade\n"
