@@ -63,3 +63,8 @@ SynapticsMstDeviceKind = dock
 [MST-602]
 Name = ThinkPad Universal ThunderBolt 4 Dock
 SynapticsMstDeviceKind = dock
+
+[MST-515]
+Name = Lenovo USB-C Dual Display Travel Dock
+SynapticsMstDeviceKind = dock
+ParentGuid = USB\VID_17EF&PID_10CA
