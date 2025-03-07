@@ -1006,3 +1006,10 @@ LIBFWUPD_2.0.4 {
     fwupd_install_flags_from_string;
   local: *;
 } LIBFWUPD_2.0.2;
+
+LIBFWUPD_2.0.7 {
+  global:
+    fwupd_release_get_sbom_url;
+    fwupd_release_set_sbom_url;
+  local: *;
+} LIBFWUPD_2.0.4;

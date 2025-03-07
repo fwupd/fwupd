@@ -42,6 +42,7 @@ typedef struct {
 	gchar *homepage;
 	gchar *details_url;
 	gchar *source_url;
+	gchar *sbom_url;
 	gchar *appstream_id;
 	gchar *id;
 	gchar *detach_caption;
@@ -875,6 +876,47 @@ fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url)
 
 	g_free(priv->source_url);
 	priv->source_url = g_strdup(source_url);
+}
+
+/**
+ * fwupd_release_set_sbom_url:
+ * @self: a #FwupdRelease
+ * @sbom_url: (nullable): the URL
+ *
+ * Sets the URL of the SBOM for this release.
+ *
+ * Since: 2.0.7
+ **/
+void
+fwupd_release_set_sbom_url(FwupdRelease *self, const gchar *sbom_url)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->sbom_url, sbom_url) == 0)
+		return;
+
+	g_free(priv->sbom_url);
+	priv->sbom_url = g_strdup(sbom_url);
+}
+
+/**
+ * fwupd_release_get_sbom_url:
+ * @self: a #FwupdRelease
+ *
+ * Gets the URL of the SBOM for this release.
+ *
+ * Returns: a URL, or %NULL if unset
+ *
+ * Since: 2.0.7
+ **/
+const gchar *
+fwupd_release_get_sbom_url(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	return priv->sbom_url;
 }
 
 /**
@@ -1774,6 +1816,12 @@ fwupd_release_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCode
 				      FWUPD_RESULT_KEY_SOURCE_URL,
 				      g_variant_new_string(priv->source_url));
 	}
+	if (priv->sbom_url != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_SBOM_URL,
+				      g_variant_new_string(priv->sbom_url));
+	}
 	if (priv->version != NULL) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -1936,6 +1984,10 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		fwupd_release_set_source_url(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_SBOM_URL) == 0) {
+		fwupd_release_set_sbom_url(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
 		fwupd_release_set_version(self, g_variant_get_string(value, NULL));
 		return;
@@ -2076,6 +2128,7 @@ fwupd_release_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags 
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SBOM_URL, priv->sbom_url);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
@@ -2175,6 +2228,7 @@ fwupd_release_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SBOM_URL, priv->sbom_url);
 	if (priv->urgency != FWUPD_RELEASE_URGENCY_UNKNOWN) {
 		fwupd_codec_string_append(str,
 					  idt,
@@ -2292,6 +2346,7 @@ fwupd_release_finalize(GObject *object)
 	g_free(priv->homepage);
 	g_free(priv->details_url);
 	g_free(priv->source_url);
+	g_free(priv->sbom_url);
 	g_free(priv->vendor);
 	g_free(priv->version);
 	g_free(priv->remote_id);

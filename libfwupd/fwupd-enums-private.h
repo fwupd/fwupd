@@ -251,6 +251,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_SOURCE_URL "SourceUrl"
 /**
+ * FWUPD_RESULT_KEY_SBOM_URL:
+ *
+ * Result key to represent SourceUrl
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_SBOM_URL "SbomUrl"
+/**
  * FWUPD_RESULT_KEY_ICON:
  *
  * Result key to represent Icon
