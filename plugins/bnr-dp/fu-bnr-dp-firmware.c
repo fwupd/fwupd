@@ -25,8 +25,8 @@ struct _FuBnrDpFirmware {
 	guint64 payload_length;	  /* Len */
 	guint16 payload_checksum; /* Chk */
 	gchar *material;	  /* Mat */
-	gchar *creation_date;	  /* Date */
-	gchar *comment;		  /* Rem */
+	gchar *creation_date;	  /* Date (optional) */
+	gchar *comment;		  /* Rem (optional) */
 };
 
 G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)
@@ -166,13 +166,9 @@ fu_bnr_dp_firmware_header_parse(FuBnrDpFirmware *self, XbSilo *silo, GError **er
 	if (self->material == NULL)
 		return FALSE;
 
+	/* these are optional and may be NULL */
 	self->creation_date = fu_bnr_dp_firmware_attribute_parse_string(root, "Date", error);
-	if (self->creation_date == NULL)
-		return FALSE;
-
 	self->comment = fu_bnr_dp_firmware_attribute_parse_string(root, "Rem", error);
-	if (self->comment == NULL)
-		return FALSE;
 
 	/* success */
 	return TRUE;
