@@ -226,7 +226,10 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	}
 
 	/* is optional */
-	type42_tables = fu_context_get_smbios_data(ctx, REDFISH_SMBIOS_TABLE_TYPE, NULL);
+	type42_tables = fu_context_get_smbios_data(ctx,
+						   REDFISH_SMBIOS_TABLE_TYPE,
+						   FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+						   NULL);
 	if (type42_tables == NULL)
 		return TRUE;
 	for (guint i = 0; i < type42_tables->len; i++) {

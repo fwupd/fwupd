@@ -163,13 +163,19 @@ gboolean
 fu_context_has_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
 
 const gchar *
-fu_context_get_smbios_string(FuContext *self, guint8 structure_type, guint8 offset, GError **error)
-    G_GNUC_NON_NULL(1);
+fu_context_get_smbios_string(FuContext *self,
+			     guint8 type,
+			     guint8 length,
+			     guint8 offset,
+			     GError **error) G_GNUC_NON_NULL(1);
 guint
-fu_context_get_smbios_integer(FuContext *self, guint8 type, guint8 offset, GError **error)
-    G_GNUC_NON_NULL(1);
+fu_context_get_smbios_integer(FuContext *self,
+			      guint8 type,
+			      guint8 length,
+			      guint8 offset,
+			      GError **error) G_GNUC_NON_NULL(1);
 GPtrArray *
-fu_context_get_smbios_data(FuContext *self, guint8 structure_type, GError **error)
+fu_context_get_smbios_data(FuContext *self, guint8 type, guint8 length, GError **error)
     G_GNUC_NON_NULL(1);
 gboolean
 fu_context_has_hwid_guid(FuContext *self, const gchar *guid) G_GNUC_NON_NULL(1);
