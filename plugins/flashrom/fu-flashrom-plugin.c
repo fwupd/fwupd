@@ -102,7 +102,10 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 	g_autoptr(GPtrArray) bios_tables = NULL;
 
 	/* get SMBIOS info */
-	bios_tables = fu_context_get_smbios_data(ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS, error);
+	bios_tables = fu_context_get_smbios_data(ctx,
+						 FU_SMBIOS_STRUCTURE_TYPE_BIOS,
+						 FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+						 error);
 	if (bios_tables == NULL)
 		return FALSE;
 
