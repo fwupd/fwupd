@@ -376,7 +376,8 @@ static struct {
     {FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
     {FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
     {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL},
-    {NULL, FWUPD_SECURITY_ATTR_LEVEL_NONE}};
+    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT},
+};
 
 static void
 fu_security_attrs_ensure_level(FwupdSecurityAttr *attr)
@@ -392,7 +393,7 @@ fu_security_attrs_ensure_level(FwupdSecurityAttr *attr)
 		return;
 
 	/* map ID to level in one place */
-	for (guint i = 0; appstream_id_level_map[i].appstream_id != NULL; i++) {
+	for (guint i = 0; i < G_N_ELEMENTS(appstream_id_level_map); i++) {
 		if (g_strcmp0(appstream_id, appstream_id_level_map[i].appstream_id) == 0) {
 			fwupd_security_attr_set_level(attr, appstream_id_level_map[i].level);
 			return;

@@ -21,7 +21,6 @@ fu_uefi_mok_attr_new(FuPlugin *plugin, const gchar *filename, GError **error)
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION);
 	fwupd_security_attr_set_plugin(attr, "uefi_mok");
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
-	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 
 	/* split into lines */
 	blob = fu_bytes_get_contents(filename, error);

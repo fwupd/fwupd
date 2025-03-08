@@ -2424,6 +2424,27 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("TPM PCR0 reconstruction is now valid")},
+		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI memory protection enabled but not locked")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI memory protection enabled and locked")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI memory protection is now locked")},
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("UEFI memory protection is now unlocked")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
