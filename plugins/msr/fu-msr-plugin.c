@@ -597,12 +597,15 @@ fu_msr_plugin_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
 static gboolean
 fu_msr_plugin_kernel_enabled_sme(GError **error)
 {
-	g_autofree gchar *buf = NULL;
-	gsize bufsz = 0;
-	if (!g_file_get_contents("/proc/cpuinfo", &buf, &bufsz, error))
+	const gchar *flags;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+
+	cpu_attrs = fu_cpu_get_attrs(error);
+	if (cpu_attrs == NULL)
 		return FALSE;
-	if (bufsz > 0) {
-		g_auto(GStrv) tokens = fu_strsplit(buf, bufsz, " ", -1);
+	flags = g_hash_table_lookup(cpu_attrs, "flags");
+	if (flags != NULL) {
+		g_auto(GStrv) tokens = g_strsplit(flags, " ", -1);
 		for (guint i = 0; tokens[i] != NULL; i++) {
 			if (g_strcmp0(tokens[i], "sme") == 0)
 				return TRUE;

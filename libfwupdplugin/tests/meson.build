@@ -20,6 +20,7 @@ install_data([
   install_dir: join_paths(installed_test_datadir, 'tests/America'),
 )
 install_data([
+    'cpuinfo',
     'cab.builder.xml',
     'cab-compressed.builder.xml',
     'cfu-offer.builder.xml',
