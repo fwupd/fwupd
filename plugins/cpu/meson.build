@@ -6,6 +6,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('cpu.quirk')
 plugin_builtins += static_library('fu_plugin_cpu',
   sources: [
+    'fu-cpu-common.c',
     'fu-cpu-plugin.c',
     'fu-cpu-device.c',
   ],
