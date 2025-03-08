@@ -1,0 +1,6 @@
+processor	: 0
+vendor_id	: AuthenticAMD
+fpu_exception	: yes
+
+processor	: 1
+fpu_exception	: no

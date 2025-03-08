@@ -14,6 +14,7 @@
 
 #include "fu-common-private.h"
 #include "fu-firmware.h"
+#include "fu-path.h"
 #include "fu-string.h"
 
 /**
@@ -57,6 +58,48 @@ fu_cpuid(guint32 leaf, guint32 *eax, guint32 *ebx, guint32 *ecx, guint32 *edx, G
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no <cpuid.h> support");
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_cpu_get_attrs:
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets attributes for the first CPU listed in `/proc/cpuinfo`.
+ *
+ * Returns: (element-type utf8 utf8) (transfer full): CPU attributes
+ *
+ * Since: 2.0.7
+ **/
+GHashTable *
+fu_cpu_get_attrs(GError **error)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *procpath = fu_path_from_kind(FU_PATH_KIND_PROCFS);
+	g_autofree gchar *fn = g_build_filename(procpath, "cpuinfo", NULL);
+	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (!g_file_get_contents(fn, &buf, &bufsz, error))
+		return NULL;
+	if (bufsz > 0) {
+		g_auto(GStrv) lines = fu_strsplit(buf, bufsz, "\n", -1);
+		for (guint i = 0; lines[i] != NULL; i++) {
+			g_auto(GStrv) tokens = NULL;
+			if (lines[i][0] == '\0')
+				break;
+			tokens = g_strsplit(lines[i], ": ", 2);
+			for (guint j = 0; tokens[j] != NULL; j++) {
+				g_hash_table_insert(hash,
+						    fu_strstrip(tokens[0]),
+						    g_strdup(tokens[1]));
+			}
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&hash);
 }
 
 /**
