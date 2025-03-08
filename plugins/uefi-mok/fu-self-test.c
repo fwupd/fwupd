@@ -36,7 +36,6 @@ fu_uefi_mok_nx_disabled_func(void)
 			==,
 			"FuSecurityAttr:\n"
 			"  AppstreamId:          org.fwupd.hsi.Uefi.MemoryProtection\n"
-			"  HsiLevel:             2\n"
 			"  HsiResult:            not-enabled\n"
 			"  HsiResultSuccess:     locked\n"
 			"  Flags:                action-config-os\n"
@@ -77,7 +76,6 @@ fu_uefi_mok_nx_invalid_func(void)
 			==,
 			"FuSecurityAttr:\n"
 			"  AppstreamId:          org.fwupd.hsi.Uefi.MemoryProtection\n"
-			"  HsiLevel:             2\n"
 			"  HsiResult:            not-locked\n"
 			"  HsiResultSuccess:     locked\n"
 			"  Flags:                action-contact-oem\n"
@@ -119,7 +117,6 @@ fu_uefi_mok_nx_valid_func(void)
 			==,
 			"FuSecurityAttr:\n"
 			"  AppstreamId:          org.fwupd.hsi.Uefi.MemoryProtection\n"
-			"  HsiLevel:             2\n"
 			"  HsiResult:            locked\n"
 			"  HsiResultSuccess:     locked\n"
 			"  Flags:                success\n"

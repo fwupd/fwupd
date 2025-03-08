@@ -227,6 +227,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: Whether firmware is locked down */
 		return g_strdup(_("SMM locked down"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return g_strdup(_("UEFI memory protection"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -411,6 +415,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED) == 0) {
 		/* TRANSLATORS: Title: Whether firmware is locked down */
 		return _("System Management Mode");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
+		return _("UEFI Memory Protection");
 	}
 	return NULL;
 }
@@ -604,6 +612,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("System management mode is used by the firmware to access "
 			 "resident BIOS code and data.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The UEFI system can set up memory attributes at boot which prevent "
+			 "common exploits from running.");
 	}
 	return NULL;
 }
