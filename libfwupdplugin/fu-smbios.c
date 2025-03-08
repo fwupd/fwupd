@@ -51,12 +51,19 @@ typedef struct {
 G_DEFINE_TYPE(FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
 
 static FuSmbiosItem *
-fu_smbios_get_item_for_type(FuSmbios *self, guint8 type)
+fu_smbios_get_item_for_type_length(FuSmbios *self, guint8 type, guint8 length)
 {
 	for (guint i = 0; i < self->items->len; i++) {
 		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
-		if (item->type == type)
-			return item;
+		if (item->type != type)
+			continue;
+		if (length != FU_SMBIOS_STRUCTURE_LENGTH_ANY && length != item->buf->len) {
+			g_debug("filtering SMBIOS structure by length: 0x%x != 0x%x",
+				length,
+				item->buf->len);
+			continue;
+		}
+		return item;
 	}
 	return NULL;
 }
@@ -120,7 +127,9 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 	}
 
 	/* this has to exist */
-	if (fu_smbios_get_item_for_type(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM) == NULL) {
+	if (fu_smbios_get_item_for_type_length(self,
+					       FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+					       FU_SMBIOS_STRUCTURE_LENGTH_ANY) == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -452,16 +461,17 @@ fu_smbios_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNod
  * fu_smbios_get_data:
  * @self: a #FuSmbios
  * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @length: expected length of the structure, or %FU_SMBIOS_STRUCTURE_LENGTH_ANY
  * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS data blobs of a specified type.
  *
  * Returns: (transfer container) (element-type GBytes): a #GBytes, or %NULL if invalid or not found
  *
- * Since: 1.9.8
+ * Since: 2.0.7
  **/
 GPtrArray *
-fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error)
+fu_smbios_get_data(FuSmbios *self, guint8 type, guint8 length, GError **error)
 {
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 
@@ -470,8 +480,13 @@ fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error)
 
 	for (guint i = 0; i < self->items->len; i++) {
 		FuSmbiosItem *item = g_ptr_array_index(self->items, i);
-		if (item->type == type && item->buf->len > 0)
-			g_ptr_array_add(array, g_bytes_new(item->buf->data, item->buf->len));
+		if (item->type != type)
+			continue;
+		if (length != FU_SMBIOS_STRUCTURE_LENGTH_ANY && length != item->buf->len)
+			continue;
+		if (item->buf->len == 0)
+			continue;
+		g_ptr_array_add(array, g_bytes_new(item->buf->data, item->buf->len));
 	}
 	if (array->len == 0) {
 		g_set_error(error,
@@ -488,6 +503,7 @@ fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error)
  * fu_smbios_get_integer:
  * @self: a #FuSmbios
  * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @length: expected length of the structure, or %FU_SMBIOS_STRUCTURE_LENGTH_ANY
  * @offset: a structure offset
  * @error: (nullable): optional return location for an error
  *
@@ -498,10 +514,10 @@ fu_smbios_get_data(FuSmbios *self, guint8 type, GError **error)
  *
  * Returns: an integer, or %G_MAXUINT if invalid or not found
  *
- * Since: 1.5.0
+ * Since: 2.0.7
  **/
 guint
-fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error)
+fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
 {
 	FuSmbiosItem *item;
 
@@ -509,7 +525,7 @@ fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error
 	g_return_val_if_fail(error == NULL || *error == NULL, 0);
 
 	/* get item */
-	item = fu_smbios_get_item_for_type(self, type);
+	item = fu_smbios_get_item_for_type_length(self, type, length);
 	if (item == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -537,6 +553,7 @@ fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error
  * fu_smbios_get_string:
  * @self: a #FuSmbios
  * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @length: expected length of the structure, or %FU_SMBIOS_STRUCTURE_LENGTH_ANY
  * @offset: a structure offset
  * @error: (nullable): optional return location for an error
  *
@@ -547,10 +564,10 @@ fu_smbios_get_integer(FuSmbios *self, guint8 type, guint8 offset, GError **error
  *
  * Returns: a string, or %NULL if invalid or not found
  *
- * Since: 1.0.0
+ * Since: 2.0.7
  **/
 const gchar *
-fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 offset, GError **error)
+fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, GError **error)
 {
 	FuSmbiosItem *item;
 
@@ -558,7 +575,7 @@ fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* get item */
-	item = fu_smbios_get_item_for_type(self, type);
+	item = fu_smbios_get_item_for_type_length(self, type, length);
 	if (item == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,

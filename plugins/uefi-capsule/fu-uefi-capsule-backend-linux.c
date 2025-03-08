@@ -172,8 +172,9 @@ fu_uefi_capsule_backend_linux_check_smbios_enabled(FuContext *ctx, GError **erro
 	GBytes *bios_blob;
 	const guint8 *data;
 	gsize sz;
-	g_autoptr(GPtrArray) bios_tables = fu_context_get_smbios_data(ctx, 0, NULL);
+	g_autoptr(GPtrArray) bios_tables = NULL;
 
+	bios_tables = fu_context_get_smbios_data(ctx, 0, FU_SMBIOS_STRUCTURE_LENGTH_ANY, NULL);
 	if (bios_tables == NULL) {
 		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
 		if (tmp != NULL)

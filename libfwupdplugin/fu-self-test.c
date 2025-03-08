@@ -706,19 +706,38 @@ fu_smbios_func(void)
 	g_debug("%s", dump);
 
 	/* test for missing table */
-	str = fu_smbios_get_string(smbios, 0xff, 0, &error);
+	str = fu_smbios_get_string(smbios, 0xff, FU_SMBIOS_STRUCTURE_LENGTH_ANY, 0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(str);
 	g_clear_error(&error);
 
 	/* check for invalid offset */
-	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0xff, &error);
+	str = fu_smbios_get_string(smbios,
+				   FU_SMBIOS_STRUCTURE_TYPE_BIOS,
+				   FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+				   0xff,
+				   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null(str);
 	g_clear_error(&error);
 
+	/* check for invalid length */
+	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x01, 0xff, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null(str);
+	g_clear_error(&error);
+
+	/* get vendor -- explicit length */
+	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x18, 0x04, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(str, ==, "LENOVO");
+
 	/* get vendor */
-	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	str = fu_smbios_get_string(smbios,
+				   FU_SMBIOS_STRUCTURE_TYPE_BIOS,
+				   FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+				   0x04,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(str, ==, "LENOVO");
 }
@@ -782,7 +801,7 @@ fu_smbios3_func(void)
 	g_debug("%s", dump);
 
 	/* get vendor */
-	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
+	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x18, 0x04, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(str, ==, "Dell Inc.");
 }

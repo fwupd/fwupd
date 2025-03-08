@@ -24,7 +24,8 @@ fu_hwids_smbios_convert_string_table_cb(FuSmbios *smbios,
 					guint8 offset,
 					GError **error)
 {
-	const gchar *tmp = fu_smbios_get_string(smbios, type, offset, error);
+	const gchar *tmp =
+	    fu_smbios_get_string(smbios, type, FU_SMBIOS_STRUCTURE_LENGTH_ANY, offset, error);
 	if (tmp == NULL)
 		return NULL;
 	/* ComputerHardwareIds.exe seems to strip spaces */
@@ -37,7 +38,8 @@ fu_hwids_smbios_convert_padded_integer_cb(FuSmbios *smbios,
 					  guint8 offset,
 					  GError **error)
 {
-	guint tmp = fu_smbios_get_integer(smbios, type, offset, error);
+	guint tmp =
+	    fu_smbios_get_integer(smbios, type, FU_SMBIOS_STRUCTURE_LENGTH_ANY, offset, error);
 	if (tmp == G_MAXUINT)
 		return NULL;
 	return g_strdup_printf("%02x", tmp);
@@ -46,7 +48,8 @@ fu_hwids_smbios_convert_padded_integer_cb(FuSmbios *smbios,
 static gchar *
 fu_hwids_smbios_convert_integer_cb(FuSmbios *smbios, guint8 type, guint8 offset, GError **error)
 {
-	guint tmp = fu_smbios_get_integer(smbios, type, offset, error);
+	guint tmp =
+	    fu_smbios_get_integer(smbios, type, FU_SMBIOS_STRUCTURE_LENGTH_ANY, offset, error);
 	if (tmp == G_MAXUINT)
 		return NULL;
 	return g_strdup_printf("%x", tmp);
@@ -119,9 +122,12 @@ fu_hwids_smbios_setup(FuContext *ctx, FuHwids *self, GError **error)
 		return FALSE;
 
 	/* get all DMI data from SMBIOS */
-	fu_context_set_chassis_kind(
-	    ctx,
-	    fu_smbios_get_integer(smbios, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05, NULL));
+	fu_context_set_chassis_kind(ctx,
+				    fu_smbios_get_integer(smbios,
+							  FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
+							  FU_SMBIOS_STRUCTURE_LENGTH_ANY,
+							  0x05,
+							  NULL));
 	for (guint i = 0; map[i].key != NULL; i++) {
 		const gchar *contents_hdr = NULL;
 		g_autofree gchar *contents = NULL;

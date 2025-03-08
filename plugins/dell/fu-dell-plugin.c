@@ -86,7 +86,7 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 	struct da_structure da_values = {0x0};
 
 	/* make sure that Dell SMBIOS methods are available */
-	de_tables = fu_context_get_smbios_data(ctx, 0xDE, error);
+	de_tables = fu_context_get_smbios_data(ctx, 0xDE, FU_SMBIOS_STRUCTURE_LENGTH_ANY, error);
 	if (de_tables == NULL)
 		return FALSE;
 	de_blob = g_ptr_array_index(de_tables, 0);
@@ -106,7 +106,7 @@ fu_dell_plugin_supported(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	da_tables = fu_context_get_smbios_data(ctx, 0xDA, error);
+	da_tables = fu_context_get_smbios_data(ctx, 0xDA, FU_SMBIOS_STRUCTURE_LENGTH_ANY, error);
 	if (da_tables == NULL)
 		return FALSE;
 	da_blob = g_ptr_array_index(da_tables, 0);
