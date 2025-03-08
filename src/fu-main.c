@@ -75,11 +75,16 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 static gboolean
 fu_main_is_hypervisor(void)
 {
-	g_autofree gchar *buf = NULL;
-	gsize bufsz = 0;
-	if (!g_file_get_contents("/proc/cpuinfo", &buf, &bufsz, NULL))
+	const gchar *flags;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+
+	cpu_attrs = fu_cpu_get_attrs(NULL);
+	if (cpu_attrs == NULL)
 		return FALSE;
-	return g_strstr_len(buf, (gssize)bufsz, "hypervisor") != NULL;
+	flags = g_hash_table_lookup(cpu_attrs, "flags");
+	if (flags == NULL)
+		return FALSE;
+	return g_strstr_len(flags, -1, "hypervisor") != NULL;
 }
 
 static gboolean
