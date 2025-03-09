@@ -45,6 +45,7 @@ run_test acpi-facp-self-test
 run_test acpi-ivrs-self-test
 run_test acpi-phat-self-test
 run_test ata-self-test
+run_test cpu-self-test
 run_test dfu-self-test
 run_test fwupdplugin-self-test
 run_test linux-swap-self-test

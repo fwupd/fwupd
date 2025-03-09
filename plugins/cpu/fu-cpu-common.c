@@ -9,7 +9,7 @@
 #include "fu-cpu-common.h"
 
 const gchar *
-fu_cpu_stream_name_to_fixed_amd_entry_sign_agesa_version(const gchar *stream_name)
+fu_cpu_amd_stream_name_to_entry_sign_fixed_agesa_version(const gchar *stream_name)
 {
 	struct {
 		const gchar *stream_name;
@@ -19,13 +19,13 @@ fu_cpu_stream_name_to_fixed_amd_entry_sign_agesa_version(const gchar *stream_nam
 	    {"RomePI", "1.0.0.L"},
 	    {"MilanPI", "1.0.0.F"},
 	    {"Genoa", "1.0.0.E"},
-	    {"ComboAM5PI", "1.0.0.A/1.0.0.4/1.2.0.3???"},
+	    {"ComboAM5PI", "1.2.0.3"}, /* maybe */
 	    {"MI300PI_SR5", "1.0.0.8"},
 	    {"ComboAM4v2PI", "1.2.0.E"},
 	    {"ComboAM4PI", "1.0.0.D"},
-	    {"ComboAM5PI", "1.0.0.A/1.0.0.4/1.2.0.3/???"},
+	    {"ComboAM5PI", "1.2.0.3"}, /* maybe */
 	    {"ComboAM4v2PI", "1.2.0.E"},
-	    {"ComboAM5PI", "1.1.0.3c/1.2.0.3/???"},
+	    {"ComboAM5PI", "1.2.0.3"}, /* maybe */
 	    {"CastlePeakPI-SP3r3", "1.0.0.E"},
 	    {"StormPeakPI-SP6", "1.0.0.1k"},
 	    {"ChagallWSPI-sWRX8", "1.0.0.B"},
@@ -54,7 +54,7 @@ fu_cpu_stream_name_to_fixed_amd_entry_sign_agesa_version(const gchar *stream_nam
 }
 
 guint32
-fu_cpu_model_id_to_amd_entry_sign_ucode_version(guint32 model_id)
+fu_cpu_amd_model_id_to_entry_sign_fixed_ucode_version(guint32 model_id)
 {
 	struct {
 		guint32 model_id;

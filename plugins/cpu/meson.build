@@ -16,6 +16,33 @@ plugin_builtins += static_library('fu_plugin_cpu',
   dependencies: plugin_deps,
 )
 
+if get_option('tests')
+  e = executable(
+    'cpu-self-test',
+    sources: [
+      'fu-cpu-common.c',
+      'fu-self-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: [
+      plugin_deps,
+      platform_deps,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: installed_test_bindir,
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
+  )
+  test('cpu-self-test', e)
+endif
+
 code = '''
 #if !__has_attribute (__noclone__)
 #error symver attribute not supported

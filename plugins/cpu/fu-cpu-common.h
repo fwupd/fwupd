@@ -9,6 +9,6 @@
 #include <fwupdplugin.h>
 
 const gchar *
-fu_cpu_stream_name_to_amd_entry_sign_agesa_version(const gchar *stream_name);
+fu_cpu_amd_stream_name_to_entry_sign_fixed_agesa_version(const gchar *stream_name);
 guint32
-fu_cpu_model_id_to_amd_entry_sign_ucode_version(guint32 model_id);
+fu_cpu_amd_model_id_to_entry_sign_fixed_ucode_version(guint32 model_id);

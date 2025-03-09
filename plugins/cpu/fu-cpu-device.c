@@ -24,6 +24,7 @@ typedef enum {
 struct _FuCpuDevice {
 	FuDevice parent_instance;
 	FuCpuDeviceFlag flags;
+	guint32 family_id;
 	guint32 model_id;
 };
 
@@ -44,6 +45,7 @@ fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	fwupd_codec_string_append_int(str, idt, "ModelId", self->model_id);
+	fwupd_codec_string_append_int(str, idt, "FamilyId", self->family_id);
 	fwupd_codec_string_append_bool(str,
 				       idt,
 				       "HasSHSTK",
@@ -133,9 +135,6 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	guint32 eax = 0;
-	guint32 family_id;
-	guint32 family_id_ext;
-	guint32 model_id_ext;
 	guint32 processor_id;
 	guint32 stepping_id;
 
@@ -144,20 +143,22 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 		return FALSE;
 	processor_id = (eax >> 12) & 0x3;
 	self->model_id = (eax >> 4) & 0xf;
-	family_id = (eax >> 8) & 0xf;
-	model_id_ext = (eax >> 16) & 0xf;
-	family_id_ext = (eax >> 20) & 0xff;
+	self->family_id = (eax >> 8) & 0xf;
 	stepping_id = eax & 0xf;
 
 	/* use extended IDs where required */
-	if (family_id == 6 || family_id == 15)
+	if (self->family_id == 6 || self->family_id == 15) {
+		guint32 model_id_ext = (eax >> 16) & 0xf;
 		self->model_id |= model_id_ext << 4;
-	if (family_id == 15)
-		family_id += family_id_ext;
+	}
+	if (self->family_id == 15) {
+		guint32 family_id_ext = (eax >> 20) & 0xff;
+		self->family_id += family_id_ext;
+	}
 
 	/* add GUIDs */
 	fu_device_add_instance_u4(device, "PRO", processor_id);
-	fu_device_add_instance_u8(device, "FAM", family_id);
+	fu_device_add_instance_u8(device, "FAM", self->family_id);
 	fu_device_add_instance_u8(device, "MOD", self->model_id);
 	fu_device_add_instance_u4(device, "STP", stepping_id);
 	fu_device_build_instance_id_full(device,
@@ -438,6 +439,10 @@ fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAtt
 	g_autoptr(GHashTable) cpu_attrs = NULL;
 	g_auto(GStrv) split = NULL;
 
+	/* only affects certain families */
+	if (self->family_id != 0x17 && self->family_id != 0x19)
+		return;
+
 	/* create attr */
 	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN);
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
@@ -456,13 +461,14 @@ fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAtt
 	}
 	split = g_strsplit(agesa_stream, " ", 3);
 	if (g_strv_length(split) != 3) {
-		g_warning("invalid agesa stream format: %s", agesa_stream);
+		g_warning("invalid AGESA stream format: %s", agesa_stream);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
-	version = fu_cpu_stream_name_to_amd_entry_sign_agesa_version(split[1]);
+	fwupd_security_attr_add_metadata(attr, "agesa-version", split[1]);
+	version = fu_cpu_amd_stream_name_to_entry_sign_fixed_agesa_version(split[1]);
 	if (version == NULL) {
-		g_warning("unknown agesa stream name: %s", split[1]);
+		g_warning("unknown AGESA stream name: %s", split[1]);
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
@@ -474,7 +480,7 @@ fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAtt
 		return;
 	}
 
-	/* is this fixed by microcode */
+	/* is this mitigated by microcode */
 	cpu_attrs = fu_cpu_get_attrs(&error_local);
 	if (cpu_attrs == NULL) {
 		g_debug("no CPU attrs: %s", error_local->message);
@@ -487,6 +493,7 @@ fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAtt
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
+	fwupd_security_attr_add_metadata(attr, "ucode-version", split[1]);
 	if (!fu_strtoull(version,
 			 &ucode_version,
 			 0x0,
@@ -497,7 +504,7 @@ fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAtt
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
 		return;
 	}
-	ucode_version_fixed = fu_cpu_model_id_to_amd_entry_sign_ucode_version(self->model_id);
+	ucode_version_fixed = fu_cpu_amd_model_id_to_entry_sign_fixed_ucode_version(self->model_id);
 	if (ucode_version_fixed != 0 && ucode_version > ucode_version_fixed) {
 		g_warning("0x%8x > 0x%8x, so good enough",
 			  (guint)ucode_version,
