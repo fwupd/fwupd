@@ -9,7 +9,7 @@
 #include "fu-cpu-common.h"
 
 const gchar *
-fu_cpu_stream_name_to_amd_entry_sign_agesa_version(const gchar *stream_name)
+fu_cpu_stream_name_to_fixed_amd_entry_sign_agesa_version(const gchar *stream_name)
 {
 	struct {
 		const gchar *stream_name;
