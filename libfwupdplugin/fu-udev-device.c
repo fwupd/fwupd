@@ -1091,11 +1091,10 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	 * could add more flags, or set the flags back to NONE -- detect and fixup */
 	if (priv->device_file != NULL && priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE) {
 #ifndef SUPPORTED_BUILD
-		g_critical(
-		    "%s [%s] forgot to call fu_udev_device_add_open_flag() with OPEN_READ and/or "
-		    "OPEN_WRITE",
-		    fu_device_get_name(device),
-		    fu_device_get_id(device));
+		g_critical("%s [%s] forgot to call fu_udev_device_add_open_flag() with "
+			   "FU_IO_CHANNEL_OPEN_FLAG_READ and/or FU_IO_CHANNEL_OPEN_FLAG_WRITE",
+			   fu_device_get_name(device),
+			   fu_device_get_id(device));
 #endif
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
