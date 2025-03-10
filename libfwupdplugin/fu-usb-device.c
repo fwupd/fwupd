@@ -883,6 +883,10 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 	str = fu_firmware_to_string(ds20);
 	g_debug("DS20: %s", str);
 
+	/* Microsoft descriptors are not useful at the moment */
+	if (FU_IS_USB_DEVICE_MS_DS20(ds20))
+		return TRUE;
+
 	/* set the quirks onto the device */
 	usb_locker = fu_device_locker_new_full(self,
 					       (FuDeviceLockerFunc)fu_usb_device_open,
