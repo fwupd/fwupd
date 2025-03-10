@@ -686,7 +686,7 @@ fu_volume_check_free_space(FuVolume *self, guint64 required, GError **error)
 	}
 	if (fs_free < required) {
 		g_autofree gchar *str_free = g_format_size(required - fs_free);
-		g_autofree gchar *str_reqd = g_format_size(fs_free);
+		g_autofree gchar *str_reqd = g_format_size(required);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
