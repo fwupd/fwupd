@@ -6,6 +6,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('cpu.quirk')
 plugin_builtins += static_library('fu_plugin_cpu',
   sources: [
+    'fu-cpu-common.c',
     'fu-cpu-plugin.c',
     'fu-cpu-device.c',
   ],
@@ -14,6 +15,33 @@ plugin_builtins += static_library('fu_plugin_cpu',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+if get_option('tests')
+  e = executable(
+    'cpu-self-test',
+    sources: [
+      'fu-cpu-common.c',
+      'fu-self-test.c',
+    ],
+    include_directories: plugin_incdirs,
+    dependencies: [
+      plugin_deps,
+      platform_deps,
+    ],
+    link_with: [
+      fwupd,
+      fwupdplugin,
+    ],
+    install: true,
+    install_rpath: libdir_pkg,
+    install_dir: installed_test_bindir,
+    c_args: [
+      cargs,
+      '-DSRCDIR="' + meson.current_source_dir() + '"',
+    ],
+  )
+  test('cpu-self-test', e)
+endif
 
 code = '''
 #if !__has_attribute (__noclone__)
