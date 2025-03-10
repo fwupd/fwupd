@@ -46,7 +46,8 @@ fu_uefi_mok_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	attr = fu_uefi_mok_attr_new(plugin, fn, &error_local);
 	if (attr == NULL) {
-		g_warning("failed to load %s: %s", fn, error_local->message);
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+			g_warning("failed to load %s: %s", fn, error_local->message);
 		return;
 	}
 	fu_security_attrs_append(attrs, attr);
