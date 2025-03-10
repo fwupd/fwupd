@@ -10,10 +10,6 @@
 
 #include "fu-mm-qcdm-device.h"
 
-// struct _FuMmQcdmDevice {
-//	FuMmDevice parent_instance;
-// };
-
 G_DEFINE_TYPE(FuMmQcdmDevice, fu_mm_qcdm_device, FU_TYPE_MM_DEVICE)
 
 static gboolean

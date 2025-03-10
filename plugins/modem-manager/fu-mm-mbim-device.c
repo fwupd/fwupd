@@ -21,29 +21,17 @@ G_DEFINE_TYPE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_MBIM_DEVICE_TIMEOUT_MS 1500
 
-typedef struct {
-	gboolean ret;
-	GMainLoop *loop;
-	MbimDevice *mbim_device;
-	GError *error;
-} _MbimDeviceHelper;
-
-static void
-fu_mm_mbim_device_caps_query_cb(MbimDevice *device, GAsyncResult *res, gpointer user_data)
+static gboolean
+fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
 {
-	_MbimDeviceHelper *helper = user_data;
 	g_autofree gchar *firmware_version = NULL;
+	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
 
-	response = mbim_device_command_finish(device, res, &helper->error);
-	if (response == NULL || !mbim_message_response_get_result(response,
-								  MBIM_MESSAGE_TYPE_COMMAND_DONE,
-								  &helper->error)) {
-		g_debug("operation failed: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
+	request = mbim_message_device_caps_query_new(NULL);
+	response = _mbim_device_command_sync(self->mbim_device, request, 10 * 1000, error);
+	if (response == NULL)
+		return FALSE;
 	if (!mbim_message_device_caps_response_parse(response,
 						     NULL,
 						     NULL,
@@ -57,74 +45,42 @@ fu_mm_mbim_device_caps_query_cb(MbimDevice *device, GAsyncResult *res, gpointer 
 						     NULL,
 						     &firmware_version,
 						     NULL,
-						     &helper->error)) {
-		g_debug("couldn't parse response message: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	g_debug("[%s] Successfully request modem to query caps",
-		mbim_device_get_path_display(device));
-	g_debug("new firmware version: %s", firmware_version);
-
-	g_main_loop_quit(helper->loop);
-}
-
-static gboolean
-fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
-{
-	g_autoptr(GMainLoop) loop = g_main_loop_new(NULL, FALSE);
-	g_autoptr(MbimMessage) request = NULL;
-	_MbimDeviceHelper helper = {
-	    .loop = loop,
-	    .error = NULL,
-	};
-
-	request = mbim_message_device_caps_query_new(NULL);
-	mbim_device_command(self->mbim_device,
-			    request,
-			    10,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_mbim_device_caps_query_cb,
-			    &helper);
-
-	g_main_loop_run(loop);
-	if (helper.error != NULL) {
-		g_propagate_error(error, helper.error);
+						     error)) {
+		g_debug("failed to parse caps-query response: ");
 		return FALSE;
 	}
+	g_debug("[%s] modem query caps firmware version: %s",
+		mbim_device_get_path_display(self->mbim_device),
+		firmware_version);
 
 	/* success */
 	return TRUE;
 }
 
 #if MBIM_CHECK_VERSION(1, 27, 5)
-static void
-fu_mm_mbim_device_detach_to_edl_cb(MbimDevice *device, GAsyncResult *res, gpointer user_data)
-{
-	GMainLoop *loop = user_data;
-
-	/* no need to check for a response since MBIM port goes away without sending one */
-	g_main_loop_quit(loop);
-}
-
 static gboolean
 fu_mm_mbim_device_detach_to_edl(FuMmMbimDevice *self, GError **error)
 {
-	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
-	g_autoptr(MbimMessage) message = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(MbimMessage) request = NULL;
+	g_autoptr(MbimMessage) response = NULL;
 
-	message = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
-	mbim_device_command(self->mbim_device,
-			    message,
-			    5,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_mbim_device_detach_to_edl_cb,
-			    mainloop);
-	g_main_loop_run(mainloop);
+	request = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
+	response = _mbim_device_command_sync(self->mbim_device, request, 5 * 1000, &error_local);
+	if (response == NULL) {
+		/* MBIM port goes away */
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+			g_debug("ignoring: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
-#endif // MBIM_CHECK_VERSION(1, 27, 5)
+#endif
 
 static gboolean
 fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
@@ -150,178 +106,6 @@ fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-typedef struct {
-	FuMmMbimDevice *self; /* noref */
-	GMainLoop *loop;
-	GError *error;
-	GBytes *blob;
-	GArray *digest;
-	FuChunkArray *chunks;
-	guint chunk_sent;
-	FuProgress *progress;
-} FuMmMbimDeviceWriteHelper;
-
-static void
-fu_mm_mbim_device_write_helper_free(FuMmMbimDeviceWriteHelper *helper)
-{
-	g_main_loop_unref(helper->loop);
-	if (helper->error != NULL)
-		g_error_free(helper->error);
-	if (helper->blob != NULL)
-		g_bytes_unref(helper->blob);
-	if (helper->digest != NULL)
-		g_array_unref(helper->digest);
-	if (helper->chunks != NULL)
-		g_object_unref(helper->chunks);
-	if (helper->progress != NULL)
-		g_object_unref(helper->progress);
-	g_free(helper);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMmMbimDeviceWriteHelper, fu_mm_mbim_device_write_helper_free)
-
-static void
-fu_mm_mbim_device_file_write_cb(MbimDevice *device, GAsyncResult *res, gpointer user_data)
-{
-	FuMmMbimDeviceWriteHelper *helper = user_data;
-	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(helper->self);
-	g_autoptr(MbimMessage) response = NULL;
-
-	response = mbim_device_command_finish(device, res, &helper->error);
-	if (response == NULL || !mbim_message_response_get_result(response,
-								  MBIM_MESSAGE_TYPE_COMMAND_DONE,
-								  &helper->error)) {
-		g_debug("operation failed: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	if (!mbim_message_qdu_file_write_response_parse(response, &helper->error)) {
-		g_debug("couldn't parse response message: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	helper->chunk_sent++;
-	fu_progress_set_percentage_full(helper->progress,
-					(gsize)helper->chunk_sent,
-					(gsize)fu_chunk_array_length(helper->chunks));
-	if (helper->chunk_sent < fu_chunk_array_length(helper->chunks)) {
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(MbimMessage) request = NULL;
-
-		/* prepare chunk */
-		chk = fu_chunk_array_index(helper->chunks, helper->chunk_sent, &helper->error);
-		if (chk == NULL) {
-			g_main_loop_quit(helper->loop);
-			return;
-		}
-		request =
-		    mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
-							(const guint8 *)fu_chunk_get_data(chk),
-							NULL);
-		mbim_device_command(self->mbim_device,
-				    request,
-				    20,
-				    NULL,
-				    (GAsyncReadyCallback)fu_mm_mbim_device_file_write_cb,
-				    helper);
-		return;
-	}
-	g_main_loop_quit(helper->loop);
-}
-
-static void
-fu_mm_mbim_device_file_open_cb(MbimDevice *device, GAsyncResult *res, gpointer user_data)
-{
-	FuMmMbimDeviceWriteHelper *helper = user_data;
-	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(helper->self);
-	guint32 out_max_transfer_size;
-	g_autoptr(FuChunk) chk = NULL;
-	g_autoptr(MbimMessage) request = NULL;
-	g_autoptr(MbimMessage) response = NULL;
-
-	response = mbim_device_command_finish(device, res, &helper->error);
-	if (response == NULL || !mbim_message_response_get_result(response,
-								  MBIM_MESSAGE_TYPE_COMMAND_DONE,
-								  &helper->error)) {
-		g_debug("operation failed: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	if (!mbim_message_qdu_file_open_response_parse(response,
-						       &out_max_transfer_size,
-						       NULL,
-						       &helper->error)) {
-		g_debug("couldn't parse response message: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	helper->chunks = fu_chunk_array_new_from_bytes(helper->blob,
-						       FU_CHUNK_ADDR_OFFSET_NONE,
-						       FU_CHUNK_PAGESZ_NONE,
-						       out_max_transfer_size);
-	chk = fu_chunk_array_index(helper->chunks, 0, &helper->error);
-	if (chk == NULL) {
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
-						      (const guint8 *)fu_chunk_get_data(chk),
-						      NULL);
-	mbim_device_command(self->mbim_device,
-			    request,
-			    10,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_mbim_device_file_write_cb,
-			    helper);
-}
-
-static void
-fu_mm_mbim_device_session_ready_cb(MbimDevice *device, GAsyncResult *res, gpointer user_data)
-{
-	FuMmMbimDeviceWriteHelper *helper = user_data;
-	g_autoptr(MbimMessage) response = NULL;
-	g_autoptr(MbimMessage) request = NULL;
-
-	response = mbim_device_command_finish(device, res, &helper->error);
-	if (response == NULL || !mbim_message_response_get_result(response,
-								  MBIM_MESSAGE_TYPE_COMMAND_DONE,
-								  &helper->error)) {
-		g_debug("operation failed: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	if (!mbim_message_qdu_update_session_response_parse(response,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    &helper->error)) {
-		g_debug("couldn't parse response message: %s", helper->error->message);
-		g_main_loop_quit(helper->loop);
-		return;
-	}
-
-	g_debug("[%s] Successfully request modem to update session",
-		mbim_device_get_path_display(device));
-
-	request = mbim_message_qdu_file_open_set_new(MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE,
-						     g_bytes_get_size(helper->blob),
-						     NULL);
-	mbim_device_command(device,
-			    request,
-			    10,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_mbim_device_file_open_cb,
-			    helper);
-}
-
 static GArray *
 fu_mm_mbim_device_get_checksum(GBytes *blob)
 {
@@ -344,38 +128,123 @@ fu_mm_mbim_device_get_checksum(GBytes *blob)
 }
 
 static gboolean
+fu_mm_mbim_device_write_chunk(FuMmMbimDevice *self, FuChunk *chk, GError **error)
+{
+	g_autoptr(MbimMessage) request = NULL;
+	g_autoptr(MbimMessage) response = NULL;
+
+	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
+						      fu_chunk_get_data(chk),
+						      NULL);
+	response = _mbim_device_command_sync(self->mbim_device, request, 20 * 1000, error);
+	if (response == NULL)
+		return FALSE;
+	if (!mbim_message_qdu_file_write_response_parse(response, error)) {
+		g_prefix_error(error, "failed to parse write-chunk response: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mm_mbim_device_write_chunks(FuMmMbimDevice *self,
+			       FuChunkArray *chunks,
+			       FuProgress *progress,
+			       GError **error)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chk = NULL;
+		chk = fu_chunk_array_index(chunks, 0, error);
+		if (chk == NULL) {
+			g_prefix_error(error, "failed to get chunk: ");
+			return FALSE;
+		}
+		if (!fu_mm_mbim_device_write_chunk(self, chk, error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mm_mbim_device_write(FuMmMbimDevice *self,
 			const gchar *filename,
 			GBytes *blob,
 			FuProgress *progress,
 			GError **error)
 {
-	g_autoptr(FuMmMbimDeviceWriteHelper) helper = g_new0(FuMmMbimDeviceWriteHelper, 1);
-	g_autoptr(MbimMessage) request = NULL;
+	guint32 out_max_transfer_size = 0;
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GArray) checksum = fu_mm_mbim_device_get_checksum(blob);
+	g_autoptr(MbimMessage) action_start_req = NULL;
+	g_autoptr(MbimMessage) action_start_res = NULL;
+	g_autoptr(MbimMessage) file_open_req = NULL;
+	g_autoptr(MbimMessage) file_open_res = NULL;
 
-	/* use a helper to perform the linked async actions */
-	helper->self = self;
-	helper->loop = g_main_loop_new(NULL, FALSE);
-	helper->blob = g_bytes_ref(blob);
-	helper->progress = g_object_ref(progress);
-	helper->digest = fu_mm_mbim_device_get_checksum(blob); // fixme rename checksum
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "start-update");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "file-open");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "send-chunks");
 
 	/* start update */
-	request = mbim_message_qdu_update_session_set_new(MBIM_QDU_SESSION_ACTION_START,
-							  MBIM_QDU_SESSION_TYPE_LE,
-							  NULL);
-	mbim_device_command(self->mbim_device,
-			    request,
-			    10,
-			    NULL,
-			    (GAsyncReadyCallback)fu_mm_mbim_device_session_ready_cb,
-			    helper);
-	g_main_loop_run(helper->loop);
-	if (helper->error != NULL) {
-		g_propagate_error(error, g_steal_pointer(&helper->error));
+	action_start_req = mbim_message_qdu_update_session_set_new(MBIM_QDU_SESSION_ACTION_START,
+								   MBIM_QDU_SESSION_TYPE_LE,
+								   NULL);
+	action_start_res =
+	    _mbim_device_command_sync(self->mbim_device, action_start_req, 10 * 1000, error);
+	if (action_start_res == NULL)
+		return FALSE;
+	if (!mbim_message_qdu_update_session_response_parse(action_start_res,
+							    NULL,
+							    NULL,
+							    NULL,
+							    NULL,
+							    NULL,
+							    NULL,
+							    error)) {
+		g_prefix_error(error, "failed to parse action-start response: ");
 		return FALSE;
 	}
+	g_debug("[%s] successfully request modem to update session",
+		mbim_device_get_path_display(self->mbim_device));
+	fu_progress_step_done(progress);
 
+	/* get the max transfer size */
+	file_open_req = mbim_message_qdu_file_open_set_new(MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE,
+							   g_bytes_get_size(blob),
+							   NULL);
+	file_open_res =
+	    _mbim_device_command_sync(self->mbim_device, file_open_req, 10 * 1000, error);
+	if (file_open_res == NULL)
+		return FALSE;
+
+	if (!mbim_message_qdu_file_open_response_parse(file_open_res,
+						       &out_max_transfer_size,
+						       NULL,
+						       error)) {
+		g_prefix_error(error, "failed to parse file-open response: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* send chunks */
+	chunks = fu_chunk_array_new_from_bytes(blob,
+					       FU_CHUNK_ADDR_OFFSET_NONE,
+					       FU_CHUNK_PAGESZ_NONE,
+					       out_max_transfer_size);
+	if (!fu_mm_mbim_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
 	return TRUE;
 }
 
