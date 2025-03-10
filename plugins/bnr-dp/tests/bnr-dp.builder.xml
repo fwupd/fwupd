@@ -1,0 +1,14 @@
+<firmware gtype="FuBnrDpFirmware">
+  <version>0.13</version>
+  <version_raw>0xd</version_raw>
+  <data size="0x300000">[GInputStream]</data>
+  <device_id>0x2f1a</device_id>
+  <usage>fw</usage>
+  <function>0x5f</function>
+  <payload_length>0x300000</payload_length>
+  <payload_checksum>0x7262</payload_checksum>
+  <material>5DLDPO.1001-00</material>
+  <creation_date>04.09.2024</creation_date>
+  <comment>
+  </comment>
+</firmware>
