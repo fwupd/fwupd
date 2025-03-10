@@ -19,6 +19,8 @@ G_DEFINE_TYPE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_MBIM_DEVICE_MAX_OPEN_ATTEMPTS 8
 
+#define FU_MM_MBIM_DEVICE_TIMEOUT_MS 1500
+
 typedef struct {
 	gboolean ret;
 	GMainLoop *loop;
@@ -460,7 +462,7 @@ static gboolean
 fu_mm_mbim_device_open_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-	return _mbim_device_open_sync(self->mbim_device, NULL, error);
+	return _mbim_device_open_sync(self->mbim_device, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 }
 
 static gboolean
@@ -472,7 +474,8 @@ fu_mm_mbim_device_open(FuDevice *device, GError **error)
 
 	/* create and open */
 	g_clear_object(&self->mbim_device);
-	self->mbim_device = _mbim_device_new_sync(mbim_device_file, NULL, error);
+	self->mbim_device =
+	    _mbim_device_new_sync(mbim_device_file, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 	if (self->mbim_device == NULL)
 		return FALSE;
 	return fu_device_retry(device,
@@ -497,7 +500,7 @@ fu_mm_mbim_device_close(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	mbim_device = g_steal_pointer(&self->mbim_device);
-	return _mbim_device_close_sync(mbim_device, NULL, error);
+	return _mbim_device_close_sync(mbim_device, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 }
 
 static gboolean

@@ -9,12 +9,12 @@
 #include <libmbim-glib.h>
 
 MbimDevice *
-_mbim_device_new_sync(GFile *file, GCancellable *cancellable, GError **error); /* nocheck:name */
+_mbim_device_new_sync(GFile *file, guint timeout_ms, GError **error); /* nocheck:name */
 gboolean
 _mbim_device_open_sync(MbimDevice *mbim_device, /* nocheck:name */
-		       GCancellable *cancellable,
+		       guint timeout_ms,
 		       GError **error);
 gboolean
 _mbim_device_close_sync(MbimDevice *mbim_device, /* nocheck:name */
-			GCancellable *cancellable,
+			guint timeout_ms,
 			GError **error);
