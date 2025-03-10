@@ -1763,7 +1763,7 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_FOUND,
 		    "no image id %s found in firmware",
-		    id);
+		    id != NULL ? id : "NULL");
 	return NULL;
 }
 
