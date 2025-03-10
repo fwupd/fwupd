@@ -7528,6 +7528,9 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 
 	fu_engine_backend_device_added(self, device, progress);
 
+	/* free data cached during ->probe */
+	fu_device_probe_complete(device);
+
 	/* there's no point keeping this in the cache */
 	possible_plugins = fu_device_get_possible_plugins(device);
 	if (possible_plugins->len == 0) {
@@ -7930,6 +7933,9 @@ fu_engine_backends_coldplug_backend_add_devices(FuEngine *self,
 
 		fu_engine_backend_device_added(self, device, fu_progress_get_child(progress));
 		fu_progress_step_done(progress);
+
+		/* free data cached during ->probe */
+		fu_device_probe_complete(device);
 
 		/* there's no point keeping this in the cache */
 		possible_plugins = fu_device_get_possible_plugins(device);
