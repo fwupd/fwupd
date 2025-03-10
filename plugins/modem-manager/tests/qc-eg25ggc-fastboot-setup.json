@@ -1,0 +1,85 @@
+{
+  "UsbDevices": [
+    {
+      "Created": "2025-03-05T15:58:10.344062Z",
+      "GType": "FuMmFastbootDevice",
+      "BackendId": "/org/freedesktop/ModemManager1/Modem/1",
+      "DeviceFile": "/dev/ttyUSB2",
+      "Events": [
+        {
+          "Id": "#f697c6f3"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#f697c6f3"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#f697c6f3"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#ea95ac24"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#ea95ac24"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#ea95ac24"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQpFUlJPUg0K"
+        },
+        {
+          "Id": "#685152b7"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Error": 19,
+          "ErrorMsg": "timeout"
+        },
+        {
+          "Id": "#685152b7"
+        },
+        {
+          "Id": "#1f7c4061",
+          "Data": "DQorUUNGRzogInNlY2Jvb3RzdGF0IiwwDQoNCk9LDQo="
+        }
+      ],
+      "Version": "EG25GGCR07A02M1G_30.202.30.202",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c5:00.3/usb1/1-2",
+      "BranchAt": "AT+GETFWBRANCH",
+      "DeviceIds": [
+        "USB\\VID_2C7C&PID_0125&REV_0318&NAME_EG25GGC",
+        "USB\\VID_2C7C&PID_0125&REV_0318",
+        "USB\\VID_2C7C&PID_0125",
+        "USB\\VID_2C7C"
+      ],
+      "Ports": {
+        "net": "/dev/wwp197s0f3u2i4",
+        "at": "/dev/ttyUSB2",
+        "gps": "/dev/ttyUSB1",
+        "qmi": "/dev/cdc-wdm0"
+      },
+      "DetachAt": "AT+QFASTBOOT"
+    }
+  ]
+}

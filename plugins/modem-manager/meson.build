@@ -15,18 +15,22 @@ plugin_quirks += files('modem-manager.quirk')
 
 shared_module('fu_plugin_modem_manager',
   rustgen.process(
-    'fu-cinterion-fdl-updater.rs',
-    'fu-sahara.rs',
+    'fu-mm-fdl.rs',
   ),
   sources: [
-    'fu-mm-plugin.c',
+    'fu-mm-backend.c',
+    'fu-mm-common.c',
     'fu-mm-device.c',
-    'fu-qmi-pdc-updater.c',
-    'fu-mbim-qdu-updater.c',
-    'fu-firehose-updater.c',
-    'fu-sahara-loader.c',
-    'fu-cinterion-fdl-updater.c',
-    'fu-dfota-updater.c',
+    'fu-mm-dfota-device.c',
+    'fu-mm-fastboot-device.c',
+    'fu-mm-fdl-device.c',
+    'fu-mm-firehose-device.c',
+    'fu-mm-mbim-common.c',
+    'fu-mm-mbim-device.c',
+    'fu-mm-mhi-qcdm-device.c',
+    'fu-mm-plugin.c',
+    'fu-mm-qcdm-device.c',
+    'fu-mm-qmi-device.c',
   ],
   include_directories: plugin_incdirs,
   install: true,
@@ -41,4 +45,12 @@ shared_module('fu_plugin_modem_manager',
     libmbim_glib,
   ],
 )
+
+device_tests += files(
+  'tests/qc-eg25ggc-fastboot.json',
+)
+enumeration_data += files(
+  'tests/qc-eg25ggc-fastboot-setup.json',
+)
+
 endif
