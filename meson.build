@@ -504,6 +504,9 @@ if build_standalone
   libflashrom = dependency('flashrom',
                             fallback: ['flashrom', 'flashrom_dep'],
                             required: flashrom)
+  if libflashrom.type_name() == 'pkgconfig' and cc.has_function('flashrom_set_progress_callback_v2', dependencies: libflashrom)
+      conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
+  endif
 endif
 
 if libsystemd.found()
