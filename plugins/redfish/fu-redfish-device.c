@@ -406,6 +406,46 @@ fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, JsonObject *json_object, 
 }
 
 static gboolean
+fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, JsonObject *json_object, GError **error)
+{
+	if (json_object_has_member(json_object, "DellSoftwareInventory")) {
+		JsonObject *software_info =
+		    json_object_get_object_member(json_object, "DellSoftwareInventory");
+		if (json_object_has_member(software_info, "Status")) {
+			const gchar *status =
+			    json_object_get_string_member(software_info, "Status");
+			FuRedfishBackendDellSpecific *dell_specific =
+			    FU_REDFISH_BACKEND_DELL_SPECIFIC(fu_redfish_backend_get_vendor_specific(
+				fu_redfish_device_get_backend(self)));
+			FuDevice *dev = FU_DEVICE(self);
+
+			if (g_strcmp0(status, "AvailableForInstallation") == 0) {
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+			}
+
+			/* it does not seem that Dell allows targeting a device when updating */
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+
+			fu_device_add_instance_u16(
+			    dev,
+			    "SYSTEMID",
+			    fu_redfish_backend_vendors_dell_specific_get_systemid(dell_specific));
+
+			fu_device_build_instance_id(dev,
+						    error,
+						    "REDFISH",
+						    "VENDOR",
+						    "SYSTEMID",
+						    "SOFTWAREID",
+						    NULL);
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(dev);
@@ -434,7 +474,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (tmp != NULL)
 			fu_device_set_backend_id(dev, tmp);
 	}
-	fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
+	// fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
 
 	/* device properties */
 	if (json_object_has_member(member, "Manufacturer")) {
@@ -456,7 +496,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	/* ReleaseDate may or may not have a timezone */
 	if (json_object_has_member(member, "ReleaseDate")) {
 		const gchar *tmp = json_object_get_string_member(member, "ReleaseDate");
-		if (tmp != NULL && tmp[0] != '\0') {
+		if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "00:00:00Z") != 0) {
 			g_autoptr(GDateTime) dt = NULL;
 			g_autoptr(GTimeZone) tz = g_time_zone_new_utc();
 			dt = g_date_time_new_from_iso8601(tmp, tz);
@@ -496,6 +536,11 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
 			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
 			if (!fu_redfish_device_probe_oem_hpe(self, hpe, error))
+				return FALSE;
+		}
+		if (oem != NULL && json_object_has_member(oem, "Dell")) {
+			JsonObject *hpe = json_object_get_object_member(oem, "Dell");
+			if (!fu_redfish_device_probe_oem_dell(self, hpe, error))
 				return FALSE;
 		}
 	}
