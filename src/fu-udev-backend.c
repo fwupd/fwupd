@@ -422,7 +422,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 					return TRUE;
 				if (g_strcmp0(
 					fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device_tmp)),
-					"drm") != 0)
+					"drm") == 0)
 					fu_udev_backend_rescan_dpaux_devices(self);
 				g_set_object(&device_donor, FU_UDEV_DEVICE(device_tmp));
 			}
