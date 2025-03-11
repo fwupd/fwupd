@@ -133,7 +133,6 @@ struct _FuEngine {
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
 	gboolean loaded;
-	gchar *host_security_id;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
@@ -225,7 +224,7 @@ fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 		return;
 
 	/* invalidate host security attributes */
-	g_clear_pointer(&self->host_security_id, g_free);
+	fu_security_attrs_remove_all(self->host_security_attrs);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
@@ -4075,7 +4074,7 @@ fu_engine_metadata_changed(FuEngine *self)
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	g_clear_pointer(&self->host_security_id, g_free);
+	fu_security_attrs_remove_all(self->host_security_attrs);
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -4343,7 +4342,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	fu_engine_md_refresh_devices(self);
 
 	/* invalidate host security attributes */
-	g_clear_pointer(&self->host_security_id, g_free);
+	fu_security_attrs_remove_all(self->host_security_attrs);
 
 	/* make the UI update */
 	fu_engine_emit_changed(self);
@@ -4782,16 +4781,18 @@ fu_engine_get_devices_by_composite_id(FuEngine *self, const gchar *composite_id,
 	return g_steal_pointer(&devices);
 }
 
+#ifdef HAVE_HSI
 static void
 fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 {
 	g_autoptr(GPtrArray) vals = NULL;
+	g_autofree gchar *host_security_id = fu_engine_get_host_security_id(self, NULL);
 
 	/* ensure up to date */
 	fu_engine_ensure_security_attrs(self);
 
 	/* add attributes */
-	vals = fu_security_attrs_get_all(self->host_security_attrs);
+	vals = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
 		const gchar *tmp;
@@ -4800,8 +4801,9 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 	}
 
 	/* computed value */
-	fu_device_set_metadata(device, "HSI", self->host_security_id);
+	fu_device_set_metadata(device, "HSI", host_security_id);
 }
+#endif
 
 static void
 fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
@@ -4880,12 +4882,14 @@ fu_engine_get_history(FuEngine *self, GError **error)
 		return NULL;
 	}
 
+#ifdef HAVE_HSI
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
+#endif
 
 	/* try to set the remote ID for each device */
 	for (guint i = 0; i < devices->len; i++) {
@@ -6318,7 +6322,7 @@ fu_engine_context_security_changed_cb(FuContext *ctx, gpointer user_data)
 	FuEngine *self = FU_ENGINE(user_data);
 
 	/* invalidate host security attributes */
-	g_clear_pointer(&self->host_security_id, g_free);
+	fu_security_attrs_remove_all(self->host_security_attrs);
 
 	/* make UI refresh */
 	fu_engine_emit_changed(self);
@@ -6522,15 +6526,18 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
-/*
- * Get chassis type from SMBIOS data and verify HSI makes sense for it
- */
-static gchar *
-fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
+/* private */
+gchar *
+fu_engine_get_host_security_id(FuEngine *self, const gchar *fwupd_version)
 {
-	FuSmbiosChassisKind chassis_kind = fu_context_get_chassis_kind(self->ctx);
+	FuSmbiosChassisKind chassis_kind;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+
+	fu_engine_ensure_security_attrs(self);
 
 	/* if emulating, force the chassis type to be valid */
+	chassis_kind = fu_context_get_chassis_kind(self->ctx);
 	if (self->host_emulation && (chassis_kind == FU_SMBIOS_CHASSIS_KIND_OTHER ||
 				     chassis_kind == FU_SMBIOS_CHASSIS_KIND_UNKNOWN)) {
 		g_info("forcing chassis kind %s to be valid",
@@ -6558,6 +6565,7 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	case FU_SMBIOS_CHASSIS_KIND_MINI_PC:
 	case FU_SMBIOS_CHASSIS_KIND_STICK_PC:
 		return fu_security_attrs_calculate_hsi(self->host_security_attrs,
+						       fwupd_version,
 						       FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
 	default:
 		break;
@@ -6574,6 +6582,7 @@ static gboolean
 fu_engine_record_security_attrs(FuEngine *self, GError **error)
 {
 	g_autoptr(GPtrArray) attrs_array = NULL;
+	g_autofree gchar *host_security_id = fu_engine_get_host_security_id(self, NULL);
 	g_autofree gchar *json = NULL;
 
 	/* convert attrs to json string */
@@ -6600,10 +6609,7 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 	}
 
 	/* write new values */
-	if (!fu_history_add_security_attribute(self->history,
-					       json,
-					       self->host_security_id,
-					       error)) {
+	if (!fu_history_add_security_attribute(self->history, json, host_security_id, error)) {
 		g_prefix_error(error, "failed to write to DB: ");
 		return FALSE;
 	}
@@ -6621,7 +6627,7 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 	fu_security_attrs_depsolve(self->host_security_attrs);
 
 	/* set the fallback names for clients without native translations */
-	items = fu_security_attrs_get_all(self->host_security_attrs);
+	items = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		if (fwupd_security_attr_get_name(attr) == NULL) {
@@ -6640,10 +6646,6 @@ fu_engine_security_attrs_depsolve(FuEngine *self)
 							    fu_security_attr_get_description(attr));
 		}
 	}
-
-	/* distil into one simple string */
-	g_free(self->host_security_id);
-	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
 }
 #endif
 
@@ -6672,7 +6674,7 @@ fu_engine_get_previous_bios_security_attr(FuEngine *self,
 		return NULL;
 	for (guint i = 0; i < attrs_array->len; i++) {
 		FuSecurityAttrs *attrs = g_ptr_array_index(attrs_array, i);
-		g_autoptr(GPtrArray) attr_items = fu_security_attrs_get_all(attrs);
+		g_autoptr(GPtrArray) attr_items = fu_security_attrs_get_all(attrs, NULL);
 		for (guint j = 0; j < attr_items->len; j++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(attr_items, j);
 			if (g_strcmp0(appstream_id, fwupd_security_attr_get_appstream_id(attr)) ==
@@ -6974,11 +6976,8 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* already valid */
-	if (self->host_security_id != NULL || self->host_emulation)
+	if (fu_security_attrs_is_valid(self->host_security_attrs) || self->host_emulation)
 		return;
-
-	/* clear old values */
-	fu_security_attrs_remove_all(self->host_security_attrs);
 
 	/* built in */
 	fu_engine_ensure_security_attrs_supported_cpu(self);
@@ -6997,7 +6996,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	}
 
 	/* sanity check */
-	vals = fu_security_attrs_get_all(self->host_security_attrs);
+	vals = fu_security_attrs_get_all(self->host_security_attrs, NULL);
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(vals, i);
 		if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
@@ -7020,14 +7019,6 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	if (!fu_engine_record_security_attrs(self, &error))
 		g_warning("failed to record HSI attributes: %s", error->message);
 #endif
-}
-
-const gchar *
-fu_engine_get_host_security_id(FuEngine *self)
-{
-	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
-	fu_engine_ensure_security_attrs(self);
-	return self->host_security_id;
 }
 
 FuSecurityAttrs *
@@ -8875,7 +8866,6 @@ fu_engine_finalize(GObject *obj)
 	g_main_loop_unref(self->acquiesce_loop);
 
 	g_free(self->host_machine_id);
-	g_free(self->host_security_id);
 	g_object_unref(self->host_security_attrs);
 	g_object_unref(self->idle);
 	g_object_unref(self->config);

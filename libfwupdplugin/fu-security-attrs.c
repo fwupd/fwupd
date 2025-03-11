@@ -13,6 +13,7 @@
 
 #include "fwupd-security-attr-private.h"
 
+#include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-security-attrs.h"
 
@@ -74,6 +75,23 @@ fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr
 	g_return_if_fail(FU_IS_SECURITY_ATTRS(self));
 	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(attr));
 	g_ptr_array_add(self->attrs, g_object_ref(attr));
+}
+
+/**
+ * fu_security_attrs_is_valid:
+ * @self: a #FuSecurityAttrs
+ *
+ * Adds a #FwupdSecurityAttr to the array with no sanity checks.
+ *
+ * Returns: %TRUE if the collection is valid
+ *
+ * Since: 2.0.7
+ **/
+gboolean
+fu_security_attrs_is_valid(FuSecurityAttrs *self)
+{
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), FALSE);
+	return self->attrs->len > 0;
 }
 
 /**
@@ -179,6 +197,7 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
 /**
  * fu_security_attrs_get_all:
  * @self: a #FuSecurityAttrs
+ * @fwupd_version: (nullable): fwupd version string, e.g. `2.0.7`
  *
  * Gets all the non-obsoleted attributes in the object.
  *
@@ -187,13 +206,15 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
  * Since: 1.5.0
  **/
 GPtrArray *
-fu_security_attrs_get_all(FuSecurityAttrs *self)
+fu_security_attrs_get_all(FuSecurityAttrs *self, const gchar *fwupd_version)
 {
 	g_autoptr(GPtrArray) all = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+			continue;
+		if (!fu_security_attr_check_fwupd_version(attr, fwupd_version))
 			continue;
 		g_ptr_array_add(all, g_object_ref(attr));
 	}
@@ -218,16 +239,19 @@ fu_security_attrs_remove_all(FuSecurityAttrs *self)
 /**
  * fu_security_attrs_calculate_hsi:
  * @self: a #FuSecurityAttrs
+ * @fwupd_version: fwupd version, e.g. `2.0.7`
  * @flags: HSI attribute flags
  *
  * Calculates the HSI string from the appended attributes.
  *
  * Returns: (transfer full): a string or %NULL
  *
- * Since: 1.5.0
+ * Since: 2.0.7
  **/
 gchar *
-fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flags)
+fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
+				const gchar *fwupd_version,
+				FuSecurityAttrsFlags flags)
 {
 	guint hsi_number = 0;
 	FwupdSecurityAttrFlags attr_flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
@@ -247,6 +271,8 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 		for (guint i = 0; i < self->attrs->len; i++) {
 			FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
 			if (fwupd_security_attr_get_level(attr) != j)
+				continue;
+			if (!fu_security_attr_check_fwupd_version(attr, fwupd_version))
 				continue;
 			if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 				success_cnt++;
@@ -271,6 +297,8 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flag
 			continue;
 		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
 		    fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+			continue;
+		if (!fu_security_attr_check_fwupd_version(attr, fwupd_version))
 			continue;
 
 		attr_flags |= fwupd_security_attr_get_flags(attr);
@@ -405,6 +433,80 @@ fu_security_attrs_ensure_level(FwupdSecurityAttr *attr)
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 }
 
+static struct {
+	const gchar *appstream_id;
+	const gchar *fwupd_version;
+} appstream_id_version_map[] = {
+    {FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SMM_LOCKED, "2.0.2"},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_BIOS_CAPSULE_UPDATES, "1.9.6"},
+    {FWUPD_SECURITY_ATTR_ID_BIOS_ROLLBACK_PROTECTION, "1.8.8"},
+    {FWUPD_SECURITY_ATTR_ID_CET_ACTIVE, "2.0.0"},
+    {FWUPD_SECURITY_ATTR_ID_CET_ENABLED, "2.0.0"},
+    {FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_INTEL_GDS, "1.9.4"},
+    {FWUPD_SECURITY_ATTR_ID_IOMMU, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_MEI_KEY_MANIFEST, "1.8.7"},
+    {FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_MEI_VERSION, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_SMAP, "2.0.0"},
+    {FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_SPI_BLE, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR, "1.6.0"},
+    {FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU, "1.8.0"},
+    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR, "1.7.2"},
+    {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_BOOTSERVICE_VARS, "1.9.3"},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION, "2.0.7"},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_PK, "1.5.0"},
+    {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT, "1.5.0"},
+};
+
+static void
+fu_security_attrs_ensure_fwupd_version(FwupdSecurityAttr *attr)
+{
+	const gchar *appstream_id = fwupd_security_attr_get_appstream_id(attr);
+
+	/* already set */
+	if (fwupd_security_attr_get_fwupd_version(attr) != NULL)
+		return;
+
+	/* not required */
+	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE))
+		return;
+
+	/* map ID to fwupd version in one place */
+	for (guint i = 0; i < G_N_ELEMENTS(appstream_id_version_map); i++) {
+		if (g_strcmp0(appstream_id, appstream_id_version_map[i].appstream_id) == 0) {
+			fwupd_security_attr_set_fwupd_version(
+			    attr,
+			    appstream_id_version_map[i].fwupd_version);
+			return;
+		}
+	}
+
+	/* somebody forgot to add to the level map... */
+	g_warning("cannot map %s to a fwupd version", appstream_id);
+}
+
 /**
  * fu_security_attrs_depsolve:
  * @self: a #FuSecurityAttrs
@@ -426,6 +528,7 @@ fu_security_attrs_depsolve(FuSecurityAttrs *self)
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
 		fu_security_attrs_ensure_level(attr);
+		fu_security_attrs_ensure_fwupd_version(attr);
 	}
 
 	/* set flat where required */
@@ -500,7 +603,7 @@ fu_security_attrs_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFl
 
 	json_builder_set_member_name(builder, "SecurityAttributes");
 	json_builder_begin_array(builder);
-	items = fu_security_attrs_get_all(self);
+	items = fu_security_attrs_get_all(self, NULL);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		guint64 created = fwupd_security_attr_get_created(attr);
@@ -581,8 +684,8 @@ fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2)
 {
 	g_autoptr(GHashTable) hash1 = g_hash_table_new(g_str_hash, g_str_equal);
 	g_autoptr(GHashTable) hash2 = g_hash_table_new(g_str_hash, g_str_equal);
-	g_autoptr(GPtrArray) array1 = fu_security_attrs_get_all(attrs1);
-	g_autoptr(GPtrArray) array2 = fu_security_attrs_get_all(attrs2);
+	g_autoptr(GPtrArray) array1 = fu_security_attrs_get_all(attrs1, NULL);
+	g_autoptr(GPtrArray) array2 = fu_security_attrs_get_all(attrs2, NULL);
 	g_autoptr(GPtrArray) results =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 

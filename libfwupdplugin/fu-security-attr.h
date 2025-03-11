@@ -23,3 +23,6 @@ void
 fu_security_attr_add_bios_target_value(FwupdSecurityAttr *attr,
 				       const gchar *id,
 				       const gchar *needle) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_security_attr_check_fwupd_version(FwupdSecurityAttr *attr, const gchar *fwupd_version)
+    G_GNUC_NON_NULL(1);

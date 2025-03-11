@@ -3624,12 +3624,14 @@ static gboolean
 fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
+	const gchar *fwupd_version = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
 	g_autoptr(FuSecurityAttrs) events = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GPtrArray) events_array = NULL;
 	g_autofree gchar *str = NULL;
+	g_autofree gchar *host_security_id = NULL;
 
 #ifndef HAVE_HSI
 	g_set_error(error,
@@ -3639,6 +3641,10 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
+
+	/* optionally restrict by version */
+	if (g_strv_length(values) > 0)
+		fwupd_version = values[0];
 
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
@@ -3654,7 +3660,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	attrs = fu_engine_get_host_security_attrs(priv->engine);
-	items = fu_security_attrs_get_all(attrs);
+	items = fu_security_attrs_get_all(attrs, fwupd_version);
 
 	/* print the "why" */
 	if (priv->as_json) {
@@ -3665,11 +3671,12 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
+	host_security_id = fu_engine_get_host_security_id(priv->engine, fwupd_version);
 	fu_console_print(priv->console,
 			 "%s \033[1m%s\033[0m",
 			 /* TRANSLATORS: this is a string like 'HSI:2-U' */
 			 _("Host Security ID:"),
-			 fu_engine_get_host_security_id(priv->engine));
+			 host_security_id);
 
 	str = fu_util_security_attrs_to_string(items, flags);
 	fu_console_print_literal(priv->console, str);
@@ -3678,7 +3685,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	events = fu_engine_get_host_security_events(priv->engine, 10, error);
 	if (events == NULL)
 		return FALSE;
-	events_array = fu_security_attrs_get_all(events);
+	events_array = fu_security_attrs_get_all(events, fwupd_version);
 	if (events_array->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
 		if (estr != NULL)
@@ -5255,7 +5262,8 @@ main(int argc, char *argv[])
 			      fu_util_refresh);
 	fu_util_cmd_array_add(cmd_array,
 			      "security",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FWUPD-VERSION]"),
 			      /* TRANSLATORS: command description */
 			      _("Gets the host security attributes"),
 			      fu_util_security);

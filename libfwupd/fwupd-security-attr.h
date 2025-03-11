@@ -368,6 +368,11 @@ fwupd_security_attr_get_plugin(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
 void
 fwupd_security_attr_set_plugin(FwupdSecurityAttr *self, const gchar *plugin) G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_security_attr_get_fwupd_version(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
+void
+fwupd_security_attr_set_fwupd_version(FwupdSecurityAttr *self, const gchar *fwupd_version)
+    G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_security_attr_get_url(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);
 void
 fwupd_security_attr_set_url(FwupdSecurityAttr *self, const gchar *url) G_GNUC_NON_NULL(1);
