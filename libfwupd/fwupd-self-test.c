@@ -1152,6 +1152,7 @@ fwupd_security_attr_func(void)
 
 	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr1), ==, "org.fwupd.hsi.bar");
 	fwupd_security_attr_set_appstream_id(attr1, "org.fwupd.hsi.baz");
+	fwupd_security_attr_set_fwupd_version(attr1, "2.0.7");
 	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr1), ==, "org.fwupd.hsi.baz");
 
 	fwupd_security_attr_set_level(attr1, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
@@ -1176,6 +1177,7 @@ fwupd_security_attr_func(void)
 
 	fwupd_security_attr_set_plugin(attr1, "uefi-capsule");
 	g_assert_cmpstr(fwupd_security_attr_get_plugin(attr1), ==, "uefi-capsule");
+	g_assert_cmpstr(fwupd_security_attr_get_fwupd_version(attr1), ==, "2.0.7");
 
 	fwupd_security_attr_set_url(attr1, "https://foo.bar");
 	g_assert_cmpstr(fwupd_security_attr_get_url(attr1), ==, "https://foo.bar");
@@ -1199,6 +1201,7 @@ fwupd_security_attr_func(void)
 				    "  Flags:                success\n"
 				    "  Name:                 DCI\n"
 				    "  Plugin:               uefi-capsule\n"
+				    "  Version:              2.0.7\n"
 				    "  Uri:                  https://foo.bar\n"
 				    "  Guid:                 af3fc12c-d090-5783-8a67-845b90d3cfec\n"
 				    "  KEY:                  VALUE\n",
@@ -1221,6 +1224,7 @@ fwupd_security_attr_func(void)
 				    "  Flags:                success\n"
 				    "  Name:                 DCI\n"
 				    "  Plugin:               uefi-capsule\n"
+				    "  Version:              2.0.7\n"
 				    "  Uri:                  https://foo.bar\n"
 				    "  Guid:                 af3fc12c-d090-5783-8a67-845b90d3cfec\n"
 				    "  KEY:                  VALUE\n",
@@ -1239,6 +1243,7 @@ fwupd_security_attr_func(void)
 				    "  \"HsiResult\" : \"enabled\",\n"
 				    "  \"Name\" : \"DCI\",\n"
 				    "  \"Plugin\" : \"uefi-capsule\",\n"
+				    "  \"Version\" : \"2.0.7\",\n"
 				    "  \"Uri\" : \"https://foo.bar\",\n"
 				    "  \"Flags\" : [\n"
 				    "    \"success\"\n"

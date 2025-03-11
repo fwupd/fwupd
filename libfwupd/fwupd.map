@@ -1011,5 +1011,7 @@ LIBFWUPD_2.0.7 {
   global:
     fwupd_release_get_sbom_url;
     fwupd_release_set_sbom_url;
+    fwupd_security_attr_get_fwupd_version;
+    fwupd_security_attr_set_fwupd_version;
   local: *;
 } LIBFWUPD_2.0.4;

@@ -1611,7 +1611,7 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 		created_dt = g_date_time_new_from_iso8601(timestamp, tz_utc);
 		if (created_dt != NULL) {
 			guint64 created_unix = g_date_time_to_unix(created_dt);
-			g_autoptr(GPtrArray) attr_array = fu_security_attrs_get_all(attrs);
+			g_autoptr(GPtrArray) attr_array = fu_security_attrs_get_all(attrs, NULL);
 			for (guint i = 0; i < attr_array->len; i++) {
 				FwupdSecurityAttr *attr = g_ptr_array_index(attr_array, i);
 				fwupd_security_attr_set_created(attr, created_unix);

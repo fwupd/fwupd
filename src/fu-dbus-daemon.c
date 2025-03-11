@@ -2606,16 +2606,17 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	}
 
 	if (g_strcmp0(property_name, "HostSecurityId") == 0) {
-		const gchar *tmp = fu_engine_get_host_security_id(engine);
-		if (tmp == NULL) {
-			g_set_error(error,
-				    G_DBUS_ERROR,
-				    G_DBUS_ERROR_NOT_SUPPORTED,
-				    "failed to get daemon property %s",
-				    property_name);
-			return NULL;
-		}
+#ifdef HAVE_HSI
+		g_autofree gchar *tmp = fu_engine_get_host_security_id(engine, NULL);
 		return g_variant_new_string(tmp);
+#else
+		g_set_error(error,
+			    G_DBUS_ERROR,
+			    G_DBUS_ERROR_NOT_SUPPORTED,
+			    "failed to get daemon property %s",
+			    property_name);
+		return NULL;
+#endif
 	}
 
 	if (g_strcmp0(property_name, "Interactive") == 0)
