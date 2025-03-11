@@ -3429,7 +3429,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	events = fu_engine_get_host_security_events(priv->engine, 10, error);
 	if (events == NULL)
 		return FALSE;
-	events_array = fu_security_attrs_get_all(attrs);
+	events_array = fu_security_attrs_get_all(events);
 	if (events_array->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
 		if (estr != NULL)
