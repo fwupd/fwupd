@@ -29,6 +29,11 @@ If the `SoftwareId` property is not a GUID then the vendor instance ID is used i
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&SOFTWAREID_${RedfishSoftwareId}`
 
+Additionally, on Dell hardware the SystemID is also used:
+
+* `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID_${RedfishSoftwareId}`
+* `REDFISH\VENDOR_${RedfishManufacturer}&SYSTEMID_${RedfishSystemID}&SOFTWAREID` (only-quirks)
+
 Additionally, this Instance ID is added for quirk and parent matching:
 
 * `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
