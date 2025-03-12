@@ -443,7 +443,7 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	/* ReleaseDate may or may not have a timezone */
 	if (json_object_has_member(member, "ReleaseDate")) {
 		const gchar *tmp = json_object_get_string_member(member, "ReleaseDate");
-		if (tmp != NULL && tmp[0] != '\0') {
+		if (tmp != NULL && tmp[0] != '\0' && g_strcmp0(tmp, "00:00:00Z") != 0) {
 			g_autoptr(GDateTime) dt = NULL;
 			g_autoptr(GTimeZone) tz = g_time_zone_new_utc();
 			dt = g_date_time_new_from_iso8601(tmp, tz);
