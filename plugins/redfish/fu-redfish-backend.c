@@ -33,6 +33,7 @@ struct _FuRedfishBackend {
 	gboolean cacheck;
 	gboolean wildcard_targets;
 	gint64 max_image_size; /* bytes */
+	gchar *system_id;
 	GType device_gtype;
 	GHashTable *request_cache; /* str:GByteArray */
 	CURLSH *curlsh;
@@ -115,6 +116,10 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 			   "member",
 			   member,
 			   NULL);
+
+	/* Dell specific currently */
+	if (self->system_id != NULL)
+		fu_device_add_instance_str(dev, "SYSTEMID", self->system_id);
 
 	/* some vendors do not specify the Targets array when updating */
 	if (self->wildcard_targets)
@@ -396,6 +401,112 @@ fu_redfish_backend_set_update_uri_path(FuRedfishBackend *self, const gchar *upda
 }
 
 static gboolean
+fu_redfish_backend_setup_dell_member(FuRedfishBackend *self,
+				     const gchar *member_uri,
+				     GError **error)
+{
+	JsonObject *dell_obj;
+	JsonObject *dell_system_obj;
+	JsonObject *json_obj;
+	JsonObject *oem_obj;
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+
+	if (!fu_redfish_request_perform(request,
+					member_uri,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					error))
+		return FALSE;
+	json_obj = fu_redfish_request_get_json_object(request);
+	if (!json_object_has_member(json_obj, "Oem")) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no Oem in Member");
+		return FALSE;
+	}
+	oem_obj = json_object_get_object_member(json_obj, "Oem");
+	if (oem_obj == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no valid Oem in Member");
+		return FALSE;
+	}
+	if (!json_object_has_member(oem_obj, "Dell")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no OEM/Dell in Member");
+		return FALSE;
+	}
+	dell_obj = json_object_get_object_member(oem_obj, "Dell");
+	if (dell_obj == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no valid OEM/Dell in Member");
+		return FALSE;
+	}
+	if (!json_object_has_member(dell_obj, "DellSystem")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no OEM/Dell/DellSystem in Member");
+		return FALSE;
+	}
+	dell_system_obj = json_object_get_object_member(dell_obj, "DellSystem");
+	if (dell_system_obj == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no valid OEM/Dell/DellSystem in Member");
+		return FALSE;
+	}
+	if (!json_object_has_member(dell_system_obj, "SystemID")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no OEM/Dell/DellSystem/SystemID in Member");
+		return FALSE;
+	}
+
+	/* success */
+	self->system_id =
+	    g_strdup_printf("%04X",
+			    (guint16)json_object_get_int_member(dell_system_obj, "SystemID"));
+	return TRUE;
+}
+
+static gboolean
+fu_redfish_backend_setup_dell(FuRedfishBackend *self, GError **error)
+{
+	JsonObject *member;
+	JsonArray *members;
+	JsonObject *json_obj;
+	const gchar *member_uri;
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(self);
+
+	if (!fu_redfish_request_perform(request,
+					"/redfish/v1/Systems",
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					error))
+		return FALSE;
+	json_obj = fu_redfish_request_get_json_object(request);
+	if (!json_object_has_member(json_obj, "Members")) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no Members object");
+		return FALSE;
+	}
+	members = json_object_get_array_member(json_obj, "Members");
+	if (json_array_get_length(members) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "empty Members array");
+		return FALSE;
+	}
+	member = json_array_get_object_element(members, 0);
+	member_uri = json_object_get_string_member(member, "@odata.id");
+	return fu_redfish_backend_setup_dell_member(self, member_uri, error);
+}
+
+static gboolean
 fu_redfish_backend_setup(FuBackend *backend,
 			 FuBackendSetupFlags flags,
 			 FuProgress *progress,
@@ -442,7 +553,10 @@ fu_redfish_backend_setup(FuBackend *backend,
 		g_free(self->vendor);
 		self->vendor = g_strdup(json_object_get_string_member(json_obj, "Vendor"));
 	}
-
+	if (g_strcmp0(self->vendor, "Dell") == 0) {
+		if (!fu_redfish_backend_setup_dell(self, error))
+			return FALSE;
+	}
 	if (json_object_has_member(json_obj, "UpdateService"))
 		json_update_service = json_object_get_object_member(json_obj, "UpdateService");
 	if (json_update_service == NULL) {
@@ -549,6 +663,7 @@ fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 	fwupd_codec_string_append_bool(str, idt, "Cacheck", self->cacheck);
 	fwupd_codec_string_append_bool(str, idt, "WildcardTargets", self->wildcard_targets);
 	fwupd_codec_string_append_hex(str, idt, "MaxImageSize", self->max_image_size);
+	fwupd_codec_string_append(str, idt, "SystemId", self->system_id);
 	fwupd_codec_string_append(str, idt, "DeviceGType", g_type_name(self->device_gtype));
 }
 
@@ -567,6 +682,7 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->vendor);
 	g_free(self->version);
 	g_free(self->uuid);
+	g_free(self->system_id);
 	G_OBJECT_CLASS(fu_redfish_backend_parent_class)->finalize(object);
 }
 

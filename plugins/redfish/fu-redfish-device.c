@@ -406,6 +406,43 @@ fu_redfish_device_probe_oem_hpe(FuRedfishDevice *self, JsonObject *json_object, 
 }
 
 static gboolean
+fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, JsonObject *json_object, GError **error)
+{
+	JsonObject *software_info;
+
+	/* ignore */
+	if (!json_object_has_member(json_object, "DellSoftwareInventory"))
+		return TRUE;
+	software_info = json_object_get_object_member(json_object, "DellSoftwareInventory");
+	if (json_object_has_member(software_info, "Status")) {
+		const gchar *status = json_object_get_string_member(software_info, "Status");
+		if (g_strcmp0(status, "AvailableForInstallation") == 0)
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+	}
+
+	/* it does not seem that Dell allows targeting a device when updating */
+	fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+
+	/* SYSTEMID is set by the backend */
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "REDFISH",
+					      "VENDOR",
+					      "SYSTEMID",
+					      NULL))
+		return FALSE;
+	return fu_device_build_instance_id(FU_DEVICE(self),
+					   error,
+					   "REDFISH",
+					   "VENDOR",
+					   "SYSTEMID",
+					   "SOFTWAREID",
+					   NULL);
+}
+
+static gboolean
 fu_redfish_device_probe(FuDevice *dev, GError **error)
 {
 	FuRedfishDevice *self = FU_REDFISH_DEVICE(dev);
@@ -496,6 +533,11 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (oem != NULL && json_object_has_member(oem, "Hpe")) {
 			JsonObject *hpe = json_object_get_object_member(oem, "Hpe");
 			if (!fu_redfish_device_probe_oem_hpe(self, hpe, error))
+				return FALSE;
+		}
+		if (oem != NULL && json_object_has_member(oem, "Dell")) {
+			JsonObject *json_oem = json_object_get_object_member(oem, "Dell");
+			if (!fu_redfish_device_probe_oem_dell(self, json_oem, error))
 				return FALSE;
 		}
 	}
