@@ -501,7 +501,13 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	}
 
 	/* used for quirking and parenting */
-	fu_device_build_instance_id(dev, NULL, "REDFISH", "VENDOR", "ID", NULL);
+	fu_device_build_instance_id_full(dev,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "REDFISH",
+					 "VENDOR",
+					 "ID",
+					 NULL);
 
 	if (json_object_has_member(member, "Name")) {
 		const gchar *tmp = json_object_get_string_member(member, "Name");
