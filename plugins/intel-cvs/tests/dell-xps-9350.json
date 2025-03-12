@@ -6,7 +6,7 @@
       "emulation-file": "@enumeration_datadir@/dell-xps-9350-setup.json",
       "components": [
         {
-          "version": "1.19.0.0",
+          "version": "1.13.0.0",
           "protocol": "com.intel.cvs",
           "guids": [
             "6344aa58-fe82-5e4d-b981-847f422e67c2"

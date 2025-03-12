@@ -56,7 +56,7 @@ fu_intel_cvs_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 
 	/* build the version */
-	version = g_strdup_printf("%u.%u.%u.%u",
+	version = g_strdup_printf("%x.%x.%x.%x",
 				  fu_struct_intel_cvs_probe_get_major(st_probe),
 				  fu_struct_intel_cvs_probe_get_minor(st_probe),
 				  fu_struct_intel_cvs_probe_get_hotfix(st_probe),
