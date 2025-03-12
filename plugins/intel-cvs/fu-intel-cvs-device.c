@@ -131,7 +131,6 @@ fu_intel_cvs_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_intel_cvs_device_check_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuIntelCvsDevstate devstate;
 	FuProgress *progress = FU_PROGRESS(user_data);
 	g_autoptr(FuStructIntelCvsStatus) st_status = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -155,15 +154,6 @@ fu_intel_cvs_device_check_status_cb(FuDevice *device, gpointer user_data, GError
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "waiting for update to complete");
-		return FALSE;
-	}
-	devstate = fu_struct_intel_cvs_status_get_dev_state(st_status);
-	if (devstate != FU_INTEL_CVS_DEVSTATE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed; devstate was %s",
-			    fu_intel_cvs_devstate_to_string(devstate));
 		return FALSE;
 	}
 
