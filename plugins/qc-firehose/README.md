@@ -58,12 +58,6 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x05C6`
 
 This plugin uses the following plugin-specific quirks:
 
-### `Flags=loaded-sahara`
-
-The device has loaded the Sahara binary.
-
-Since: 2.0.7
-
 ### `Flags=no-zlp`
 
 The device should not have the Zero Length Packet sent.
