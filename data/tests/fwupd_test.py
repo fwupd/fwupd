@@ -22,19 +22,6 @@ gi.require_version("UMockdev", "1.0")
 from gi.repository import UMockdev
 
 
-def override_gi_search_path():
-    if "LIBFWUPD_BUILD_DIR" in os.environ:
-        gi.require_version("GIRepository", "2.0")
-        from gi.repository import GIRepository
-
-        GIRepository.Repository.prepend_search_path(
-            os.path.join(os.environ["LIBFWUPD_BUILD_DIR"])
-        )
-        GIRepository.Repository.prepend_library_path(
-            os.path.join(os.environ["LIBFWUPD_BUILD_DIR"])
-        )
-
-
 class FwupdTest(dbusmock.DBusTestCase):
     DBUS_NAME = "org.freedesktop.fwupd"
     DBUS_PATH = "/"
@@ -59,8 +46,6 @@ class FwupdTest(dbusmock.DBusTestCase):
         # set up a fake system D-BUS
         cls.start_system_bus()
         cls.dbus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
-
-        override_gi_search_path()
 
     def setUp(self):
         self.testbed = UMockdev.Testbed.new()

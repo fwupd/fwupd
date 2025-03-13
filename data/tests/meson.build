@@ -140,10 +140,11 @@ if umockdev_integration_tests.allowed()
   foreach ut: unit_tests
       test(ut, python3, args: [fwupd_mockdev_tests, ut], is_parallel: false,
           env: {
-            'DAEMON_BUILDDIR': join_paths(meson.project_build_root(), 'src'),
-            'LIBFWUPD_BUILD_DIR': join_paths(meson.project_build_root(), 'libfwupd'),
-            'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state'),
             'CACHE_DIRECTORY': join_paths(meson.project_build_root(), 'cache'),
+            'DAEMON_BUILDDIR': join_paths(meson.project_build_root(), 'src'),
+            'GI_TYPELIB_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
+            'LD_LIBRARY_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
+            'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state')
           },
           )
   endforeach

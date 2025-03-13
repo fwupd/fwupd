@@ -5,7 +5,8 @@ BUILD=${VENV}/build
 INSTALLED_TESTS=${VENV}/dist/share/installed-tests/fwupd
 export G_TEST_BUILDDIR=${INSTALLED_TESTS}
 export G_TEST_SRCDIR=${INSTALLED_TESTS}
-export LIBFWUPD_BUILD_DIR=${BUILD}/libfwupd
+export GI_TYPELIB_PATH=${BUILD}/libfwupd
+export LD_LIBRARY_PATH=${BUILD}/libfwupd
 export DAEMON_BUILDDIR=${BUILD}/src
 export PATH=${VENV}/bin:$PATH
 

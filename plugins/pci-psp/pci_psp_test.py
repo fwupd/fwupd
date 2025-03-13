@@ -8,10 +8,9 @@ import gi
 import os
 import sys
 import unittest
-from fwupd_test import FwupdTest, override_gi_search_path
+from fwupd_test import FwupdTest
 
 try:
-    override_gi_search_path()
     gi.require_version("Fwupd", "2.0")
     from gi.repository import Fwupd  # pylint: disable=wrong-import-position
 except ValueError:
