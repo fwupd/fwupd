@@ -8,17 +8,17 @@
 
 #include "config.h"
 
-#include "fu-qc-firehose-device.h"
 #include "fu-qc-firehose-struct.h"
+#include "fu-qc-firehose-usb-device.h"
 
-#define FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA "loaded-sahara"
-#define FU_QC_FIREHOSE_DEVICE_NO_ZLP	    "no-zlp"
+#define FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA "loaded-sahara"
+#define FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP	"no-zlp"
 
-#define FU_QC_FIREHOSE_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
+#define FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
 
-#define FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS 500
+#define FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS 500
 
-struct _FuQcFirehoseDevice {
+struct _FuQcFirehoseUsbDevice {
 	FuUsbDevice parent_instance;
 	guint8 ep_in;
 	guint8 ep_out;
@@ -29,12 +29,12 @@ struct _FuQcFirehoseDevice {
 	gboolean rawmode;
 };
 
-G_DEFINE_TYPE(FuQcFirehoseDevice, fu_qc_firehose_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuQcFirehoseUsbDevice, fu_qc_firehose_usb_device, FU_TYPE_USB_DEVICE)
 
 static void
-fu_qc_firehose_device_to_string(FuDevice *device, guint idt, GString *str)
+fu_qc_firehose_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuQcFirehoseDevice *self = FU_QC_FIREHOSE_DEVICE(device);
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
 	g_autofree gchar *functions = fu_qc_firehose_functions_to_string(self->supported_functions);
 	fwupd_codec_string_append_hex(str, idt, "EpIn", self->ep_in);
 	fwupd_codec_string_append_hex(str, idt, "EpOut", self->ep_out);
@@ -46,12 +46,12 @@ fu_qc_firehose_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static GByteArray *
-fu_qc_firehose_device_read(FuQcFirehoseDevice *self, guint timeout_ms, GError **error)
+fu_qc_firehose_usb_device_read(FuQcFirehoseUsbDevice *self, guint timeout_ms, GError **error)
 {
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	fu_byte_array_set_size(buf, FU_QC_FIREHOSE_DEVICE_RAW_BUFFER_SIZE, 0x00);
+	fu_byte_array_set_size(buf, FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE, 0x00);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 self->ep_in,
 					 buf->data,
@@ -70,7 +70,10 @@ fu_qc_firehose_device_read(FuQcFirehoseDevice *self, guint timeout_ms, GError **
 }
 
 static gboolean
-fu_qc_firehose_device_write(FuQcFirehoseDevice *self, const guint8 *data, gsize sz, GError **error)
+fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
+				const guint8 *data,
+				gsize sz,
+				GError **error)
 {
 	gsize actual_len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -93,7 +96,7 @@ fu_qc_firehose_device_write(FuQcFirehoseDevice *self, const guint8 *data, gsize 
 						 fu_chunk_get_data_out(chk),
 						 fu_chunk_get_data_sz(chk),
 						 &actual_len,
-						 FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS,
+						 FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
 						 NULL,
 						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write data): ");
@@ -110,14 +113,14 @@ fu_qc_firehose_device_write(FuQcFirehoseDevice *self, const guint8 *data, gsize 
 	}
 
 	/* sent zlp packet if needed */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_NO_ZLP) &&
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP) &&
 	    sz % self->maxpktsize_out == 0) {
 		if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 						 self->ep_out,
 						 NULL,
 						 0,
 						 NULL,
-						 FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS,
+						 FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
 						 NULL,
 						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
@@ -130,7 +133,7 @@ fu_qc_firehose_device_write(FuQcFirehoseDevice *self, const guint8 *data, gsize 
 }
 
 static void
-fu_qc_firehose_device_parse_log_text(FuQcFirehoseDevice *self, const gchar *text)
+fu_qc_firehose_usb_device_parse_log_text(FuQcFirehoseUsbDevice *self, const gchar *text)
 {
 	if (text == NULL)
 		return;
@@ -142,9 +145,9 @@ fu_qc_firehose_device_parse_log_text(FuQcFirehoseDevice *self, const gchar *text
 }
 
 static gboolean
-fu_qc_firehose_device_read_xml_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_qc_firehose_usb_device_read_xml_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuQcFirehoseDevice *self = FU_QC_FIREHOSE_DEVICE(device);
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
 	const gchar *tmp;
 	g_autofree gchar *xml = NULL;
 	g_autoptr(GByteArray) buf = NULL;
@@ -153,7 +156,7 @@ fu_qc_firehose_device_read_xml_cb(FuDevice *device, gpointer user_data, GError *
 	g_autoptr(XbNode) xn_response = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
-	buf = fu_qc_firehose_device_read(self, FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS, error);
+	buf = fu_qc_firehose_usb_device_read(self, FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS, error);
 	if (buf == NULL)
 		return FALSE;
 	xml = g_strndup((const gchar *)buf->data, buf->len);
@@ -176,8 +179,8 @@ fu_qc_firehose_device_read_xml_cb(FuDevice *device, gpointer user_data, GError *
 	if (xn_logs != NULL) {
 		for (guint i = 0; i < xn_logs->len; i++) {
 			XbNode *xn_log = g_ptr_array_index(xn_logs, i);
-			fu_qc_firehose_device_parse_log_text(self,
-							     xb_node_get_attr(xn_log, "value"));
+			fu_qc_firehose_usb_device_parse_log_text(self,
+								 xb_node_get_attr(xn_log, "value"));
 		}
 	}
 
@@ -242,25 +245,25 @@ fu_qc_firehose_device_read_xml_cb(FuDevice *device, gpointer user_data, GError *
 }
 
 static gboolean
-fu_qc_firehose_device_read_xml(FuQcFirehoseDevice *self, guint timeout_ms, GError **error)
+fu_qc_firehose_usb_device_read_xml(FuQcFirehoseUsbDevice *self, guint timeout_ms, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_qc_firehose_device_read_xml_cb,
-			       timeout_ms / FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS,
+			       fu_qc_firehose_usb_device_read_xml_cb,
+			       timeout_ms / FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
 			       NULL,
 			       error);
 }
 
 static gboolean
-fu_qc_firehose_device_write_xml_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_qc_firehose_usb_device_write_xml_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuQcFirehoseDevice *self = FU_QC_FIREHOSE_DEVICE(device);
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
 	const gchar *xml = (const gchar *)user_data;
-	return fu_qc_firehose_device_write(self, (const guint8 *)xml, strlen(xml), error);
+	return fu_qc_firehose_usb_device_write(self, (const guint8 *)xml, strlen(xml), error);
 }
 
 static gboolean
-fu_qc_firehose_device_write_xml(FuQcFirehoseDevice *self, XbBuilderNode *bn, GError **error)
+fu_qc_firehose_usb_device_write_xml(FuQcFirehoseUsbDevice *self, XbBuilderNode *bn, GError **error)
 {
 	g_autofree gchar *xml = NULL;
 	xml = xb_builder_node_export(
@@ -285,16 +288,21 @@ fu_qc_firehose_device_write_xml(FuQcFirehoseDevice *self, XbBuilderNode *bn, GEr
 	}
 #endif
 	g_debug("XML request: %s", xml);
-	return fu_device_retry(FU_DEVICE(self), fu_qc_firehose_device_write_xml_cb, 5, xml, error);
+	return fu_device_retry(FU_DEVICE(self),
+			       fu_qc_firehose_usb_device_write_xml_cb,
+			       5,
+			       xml,
+			       error);
 }
 
 static gboolean
-fu_qc_firehose_device_send_configure(FuQcFirehoseDevice *self,
-				     const gchar *storage,
-				     gboolean ignore_nak,
-				     GError **error)
+fu_qc_firehose_usb_device_send_configure(FuQcFirehoseUsbDevice *self,
+					 const gchar *storage,
+					 gboolean ignore_nak,
+					 GError **error)
 {
-	gboolean no_zlp = fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_NO_ZLP);
+	gboolean no_zlp =
+	    fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 	g_autofree gchar *max_payload_size_str = NULL;
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(GError) error_local = NULL;
@@ -319,9 +327,9 @@ fu_qc_firehose_device_send_configure(FuQcFirehoseDevice *self,
 				    "SkipStorageInit",
 				    "0",
 				    NULL);
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	if (!fu_qc_firehose_device_read_xml(self, 5000, &error_local)) {
+	if (!fu_qc_firehose_usb_device_read_xml(self, 5000, &error_local)) {
 		/* we're sending our initial suggestion */
 		if (ignore_nak &&
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -337,7 +345,9 @@ fu_qc_firehose_device_send_configure(FuQcFirehoseDevice *self,
 }
 
 static gboolean
-fu_qc_firehose_device_configure(FuQcFirehoseDevice *self, const gchar *storage, GError **error)
+fu_qc_firehose_usb_device_configure(FuQcFirehoseUsbDevice *self,
+				    const gchar *storage,
+				    GError **error)
 {
 	guint64 max_payload_size_old = self->max_payload_size;
 
@@ -351,10 +361,10 @@ fu_qc_firehose_device_configure(FuQcFirehoseDevice *self, const gchar *storage, 
 	}
 
 	/* retry if remote proposed different size */
-	if (!fu_qc_firehose_device_send_configure(self, storage, TRUE, error))
+	if (!fu_qc_firehose_usb_device_send_configure(self, storage, TRUE, error))
 		return FALSE;
 	if (max_payload_size_old != self->max_payload_size) {
-		if (!fu_qc_firehose_device_send_configure(self, storage, FALSE, error))
+		if (!fu_qc_firehose_usb_device_send_configure(self, storage, FALSE, error))
 			return FALSE;
 	}
 
@@ -363,7 +373,7 @@ fu_qc_firehose_device_configure(FuQcFirehoseDevice *self, const gchar *storage, 
 }
 
 static gboolean
-fu_qc_firehose_device_erase(FuQcFirehoseDevice *self, XbNode *xn, GError **error)
+fu_qc_firehose_usb_device_erase(FuQcFirehoseUsbDevice *self, XbNode *xn, GError **error)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
@@ -387,16 +397,16 @@ fu_qc_firehose_device_erase(FuQcFirehoseDevice *self, XbNode *xn, GError **error
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	return fu_qc_firehose_device_read_xml(self, 30000, error);
+	return fu_qc_firehose_usb_device_read_xml(self, 30000, error);
 }
 
 static gboolean
-fu_qc_firehose_device_write_blocks(FuQcFirehoseDevice *self,
-				   FuChunkArray *chunks,
-				   FuProgress *progress,
-				   GError **error)
+fu_qc_firehose_usb_device_write_blocks(FuQcFirehoseUsbDevice *self,
+				       FuChunkArray *chunks,
+				       FuProgress *progress,
+				       GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -408,10 +418,10 @@ fu_qc_firehose_device_write_blocks(FuQcFirehoseDevice *self,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_qc_firehose_device_write(self,
-						 fu_chunk_get_data(chk),
-						 fu_chunk_get_data_sz(chk),
-						 error))
+		if (!fu_qc_firehose_usb_device_write(self,
+						     fu_chunk_get_data(chk),
+						     fu_chunk_get_data_sz(chk),
+						     error))
 			return FALSE;
 
 		/* update progress */
@@ -423,7 +433,7 @@ fu_qc_firehose_device_write_blocks(FuQcFirehoseDevice *self,
 }
 
 static gchar *
-fu_qc_firehose_device_convert_to_image_id(const gchar *filename, GError **error)
+fu_qc_firehose_usb_device_convert_to_image_id(const gchar *filename, GError **error)
 {
 	g_autofree gchar *filename_safe = NULL;
 
@@ -441,11 +451,11 @@ fu_qc_firehose_device_convert_to_image_id(const gchar *filename, GError **error)
 }
 
 static gboolean
-fu_qc_firehose_device_program(FuQcFirehoseDevice *self,
-			      FuFirmware *firmware,
-			      XbNode *xn,
-			      FuProgress *progress,
-			      GError **error)
+fu_qc_firehose_usb_device_program(FuQcFirehoseUsbDevice *self,
+				  FuFirmware *firmware,
+				  XbNode *xn,
+				  FuProgress *progress,
+				  GError **error)
 {
 	guint64 sector_size = xb_node_get_attr_as_uint(xn, "SECTOR_SIZE_IN_BYTES");
 	guint64 num_sectors = xb_node_get_attr_as_uint(xn, "num_partition_sectors");
@@ -476,7 +486,7 @@ fu_qc_firehose_device_program(FuQcFirehoseDevice *self,
 	}
 
 	/* skip any empty filenames */
-	filename_basename = fu_qc_firehose_device_convert_to_image_id(filename, error);
+	filename_basename = fu_qc_firehose_usb_device_convert_to_image_id(filename, error);
 	if (filename_basename == NULL)
 		return FALSE;
 	blob = fu_firmware_get_image_by_id_bytes(firmware, filename_basename, error);
@@ -489,9 +499,11 @@ fu_qc_firehose_device_program(FuQcFirehoseDevice *self,
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	if (!fu_qc_firehose_device_read_xml(self, 5 * FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS, error)) {
+	if (!fu_qc_firehose_usb_device_read_xml(self,
+						5 * FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						error)) {
 		g_prefix_error(error, "failed to setup: ");
 		return FALSE;
 	}
@@ -522,9 +534,9 @@ fu_qc_firehose_device_program(FuQcFirehoseDevice *self,
 	/* write data */
 	blob_padded = fu_bytes_pad(blob, num_sectors * sector_size, 0xFF);
 	chunks = fu_chunk_array_new_from_bytes(blob_padded, 0x0, 0x0, self->max_payload_size);
-	if (!fu_qc_firehose_device_write_blocks(self, chunks, progress, error))
+	if (!fu_qc_firehose_usb_device_write_blocks(self, chunks, progress, error))
 		return FALSE;
-	if (!fu_qc_firehose_device_read_xml(self, 30000, error))
+	if (!fu_qc_firehose_usb_device_read_xml(self, 30000, error))
 		return FALSE;
 
 	/* sanity check */
@@ -541,7 +553,7 @@ fu_qc_firehose_device_program(FuQcFirehoseDevice *self,
 }
 
 static gboolean
-fu_qc_firehose_device_apply_patch(FuQcFirehoseDevice *self, XbNode *xn, GError **error)
+fu_qc_firehose_usb_device_apply_patch(FuQcFirehoseUsbDevice *self, XbNode *xn, GError **error)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
@@ -568,22 +580,24 @@ fu_qc_firehose_device_apply_patch(FuQcFirehoseDevice *self, XbNode *xn, GError *
 		if (value != NULL)
 			xb_builder_node_set_attr(bc, names[i], value);
 	}
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	return fu_qc_firehose_device_read_xml(self, 5000, error);
+	return fu_qc_firehose_usb_device_read_xml(self, 5000, error);
 }
 
 static gboolean
-fu_qc_firehose_device_set_bootable(FuQcFirehoseDevice *self, guint part, GError **error)
+fu_qc_firehose_usb_device_set_bootable(FuQcFirehoseUsbDevice *self, guint part, GError **error)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autofree gchar *partstr = g_strdup_printf("%u", part);
 
 	/* <data><setbootablestoragedrive value="1" /></data> */
 	xb_builder_node_insert_text(bn, "setbootablestoragedrive", NULL, "value", partstr, NULL);
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	if (!fu_qc_firehose_device_read_xml(self, FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS, error)) {
+	if (!fu_qc_firehose_usb_device_read_xml(self,
+						FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						error)) {
 		g_prefix_error(error, "failed to mark partition %u as bootable: ", part);
 		return FALSE;
 	}
@@ -592,22 +606,22 @@ fu_qc_firehose_device_set_bootable(FuQcFirehoseDevice *self, guint part, GError 
 }
 
 static gboolean
-fu_qc_firehose_device_reset(FuQcFirehoseDevice *self, GError **error)
+fu_qc_firehose_usb_device_reset(FuQcFirehoseUsbDevice *self, GError **error)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 
 	/* <data><power value="reset /></data> */
 	xb_builder_node_insert_text(bn, "power", NULL, "value", "reset", NULL);
-	if (!fu_qc_firehose_device_write_xml(self, bn, error))
+	if (!fu_qc_firehose_usb_device_write_xml(self, bn, error))
 		return FALSE;
-	return fu_qc_firehose_device_read_xml(self, 5000, NULL);
+	return fu_qc_firehose_usb_device_read_xml(self, 5000, NULL);
 }
 
 static gboolean
-fu_qc_firehose_device_erase_targets(FuQcFirehoseDevice *self,
-				    GPtrArray *xns,
-				    FuProgress *progress,
-				    GError **error)
+fu_qc_firehose_usb_device_erase_targets(FuQcFirehoseUsbDevice *self,
+					GPtrArray *xns,
+					FuProgress *progress,
+					GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -616,7 +630,7 @@ fu_qc_firehose_device_erase_targets(FuQcFirehoseDevice *self,
 	/* each action in the list */
 	for (guint i = 0; i < xns->len; i++) {
 		XbNode *xn = g_ptr_array_index(xns, i);
-		if (!fu_qc_firehose_device_erase(self, xn, error))
+		if (!fu_qc_firehose_usb_device_erase(self, xn, error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -626,11 +640,11 @@ fu_qc_firehose_device_erase_targets(FuQcFirehoseDevice *self,
 }
 
 static gboolean
-fu_qc_firehose_device_program_targets(FuQcFirehoseDevice *self,
-				      FuFirmware *firmware,
-				      GPtrArray *xns,
-				      FuProgress *progress,
-				      GError **error)
+fu_qc_firehose_usb_device_program_targets(FuQcFirehoseUsbDevice *self,
+					  FuFirmware *firmware,
+					  GPtrArray *xns,
+					  FuProgress *progress,
+					  GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -641,11 +655,11 @@ fu_qc_firehose_device_program_targets(FuQcFirehoseDevice *self,
 		XbNode *xn = g_ptr_array_index(xns, i);
 		const gchar *filename = xb_node_get_attr(xn, "filename");
 		if (filename == NULL || g_strcmp0(filename, "") != 0) {
-			if (!fu_qc_firehose_device_program(self,
-							   firmware,
-							   xn,
-							   fu_progress_get_child(progress),
-							   error))
+			if (!fu_qc_firehose_usb_device_program(self,
+							       firmware,
+							       xn,
+							       fu_progress_get_child(progress),
+							       error))
 				return FALSE;
 		} else {
 			g_debug("skipping as filename not provided");
@@ -658,10 +672,10 @@ fu_qc_firehose_device_program_targets(FuQcFirehoseDevice *self,
 }
 
 static gboolean
-fu_qc_firehose_device_patch_targets(FuQcFirehoseDevice *self,
-				    GPtrArray *xns,
-				    FuProgress *progress,
-				    GError **error)
+fu_qc_firehose_usb_device_patch_targets(FuQcFirehoseUsbDevice *self,
+					GPtrArray *xns,
+					FuProgress *progress,
+					GError **error)
 {
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -670,7 +684,7 @@ fu_qc_firehose_device_patch_targets(FuQcFirehoseDevice *self,
 	/* each action in the list */
 	for (guint i = 0; i < xns->len; i++) {
 		XbNode *xn = g_ptr_array_index(xns, i);
-		if (!fu_qc_firehose_device_apply_patch(self, xn, error))
+		if (!fu_qc_firehose_usb_device_apply_patch(self, xn, error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
@@ -680,7 +694,7 @@ fu_qc_firehose_device_patch_targets(FuQcFirehoseDevice *self,
 }
 
 static guint64
-fu_qc_firehose_device_find_bootable(FuQcFirehoseDevice *self, GPtrArray *xns)
+fu_qc_firehose_usb_device_find_bootable(FuQcFirehoseUsbDevice *self, GPtrArray *xns)
 {
 	for (guint i = 0; i < xns->len; i++) {
 		XbNode *xn = g_ptr_array_index(xns, i);
@@ -697,11 +711,11 @@ fu_qc_firehose_device_find_bootable(FuQcFirehoseDevice *self, GPtrArray *xns)
 }
 
 static gboolean
-fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
-					     FuFirmware *firmware,
-					     FuProgress *progress,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_qc_firehose_usb_device_write_firmware_payload(FuQcFirehoseUsbDevice *self,
+						 FuFirmware *firmware,
+						 FuProgress *progress,
+						 FwupdInstallFlags flags,
+						 GError **error)
 {
 	const gchar *fnglob = "firehose-rawprogram.xml|rawprogram_*.xml";
 	g_autoptr(GBytes) blob = NULL;
@@ -740,9 +754,9 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	}
 
 	/* clear buffer */
-	if (!fu_qc_firehose_device_read_xml(self,
-					    5 * FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS,
-					    &error_local)) {
+	if (!fu_qc_firehose_usb_device_read_xml(self,
+						5 * FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						&error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
@@ -751,7 +765,7 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	}
 
 	/* hardcode storage */
-	if (!fu_qc_firehose_device_configure(self, "nand", error)) {
+	if (!fu_qc_firehose_usb_device_configure(self, "nand", error)) {
 		g_prefix_error(error, "failed to configure: ");
 		return FALSE;
 	}
@@ -760,10 +774,10 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	/* erase */
 	xns_erase = xb_silo_query(silo, "data/erase", 0, NULL);
 	if (xns_erase != NULL) {
-		if (!fu_qc_firehose_device_erase_targets(self,
-							 xns_erase,
-							 fu_progress_get_child(progress),
-							 error)) {
+		if (!fu_qc_firehose_usb_device_erase_targets(self,
+							     xns_erase,
+							     fu_progress_get_child(progress),
+							     error)) {
 			g_prefix_error(error, "failed to erase targets: ");
 			return FALSE;
 		}
@@ -773,11 +787,11 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	/* program */
 	xns_program = xb_silo_query(silo, "data/program", 0, NULL);
 	if (xns_program != NULL) {
-		if (!fu_qc_firehose_device_program_targets(self,
-							   firmware,
-							   xns_program,
-							   fu_progress_get_child(progress),
-							   error)) {
+		if (!fu_qc_firehose_usb_device_program_targets(self,
+							       firmware,
+							       xns_program,
+							       fu_progress_get_child(progress),
+							       error)) {
 			g_prefix_error(error, "failed to program targets: ");
 			return FALSE;
 		}
@@ -787,10 +801,10 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	/* patch */
 	xns_patch = xb_silo_query(silo, "data/patch", 0, NULL);
 	if (xns_patch != NULL) {
-		if (!fu_qc_firehose_device_patch_targets(self,
-							 xns_patch,
-							 fu_progress_get_child(progress),
-							 error)) {
+		if (!fu_qc_firehose_usb_device_patch_targets(self,
+							     xns_patch,
+							     fu_progress_get_child(progress),
+							     error)) {
 			g_prefix_error(error, "failed to patch targets: ");
 			return FALSE;
 		}
@@ -800,10 +814,10 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	/* find the bootable partition */
 	if (xns_program != NULL &&
 	    (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_SETBOOTABLESTORAGEDRIVE) > 0) {
-		guint64 bootable = fu_qc_firehose_device_find_bootable(self, xns_program);
+		guint64 bootable = fu_qc_firehose_usb_device_find_bootable(self, xns_program);
 		if (bootable != G_MAXUINT64) {
 			g_debug("setting partition %u bootable", (guint)bootable);
-			if (!fu_qc_firehose_device_set_bootable(self, (guint)bootable, error)) {
+			if (!fu_qc_firehose_usb_device_set_bootable(self, (guint)bootable, error)) {
 				g_prefix_error(error, "failed to set bootable: ");
 				return FALSE;
 			}
@@ -812,7 +826,7 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 
 	/* reset, back to runtime */
 	if (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_POWER) {
-		if (!fu_qc_firehose_device_reset(self, error)) {
+		if (!fu_qc_firehose_usb_device_reset(self, error)) {
 			g_prefix_error(error, "failed to reset: ");
 			return FALSE;
 		}
@@ -821,12 +835,12 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	fu_progress_step_done(progress);
 
 	/* success */
-	fu_device_remove_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
+	fu_device_remove_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA);
 	return TRUE;
 }
 
 static void
-fu_qc_firehose_device_parse_eps(FuQcFirehoseDevice *self, GPtrArray *endpoints)
+fu_qc_firehose_usb_device_parse_eps(FuQcFirehoseUsbDevice *self, GPtrArray *endpoints)
 {
 	for (guint i = 0; i < endpoints->len; i++) {
 		FuUsbEndpoint *ep = g_ptr_array_index(endpoints, i);
@@ -841,9 +855,9 @@ fu_qc_firehose_device_parse_eps(FuQcFirehoseDevice *self, GPtrArray *endpoints)
 }
 
 static gboolean
-fu_qc_firehose_device_probe(FuDevice *device, GError **error)
+fu_qc_firehose_usb_device_probe(FuDevice *device, GError **error)
 {
-	FuQcFirehoseDevice *self = FU_QC_FIREHOSE_DEVICE(device);
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* most devices have a BCD version of 0.0 (i.e. unset), but we still want to show the
@@ -851,7 +865,7 @@ fu_qc_firehose_device_probe(FuDevice *device, GError **error)
 	fu_device_set_version(device, "0.0");
 
 	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_qc_firehose_device_parent_class)->probe(device, error))
+	if (!FU_DEVICE_CLASS(fu_qc_firehose_usb_device_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* parse usb interfaces and find suitable endpoints */
@@ -867,7 +881,7 @@ fu_qc_firehose_device_probe(FuDevice *device, GError **error)
 			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(intf);
 			if (endpoints == NULL || endpoints->len == 0)
 				continue;
-			fu_qc_firehose_device_parse_eps(self, endpoints);
+			fu_qc_firehose_usb_device_parse_eps(self, endpoints);
 			fu_usb_device_add_interface(FU_USB_DEVICE(self),
 						    fu_usb_interface_get_number(intf));
 			return TRUE;
@@ -878,7 +892,7 @@ fu_qc_firehose_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_hello(FuQcFirehoseDevice *self, GByteArray *buf, GError **error)
+fu_qc_firehose_usb_device_sahara_hello(FuQcFirehoseUsbDevice *self, GByteArray *buf, GError **error)
 {
 	g_autoptr(FuQcFirehoseSaharaPktHello) st = NULL;
 	g_autoptr(FuQcFirehoseSaharaPktHelloResp) st_resp =
@@ -890,14 +904,14 @@ fu_qc_firehose_device_sahara_hello(FuQcFirehoseDevice *self, GByteArray *buf, GE
 		return FALSE;
 	fu_qc_firehose_sahara_pkt_hello_resp_set_mode(st_resp,
 						      fu_qc_firehose_sahara_pkt_hello_get_mode(st));
-	return fu_qc_firehose_device_write(self, st_resp->data, st_resp->len, error);
+	return fu_qc_firehose_usb_device_write(self, st_resp->data, st_resp->len, error);
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_read(FuQcFirehoseDevice *self,
-				  GByteArray *buf,
-				  GBytes *blob,
-				  GError **error)
+fu_qc_firehose_usb_device_sahara_read(FuQcFirehoseUsbDevice *self,
+				      GByteArray *buf,
+				      GBytes *blob,
+				      GError **error)
 {
 	g_autoptr(FuQcFirehoseSaharaPktRead) st = NULL;
 	g_autoptr(GBytes) blob_chunk = NULL;
@@ -914,17 +928,17 @@ fu_qc_firehose_device_sahara_read(FuQcFirehoseDevice *self,
 		g_prefix_error(error, "failed to get bootloader chunk: ");
 		return FALSE;
 	}
-	return fu_qc_firehose_device_write(self,
-					   g_bytes_get_data(blob_chunk, NULL),
-					   g_bytes_get_size(blob_chunk),
-					   error);
+	return fu_qc_firehose_usb_device_write(self,
+					       g_bytes_get_data(blob_chunk, NULL),
+					       g_bytes_get_size(blob_chunk),
+					       error);
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_read64(FuQcFirehoseDevice *self,
-				    GByteArray *buf,
-				    GBytes *blob,
-				    GError **error)
+fu_qc_firehose_usb_device_sahara_read64(FuQcFirehoseUsbDevice *self,
+					GByteArray *buf,
+					GBytes *blob,
+					GError **error)
 {
 	g_autoptr(FuQcFirehoseSaharaPktRead64) st = NULL;
 	g_autoptr(GBytes) blob_chunk = NULL;
@@ -941,14 +955,14 @@ fu_qc_firehose_device_sahara_read64(FuQcFirehoseDevice *self,
 		g_prefix_error(error, "failed to get bootloader chunk: ");
 		return FALSE;
 	}
-	return fu_qc_firehose_device_write(self,
-					   g_bytes_get_data(blob_chunk, NULL),
-					   g_bytes_get_size(blob_chunk),
-					   error);
+	return fu_qc_firehose_usb_device_write(self,
+					       g_bytes_get_data(blob_chunk, NULL),
+					       g_bytes_get_size(blob_chunk),
+					       error);
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_eoi(FuQcFirehoseDevice *self, GByteArray *buf, GError **error)
+fu_qc_firehose_usb_device_sahara_eoi(FuQcFirehoseUsbDevice *self, GByteArray *buf, GError **error)
 {
 	FuQcFirehoseSaharaStatus status;
 	g_autoptr(FuQcFirehoseSaharaPktEndOfImage) st = NULL;
@@ -968,11 +982,11 @@ fu_qc_firehose_device_sahara_eoi(FuQcFirehoseDevice *self, GByteArray *buf, GErr
 			    fu_qc_firehose_sahara_status_to_string(status));
 		return FALSE;
 	}
-	return fu_qc_firehose_device_write(self, st_resp->data, st_resp->len, error);
+	return fu_qc_firehose_usb_device_write(self, st_resp->data, st_resp->len, error);
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_done(FuQcFirehoseDevice *self, GByteArray *buf, GError **error)
+fu_qc_firehose_usb_device_sahara_done(FuQcFirehoseUsbDevice *self, GByteArray *buf, GError **error)
 {
 	FuQcFirehoseSaharaStatus status;
 	g_autoptr(FuQcFirehoseSaharaPktDoneResp) st = NULL;
@@ -995,11 +1009,11 @@ fu_qc_firehose_device_sahara_done(FuQcFirehoseDevice *self, GByteArray *buf, GEr
 }
 
 static gboolean
-fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
-					    FuFirmware *firmware,
-					    FuProgress *progress,
-					    FwupdInstallFlags flags,
-					    GError **error)
+fu_qc_firehose_usb_device_sahara_write_firmware(FuQcFirehoseUsbDevice *self,
+						FuFirmware *firmware,
+						FuProgress *progress,
+						FwupdInstallFlags flags,
+						GError **error)
 {
 	const gchar *fnglob = "firehose-prog.mbn|prog_nand*.mbn|prog_firehose*";
 	gboolean done = FALSE;
@@ -1015,7 +1029,9 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 		g_autoptr(FuQcFirehoseSaharaPkt) pkt = NULL;
 		g_autoptr(GByteArray) buf = NULL;
 
-		buf = fu_qc_firehose_device_read(self, FU_QC_FIREHOSE_DEVICE_TIMEOUT_MS, error);
+		buf = fu_qc_firehose_usb_device_read(self,
+						     FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						     error);
 		if (buf == NULL) {
 			g_prefix_error(error, "failed to get device response: ");
 			return FALSE;
@@ -1027,7 +1043,7 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 			if (str != NULL && g_str_has_prefix(str, "<?xml version=")) {
 				g_debug("already receiving firehose XML!");
 				fu_device_add_private_flag(FU_DEVICE(self),
-							   FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
+							   FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA);
 				return TRUE;
 			}
 		}
@@ -1046,24 +1062,24 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 		cmd_id = fu_qc_firehose_sahara_pkt_get_command_id(pkt);
 		switch (cmd_id) {
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_HELLO:
-			if (!fu_qc_firehose_device_sahara_hello(self, buf, error))
+			if (!fu_qc_firehose_usb_device_sahara_hello(self, buf, error))
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_READ:
-			if (!fu_qc_firehose_device_sahara_read(self, buf, blob, error))
+			if (!fu_qc_firehose_usb_device_sahara_read(self, buf, blob, error))
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_END_OF_IMAGE:
-			if (!fu_qc_firehose_device_sahara_eoi(self, buf, error))
+			if (!fu_qc_firehose_usb_device_sahara_eoi(self, buf, error))
 				return FALSE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_DONE_RESPONSE:
-			if (!fu_qc_firehose_device_sahara_done(self, buf, error))
+			if (!fu_qc_firehose_usb_device_sahara_done(self, buf, error))
 				return FALSE;
 			done = TRUE;
 			break;
 		case FU_QC_FIREHOSE_SAHARA_COMMAND_ID_READ64:
-			if (!fu_qc_firehose_device_sahara_read64(self, buf, blob, error))
+			if (!fu_qc_firehose_usb_device_sahara_read64(self, buf, blob, error))
 				return FALSE;
 			break;
 		default:
@@ -1089,13 +1105,13 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 }
 
 static gboolean
-fu_qc_firehose_device_write_firmware(FuDevice *device,
-				     FuFirmware *firmware,
-				     FuProgress *progress,
-				     FwupdInstallFlags flags,
-				     GError **error)
+fu_qc_firehose_usb_device_write_firmware(FuDevice *device,
+					 FuFirmware *firmware,
+					 FuProgress *progress,
+					 FwupdInstallFlags flags,
+					 GError **error)
 {
-	FuQcFirehoseDevice *self = FU_QC_FIREHOSE_DEVICE(device);
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1103,23 +1119,25 @@ fu_qc_firehose_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "firehose");
 
 	/* we've not loaded the sahara binary yet */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA)) {
-		if (!fu_qc_firehose_device_sahara_write_firmware(self,
-								 firmware,
-								 fu_progress_get_child(progress),
-								 flags,
-								 error))
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA)) {
+		if (!fu_qc_firehose_usb_device_sahara_write_firmware(
+			self,
+			firmware,
+			fu_progress_get_child(progress),
+			flags,
+			error))
 			return FALSE;
-		fu_device_add_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
+		fu_device_add_private_flag(FU_DEVICE(self),
+					   FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA);
 	}
 	fu_progress_step_done(progress);
 
 	/* use firehose XML */
-	if (!fu_qc_firehose_device_write_firmware_payload(self,
-							  firmware,
-							  fu_progress_get_child(progress),
-							  flags,
-							  error))
+	if (!fu_qc_firehose_usb_device_write_firmware_payload(self,
+							      firmware,
+							      fu_progress_get_child(progress),
+							      flags,
+							      error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -1128,16 +1146,16 @@ fu_qc_firehose_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_qc_firehose_device_replace(FuDevice *device, FuDevice *donor)
+fu_qc_firehose_usb_device_replace(FuDevice *device, FuDevice *donor)
 {
-	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA))
-		fu_device_add_private_flag(device, FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
-	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_DEVICE_NO_ZLP))
-		fu_device_add_private_flag(device, FU_QC_FIREHOSE_DEVICE_NO_ZLP);
+	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA))
+		fu_device_add_private_flag(device, FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA);
+	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP))
+		fu_device_add_private_flag(device, FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 }
 
 static void
-fu_qc_firehose_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_qc_firehose_usb_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -1148,7 +1166,7 @@ fu_qc_firehose_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_qc_firehose_device_init(FuQcFirehoseDevice *self)
+fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 {
 	self->max_payload_size = 0x100000;
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -1158,19 +1176,19 @@ fu_qc_firehose_device_init(FuQcFirehoseDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_NO_ZLP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_LOADED_SAHARA);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 }
 
 static void
-fu_qc_firehose_device_class_init(FuQcFirehoseDeviceClass *klass)
+fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->to_string = fu_qc_firehose_device_to_string;
-	device_class->probe = fu_qc_firehose_device_probe;
-	device_class->replace = fu_qc_firehose_device_replace;
-	device_class->write_firmware = fu_qc_firehose_device_write_firmware;
-	device_class->set_progress = fu_qc_firehose_device_set_progress;
+	device_class->to_string = fu_qc_firehose_usb_device_to_string;
+	device_class->probe = fu_qc_firehose_usb_device_probe;
+	device_class->replace = fu_qc_firehose_usb_device_replace;
+	device_class->write_firmware = fu_qc_firehose_usb_device_write_firmware;
+	device_class->set_progress = fu_qc_firehose_usb_device_set_progress;
 }
