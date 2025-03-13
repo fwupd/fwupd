@@ -1010,7 +1010,7 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 		g_prefix_error(error, "failed to find %s: ", fnglob);
 		return FALSE;
 	}
-	while (!done) {
+	for (guint i = 0; i < G_MAXUINT16 && !done; i++) {
 		FuQcFirehoseSaharaCommandId cmd_id;
 		g_autoptr(FuQcFirehoseSaharaPkt) pkt = NULL;
 		g_autoptr(GByteArray) buf = NULL;
@@ -1064,6 +1064,13 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 				    fu_qc_firehose_sahara_command_id_to_string(cmd_id));
 			return FALSE;
 		}
+	}
+	if (!done) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "transferring sahara never completed");
+		return FALSE;
 	}
 
 	/* success */
