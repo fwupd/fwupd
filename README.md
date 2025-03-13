@@ -15,9 +15,6 @@ Additional information is available [at the website](https://fwupd.org/).
 ## Where to get help?
 
 - GitHub issues & discussions in [this repository](https://github.com/fwupd/fwupd)
-- Libera IRC channel `#fwupd`.
-  You can join through Libera's [IRC](https://libera.chat/)
-  or via the IRC bridge on [Matrix](https://matrix.to/#/#fwupd:libera.chat).
 
 ## Compiling
 
