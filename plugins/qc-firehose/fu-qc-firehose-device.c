@@ -11,7 +11,7 @@
 #include "fu-qc-firehose-device.h"
 #include "fu-qc-firehose-struct.h"
 
-#define FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE "loaded-firehose"
+#define FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA "loaded-sahara"
 #define FU_QC_FIREHOSE_DEVICE_NO_ZLP	    "no-zlp"
 
 #define FU_QC_FIREHOSE_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
@@ -821,7 +821,7 @@ fu_qc_firehose_device_write_firmware_payload(FuQcFirehoseDevice *self,
 	fu_progress_step_done(progress);
 
 	/* success */
-	fu_device_remove_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+	fu_device_remove_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
 	return TRUE;
 }
 
@@ -1027,7 +1027,7 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 			if (str != NULL && g_str_has_prefix(str, "<?xml version=")) {
 				g_debug("already receiving firehose XML!");
 				fu_device_add_private_flag(FU_DEVICE(self),
-							   FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+							   FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
 				return TRUE;
 			}
 		}
@@ -1103,14 +1103,14 @@ fu_qc_firehose_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95, "firehose");
 
 	/* we've not loaded the sahara binary yet */
-	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE)) {
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA)) {
 		if (!fu_qc_firehose_device_sahara_write_firmware(self,
 								 firmware,
 								 fu_progress_get_child(progress),
 								 flags,
 								 error))
 			return FALSE;
-		fu_device_add_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+		fu_device_add_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
 	}
 	fu_progress_step_done(progress);
 
@@ -1130,8 +1130,8 @@ fu_qc_firehose_device_write_firmware(FuDevice *device,
 static void
 fu_qc_firehose_device_replace(FuDevice *device, FuDevice *donor)
 {
-	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE))
-		fu_device_add_private_flag(device, FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA))
+		fu_device_add_private_flag(device, FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
 	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_DEVICE_NO_ZLP))
 		fu_device_add_private_flag(device, FU_QC_FIREHOSE_DEVICE_NO_ZLP);
 }
@@ -1159,7 +1159,7 @@ fu_qc_firehose_device_init(FuQcFirehoseDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_NO_ZLP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_DEVICE_LOADED_SAHARA);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 }

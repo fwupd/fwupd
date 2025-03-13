@@ -58,7 +58,7 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x05C6`
 
 This plugin uses the following plugin-specific quirks:
 
-### `Flags=loaded-firehose`
+### `Flags=loaded-sahara`
 
 The device has loaded the Sahara binary.
 
