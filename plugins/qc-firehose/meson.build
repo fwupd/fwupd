@@ -5,6 +5,8 @@ plugin_quirks += files('qc-firehose.quirk')
 plugin_builtins += static_library('fu_plugin_qc_firehose',
   rustgen.process('fu-qc-firehose.rs'),
   sources: [
+    'fu-qc-firehose-impl.c',
+    'fu-qc-firehose-sahara-impl.c',
     'fu-qc-firehose-usb-device.c',
     'fu-qc-firehose-plugin.c',
   ],
