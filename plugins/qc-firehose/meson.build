@@ -8,6 +8,7 @@ plugin_builtins += static_library('fu_plugin_qc_firehose',
     'fu-qc-firehose-impl.c',
     'fu-qc-firehose-sahara-impl.c',
     'fu-qc-firehose-usb-device.c',
+    'fu-qc-firehose-raw-device.c',
     'fu-qc-firehose-plugin.c',
   ],
   include_directories: plugin_incdirs,
@@ -19,7 +20,9 @@ plugin_builtins += static_library('fu_plugin_qc_firehose',
 device_tests += files(
   'tests/qc-ec25au.json',
   'tests/qc-eg25ggc.json',
+  'tests/qc-em160r.json',
 )
 enumeration_data += files(
   'tests/qc-ec25au-setup.json',
+  'tests/qc-em160r-setup.json',
 )

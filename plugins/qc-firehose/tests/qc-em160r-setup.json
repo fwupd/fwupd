@@ -1,0 +1,156 @@
+{
+  "UsbDevices": [
+    {
+      "Created": "2025-03-17T10:59:26.658090Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:1c.6/0000:08:00.0/mhi0/wwan/wwan0/wwan0firehose0",
+      "DeviceFile": "/dev/wwan0firehose0",
+      "Subsystem": "wwan",
+      "Devtype": "wwan_port",
+      "Events": [
+        {
+          "Id": "#d5a801ad",
+          "Data": "wwan"
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "wwan_port"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=244\nMINOR=0\nDEVNAME=wwan0firehose0\nDEVTYPE=wwan_port"
+        },
+        {
+          "Id": "#d432c663",
+          "Data": "wwan0firehose0"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "wwan_port"
+        },
+        {
+          "Id": "#285d9a88",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:1c.6/0000:08:00.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:08:00.0"
+        },
+        {
+          "Id": "#d5a801ad",
+          "Data": "pci"
+        },
+        {
+          "Id": "#ad8c58d3",
+          "Data": "mhi-pci-generic"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=mhi-pci-generic\nPCI_CLASS=FF0000\nPCI_ID=1EAC:100D\nPCI_SUBSYS_ID=1EAC:5004\nPCI_SLOT_NAME=0000:08:00.0\nMODALIAS=pci:v00001EACd0000100Dsv00001EACsd00005004bcFFsc00i00"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2",
+          "Data": "0x1eac"
+        },
+        {
+          "Id": "#66f3e150",
+          "Data": "0x100d"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0xff0000"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "DRIVER=mhi-pci-generic\nPCI_CLASS=FF0000\nPCI_ID=1EAC:100D\nPCI_SUBSYS_ID=1EAC:5004\nPCI_SLOT_NAME=0000:08:00.0\nMODALIAS=pci:v00001EACd0000100Dsv00001EACsd00005004bcFFsc00i00"
+        },
+        {
+          "Id": "#d432c663"
+        },
+        {
+          "Id": "#9b895db2",
+          "Data": "0x1eac"
+        },
+        {
+          "Id": "#66f3e150",
+          "Data": "0x100d"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0xff0000"
+        },
+        {
+          "Id": "#1075ed5c"
+        },
+        {
+          "Id": "#fbe018fe"
+        },
+        {
+          "Id": "#d410b6c7",
+          "Data": "0xff0000"
+        },
+        {
+          "Id": "#bf29d2f6",
+          "Data": "0x00"
+        },
+        {
+          "Id": "#269abd81",
+          "Data": "0x1eac"
+        },
+        {
+          "Id": "#360cec38",
+          "Data": "0x5004"
+        },
+        {
+          "Id": "#d2629d83",
+          "Data": "0000:08:00.0"
+        },
+        {
+          "Id": "#ad8c58d3"
+        },
+        {
+          "Id": "#9b895db2"
+        },
+        {
+          "Id": "#66f3e150"
+        },
+        {
+          "Id": "#d410b6c7"
+        },
+        {
+          "Id": "#1075ed5c",
+          "Data": "wwan_port"
+        },
+        {
+          "Id": "#bddbca22",
+          "Data": "MAJOR=244\nMINOR=0\nDEVNAME=wwan0firehose0\nDEVTYPE=wwan_port"
+        },
+        {
+          "Id": "#fbe018fe"
+        }
+      ]
+    }
+  ]
+}
