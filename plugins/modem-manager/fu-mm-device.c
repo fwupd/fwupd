@@ -18,7 +18,7 @@
  */
 
 /* not strictly last, but the last we care about */
-#define MM_MODEM_PORT_TYPE_LAST MM_MODEM_PORT_TYPE_AUDIO
+#define MM_MODEM_PORT_TYPE_LAST (MM_MODEM_PORT_TYPE_IGNORED + 1)
 
 typedef struct {
 	gboolean inhibited;
@@ -255,7 +255,12 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 		const gchar *device_file = g_strdup_printf("/dev/%s", ports[i].name);
 		if (ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
 			continue;
-		fu_mm_device_add_port(self, ports[i].type, device_file);
+		if (ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
+		    g_pattern_match_simple("wwan*qcdm*", ports[i].name)) {
+			fu_mm_device_add_port(self, MM_MODEM_PORT_TYPE_QCDM, device_file);
+		} else {
+			fu_mm_device_add_port(self, ports[i].type, device_file);
+		}
 	}
 	mm_modem_port_info_array_free(ports, n_ports);
 
