@@ -85,22 +85,27 @@ ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
 # Quectel EM120 firehose prog file
 [PCI\VID_1EAC&PID_1001]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_1002]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_100D]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1004]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1007]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom FM101
@@ -116,13 +121,16 @@ Plugin = modem_manager
 
 # Netprisma LCUR57 firehose prog file
 [PCI\VID_203E&PID_1000]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Netprisma FCUN69 firehose prog file
 [PCI\VID_203E&PID_1001]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom NL668-EAU
 [USB\VID_1508&PID_1001]
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
 Flags = disable-zlp
