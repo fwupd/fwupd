@@ -20,3 +20,5 @@
 
 void
 fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz);
+gchar *
+fu_wac_version_u32_to_quad_bcd(guint32 value) G_GNUC_WARN_UNUSED_RESULT;

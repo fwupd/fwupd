@@ -227,8 +227,8 @@ fu_wac_module_cleanup(FuDevice *device,
 static gchar *
 fu_wac_module_convert_version(FuDevice *device, guint64 version_raw)
 {
-	if (version_raw > G_MAXUINT16)
-		return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_QUAD)
+		return fu_wac_version_u32_to_quad_bcd(version_raw);
 
 	return fu_version_from_uint16(version_raw, fu_device_get_version_format(device));
 }

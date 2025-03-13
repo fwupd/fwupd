@@ -803,6 +803,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		guint32 ver;
 		guint16 ver2;
 		FuWacModuleFwType fw_type;
+		FwupdVersionFormat verfmt = FWUPD_VERSION_FORMAT_BCD;
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuStructModuleItem) st_item = NULL;
 		g_autoptr(FuWacModule) module = NULL;
@@ -821,6 +822,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		if (ver2 != 0xFF && ver2 != 0) {
 			ver = (ver << 16);
 			ver |= (ver2 << 8);
+			verfmt = FWUPD_VERSION_FORMAT_QUAD;
 		}
 
 		fw_type = fu_struct_module_item_get_kind(st_item) & 0x7F;
@@ -831,6 +833,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_TOUCH_ID7:
@@ -840,6 +843,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
 			fu_device_set_summary(FU_DEVICE(module), "ID7");
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
@@ -848,6 +852,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
@@ -857,6 +862,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
 			fu_device_set_summary(FU_DEVICE(module), "ID6");
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_SCALER:
@@ -865,6 +871,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID9:
@@ -874,6 +881,7 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
 			fu_device_set_summary(FU_DEVICE(module), "ID9");
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_SUB_CPU:
@@ -882,9 +890,11 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version_format(FU_DEVICE(module), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
+			fu_device_set_version_format(FU_DEVICE(self), verfmt);
 			fu_device_set_version_raw(FU_DEVICE(self), ver);
 			break;
 		default:
