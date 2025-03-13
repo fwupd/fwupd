@@ -23,6 +23,8 @@ fu_mm_device_port_type_to_string(MMModemPortType port_type)
 		return "qmi";
 	if (port_type == MM_MODEM_PORT_TYPE_MBIM)
 		return "mbim";
+	if (port_type == MM_MODEM_PORT_TYPE_IGNORED)
+		return "ignored";
 	return NULL;
 }
 
@@ -41,5 +43,7 @@ fu_mm_device_port_type_from_string(const gchar *port_type)
 		return MM_MODEM_PORT_TYPE_QMI;
 	if (g_strcmp0(port_type, "mbim") == 0)
 		return MM_MODEM_PORT_TYPE_MBIM;
+	if (g_strcmp0(port_type, "ignored") == 0)
+		return MM_MODEM_PORT_TYPE_IGNORED;
 	return MM_MODEM_PORT_TYPE_UNKNOWN;
 }
