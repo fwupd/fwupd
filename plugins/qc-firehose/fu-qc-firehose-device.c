@@ -1020,6 +1020,17 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 			g_prefix_error(error, "failed to get device response: ");
 			return FALSE;
 		}
+
+		/* check if we're already loaded, perhaps from MHI-QCDM */
+		if (i == 0) {
+			g_autofree gchar *str = fu_strsafe((const gchar *)buf->data, buf->len);
+			if (str != NULL && g_str_has_prefix(str, "<?xml version=")) {
+				g_debug("already receiving firehose XML!");
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+				return TRUE;
+			}
+		}
 		pkt = fu_qc_firehose_sahara_pkt_parse(buf->data, buf->len, 0x0, error);
 		if (pkt == NULL)
 			return FALSE;
