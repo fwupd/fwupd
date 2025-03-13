@@ -74,18 +74,56 @@ fu_mm_backend_device_inhibited_notify_cb(FuDevice *device, GParamSpec *pspec, gp
 }
 
 static FuDevice *
-fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GError **error)
+fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 {
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	MMModemFirmware *modem_fw = mm_object_peek_modem_firmware(omodem);
+	const gchar **device_ids;
+	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
+
+	/* use the instance IDs provided by ModemManager to find the correct GType */
+	update_settings = mm_modem_firmware_get_update_settings(modem_fw);
+	device_ids = mm_firmware_update_settings_get_device_ids(update_settings);
+	if (device_ids == NULL || device_ids[0] == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "modem did not specify any device IDs");
+		return NULL;
+	}
+	for (guint i = 0; device_ids[i] != NULL; i++) {
+		g_autofree gchar *guid = fwupd_guid_hash_string(device_ids[i]);
+		const gchar *gtypestr = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_GTYPE);
+		if (gtypestr != NULL) {
+			GType gtype = g_type_from_name(gtypestr);
+			if (gtype == G_TYPE_INVALID) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "unknown GType name %s",
+					    gtypestr);
+				return NULL;
+			}
+			return g_object_new(gtype, "context", ctx, NULL);
+		}
+	}
+
+	/* failed */
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no explicit GType");
+	return NULL;
+}
+
+static FuDevice *
+fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError **error)
+{
+	MMModem *modem = mm_object_peek_modem(omodem);
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	MMModemFirmware *modem_fw;
 	MMModemFirmwareUpdateMethod update_methods;
-	MMModem *modem = mm_object_peek_modem(omodem);
 	MMModemPortInfo *ports = NULL;
 	guint64 ports_bitmask = 0;
 	guint n_ports = 0;
 	GType gtype = G_TYPE_INVALID;
-	g_autofree gchar *methods_str = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 	struct {
 		GType gtype;
@@ -138,13 +176,13 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 	update_settings = mm_modem_firmware_get_update_settings(modem_fw);
 	update_methods = mm_firmware_update_settings_get_method(update_settings);
 	if (update_methods == MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "ignoring %s as it does not support firmware updates",
-			    mm_object_get_path(omodem));
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "does not support firmware updates");
 		return NULL;
 	}
+
 	if (!mm_modem_get_ports(modem, &ports, &n_ports)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -168,8 +206,9 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 			break;
 		}
 	}
-	methods_str = mm_modem_firmware_update_method_build_string_from_mask(update_methods);
 	if (gtype == G_TYPE_INVALID) {
+		g_autofree gchar *methods_str =
+		    mm_modem_firmware_update_method_build_string_from_mask(update_methods);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -178,13 +217,37 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 		return NULL;
 	}
 
+	/* success */
+	return g_object_new(gtype, "context", ctx, NULL);
+}
+
+static FuDevice *
+fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+
 	/* create device and probe */
-	device = g_object_new(gtype, "context", ctx, NULL);
+	device = fu_mm_backend_probe_gtype(self, omodem, &error_local);
+	if (device == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("ignoring, and trying legacy fallback: %s", error_local->message);
+			device = fu_mm_backend_probe_gtype_fallback(self, omodem, error);
+			if (device == NULL)
+				return NULL;
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return NULL;
+		}
+	}
 	if (!fu_mm_device_probe_from_omodem(FU_MM_DEVICE(device), omodem, error))
 		return NULL;
 
 	/* fastboot extra properties */
 	if (FU_IS_MM_FASTBOOT_DEVICE(device)) {
+		MMModemFirmware *modem_fw = mm_object_peek_modem_firmware(omodem);
+		g_autoptr(MMFirmwareUpdateSettings) update_settings =
+		    mm_modem_firmware_get_update_settings(modem_fw);
 		const gchar *tmp = mm_firmware_update_settings_get_fastboot_at(update_settings);
 		if (tmp == NULL) {
 			g_set_error_literal(error,
@@ -197,9 +260,6 @@ fu_mm_backend_device_create_from_omodem(FuMmBackend *self, MMObject *omodem, GEr
 	}
 
 	/* success */
-	g_debug("added modem: %s (update_methods: %s)",
-		fu_device_get_backend_id(device),
-		methods_str);
 	return g_steal_pointer(&device);
 }
 
