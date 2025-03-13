@@ -79,6 +79,7 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	MMModemFirmware *modem_fw = mm_object_peek_modem_firmware(omodem);
 	const gchar **device_ids;
+	g_autofree gchar *device_ids_str = NULL;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 
 	/* use the instance IDs provided by ModemManager to find the correct GType */
@@ -109,7 +110,12 @@ fu_mm_backend_probe_gtype(FuMmBackend *self, MMObject *omodem, GError **error)
 	}
 
 	/* failed */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no explicit GType");
+	device_ids_str = g_strjoinv(", ", (gchar **)device_ids);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no explicit GType for %s",
+		    device_ids_str);
 	return NULL;
 }
 
