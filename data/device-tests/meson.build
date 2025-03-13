@@ -11,7 +11,7 @@ con.set('enumeration_datadir', enumeration_datadir)
 
 foreach test: device_tests
   configure_file(
-    input: join_paths(meson.project_source_root(),'@0@'.format(test)),
+    input: test,
     output: '@BASENAME@.json',
     configuration: con,
     install: true,
