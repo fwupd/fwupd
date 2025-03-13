@@ -1,2 +1,8 @@
 [USB\VID_05C6&PID_9008]
 Plugin = qc_firehose
+GType = FuQcFirehoseUsbDevice
+
+# for /dev/wwan0firehose0
+[WWAN\TYPE_WWAN_PORT]
+Plugin = qc_firehose
+GType = FuQcFirehoseRawDevice

@@ -1,0 +1,17 @@
+{
+  "name": "Qualcomm EM160R (raw)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/qc-em160r-setup.json",
+      "components": [
+        {
+          "version": "0.0",
+          "guids": [
+            "541f24d9-e376-5dc0-abe6-28073755bcad"
+          ]
+        }
+      ]
+    }
+  ]
+}
