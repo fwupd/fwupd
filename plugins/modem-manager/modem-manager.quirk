@@ -76,6 +76,7 @@ CounterpartGuid = PCI\VID_105B&PID_E0F9
 
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
+GType = FuMmFastbootDevice
 Summary = Quectel EG25-G/EC25 modem
 CounterpartGuid = USB\VID_18D1&PID_D00D
 Flags = detach-at-fastboot-has-no-response
@@ -110,12 +111,14 @@ ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom FM101
 [USB\VID_2CB7&PID_01A2]
+GType = FuMmFastbootDevice
 Summary = Fibocom FM101-GL Module
 Flags = detach-at-fastboot-has-no-response
 CounterpartGuid = USB\VID_2CB7&PID_D00D
 
 # Cinterion PLS8
 [USB\VID_1e2d&PID_0061]
+GType = FuMmFdlDevice
 Summary = Cinterion PLS8 AT^SFDL update
 Plugin = modem_manager
 

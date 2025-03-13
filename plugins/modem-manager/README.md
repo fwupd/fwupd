@@ -29,7 +29,7 @@ Since: 1.7.4
 
 ### ModemManagerFirehoseProgFile
 
-Firehose program file to use during the switch to EDL (Emergency Download) mode.
+Firehose program file to use during the QCDM switch to EDL (Emergency Download) mode.
 
 Since: 1.8.10
 
