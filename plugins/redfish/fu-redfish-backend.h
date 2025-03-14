@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-redfish-backend-vendors.h"
 #include "fu-redfish-request.h"
 
 #define FU_REDFISH_TYPE_BACKEND (fu_redfish_backend_get_type())
@@ -42,6 +43,8 @@ const gchar *
 fu_redfish_backend_get_push_uri_path(FuRedfishBackend *self);
 const gchar *
 fu_redfish_backend_get_session_key(FuRedfishBackend *self);
+FuRedfishBackendVendorSpecific *
+fu_redfish_backend_get_vendor_specific(FuRedfishBackend *self);
 gboolean
 fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error);
 FuRedfishRequest *

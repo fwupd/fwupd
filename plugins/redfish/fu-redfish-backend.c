@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-redfish-backend-vendors.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-hpe-device.h"
@@ -34,6 +35,7 @@ struct _FuRedfishBackend {
 	gboolean wildcard_targets;
 	gint64 max_image_size; /* bytes */
 	GType device_gtype;
+	FuRedfishBackendVendorSpecific *vendor_specific;
 	GHashTable *request_cache; /* str:GByteArray */
 	CURLSH *curlsh;
 };
@@ -441,6 +443,18 @@ fu_redfish_backend_setup(FuBackend *backend,
 	if (json_object_has_member(json_obj, "Vendor")) {
 		g_free(self->vendor);
 		self->vendor = g_strdup(json_object_get_string_member(json_obj, "Vendor"));
+
+		if (g_str_equal(self->vendor, "Dell")) {
+			self->vendor_specific = FU_REDFISH_BACKEND_VENDOR_SPECIFIC(
+			    g_object_new(FU_TYPE_REDFISH_BACKEND_DELL_SPECIFIC, NULL));
+			if (!fu_redfish_backend_vendors_dell_specific_init_systemid(
+				backend,
+				FU_REDFISH_BACKEND_DELL_SPECIFIC(self->vendor_specific),
+				progress,
+				error)) {
+				return FALSE;
+			}
+		}
 	}
 
 	if (json_object_has_member(json_obj, "UpdateService"))
@@ -534,6 +548,12 @@ fu_redfish_backend_get_session_key(FuRedfishBackend *self)
 	return self->session_key;
 }
 
+FuRedfishBackendVendorSpecific *
+fu_redfish_backend_get_vendor_specific(FuRedfishBackend *self)
+{
+	return self->vendor_specific;
+}
+
 static void
 fu_redfish_backend_to_string(FuBackend *backend, guint idt, GString *str)
 {
@@ -567,6 +587,8 @@ fu_redfish_backend_finalize(GObject *object)
 	g_free(self->vendor);
 	g_free(self->version);
 	g_free(self->uuid);
+	if (self->vendor_specific != NULL)
+		g_object_unref(self->vendor_specific);
 	G_OBJECT_CLASS(fu_redfish_backend_parent_class)->finalize(object);
 }
 
@@ -595,6 +617,7 @@ fu_redfish_backend_init(FuRedfishBackend *self)
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS);
 	curl_share_setopt(self->curlsh, CURLSHOPT_SHARE, CURL_LOCK_DATA_SSL_SESSION);
+	self->vendor_specific = NULL;
 }
 
 FuRedfishBackend *
