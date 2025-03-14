@@ -141,8 +141,12 @@ def main(args) -> int:
                 items = Pango.itemize(pctx, label_translated, 0, length, attrs, None)
                 if not items:
                     continue
-                gs = Pango.GlyphString()
-                Pango.shape(label_translated, length, items[0].analysis, gs)
+                try:
+                    # urgh, https://gitlab.gnome.org/GNOME/pango/-/merge_requests/829
+                    gs = Pango.shape(label_translated, length, items[0].analysis)
+                except TypeError:
+                    gs = Pango.GlyphString()
+                    Pango.shape(label_translated, length, items[0].analysis, gs)
                 del img, cctx, pctx, layout
 
                 def find_size(fs, f, data):
