@@ -10,6 +10,7 @@
 #include <sys/utsname.h>
 #endif
 
+#include "fu-cpu-common.h"
 #include "fu-cpu-device.h"
 
 typedef enum {
@@ -23,9 +24,15 @@ typedef enum {
 struct _FuCpuDevice {
 	FuDevice parent_instance;
 	FuCpuDeviceFlag flags;
+	guint32 family_id;
+	guint32 model_id;
 };
 
 G_DEFINE_TYPE(FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
+
+#define FU_CPU_AGESA_SMBIOS_TYPE   40
+#define FU_CPU_AGESA_SMBIOS_LENGTH 0x0E
+#define FU_CPU_AGESA_SMBIOS_OFFSET 4
 
 static gboolean
 fu_cpu_device_has_flag(FuCpuDevice *self, FuCpuDeviceFlag flag)
@@ -37,6 +44,8 @@ static void
 fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
+	fwupd_codec_string_append_int(str, idt, "ModelId", self->model_id);
+	fwupd_codec_string_append_int(str, idt, "FamilyId", self->family_id);
 	fwupd_codec_string_append_bool(str,
 				       idt,
 				       "HasSHSTK",
@@ -124,11 +133,8 @@ fu_cpu_device_init(FuCpuDevice *self)
 static gboolean
 fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 {
+	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	guint32 eax = 0;
-	guint32 family_id;
-	guint32 family_id_ext;
-	guint32 model_id;
-	guint32 model_id_ext;
 	guint32 processor_id;
 	guint32 stepping_id;
 
@@ -136,22 +142,24 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 	if (!fu_cpuid(0x1, &eax, NULL, NULL, NULL, error))
 		return FALSE;
 	processor_id = (eax >> 12) & 0x3;
-	model_id = (eax >> 4) & 0xf;
-	family_id = (eax >> 8) & 0xf;
-	model_id_ext = (eax >> 16) & 0xf;
-	family_id_ext = (eax >> 20) & 0xff;
+	self->model_id = (eax >> 4) & 0xf;
+	self->family_id = (eax >> 8) & 0xf;
 	stepping_id = eax & 0xf;
 
 	/* use extended IDs where required */
-	if (family_id == 6 || family_id == 15)
-		model_id |= model_id_ext << 4;
-	if (family_id == 15)
-		family_id += family_id_ext;
+	if (self->family_id == 6 || self->family_id == 15) {
+		guint32 model_id_ext = (eax >> 16) & 0xf;
+		self->model_id |= model_id_ext << 4;
+	}
+	if (self->family_id == 15) {
+		guint32 family_id_ext = (eax >> 20) & 0xff;
+		self->family_id += family_id_ext;
+	}
 
 	/* add GUIDs */
 	fu_device_add_instance_u4(device, "PRO", processor_id);
-	fu_device_add_instance_u8(device, "FAM", family_id);
-	fu_device_add_instance_u8(device, "MOD", model_id);
+	fu_device_add_instance_u8(device, "FAM", self->family_id);
+	fu_device_add_instance_u8(device, "MOD", self->model_id);
 	fu_device_add_instance_u4(device, "STP", stepping_id);
 	fu_device_build_instance_id_full(device,
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
@@ -419,6 +427,96 @@ fu_cpu_device_add_security_attrs_intel_tme(FuCpuDevice *self, FuSecurityAttrs *a
 }
 
 static void
+fu_cpu_device_add_security_attrs_amd_entry_sign(FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	const gchar *agesa_stream;
+	const gchar *version;
+	guint64 ucode_version = 0;
+	guint32 ucode_version_fixed;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+	g_auto(GStrv) split = NULL;
+
+	/* only affects certain families */
+	if (self->family_id != 0x17 && self->family_id != 0x19)
+		return;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(FU_DEVICE(self), FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs, attr);
+
+	/* get the AGESA stream e.g. `AGESA!V9 StrixKrackanPI-FP8 1.1.0.0a` */
+	agesa_stream = fu_context_get_smbios_string(ctx,
+						    FU_CPU_AGESA_SMBIOS_TYPE,
+						    FU_CPU_AGESA_SMBIOS_LENGTH,
+						    FU_CPU_AGESA_SMBIOS_OFFSET,
+						    &error_local);
+	if (agesa_stream == NULL) {
+		g_debug("cannot get AGESA stream: %s", error_local->message);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	split = g_strsplit(agesa_stream, " ", 3);
+	if (g_strv_length(split) != 3) {
+		g_warning("invalid AGESA stream format: %s", agesa_stream);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	fwupd_security_attr_add_metadata(attr, "agesa-version", split[1]);
+	version = fu_cpu_amd_stream_name_to_entry_sign_fixed_agesa_version(split[1]);
+	if (version == NULL) {
+		g_warning("unknown AGESA stream name: %s", split[1]);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
+	/* the firmware is new enough to be fixed */
+	if (fu_version_compare(version, split[2], FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
+		g_debug("%s > %s, so good enough", version, split[2]);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		return;
+	}
+
+	/* is this mitigated by microcode */
+	cpu_attrs = fu_cpu_get_attrs(&error_local);
+	if (cpu_attrs == NULL) {
+		g_debug("no CPU attrs: %s", error_local->message);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	version = g_hash_table_lookup(cpu_attrs, "microcode");
+	if (version == NULL) {
+		g_warning("microcode version not found");
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	fwupd_security_attr_add_metadata(attr, "ucode-version", split[1]);
+	if (!fu_strtoull(version,
+			 &ucode_version,
+			 0x0,
+			 G_MAXUINT32,
+			 FU_INTEGER_BASE_AUTO,
+			 &error_local)) {
+		g_debug("microcode version %s not valid: %s", version, error_local->message);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+	ucode_version_fixed = fu_cpu_amd_model_id_to_entry_sign_fixed_ucode_version(self->model_id);
+	if (ucode_version_fixed != 0 && ucode_version > ucode_version_fixed) {
+		g_warning("0x%8x > 0x%8x, so good enough",
+			  (guint)ucode_version,
+			  ucode_version_fixed);
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	}
+
+	/* we had neither new firmware or new microcode */
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+}
+
+static void
 fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -449,6 +547,10 @@ fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs
 	fu_cpu_device_add_security_attrs_cet_enabled(self, attrs);
 	fu_cpu_device_add_security_attrs_cet_active(self, attrs);
 	fu_cpu_device_add_security_attrs_smap(self, attrs);
+
+	/* only AMD */
+	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_AMD)
+		fu_cpu_device_add_security_attrs_amd_entry_sign(self, attrs);
 }
 
 static void

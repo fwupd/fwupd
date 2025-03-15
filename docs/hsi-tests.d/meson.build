@@ -1,4 +1,5 @@
 hsi_test_jsons = files([
+  'org.fwupd.hsi.Amd.EntrySign.json',
   'org.fwupd.hsi.Amd.RollbackProtection.json',
   'org.fwupd.hsi.Amd.SpiReplayProtection.json',
   'org.fwupd.hsi.Amd.SpiWriteProtection.json',
