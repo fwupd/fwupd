@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-security-attr.h"
+#include "fu-version-common.h"
 
 typedef struct {
 	FuContext *ctx;
@@ -17,6 +18,32 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuSecurityAttr, fu_security_attr, FWUPD_TYPE_SECURITY_ATTR)
 
 #define GET_PRIVATE(o) (fu_security_attr_get_instance_private(o))
+
+/**
+ * fu_security_attr_check_fwupd_version:
+ * @attr: a #FwupdSecurityAttr
+ * @fwupd_version: a fwupd version, e.g. `2.0.7`
+ *
+ * Checks if this attribute was available in a given fwupd release.
+ *
+ * If @fwupd_version is %NULL then expect %TRUE.
+ *
+ * Returns: %TRUE if the fwupd release contained this attribute
+ *
+ * Since: 2.0.7
+ **/
+gboolean
+fu_security_attr_check_fwupd_version(FwupdSecurityAttr *attr, const gchar *fwupd_version)
+{
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(attr), FALSE);
+	if (fwupd_version == NULL)
+		return TRUE;
+	if (fwupd_security_attr_get_fwupd_version(attr) == NULL)
+		return TRUE;
+	return fu_version_compare(fwupd_version,
+				  fwupd_security_attr_get_fwupd_version(attr),
+				  FWUPD_VERSION_FORMAT_UNKNOWN) >= 0;
+}
 
 /**
  * fu_security_attr_add_bios_target_value:

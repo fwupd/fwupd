@@ -33,6 +33,7 @@ typedef struct {
 	gchar *title;
 	gchar *description;
 	gchar *plugin;
+	gchar *fwupd_version;
 	gchar *url;
 	guint64 created;
 	FwupdSecurityAttrLevel level;
@@ -755,6 +756,29 @@ fwupd_security_attr_set_plugin(FwupdSecurityAttr *self, const gchar *plugin)
 }
 
 /**
+ * fwupd_security_attr_set_fwupd_version:
+ * @self: a #FwupdSecurityAttr
+ * @fwupd_version: (nullable): the fwupd version, e.g. `2.0.7`
+ *
+ * Sets the fwupd version the attribute was added.
+ *
+ * Since: 2.0.7
+ **/
+void
+fwupd_security_attr_set_fwupd_version(FwupdSecurityAttr *self, const gchar *fwupd_version)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->fwupd_version, fwupd_version) == 0)
+		return;
+
+	g_free(priv->fwupd_version);
+	priv->fwupd_version = g_strdup(fwupd_version);
+}
+
+/**
  * fwupd_security_attr_set_url:
  * @self: a #FwupdSecurityAttr
  * @url: (nullable): the attribute URL
@@ -891,6 +915,24 @@ fwupd_security_attr_get_plugin(FwupdSecurityAttr *self)
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
 	return priv->plugin;
+}
+
+/**
+ * fwupd_security_attr_get_fwupd_version:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the fwupd version the attribute was added.
+ *
+ * Returns: the fwupd version, or %NULL if unset
+ *
+ * Since: 2.0.7
+ **/
+const gchar *
+fwupd_security_attr_get_fwupd_version(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->fwupd_version;
 }
 
 /**
@@ -1193,6 +1235,12 @@ fwupd_security_attr_add_variant(FwupdCodec *codec, GVariantBuilder *builder, Fwu
 				      FWUPD_RESULT_KEY_PLUGIN,
 				      g_variant_new_string(priv->plugin));
 	}
+	if (priv->fwupd_version != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_VERSION,
+				      g_variant_new_string(priv->fwupd_version));
+	}
 	if (priv->url != NULL) {
 		g_variant_builder_add(builder,
 				      "{sv}",
@@ -1362,6 +1410,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
+		fwupd_security_attr_set_fwupd_version(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
 		fwupd_security_attr_set_url(self, g_variant_get_string(value, NULL));
 		return;
@@ -1490,6 +1542,9 @@ fwupd_security_attr_from_json(FwupdCodec *codec, JsonNode *json_node, GError **e
 	fwupd_security_attr_set_plugin(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_PLUGIN, NULL));
+	fwupd_security_attr_set_fwupd_version(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_VERSION, NULL));
 	fwupd_security_attr_set_url(
 	    self,
 	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_URI, NULL));
@@ -1594,6 +1649,7 @@ fwupd_security_attr_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodec
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_SUMMARY, priv->title);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION, priv->fwupd_version);
 	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_URI, priv->url);
 	fwupd_codec_json_append(builder,
 				FWUPD_RESULT_KEY_BIOS_SETTING_TARGET_VALUE,
@@ -1669,6 +1725,7 @@ fwupd_security_attr_add_string(FwupdCodec *codec, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_SUMMARY, priv->title);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_VERSION, priv->fwupd_version);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_URI, priv->url);
 	fwupd_codec_string_append(str,
 				  idt,
@@ -1745,6 +1802,7 @@ fwupd_security_attr_finalize(GObject *object)
 	g_free(priv->title);
 	g_free(priv->description);
 	g_free(priv->plugin);
+	g_free(priv->fwupd_version);
 	g_free(priv->url);
 	g_ptr_array_unref(priv->obsoletes);
 	g_ptr_array_unref(priv->guids);
@@ -1797,6 +1855,7 @@ fwupd_security_attr_copy(FwupdSecurityAttr *self)
 	fwupd_security_attr_set_title(new, priv->title);
 	fwupd_security_attr_set_description(new, priv->description);
 	fwupd_security_attr_set_plugin(new, priv->plugin);
+	fwupd_security_attr_set_fwupd_version(new, priv->fwupd_version);
 	fwupd_security_attr_set_url(new, priv->url);
 	fwupd_security_attr_set_level(new, priv->level);
 	fwupd_security_attr_set_flags(new, priv->flags);
