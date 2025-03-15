@@ -1010,7 +1010,7 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 		g_prefix_error(error, "failed to find %s: ", fnglob);
 		return FALSE;
 	}
-	while (!done) {
+	for (guint i = 0; i < G_MAXUINT16 && !done; i++) {
 		FuQcFirehoseSaharaCommandId cmd_id;
 		g_autoptr(FuQcFirehoseSaharaPkt) pkt = NULL;
 		g_autoptr(GByteArray) buf = NULL;
@@ -1019,6 +1019,17 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 		if (buf == NULL) {
 			g_prefix_error(error, "failed to get device response: ");
 			return FALSE;
+		}
+
+		/* check if we're already loaded, perhaps from MHI-QCDM */
+		if (i == 0) {
+			g_autofree gchar *str = fu_strsafe((const gchar *)buf->data, buf->len);
+			if (str != NULL && g_str_has_prefix(str, "<?xml version=")) {
+				g_debug("already receiving firehose XML!");
+				fu_device_add_private_flag(FU_DEVICE(self),
+							   FU_QC_FIREHOSE_DEVICE_LOADED_FIREHOSE);
+				return TRUE;
+			}
 		}
 		pkt = fu_qc_firehose_sahara_pkt_parse(buf->data, buf->len, 0x0, error);
 		if (pkt == NULL)
@@ -1064,6 +1075,13 @@ fu_qc_firehose_device_sahara_write_firmware(FuQcFirehoseDevice *self,
 				    fu_qc_firehose_sahara_command_id_to_string(cmd_id));
 			return FALSE;
 		}
+	}
+	if (!done) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "transferring sahara never completed");
+		return FALSE;
 	}
 
 	/* success */

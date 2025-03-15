@@ -1172,6 +1172,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	};
 	const gchar *external_plugins[] = {
 	    "flashrom",
+	    "modem-manager",
 	};
 
 	/* no metadata in daemon */
