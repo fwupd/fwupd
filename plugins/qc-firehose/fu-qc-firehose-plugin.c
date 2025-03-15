@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-qc-firehose-device.h"
 #include "fu-qc-firehose-plugin.h"
+#include "fu-qc-firehose-usb-device.h"
 
 struct _FuQcFirehosePlugin {
 	FuPlugin parent_instance;
@@ -24,7 +24,7 @@ static void
 fu_qc_firehose_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_FIREHOSE_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_QC_FIREHOSE_USB_DEVICE);
 }
 
 static void
