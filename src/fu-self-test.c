@@ -1190,7 +1190,7 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 							      NULL));
 		}
 		external_plugindir = fu_strjoin(",", external_plugin_dirs);
-		g_setenv("FWUPD_LIBDIR_PKG", external_plugindir, TRUE);
+		(void)g_setenv("FWUPD_LIBDIR_PKG", external_plugindir, TRUE);
 	}
 
 	/* load all plugins */

@@ -32,8 +32,10 @@ def test_files() -> int:
                 gtype: str = ""
                 if line.startswith("G_DEFINE_TYPE("):
                     gtype = line[14:].split(",")[0]
-                if line.startswith("G_DEFINE_TYPE_WITH_PRIVATE("):
+                elif line.startswith("G_DEFINE_TYPE_WITH_PRIVATE("):
                     gtype = line[27:].split(",")[0]
+                elif line.startswith("G_DEFINE_TYPE_WITH_CODE("):
+                    gtype = line[24:].split(",")[0]
                 if gtype_is_valid(gtype):
                     gtypes.append(gtype)
 
