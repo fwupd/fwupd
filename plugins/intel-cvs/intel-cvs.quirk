@@ -21,5 +21,5 @@ Plugin = intel_cvs
 # Synaptics Foo Bar Baz
 #[I2C\NAME_INTC10DE:00&VID_06CB&PID_0701]
 #IntelCvsMaxDownloadTime = 200000
-#IntelCvsMaxFlashTime = 200000
 #IntelCvsMaxRetryCount = 5
+#RemoveDelay = 200000

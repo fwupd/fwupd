@@ -23,13 +23,6 @@ struct FuStructIntelCvsFirmwareHdr {
     header_checksum: u32le,
 }
 
-#[derive(ToString)]
-#[repr(u8)]
-enum FuIntelCvsDevstate {
-    Unknown,
-    Failed, // FIXME WHAT ARE THESE ENUMS
-}
-
 // CV SoC device status */
 #[repr(u8)]
 enum FuIntelCvsDeviceState {
@@ -98,7 +91,7 @@ struct FuStructIntelCvsWrite {
 
 #[derive(ParseBytes)]
 struct FuStructIntelCvsStatus {
-    dev_state: FuIntelCvsDevstate,
+    dev_state: FuIntelCvsDeviceState,
     fw_upd_retries: u32le,
     total_packets: u32le,
     num_packets_sent: u32le,

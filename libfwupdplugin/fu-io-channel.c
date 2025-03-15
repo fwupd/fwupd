@@ -212,7 +212,7 @@ fu_io_channel_write_stream(FuIOChannel *self,
 					       .timeout_ms = timeout_ms,
 					       .flags = flags};
 	g_return_val_if_fail(FU_IS_IO_CHANNEL(self), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(self), FALSE);
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	return fu_input_stream_chunkify(stream, fu_io_channel_write_stream_cb, &helper, error);
 }

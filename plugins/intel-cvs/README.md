@@ -50,12 +50,6 @@ The device maximum download time in ms, which defaults to 200s.
 
 Since: 2.0.7
 
-### IntelCvsMaxFlashTime
-
-The device maximum flash time in ms, which defaults to 200s.
-
-Since: 2.0.7
-
 ### IntelCvsMaxRetryCount
 
 The device maximum retry count, which defaults to 5.

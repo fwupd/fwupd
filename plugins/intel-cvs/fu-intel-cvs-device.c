@@ -15,7 +15,6 @@
 struct _FuIntelCvsDevice {
 	FuI2cDevice parent_instance;
 	guint32 max_download_time;
-	guint32 max_flash_time;
 	guint32 max_retry_count;
 };
 
@@ -26,7 +25,6 @@ fu_intel_cvs_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuIntelCvsDevice *self = FU_INTEL_CVS_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "MaxDownloadTime", self->max_download_time);
-	fwupd_codec_string_append_hex(str, idt, "MaxFlashTime", self->max_flash_time);
 	fwupd_codec_string_append_hex(str, idt, "MaxRetryCount", self->max_retry_count);
 }
 
@@ -56,7 +54,7 @@ fu_intel_cvs_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 
 	/* build the version */
-	version = g_strdup_printf("%u.%u.%u.%u",
+	version = g_strdup_printf("%x.%x.%x.%x",
 				  fu_struct_intel_cvs_probe_get_major(st_probe),
 				  fu_struct_intel_cvs_probe_get_minor(st_probe),
 				  fu_struct_intel_cvs_probe_get_hotfix(st_probe),
@@ -131,7 +129,6 @@ fu_intel_cvs_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_intel_cvs_device_check_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuIntelCvsDevstate devstate;
 	FuProgress *progress = FU_PROGRESS(user_data);
 	g_autoptr(FuStructIntelCvsStatus) st_status = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -157,15 +154,6 @@ fu_intel_cvs_device_check_status_cb(FuDevice *device, gpointer user_data, GError
 				    "waiting for update to complete");
 		return FALSE;
 	}
-	devstate = fu_struct_intel_cvs_status_get_dev_state(st_status);
-	if (devstate != FU_INTEL_CVS_DEVSTATE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed; devstate was %s",
-			    fu_intel_cvs_devstate_to_string(devstate));
-		return FALSE;
-	}
 
 	/* this will be implemented in the future release */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
@@ -185,6 +173,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuIOChannel) io_payload = NULL;
 	g_autoptr(FuStructIntelCvsWrite) st_write = fu_struct_intel_cvs_write_new();
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* get default image */
@@ -209,7 +198,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 
 	/* write */
 	fu_struct_intel_cvs_write_set_max_download_time(st_write, self->max_download_time);
-	fu_struct_intel_cvs_write_set_max_flash_time(st_write, self->max_flash_time);
+	fu_struct_intel_cvs_write_set_max_flash_time(st_write, fu_device_get_remove_delay(device));
 	fu_struct_intel_cvs_write_set_max_fwupd_retry_count(st_write, self->max_retry_count);
 	fu_struct_intel_cvs_write_set_fw_bin_fd(st_write, fu_io_channel_unix_get_fd(io_payload));
 	if (!fu_udev_device_write_sysfs_byte_array(FU_UDEV_DEVICE(self),
@@ -220,13 +209,23 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* poll the status */
-	return fu_device_retry_full(device,
-				    fu_intel_cvs_device_check_status_cb,
-				    (self->max_flash_time + self->max_flash_time) *
-					self->max_retry_count / 1000,
-				    1000, /* ms */
-				    progress,
-				    error);
+	if (!fu_device_retry_full(device,
+				  fu_intel_cvs_device_check_status_cb,
+				  self->max_download_time * self->max_retry_count / 1000,
+				  1000, /* ms */
+				  progress,
+				  &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
+
+	/* wait for hardware to re-appear */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
 }
 
 static gboolean
@@ -243,13 +242,6 @@ fu_intel_cvs_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->max_download_time = tmp;
-		return TRUE;
-	}
-	if (g_strcmp0(key, "IntelCvsMaxFlashTime") == 0) {
-		guint64 tmp = 0;
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
-			return FALSE;
-		self->max_flash_time = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "IntelCvsMaxRetryCount") == 0) {
@@ -284,8 +276,8 @@ static void
 fu_intel_cvs_device_init(FuIntelCvsDevice *self)
 {
 	self->max_download_time = 200000;
-	self->max_flash_time = 200000;
 	self->max_retry_count = 5;
+	fu_device_set_remove_delay(FU_DEVICE(self), 200000);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.cvs");
@@ -298,6 +290,7 @@ fu_intel_cvs_device_init(FuIntelCvsDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), "camera-video");
 	fu_device_set_name(FU_DEVICE(self), "Camera");
 	fu_device_set_summary(FU_DEVICE(self), "Computer Vision Sensing Camera");
+	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, NULL);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_intel_cvs_device_vid_notify_cb),
