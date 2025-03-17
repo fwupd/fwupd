@@ -12,3 +12,6 @@ G_DECLARE_FINAL_TYPE(FuRedfishPlugin, fu_redfish_plugin, FU, REDFISH_PLUGIN, FuP
 
 void
 fu_redfish_plugin_set_credentials(FuPlugin *plugin, const gchar *username, const gchar *password);
+
+gboolean
+fu_redfish_plugin_reload(FuPlugin *plugin, FuProgress *progress, GError **error);
