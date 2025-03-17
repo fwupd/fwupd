@@ -23,6 +23,7 @@ typedef struct {
 	FuPlugin *smc_plugin;
 	FuPlugin *unlicensed_plugin;
 	FuPlugin *hpe_plugin;
+	FuPlugin *dell_plugin;
 } FuTest;
 
 static void
@@ -98,6 +99,7 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_runner_startup(self->hpe_plugin, progress, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");
+		g_clear_error(&error);
 	} else {
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -118,6 +120,27 @@ fu_test_self_init(FuTest *self)
 
 		fu_backend_invalidate(backend);
 		ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+
+	/* Dell BMC */
+	self->dell_plugin = fu_plugin_new_from_gtype(fu_redfish_plugin_get_type(), ctx);
+	ret = fu_plugin_runner_startup(self->dell_plugin, progress, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+		g_test_skip("no redfish.py running");
+	} else {
+		g_assert_no_error(error);
+		g_assert_true(ret);
+
+		fu_redfish_plugin_set_credentials(self->dell_plugin, "dell_username", "password2");
+		/* We just changed the credentials and need to resetup again to discover the vendor
+		 * Here we need to get a device to query the backend
+		 */
+		ret = fu_redfish_plugin_reload(self->dell_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+		ret = fu_plugin_runner_coldplug(self->dell_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
@@ -418,6 +441,27 @@ fu_test_redfish_smc_devices_func(gconstpointer user_data)
 }
 
 static void
+fu_test_redfish_dell_devices_func(gconstpointer user_data)
+{
+	FuDevice *dev;
+	FuTest *self = (FuTest *)user_data;
+	GPtrArray *devices;
+
+	devices = fu_plugin_get_devices(self->dell_plugin);
+	g_assert_nonnull(devices);
+	if (devices->len == 0) {
+		g_test_skip("no redfish support");
+		return;
+	}
+	g_assert_cmpint(devices->len, ==, 2);
+
+	dev = g_ptr_array_index(devices, 1);
+	g_assert_true(FU_IS_REDFISH_DEVICE(dev));
+	g_assert_true(
+	    fu_device_has_guid(dev, "REDFISH\\VENDOR_Lenovo&SYSTEMID_0C60&SOFTWAREID_UEFI-AFE1-6"));
+}
+
+static void
 fu_test_redfish_hpe_update_func(gconstpointer user_data)
 {
 	FuDevice *dev;
@@ -576,6 +620,8 @@ fu_test_self_free(FuTest *self)
 		g_object_unref(self->unlicensed_plugin);
 	if (self->hpe_plugin != NULL)
 		g_object_unref(self->hpe_plugin);
+	if (self->dell_plugin != NULL)
+		g_object_unref(self->dell_plugin);
 	g_free(self);
 }
 
@@ -620,6 +666,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/redfish/smc_plugin{update}", self, fu_test_redfish_smc_update_func);
 	g_test_add_data_func("/redfish/hpe_plugin{update}", self, fu_test_redfish_hpe_update_func);
 	g_test_add_data_func("/redfish/plugin{devices}", self, fu_test_redfish_devices_func);
+	g_test_add_data_func("/redfish/dell_plugin{devices}",
+			     self,
+			     fu_test_redfish_dell_devices_func);
 	g_test_add_data_func("/redfish/plugin{update}", self, fu_test_redfish_update_func);
 	return g_test_run();
 }

@@ -14,11 +14,13 @@ app = Flask(__name__)
 HARDCODED_SMC_USERNAME = "smc_username"
 HARDCODED_UNL_USERNAME = "unlicensed_username"
 HARDCODED_HPE_USERNAME = "hpe_username"
+HARDCODED_DELL_USERNAME = "dell_username"
 HARDCODED_USERNAMES = {
     "username2",
     HARDCODED_SMC_USERNAME,
     HARDCODED_UNL_USERNAME,
     HARDCODED_HPE_USERNAME,
+    HARDCODED_DELL_USERNAME,
 }
 HARDCODED_PASSWORD = "password2"
 
@@ -64,6 +66,40 @@ def index():
     if request.authorization["username"] == HARDCODED_HPE_USERNAME:
         res["Vendor"] = "HPE"
 
+    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+        res["Vendor"] = "Dell"
+
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Systems")
+def systems():
+    res = {
+        "@odata.id": "/redfish/v1/Systems",
+        "@odata.type": "#ComputerSystemCollection.ComputerSystemCollection",
+        "Members": [
+            {"@odata.id": "/redfish/v1/Systems/System.Embedded.1"},
+        ],
+        "Members@odata.count": 1,
+    }
+    return Response(json.dumps(res), status=200, mimetype="application/json")
+
+
+@app.route("/redfish/v1/Systems/System.Embedded.1")
+def system():
+    res = {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1",
+        "@odata.type": "#ComputerSystem.v1_20_1.ComputerSystem",
+    }
+
+    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+        res["Oem"] = {
+            "Dell": {
+                "DellSystem": {
+                    "SystemID": 3168,
+                }
+            }
+        }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -156,6 +192,9 @@ def firmware_inventory_bmc():
         res["Manufacturer"] = "SMCI"
     else:
         res["Manufacturer"] = "Lenovo"
+
+    if request.authorization["username"] == HARDCODED_DELL_USERNAME:
+        res["Oem"] = {"Dell": {"DellSoftwareInventory": {"Status": "Installed"}}}
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
