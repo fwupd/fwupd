@@ -1,5 +1,5 @@
 {%- if Parent == 'Udev' -%}
-if enable_udev
+if host_machine.system() == 'linux'
 {%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
 

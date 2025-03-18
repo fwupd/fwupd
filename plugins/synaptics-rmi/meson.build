@@ -1,4 +1,4 @@
-if gnutls.found() and enable_udev
+if gnutls.found() and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

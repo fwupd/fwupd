@@ -1,4 +1,4 @@
-if enable_udev
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
