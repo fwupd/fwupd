@@ -1,4 +1,4 @@
-if enable_udev and libdrm_amdgpu.found() and get_option('plugin_amdgpu').allowed()
+if enable_udev and libdrm_amdgpu.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdGpu"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
