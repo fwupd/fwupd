@@ -186,10 +186,6 @@ option('plugin_redfish',
   type: 'feature',
   description: 'Redfish support',
 )
-option('plugin_scsi',
-  type: 'feature',
-  description: 'SCSI support',
-)
 option('plugin_synaptics_mst',
   type: 'feature',
   description: 'Synaptics MST hub support',
