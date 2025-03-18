@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_LZMA
 #include <lzma.h>
-#endif
 
 #include "fu-lzma-common.h"
 
@@ -26,7 +24,6 @@
 GBytes *
 fu_lzma_decompress_bytes(GBytes *blob, GError **error)
 {
-#ifdef HAVE_LZMA
 	const gsize tmpbufsz = 0x20000;
 	lzma_ret rc;
 	lzma_stream strm = LZMA_STREAM_INIT;
@@ -67,10 +64,6 @@ fu_lzma_decompress_bytes(GBytes *blob, GError **error)
 		return NULL;
 	}
 	return g_bytes_new(buf->data, buf->len);
-#else
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "missing lzma support");
-	return NULL;
-#endif
 }
 
 /**
@@ -87,7 +80,6 @@ fu_lzma_decompress_bytes(GBytes *blob, GError **error)
 GBytes *
 fu_lzma_compress_bytes(GBytes *blob, GError **error)
 {
-#ifdef HAVE_LZMA
 	const gsize tmpbufsz = 0x20000;
 	lzma_ret rc;
 	lzma_stream strm = LZMA_STREAM_INIT;
@@ -127,8 +119,4 @@ fu_lzma_compress_bytes(GBytes *blob, GError **error)
 		return NULL;
 	}
 	return g_bytes_new(buf->data, buf->len);
-#else
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "missing lzma support");
-	return NULL;
-#endif
 }
