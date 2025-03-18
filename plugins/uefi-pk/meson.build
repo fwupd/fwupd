@@ -1,6 +1,4 @@
-if hsi and \
-   get_option('plugin_uefi_pk').require(gnutls.found(),
-   error_message: 'gnutls is needed for plugin_uefi_pk').allowed()
+if hsi and gnutls.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
