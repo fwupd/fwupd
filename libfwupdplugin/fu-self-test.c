@@ -6243,11 +6243,6 @@ fu_lzma_func(void)
 	g_autoptr(GBytes) blob_out = NULL;
 	g_autoptr(GError) error = NULL;
 
-#ifndef HAVE_LZMA
-	g_test_skip("not compiled with lzma support");
-	return;
-#endif
-
 	/* create a repeating pattern */
 	for (guint i = 0; i < 10000; i++) {
 		guint8 tmp = i % 8;

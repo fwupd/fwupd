@@ -109,10 +109,6 @@ option('lvfs',
   value: 'true',
   description: 'install LVFS remotes',
 )
-option('lzma',
-  type: 'feature',
-  description: 'LZMA support',
-)
 option('man',
   type: 'boolean',
   value: true,

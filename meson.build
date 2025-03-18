@@ -339,11 +339,7 @@ if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
 
-lzma = dependency('liblzma', required: get_option('lzma'))
-if lzma.found()
-  conf.set('HAVE_LZMA', '1')
-endif
-
+lzma = dependency('liblzma')
 cbor = dependency('libcbor', version: '>= 0.7.0', required: get_option('cbor'))
 if cbor.found()
   conf.set('HAVE_CBOR', '1')
@@ -720,7 +716,6 @@ summary({
   'libcurl': libcurl,
   'libdrm': libdrm,
   'valgrind': valgrind,
-  'lzma': lzma,
   'polkit': polkit,
   'python3': python3,
   'supported_build': supported_build,
