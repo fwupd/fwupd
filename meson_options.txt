@@ -61,10 +61,6 @@ option('gnutls',
   type: 'feature',
   description: 'GnuTLS support',
 )
-option('udev',
-  type: 'feature',
-  description: 'Linux UDev support',
-)
 option('hsi',
   type: 'feature',
   description: ' Host Security Information',
