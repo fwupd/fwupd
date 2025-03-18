@@ -38,6 +38,35 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.29" date="2025-03-18">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Prepend the missing capsule header also when using CoD</li>
+          <li>Support cabinet archives greater in size than 2GB</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not add a Redfish release date if set to 00:00:00Z</li>
+          <li>Do not add invalid CoSWID entities</li>
+          <li>Fix creating the Redfish user when the ETAG is set</li>
+          <li>Fix dbx deployment by ignoring missing PE/COFF sections</li>
+          <li>Fix writing EFI variables on new kernel versions</li>
+          <li>Include a SHA-256 checksum when using fwupdtool self-sign</li>
+          <li>Include the length in Wacom USB scaler update for future hardware support</li>
+          <li>Increase the timeout for RMM ack when updating Dell Kestrel docks</li>
+          <li>Mark the Redfish progress as finished even if the update never got to 100%</li>
+          <li>Set the Redfish MIME form-data filename correctly</li>
+          <li>Use the metadata version format to set the lowest possible version</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo USB-C Dual Display Travel Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.28" date="2025-01-28">
       <description>
         <p>
