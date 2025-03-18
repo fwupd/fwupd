@@ -73,11 +73,6 @@ option('introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',
 )
-option('launchd',
-  type: 'feature',
-  value: 'auto',
-  description: 'Launchd auto-launch support (MacOS only)',
-)
 option('launchd_agent_dir',
   type: 'string',
   value: '/Library/LaunchAgents',

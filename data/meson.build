@@ -190,7 +190,7 @@ if build_daemon
     )
   endif
 
-  if get_option('launchd').allowed() and launchctl.found()
+  if launchctl.found()
     con2 = configuration_data()
     con2.set('libexecdir', libexecdir)
     con2.set('dbus_socket_address', get_option('dbus_socket_address'))
