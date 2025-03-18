@@ -9,7 +9,7 @@ Write release entries:
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.9.29"
+export release_ver="1.9.30"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
@@ -33,7 +33,3 @@ gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 
 git commit -a -m "trivial: post release version bump" --no-verify
 git push
-
-7. Update flatpak package for new release:
-
-https://github.com/flathub/org.freedesktop.fwupd
