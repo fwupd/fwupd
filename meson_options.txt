@@ -163,10 +163,6 @@ option('plugin_uefi_capsule_splash',
   value: true,
   description: 'enable UEFI capsule splash support',
 )
-option('plugin_upower',
-  type: 'feature',
-  description: 'support for UPower',
-)
 option('polkit',
   type: 'feature',
   description: 'PolKit support in daemon',
