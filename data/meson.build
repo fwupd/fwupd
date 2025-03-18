@@ -96,6 +96,7 @@ if build_daemon
       'char-drm',
       'char-gpiochip',
       'char-hidraw',
+      'char-mei',
       'char-usb',
       'char-usb_device',
     ]
@@ -107,9 +108,6 @@ if build_daemon
     endif
     if get_option('plugin_tpm').allowed()
       device_allows += ['char-tpm']
-    endif
-    if get_option('plugin_intel_me').allowed()
-      device_allows += ['char-mei']
     endif
     if get_option('plugin_uefi_capsule').allowed()
       # for BLKSSZGET
