@@ -287,11 +287,6 @@ option('plugin_upower',
   type: 'feature',
   description: 'support for UPower',
 )
-option('plugin_vendor_example',
-  type: 'boolean',
-  value: false,
-  description: 'enable vendor example support',
-)
 option('polkit',
   type: 'feature',
   description: 'PolKit support in daemon',
