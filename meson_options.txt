@@ -138,10 +138,6 @@ option('p2p_policy',
   value: 'metadata',
   description: 'Default P2P sharing policy',
 )
-option('plugin_acpi_phat',
-  type: 'feature',
-  description: 'ACPI PHAT support',
-)
 option('plugin_amdgpu',
   type: 'feature',
   description: 'AMDGPU support',
