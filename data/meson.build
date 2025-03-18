@@ -116,38 +116,36 @@ if build_daemon
     endforeach
 
     # allow-list, see `systemd-analyze syscall-filter` for what each group adds
-    if get_option('systemd_syscall_filter')
-      syscall_filter = [
-        '@basic-io',
-        '@file-system',
-        '@io-event',
-        '@ipc',
-        '@network-io',
-        '@process',
-        '@sync',
-        '@signal',  # for g_local_file_monitor_new
-        '@timer',   # for usbi_create_timer
-        '@chown',   # for sqlite3Step
-        'ioctl',
-        'uname',
-        'fadvise64',
-        'sysinfo',  # for sysconf
-        'madvise',  # for mtrim
-        'mremap',   # for g_realloc
-        'splice', 'vmsplice', 'copy_file_range', # for g_file_copy
-      ]
-      if allow_flashrom
-        syscall_filter += ['@raw-io']
-      endif
-      dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
-      if supported_build
-        dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
-        dynamic_options += ['SystemCallErrorNumber=EPERM']
-      else
-        # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS
-        # and then can do `coredumpctl debug` and get the syscall number with `(gdb) p $rax`
-        dynamic_options += ['SystemCallErrorNumber=SIGSYS']
-      endif
+    syscall_filter = [
+      '@basic-io',
+      '@file-system',
+      '@io-event',
+      '@ipc',
+      '@network-io',
+      '@process',
+      '@sync',
+      '@signal',  # for g_local_file_monitor_new
+      '@timer',   # for usbi_create_timer
+      '@chown',   # for sqlite3Step
+      'ioctl',
+      'uname',
+      'fadvise64',
+      'sysinfo',  # for sysconf
+      'madvise',  # for mtrim
+      'mremap',   # for g_realloc
+      'splice', 'vmsplice', 'copy_file_range', # for g_file_copy
+    ]
+    if allow_flashrom
+      syscall_filter += ['@raw-io']
+    endif
+    dynamic_options += ['SystemCallFilter=' + ' '.join(syscall_filter)]
+    if supported_build
+      dynamic_options += ['Environment="FWUPD_SYSCALL_FILTER=systemd"']
+      dynamic_options += ['SystemCallErrorNumber=EPERM']
+    else
+      # to debug what additional syscalls are required, we set SystemCallErrorNumber=SIGSYS
+      # and then can do `coredumpctl debug` and get the syscall number with `(gdb) p $rax`
+      dynamic_options += ['SystemCallErrorNumber=SIGSYS']
     endif
     if not supported_build
       dynamic_options += ['Environment="G_DEBUG=fatal-criticals"']
