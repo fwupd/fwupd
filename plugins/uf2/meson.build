@@ -1,6 +1,4 @@
-
-if get_option('plugin_uf2').require(enable_udev,
-    error_message: 'udev is needed for plugin_uf2').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
