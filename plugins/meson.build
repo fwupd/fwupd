@@ -139,10 +139,6 @@ plugins = {
   'wistron-dock': false,
 }
 
-if get_option('plugin_vendor_example')
-  plugins += {'vendor-example': false}
-endif
-
 umockdev_tests = []
 umockdev_ioctls = []
 device_tests = []
