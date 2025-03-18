@@ -68,10 +68,10 @@ def find_uefi_device(client, deviceid):
             if item.get_id() != deviceid:
                 continue
         # internal
-        if not item.has_flag(1 << 0):
+        if not item.has_flag(Fwupd.DeviceFlags.INTERNAL):
             continue
         # needs reboot
-        if not item.has_flag(1 << 8):
+        if not item.has_flag(Fwupd.DeviceFlags.NEEDS_REBOOT):
             continue
         # return the first hit for UEFI plugin
         if item.get_plugin() == "uefi" or item.get_plugin() == "uefi_capsule":
