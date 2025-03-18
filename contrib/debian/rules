@@ -38,7 +38,7 @@ ifneq ($(filter nodoc,$(DEB_BUILD_PROFILES)),)
 	CONFARGS += -Ddocs=disabled
 endif
 
-CONFARGS += -Dplugin_powerd=disabled -Dplugin_modem_manager=enabled
+CONFARGS += -Dplugin_modem_manager=enabled
 
 %:
 	dh $@ --with gir

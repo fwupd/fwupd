@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <unistd.h>
+
 #include "fu-powerd-plugin.h"
 
 struct _FuPowerdPlugin {

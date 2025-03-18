@@ -21,7 +21,6 @@ meson setup .. \
 	-Dplugin_uefi_capsule=disabled \
 	-Dplugin_modem_manager=disabled \
 	-Dplugin_msr=disabled \
-	-Dplugin_powerd=disabled \
 	-Dintrospection=false \
 	-Dlibxmlb:introspection=false \
 	-Dlibxmlb:gtkdoc=false \
