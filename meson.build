@@ -428,7 +428,7 @@ if cc.has_header('malloc.h')
 	 conf.set('HAVE_MALLOC_TRIM', '1')
   endif
 endif
-has_cpuid = cc.has_header_symbol('cpuid.h', '__get_cpuid_count', required: get_option('plugin_msr'))
+has_cpuid = cc.has_header_symbol('cpuid.h', '__get_cpuid_count', required: false)
 if has_cpuid
   conf.set('HAVE_CPUID_H', '1')
 endif

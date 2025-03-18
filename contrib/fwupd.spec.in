@@ -245,11 +245,6 @@ fwupd wrapper for Qubes OS
 %else
     -Dplugin_flashrom=disabled \
 %endif
-%if 0%{?have_msr}
-    -Dplugin_msr=enabled \
-%else
-    -Dplugin_msr=disabled \
-%endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \
 %else
