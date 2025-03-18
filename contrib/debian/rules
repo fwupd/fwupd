@@ -24,12 +24,6 @@ else
 	CONFARGS += -Dplugin_flashrom=disabled
 endif
 
-ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
-	CONFARGS += -Dplugin_msr=enabled
-else
-	CONFARGS += -Dplugin_msr=disabled
-endif
-
 ifneq ($(QUBES_OPTION),)
 	CONFARGS += -Dqubes=true
 endif

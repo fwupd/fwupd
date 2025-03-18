@@ -19,7 +19,6 @@ meson setup .. \
 	--werror \
 	-Dplugin_flashrom=disabled \
 	-Dplugin_modem_manager=disabled \
-	-Dplugin_msr=disabled \
 	-Dintrospection=false \
 	-Dlibxmlb:introspection=false \
 	-Dlibxmlb:gtkdoc=false \
