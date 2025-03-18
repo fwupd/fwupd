@@ -150,10 +150,6 @@ option('plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
 )
-option('plugin_kinetic_dp',
-  type: 'feature',
-  description: 'Kinetic SST/MST DisplayPort converter support',
-)
 option('plugin_logitech_bulkcontroller',
   type: 'feature',
   description: 'Logitech bulk controller support',
