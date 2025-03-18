@@ -250,11 +250,6 @@ fwupd wrapper for Qubes OS
 %else
     -Dplugin_msr=disabled \
 %endif
-%if 0%{?have_uefi}
-    -Dplugin_uefi_capsule=enabled \
-%else
-    -Dplugin_uefi_capsule=disabled \
-%endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \
 %else

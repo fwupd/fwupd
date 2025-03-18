@@ -107,7 +107,7 @@ if build_daemon
     if cc.has_header('linux/nvme_ioctl.h', required: false)
       device_allows += ['char-nvme']
     endif
-    if get_option('plugin_uefi_capsule').allowed()
+    if allow_uefi_capsule
       # for BLKSSZGET
       device_allows += ['block-blkext']
     endif
