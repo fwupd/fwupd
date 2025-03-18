@@ -1,4 +1,4 @@
-if get_option('plugin_pixart_rf').disable_auto_if(host_machine.system() != 'linux').allowed()
+if cc.has_header('linux/hidraw.h', required: false)
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

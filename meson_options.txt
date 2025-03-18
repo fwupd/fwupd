@@ -214,10 +214,6 @@ option('plugin_parade_lspcon',
   type: 'feature',
   description: 'Parade LSPCON support',
 )
-option('plugin_pixart_rf',
-  type: 'feature',
-  description: 'PixartRF support',
-)
 option('plugin_powerd',
   type: 'feature',
   description: 'support for powerd',
