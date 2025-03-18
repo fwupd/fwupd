@@ -1,6 +1,4 @@
-if get_option('plugin_emmc').require(enable_udev,
-    error_message: 'udev is needed for plugin_emmc').allowed()
-
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

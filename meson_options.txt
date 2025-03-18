@@ -146,10 +146,6 @@ option('plugin_bcm57xx',
   type: 'feature',
   description: 'BCM57xx support',
 )
-option('plugin_emmc',
-  type: 'feature',
-  description: 'eMMC support',
-)
 option('plugin_ep963x',
   type: 'feature',
   description: 'EP963x support',
