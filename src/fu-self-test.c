@@ -7185,7 +7185,7 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* no -Dplugin_nvme=enabled */
+	/* no linux/nvme_ioctl.h */
 	if (fu_engine_get_plugin_by_name(engine, "nvme", &error) == NULL) {
 		g_test_skip(error->message);
 		return;
