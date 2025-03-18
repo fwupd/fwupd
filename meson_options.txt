@@ -178,10 +178,6 @@ option('plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
 )
-option('plugin_gpio',
-  type: 'feature',
-  description: 'Linux GPIO support',
-)
 option('plugin_igsc',
   type: 'feature',
   description: 'Intel Graphics System Controller support',
