@@ -21,11 +21,6 @@
 %global have_uefi 1
 %endif
 
-# gpio.h is only available on these arches
-%ifarch x86_64 aarch64
-%global have_gpio 1
-%endif
-
 # flashrom is only available on these arches
 %ifarch i686 x86_64 armv7hl aarch64 ppc64le riscv64
 %global have_flashrom 1
@@ -254,11 +249,6 @@ fwupd wrapper for Qubes OS
     -Dplugin_msr=enabled \
 %else
     -Dplugin_msr=disabled \
-%endif
-%if 0%{?have_gpio}
-    -Dplugin_gpio=enabled \
-%else
-    -Dplugin_gpio=disabled \
 %endif
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=enabled \

@@ -1,4 +1,4 @@
-gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: get_option('plugin_gpio'))
+gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: false)
 
 if gpio_header and enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
