@@ -1,4 +1,4 @@
-if enable_udev and get_option('plugin_mtd').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdKria"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
