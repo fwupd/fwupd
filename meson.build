@@ -275,10 +275,7 @@ if libblkid.found()
   conf.set('HAVE_BLKID', '1')
 endif
 valgrind = dependency('valgrind', required: get_option('valgrind'))
-libcurl = dependency('libcurl', version: '>= 7.62.0', required: get_option('curl'))
-if libcurl.found()
-  conf.set('HAVE_LIBCURL', '1')
-endif
+libcurl = dependency('libcurl', version: '>= 7.62.0')
 libdrm = dependency('libdrm', required: get_option('libdrm'))
 if libdrm.found()
   conf.set('HAVE_LIBDRM' , '1')
@@ -707,7 +704,6 @@ summary({
   'gnutls': gnutls,
   'introspection': introspection.allowed(),
   'libblkid': libblkid,
-  'libcurl': libcurl,
   'libdrm': libdrm,
   'valgrind': valgrind,
   'polkit': polkit,

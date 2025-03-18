@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
-#endif
 #include <jcat.h>
 
 #include "fwupd-codec.h"
@@ -80,11 +78,9 @@ G_DEFINE_TYPE_EXTENDED(FwupdRemote,
 
 #define GET_PRIVATE(o) (fwupd_remote_get_instance_private(o))
 
-#ifdef HAVE_LIBCURL
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
-#endif
 
 /**
  * fwupd_remote_flag_to_string:
@@ -517,7 +513,6 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		       GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-#ifdef HAVE_LIBCURL
 	g_autofree gchar *url = NULL;
 	g_autoptr(curlptr) tmp_uri = NULL;
 	g_autoptr(CURLU) uri = curl_url();
@@ -596,17 +591,6 @@ fwupd_remote_build_uri(FwupdRemote *self,
 	}
 	(void)curl_url_get(uri, CURLUPART_URL, &tmp_uri, 0);
 	return g_strdup(tmp_uri);
-#else
-	if (priv->firmware_base_uri != NULL) {
-		g_autofree gchar *basename = g_path_get_basename(url_noauth);
-		return g_build_filename(priv->firmware_base_uri, basename, NULL);
-	}
-	if (g_strstr_len(url_noauth, -1, "/") == NULL) {
-		g_autofree gchar *basename = g_path_get_dirname(priv->metadata_uri);
-		return g_build_filename(basename, url_noauth, NULL);
-	}
-	return g_strdup(url_noauth);
-#endif
 }
 
 /**

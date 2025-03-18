@@ -12,9 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <xmlb.h>
-#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
-#endif
 
 #include "fu-console.h"
 #include "fu-device-private.h"
@@ -2848,20 +2846,13 @@ fu_util_modify_remote_warning(FuConsole *console,
 	return TRUE;
 }
 
-#ifdef HAVE_LIBCURL
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
-#endif
 
 gboolean
 fu_util_is_url(const gchar *perhaps_url)
 {
-#ifdef HAVE_LIBCURL
 	g_autoptr(CURLU) h = curl_url();
 	return curl_url_set(h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
-#else
-	return g_str_has_prefix(perhaps_url, "http://") ||
-	       g_str_has_prefix(perhaps_url, "https://");
-#endif
 }
 
 gboolean

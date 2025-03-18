@@ -33,4 +33,5 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 SystemCallArchitectures=native
 Environment="GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK"
+RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
 @dynamic_options@
