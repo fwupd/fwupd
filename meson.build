@@ -527,11 +527,6 @@ if libsystemd.found()
   endif
 endif
 
-elogind = dependency('systemd', 'libelogind', required: get_option('elogind'))
-if elogind.found()
-  conf.set('HAVE_LOGIND' , '1')
-endif
-
 consolekit = get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
 if consolekit
   conf.set('HAVE_CONSOLEKIT' , '1')
@@ -724,7 +719,6 @@ summary({
   'dbus_socket_address': get_option('dbus_socket_address'),
   'vendor_ids_dir': vendor_ids_dir,
   'docs': build_docs,
-  'elogind': elogind,
   'gnutls': gnutls,
   'introspection': introspection.allowed(),
   'libblkid': libblkid,

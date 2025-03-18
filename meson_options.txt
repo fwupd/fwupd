@@ -47,10 +47,6 @@ option('efi_os_dir',
   type: 'string',
   description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
 )
-option('elogind',
-  type: 'feature',
-  description: 'elogind support',
-)
 option('firmware-packager',
   type: 'boolean',
   value: true,

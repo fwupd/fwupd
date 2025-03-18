@@ -1,4 +1,4 @@
-if libsystemd.found() or elogind.found()
+if libsystemd.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
