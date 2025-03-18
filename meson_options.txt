@@ -186,11 +186,6 @@ option('systemd_unit_user',
   value: 'fwupd-refresh',
   description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
 )
-option('systemd_syscall_filter',
-  type: 'boolean',
-  value: true,
-  description: 'Enable systemd syscall filter',
-)
 option('tests',
   type: 'boolean',
   value: true,
