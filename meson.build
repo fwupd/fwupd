@@ -472,15 +472,13 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
-launchctl = find_program('launchctl',
-  required: get_option('launchd').disable_auto_if(host_machine.system() != 'darwin').allowed(),
-)
+launchctl = find_program('launchctl', required: host_machine.system() == 'darwin')
 
 # this is way less hassle than including TargetConditionals.h and looking for TARGET_OS_MAC=1
 if host_machine.system() == 'darwin'
   conf.set('HOST_MACHINE_SYSTEM_DARWIN', '1')
   summary({
-    'launchd': launchctl,
+    'launchctl': launchctl,
     'launchd_agent_dir': get_option('launchd_agent_dir'),
   }, section: 'Darwin options')
 endif
