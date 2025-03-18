@@ -252,10 +252,8 @@ fwupd wrapper for Qubes OS
 %endif
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=enabled \
-    -Dplugin_tpm=enabled \
 %else
     -Dplugin_uefi_capsule=disabled \
-    -Dplugin_tpm=disabled \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \
