@@ -142,10 +142,6 @@ option('plugin_amdgpu',
   type: 'feature',
   description: 'AMDGPU support',
 )
-option('plugin_android_boot',
-  type: 'feature',
-  description: 'Android Boot support',
-)
 option('plugin_bcm57xx',
   type: 'feature',
   description: 'BCM57xx support',
