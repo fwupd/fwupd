@@ -438,6 +438,7 @@ fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+#ifdef HAVE_UTSNAME_H
 static void
 fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
@@ -450,6 +451,7 @@ fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs
 	fu_cpu_device_add_security_attrs_cet_active(self, attrs);
 	fu_cpu_device_add_security_attrs_smap(self, attrs);
 }
+#endif
 
 static void
 fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
