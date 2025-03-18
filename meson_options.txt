@@ -178,10 +178,6 @@ option('plugin_powerd',
   type: 'feature',
   description: 'support for powerd',
 )
-option('plugin_realtek_mst',
-  type: 'feature',
-  description: 'Realtek MST hub support',
-)
 option('plugin_redfish',
   type: 'feature',
   description: 'Redfish support',
