@@ -138,10 +138,6 @@ option('p2p_policy',
   value: 'metadata',
   description: 'Default P2P sharing policy',
 )
-option('plugin_bcm57xx',
-  type: 'feature',
-  description: 'BCM57xx support',
-)
 option('plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
