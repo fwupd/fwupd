@@ -97,6 +97,7 @@ if build_daemon
       'char-gpiochip',
       'char-hidraw',
       'char-mei',
+      'char-tpm',
       'char-usb',
       'char-usb_device',
     ]
@@ -105,9 +106,6 @@ if build_daemon
     endif
     if cc.has_header('linux/nvme_ioctl.h', required: false)
       device_allows += ['char-nvme']
-    endif
-    if get_option('plugin_tpm').allowed()
-      device_allows += ['char-tpm']
     endif
     if get_option('plugin_uefi_capsule').allowed()
       # for BLKSSZGET

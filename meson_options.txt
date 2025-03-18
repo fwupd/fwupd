@@ -166,10 +166,6 @@ option('plugin_redfish',
   type: 'feature',
   description: 'Redfish support',
 )
-option('plugin_tpm',
-  type: 'feature',
-  description: 'TPM support',
-)
 option('plugin_uefi_capsule',
   type: 'feature',
   description: 'UEFI capsule support',
