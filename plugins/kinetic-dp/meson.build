@@ -1,5 +1,4 @@
-if get_option('plugin_kinetic_dp').require(enable_udev,
-    error_message: 'udev is needed for plugin_kinetic_dp').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginKineticDp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
