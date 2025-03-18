@@ -198,10 +198,6 @@ option('plugin_logitech_bulkcontroller',
   type: 'feature',
   description: 'Logitech bulk controller support',
 )
-option('plugin_logitech_scribe',
-  type: 'feature',
-  description: 'Logitech Scribe support',
-)
 option('plugin_logitech_tap',
   type: 'feature',
   description: 'Logitech Tap support',

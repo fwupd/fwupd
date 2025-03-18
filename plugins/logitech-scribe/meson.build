@@ -1,5 +1,4 @@
-if get_option('plugin_logitech_scribe').require(enable_udev,
-    error_message: 'usb and udev are needed for plugin_logitech_scribe').disable_auto_if(host_machine.system() != 'linux').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechScribe"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
