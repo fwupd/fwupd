@@ -8,7 +8,7 @@ typedef enum {
 {%- endfor %}
 } {{obj.c_type}};
 
-{%- if not obj.items_any_defaults %}
+{%- if not obj.items_any_defaults and not obj.item('Last') %}
 #define {{obj.c_define_last}} {{obj.items|length}}
 {%- endif %}
 
