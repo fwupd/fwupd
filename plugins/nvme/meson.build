@@ -1,8 +1,6 @@
-nvme_header = cc.has_header('linux/nvme_ioctl.h', required: get_option('plugin_nvme'))
+nvme_header = cc.has_header('linux/nvme_ioctl.h', required: false)
 
-if nvme_header and \
-   get_option('plugin_nvme').require(enable_udev,
-    error_message: 'udev is needed for plugin_nvme').allowed()
+if nvme_header and enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

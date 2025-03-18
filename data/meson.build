@@ -102,7 +102,7 @@ if build_daemon
     if allow_flashrom
       device_allows += ['char-mem']
     endif
-    if get_option('plugin_nvme').allowed()
+    if cc.has_header('linux/nvme_ioctl.h', required: false)
       device_allows += ['char-nvme']
     endif
     if get_option('plugin_tpm').allowed()
