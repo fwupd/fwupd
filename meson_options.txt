@@ -162,10 +162,6 @@ option('plugin_powerd',
   type: 'feature',
   description: 'support for powerd',
 )
-option('plugin_redfish',
-  type: 'feature',
-  description: 'Redfish support',
-)
 option('plugin_uefi_capsule',
   type: 'feature',
   description: 'UEFI capsule support',
