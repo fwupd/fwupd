@@ -1,5 +1,4 @@
-if get_option('plugin_realtek_mst').require(enable_udev,
-    error_message: 'udev is needed for plugin_realtek_mst').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
