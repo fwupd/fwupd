@@ -1,6 +1,6 @@
 tpm2tss_tpm = dependency('tss2-esys', version: '>= 2.0', required: false)
 
-if hsi and tpm2tss_tpm.found() and enable_udev
+if hsi and tpm2tss_tpm.found() and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

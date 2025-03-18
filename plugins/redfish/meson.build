@@ -1,4 +1,4 @@
-if enable_udev and libcurl.found()
+if host_machine.system() == 'linux' and libcurl.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 

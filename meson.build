@@ -219,8 +219,7 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-enable_udev = host_machine.system() == 'linux'
-if enable_udev
+if host_machine.system() == 'linux'
   conf.set('HAVE_UDEV', '1')
 endif
 if build_standalone
@@ -723,7 +722,6 @@ if build_daemon
   summary({
     'bluez': bluez.allowed(),
     'libusb': libusb,
-    'udev': enable_udev,
     'hsi': hsi,
     'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),
