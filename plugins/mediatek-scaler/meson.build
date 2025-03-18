@@ -1,5 +1,4 @@
-if get_option('plugin_mediatek_scaler').require(enable_udev,
-    error_message: 'udev is needed for plugin_mediatek_scaler').allowed()
+if enable_udev
 cargs = ['-DG_LOG_DOMAIN="FuPluginMediatekScaler"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
