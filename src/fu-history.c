@@ -10,9 +10,7 @@
 
 #include <glib/gstdio.h>
 #include <json-glib/json-glib.h>
-#ifdef HAVE_SQLITE
 #include <sqlite3.h>
-#endif
 #include <stdlib.h>
 
 #include "fwupd-security-attr-private.h"
@@ -46,14 +44,11 @@ fu_history_finalize(GObject *object);
 struct _FuHistory {
 	GObject parent_instance;
 	FuContext *ctx;
-#ifdef HAVE_SQLITE
 	sqlite3 *db;
-#endif
 };
 
 G_DEFINE_TYPE(FuHistory, fu_history, G_TYPE_OBJECT)
 
-#ifdef HAVE_SQLITE
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
@@ -701,7 +696,6 @@ fu_history_get_device_flags_filtered(FuDevice *device)
 	flags &= ~FWUPD_DEVICE_FLAG_SUPPORTED;
 	return flags;
 }
-#endif
 
 /**
  * fu_history_modify_device:
@@ -718,7 +712,6 @@ fu_history_get_device_flags_filtered(FuDevice *device)
 gboolean
 fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -776,7 +769,6 @@ fu_history_modify_device(FuHistory *self, FuDevice *device, GError **error)
 			    fu_device_get_id(device));
 		return FALSE;
 	}
-#endif
 	return TRUE;
 }
 
@@ -799,7 +791,6 @@ fu_history_modify_device_release(FuHistory *self,
 				 FuRelease *release,
 				 GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
@@ -852,9 +843,6 @@ fu_history_modify_device_release(FuHistory *self,
 	sqlite3_bind_text(stmt, 8, metadata, -1, SQLITE_STATIC);
 
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	return TRUE;
-#endif
 }
 
 /**
@@ -873,7 +861,6 @@ fu_history_modify_device_release(FuHistory *self,
 gboolean
 fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GError **error)
 {
-#ifdef HAVE_SQLITE
 	const gchar *checksum_device;
 	const gchar *checksum = NULL;
 	gint rc;
@@ -960,9 +947,6 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 	sqlite3_bind_int(stmt, 20, fu_device_get_install_duration(device));
 	sqlite3_bind_int(stmt, 21, fu_release_get_flags(release));
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	return TRUE;
-#endif
 }
 
 /**
@@ -979,7 +963,6 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FuRelease *release, GEr
 gboolean
 fu_history_remove_all(FuHistory *self, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1001,10 +984,6 @@ fu_history_remove_all(FuHistory *self, GError **error)
 		return FALSE;
 	}
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1022,7 +1001,6 @@ fu_history_remove_all(FuHistory *self, GError **error)
 gboolean
 fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1049,9 +1027,6 @@ fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 	}
 	sqlite3_bind_text(stmt, 1, fu_device_get_id(device), -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	return TRUE;
-#endif
 }
 
 /**
@@ -1069,7 +1044,6 @@ fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error)
 FuDevice *
 fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(GPtrArray) array_tmp = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
@@ -1126,10 +1100,6 @@ fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **er
 		return NULL;
 	}
 	return g_object_ref(g_ptr_array_index(array_tmp, 0));
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return NULL;
-#endif
 }
 
 /**
@@ -1147,7 +1117,6 @@ GPtrArray *
 fu_history_get_devices(FuHistory *self, GError **error)
 {
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-#ifdef HAVE_SQLITE
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 	gint rc;
 
@@ -1196,7 +1165,6 @@ fu_history_get_devices(FuHistory *self, GError **error)
 	}
 	if (!fu_history_stmt_exec(self, stmt, array, error))
 		return NULL;
-#endif
 	return g_steal_pointer(&array);
 }
 
@@ -1215,7 +1183,6 @@ GPtrArray *
 fu_history_get_approved_firmware(FuHistory *self, GError **error)
 {
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1253,7 +1220,6 @@ fu_history_get_approved_firmware(FuHistory *self, GError **error)
 			    sqlite3_errmsg(self->db));
 		return NULL;
 	}
-#endif
 	return g_steal_pointer(&array);
 }
 
@@ -1271,7 +1237,6 @@ fu_history_get_approved_firmware(FuHistory *self, GError **error)
 gboolean
 fu_history_clear_approved_firmware(FuHistory *self, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1292,10 +1257,6 @@ fu_history_clear_approved_firmware(FuHistory *self, GError **error)
 		return FALSE;
 	}
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1313,7 +1274,6 @@ fu_history_clear_approved_firmware(FuHistory *self, GError **error)
 gboolean
 fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1341,10 +1301,6 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 	}
 	sqlite3_bind_text(stmt, 1, checksum, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1361,9 +1317,8 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 GPtrArray *
 fu_history_get_blocked_firmware(FuHistory *self, GError **error)
 {
-	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
-#ifdef HAVE_SQLITE
 	gint rc;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
@@ -1397,7 +1352,6 @@ fu_history_get_blocked_firmware(FuHistory *self, GError **error)
 			    sqlite3_errmsg(self->db));
 		return NULL;
 	}
-#endif
 	return g_steal_pointer(&array);
 }
 
@@ -1415,7 +1369,6 @@ fu_history_get_blocked_firmware(FuHistory *self, GError **error)
 gboolean
 fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1436,10 +1389,6 @@ fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
 		return FALSE;
 	}
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1457,7 +1406,6 @@ fu_history_clear_blocked_firmware(FuHistory *self, GError **error)
 gboolean
 fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1485,10 +1433,6 @@ fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError *
 	}
 	sqlite3_bind_text(stmt, 1, checksum, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 gboolean
@@ -1497,7 +1441,6 @@ fu_history_add_security_attribute(FuHistory *self,
 				  const gchar *hsi_score,
 				  GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1525,10 +1468,6 @@ fu_history_add_security_attribute(FuHistory *self,
 	sqlite3_bind_text(stmt, 1, security_attr_json, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, hsi_score, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1547,11 +1486,10 @@ fu_history_add_security_attribute(FuHistory *self,
 GPtrArray *
 fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 {
-	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-#ifdef HAVE_SQLITE
-	g_autoptr(sqlite3_stmt) stmt = NULL;
 	gint rc;
 	guint old_hash = 0;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
 
@@ -1633,7 +1571,6 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 			    sqlite3_errmsg(self->db));
 		return NULL;
 	}
-#endif
 	return g_steal_pointer(&array);
 }
 
@@ -1652,7 +1589,6 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 gboolean
 fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1715,10 +1651,6 @@ fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **e
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1736,7 +1668,6 @@ fu_history_has_emulation_tag(FuHistory *self, const gchar *device_id, GError **e
 gboolean
 fu_history_add_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1764,10 +1695,6 @@ fu_history_add_emulation_tag(FuHistory *self, const gchar *device_id, GError **e
 	}
 	sqlite3_bind_text(stmt, 1, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 /**
@@ -1784,7 +1711,6 @@ fu_history_add_emulation_tag(FuHistory *self, const gchar *device_id, GError **e
 gboolean
 fu_history_remove_emulation_tag(FuHistory *self, const gchar *device_id, GError **error)
 {
-#ifdef HAVE_SQLITE
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
@@ -1811,20 +1737,14 @@ fu_history_remove_emulation_tag(FuHistory *self, const gchar *device_id, GError 
 	}
 	sqlite3_bind_text(stmt, 1, device_id, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no sqlite support");
-	return FALSE;
-#endif
 }
 
 static void
 fu_history_housekeeping_cb(FuContext *ctx, FuHistory *self)
 {
-#ifdef HAVE_SQLITE
 	sqlite3_release_memory(G_MAXINT32);
 	if (self->db != NULL)
 		sqlite3_db_release_memory(self->db);
-#endif
 }
 
 static void
@@ -1853,12 +1773,9 @@ fu_history_init(FuHistory *self)
 static void
 fu_history_finalize(GObject *object)
 {
-#ifdef HAVE_SQLITE
 	FuHistory *self = FU_HISTORY(object);
 	if (self->db != NULL)
 		sqlite3_close(self->db);
-#endif
-
 	G_OBJECT_CLASS(fu_history_parent_class)->finalize(object);
 }
 
