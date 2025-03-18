@@ -178,7 +178,7 @@ if build_daemon
     )
   endif
 
-  if libsystemd.found() or elogind.found()
+  if libsystemd.found()
     con2 = configuration_data()
     con2.set('libexecdir', libexecdir)
 
