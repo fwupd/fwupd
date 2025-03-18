@@ -149,7 +149,7 @@ struct FuStructQcStartDataReq {
 #[repr(u8)]
 enum FuQcMoreData {
     More,
-    Last,
+    LastPacket,
 }
 #[derive(Parse, Default)]
 #[repr(C, packed)]
