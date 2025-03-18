@@ -45,9 +45,8 @@ fu_logitech_rallysystem_plugin_device_added(FuPlugin *plugin, FuDevice *device)
 			for (guint i = 0; i < devices->len; i++) {
 				FuDevice *device_tmp = g_ptr_array_index(devices, i);
 				if (FU_IS_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device_tmp)) {
-					fu_device_set_version(
-					    device_tmp,
-					    strdup(fu_device_get_version(device)));
+					fu_device_set_version(device_tmp,
+							      fu_device_get_version(device));
 					g_debug("overwriting tablehub version to: %s",
 						fu_device_get_version(device));
 					break;
@@ -58,9 +57,8 @@ fu_logitech_rallysystem_plugin_device_added(FuPlugin *plugin, FuDevice *device)
 			for (guint i = 0; i < devices->len; i++) {
 				FuDevice *device_tmp = g_ptr_array_index(devices, i);
 				if (FU_IS_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE(device_tmp)) {
-					fu_device_set_version(
-					    device,
-					    strdup(fu_device_get_version(device_tmp)));
+					fu_device_set_version(device,
+							      fu_device_get_version(device_tmp));
 					g_debug("overwriting tablehub version to %s",
 						fu_device_get_version(device_tmp));
 					break;
