@@ -21,10 +21,6 @@ option('cbor',
   type: 'feature',
   description: 'CBOR support for coSWID and uSWID',
 )
-option('consolekit',
-  type: 'feature',
-  description: 'ConsoleKit support',
-)
 option('dbus_socket_address',
   type: 'string',
   value: '',

@@ -511,11 +511,6 @@ if libsystemd.found()
   endif
 endif
 
-consolekit = get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
-if consolekit
-  conf.set('HAVE_CONSOLEKIT' , '1')
-endif
-
 supported_build = get_option('supported_build').disable_auto_if(not tag).allowed()
 if supported_build
     conf.set('SUPPORTED_BUILD', '1')
@@ -697,7 +692,6 @@ summary({
 
 summary({
   'cbor': cbor,
-  'consolekit': consolekit,
   'dbus_socket_address': get_option('dbus_socket_address'),
   'vendor_ids_dir': vendor_ids_dir,
   'docs': build_docs,

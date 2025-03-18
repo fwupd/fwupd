@@ -210,24 +210,11 @@ fu_util_update_shutdown(GError **error)
 					  -1,
 					  NULL,
 					  error);
-#elif defined(HAVE_CONSOLEKIT)
-	/* shutdown using ConsoleKit */
-	val = g_dbus_connection_call_sync(connection,
-					  "org.freedesktop.ConsoleKit",
-					  "/org/freedesktop/ConsoleKit/Manager",
-					  "org.freedesktop.ConsoleKit.Manager",
-					  "Stop",
-					  NULL,
-					  NULL,
-					  G_DBUS_CALL_FLAGS_NONE,
-					  -1,
-					  NULL,
-					  error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_ARGS,
-			    "No supported backend compiled in to perform the operation.");
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "No way to perform the operation");
 #endif
 	return val != NULL;
 }
@@ -255,24 +242,11 @@ fu_util_update_reboot(GError **error)
 					  -1,
 					  NULL,
 					  error);
-#elif defined(HAVE_CONSOLEKIT)
-	/* reboot using ConsoleKit */
-	val = g_dbus_connection_call_sync(connection,
-					  "org.freedesktop.ConsoleKit",
-					  "/org/freedesktop/ConsoleKit/Manager",
-					  "org.freedesktop.ConsoleKit.Manager",
-					  "Restart",
-					  NULL,
-					  NULL,
-					  G_DBUS_CALL_FLAGS_NONE,
-					  -1,
-					  NULL,
-					  error);
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_ARGS,
-			    "No supported backend compiled in to perform the operation.");
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "No way to perform the operation");
 #endif
 	return val != NULL;
 }
