@@ -70,16 +70,14 @@ install_data([
   install_dir: join_paths(installed_test_datadir, 'tests')
 )
 
-if sqlite.found()
-  install_data([
-      'oui.txt',
-      'pci.ids',
-      'pnp.ids',
-      'usb.ids',
-    ],
-    install_dir: join_paths(installed_test_datadir, 'tests')
-  )
-endif
+install_data([
+  'oui.txt',
+  'pci.ids',
+  'pnp.ids',
+  'usb.ids',
+],
+install_dir: join_paths(installed_test_datadir, 'tests')
+)
 
 install_data([
     'lockdown/locked/lockdown',
