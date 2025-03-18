@@ -7335,7 +7335,7 @@ fu_test_engine_fake_mei(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* no -Dplugin_intel_me=enabled */
+	/* not linux */
 	if (fu_engine_get_plugin_by_name(engine, "intel_me", &error) == NULL) {
 		g_test_skip(error->message);
 		return;

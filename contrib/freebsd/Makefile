@@ -41,7 +41,6 @@ USE_LDCONFIG=	yes
 SHEBANG_GLOB=	*.py
 
 MESON_ARGS=	-Dudev=disabled \
-		-Dplugin_intel_me=false \
 		-Dpolkit=disabled \
 		-Dsystemd=disabled \
 		-Dtests=false \
