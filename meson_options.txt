@@ -222,10 +222,6 @@ option('plugin_mtd',
   type: 'feature',
   description: 'MTD support',
 )
-option('plugin_nitrokey',
-  type: 'feature',
-  description: 'Nitrokey support',
-)
 option('plugin_nvme',
   type: 'feature',
   description: 'NVMe support',
