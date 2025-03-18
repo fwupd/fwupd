@@ -648,7 +648,7 @@ if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')
 endif
 
-allow_uefi_capsule = get_option('plugin_uefi_capsule').disable_auto_if(host_machine.system() not in ['linux', 'freebsd']).allowed()
+allow_uefi_capsule = host_machine.system() in ['linux', 'freebsd']
 
 subdir('generate-build')
 subdir('libfwupd')

@@ -154,10 +154,6 @@ option('plugin_msr',
   type: 'feature',
   description: 'MSR support',
 )
-option('plugin_uefi_capsule',
-  type: 'feature',
-  description: 'UEFI capsule support',
-)
 option('plugin_uefi_capsule_splash',
   type: 'boolean',
   value: true,
