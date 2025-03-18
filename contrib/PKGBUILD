@@ -73,7 +73,6 @@ build() {
     export CI="--wrap-mode=default -Db_coverage=true"
   fi
   arch-meson -D b_lto=false $CI ../build \
-    -Dplugin_powerd=disabled \
     -Dlaunchd=disabled \
     -Ddocs=enabled \
     -Defi_binary=false \
