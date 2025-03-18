@@ -25,10 +25,6 @@ option('consolekit',
   type: 'feature',
   description: 'ConsoleKit support',
 )
-option('curl',
-  type: 'feature',
-  description: 'libcurl support',
-)
 option('dbus_socket_address',
   type: 'string',
   value: '',

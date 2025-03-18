@@ -83,11 +83,6 @@ if build_daemon
       dynamic_options += 'StateDirectory=fwupd'
       dynamic_options += 'CacheDirectory=fwupd'
     endif
-    if libcurl.found()
-      dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6'
-    else
-      dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
-    endif
 
     device_allows = [
       'block-sd',

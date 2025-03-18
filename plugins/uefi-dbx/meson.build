@@ -1,5 +1,3 @@
-# snapd integration has a hard dependency on curl
-if get_option('curl').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -95,5 +93,4 @@ if build_docs
     ],
   )
   man_md += ['"dbxtool.md"']
-endif
 endif
