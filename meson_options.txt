@@ -198,10 +198,6 @@ option('plugin_logitech_bulkcontroller',
   type: 'feature',
   description: 'Logitech bulk controller support',
 )
-option('plugin_mediatek_scaler',
-  type: 'feature',
-  description: 'Mediatek scaler support',
-)
 option('plugin_modem_manager',
   type: 'feature',
   description: 'ModemManager support',
