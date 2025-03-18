@@ -170,10 +170,6 @@ option('plugin_mtd',
   type: 'feature',
   description: 'MTD support',
 )
-option('plugin_parade_lspcon',
-  type: 'feature',
-  description: 'Parade LSPCON support',
-)
 option('plugin_powerd',
   type: 'feature',
   description: 'support for powerd',
