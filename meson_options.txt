@@ -194,10 +194,6 @@ option('plugin_synaptics_mst',
   type: 'feature',
   description: 'Synaptics MST hub support',
 )
-option('plugin_synaptics_rmi',
-  type: 'feature',
-  description: 'Synaptics RMI support',
-)
 option('plugin_tpm',
   type: 'feature',
   description: 'TPM support',
