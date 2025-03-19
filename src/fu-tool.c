@@ -913,10 +913,12 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print */
 	if (g_node_n_children(root) == 0) {
-		fu_console_print_literal(priv->console,
-					 /* TRANSLATORS: nothing attached that can be upgraded */
-					 _("No hardware detected with firmware update capability"));
-		return TRUE;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: nothing attached that can be upgraded */
+				    _("No hardware detected with firmware update capability"));
+		return FALSE;
 	}
 	fu_util_print_node(priv->console, priv->client, root);
 
