@@ -26,7 +26,7 @@ mkdir -p $build $DESTDIR && cd $build
 # run before using meson
 export WINEPREFIX=$build/.wine
 
-# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=disabled):
+# For logitech bulk controller being disabled (-Dprotobuf=disabled):
 # See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
 # When fixed need to do the following to enable:
 # 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps

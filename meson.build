@@ -558,8 +558,8 @@ configure_file(
 )
 
 libdrm_amdgpu = dependency('libdrm_amdgpu', version: '>= 2.4.113', required: false)
-protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
-protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitech_bulkcontroller'))
+protobufc = dependency('libprotobuf-c', required: get_option('protobuf'))
+protoc = find_program('protoc', 'protoc-c', required: get_option('protobuf'))
 
 root_incdir = include_directories('.')
 
