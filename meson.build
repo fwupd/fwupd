@@ -557,7 +557,7 @@ configure_file(
   configuration: conf
 )
 
-libdrm_amdgpu = dependency('libdrm_amdgpu', version: '>= 2.4.113', required: false)
+libdrm_amdgpu = dependency('libdrm_amdgpu', version: '>= 2.4.113', required: get_option('libdrm'))
 protobufc = dependency('libprotobuf-c', required: get_option('protobuf'))
 protoc = find_program('protoc', 'protoc-c', required: get_option('protobuf'))
 
