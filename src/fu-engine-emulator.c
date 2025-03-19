@@ -16,17 +16,28 @@
 struct _FuEngineEmulator {
 	GObject parent_instance;
 	FuEngine *engine;
-	GHashTable *phase_blobs; /* (element-type int GBytes) */
+	GHashTable *phase_blobs; /* (element-type utf-8 GBytes) */
 };
 
 G_DEFINE_TYPE(FuEngineEmulator, fu_engine_emulator, G_TYPE_OBJECT)
 
 enum { PROP_0, PROP_ENGINE, PROP_LAST };
 
+static gchar *
+fu_engine_emulator_phase_to_filename(FuEngineEmulatorPhase phase, guint write_cnt)
+{
+	if (write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT)
+		return g_strdup_printf("%s.json", fu_engine_emulator_phase_to_string(phase));
+	return g_strdup_printf("%s-%u.json", fu_engine_emulator_phase_to_string(phase), write_cnt);
+}
+
 gboolean
 fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **error)
 {
+	GHashTableIter iter;
 	gboolean got_json = FALSE;
+	gpointer key;
+	gpointer value;
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
 
@@ -35,15 +46,10 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* sanity check */
-	for (guint phase = FU_ENGINE_EMULATOR_PHASE_SETUP; phase < FU_ENGINE_EMULATOR_PHASE_LAST;
-	     phase++) {
-		GBytes *blob = g_hash_table_lookup(self->phase_blobs, GINT_TO_POINTER(phase));
-		g_autofree gchar *fn =
-		    g_strdup_printf("%s.json", fu_engine_emulator_phase_to_string(phase));
-		if (blob == NULL)
-			continue;
+	g_hash_table_iter_init(&iter, self->phase_blobs);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		fu_archive_add_entry(archive, (const gchar *)key, (GBytes *)value);
 		got_json = TRUE;
-		fu_archive_add_entry(archive, fn, blob);
 	}
 	if (!got_json) {
 		g_set_error_literal(error,
@@ -98,11 +104,15 @@ fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GEr
 }
 
 gboolean
-fu_engine_emulator_load_phase(FuEngineEmulator *self, FuEngineEmulatorPhase phase, GError **error)
+fu_engine_emulator_load_phase(FuEngineEmulator *self,
+			      FuEngineEmulatorPhase phase,
+			      guint write_cnt,
+			      GError **error)
 {
 	GBytes *json_blob;
+	g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
 
-	json_blob = g_hash_table_lookup(self->phase_blobs, GINT_TO_POINTER(phase));
+	json_blob = g_hash_table_lookup(self->phase_blobs, fn);
 	if (json_blob == NULL)
 		return TRUE;
 	return fu_engine_emulator_load_json_blob(self, json_blob, error);
@@ -138,10 +148,14 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 }
 
 gboolean
-fu_engine_emulator_save_phase(FuEngineEmulator *self, FuEngineEmulatorPhase phase, GError **error)
+fu_engine_emulator_save_phase(FuEngineEmulator *self,
+			      FuEngineEmulatorPhase phase,
+			      guint write_cnt,
+			      GError **error)
 {
 	GBytes *blob_old;
 	g_autofree gchar *blob_new_safe = NULL;
+	g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
 	g_autoptr(GBytes) blob_new = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GOutputStream) ostream = g_memory_output_stream_new_resizable();
@@ -160,7 +174,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self, FuEngineEmulatorPhase phas
 	json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 
-	blob_old = g_hash_table_lookup(self->phase_blobs, GINT_TO_POINTER(phase));
+	blob_old = g_hash_table_lookup(self->phase_blobs, fn);
 	if (!json_generator_to_stream(json_generator, ostream, NULL, error))
 		return FALSE;
 	if (!g_output_stream_close(ostream, NULL, error))
@@ -168,19 +182,60 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self, FuEngineEmulatorPhase phas
 	blob_new = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(ostream));
 
 	if (g_bytes_get_size(blob_new) == 0) {
-		g_info("no data for phase %s", fu_engine_emulator_phase_to_string(phase));
+		g_info("no data for phase %s [%u]",
+		       fu_engine_emulator_phase_to_string(phase),
+		       write_cnt);
 		return TRUE;
 	}
 	if (blob_old != NULL && g_bytes_compare(blob_old, blob_new) == 0) {
-		g_info("JSON unchanged for phase %s", fu_engine_emulator_phase_to_string(phase));
+		g_info("JSON unchanged for phase %s [%u]",
+		       fu_engine_emulator_phase_to_string(phase),
+		       write_cnt);
 		return TRUE;
 	}
 	blob_new_safe = fu_strsafe_bytes(blob_new, 8000);
-	g_info("JSON %s for phase %s: %s...",
+	g_info("JSON %s for phase %s [%u]: %s...",
 	       blob_old == NULL ? "added" : "changed",
 	       fu_engine_emulator_phase_to_string(phase),
+	       write_cnt,
 	       blob_new_safe);
-	g_hash_table_insert(self->phase_blobs, GINT_TO_POINTER(phase), g_steal_pointer(&blob_new));
+	g_hash_table_insert(self->phase_blobs, g_steal_pointer(&fn), g_steal_pointer(&blob_new));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_emulator_load_phases(FuEngineEmulator *self,
+			       FuArchive *archive,
+			       guint write_cnt,
+			       gboolean *got_json,
+			       GError **error)
+{
+	for (FuEngineEmulatorPhase phase = FU_ENGINE_EMULATOR_PHASE_SETUP;
+	     phase < FU_ENGINE_EMULATOR_PHASE_LAST;
+	     phase++) {
+		g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
+		g_autoptr(GBytes) blob = NULL;
+
+		/* not found */
+		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
+		if (blob == NULL || g_bytes_get_size(blob) == 0)
+			continue;
+		*got_json = TRUE;
+		g_info("emulation for phase %s [%u]",
+		       fu_engine_emulator_phase_to_string(phase),
+		       write_cnt);
+		if (write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT &&
+		    phase == FU_ENGINE_EMULATOR_PHASE_SETUP) {
+			if (!fu_engine_emulator_load_json_blob(self, blob, error))
+				return FALSE;
+		} else {
+			g_hash_table_insert(self->phase_blobs,
+					    g_steal_pointer(&fn),
+					    g_steal_pointer(&blob));
+		}
+	}
 
 	/* success */
 	return TRUE;
@@ -216,26 +271,9 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	}
 
 	/* load JSON files from archive */
-	for (guint phase = FU_ENGINE_EMULATOR_PHASE_SETUP; phase < FU_ENGINE_EMULATOR_PHASE_LAST;
-	     phase++) {
-		g_autofree gchar *fn =
-		    g_strdup_printf("%s.json", fu_engine_emulator_phase_to_string(phase));
-		g_autoptr(GBytes) blob = NULL;
-
-		/* not found */
-		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
-		if (blob == NULL || g_bytes_get_size(blob) == 0)
-			continue;
-		got_json = TRUE;
-		g_info("emulation for phase %s", fu_engine_emulator_phase_to_string(phase));
-		if (phase == FU_ENGINE_EMULATOR_PHASE_SETUP) {
-			if (!fu_engine_emulator_load_json_blob(self, blob, error))
-				return FALSE;
-		} else {
-			g_hash_table_insert(self->phase_blobs,
-					    GINT_TO_POINTER(phase),
-					    g_steal_pointer(&blob));
-		}
+	for (guint write_cnt = 0; write_cnt < FU_ENGINE_EMULATOR_WRITE_COUNT_MAX; write_cnt++) {
+		if (!fu_engine_emulator_load_phases(self, archive, write_cnt, &got_json, error))
+			return FALSE;
 	}
 	if (!got_json) {
 		g_set_error_literal(error,
@@ -283,10 +321,8 @@ fu_engine_emulator_set_property(GObject *object,
 static void
 fu_engine_emulator_init(FuEngineEmulator *self)
 {
-	self->phase_blobs = g_hash_table_new_full(g_direct_hash,
-						  g_direct_equal,
-						  NULL,
-						  (GDestroyNotify)g_bytes_unref);
+	self->phase_blobs =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_bytes_unref);
 }
 
 static void
