@@ -121,9 +121,9 @@ option('plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
 )
-option('plugin_logitech_bulkcontroller',
+option('protobuf',
   type: 'feature',
-  description: 'Logitech bulk controller support',
+  description: 'protobuf support',
 )
 option('plugin_modem_manager',
   type: 'feature',
