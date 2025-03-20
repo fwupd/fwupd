@@ -137,6 +137,7 @@ fu_dell_kestrel_plugin_ec_add_cached_devices(FuPlugin *plugin, FuDevice *ec_devi
 	    {DELL_VID, DELL_KESTREL_USB_RTS0_G1_PID},
 	    {DELL_VID, DELL_KESTREL_USB_RTS0_G2_PID},
 	    {DELL_VID, DELL_KESTREL_USB_RTS5_G2_PID},
+	    {DELL_VID, DELL_KESTREL_USB_RMM_PID},
 	    {0},
 	};
 
