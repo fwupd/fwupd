@@ -255,7 +255,10 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
 
-sqlite = dependency('sqlite3')
+sqlite = dependency('sqlite3', required: get_option('sqlite'))
+if sqlite.found()
+  conf.set('HAVE_SQLITE', '1')
+endif
 passim = dependency('passim', version: '>= 0.1.6', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
 if passim.found()
   conf.set('HAVE_PASSIM', '1')
@@ -716,6 +719,7 @@ if build_daemon
     'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),
     'passim': passim,
+    'sqlite': sqlite,
     'GPG support': supported_gpg,
     'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')
