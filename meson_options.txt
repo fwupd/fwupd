@@ -147,10 +147,6 @@ option('qubes',
   value: false,
   description: 'build packages for Qubes OS',
 )
-option('sqlite',
-  type: 'feature',
-  description: 'sqlite support',
-)
 option('static_analysis',
   type: 'boolean',
   value: false,

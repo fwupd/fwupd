@@ -255,7 +255,7 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
 
-sqlite = dependency('sqlite3', required: get_option('sqlite'))
+sqlite = dependency('sqlite3')
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
@@ -719,7 +719,6 @@ if build_daemon
     'lvfs_metadata_format': lvfs_metadata_format,
     'libarchive': libarchive.found(),
     'passim': passim,
-    'sqlite': sqlite,
     'GPG support': supported_gpg,
     'PKCS7 support': supported_pkcs7,
   }, section: 'daemon features')

@@ -1709,10 +1709,6 @@ fu_quirks_vendor_ids_func(void)
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
 
-#ifndef HAVE_SQLITE
-	g_test_skip("no sqlite");
-	return;
-#endif
 	g_debug("deleting %s if exists", quirksdb);
 	g_unlink(quirksdb);
 
