@@ -66,6 +66,23 @@ fu_qc_firehose_raw_device_impl_write_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_qc_firehose_raw_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuQcFirehoseRawDevice *self = FU_QC_FIREHOSE_RAW_DEVICE(device);
+
+	/* if called in recovery we have no supported functions */
+	if (self->supported_functions == 0 ||
+	    (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_POWER) > 0) {
+		if (!fu_qc_firehose_impl_reset(FU_QC_FIREHOSE_IMPL(self), error))
+			return FALSE;
+	}
+
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static gboolean
 fu_qc_firehose_raw_device_probe(FuDevice *device, GError **error)
 {
 	const gchar *device_file;
@@ -189,4 +206,5 @@ fu_qc_firehose_raw_device_class_init(FuQcFirehoseRawDeviceClass *klass)
 	device_class->write_firmware = fu_qc_firehose_raw_device_impl_write_firmware;
 	device_class->set_progress = fu_qc_firehose_raw_device_set_progress;
 	device_class->probe = fu_qc_firehose_raw_device_probe;
+	device_class->attach = fu_qc_firehose_raw_device_attach;
 }

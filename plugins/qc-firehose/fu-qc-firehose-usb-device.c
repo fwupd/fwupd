@@ -207,6 +207,23 @@ fu_qc_firehose_usb_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_qc_firehose_usb_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(device);
+
+	/* if called in recovery we have no supported functions */
+	if (self->supported_functions == 0 ||
+	    (self->supported_functions & FU_QC_FIREHOSE_FUNCTIONS_POWER) > 0) {
+		if (!fu_qc_firehose_impl_reset(FU_QC_FIREHOSE_IMPL(self), error))
+			return FALSE;
+	}
+
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static gboolean
 fu_qc_firehose_usb_device_impl_write_firmware(FuDevice *device,
 					      FuFirmware *firmware,
 					      FuProgress *progress,
@@ -335,5 +352,6 @@ fu_qc_firehose_usb_device_class_init(FuQcFirehoseUsbDeviceClass *klass)
 	device_class->probe = fu_qc_firehose_usb_device_probe;
 	device_class->replace = fu_qc_firehose_usb_device_replace;
 	device_class->write_firmware = fu_qc_firehose_usb_device_impl_write_firmware;
+	device_class->attach = fu_qc_firehose_usb_device_attach;
 	device_class->set_progress = fu_qc_firehose_usb_device_set_progress;
 }

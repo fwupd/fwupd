@@ -31,3 +31,5 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 				   gboolean no_zlp,
 				   FuProgress *progress,
 				   GError **error) G_GNUC_NON_NULL(1, 2, 4);
+gboolean
+fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error) G_GNUC_NON_NULL(1);
