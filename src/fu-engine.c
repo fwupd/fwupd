@@ -1075,6 +1075,7 @@ fu_engine_remove_device_flag(FuEngine *self,
 				    fu_device_get_id(device));
 			return FALSE;
 		}
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		fu_backend_device_removed(fu_device_get_backend(device), device);
 		return TRUE;
 	}
