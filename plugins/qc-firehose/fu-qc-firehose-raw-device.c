@@ -183,7 +183,6 @@ fu_qc_firehose_raw_device_impl_iface_init(FuQcFirehoseImplInterface *iface)
 static void
 fu_qc_firehose_raw_device_init(FuQcFirehoseRawDevice *self)
 {
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_name(FU_DEVICE(self), "Firehose");
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.firehose");
 	fu_device_set_version(FU_DEVICE(self), "0.0");
@@ -193,7 +192,7 @@ fu_qc_firehose_raw_device_init(FuQcFirehoseRawDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
