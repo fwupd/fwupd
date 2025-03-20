@@ -571,16 +571,28 @@ fu_qc_firehose_impl_set_bootable(FuQcFirehoseImpl *self,
 	return TRUE;
 }
 
-static gboolean
-fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, FuQcFirehoseImplHelper *helper, GError **error)
+gboolean
+fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
+	FuQcFirehoseImplHelper helper = {0x0};
 
 	/* <data><power value="reset /></data> */
 	xb_builder_node_insert_text(bn, "power", NULL, "value", "reset", NULL);
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
-	return fu_qc_firehose_impl_read_xml(self, 5000, helper, error);
+	if (!fu_qc_firehose_impl_read_xml(self, 5000, &helper, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_debug("ignoring: %s", error_local->message);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -708,7 +720,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "patch");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
 
 	/* load XML */
 	blob = fu_firmware_get_image_by_id_bytes(firmware, fnglob, error);
@@ -804,16 +815,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 			}
 		}
 	}
-
-	/* reset, back to runtime */
-	if (fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_POWER)) {
-		if (!fu_qc_firehose_impl_reset(self, &helper, error)) {
-			g_prefix_error(error, "failed to reset: ");
-			return FALSE;
-		}
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
-	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
