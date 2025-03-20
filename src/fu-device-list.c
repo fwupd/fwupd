@@ -435,7 +435,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			if (fu_device_has_guid(item->device, guid) ||
 			    fu_device_has_instance_id(item->device,
 						      guid,
-						      FU_DEVICE_INSTANCE_FLAG_COUNTERPART))
+						      FU_DEVICE_INSTANCE_FLAG_COUNTERPART |
+							  FU_DEVICE_INSTANCE_FLAG_VISIBLE))
 				return item;
 		}
 	}
@@ -450,7 +451,8 @@ fu_device_list_get_by_guids_removed(FuDeviceList *self, GPtrArray *guids)
 			if (fu_device_has_guid(item->device_old, guid) ||
 			    fu_device_has_instance_id(item->device_old,
 						      guid,
-						      FU_DEVICE_INSTANCE_FLAG_COUNTERPART))
+						      FU_DEVICE_INSTANCE_FLAG_COUNTERPART |
+							  FU_DEVICE_INSTANCE_FLAG_VISIBLE))
 				return item;
 		}
 	}
