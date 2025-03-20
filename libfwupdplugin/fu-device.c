@@ -315,6 +315,7 @@ fu_device_register_flags(FuDevice *self)
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP);
+	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART);
 }
 
 static void
