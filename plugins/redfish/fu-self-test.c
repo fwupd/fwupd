@@ -30,9 +30,6 @@ static void
 fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
-	GPtrArray *devices;
-	FuBackend *backend;
-	g_autoptr(FuRedfishDevice) dev = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -108,18 +105,10 @@ fu_test_self_init(FuTest *self)
 		/* We just changed the credentials and need to resetup again to discover the vendor
 		 * Here we need to get a device to query the backend
 		 */
-		ret = fu_plugin_runner_coldplug(self->hpe_plugin, progress, &error);
+		ret = fu_redfish_plugin_reload(self->hpe_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
-		devices = fu_plugin_get_devices(self->hpe_plugin);
-		backend = FU_BACKEND(fu_redfish_device_get_backend(
-		    FU_REDFISH_DEVICE(g_ptr_array_index(devices, 0))));
-
-		fu_plugin_device_remove(self->hpe_plugin, FU_DEVICE(g_ptr_array_index(devices, 0)));
-		fu_plugin_device_remove(self->hpe_plugin, FU_DEVICE(g_ptr_array_index(devices, 1)));
-
-		fu_backend_invalidate(backend);
-		ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
+		ret = fu_plugin_runner_coldplug(self->hpe_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
@@ -498,7 +487,6 @@ fu_test_redfish_hpe_update_func(gconstpointer user_data)
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_progress_step_done(progress);
 }
 
 static void
