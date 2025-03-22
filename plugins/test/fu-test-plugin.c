@@ -327,6 +327,13 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		fu_device_set_metadata_boolean(device, "DoneAnotherWriteRequired", TRUE);
 	}
 
+	/* do this all over again */
+	if (fu_plugin_get_config_value_boolean(plugin, "InstallLoopRestart") &&
+	    !fu_device_get_metadata_boolean(device, "DoneInstallLoopRestart")) {
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART);
+		fu_device_set_metadata_boolean(device, "DoneInstallLoopRestart", TRUE);
+	}
+
 	/* for the self tests only */
 	fu_device_set_metadata_integer(device,
 				       "nr-update",
@@ -374,6 +381,15 @@ fu_test_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **
 	return TRUE;
 }
 
+static gboolean
+fu_test_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+{
+	fu_device_set_metadata_integer(device,
+				       "nr-attach",
+				       fu_device_get_metadata_integer(device, "nr-attach") + 1);
+	return TRUE;
+}
+
 static void
 fu_test_plugin_init(FuTestPlugin *self)
 {
@@ -385,6 +401,7 @@ fu_test_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_set_config_default(plugin, "AnotherWriteRequired", "false");
+	fu_plugin_set_config_default(plugin, "InstallLoopRestart", "false");
 	fu_plugin_set_config_default(plugin, "CompositeChild", "false");
 	fu_plugin_set_config_default(plugin, "DecompressDelay", "0");
 	fu_plugin_set_config_default(plugin, "NeedsActivation", "false");
@@ -418,6 +435,7 @@ fu_test_plugin_class_init(FuTestPluginClass *klass)
 	plugin_class->activate = fu_test_plugin_activate;
 	plugin_class->write_firmware = fu_test_plugin_write_firmware;
 	plugin_class->verify = fu_test_plugin_verify;
+	plugin_class->attach = fu_test_plugin_attach;
 	plugin_class->coldplug = fu_test_plugin_coldplug;
 	plugin_class->device_registered = fu_test_plugin_device_registered;
 	plugin_class->modify_config = fu_test_plugin_modify_config;

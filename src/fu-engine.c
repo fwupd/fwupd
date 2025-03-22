@@ -3271,6 +3271,10 @@ fu_engine_write_firmware(FuEngine *self,
 			return FALSE;
 	}
 
+	/* abort loop before waiting for replug */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART))
+		return TRUE;
+
 	/* wait for any device to disconnect and reconnect */
 	if (!fu_device_list_wait_for_replug(self->device_list, error)) {
 		g_prefix_error(error, "failed to wait for write-firmware replug: ");
@@ -3330,22 +3334,6 @@ fu_engine_firmware_read(FuEngine *self,
 }
 
 static gboolean
-fu_engine_device_another_write_required(FuEngine *self, const gchar *device_id)
-{
-	g_autoptr(FuDevice) device = NULL;
-
-	device = fu_engine_get_device(self, device_id, NULL);
-	if (device == NULL)
-		return FALSE;
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED))
-		return FALSE;
-
-	/* don't rely on a plugin clearing this */
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-	return TRUE;
-}
-
-static gboolean
 fu_engine_install_loop(FuEngine *self,
 		       const gchar *device_id,
 		       GInputStream *stream_fw,
@@ -3356,6 +3344,7 @@ fu_engine_install_loop(FuEngine *self,
 		       GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	/* not ideal; but best we can do as we don't know how many writes are required */
@@ -3387,6 +3376,18 @@ fu_engine_install_loop(FuEngine *self,
 		g_prefix_error(error, "failed to get device for flags: ");
 		return FALSE;
 	}
+
+	/* do not rely on the plugin clearing these */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART)) {
+		g_debug("clearing install-loop-restart");
+		fu_device_remove_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART);
+	}
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)) {
+		g_debug("clearing another-write-required");
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+	}
+
+	/* detach->parse->install or parse->detach->install */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE)) {
 		/* detach to bootloader mode */
 		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
@@ -3461,6 +3462,12 @@ fu_engine_install_loop(FuEngine *self,
 		fu_progress_step_done(progress);
 	}
 
+	/* abort loop */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART)) {
+		g_debug("restarting install loop, aborting with success");
+		return TRUE;
+	}
+
 	/* attach into runtime mode */
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_ATTACH);
 	if (!fu_engine_attach(self, device_id, fu_progress_get_child(progress), error)) {
@@ -3468,6 +3475,12 @@ fu_engine_install_loop(FuEngine *self,
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
+
+	/* abort loop */
+	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART)) {
+		g_debug("restarting install loop, aborting with success");
+		return TRUE;
+	}
 
 	/* get the new version number */
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_RELOAD);
@@ -3478,7 +3491,12 @@ fu_engine_install_loop(FuEngine *self,
 	fu_progress_step_done(progress);
 
 	/* abort loop */
-	if (fu_engine_device_another_write_required(self, device_id)) {
+	device_tmp = fu_engine_get_device(self, device_id, error);
+	if (device_tmp == NULL) {
+		g_prefix_error(error, "failed to get device after reload: ");
+		return FALSE;
+	}
+	if (fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)) {
 		g_debug("another write required, aborting with success");
 		return TRUE;
 	}

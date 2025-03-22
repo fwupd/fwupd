@@ -822,6 +822,16 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP "emulated-require-setup"
 
+/**
+ * FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART:
+ *
+ * Restart the `detach->write_firmware->attach->reload` loop without completing the sequence.
+ * This can be set on any step, unlike `another-write-required` which does all steps.
+ *
+ * Since: 2.0.7
+ */
+#define FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART "install-loop-restart"
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
