@@ -3444,6 +3444,9 @@ fu_engine_install_request(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_plugin_set_config_value(plugin, "RequestSupported", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3541,6 +3544,9 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* set up dummy plugin */
+	ret = fu_plugin_reset_config_values(plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_plugin_set_config_value(plugin, "WriteSupported", "false", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4675,6 +4681,9 @@ fu_plugin_module_func(gconstpointer user_data)
 	fu_engine_set_silo(engine, silo_empty);
 
 	/* create a fake device */
+	ret = fu_plugin_reset_config_values(plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	ret = fu_plugin_set_config_value(plugin, "RegistrationSupported", "true", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
