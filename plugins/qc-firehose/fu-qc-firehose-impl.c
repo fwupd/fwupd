@@ -235,8 +235,7 @@ fu_qc_firehose_impl_write_xml(FuQcFirehoseImpl *self, XbBuilderNode *bn, GError 
 	    error);
 	if (xml == NULL)
 		return FALSE;
-#if !LIBXMLB_CHECK_VERSION(0, 3, 22)
-	{
+	if (fu_version_compare(xb_version_string(), "0.3.22", FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
 		/* firehose is *very* picky about XML and will not accept empty elements */
 		GString *xml_fixed = g_string_new(xml);
 		g_string_replace(xml_fixed, ">\n  </configure>", " />", 0);
@@ -248,7 +247,6 @@ fu_qc_firehose_impl_write_xml(FuQcFirehoseImpl *self, XbBuilderNode *bn, GError 
 		g_free(xml);
 		xml = g_string_free(xml_fixed, FALSE);
 	}
-#endif
 	g_debug("XML request: %s", xml);
 	return fu_device_retry(FU_DEVICE(self), fu_qc_firehose_impl_write_xml_cb, 5, xml, error);
 }
