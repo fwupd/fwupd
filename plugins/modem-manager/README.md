@@ -29,7 +29,7 @@ Since: 1.7.4
 
 ### ModemManagerFirehoseProgFile
 
-Firehose program file to use during the switch to EDL (Emergency Download) mode.
+Firehose program file to use during the QCDM switch to EDL (Emergency Download) mode.
 
 Since: 1.8.10
 
@@ -46,13 +46,6 @@ Since: 1.9.8
 ### `Flags=detach-at-fastboot-has-no-response`
 
 If no AT response is expected when entering fastboot mode.
-
-### `Flags=uninhibit-modemmanager-after-fastboot-reboot`
-
-After entering the fastboot state, the modem cannot execute the attach method in the MM plugin
-plugin plugin.
-The shadow device needs to be used to uninhibit the modem when `fu_mm_plugin_udev_uevent_cb`
-detects it.
 
 ## Vendor ID Security
 
