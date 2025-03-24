@@ -26,6 +26,8 @@ struct _FuQcFirehoseImplInterface {
 };
 
 gboolean
+fu_qc_firehose_impl_setup(FuQcFirehoseImpl *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
 fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 				   FuFirmware *firmware,
 				   gboolean no_zlp,

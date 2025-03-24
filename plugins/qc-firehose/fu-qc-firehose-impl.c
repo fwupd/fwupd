@@ -689,6 +689,28 @@ fu_qc_firehose_impl_find_bootable(FuQcFirehoseImpl *self, GPtrArray *xns)
 }
 
 gboolean
+fu_qc_firehose_impl_setup(FuQcFirehoseImpl *self, GError **error)
+{
+	FuQcFirehoseImplHelper helper = {0x0};
+	g_autoptr(GError) error_local = NULL;
+
+	/* clear buffer */
+	if (!fu_qc_firehose_impl_read_xml(self,
+					  5 * FU_QC_FIREHOSE_IMPL_TIMEOUT_MS,
+					  &helper,
+					  &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
 fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 				   FuFirmware *firmware,
 				   gboolean no_zlp,
@@ -697,7 +719,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 {
 	const gchar *fnglob = "firehose-rawprogram.xml|rawprogram_*.xml";
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) xns_erase = NULL;
 	g_autoptr(GPtrArray) xns_program = NULL;
 	g_autoptr(GPtrArray) xns_patch = NULL;
@@ -734,18 +755,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	if (silo == NULL) {
 		g_prefix_error(error, "failed to compile %s: ", fnglob);
 		return FALSE;
-	}
-
-	/* clear buffer */
-	if (!fu_qc_firehose_impl_read_xml(self,
-					  5 * FU_QC_FIREHOSE_IMPL_TIMEOUT_MS,
-					  &helper,
-					  &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-		g_debug("ignoring: %s", error_local->message);
 	}
 
 	/* hardcode storage */

@@ -246,6 +246,8 @@ fu_qc_firehose_usb_device_impl_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* use firehose XML */
+	if (!fu_qc_firehose_impl_setup(FU_QC_FIREHOSE_IMPL(self), error))
+		return FALSE;
 	if (!fu_qc_firehose_impl_write_firmware(
 		FU_QC_FIREHOSE_IMPL(self),
 		firmware,
