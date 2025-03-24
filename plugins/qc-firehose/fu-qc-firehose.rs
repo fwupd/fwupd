@@ -3,7 +3,7 @@
 
 #[derive(ToBitString, FromString)]
 enum FuQcFirehoseFunctions {
-    Unknown = 0,
+    None = 0,
     Program = 1 << 0,
     Configure = 1 << 1,
     Power = 1 << 2,
@@ -13,6 +13,15 @@ enum FuQcFirehoseFunctions {
     Nop = 1 << 6,
     Setbootablestoragedrive = 1 << 7,
     Patch = 1 << 8,
+    Ufs = 1 << 9,
+    Emmc = 1 << 10,
+    Xml = 1 << 11,
+    Peek = 1 << 12,
+    Poke = 1 << 13,
+    Firmwarewrite = 1 << 14,
+    Benchmark = 1 << 15,
+    Getcrc16digest = 1 << 16,
+    Getsha256digest = 1 << 17,
 }
 
 #[repr(u32le)]
