@@ -1620,6 +1620,20 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 }
 
 static gboolean
+fu_context_is_esp(FuVolume *esp)
+{
+	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
+	g_autofree gchar *fn = NULL;
+
+	if (mount_point == NULL)
+		return FALSE;
+
+	fn = g_build_filename(mount_point, "EFI", NULL);
+
+	return g_file_test(fn, G_FILE_TEST_IS_DIR);
+}
+
+static gboolean
 fu_context_is_esp_linux(FuVolume *esp, GError **error)
 {
 	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", "zfsbootmenu", NULL};
@@ -1737,6 +1751,11 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 						mount);
 					continue;
 				}
+			}
+
+			if (!fu_context_is_esp(esp)) {
+				g_debug("not an ESP: %s", fu_volume_get_id(esp));
+				continue;
 			}
 
 			/* big partitions are better than small partitions */
