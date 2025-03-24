@@ -13,7 +13,7 @@
 
 G_DEFINE_INTERFACE(FuQcFirehoseSaharaImpl, fu_qc_firehose_sahara_impl, G_TYPE_OBJECT)
 
-#define FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS 500
+#define FU_QC_FIREHOSE_SAHARA_IMPL_TIMEOUT_MS 500
 
 static void
 fu_qc_firehose_sahara_impl_default_init(FuQcFirehoseSaharaImplInterface *iface)
@@ -21,7 +21,7 @@ fu_qc_firehose_sahara_impl_default_init(FuQcFirehoseSaharaImplInterface *iface)
 }
 
 static GByteArray *
-fu_qc_firehose_sahara_impl_read(FuQcFirehoseSaharaImpl *self, guint timeout_ms, GError **error)
+fu_qc_firehose_sahara_impl_read(FuQcFirehoseSaharaImpl *self, GError **error)
 {
 	FuQcFirehoseSaharaImplInterface *iface;
 
@@ -35,7 +35,7 @@ fu_qc_firehose_sahara_impl_read(FuQcFirehoseSaharaImpl *self, guint timeout_ms, 
 				    "iface->read not implemented");
 		return NULL;
 	}
-	return (*iface->read)(self, timeout_ms, error);
+	return (*iface->read)(self, FU_QC_FIREHOSE_SAHARA_IMPL_TIMEOUT_MS, error);
 }
 
 static gboolean
@@ -56,7 +56,7 @@ fu_qc_firehose_sahara_impl_write(FuQcFirehoseSaharaImpl *self,
 				    "iface->write not implemented");
 		return FALSE;
 	}
-	return (*iface->write)(self, buf, bufsz, error);
+	return (*iface->write)(self, buf, bufsz, FU_QC_FIREHOSE_SAHARA_IMPL_TIMEOUT_MS, error);
 }
 
 static gboolean
@@ -196,9 +196,7 @@ fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 		g_autoptr(FuQcFirehoseSaharaPkt) pkt = NULL;
 		g_autoptr(GByteArray) buf = NULL;
 
-		buf = fu_qc_firehose_sahara_impl_read(self,
-						      FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
-						      error);
+		buf = fu_qc_firehose_sahara_impl_read(self, error);
 		if (buf == NULL) {
 			g_prefix_error(error, "failed to get device response: ");
 			return FALSE;
