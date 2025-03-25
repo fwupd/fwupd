@@ -1416,16 +1416,22 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 	data_xml = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
 	if (data_xml == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	part = xb_silo_query_first(silo, "parts/part", error);
-	if (part == NULL)
+	if (part == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	filename = xb_node_get_attr(part, "filename");
 	csum = xb_node_get_attr(part, "MD5");
 	data_part = fu_archive_lookup_by_fn(archive, filename, error);

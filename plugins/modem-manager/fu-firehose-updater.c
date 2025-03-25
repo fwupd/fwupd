@@ -181,12 +181,16 @@ fu_firehose_updater_validate_rawprogram(GBytes *rawprogram,
 	g_autoptr(XbNode) data_node = NULL;
 	g_autoptr(GPtrArray) action_nodes = NULL;
 
-	if (!xb_builder_source_load_bytes(source, rawprogram, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, rawprogram, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	data_node = xb_silo_get_root(silo);
 	action_nodes = xb_node_get_children(data_node);
@@ -283,8 +287,10 @@ fu_firehose_updater_process_response(GBytes *rsp_bytes,
 	g_autoptr(XbNode) data_node = NULL;
 	g_autoptr(GPtrArray) action_nodes = NULL;
 
-	if (!xb_builder_source_load_bytes(source, rsp_bytes, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, rsp_bytes, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL)

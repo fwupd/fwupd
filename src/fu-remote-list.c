@@ -668,8 +668,10 @@ fu_remote_list_load_metainfos(XbBuilder *builder, GError **error)
 							 file,
 							 XB_BUILDER_SOURCE_FLAG_NONE,
 							 NULL,
-							 error))
+							 error)) {
+				fwupd_error_convert(error);
 				return FALSE;
+			}
 			xb_builder_import_source(builder, source);
 		}
 	}

@@ -655,20 +655,26 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	/* did we get any valid files */
 	self->silo =
 	    xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
-	if (self->silo == NULL)
+	if (self->silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* build the index */
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component[@type='firmware']/provides/firmware",
 				       "type",
-				       error))
+				       error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component[@type='firmware']/provides/firmware",
 				       NULL,
-				       error))
+				       error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -753,6 +759,7 @@ fu_cabinet_sign_enumerate_metainfo(FuCabinet *self, GPtrArray *files, GError **e
 			g_ptr_array_add(files, g_strdup("firmware.metainfo.xml"));
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	} else {
@@ -789,6 +796,7 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
 			g_ptr_array_add(files, g_strdup("firmware.bin"));
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	} else {
@@ -981,13 +989,19 @@ XbNode *
 fu_cabinet_get_component(FuCabinet *self, const gchar *id, GError **error)
 {
 	g_autofree gchar *xpath = NULL;
+	g_autoptr(XbNode) xn = NULL;
 
 	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
 	g_return_val_if_fail(id != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	xpath = g_strdup_printf("components/component/id[text()='%s']/..", id);
-	return xb_silo_query_first(self->silo, xpath, error);
+	xn = xb_silo_query_first(self->silo, xpath, error);
+	if (xn == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	return g_steal_pointer(&xn);
 }
 
 static void
