@@ -1,3 +1,4 @@
+if get_option('plugin_qc_firehose')
 cargs = ['-DG_LOG_DOMAIN="FuPluginQcFirehose"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -26,3 +27,4 @@ enumeration_data += files(
   'tests/qc-ec25au-setup.json',
   'tests/qc-em160r-setup.json',
 )
+endif
