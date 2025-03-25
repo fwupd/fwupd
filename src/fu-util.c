@@ -3112,7 +3112,8 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 				error_install->message);
 			continue;
 		}
-		fu_util_display_current_message(priv);
+		if (ret)
+			fu_util_display_current_message(priv);
 
 		/* send report if we're supposed to */
 		if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3352,7 +3353,8 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3402,7 +3404,8 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3472,7 +3475,8 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3611,7 +3615,8 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
