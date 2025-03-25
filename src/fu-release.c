@@ -1075,6 +1075,7 @@ fu_release_load(FuRelease *self,
 		if (!g_error_matches(error_hard, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
 		    !g_error_matches(error_hard, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 			g_propagate_error(error, g_steal_pointer(&error_hard));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	}
@@ -1083,6 +1084,7 @@ fu_release_load(FuRelease *self,
 		if (!g_error_matches(error_soft, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
 		    !g_error_matches(error_soft, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 			g_propagate_error(error, g_steal_pointer(&error_soft));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 	}

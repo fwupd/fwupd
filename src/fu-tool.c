@@ -3067,17 +3067,22 @@ fu_util_firmware_build(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* parse XML */
 	if (!xb_builder_source_load_bytes(source, blob_src, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
 		g_prefix_error(error, "could not parse XML: ");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* create FuFirmware of specific GType */
 	n = xb_silo_query_first(silo, "firmware", error);
-	if (n == NULL)
+	if (n == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	tmp = xb_node_get_attr(n, "gtype");
 	if (tmp != NULL) {
 		gtype = g_type_from_name(tmp);

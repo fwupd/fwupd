@@ -135,8 +135,10 @@ fu_csv_entry_build(FuFirmware *firmware, XbNode *n, GError **error)
 	g_autoptr(GPtrArray) values = NULL;
 
 	values = xb_node_query(n, "values/*", 0, error);
-	if (values == NULL)
+	if (values == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	for (guint i = 0; i < values->len; i++) {
 		XbNode *c = g_ptr_array_index(values, i);
 		if (add_columns && xb_node_get_element(c) != NULL)

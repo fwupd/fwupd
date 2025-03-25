@@ -923,12 +923,16 @@ fu_coswid_firmware_build_entity(FuCoswidFirmware *self, XbNode *n, GError **erro
 
 	/* these are required */
 	tmp = xb_node_query_text(n, "name", error);
-	if (tmp == NULL)
+	if (tmp == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	entity->name = g_strdup(tmp);
 	tmp = xb_node_query_text(n, "regid", error);
-	if (tmp == NULL)
+	if (tmp == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	entity->regid = g_strdup(tmp);
 
 	/* optional */
@@ -965,8 +969,10 @@ fu_coswid_firmware_build_link(FuCoswidFirmware *self, XbNode *n, GError **error)
 
 	/* required */
 	tmp = xb_node_query_text(n, "href", error);
-	if (tmp == NULL)
+	if (tmp == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	link->href = g_strdup(tmp);
 
 	/* optional */
@@ -999,8 +1005,10 @@ fu_coswid_firmware_build_hash(FuCoswidFirmware *self,
 
 	/* required */
 	tmp = xb_node_query_text(n, "value", error);
-	if (tmp == NULL)
+	if (tmp == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	hash->value = fu_byte_array_from_string(tmp, error);
 	if (hash->value == NULL)
 		return FALSE;

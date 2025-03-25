@@ -131,8 +131,10 @@ fu_qc_firehose_impl_read_xml_cb(FuDevice *device, gpointer user_data, GError **e
 
 	/* parse response */
 	xn_data = xb_silo_query_first(silo, "data", error);
-	if (xn_data == NULL)
+	if (xn_data == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* logs to the console */
 	xn_logs = xb_node_query(xn_data, "log", 0, NULL);
@@ -748,12 +750,14 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	}
 	if (!xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", fnglob);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL) {
 		g_prefix_error(error, "failed to compile %s: ", fnglob);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 

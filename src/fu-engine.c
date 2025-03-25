@@ -588,6 +588,7 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
 				continue;
 			g_propagate_error(error, g_steal_pointer(&error_local));
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 		for (guint j = 0; j < tags->len; j++) {
@@ -1359,8 +1360,10 @@ fu_engine_verify_update(FuEngine *self,
 		return FALSE;
 	file = g_file_new_for_path(fn);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!xb_silo_export_file(silo, file, XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE, NULL, error))
 		return FALSE;
 
@@ -1429,12 +1432,16 @@ fu_engine_verify_from_local_metadata(FuEngine *self, FuDevice *device, GError **
 		return NULL;
 	}
 
-	if (!xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, error))
+	if (!xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, error)) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	xpath = g_strdup_printf("component/releases/release[@version='%s']",
 				fu_device_get_version(device));
 	release = xb_silo_query_first(silo, xpath, error);
@@ -1485,6 +1492,7 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_local));
+			fwupd_error_convert(error);
 			return NULL;
 		}
 		for (guint j = 0; j < releases->len; j++) {
@@ -3678,23 +3686,31 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	g_clear_object(&self->query_tag_by_guid_version);
 
 	/* build the index */
-	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
+	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component[@type='firmware']/provides/firmware",
 				       "type",
-				       error))
+				       error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component/provides/firmware",
 				       NULL,
-				       error))
+				       error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component[@type='firmware']/tags/tag",
 				       "namespace",
-				       error))
+				       error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* create prepared queries to save time later */
 	self->query_component_by_guid =
@@ -3811,8 +3827,10 @@ fu_engine_create_metadata_builder_source(FuEngine *self, const gchar *fn, GError
 					 XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
 					     XB_BUILDER_SOURCE_FLAG_WATCH_DIRECTORY,
 					 NULL,
-					 error))
+					 error)) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	return g_steal_pointer(&source);
 }
 
@@ -3984,8 +4002,10 @@ fu_engine_load_metadata_store_local(FuEngine *self,
 						 file,
 						 XB_BUILDER_SOURCE_FLAG_NONE,
 						 NULL,
-						 error))
+						 error)) {
+			fwupd_error_convert(error);
 			return FALSE;
+		}
 		xb_builder_source_set_prefix(source, "local");
 		xb_builder_import_source(builder, source);
 	}
