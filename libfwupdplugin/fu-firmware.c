@@ -2009,13 +2009,8 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (id == NULL) {
-		for (guint i = 0; i < priv->images->len; i++) {
-			FuFirmware *img = g_ptr_array_index(priv->images, i);
-			if (fu_firmware_get_id(img) == NULL)
-				return g_object_ref(img);
-		}
-	} else {
+	/* non-NULL */
+	if (id != NULL) {
 		g_auto(GStrv) split = g_strsplit(id, "|", 0);
 		for (guint i = 0; i < priv->images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(priv->images, i);
@@ -2024,12 +2019,24 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 					return g_object_ref(img);
 			}
 		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no image id %s found in firmware",
+			    id);
+		return NULL;
 	}
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_FOUND,
-		    "no image id %s found in firmware",
-		    id != NULL ? id : "NULL");
+
+	/* NULL */
+	for (guint i = 0; i < priv->images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(priv->images, i);
+		if (fu_firmware_get_id(img) == NULL)
+			return g_object_ref(img);
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no NULL image id found in firmware");
 	return NULL;
 }
 
