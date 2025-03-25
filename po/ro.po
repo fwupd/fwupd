@@ -582,6 +582,11 @@ msgstr "Autentificarea este necesară pentru a actualiza sumele de control stoca
 msgid "Automatic Reporting"
 msgstr "Raportare automată"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Dezinhibare automată în %ums..."
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Încărcați automat de fiecare dată?"
@@ -3483,6 +3488,10 @@ msgstr "[FIȘIER SEMNĂTURĂ_FIȘIER ID-DEPOZIT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[ NUME_FIȘIER1 ] [ NUME_FIȘIER2 ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[MOTIV] [TIMP_AȘTEPTARE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

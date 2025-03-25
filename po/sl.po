@@ -591,6 +591,11 @@ msgstr "Preverjanje pristnosti je potrebno za posodobitev shranjenih kontrolnih 
 msgid "Automatic Reporting"
 msgstr "Samodejno poročanje"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Samodejno sproščanje sistema čez %u ms ..."
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Želite vsakič samodejno naložiti?"
@@ -3498,6 +3503,10 @@ msgstr "[DATOTEKA PODP_DATOTEKE ID-ODDALJENEGA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[IMEDATOTEKE1] [IMEDATOTEKE2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[REASON] [TIMEOUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

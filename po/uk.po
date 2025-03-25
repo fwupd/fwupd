@@ -591,6 +591,11 @@ msgstr "Щоб отримати доступ до оновлення збере�
 msgid "Automatic Reporting"
 msgstr "Автоматичне звітування"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Автоматичне скасування успадкування за %uмс…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Автоматично вивантажувати кожного разу?"
@@ -3498,6 +3503,10 @@ msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[ПРИЧИНА] [ЧАС ОЧІКУВАННЯ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

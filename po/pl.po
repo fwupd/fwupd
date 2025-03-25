@@ -591,6 +591,11 @@ msgstr "Wymagane jest uwierzytelnienie, aby zaktualizować przechowywane sumy ko
 msgid "Automatic Reporting"
 msgstr "Automatyczne zgłaszanie"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Automatyczne kończenie wstrzymania za %u ms…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Automatycznie wysyłać za każdym razem?"
@@ -3367,6 +3372,10 @@ msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[POWÓD] [CZAS-OCZEKIWANIA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

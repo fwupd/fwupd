@@ -431,6 +431,10 @@ msgstr "Permetre tornar a instal·lar les versions existents del microprogramari
 msgid "Allow switching firmware branch"
 msgstr "Permet canviar de branca de microprogramari"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Ja existeix, i no --force specified"
+
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "Branca alternativa"
@@ -569,6 +573,11 @@ msgstr "Es requereix autenticació per a actualitzar les sumes de verificació e
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Informa automàticament"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Desinhibició automàtica a %u ms…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -739,6 +748,10 @@ msgstr "Tecnologia de compliment del flux de control"
 msgid "Convert a firmware file"
 msgstr "Converteix un fitxer de microprogramari."
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Crea una entrada d'arrencada EFI"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Creat"
@@ -770,6 +783,10 @@ msgstr "Opcions per a la depuració"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "S'està descomprimint..."
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Suprimeix una entrada d'arrencada EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1023,6 +1040,11 @@ msgstr "No escriure a la base de dades de l'historial"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Enteneu les conseqüències de canviar la branca del microprogramari?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Voleu convertir-la ara?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1540,6 +1562,22 @@ msgid "Host Security ID:"
 msgstr "ID de seguretat de l'amfitrió:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "ÍNDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "ÍNDEX CLAU [VALOR]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "ÍNDEX NOM OBJECTIU [PUNT_DE_MUNTATGE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "ÍNDEX1,ÍNDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "ID_INHIBEIX"
 
@@ -1759,7 +1797,15 @@ msgstr "Arguments no vàlids"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
-msgstr "Arguments no vàlids, GUID esperat"
+msgstr "Arguments no vàlids, s'esperava un GUID"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Arguments no vàlids, s'esperava un ÍNDEX CLAU [VALOR]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Arguments no vàlids, s'esperava un ÍNDEX NOM OBJECTIU [PUNT_DE_MUNTATGE]"
 
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
@@ -1768,7 +1814,11 @@ msgstr "Arguments no vàlids, s'esperava un ID d'AppStream"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
-msgstr "Arguments no vàlids, com a mínim s'esperaven ARXIU MICROPROGRAMARI METAINFO"
+msgstr "Arguments no vàlids, com a mínim s'esperaven un ARXIU MICROPROGRAMARI METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Arguments no vàlids, s'esperava un sencer de base-16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2072,6 +2122,11 @@ msgstr "No hi ha cap actualització disponible"
 
 msgid "No updates available for remaining devices"
 msgstr "No hi ha cap actualització disponible per als dispositius restants"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "No hi ha cap volum coincident %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2536,6 +2591,18 @@ msgstr "Estableix una configuració del BIOS"
 msgid "Set one or more BIOS settings"
 msgstr "Estableix una o més opcions de configuració del BIOS"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Estableix o suprimeix una entrada de rusc d'arrencada EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "A continuació, establiu l'arrencada EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Estableix l'ordre d'arrencada EFI"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Estableix els reintents de baixada per als errors transitoris"
@@ -2884,6 +2951,14 @@ msgstr "Provada per %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Provat per un venedor de confiança"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "L'entrada d'arrencada EFI no està en el format rusc i és possible que la correcció no sigui prou nova per a llegir-la."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "L'entrada d'arrencada EFI no estava en format rusc, es retrocedeix"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3399,6 +3474,10 @@ msgstr "[FITXER SIGNATURA_FITXER ID_REMOT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NOM_FITXER_1] [NOM_FITXER_2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[RAÓ] [TEMPS_D'ESPERA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

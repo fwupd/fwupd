@@ -436,6 +436,10 @@ msgstr "Neuinstallation vorhandener Firmware-Versionen erlauben"
 msgid "Allow switching firmware branch"
 msgstr "Wechsel des Firmware-Zweigs erlauben"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Bereits vorhanden, und kein --force angegeben"
+
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "Alternativer Zweig"
@@ -574,6 +578,11 @@ msgstr "Zur Aktualisierung der gespeicherten Prüfsummen für das Gerät ist ein
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Automatische Berichterstattung"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Wird in %u ms automatisch entriegelt..."
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -744,6 +753,10 @@ msgstr "Kontrollfluss-Durchsetzungstechnologie"
 msgid "Convert a firmware file"
 msgstr "Eine Firmware-Datei konvertieren"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "EFI-Boot-Eintrag erstellen"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Erstellt"
@@ -775,6 +788,10 @@ msgstr "Defektlokalisierungsoptionen"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Entpacken …"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "EFI-Boot-Eintrag löschen"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1028,6 +1045,11 @@ msgstr "Nicht in die Verlaufsdatenbank schreiben"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Verstehen Sie die Folgen einer Änderung des Firmware-Zweigs?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Möchten Sie es jetzt konvertieren?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1545,6 +1567,22 @@ msgid "Host Security ID:"
 msgstr "Host-Sicherheitskennung:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEXSCHLÜSSEL [WERT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEXNAME [EINHÄNGEPUNKT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "BLOCKIERUNGSKENNUNG"
 
@@ -1766,6 +1804,14 @@ msgstr "Ungültige Argumente"
 msgid "Invalid arguments, expected GUID"
 msgstr "Ungültige Argumente, erwartete GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Ungültige Argumente, erwartete INDEXSCHLÜSSEL [WERT]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Ungültige Argumente, erwartete INDEXNAME ZIEL [EINHÄNGEPUNKT]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1774,6 +1820,10 @@ msgstr "Ungültige Argumente. Es wurde eine AppStream-Kennung erwartet."
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Ungültige Argumente, erwartete wenigstens ARCHIV FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Ungültige Argumente, erwartete Basis-16-Ganzzahl"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2077,6 +2127,11 @@ msgstr "Keine Aktualisierungen verfügbar"
 
 msgid "No updates available for remaining devices"
 msgstr "Für die verbleibenden Geräte sind keine Aktualisierungen verfügbar"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Kein Volume passt zu %s"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2541,6 +2596,18 @@ msgstr "Eine BIOS-Einstellung festlegen"
 msgid "Set one or more BIOS settings"
 msgstr "Eine oder mehrere BIOS-Einstellungen festlegen"
 
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "EFI-Boot-hive-Eintrag festlegen oder entfernen"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Nächsten EFI-Boot festlegen"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "EFI-Boot-Reihenfolge festlegen"
+
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
 msgstr "Legen Sie die Wiederholungsversuche für das Herunterladen bei vorübergehenden Fehlern fest"
@@ -2889,6 +2956,14 @@ msgstr "Geprüft von %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Getestet von einem vertrauenswürdigen Anbieter"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Der EFI-Boot-Eintrag ist nicht im hive-Format, und shim ist möglicherweise nicht neu genug, um ihn zu lesen."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Der EFI-Boot-Eintrag war nicht im hive-Format, Rückgriff auf Reservesystem"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3404,6 +3479,10 @@ msgstr "[DATEI DATEI_SIG GEGENSTELLENKENNUNG]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[DATEINAME1] [DATEINAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[GRUND] [ZEITÜBERSCHREITUNG]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -38,6 +38,52 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.7" date="2025-03-25">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow calling 'fwupdtool security' with a fwupd version parameter</li>
+          <li>A new plugin to update B&amp;R DisplayPort receivers</li>
+          <li>A new plugin to update Intel CVS cameras</li>
+          <li>A new plugin to verify UEFI memory protection attributes</li>
+          <li>A new quirk to signify that no additional ESP space is required</li>
+          <li>Build additional Redfish instance IDs for Dell server hardware</li>
+          <li>Implement the HPE proprietary Redfish firmware push method</li>
+          <li>Support cabinet archives greater in size than 2GB</li>
+          <li>Support for showing the SBOM release URL</li>
+          <li>Support for UEFI capsule installation in the bootloader</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always close USB file descriptors after starting the daemon</li>
+          <li>Do not add a Redfish release date if set to 00:00:00Z</li>
+          <li>Fix a critical warning when rescanning a device with no GUIDs</li>
+          <li>Fix a small memory leak when emumerating Logitech Rallysystem devices</li>
+          <li>Fix a tiny Redfish memory leak when writing firmware</li>
+          <li>Fix building against pygobject 3.52</li>
+          <li>Fix Logitech BulkController setup for new device firmware versions</li>
+          <li>Fix scaler-only Wacom USB update deployment</li>
+          <li>Fix updating the RMM component in the dell-kestrel dock</li>
+          <li>Fix writing new EFI variables to workaround a kernel regression</li>
+          <li>Make PCI NAME and SSVID_SSPID based modem-manager IDs visible</li>
+          <li>Parse firmware before putting the device into bootloader mode</li>
+          <li>Prepend the capsule header when using Capsule-on-Disk</li>
+          <li>Put a memory limit on decoding LZMA streams when parsing firmware</li>
+          <li>Retry claiming the fastboot interface for up to 2500ms</li>
+          <li>Trigger dpaux rescan on drm changes correctly</li>
+          <li>Use the metadata version format to set the version_lowest when required</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Another HP wireless dongle</li>
+          <li>Lenovo ThinkPad Thunderbolt 4 Smart Dock Gen2</li>
+          <li>Lenovo USB-C Dual Display Travel Dock</li>
+          <li>More EDL 5G modem devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.6" date="2025-02-14">
       <description>
         <p>

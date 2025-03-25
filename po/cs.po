@@ -6,7 +6,7 @@
 # Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020,2022
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
-# Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023
+# Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023,2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -126,6 +126,21 @@ msgstr "%s aktualizace GPU"
 msgid "%s Graphics Tablet Update"
 msgstr "Aktualizace grafického tabletu %s"
 
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "Aktualizace sluchátek %s"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "Aktualizace náhlavní soupravy %s"
+
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "Aktualizace herního ovladače %s"
+
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
@@ -233,6 +248,12 @@ msgstr "%s zmizelo: %s"
 msgid "%s is not currently updatable"
 msgstr "%s v tuto chvíli není možné aktualizovat"
 
+#. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+#. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
+#, c-format
+msgid "%s is pending activation; use %s to complete the update."
+msgstr "%s čeká na aktivaci; dokončete aktualizaci spuštěním %s."
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -318,6 +339,15 @@ msgstr[0] "%u sekunda"
 msgstr[1] "%u sekundy"
 msgstr[2] "%u sekund"
 msgstr[3] "%u sekundy"
+
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u test byl přeskočen"
+msgstr[1] "%u testy byly přeskočeny"
+msgstr[2] "%u testů bylo přeskočeno"
+msgstr[3] "%u testy byly přeskočeny"
 
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
@@ -419,6 +449,10 @@ msgstr "Povolit přeinstalaci stávající verze firmwaru"
 msgid "Allow switching firmware branch"
 msgstr "Umožnit přepnutí varianty firmware"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Už existuje a není zadáno --force"
+
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "Alternativní větev"
@@ -485,8 +519,16 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "K návratu na starší verzi firmwaru na tomto počítači je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Pro zapnutí shromažďování dat emulace je vyžadováno ověření"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
 msgstr "Pro opravu problému se zabezpečením stroje je třeba se ověřit"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Pro načtení dat emulace hardware je vyžadováno ověření"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
@@ -505,12 +547,24 @@ msgid "Authentication is required to read BIOS settings"
 msgstr "Pro načtení nastavení BIOS je třeba se ověřit"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr "K vrácení nastavení procesu služby do výchozího stavu je vyžadováno ověření se"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Pro uložení dat emulace hardware je vyžadováno ověření"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Pro nastavení seznamu schválených firmwarů je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Pro podepsání dat klientským certifikátem je vyžadováno ověření se"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "K zastavení služby aktualizací firmwarů je vyžadováno ověření"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
@@ -539,6 +593,11 @@ msgstr "K aktualizaci uložených kontrolních součtů pro zařízení je vyža
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Automatické odesílání hlášení"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Automaticky zrušit inhibování za %ums…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -608,9 +667,23 @@ msgstr "Sestavit cab archiv z binárního souboru s firmwarem a XML metadat"
 msgid "Build a firmware file"
 msgstr "Sestavit soubor s firmware"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * Utilized by OS means the distribution enabled it
+msgid "CET OS Support"
+msgstr "Podpora CET v OS"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "CET Platform"
+msgstr "CET platforma"
+
 #. TRANSLATORS: longer description
 msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
 msgstr "Aby bylo možné zmírnit dopad různých problémů s úniky různých informací z procesoru, je třeba zaktualizovat jeho mikrokód"
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "Může označit pro emulaci"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -671,6 +744,10 @@ msgstr "Příkaz nenalezen"
 msgid "Community supported"
 msgstr "Podporováno komunitou"
 
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Porovná dvě verze ohledně shodnosti"
+
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Doporučena změna nastavení"
@@ -679,9 +756,21 @@ msgstr "Doporučena změna nastavení"
 msgid "Configuration is only readable by the system administrator"
 msgstr "Nastavení je čitelné pouze pro správce systému"
 
+#. TRANSLATORS: longer description
+msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "Technologie Control-Flow Enforcement (vynucování řízení toku) zjišťuje a brání určitým metodám spouštění škodlivého software na zařízení."
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Control-flow Enforcement Technology"
+msgstr "Technologie vynucování řízení toku"
+
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Převést soubor s firmware"
+
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Vytvořit položku EFI zavádění"
 
 #. TRANSLATORS: when the update was built
 msgid "Created"
@@ -714,6 +803,10 @@ msgstr "Předvolby ladění"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Rozbalování…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Smazat položku EFI zavádění"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -767,6 +860,10 @@ msgstr "Akumulátor/baterie v zařízení je příliš vybitý (%u%%, vyžaduje 
 msgid "Device can recover flash failures"
 msgstr "Zařízení se dovede vzpamatovat z nezdaru při zápisu firmware"
 
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be updated while the lid is closed"
+msgstr "Zařízení není možné zaktualizovat, pokud je víko s displejem přiklopené"
+
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Změněno zařízení:"
@@ -786,6 +883,11 @@ msgstr "Zařízení je používáno"
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Zařízení je uzamčeno"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "Zařízení je nižší priority, než ekvivalentní zařízení"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
@@ -808,6 +910,10 @@ msgstr "Zařízení je možné používat i v průběhu aktualizace"
 #. TRANSLATORS: usually this is when we're waiting for a reboot
 msgid "Device is waiting for the update to be applied"
 msgstr "Zařízení čeká na instalaci aktualizací"
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Device list uploaded successfully, thanks!"
+msgstr "Seznam zařízení úspěšně odeslán – děkujeme!"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -857,6 +963,11 @@ msgstr "Zařízení, která byla úspěšně aktualizována:"
 msgid "Devices that were not updated correctly:"
 msgstr "Zařízení, která nebyla úspěšně aktualizována:"
 
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "Zařízení u kterých aktualizace firmware vyžaduje akci uživatele:"
+
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no
@@ -889,6 +1000,10 @@ msgstr "Zakázáno"
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
 msgstr "Zakázat daný vzdálený zdroj"
+
+#. TRANSLATORS: command description
+msgid "Disables virtual testing devices"
+msgstr "Vypíná virtuální testovací zařízení"
 
 #. TRANSLATORS: the OS the release was tested on
 msgid "Distribution"
@@ -945,6 +1060,11 @@ msgstr "Nezapisovat do databáze historie"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Rozumíte důsledkům změny větve firmwaru?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Chcete provést konverzi?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
@@ -1016,6 +1136,9 @@ msgstr "Emulovaný stroj"
 msgid "Enable"
 msgstr "Zapnout"
 
+msgid "Enable emulation data collection"
+msgstr "Zapnout shromažďování údajů emulace"
+
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
 msgstr "Povolit nový vzdálený zdroj?"
@@ -1036,6 +1159,10 @@ msgstr "Zapnuto pokud je odpovídající hardware"
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Povolit zadaný vzdálený zdroj"
+
+#. TRANSLATORS: command description
+msgid "Enables virtual testing devices"
+msgstr "Zapíná virtuální testovací zařízení"
 
 #. TRANSLATORS: longer description
 msgid "Enabling firmware updates for the BIOS allows fixing security issues."
@@ -1086,6 +1213,10 @@ msgstr "Skončit po načtení výkonné části"
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
 msgstr "Exportovat strukturu souboru s firmwarem do XML"
+
+#. TRANSLATORS: command description
+msgid "Export firmware history for manual upload"
+msgstr "Exportovat historii firmwarů pro ruční nahrání"
 
 #. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
@@ -1167,6 +1298,16 @@ msgstr "Zpracování argumentů se nezdařilo"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "Soubor se nepodařilo zpracovat"
+
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "Nepodařilo se zpracovat příznak pro %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
@@ -1297,6 +1438,11 @@ msgstr[3] "Metadata o firmwarech nebyla aktualizována už celé %u dny a nemus�
 msgid "Firmware updates"
 msgstr "Aktualizace firmware"
 
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "Aktualizace firmware jsou zakázané; pro jejich povolení spusťte „%s“"
+
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
 msgstr "Opravit konkrétní atribut zabezpečení stroje"
@@ -1371,6 +1517,10 @@ msgid "Get all enabled plugins registered with the system"
 msgstr "Vypsat všechny povolené zásuvné moduly registrované v systému"
 
 #. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Získat veškeré známé formáty verzí"
+
+#. TRANSLATORS: command description
 msgid "Get device report metadata"
 msgstr "Získat metadata výkazu o zařízení"
 
@@ -1436,6 +1586,22 @@ msgid "Host Security ID:"
 msgstr "Identifikátor zabezpečení hostitele:"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEX KLÍČ [HODNOTA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEX NÁZEV CÍL [PŘÍPOJNÝ-BOD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
 msgstr "IDENTIF-INHIBITORU"
 
@@ -1476,6 +1642,10 @@ msgstr "Ignorovat nesprávný kontrolní součet firmware"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignorovat neshody firmware s hardware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore non-critical firmware requirements"
+msgstr "Ignorovat nekritické požadavky firmware"
 
 #. TRANSLATORS: try to help
 msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
@@ -1653,6 +1823,14 @@ msgstr "Neplatné argumenty"
 msgid "Invalid arguments, expected GUID"
 msgstr "Neplatný argument – očekáváno GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Neplatné argumenty, očekáváno INDEX KEY [HODNOTA]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Neplatné argumenty, očekáváno INDEX NÁZEV CÍL [PŘÍPOJNÝ-BOD]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1661,6 +1839,10 @@ msgstr "Neplatný argument – očekáván AppStream identif."
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Neplatný argument – očekáváno přinjemenším ARCHIVE FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Neplané argumenty – očekáváno celé číslo ve formátu base-16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1753,6 +1935,14 @@ msgstr "Uzamčení linuxového jádra"
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
 msgstr "Linuxový odkládací prostor"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot files"
+msgstr "Vypsat soubory EFI zavádění"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot parameters"
+msgstr "Vypsat parametry EFI zavádění"
 
 #. TRANSLATORS: command description
 msgid "List EFI variables with a specific GUID"
@@ -1858,6 +2048,12 @@ msgstr "URI pro metadata"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata lze získat ze služby Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "Metadata jsou aktuální. Pokud je přesto chcete znovu načíst, použijte přepínač %s."
+
 #. TRANSLATORS: smallest version number installable on device
 msgid "Minimum Version"
 msgstr "Nejstarší použitelná verze"
@@ -1952,6 +2148,11 @@ msgstr "Nejsou k dispozici žádné aktualizace"
 
 msgid "No updates available for remaining devices"
 msgstr "Pro zbývající zařízení nejsou k dispozici žádné aktualizace"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "S %s se neshoduje žádný svazek"
 
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
@@ -2063,9 +2264,18 @@ msgstr "Než budete pokračovat, zajistěte si, abyste měli k dispozici záchra
 msgid "Please enter a number from 0 to %u: "
 msgstr "Zadejte prosím číslo od 0 do %u:"
 
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Zadejte buď %s nebo %s: "
+
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Chybí komponenty, na kterých zásuvný modul závisí"
+
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr "Zásuvný modul slouží pouze pro testování"
 
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
@@ -2151,6 +2361,10 @@ msgstr "Čtení z %s…"
 msgid "Reading…"
 msgstr "Čtení…"
 
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr "Připraveno"
+
 #. TRANSLATORS: how often we should refresh the metadata
 msgid "Refresh Interval"
 msgstr "Interval opětovného načítání"
@@ -2218,6 +2432,13 @@ msgstr "Vyžaduje ruční přepnutí do zavaděče firmware"
 msgid "Requires internet connection"
 msgstr "Vyžaduje připojení k Internetu"
 
+msgid "Reset daemon configuration"
+msgstr "Vrátit nastavení procesu služby do výchozího stavu"
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Resets a daemon configuration section"
+msgstr "Vrátí sekci nastavení procesu služby do výchozího stavu"
+
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Restartovat nyní?"
@@ -2246,6 +2467,18 @@ msgstr "Prohlédnout si a odeslat hlášení nyní?"
 msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
 msgstr "Zamezení instalace starší verze brání přechodu na starší verzi software zařízení (mohly by obsahovat už známé problémy v zabezpečení)."
 
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Podrobnosti získáte spuštěním „%s“."
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Pokud chcete tuto akci dokončit, spusťte `%s`."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Při použití install-blob spustit zásuvný modul rutina vyčištění složeného"
@@ -2272,12 +2505,24 @@ msgid "Runtime Suffix"
 msgstr "Přípona běhového prostředí"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "SEKCE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
 msgstr "HODNOTA NASTAVENI"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
 msgstr "NASTAVENÍ1 HODNOTA1 [NASTAVENÍ2] [HODNOTA2]"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "SMAP"
+msgstr "SMAP"
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM režim uzamčen"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -2314,6 +2559,10 @@ msgstr "Uložit soubor který umožňuje vytváření identifikátorů hardware"
 #. TRANSLATORS: command description
 msgid "Save device emulation data"
 msgstr "Uložit data emulace zařízení"
+
+#. TRANSLATORS: key for a offline report filename
+msgid "Saved report"
+msgstr "Uložené hlášení"
 
 #. TRANSLATORS: Scalar increment for integer BIOS setting
 msgid "Scalar Increment"
@@ -2367,6 +2616,22 @@ msgstr "Provést nastavení v BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Nastavit jedno nebo více nastavení v BIOS"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Nastavit nebo odebrat položku hive EFI zavádění"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Nastavit příští EFI zavádění"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Nastavit pořadí EFI zavádění"
+
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr "Nastavit opakované pokusy o stažení pro přechodné chyby"
 
 #. TRANSLATORS: command description
 msgid "Sets one or more BIOS settings"
@@ -2467,6 +2732,9 @@ msgstr "Zdroj"
 msgid "Specify the dbx database file"
 msgstr "Zadejte soubor dbx databáze"
 
+msgid "Stop the fwupd service"
+msgstr "Zastavit službu fwupd"
+
 #. TRANSLATORS: The BIOS setting accepts strings
 msgid "String"
 msgstr "Řetězec"
@@ -2484,6 +2752,10 @@ msgstr "Všechna zařízení úspěšně aktivována"
 msgid "Successfully disabled remote"
 msgstr "Vzdálený zdroj úspěšně zakázán"
 
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully disabled test devices"
+msgstr "Testovací zařízení úspěšně zakázány"
+
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -2496,6 +2768,10 @@ msgstr "Vzdálený zdroj úspěšně povolen a znovu načten"
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
 msgstr "Vzdálený zdroj úspěšně povolen"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully enabled test devices"
+msgstr "Testovací zařízení úspěšně povoleny"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
@@ -2512,6 +2788,14 @@ msgstr "Vzdálený zdroj úspěšně změněn"
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
 msgstr "Metadata úspěšně ručně aktualizována"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration section"
+msgstr "Sekce nastavení úspěšně vrácena do výchozího stavu"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration values"
+msgstr "Hodnoty nastavení úspěšně navráceny do výchozího stavu"
 
 #. TRANSLATORS: success message when user refreshes device checksums
 msgid "Successfully updated device checksums"
@@ -2539,6 +2823,14 @@ msgstr "Úspěšně počkáno %.0fms na zařízení"
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Supervisor Mode Access Prevention"
+msgstr "Zabránění v přístupu k režimu supervizora"
+
+#. TRANSLATORS: longer description
+msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "Supervisor Mode Access Prevention zajišťuje, že kritické části paměti zařízení nejsou přístupné méně bezpečným programům."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Supported"
@@ -2590,9 +2882,26 @@ msgstr "Přepnout větev firmware na zařízení"
 msgid "Sync firmware versions to the chosen configuration"
 msgstr "Synchronizovat verze firmwarů ke zvolenému nastavení"
 
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "Režim správy systému"
+
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
 msgstr "Aktualizace systému blokována"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Režim System management je používán firmwarem pro přístup k rezidentnímu BIOS kódu a datům."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "Akumulátor zařízení je příliš vybitý"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "Akumulátor zařízení je příliš vybitý (%u%%, vyžaduje %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
@@ -2672,6 +2981,14 @@ msgstr "Vyzkoušeno výrobcem %s"
 #. TRANSLATORS: someone we trust has tested this
 msgid "Tested by trusted vendor"
 msgstr "Vyzkoušeno důvěryhodným výrobcem"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Položka EFI zavádění není ve formátu hive a může se stát, že shim nebude dostatečně nový aby ji načetl."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Položka EFI zavádění systému nebyla ve formátu hive – bude použito náhradní řešení"
 
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
@@ -3002,6 +3319,15 @@ msgstr "Aktualizovat uložená metadata stávajícím obsahem"
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Aktualizuje firmware veškerých zadaných zařízení na nejnovější verzi, případně na všech zařízeních, pokud nejsou žádná vyjmenována"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "Pro %u lokální zařízení byly vydány aktualizace"
+msgstr[1] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
+msgstr[2] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
+msgstr[3] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
+
 msgid "Updating"
 msgstr "Aktualizuje se"
 
@@ -3016,11 +3342,24 @@ msgstr "Aktualizace %s…"
 msgid "Upgrade %s from %s to %s?"
 msgstr "Přejít na novější verzi u %s a to z %s na %s?"
 
+#. TRANSLATORS: ask the user to upload
+msgid "Upload data now?"
+msgstr "Odeslat data nyní?"
+
+#. TRANSLATORS: command description
+msgid "Upload the list of updatable devices to a remote server"
+msgstr "Odeslat seznam zařízení, která je možné aktualizovat, na vzdálený server"
+
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
 #, c-format
 msgid "Upload these anonymous results to the %s to help other users?"
 msgstr "Nahrát tyto anonymní výsledky na %s a pomoci tak ostatním uživatelům?"
+
+#. TRANSLATORS: explain why we want to upload
+#, c-format
+msgid "Uploading a device list allows the %s team to know what hardware exists, and allows us to put pressure on vendors that do not upload firmware updates for their hardware."
+msgstr "Odesílání seznamů zařízení umožní týmu %s se dozvědět, jaký hardware existuje a umožní nám vyvíjet tlak na výrobce, kteří nenahrávají aktualizace firmware pro jejich hardware."
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -3050,6 +3389,10 @@ msgstr "Uživatel byl upozorněn"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Uživatelské jméno"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERZE1 VERZE2 [FORMÁT]"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -3165,8 +3508,20 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[SOUBOR1] [SOUBOR2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[DŮVOD] [ČASOVÝ-LIMIT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr "[SEKCE] KLÍČ HODNOTA"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[NASTAVENÍ1] [NASTAVENÍ2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[NASTAVENi1] [NASTAVENI2]…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

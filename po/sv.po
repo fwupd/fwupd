@@ -579,6 +579,11 @@ msgstr "Autentisering krävs för att uppdatera lagrade kontrollsummor för enhe
 msgid "Automatic Reporting"
 msgstr "Automatisk rapportering"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Släpper automatiskt hindrande om %ums…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Skicka automatiskt varje gång?"
@@ -3474,6 +3479,10 @@ msgstr "[FIL FILSIG FJÄRR-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILNAMN1] [FILNAMN2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[ORSAK][TIDSGRÄNS-UPPNÅDD]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"
