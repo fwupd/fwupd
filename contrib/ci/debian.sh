@@ -36,12 +36,6 @@ apt update -qq && apt install python3-apt -y
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
 dpkg-checkbuilddeps
 
-# temporary workaround for libxmlb 0.3.20 issue
-ARCH="$(dpkg-architecture -q DEB_HOST_ARCH)"
-apt install wget -y
-wget http://ftp.us.debian.org/debian/pool/main/libx/libxmlb/libxmlb2_0.3.21-1_${ARCH}.deb
-dpkg -i libxmlb2_0.3.21-1_${ARCH}.deb
-
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
 	export DEB_BUILD_OPTIONS=nocheck
