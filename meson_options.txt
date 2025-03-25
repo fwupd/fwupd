@@ -35,6 +35,11 @@ option('efi_binary',
   value: false,
   description: 'generate uefi binary if missing',
 )
+option('plugin_qc_firehose',
+  type: 'boolean',
+  value: false,
+  description: 'Build the beta-quality qc_firehose plugin',
+)
 option('efi_os_dir',
   type: 'string',
   description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
