@@ -161,7 +161,7 @@ jobs:
         with:
           key: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
           name: id_rsa # optional
-          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          known_hosts: unnecessary
           if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
       - name: Clone docs
         run: |
