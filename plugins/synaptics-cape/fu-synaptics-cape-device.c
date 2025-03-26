@@ -22,7 +22,7 @@
 #define FU_SYNAPTICS_CAPE_DEVICE_HDR_WRITE_DELAY_MS	150  /* ms */
 
 /* defines CAPE command constant values and macro */
-#define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8	 /* number of guint32 */
+#define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8 /* number of guint32 */
 
 #define FU_SYNAPTICS_CAPE_CMD_GET_FLAG 0x100 /* GET flag */
 

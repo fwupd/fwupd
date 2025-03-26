@@ -62,7 +62,7 @@ fu_memwrite_uint24(guint8 *buf, guint32 val_native, FuEndianType endian)
 		break;
 	case G_LITTLE_ENDIAN:
 		val_hw = GUINT32_TO_LE(val_native); /* nocheck:blocked */
-		memcpy(buf, &val_hw, 0x3); /* nocheck:blocked */
+		memcpy(buf, &val_hw, 0x3);	    /* nocheck:blocked */
 		break;
 	default:
 		g_assert_not_reached();
@@ -177,7 +177,7 @@ fu_memread_uint24(const guint8 *buf, FuEndianType endian)
 		val_native = GUINT32_FROM_BE(val_hw);	     /* nocheck:blocked */
 		break;
 	case G_LITTLE_ENDIAN:
-		memcpy(&val_hw, buf, 0x3); /* nocheck:blocked */
+		memcpy(&val_hw, buf, 0x3);	      /* nocheck:blocked */
 		val_native = GUINT32_FROM_LE(val_hw); /* nocheck:blocked */
 		break;
 	default:

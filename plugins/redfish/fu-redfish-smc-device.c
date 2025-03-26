@@ -127,10 +127,7 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 			    fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device),
-					   location,
-					   progress,
-					   error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device), location, progress, error);
 }
 
 static gboolean
