@@ -1319,73 +1319,17 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 }
 
 static gboolean
-fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_install_stream(FuUtilPrivate *priv,
+		       GInputStream *stream,
+		       GPtrArray *devices,
+		       FuProgress *progress,
+		       GError **error)
 {
-	g_autofree gchar *filename = NULL;
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GPtrArray) components = NULL;
-	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
-	/* progress */
-	fu_progress_set_id(priv->progress, G_STRLOC);
-	fu_progress_add_flag(priv->progress, FU_PROGRESS_FLAG_NO_PROFILE);
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 50, "start-engine");
-	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
-
-	/* load engine */
-	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
-				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
-				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
-				  fu_progress_get_child(priv->progress),
-				  error))
-		return FALSE;
-	fu_progress_step_done(priv->progress);
-
-	/* handle both forms */
-	if (g_strv_length(values) == 1) {
-		devices_possible = fu_engine_get_devices(priv->engine, error);
-		if (devices_possible == NULL)
-			return FALSE;
-		fwupd_device_array_ensure_parents(devices_possible);
-	} else if (g_strv_length(values) == 2) {
-		FuDevice *device = fu_util_get_device(priv, values[1], error);
-		if (device == NULL)
-			return FALSE;
-		if (!priv->no_safety_check) {
-			if (!fu_util_prompt_warning_fde(priv->console, FWUPD_DEVICE(device), error))
-				return FALSE;
-		}
-		devices_possible =
-		    fu_engine_get_devices_by_composite_id(priv->engine,
-							  fu_device_get_composite_id(device),
-							  error);
-		if (devices_possible == NULL)
-			return FALSE;
-
-		g_ptr_array_add(devices_possible, device);
-	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
-	}
-
-	/* download if required */
-	filename = fu_util_download_if_required(priv, values[0], error);
-	if (filename == NULL)
-		return FALSE;
-
-	/* parse silo */
-	stream = fu_input_stream_from_path(filename, error);
-	if (stream == NULL) {
-		fu_util_maybe_prefix_sandbox_error(filename, error);
-		return FALSE;
-	}
 	cabinet = fu_engine_build_cabinet_from_stream(priv->engine, stream, error);
 	if (cabinet == NULL)
 		return FALSE;
@@ -1400,8 +1344,8 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		XbNode *component = g_ptr_array_index(components, i);
 
 		/* do any devices pass the requirements */
-		for (guint j = 0; j < devices_possible->len; j++) {
-			FuDevice *device = g_ptr_array_index(devices_possible, j);
+		for (guint j = 0; j < devices->len; j++) {
+			FuDevice *device = g_ptr_array_index(devices, j);
 			g_autoptr(FuRelease) release = fu_release_new();
 			g_autoptr(GError) error_local = NULL;
 
@@ -1459,13 +1403,82 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 
 	/* install all the tasks */
-	if (!fu_engine_install_releases(priv->engine,
-					priv->request,
-					releases,
-					cabinet,
-					fu_progress_get_child(priv->progress),
-					priv->flags,
-					error))
+	return fu_engine_install_releases(priv->engine,
+					  priv->request,
+					  releases,
+					  cabinet,
+					  fu_progress_get_child(priv->progress),
+					  priv->flags,
+					  error);
+}
+
+static gboolean
+fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GPtrArray) devices_possible = NULL;
+
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_flag(priv->progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 50, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
+				  error))
+		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* handle both forms */
+	if (g_strv_length(values) == 1) {
+		devices_possible = fu_engine_get_devices(priv->engine, error);
+		if (devices_possible == NULL)
+			return FALSE;
+		fwupd_device_array_ensure_parents(devices_possible);
+	} else if (g_strv_length(values) == 2) {
+		FuDevice *device = fu_util_get_device(priv, values[1], error);
+		if (device == NULL)
+			return FALSE;
+		if (!priv->no_safety_check) {
+			if (!fu_util_prompt_warning_fde(priv->console, FWUPD_DEVICE(device), error))
+				return FALSE;
+		}
+		devices_possible =
+		    fu_engine_get_devices_by_composite_id(priv->engine,
+							  fu_device_get_composite_id(device),
+							  error);
+		if (devices_possible == NULL)
+			return FALSE;
+
+		g_ptr_array_add(devices_possible, device);
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* download if required */
+	filename = fu_util_download_if_required(priv, values[0], error);
+	if (filename == NULL)
+		return FALSE;
+	stream = fu_input_stream_from_path(filename, error);
+	if (stream == NULL) {
+		fu_util_maybe_prefix_sandbox_error(filename, error);
+		return FALSE;
+	}
+	if (!fu_util_install_stream(priv,
+				    stream,
+				    devices_possible,
+				    fu_progress_get_child(priv->progress),
+				    error))
 		return FALSE;
 	fu_progress_step_done(priv->progress);
 
@@ -3874,22 +3887,55 @@ fu_util_emulation_load(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* check args */
-	if (g_strv_length(values) != 1) {
+	if (g_strv_length(values) < 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments, expected FILENAME");
+				    "Invalid arguments, expected EMULATION-FILE [ARCHIVE-FILE]");
 		return FALSE;
 	}
-	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, priv->progress, error))
+
+	/* progress */
+	fu_progress_set_id(priv->progress, G_STRLOC);
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 95, "start-engine");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_LOADING, 5, "load-emulation");
+	fu_progress_add_step(priv->progress, FWUPD_STATUS_DEVICE_WRITE, 5, "write");
+
+	/* load engine */
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  fu_progress_get_child(priv->progress),
+				  error))
 		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* load emulation */
 	stream = fu_input_stream_from_path(values[0], error);
 	if (stream == NULL)
 		return FALSE;
 	if (!fu_engine_emulation_load(priv->engine, stream, error))
 		return FALSE;
-	if (!fu_engine_emulation_load_phase(priv->engine, FU_ENGINE_EMULATOR_PHASE_INSTALL, error))
-		return FALSE;
+	fu_progress_step_done(priv->progress);
+
+	/* "install" archive */
+	if (values[1] != NULL) {
+		g_autoptr(GInputStream) stream_cab = NULL;
+		g_autoptr(GPtrArray) devices_possible = NULL;
+
+		stream_cab = fu_input_stream_from_path(values[1], error);
+		if (stream_cab == NULL)
+			return FALSE;
+		devices_possible = fu_engine_get_devices(priv->engine, error);
+		if (devices_possible == NULL)
+			return FALSE;
+		if (!fu_util_install_stream(priv,
+					    stream_cab,
+					    devices_possible,
+					    fu_progress_get_child(priv->progress),
+					    error))
+			return FALSE;
+	}
+	fu_progress_step_done(priv->progress);
 
 	/* success */
 	return TRUE;
@@ -5288,7 +5334,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "emulation-load",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME"),
+			      _("EMULATION-FILE [ARCHIVE-FILE]"),
 			      /* TRANSLATORS: command description */
 			      _("Load device emulation data"),
 			      fu_util_emulation_load);

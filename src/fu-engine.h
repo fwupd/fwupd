@@ -273,10 +273,6 @@ gboolean
 fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_engine_emulation_load_phase(FuEngine *self,
-			       FuEngineEmulatorPhase emulator_phase,
-			       GError **error);
-gboolean
 fu_engine_emulation_save(FuEngine *self, GOutputStream *stream, GError **error)
     G_GNUC_NON_NULL(1, 2);
 gboolean
