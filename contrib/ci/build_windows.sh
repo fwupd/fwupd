@@ -161,7 +161,8 @@ wixl -v \
 	-o "${MSI_FILENAME}"
 
 #generate news release
-contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
+echo "Generating news for version $VERSION"
+contrib/ci/generate_news.py $VERSION | tee -a $DESTDIR/news.txt
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
