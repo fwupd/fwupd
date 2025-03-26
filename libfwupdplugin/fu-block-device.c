@@ -9,8 +9,8 @@
 #include "config.h"
 
 #ifdef HAVE_SCSI_SG_H
-#include <stddef.h>
 #include <scsi/sg.h>
+#include <stddef.h>
 #endif
 
 #include "fu-block-device.h"

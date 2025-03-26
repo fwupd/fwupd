@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include <stddef.h>
 #include <scsi/sg.h>
+#include <stddef.h>
 
 #include "fu-scsi-device.h"
 #include "fu-scsi-struct.h"

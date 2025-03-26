@@ -8,11 +8,11 @@
 
 #include "config.h"
 
+#include <curl/curl.h>
 #include <glib/gi18n.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <xmlb.h>
-#include <curl/curl.h>
 
 #include "fu-console.h"
 #include "fu-device-private.h"

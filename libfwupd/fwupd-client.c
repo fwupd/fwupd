@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
 #include <curl/curl.h>
+#include <gio/gio.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
