@@ -126,8 +126,8 @@ struct _FuEngine {
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
-	GHashTable *approved_firmware;	      /* (nullable) */
-	GHashTable *blocked_firmware;	      /* (nullable) */
+	GHashTable *approved_firmware; /* (nullable) */
+	GHashTable *blocked_firmware;  /* (nullable) */
 	FuEngineEmulator *emulation;
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;

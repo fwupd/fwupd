@@ -116,10 +116,7 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	location = json_object_get_string_member(json_obj, "@odata.id");
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self),
-					   location,
-					   progress,
-					   error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 
 static void
