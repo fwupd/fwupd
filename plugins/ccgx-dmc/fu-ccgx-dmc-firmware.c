@@ -188,8 +188,6 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 
 	/* set initial segment info offset */
 	for (guint32 i = 0; i < image_count; i++) {
-		gsize img_digestsz = 0;
-		const guint8 *img_digest;
 		g_autoptr(FuCcgxDmcFirmwareRecord) img_rcd = NULL;
 		g_autoptr(GByteArray) st_img = NULL;
 
@@ -210,37 +208,37 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 		img_rcd->img_offset = fu_struct_ccgx_dmc_fwct_image_info_get_img_offset(st_img);
 		img_rcd->num_img_segments =
 		    fu_struct_ccgx_dmc_fwct_image_info_get_num_img_segments(st_img);
-		if (img_rcd->num_img_segments == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid segment number = %d",
-				    img_rcd->num_img_segments);
-			return FALSE;
+
+		/* segments are optional */
+		if (img_rcd->num_img_segments > 0) {
+			gsize img_digestsz = 0;
+			const guint8 *img_digest;
+
+			img_digest =
+			    fu_struct_ccgx_dmc_fwct_image_info_get_img_digest(st_img,
+									      &img_digestsz);
+			if (!fu_memcpy_safe((guint8 *)&img_rcd->img_digest,
+					    sizeof(img_rcd->img_digest),
+					    0x0, /* dst */
+					    img_digest,
+					    img_digestsz,
+					    0, /* src */
+					    img_digestsz,
+					    error))
+				return FALSE;
+
+			/* parse segment */
+			if (!fu_ccgx_dmc_firmware_parse_segment(firmware,
+								stream,
+								img_rcd,
+								&seg_off,
+								flags,
+								error))
+				return FALSE;
+
+			/* add image record to image record array */
+			g_ptr_array_add(self->image_records, g_steal_pointer(&img_rcd));
 		}
-		img_digest =
-		    fu_struct_ccgx_dmc_fwct_image_info_get_img_digest(st_img, &img_digestsz);
-		if (!fu_memcpy_safe((guint8 *)&img_rcd->img_digest,
-				    sizeof(img_rcd->img_digest),
-				    0x0, /* dst */
-				    img_digest,
-				    img_digestsz,
-				    0, /* src */
-				    img_digestsz,
-				    error))
-			return FALSE;
-
-		/* parse segment */
-		if (!fu_ccgx_dmc_firmware_parse_segment(firmware,
-							stream,
-							img_rcd,
-							&seg_off,
-							flags,
-							error))
-			return FALSE;
-
-		/* add image record to image record array */
-		g_ptr_array_add(self->image_records, g_steal_pointer(&img_rcd));
 
 		/* increment image offset */
 		img_off += FU_STRUCT_CCGX_DMC_FWCT_IMAGE_INFO_SIZE;
