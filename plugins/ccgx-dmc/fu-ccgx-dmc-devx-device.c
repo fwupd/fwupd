@@ -243,7 +243,7 @@ fu_ccgx_dmc_devx_device_type_to_name(FuCcgxDmcDevxDeviceType device_type)
 		return "PMG1S3";
 	if (device_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_SPI)
 		return "SPI";
-	return "Unknown";
+	return NULL;
 }
 
 guint
@@ -273,6 +273,7 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	gsize offset = 0;
 	guint8 device_type;
 	g_autofree gchar *logical_id = NULL;
+	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* sanity check */
@@ -282,7 +283,10 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 	}
 
 	device_type = fu_struct_ccgx_dmc_devx_status_get_device_type(self->status);
-	fu_device_set_name(device, fu_ccgx_dmc_devx_device_type_to_name(device_type));
+	name = g_strdup(fu_ccgx_dmc_devx_device_type_to_name(device_type));
+	if (name == NULL)
+		name = g_strdup_printf("Custom Component %03u", device_type);
+	fu_device_set_name(device, name);
 	logical_id = g_strdup_printf("0x%02x",
 				     fu_struct_ccgx_dmc_devx_status_get_component_id(self->status));
 	fu_device_set_logical_id(device, logical_id);
