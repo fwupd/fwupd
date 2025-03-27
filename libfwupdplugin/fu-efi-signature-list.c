@@ -16,6 +16,7 @@
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
+#include "fu-efi-x509-signature-private.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 
@@ -91,7 +92,13 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	/* header is typically unused */
 	offset_tmp = *offset + 0x1c + header_size;
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
-		g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(sig_kind);
+		g_autoptr(FuEfiSignature) sig = NULL;
+
+		if (sig_kind == FU_EFI_SIGNATURE_KIND_X509) {
+			sig = FU_EFI_SIGNATURE(fu_efi_x509_signature_new());
+		} else {
+			sig = fu_efi_signature_new(sig_kind);
+		}
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig),
 					      stream,

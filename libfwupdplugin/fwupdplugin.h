@@ -56,6 +56,7 @@
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-volume.h>
+#include <libfwupdplugin/fu-efi-x509-signature.h>
 #include <libfwupdplugin/fu-efivars.h>
 #include <libfwupdplugin/fu-elf-firmware.h>
 #include <libfwupdplugin/fu-endian.h>
