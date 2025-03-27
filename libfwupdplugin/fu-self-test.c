@@ -28,6 +28,7 @@
 #include "fu-device-progress.h"
 #include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-efi-x509-signature-private.h"
 #include "fu-efivars-private.h"
 #include "fu-kernel-search-path-private.h"
 #include "fu-lzma-common.h"
@@ -6262,6 +6263,27 @@ fu_lzma_func(void)
 }
 
 static void
+fu_plugin_efi_x509_signature_func(void)
+{
+	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
+
+	fu_efi_x509_signature_set_issuer(sig, "C=UK,O=fwupd,CN=fwupd root CA 2012");
+	fu_efi_x509_signature_set_subject(sig, "C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
+
+	/* get issuer */
+	g_assert_cmpstr(fu_efi_x509_signature_get_issuer(sig),
+			==,
+			"C=UK,O=fwupd,CN=fwupd root CA 2012");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject(sig),
+			==,
+			"C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_name(sig), ==, "Hughski Ltd. KEK CA");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_vendor(sig), ==, "Hughski Ltd.");
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2012);
+	g_assert_cmpstr(fu_firmware_get_version(FU_FIRMWARE(sig)), ==, "2012");
+}
+
+static void
 fu_cab_checksum_func(void)
 {
 	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
@@ -6777,6 +6799,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/msgpack{parse-binary}", fu_msgpack_parse_binary_func);
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
+	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);

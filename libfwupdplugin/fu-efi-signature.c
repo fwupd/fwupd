@@ -83,6 +83,15 @@ fu_efi_signature_get_kind(FuEfiSignature *self)
 	return priv->kind;
 }
 
+/* private */
+void
+fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind)
+{
+	FuEfiSignaturePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_EFI_SIGNATURE(self));
+	priv->kind = kind;
+}
+
 /**
  * fu_efi_signature_get_owner:
  * @self: A #FuEfiSignature

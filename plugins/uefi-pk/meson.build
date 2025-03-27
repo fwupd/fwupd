@@ -1,4 +1,3 @@
-if hsi and gnutls.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -15,5 +14,3 @@ plugin_builtins += static_library('fu_plugin_uefi_pk',
 )
 enumeration_data += files('tests/uefi-pk-setup.json')
 device_tests += files('tests/uefi-pk.json')
-
-endif
