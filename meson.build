@@ -593,6 +593,12 @@ configure_file(
   configuration: conf
 )
 
+configure_file(
+  input: 'contrib/android/adb_fwupd_env.sh.in',
+  output: 'adb_fwupd_env.sh',
+  configuration: conf,
+)
+
 libdrm_amdgpu = dependency('libdrm_amdgpu', version: '>= 2.4.113', required: get_option('libdrm'))
 protobufc = dependency('libprotobuf-c', required: get_option('protobuf'))
 protoc = find_program('protoc', 'protoc-c', required: get_option('protobuf'))

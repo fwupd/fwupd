@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Make sure /data/fwupd is a directory that is neither `ro` and `noexec`
+# meson setup --cross-file contrib/android/android_arm64-cross-file.ini --reconfigure --prefix=/data/fwupd _android_build
+# meson install -C _android_build --destdir=$(pwd)/_android_dist
+# adb -e shell rm -r /data/fwupd
+# adb -e push _android_dist/ /data/fwupd
+# _android_build/adb_fwupd_env.sh fwupdtool get-devices -vv
+# _android_build/adb_fwupd_env.sh fwupd-binder --verbose
+
+FWUPD_BINDIR=@FWUPD_BINDIR@
+FWUPD_LIBDIR=@FWUPD_LIBDIR@
+FWUPD_LIBEXECDIR=@FWUPD_LIBEXECDIR@
+FWUPD_LOCALSTATEDIR=@FWUPD_LOCALSTATEDIR@
+FWUPD_LIBDIR_PKG=@FWUPD_LIBDIR_PKG@
+
+adb -e shell -t \
+ FWUPD_POLKIT_NOCHECK=1 \
+ FWUPD_LOCKDIR="${FWUPD_LOCALSTATEDIR}/run" \
+ LD_LIBRARY_PATH="${FWUPD_LIBDIR_PKG}:${FWUPD_LIBDIR}" \
+ PATH="\${PATH}:${FWUPD_BINDIR}:${FWUPD_LIBEXECDIR}/fwupd" \
+ "${*}"
