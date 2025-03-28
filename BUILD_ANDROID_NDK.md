@@ -40,16 +40,16 @@ adb -e logcat 'SELinux:*' '*:S'
 adb -e shell setenforce permissive
 ```
 
-# Building and running on Android
+## Building and running on Android
 
-## 1. Point the `ndk_path` field to your `ANDROID_NDK_HOME` in `contrib/android/android_arm64-cross-file.ini`
+### 1. Point the `ndk_path` field to your `ANDROID_NDK_HOME` in `contrib/android/android_arm64-cross-file.ini`
 
 ```ini
 [constants]
 ndk_path = '/opt/android/android-ndk-r27/'
 ```
 
-## 2. Configure
+### 2. Configure
 
 Setting the prefix to a directory that is writeable on the device is important as fwupd will exit if the prefix cache path is not writeable ignoring the value of the `CACHE_DIRECTORY` environment variable.
 
@@ -59,13 +59,13 @@ meson setup --cross-file contrib/android/android_arm64-cross-file.ini --prefix=/
 
 This also disables libjcat features to sidestep the gpgme and gnutls dependencies.
 
-## 3. Build
+### 3. Build
 
 ```bash
 meson install --destdir=$(pwd)/_android_dist -C _android_build
 ```
 
-## 4. Upload to Device
+### 4. Upload to Device
 
 ```bash
 ./contrib/android/adb-push-sync.sh _android_dist/data/fwupd/ /data/fwupd
@@ -73,18 +73,18 @@ meson install --destdir=$(pwd)/_android_dist -C _android_build
 
 This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` to avoid issues I've had with `adb push` not updating the build.
 
-## 5. Run
+### 5. Run
 
 ```bash
-./contrib/android/adb_fwupd_env.sh fwupd-binder --verbose --verbase
+./_android_build/adb_fwupd_env.sh fwupd-binder --verbose --verbase
 ```
 
 This script originally set environment variables to identify paths but since we're using the correct prefix that is unnecessary.  
 Currently the script just sets the correct `LD_LIBRARY_PATH` and `PATH` environment.
 
-# Debugging
+## Debugging
 
-## logcat
+### logcat
 
 [logcat](https://developer.android.com/tools/logcat) can be used for general Android logging:
 
@@ -92,7 +92,7 @@ Currently the script just sets the correct `LD_LIBRARY_PATH` and `PATH` environm
 adb -e logcat 'fwupd:*' 'AndroidRuntime:*' 'TransactionExecutor:*' 'SELinux:*' '*:S'
 ```
 
-## Kernel binder tracing
+### Kernel binder tracing
 
 Write `1` to `/sys/kernel/tracing/tracing_on` and `/sys/kernel/tracing/events/binder/enable`.
 
@@ -112,7 +112,7 @@ adb -e shell -t '\
 
 Example output of `/sys/kernel/tracing/trace_pipe`
 
-```
+```text
  eedesktop.fwupd-3153  [001] .... 462762.700092: binder_ioctl: cmd=0xc0306201 arg=0x7fd42a0190
  eedesktop.fwupd-3153  [001] .... 462762.700104: binder_command: cmd=0x40406300 BC_TRANSACTION
  eedesktop.fwupd-3153  [001] .... 462762.700295: binder_transaction: transaction=3889277 dest_node=3879782 dest_proc=1196 dest_thread=0 reply=0 flags=0x11 code=0x3
