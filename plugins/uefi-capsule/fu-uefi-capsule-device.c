@@ -34,6 +34,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiCapsuleDevice, fu_uefi_capsule_device, FU_TYPE_
 #define GET_PRIVATE(o) (fu_uefi_capsule_device_get_instance_private(o))
 
 #define FU_EFI_FMP_CAPSULE_GUID "6dcbd5ed-e82d-4c44-bda1-7194199ad92a"
+#define FU_EFI_AB_INDICATIONS_GUID "4a8dd2d2-8acf-11ef-b864-0242ac120002"
 
 /* the size of the fwupd*.efi binary plus any logs the firmware updater might generate */
 #define FU_UEFI_CAPSULE_EXTRA_SIZE_REQUIRED (1024 * 1024) /* bytes */
@@ -518,8 +519,33 @@ fu_uefi_capsule_device_cleanup(FuDevice *device,
 }
 
 static gboolean
+fu_uefi_capsule_device_activate(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	g_autoptr(FuStructAbIndications) st = fu_struct_ab_indications_new();
+
+	/* accept */
+	if (!fu_efivars_set_data(efivars,
+				 FU_EFI_AB_INDICATIONS_GUID,
+				 "ABIndications",
+				 st->data,
+				 st->len,
+				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS |
+				     FU_EFIVARS_ATTR_AUTHENTICATED_WRITE_ACCESS,
+				 error))
+		return FALSE;
+
+	/* success */
+	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -567,6 +593,13 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		fu_device_add_icon(device, "computer");
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
+	}
+
+	/* systems supporting A/B capsule updates -- ideally we also want to also check the
+	 * FwBankFlags from ESRTv2 which does not actually exist yet */
+	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		if (fu_efivars_exists(efivars, FU_EFI_AB_INDICATIONS_GUID, "ABIndications"))
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	}
 
 	/* whether to create a missing header */
@@ -825,6 +858,7 @@ fu_uefi_capsule_device_class_init(FuUefiCapsuleDeviceClass *klass)
 	object_class->set_property = fu_uefi_capsule_device_set_property;
 	object_class->finalize = fu_uefi_capsule_device_finalize;
 	device_class->to_string = fu_uefi_capsule_device_to_string;
+	device_class->activate = fu_uefi_capsule_device_activate;
 	device_class->probe = fu_uefi_capsule_device_probe;
 	device_class->prepare_firmware = fu_uefi_capsule_device_prepare_firmware;
 	device_class->prepare = fu_uefi_capsule_device_prepare;
