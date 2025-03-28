@@ -104,6 +104,7 @@ fwupdplugin_src = [
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efivars.c', # fuzzing
+  'fu-efi-x509-device.c',
   'fu-efi-x509-signature.c',
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
@@ -250,6 +251,7 @@ fwupdplugin_headers = [
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efivars.h',
+  'fu-efi-x509-device.h',
   'fu-efi-x509-signature.h',
   'fu-elf-firmware.h',
   'fu-endian.h',

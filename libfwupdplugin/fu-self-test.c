@@ -6265,8 +6265,13 @@ fu_lzma_func(void)
 static void
 fu_plugin_efi_x509_signature_func(void)
 {
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Device) device = fu_efi_x509_device_new(ctx, sig);
+	g_autoptr(GError) error = NULL;
 
+	fu_firmware_set_id(FU_FIRMWARE(sig), "0000000000000000000000000000000000000000");
 	fu_efi_x509_signature_set_issuer(sig, "C=UK,O=fwupd,CN=fwupd root CA 2012");
 	fu_efi_x509_signature_set_subject(sig, "C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
 
@@ -6277,10 +6282,26 @@ fu_plugin_efi_x509_signature_func(void)
 	g_assert_cmpstr(fu_efi_x509_signature_get_subject(sig),
 			==,
 			"C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
-	g_assert_cmpstr(fu_efi_x509_signature_get_subject_name(sig), ==, "Hughski Ltd. KEK CA");
-	g_assert_cmpstr(fu_efi_x509_signature_get_subject_vendor(sig), ==, "Hughski Ltd.");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_name(sig), ==, "Hughski KEK CA");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_vendor(sig), ==, "Hughski");
 	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2012);
 	g_assert_cmpstr(fu_firmware_get_version(FU_FIRMWARE(sig)), ==, "2012");
+
+	/* create a device from the certificate */
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_device_get_version_raw(FU_DEVICE(device)), ==, 2012);
+	g_assert_cmpstr(fu_device_get_version(FU_DEVICE(device)), ==, "2012");
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(device)), ==, "KEK CA");
+	g_assert_cmpstr(fu_device_get_vendor(FU_DEVICE(device)), ==, "Hughski");
+	g_assert_true(fu_device_has_instance_id(FU_DEVICE(device),
+						"UEFI\\VENDOR_Hughski&NAME_Hughski-KEK-CA",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(
+	    fu_device_has_instance_id(FU_DEVICE(device),
+				      "UEFI\\CRT_0000000000000000000000000000000000000000",
+				      FU_DEVICE_INSTANCE_FLAG_VISIBLE));
 }
 
 static void
