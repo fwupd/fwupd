@@ -28,6 +28,7 @@
 #include "fu-device-progress.h"
 #include "fu-dummy-efivars.h"
 #include "fu-efi-lz77-decompressor.h"
+#include "fu-efi-x509-signature-private.h"
 #include "fu-efivars-private.h"
 #include "fu-kernel-search-path-private.h"
 #include "fu-lzma-common.h"
@@ -6262,6 +6263,74 @@ fu_lzma_func(void)
 }
 
 static void
+fu_plugin_efi_x509_signature_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuEfiX509Signature) sig = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Device) device = fu_efi_x509_device_new(ctx, sig);
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_id(FU_FIRMWARE(sig), "0000000000000000000000000000000000000000");
+	fu_efi_x509_signature_set_issuer(sig, "C=UK,O=fwupd,CN=fwupd root CA 2012");
+	fu_efi_x509_signature_set_subject(sig, "C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
+
+	/* get issuer */
+	g_assert_cmpstr(fu_efi_x509_signature_get_issuer(sig),
+			==,
+			"C=UK,O=fwupd,CN=fwupd root CA 2012");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject(sig),
+			==,
+			"C=UK,O=Hughski Ltd.,CN=Hughski Ltd. KEK CA 2012");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_name(sig), ==, "Hughski KEK CA");
+	g_assert_cmpstr(fu_efi_x509_signature_get_subject_vendor(sig), ==, "Hughski");
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2012);
+	g_assert_cmpstr(fu_firmware_get_version(FU_FIRMWARE(sig)), ==, "2012");
+
+	/* create a device from the certificate */
+	ret = fu_device_probe(FU_DEVICE(device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(fu_device_get_version_raw(FU_DEVICE(device)), ==, 2012);
+	g_assert_cmpstr(fu_device_get_version(FU_DEVICE(device)), ==, "2012");
+	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(device)), ==, "KEK CA");
+	g_assert_cmpstr(fu_device_get_vendor(FU_DEVICE(device)), ==, "Hughski");
+	g_assert_true(fu_device_has_instance_id(FU_DEVICE(device),
+						"UEFI\\VENDOR_Hughski&NAME_Hughski-KEK-CA",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+	g_assert_true(
+	    fu_device_has_instance_id(FU_DEVICE(device),
+				      "UEFI\\CRT_0000000000000000000000000000000000000000",
+				      FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+static void
+fu_plugin_efi_signature_list_func(void)
+{
+	FuEfiX509Signature *sig;
+	g_autoptr(FuEfiX509Signature) sig2022 = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Signature) sig2023 = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Signature) sig2024 = fu_efi_x509_signature_new();
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GPtrArray) sigs_newest = NULL;
+
+	fu_efi_x509_signature_set_subject(sig2022, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2022");
+	fu_efi_x509_signature_set_subject(sig2023, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2023");
+	fu_efi_x509_signature_set_subject(sig2024, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2024");
+
+	/* 2022 -> 2024 -> 2023 */
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2022));
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2024));
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2023));
+
+	/* only one */
+	sigs_newest = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
+	g_assert_cmpint(sigs_newest->len, ==, 1);
+	sig = g_ptr_array_index(sigs_newest, 0);
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2024);
+}
+
+static void
 fu_cab_checksum_func(void)
 {
 	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
@@ -6777,6 +6846,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/msgpack{parse-binary}", fu_msgpack_parse_binary_func);
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
+	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
+	g_test_add_func("/fwupd/efi-signature-list", fu_plugin_efi_signature_list_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);

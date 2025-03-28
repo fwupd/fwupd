@@ -13,3 +13,5 @@ G_DECLARE_FINAL_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU, EFI_SIGNATUR
 
 FuFirmware *
 fu_efi_signature_list_new(void);
+GPtrArray *
+fu_efi_signature_list_get_newest(FuEfiSignatureList *self) G_GNUC_NON_NULL(1);

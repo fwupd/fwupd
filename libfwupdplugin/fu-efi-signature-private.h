@@ -10,3 +10,5 @@
 
 FuEfiSignature *
 fu_efi_signature_new(FuEfiSignatureKind kind);
+void
+fu_efi_signature_set_kind(FuEfiSignature *self, FuEfiSignatureKind kind);
