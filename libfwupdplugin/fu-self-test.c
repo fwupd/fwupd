@@ -6305,6 +6305,32 @@ fu_plugin_efi_x509_signature_func(void)
 }
 
 static void
+fu_plugin_efi_signature_list_func(void)
+{
+	FuEfiX509Signature *sig;
+	g_autoptr(FuEfiX509Signature) sig2022 = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Signature) sig2023 = fu_efi_x509_signature_new();
+	g_autoptr(FuEfiX509Signature) sig2024 = fu_efi_x509_signature_new();
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GPtrArray) sigs_newest = NULL;
+
+	fu_efi_x509_signature_set_subject(sig2022, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2022");
+	fu_efi_x509_signature_set_subject(sig2023, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2023");
+	fu_efi_x509_signature_set_subject(sig2024, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2024");
+
+	/* 2022 -> 2024 -> 2023 */
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2022));
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2024));
+	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2023));
+
+	/* only one */
+	sigs_newest = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
+	g_assert_cmpint(sigs_newest->len, ==, 1);
+	sig = g_ptr_array_index(sigs_newest, 0);
+	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2024);
+}
+
+static void
 fu_cab_checksum_func(void)
 {
 	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
@@ -6821,6 +6847,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
 	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
+	g_test_add_func("/fwupd/efi-signature-list", fu_plugin_efi_signature_list_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
