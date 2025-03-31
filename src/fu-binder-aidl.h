@@ -4,46 +4,28 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <gbinder.h>
+#include <android/binder_ibinder.h>
+
+#define DEFAULT_IFACE "org.freedesktop.fwupd.IFwupd"
+#define DEFAULT_NAME  "fwupd"
 
 enum fu_binder_calls {
-	GET_DEVICES = GBINDER_FIRST_CALL_TRANSACTION,
-	GET_PLUGINS,
-	GET_RELEASES,
-	GET_DOWNGRADES,
-	GET_UPGRADES,
-	GET_DETAILS,
-	GET_HISTORY,
-	GET_HOST_SECURITY_ATTRS,
-	GET_HOST_SECURITY_EVENTS,
-	GET_REPORT_METADATA,
-	SET_HINTS,
-	INSTALL,
-	VERIFY,
-	VERIFY_UPDATE,
-	UNLOCK,
-	ACTIVATE,
-	GET_RESULTS,
-	GET_REMOTES,
-	GET_APPROVED_FIRMWARE,
-	SET_APPROVED_FIRMWARE,
-	GET_BLOCKED_FIRMWARE,
-	SET_BLOCKED_FIRMWARE,
-	SET_FEATURE_FLAGS,
-	CLEAR_RESULTS,
-	MODIFY_DEVICE,
-	MODIFY_CONFIG,
-	RESET_CONFIG,
-	UPDATE_METADATA,
-	MODIFY_REMOTE,
-	FIX_HOST_SECURITY_ATTR,
-	UNDO_HOST_SECURITY_ATTR,
-	SELF_SIGN,
-	SET_BIOS_SETTINGS,
-	GET_BIOS_SETTINGS,
-	INHIBIT,
-	UNINHIBIT,
-	QUIT,
-	EMULATION_LOAD,
-	EMULATION_SAVE,
+	FWUPD_BINDER_CALL_GET_DEVICES =
+	    FIRST_CALL_TRANSACTION, /* PersistableBundle[] getDevices(); */
+	FWUPD_BINDER_CALL_INSTALL, /* void install(in String id, in ParcelFileDescriptor firmwareFd,
+				      in @nullable PersistableBundle options); */
+	FWUPD_BINDER_CALL_ADD_EVENT_LISTENER, /* void addEventListener(IFwupdEventListener
+						 listener); */
+};
+
+enum fu_listener_binder_calls {
+	FWUPD_BINDER_LISTENER_CALL_ON_CHANGED = FIRST_CALL_TRANSACTION, /* void onChanged(); */
+	FWUPD_BINDER_LISTENER_CALL_ON_DEVICE_ADDED,   /* void onDeviceAdded(in PersistableBundle
+							 device); */
+	FWUPD_BINDER_LISTENER_CALL_ON_DEVICE_REMOVED, /* void onDeviceRemoved(in PersistableBundle
+							 device); */
+	FWUPD_BINDER_LISTENER_CALL_ON_DEVICE_CHANGED, /* void onDeviceChanged(in PersistableBundle
+							 device); */
+	FWUPD_BINDER_LISTENER_CALL_ON_DEVICE_REQUEST, /* void onDeviceRequest(in PersistableBundle
+							 request); */
 };

@@ -262,6 +262,20 @@ gp_parcel_write_null(AParcel *parcel, const GVariantType *type, GError **error)
 }
 
 binder_status_t
+gp_parcel_read_variant(AParcel *parcel, GVariant *value, const gchar *format_string, GError **error)
+{
+	// TODO: Attempt to read values from `parcel` based on `format_string` moving values to
+	// `value`
+
+	GVariantType *type = g_variant_type_new(format_string);
+
+	// const GVariantType *type)
+
+	// APersistableBundle_
+	return STATUS_OK;
+}
+
+binder_status_t
 gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 {
 	GVariantIter iter;
