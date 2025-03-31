@@ -4,7 +4,7 @@
   "steps": [
     {
       "url": "https://fwupd.org/downloads/5a909ed2e4997518a8be94003042a53ed2d3bb7676f23745d6da0b21875cf03f-bnr-dp-0.13-test.cab",
-      "emulation-url": "https://fwupd.org/downloads/af61009d6af30c14cdd5a9c47ef7d99372adb3a3be3af77875a5dea31bd47e65-bnr-dp-0.13-plugin-pr-final.zip",
+      "emulation-url": "https://fwupd.org/downloads/fa3e8e7acb302c7993442e50f9fb9d3a0223594354439b572aa86c5a7127b5a7-bnr-dp-dpaux-dpcd-check.zip",
       "components": [
         {
           "version": "0.13",
