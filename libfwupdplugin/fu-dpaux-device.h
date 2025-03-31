@@ -22,6 +22,10 @@ struct _FuDpauxDeviceClass {
 #define FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE		0x400
 #define FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE	0x500
 
+goffset
+fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset) G_GNUC_NON_NULL(1);
 guint32
 fu_dpaux_device_get_dpcd_ieee_oui(FuDpauxDevice *self) G_GNUC_NON_NULL(1);
 void
