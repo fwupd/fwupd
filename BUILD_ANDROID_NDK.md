@@ -49,6 +49,19 @@ adb -e shell setenforce permissive
 ndk_path = '/opt/android/android-ndk-r27/'
 ```
 
+#### platform libbinder_ndk
+
+The NDK version of `libbinder_ndk.so` doesn't contain service management symbols. So you need to get it from the android version you're targeting.
+
+```bash
+adb pull /system/lib64/libbinder_ndk.so ./contrib/android/lib_ndk/
+```
+
+Headers for the `libbinder_ndk.so` platform components can be found here:
+<https://cs.android.com/android/platform/superproject/main/+/main:frameworks/native/libs/binder/ndk/include_platform/>
+
+They should be placed in `contrib/android/include_platform/android`.
+
 ### 2. Configure
 
 Setting the prefix to a directory that is writeable on the device is important as fwupd will exit if the prefix cache path is not writeable ignoring the value of the `CACHE_DIRECTORY` environment variable.
@@ -79,7 +92,11 @@ This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` t
 ./_android_build/adb_fwupd_env.sh fwupd-binder --verbose --verbase
 ```
 
-This script originally set environment variables to identify paths but since we're using the correct prefix that is unnecessary.  
+```bash
+./_android_build/adb_fwupd_env.sh fwupdmgr-binder get-devices --verbose --verbose
+```
+
+This script originally set environment variables to identify paths but since we're using the correct prefix that is unnecessary.
 Currently the script just sets the correct `LD_LIBRARY_PATH` and `PATH` environment.
 
 ## Debugging

@@ -333,7 +333,7 @@ executable(
   install_dir: daemon_dir
 )
 
-if libgbinder.found() and binder_ndk.found()
+if host_machine.system() == 'android' and binder_ndk.found()
   executable(
     'fwupd-binder',
     fwupdengine_rs,
@@ -349,12 +349,12 @@ if libgbinder.found() and binder_ndk.found()
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
     ],
     dependencies: [
       valgrind,
       libsystemd,
       engine_dep,
-      libgbinder,
       binder_ndk,
     ],
     link_with: [
@@ -375,11 +375,12 @@ if libgbinder.found() and binder_ndk.found()
       root_incdir,
       fwupd_incdir,
       fwupdplugin_incdir,
+      binder_ndk_platform_incdir,
     ],
     dependencies: [
       libfwupd_deps,
       client_dep,
-      libgbinder,
+      binder_ndk,
     ],
     link_with: [
       fwupd,
