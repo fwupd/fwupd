@@ -1,0 +1,9 @@
+[wrap-git]
+directory = android_frameworks
+patch_directory = android_frameworks
+url = https://android.googlesource.com/platform/frameworks/native
+revision = main
+depth = 1
+
+[provide]
+android_frameworks = android_frameworks_dep

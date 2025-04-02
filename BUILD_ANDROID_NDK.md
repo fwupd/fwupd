@@ -60,8 +60,6 @@ adb pull /system/lib64/libbinder_ndk.so ./contrib/android/lib_ndk/
 Headers for the `libbinder_ndk.so` platform components can be found here:
 <https://cs.android.com/android/platform/superproject/main/+/main:frameworks/native/libs/binder/ndk/include_platform/>
 
-They should be placed in `contrib/android/include_platform/android`.
-
 ### 2. Configure
 
 Setting the prefix to a directory that is writeable on the device is important as fwupd will exit if the prefix cache path is not writeable ignoring the value of the `CACHE_DIRECTORY` environment variable.
