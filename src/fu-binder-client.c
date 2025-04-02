@@ -23,8 +23,6 @@
 #include <android/binder_process.h>
 #include <glib/gi18n.h>
 
-#define DEFAULT_DEVICE "/dev/binder"
-
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
@@ -300,7 +298,7 @@ get_listener_class(void)
 {
 	static AIBinder_Class *listener_class = NULL;
 	if (!listener_class) {
-		listener_class = AIBinder_Class_define(DEFAULT_IFACE,
+		listener_class = AIBinder_Class_define(BINDER_DEFAULT_IFACE,
 						       fwupd_service_on_create,
 						       fwupd_service_on_destroy,
 						       fwupd_service_on_transact);
@@ -372,7 +370,7 @@ main(int argc, char *argv[])
 	ABinderProcess_setupPolling(&priv->binder_fd);
 	g_idle_add(poll_binder_process, priv);
 
-	priv->fwupd_binder = AServiceManager_waitForService(DEFAULT_NAME);
+	priv->fwupd_binder = AServiceManager_waitForService(BINDER_SERVICE_NAME);
 	const AIBinder_Class *fwupd_binder_class = get_listener_class();
 	AIBinder_associateClass(priv->fwupd_binder, fwupd_binder_class);
 

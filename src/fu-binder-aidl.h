@@ -6,8 +6,9 @@
 
 #include <android/binder_ibinder.h>
 
-#define DEFAULT_IFACE "org.freedesktop.fwupd.IFwupd"
-#define DEFAULT_NAME  "fwupd"
+#define BINDER_DEFAULT_IFACE	    "org.freedesktop.fwupd.IFwupd"
+#define BINDER_EVENT_LISTENER_IFACE "org.freedesktop.fwupd.IFwupdEventListener"
+#define BINDER_SERVICE_NAME	    "fwupd"
 
 enum fu_binder_calls {
 	FWUPD_BINDER_CALL_GET_DEVICES =

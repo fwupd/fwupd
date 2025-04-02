@@ -38,10 +38,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
 
-#define DEFAULT_DEVICE "/dev/binder"
-
-#define EVENT_LISTENER_IFACE "org.freedesktop.fwupd.IFwupdEventListener"
-
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
 	gboolean async;
@@ -204,11 +200,11 @@ listener_on_transact(AIBinder *binder, transaction_code_t code, const AParcel *i
 }
 
 static AIBinder_Class *
-get_listener_class()
+get_listener_class(void)
 {
 	static AIBinder_Class *listener_class = NULL;
 	if (!listener_class) {
-		listener_class = AIBinder_Class_define(EVENT_LISTENER_IFACE,
+		listener_class = AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
 						       listener_on_create,
 						       listener_on_destroy,
 						       listener_on_transact);
@@ -302,53 +298,41 @@ static void
 fu_binder_daemon_send_codec_event(FuBinderDaemon *self, FwupdCodec *codec, guint32 transaction_id)
 {
 	AIBinder *event_listener_binder;
-	AParcel *in = NULL;
-	gsize size;
-	g_autofree uint8_t *buffer = NULL;
-	// TODO: Reuse parcel????
 	g_autoptr(GError) error = NULL;
-
-	GVariant *val;
-	binder_status_t nstatus = -1;
-
-	g_info("send event %d", transaction_id);
+	g_autoptr(GVariant) val = NULL;
+	binder_status_t nstatus = STATUS_OK;
 
 	if (self->event_listener_binders->len == 0)
 		return;
 
-	val = fwupd_codec_to_variant(codec, FWUPD_CODEC_FLAG_NONE);
-
-	AIBinder_prepareTransaction(event_listener_binder, &in);
-	gp_parcel_write_variant(in, val, &error);
+	if (codec)
+		val = fwupd_codec_to_variant(codec, FWUPD_CODEC_FLAG_NONE);
 
 	for (guint i = 0; i < self->event_listener_binders->len; i++) {
-		AParcel *out = NULL;
+		AParcel *in = NULL;
+		g_autoptr(AParcel) out = NULL;
+
 		event_listener_binder = g_ptr_array_index(self->event_listener_binders, i);
-		AIBinder_transact(event_listener_binder, transaction_id, &in, &out, 0);
+		AIBinder_prepareTransaction(event_listener_binder, &in);
+		if (val)
+			gp_parcel_write_variant(in, val, &error);
+		nstatus = AIBinder_transact(event_listener_binder,
+					    transaction_id,
+					    &in,
+					    &out,
+					    FLAG_ONEWAY);
+		if (nstatus != STATUS_OK) {
+			AStatus *status = AStatus_fromStatus(nstatus);
+			g_warning("Failed to transact codec %s", AStatus_getDescription(status));
+		}
 	}
 }
 
 static void
 fu_binder_daemon_engine_changed_cb(FuEngine *engine, FuBinderDaemon *self)
 {
-	AIBinder *event_listener_binder;
-	AParcel *in = NULL;
-
-	if (self->event_listener_binders->len == 0)
-		return;
-
-	AIBinder_prepareTransaction(event_listener_binder, &in);
-
-	for (guint i = 0; i < self->event_listener_binders->len; i++) {
-		AParcel *out = NULL;
-		event_listener_binder = g_ptr_array_index(self->event_listener_binders, i);
-		AIBinder_transact(event_listener_binder,
-				  FWUPD_BINDER_LISTENER_CALL_ON_CHANGED,
-				  &in,
-				  &out,
-				  0);
-	}
-
+	g_debug("changed cb");
+	fu_binder_daemon_send_codec_event(self, NULL, FWUPD_BINDER_LISTENER_CALL_ON_CHANGED);
 	fu_daemon_schedule_housekeeping(FU_DAEMON(self));
 }
 
@@ -407,25 +391,6 @@ fu_binder_daemon_engine_status_changed_cb(FuEngine *engine,
 		fu_daemon_stop(FU_DAEMON(self), NULL);
 }
 
-static int
-poll_binder_process(void *user_data)
-{
-	// Daemon *daemon = user_data;
-	FuBinderDaemon *daemon = user_data;
-	binder_status_t nstatus = STATUS_OK;
-	if (daemon->binder_fd < 0)
-		return G_SOURCE_CONTINUE;
-
-	nstatus = ABinderProcess_handlePolledCommands();
-
-	if (nstatus != STATUS_OK) {
-		AStatus *status = AStatus_fromStatus(nstatus);
-		g_warning("failed to handle polled commands %s", AStatus_getDescription(status));
-	}
-
-	return G_SOURCE_CONTINUE;
-}
-
 static gboolean
 fu_binder_daemon_stop(FuDaemon *daemon, GError **error)
 {
@@ -451,6 +416,38 @@ fu_binder_daemon_start(FuDaemon *daemon, GError **error)
 
 	return TRUE;
 }
+
+typedef struct _FuBinderFdSource {
+	GSource source;
+	gpointer fd_tag;
+} FuBinderFdSource;
+
+static gboolean
+binder_fd_source_check(GSource *source)
+{
+	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
+	return g_source_query_unix_fd(source, binder_fd_source->fd_tag) & G_IO_IN;
+}
+
+static gboolean
+binder_fd_source_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
+{
+	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
+	binder_status_t nstatus = ABinderProcess_handlePolledCommands();
+
+	if (nstatus != STATUS_OK) {
+		AStatus *status = AStatus_fromStatus(nstatus);
+		g_warning("failed to handle polled commands %s", AStatus_getDescription(status));
+	}
+
+	return G_SOURCE_CONTINUE;
+}
+
+static GSourceFuncs binder_fd_source_funcs = {
+    NULL,
+    binder_fd_source_check,
+    binder_fd_source_dispatch,
+};
 
 static gboolean
 fu_binder_daemon_setup(FuDaemon *daemon,
@@ -507,17 +504,22 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	// TODO: Wait for service manager?
 	self->binder = AIBinder_new(self->binder_class, self);
 
-	nstatus = AServiceManager_addService(self->binder, DEFAULT_NAME);
+	nstatus = AServiceManager_addService(self->binder, BINDER_SERVICE_NAME);
 	if (nstatus != STATUS_OK) {
 		AStatus *status = AStatus_fromStatus(nstatus);
 		g_warning("failed to add service %s", AStatus_getDescription(status));
 	}
 
-	AIBinder *binder_check = AServiceManager_checkService(DEFAULT_NAME);
+	AIBinder *binder_check = AServiceManager_checkService(BINDER_SERVICE_NAME);
 	g_warning("service check %p", (void *)binder_check);
 
 	ABinderProcess_setupPolling(&self->binder_fd);
-	g_idle_add(poll_binder_process, self);
+
+	g_autoptr(GSource) source = g_source_new(&binder_fd_source_funcs, sizeof(FuBinderFdSource));
+	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
+	binder_fd_source->fd_tag =
+	    g_source_add_unix_fd(source, self->binder_fd, G_IO_IN | G_IO_ERR);
+	g_source_attach(source, NULL);
 
 	fu_progress_step_done(progress);
 
@@ -590,7 +592,7 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 	self->event_listener_binders =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)AIBinder_decStrong);
 	// TODO: lifetime? and reconnection
-	self->binder_class = AIBinder_Class_define(DEFAULT_IFACE,
+	self->binder_class = AIBinder_Class_define(BINDER_DEFAULT_IFACE,
 						   binder_class_on_create,
 						   binder_class_on_destroy,
 						   binder_class_on_transact);
