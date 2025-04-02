@@ -1,4 +1,4 @@
-android_frameworks
+/subprojects/android_frameworks/
 gusb
 gi-docgen
 flashrom

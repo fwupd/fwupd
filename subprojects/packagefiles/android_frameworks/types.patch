@@ -1,0 +1,31 @@
+diff --git a/libs/binder/ndk/include_platform/android/binder_manager.h b/libs/binder/ndk/include_platform/android/binder_manager.h
+index f5df8d5..adad0f1 100644
+--- a/libs/binder/ndk/include_platform/android/binder_manager.h
++++ b/libs/binder/ndk/include_platform/android/binder_manager.h
+@@ -66,7 +66,7 @@ __attribute__((warn_unused_result)) binder_exception_t AServiceManager_addServic
+  * \return EX_NONE on success.
+  */
+ __attribute__((warn_unused_result)) binder_exception_t AServiceManager_addServiceWithFlags(
+-        AIBinder* binder, const char* instance, const AServiceManager_AddServiceFlag flags)
++        AIBinder* binder, const char* instance, const enum AServiceManager_AddServiceFlag flags)
+         __INTRODUCED_IN(34);
+ 
+ /**
+@@ -184,7 +184,7 @@ struct AServiceManager_NotificationRegistration;
+  *
+  * \return the token for this registration. Deleting this token will unregister.
+  */
+-__attribute__((warn_unused_result)) AServiceManager_NotificationRegistration*
++__attribute__((warn_unused_result)) struct AServiceManager_NotificationRegistration*
+ AServiceManager_registerForServiceNotifications(const char* instance,
+                                                 AServiceManager_onRegister onRegister, void* cookie)
+         __INTRODUCED_IN(34);
+@@ -199,7 +199,7 @@ AServiceManager_registerForServiceNotifications(const char* instance,
+  * \param notification object to dismiss
+  */
+ void AServiceManager_NotificationRegistration_delete(
+-        AServiceManager_NotificationRegistration* notification) __INTRODUCED_IN(34);
++        struct AServiceManager_NotificationRegistration* notification) __INTRODUCED_IN(34);
+ 
+ /**
+  * Check if a service is declared (e.g. VINTF manifest).

@@ -1,6 +1,7 @@
 [wrap-git]
 directory = android_frameworks
 patch_directory = android_frameworks
+diff_files = android_frameworks/types.patch
 url = https://android.googlesource.com/platform/frameworks/native
 revision = main
 depth = 1
