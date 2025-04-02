@@ -344,7 +344,8 @@ if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
 endif
 
-if host_machine.system() == 'android'
+enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'android').enabled()
+if enable_binder
   binder_ndk = cc.find_library('binder_ndk')
 
   binder_ndk_platform_incdir = include_directories( 'contrib/android/include_platform' )
@@ -352,15 +353,37 @@ if host_machine.system() == 'android'
     dirs: [ meson.current_source_dir() / 'contrib/android/lib_ndk' ],
     has_headers: [ 'android/binder_manager.h' ],
     header_include_directories: binder_ndk_platform_incdir,
-    required: get_option('binder'),
+    required: true,
     )
 
+  binder_link_test_src = '''
+    #include <android/binder_manager.h>
+    void main() { AServiceManager_waitForService("fwupd"); }
+  '''
   conf.set10('HAS_BINDER_NDK', binder_ndk.found() and
     cc.has_header('android/binder_status.h') and
-    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create', dependencies: binder_ndk) and
-    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal', dependencies: binder_ndk) and
-    cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new', dependencies: binder_ndk)
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_create',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_parcel.h', 'AParcel_marshal',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_waitForService',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/binder_manager.h', 'AServiceManager_addService',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir) and
+    cc.has_header_symbol('android/persistable_bundle.h', 'APersistableBundle_new',
+      dependencies: binder_ndk, include_directories: binder_ndk_platform_incdir)
     )
+
+  # Verify that service management symbols are present in libbinder_ndk.so
+  links_service = cc.links(binder_link_test_src,
+    name: 'binder link test',
+    dependencies: binder_ndk,
+    include_directories: binder_ndk_platform_incdir,
+    required: true)
+
+  if conf.get('HAS_BINDER_NDK') != 1
+    error('libbinder_ndk.so is incompatible')
+  endif
 endif
 
 lzma = dependency('liblzma')
