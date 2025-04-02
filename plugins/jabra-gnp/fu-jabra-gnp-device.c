@@ -6,48 +6,43 @@
 
 #include "config.h"
 
+#include "fu-jabra-gnp-child-device.h"
+#include "fu-jabra-gnp-common.h"
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
 
-#define FU_JABRA_GNP_BUF_SIZE			64
-#define FU_JABRA_GNP_MAX_RETRIES		3
-#define FU_JABRA_GNP_PRELOAD_COUNT		10
-#define FU_JABRA_GNP_RETRY_DELAY		100   /* ms */
-#define FU_JABRA_GNP_STANDARD_SEND_TIMEOUT	3000  /* ms */
-#define FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT	1000  /* ms */
-#define FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT	30000 /* ms */
-#define FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT 60000 /* ms */
-
-#define FU_JABRA_GNP_IFACE 0x05
-
-#define FU_JABRA_GNP_ADDRESS_PARENT    0x01
-#define FU_JABRA_GNP_ADDRESS_OTA_CHILD 0x04
-
 struct _FuJabraGnpDevice {
 	FuUsbDevice parent_instance;
+	guint8 fwu_protocol;
 	guint8 iface_hid;
 	guint8 sequence_number;
 	guint8 address;
-	guint dfu_pid;
+	guint8 epin;
+	guint16 dfu_pid;
 };
 
-typedef struct {
-	guint8 txbuf[FU_JABRA_GNP_BUF_SIZE];
-	const guint timeout;
-} FuJabraGnpTxData;
-
-typedef struct {
-	guint8 rxbuf[FU_JABRA_GNP_BUF_SIZE];
-	const guint timeout;
-} FuJabraGnpRxData;
-
 G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_USB_DEVICE)
+
+guint8
+fu_jabra_gnp_device_get_iface_hid(FuJabraGnpDevice *self)
+{
+	g_return_val_if_fail(FU_IS_JABRA_GNP_DEVICE(self), G_MAXUINT8);
+	return self->iface_hid;
+}
+
+guint8
+fu_jabra_gnp_device_get_epin(FuJabraGnpDevice *self)
+{
+	g_return_val_if_fail(FU_IS_JABRA_GNP_DEVICE(self), G_MAXUINT8);
+	return self->epin;
+}
 
 static void
 fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
+	fwupd_codec_string_append_hex(str, idt, "FwuProtocol", self->fwu_protocol);
 	fwupd_codec_string_append_hex(str, idt, "IfaceHid", self->iface_hid);
 	fwupd_codec_string_append_hex(str, idt, "SequenceNumber", self->sequence_number);
 	fwupd_codec_string_append_hex(str, idt, "Address", self->address);
@@ -70,13 +65,53 @@ _fu_usb_device_get_interface_for_class(FuUsbDevice *usb_device, guint8 intf_clas
 }
 
 static gboolean
+fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
+{
+	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
+	g_autoptr(GPtrArray) ifaces = NULL;
+
+	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
+	if (ifaces == NULL) {
+		g_prefix_error_literal(error, "update interface not found: ");
+		return FALSE;
+	}
+
+	for (guint i = 0; i < ifaces->len; i++) {
+		FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
+		if (fu_usb_interface_get_class(iface) == FU_USB_CLASS_HID) {
+			FuUsbEndpoint *ep1;
+			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(iface);
+
+			if (endpoints == NULL || endpoints->len < 1)
+				continue;
+			ep1 = g_ptr_array_index(endpoints, 0);
+			self->epin = fu_usb_endpoint_get_address(ep1);
+		}
+	}
+	if (self->epin == 0x0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "update endpoints not found");
+		return FALSE;
+	}
+
+	self->iface_hid =
+	    _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self), FU_USB_CLASS_HID, error);
+	if (self->iface_hid == 0xFF) {
+		g_prefix_error_literal(error, "cannot find HID interface: ");
+		return FALSE;
+	}
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface_hid);
+	return TRUE;
+}
+
+gboolean
 fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
-	FuUsbDevice *target = self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
-				  ? FU_USB_DEVICE(fu_device_get_parent(device))
-				  : FU_USB_DEVICE(self);
+	FuUsbDevice *target = FU_USB_DEVICE(self);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -96,7 +131,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
@@ -104,12 +139,9 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x0A, 0x12, 0x02};
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
-	FuUsbDevice *target = self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
-				  ? FU_USB_DEVICE(fu_device_get_parent(device))
-				  : FU_USB_DEVICE(self);
-
+	FuUsbDevice *target = FU_USB_DEVICE(self);
 	if (!fu_usb_device_interrupt_transfer(target,
-					      0x81,
+					      self->epin,
 					      rx_data->rxbuf,
 					      FU_JABRA_GNP_BUF_SIZE,
 					      NULL,
@@ -123,7 +155,7 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 	    rx_data->rxbuf[6] == match_buf[6]) {
 		/* battery report, ignore and rx again */
 		if (!fu_usb_device_interrupt_transfer(target,
-						      0x81,
+						      self->epin,
 						      rx_data->rxbuf,
 						      FU_JABRA_GNP_BUF_SIZE,
 						      NULL,
@@ -134,7 +166,6 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 			return FALSE;
 		}
 	}
-
 	if (fu_memcmp_safe(rx_data->rxbuf,
 			   sizeof(rx_data->rxbuf),
 			   0,
@@ -143,13 +174,16 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 			   0,
 			   sizeof(rx_data->rxbuf),
 			   error)) {
-		g_prefix_error_literal(error, "error reading from device: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "error reading from device: ");
 		return FALSE;
 	}
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_jabra_gnp_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
@@ -174,53 +208,6 @@ fu_jabra_gnp_device_rx_with_sequence_cb(FuDevice *device, gpointer user_data, GE
 	self->sequence_number += 1;
 	return TRUE;
 }
-
-static gboolean
-fu_jabra_gnp_device_read_name(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x46,
-		    0x02,
-		    0x00,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	g_autofree gchar *name = NULL;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	name = fu_memstrsafe(rx_data.rxbuf,
-			     sizeof(rx_data.rxbuf),
-			     0x8,
-			     sizeof(rx_data.rxbuf) - 8,
-			     error);
-	if (name == NULL)
-		return FALSE;
-	fu_device_set_name(FU_DEVICE(self), name);
-	return TRUE;
-}
-
 static gboolean
 fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 				       guint16 *child_dfu_pid,
@@ -250,566 +237,27 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 				  fu_jabra_gnp_device_tx_cb,
 				  FU_JABRA_GNP_MAX_RETRIES,
 				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
+				  &tx_data,
 				  error))
 		return FALSE;
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_jabra_gnp_device_rx_with_sequence_cb,
 				  FU_JABRA_GNP_MAX_RETRIES,
 				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
+				  &rx_data,
 				  error))
 		return FALSE;
 	/* no child device to respond properly */
-	if (rx_data.rxbuf[5] == 0xFE && rx_data.rxbuf[6] == 0xF4) {
+	if (rx_data.rxbuf[5] == 0xFE && (rx_data.rxbuf[6] == 0xF4 || rx_data.rxbuf[6] == 0xF3)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "internal error: no child device responded");
 		return FALSE;
 	}
+
 	/* success */
 	*child_dfu_pid = fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN);
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_read_child_battery_level(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x46,
-		    0x12,
-		    0x02,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	guint8 battery_level = 0;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(rx_data.rxbuf, FU_JABRA_GNP_BUF_SIZE, 8, &battery_level, error))
-		return FALSE;
-	if (battery_level == 0x00) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "battery level was 0");
-		return FALSE;
-	}
-	fu_device_set_battery_level(FU_DEVICE(self), battery_level);
-	fu_device_set_battery_threshold(FU_DEVICE(self), 30);
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_read_dfu_pid(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x46,
-		    0x02,
-		    0x13,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	self->dfu_pid = fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN);
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_read_version(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x46,
-		    0x02,
-		    0x03,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	g_autofree gchar *version = NULL;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	version = fu_memstrsafe(rx_data.rxbuf,
-				sizeof(rx_data.rxbuf),
-				0x8,
-				sizeof(rx_data.rxbuf) - 8,
-				error);
-	if (version == NULL)
-		return FALSE;
-	fu_device_set_version(FU_DEVICE(self), version);
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_write_partition(FuJabraGnpDevice *self, guint8 part, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x87,
-		    0x0F,
-		    0x2D,
-		    part,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    rx_data.rxbuf[5],
-			    rx_data.rxbuf[6]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_start(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x86,
-		    0x0F,
-		    0x17,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    rx_data.rxbuf[5],
-			    rx_data.rxbuf[6]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_flash_erase_done(FuJabraGnpDevice *self, GError **error)
-{
-	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] =
-	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x06, 0x0F, 0x18};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_EXTRA_LONG_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "internal error, buf did not match");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_write_crc(FuJabraGnpDevice *self,
-			      guint32 crc,
-			      guint total_chunks,
-			      guint preload_count,
-			      GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x8E,
-		    0x0F,
-		    0x19,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 11, total_chunks, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
-
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    rx_data.rxbuf[5],
-			    rx_data.rxbuf[6]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_write_chunk(FuJabraGnpDevice *self,
-				guint32 chunk_number,
-				const guint8 *buf,
-				gsize bufsz,
-				GError **error)
-{
-	guint8 write_length = 0x00 + bufsz + 10;
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    0x00,
-		    write_length,
-		    0x0F,
-		    0x1A,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	fu_memwrite_uint16(tx_data.txbuf + 7, chunk_number, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 9, bufsz, G_LITTLE_ENDIAN);
-	if (!fu_memcpy_safe(tx_data.txbuf,
-			    sizeof(tx_data.txbuf),
-			    11,
-			    buf,
-			    bufsz,
-			    0x0,
-			    bufsz,
-			    error))
-		return FALSE;
-	return fu_device_retry_full(FU_DEVICE(self),
-				    fu_jabra_gnp_device_tx_cb,
-				    FU_JABRA_GNP_MAX_RETRIES,
-				    FU_JABRA_GNP_RETRY_DELAY,
-				    (gpointer)&tx_data,
-				    error);
-}
-
-static gboolean
-fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
-				 FuChunkArray *chunks,
-				 FuProgress *progress,
-				 GError **error)
-{
-	gboolean failed_chunk = FALSE;
-
-	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] = {
-	    FU_JABRA_GNP_IFACE,
-	    0x00,
-	    self->address,
-	    0x00,
-	    0x06,
-	    0x0F,
-	    0x1B,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT,
-	};
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (gint chunk_number = 0; (guint)chunk_number < fu_chunk_array_length(chunks);
-	     chunk_number++) {
-		g_autoptr(FuChunk) chk = NULL;
-
-		/* prepare chunk */
-		chk = fu_chunk_array_index(chunks, chunk_number, error);
-		if (chk == NULL)
-			return FALSE;
-		if (!fu_jabra_gnp_device_write_chunk(self,
-						     chunk_number,
-						     fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
-						     error))
-			return FALSE;
-		if (((chunk_number % FU_JABRA_GNP_PRELOAD_COUNT) == 0) ||
-		    (guint)chunk_number == fu_chunk_array_length(chunks) - 1) {
-			if (!fu_device_retry_full(FU_DEVICE(self),
-						  fu_jabra_gnp_device_rx_cb,
-						  FU_JABRA_GNP_MAX_RETRIES,
-						  FU_JABRA_GNP_RETRY_DELAY,
-						  (gpointer)&rx_data,
-						  error))
-				return FALSE;
-			if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_INTERNAL,
-						    "internal error, buf did not match");
-				return FALSE;
-			}
-			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) != chunk_number) {
-				chunk_number--;
-				failed_chunk = TRUE;
-			} else
-				failed_chunk = FALSE;
-		}
-		if (!failed_chunk)
-			fu_progress_step_done(progress);
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_read_verify_status(FuJabraGnpDevice *self, GError **error)
-{
-	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] =
-	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x06, 0x0F, 0x1C};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "internal error, buf did not match");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_write_version(FuJabraGnpDevice *self,
-				  FuJabraGnpVersionData *version_data,
-				  GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x89,
-		    0x0F,
-		    0x1E,
-		    version_data->major,
-		    version_data->minor,
-		    version_data->micro,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    rx_data.rxbuf[5],
-			    rx_data.rxbuf[6]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_write_dfu_from_squif(FuJabraGnpDevice *self, GError **error)
-{
-	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    self->address,
-		    0x00,
-		    self->sequence_number,
-		    0x86,
-		    0x0F,
-		    0x1D,
-		},
-	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
-	};
-	FuJabraGnpRxData rx_data = {
-	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
-	};
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_tx_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&tx_data,
-				  error))
-		return FALSE;
-	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_jabra_gnp_device_rx_with_sequence_cb,
-				  FU_JABRA_GNP_MAX_RETRIES,
-				  FU_JABRA_GNP_RETRY_DELAY,
-				  (gpointer)&rx_data,
-				  error))
-		return FALSE;
-	if (rx_data.rxbuf[5] != 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: expected 0xFF, got 0x%02x 0x%02x",
-			    rx_data.rxbuf[5],
-			    rx_data.rxbuf[6]);
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -839,35 +287,10 @@ fu_jabra_gnp_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
-{
-	g_autoptr(GError) error_local = NULL;
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-
-	/* already set by parent */
-	if (self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD)
-		return TRUE;
-
-	self->iface_hid = _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self),
-								 FU_USB_CLASS_HID,
-								 &error_local);
-	if (self->iface_hid == 0xFF) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot find HID interface: %s",
-			    error_local->message);
-		return FALSE;
-	}
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface_hid);
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_add_child(FuDevice *device, guint dfu_pid, GError **error)
+fu_jabra_gnp_device_add_child(FuDevice *device, guint16 dfu_pid, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	g_autoptr(FuJabraGnpDevice) child = NULL;
+	g_autoptr(FuJabraGnpChildDevice) child = NULL;
 
 	/* sanity check */
 	if (self->address != FU_JABRA_GNP_ADDRESS_PARENT) {
@@ -880,20 +303,11 @@ fu_jabra_gnp_device_add_child(FuDevice *device, guint dfu_pid, GError **error)
 		return FALSE;
 	}
 
-	child = g_object_new(FU_TYPE_JABRA_GNP_DEVICE, "parent", FU_DEVICE(self), NULL);
-	child->iface_hid = self->iface_hid;
-	child->sequence_number = 0;
-	child->address = FU_JABRA_GNP_ADDRESS_OTA_CHILD;
-	child->dfu_pid = dfu_pid;
-
-	/* prohibit to close parent's communication descriptor */
-	fu_device_add_private_flag(FU_DEVICE(child), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
-
+	child = g_object_new(FU_TYPE_JABRA_GNP_CHILD_DEVICE, "parent", FU_DEVICE(self), NULL);
+	fu_jabra_gnp_child_device_set_dfu_pid_and_seq(child, dfu_pid);
 	fu_device_incorporate(FU_DEVICE(child),
 			      FU_DEVICE(self),
 			      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	fu_device_set_logical_id(FU_DEVICE(child), "ota_device");
-
 	if (!fu_device_setup(FU_DEVICE(child), error)) {
 		g_prefix_error_literal(error, "failed to setup child device: ");
 		return FALSE;
@@ -910,6 +324,7 @@ fu_jabra_gnp_device_add_child(FuDevice *device, guint dfu_pid, GError **error)
 					      "PID",
 					      NULL))
 		return FALSE;
+
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 
 	/* success */
@@ -921,11 +336,15 @@ fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
-	if (!fu_jabra_gnp_device_read_name(self, error))
+	if (!fu_jabra_gnp_ensure_name(device, self->address, self->sequence_number, error))
 		return FALSE;
-	if (!fu_jabra_gnp_device_read_version(self, error))
+	if (!fu_jabra_gnp_ensure_version(device, self->address, self->sequence_number, error))
 		return FALSE;
-	if (!fu_jabra_gnp_device_read_dfu_pid(self, error))
+	if (!fu_jabra_gnp_read_dfu_pid(device,
+				       self->address,
+				       self->sequence_number,
+				       &self->dfu_pid,
+				       error))
 		return FALSE;
 	if (self->address == FU_JABRA_GNP_ADDRESS_PARENT) {
 		guint16 child_dfu_pid = 0;
@@ -946,16 +365,11 @@ fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 			}
 		}
 	}
-	if (self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD) {
-		if (!fu_jabra_gnp_device_read_child_battery_level(self, error))
-			return FALSE;
-	}
-
 	return TRUE;
 }
 
 static gboolean
-fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
+fu_jabra_gnp_device_write_image(FuDevice *device,
 				FuFirmware *firmware,
 				FuFirmware *img,
 				FuProgress *progress,
@@ -964,6 +378,7 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	const guint chunk_size = 52;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -978,17 +393,21 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 	stream = fu_firmware_get_stream(img, error);
 	if (stream == NULL)
 		return FALSE;
-	if (!fu_jabra_gnp_device_write_partition(self, fu_firmware_get_idx(img), error))
+	if (!fu_jabra_gnp_write_partition(device,
+					  self->address,
+					  self->sequence_number,
+					  fu_firmware_get_idx(img),
+					  error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* start erasing */
-	if (!fu_jabra_gnp_device_start(self, error))
+	if (!fu_jabra_gnp_start(device, self->address, self->sequence_number, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* poll for erase done */
-	if (!fu_jabra_gnp_device_flash_erase_done(self, error))
+	if (!fu_jabra_gnp_flash_erase_done(device, self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -1000,24 +419,45 @@ fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 						error);
 	if (chunks == NULL)
 		return FALSE;
-	if (!fu_jabra_gnp_device_write_crc(self,
-					   fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
-					   fu_chunk_array_length(chunks),
-					   FU_JABRA_GNP_PRELOAD_COUNT,
-					   error))
-		return FALSE;
-	if (!fu_jabra_gnp_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
+	if (self->fwu_protocol == FU_JABRA_GNP_PROTOCOL_OTA) {
+		if (!fu_jabra_gnp_write_crc(device,
+					    self->address,
+					    self->sequence_number,
+					    fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
+					    fu_chunk_array_length(chunks),
+					    FU_JABRA_GNP_PRELOAD_COUNT,
+					    error))
+			return FALSE;
+	} else {
+		/* FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA */
+		if (!fu_jabra_gnp_write_extended_crc(
+			device,
+			self->address,
+			self->sequence_number,
+			fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
+			fu_chunk_array_length(chunks),
+			FU_JABRA_GNP_PRELOAD_COUNT,
+			error))
+			return FALSE;
+	}
+	if (!fu_jabra_gnp_write_chunks(device,
+				       self->address,
+				       chunks,
+				       fu_progress_get_child(progress),
+				       error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* verify */
-	if (!fu_jabra_gnp_device_read_verify_status(self, error))
+	if (!fu_jabra_gnp_read_verify_status(device, self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write version */
-	if (!fu_jabra_gnp_device_write_version(
-		self,
+	if (!fu_jabra_gnp_write_version(
+		device,
+		self->address,
+		self->sequence_number,
 		fu_jabra_gnp_firmware_get_version_data(FU_JABRA_GNP_FIRMWARE(firmware)),
 		error))
 		return FALSE;
@@ -1047,9 +487,15 @@ fu_jabra_gnp_device_write_firmware(FuDevice *device,
 				     fu_firmware_get_size(img),
 				     fu_firmware_get_id(img));
 	}
+	if (!fu_jabra_gnp_read_fwu_protocol(device,
+					    self->address,
+					    self->sequence_number,
+					    &self->fwu_protocol,
+					    error))
+		return FALSE;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		if (!fu_jabra_gnp_device_write_image(self,
+		if (!fu_jabra_gnp_device_write_image(device,
 						     firmware,
 						     img,
 						     fu_progress_get_child(progress),
@@ -1060,23 +506,10 @@ fu_jabra_gnp_device_write_firmware(FuDevice *device,
 		fu_progress_step_done(progress);
 	}
 	/* write squif */
-	if (!fu_jabra_gnp_device_write_dfu_from_squif(self, error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
-fu_jabra_gnp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	/* ota device needs some time to restart and reconnect */
-	if (self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD) {
-		fu_device_sleep_full(FU_DEVICE(self), 45000, progress);
-		fu_device_set_remove_delay(FU_DEVICE(self), 10000);
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
-	return TRUE;
+	return fu_jabra_gnp_write_dfu_from_squif(device,
+						 self->address,
+						 self->sequence_number,
+						 error);
 }
 
 static gboolean
@@ -1137,7 +570,6 @@ fu_jabra_gnp_device_class_init(FuJabraGnpDeviceClass *klass)
 	device_class->probe = fu_jabra_gnp_device_probe;
 	device_class->setup = fu_jabra_gnp_device_setup;
 	device_class->write_firmware = fu_jabra_gnp_device_write_firmware;
-	device_class->attach = fu_jabra_gnp_device_attach;
 	device_class->set_quirk_kv = fu_jabra_gnp_device_set_quirk_kv;
 	device_class->set_progress = fu_jabra_gnp_device_set_progress;
 }

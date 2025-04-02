@@ -8,14 +8,15 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-jabra-gnp-common.h"
+
 #define FU_TYPE_JABRA_GNP_FIRMWARE (fu_jabra_gnp_firmware_get_type())
 G_DECLARE_FINAL_TYPE(FuJabraGnpFirmware, fu_jabra_gnp_firmware, FU, JABRA_GNP_FIRMWARE, FuFirmware)
-
-typedef struct {
-	guint8 major;
-	guint8 minor;
-	guint8 micro;
-} FuJabraGnpVersionData;
+struct _FuJabraGnpFirmware {
+	FuFirmware parent_instance;
+	guint16 dfu_pid;
+	FuJabraGnpVersionData version_data;
+};
 
 FuFirmware *
 fu_jabra_gnp_firmware_new(void);
