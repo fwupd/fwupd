@@ -88,9 +88,19 @@ This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` t
 
 ### 5. Run
 
+Start fwupd:
+
 ```bash
 ./_android_build/adb_fwupd_env.sh fwupd-binder --verbose --verbase
 ```
+
+Verify that the fwupd service is exposed:
+
+```bash
+adb shell -t service list | grep fwupd
+```
+
+Test `get-devices` binder call:
 
 ```bash
 ./_android_build/adb_fwupd_env.sh fwupdmgr-binder get-devices --verbose --verbose
