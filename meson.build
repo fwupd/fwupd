@@ -348,7 +348,8 @@ enable_binder = get_option('binder').enable_auto_if(host_machine.system() == 'an
 if enable_binder
   binder_ndk = cc.find_library('binder_ndk')
 
-  binder_ndk_platform_incdir = include_directories( 'contrib/android/include_platform' )
+  android_frameworks = dependency('android_frameworks')
+  binder_ndk_platform_incdir = subproject('android_frameworks').get_variable('binder_dirs')
   binder_ndk = cc.find_library('binder_ndk',
     dirs: [ meson.current_source_dir() / 'contrib/android/lib_ndk' ],
     has_headers: [ 'android/binder_manager.h' ],
