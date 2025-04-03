@@ -1624,13 +1624,15 @@ fu_context_is_esp(FuVolume *esp)
 {
 	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
 	g_autofree gchar *fn = NULL;
+	g_autofree gchar *fn2 = NULL;
 
 	if (mount_point == NULL)
 		return FALSE;
 
 	fn = g_build_filename(mount_point, "EFI", NULL);
+	fn2 = g_build_filename(mount_point, "efi", NULL);
 
-	return g_file_test(fn, G_FILE_TEST_IS_DIR);
+	return g_file_test(fn, G_FILE_TEST_IS_DIR) || g_file_test(fn2, G_FILE_TEST_IS_DIR);
 }
 
 static gboolean
