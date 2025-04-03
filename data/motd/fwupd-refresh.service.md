@@ -2,7 +2,7 @@
 title: Message Of The Day Integration
 ---
 
-% fwupd-refresh.service(5) {{PACKAGE_VERSION}} | Message Of The Day Integration
+% fwupd-refresh.service(8) {{PACKAGE_VERSION}} | Message Of The Day Integration
 
 ## NAME
 
