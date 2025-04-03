@@ -8776,8 +8776,6 @@ fu_engine_constructed(GObject *obj)
 	g_autofree gchar *pkidir_md = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 
-	/* for debugging */
-	g_info("starting fwupd %s…", VERSION);
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
 			 G_CALLBACK(fu_engine_context_security_changed_cb),

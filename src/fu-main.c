@@ -206,7 +206,7 @@ main(int argc, char *argv[])
 		g_timeout_add_seconds(5, fu_main_timed_exit_cb, daemon);
 
 	/* wait */
-	g_message("Daemon ready for requests (locale %s)", g_getenv("LANG"));
+	g_message("fwupd %s ready for requests (locale %s)", VERSION, g_getenv("LANG"));
 	fu_daemon_start(daemon);
 
 #ifdef HAVE_SYSTEMD
