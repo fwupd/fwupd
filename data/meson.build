@@ -72,7 +72,13 @@ if build_daemon
     con2.set('localstatedir', localstatedir)
     rw_directories = []
     if not get_option('plugin_uefi_capsule').disabled()
-      rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
+      rw_directories += [
+        '-/boot/efi',
+        '-/boot/EFI',
+        '-/boot/grub',
+        '-/efi/EFI',
+        '-/sys/firmware/efi/efivars',
+      ]
     endif
 
     # not using ConfigurationDirectory further down
