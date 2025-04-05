@@ -6711,6 +6711,63 @@ fu_plugin_struct_wrapped_func(void)
 }
 
 static void
+fu_efi_load_option_path_func(void)
+{
+	const gchar *tmp;
+	g_autofree gchar *blobstr = NULL;
+	g_autoptr(FuEfiDevicePathList) devpathlist = fu_efi_device_path_list_new();
+	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_assert_cmpint(fu_efi_load_option_get_kind(loadopt), ==, FU_EFI_LOAD_OPTION_KIND_UNKNOWN);
+	fu_efi_load_option_set_metadata(loadopt, FU_EFI_LOAD_OPTION_METADATA_PATH, "/foo");
+	g_assert_cmpint(fu_efi_load_option_get_kind(loadopt), ==, FU_EFI_LOAD_OPTION_KIND_PATH);
+
+	tmp = fu_efi_load_option_get_metadata(loadopt, FU_EFI_LOAD_OPTION_METADATA_PATH, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "/foo");
+
+	fu_firmware_set_id(FU_FIRMWARE(loadopt), "id");
+	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist));
+	blob = fu_firmware_write(FU_FIRMWARE(loadopt), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	blobstr = fu_bytes_to_string(blob);
+	g_assert_cmpstr(blobstr, ==, "0100000004006900640000007fff04005c002f0066006f006f000000");
+}
+
+static void
+fu_efi_load_option_hive_func(void)
+{
+	g_autofree gchar *blobstr = NULL;
+	g_autoptr(FuEfiDevicePathList) devpathlist = fu_efi_device_path_list_new();
+	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_assert_cmpint(fu_efi_load_option_get_kind(loadopt), ==, FU_EFI_LOAD_OPTION_KIND_UNKNOWN);
+	fu_efi_load_option_set_metadata(loadopt, FU_EFI_LOAD_OPTION_METADATA_PATH, "/foo");
+	fu_efi_load_option_set_metadata(loadopt, FU_EFI_LOAD_OPTION_METADATA_CMDLINE, "noacpi");
+	g_assert_cmpint(fu_efi_load_option_get_kind(loadopt), ==, FU_EFI_LOAD_OPTION_KIND_HIVE);
+
+	fu_firmware_set_id(FU_FIRMWARE(loadopt), "id");
+	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist));
+	blob = fu_firmware_write(FU_FIRMWARE(loadopt), &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	g_assert_cmpint(g_bytes_get_size(blob), ==, 512);
+	blobstr = fu_bytes_to_string(blob);
+
+	/* get rid of extra NUL butes */
+	blobstr[120] = '\0';
+	g_assert_cmpstr(blobstr,
+			==,
+			"0100000004006900640000007fff04004849564501020b0f4a6ea20405000000706174685c"
+			"2f666f6f0706000000636d646c696e656e6f6163706900");
+}
+
+static void
 fu_efi_load_option_func(void)
 {
 	g_autoptr(FuEfivars) efivars = fu_efivars_new();
@@ -6846,6 +6903,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/msgpack{parse-binary}", fu_msgpack_parse_binary_func);
 	g_test_add_func("/fwupd/msgpack{lookup}", fu_msgpack_lookup_func);
 	g_test_add_func("/fwupd/efi-load-option", fu_efi_load_option_func);
+	g_test_add_func("/fwupd/efi-load-option{path}", fu_efi_load_option_path_func);
+	g_test_add_func("/fwupd/efi-load-option{hive}", fu_efi_load_option_hive_func);
 	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efi-signature-list", fu_plugin_efi_signature_list_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);

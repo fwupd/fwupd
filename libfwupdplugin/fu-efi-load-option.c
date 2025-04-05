@@ -142,6 +142,13 @@ fu_efi_load_option_set_metadata(FuEfiLoadOption *self, const gchar *key, const g
 		g_hash_table_remove(self->metadata, key);
 		return;
 	}
+	/* auto-set something sensible */
+	if (self->kind == FU_EFI_LOAD_OPTION_KIND_UNKNOWN &&
+	    g_strcmp0(key, FU_EFI_LOAD_OPTION_METADATA_PATH) == 0) {
+		self->kind = FU_EFI_LOAD_OPTION_KIND_PATH;
+	} else {
+		self->kind = FU_EFI_LOAD_OPTION_KIND_HIVE;
+	}
 	if (g_strcmp0(key, FU_EFI_LOAD_OPTION_METADATA_PATH) == 0 && value != NULL &&
 	    g_str_has_prefix(value, "\\")) {
 		value++;
