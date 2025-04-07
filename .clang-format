@@ -36,19 +36,6 @@ PenaltyBreakBeforeFirstCallParameter: '15'
 ---
 Language: 'Proto'
 ---
-Language: 'C'
-IncludeCategories:
-  - Regex:           '^"config.h"$'
-    Priority:        '0'
-  - Regex:           '<fwupdplugin.h>'
-    Priority:        '1'
-  - Regex:           '^<'
-    Priority:        '2'
-  - Regex:           'fwupd'
-    Priority:        '3'
-  - Regex:           '.*'
-    Priority:        '4'
----
 Language: 'Cpp'
 IncludeCategories:
   - Regex:           '^"config.h"$'
