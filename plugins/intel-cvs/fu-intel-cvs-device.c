@@ -170,7 +170,6 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuIntelCvsDevice *self = FU_INTEL_CVS_DEVICE(device);
-	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuIOChannel) io_payload = NULL;
 	g_autoptr(FuStructIntelCvsWrite) st_write = fu_struct_intel_cvs_write_new();
 	g_autoptr(GError) error_local = NULL;
