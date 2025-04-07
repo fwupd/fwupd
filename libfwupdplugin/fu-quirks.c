@@ -11,9 +11,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
-#ifdef HAVE_SQLITE
 #include <sqlite3.h>
-#endif
 
 #include "fwupd-common.h"
 #include "fwupd-enums-private.h"
@@ -81,16 +79,12 @@ struct _FuQuirks {
 	XbQuery *query_kv;
 	XbQuery *query_vs;
 	gboolean verbose;
-#ifdef HAVE_SQLITE
 	sqlite3 *db;
-#endif
 };
 
 G_DEFINE_TYPE(FuQuirks, fu_quirks, G_TYPE_OBJECT)
 
-#ifdef HAVE_SQLITE
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(sqlite3_stmt, sqlite3_finalize);
-#endif
 
 static gchar *
 fu_quirks_build_group_key(const gchar *group)
@@ -469,7 +463,6 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
-#ifdef HAVE_SQLITE
 	/* this is generated from usb.ids and other static sources */
 	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
 		g_autoptr(sqlite3_stmt) stmt = NULL;
@@ -490,7 +483,6 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 				return g_intern_string(value);
 		}
 	}
-#endif
 
 	/* ensure up to date */
 	if (!fu_quirks_check_silo(self, &error)) {
@@ -549,7 +541,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 
-#ifdef HAVE_SQLITE
 	/* this is generated from usb.ids and other static sources */
 	if (self->db != NULL && (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
 		g_autoptr(sqlite3_stmt) stmt = NULL;
@@ -582,7 +573,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 			iter_cb(self, key_tmp, value, FU_CONTEXT_QUIRK_SOURCE_DB, user_data);
 		}
 	}
-#endif
 
 	/* ensure up to date */
 	if (!fu_quirks_check_silo(self, &error)) {
@@ -626,8 +616,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 
 	return TRUE;
 }
-
-#ifdef HAVE_SQLITE
 
 typedef struct {
 	FuQuirks *self;
@@ -977,7 +965,6 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	/* success */
 	return TRUE;
 }
-#endif
 
 /**
  * fu_quirks_load: (skip)
@@ -994,10 +981,8 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 gboolean
 fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
-#ifdef HAVE_SQLITE
 	g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
 	g_autofree gchar *quirksdb = g_build_filename(cachedirpkg, "quirks.db", NULL);
-#endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -1005,7 +990,6 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	self->load_flags = load_flags;
 	self->verbose = g_getenv("FWUPD_XMLB_VERBOSE") != NULL;
 
-#ifdef HAVE_SQLITE
 	if (self->db == NULL && (load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) == 0) {
 		g_debug("open database %s", quirksdb);
 		if (!fu_path_mkdir_parent(quirksdb, error))
@@ -1022,7 +1006,6 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 		if (!fu_quirks_db_load(self, load_flags, error))
 			return FALSE;
 	}
-#endif
 
 	/* now silo */
 	return fu_quirks_check_silo(self, error);
@@ -1049,11 +1032,9 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key)
 static void
 fu_quirks_housekeeping_cb(FuContext *ctx, FuQuirks *self)
 {
-#ifdef HAVE_SQLITE
 	sqlite3_release_memory(G_MAXINT32);
 	if (self->db != NULL)
 		sqlite3_db_release_memory(self->db);
-#endif
 }
 
 static void
@@ -1135,10 +1116,8 @@ fu_quirks_finalize(GObject *obj)
 		g_object_unref(self->query_vs);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
-#ifdef HAVE_SQLITE
 	if (self->db != NULL)
 		sqlite3_close(self->db);
-#endif
 	g_hash_table_unref(self->possible_keys);
 	g_ptr_array_unref(self->invalid_keys);
 	G_OBJECT_CLASS(fu_quirks_parent_class)->finalize(obj);

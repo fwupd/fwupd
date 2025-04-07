@@ -256,9 +256,6 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
 endif
 
 sqlite = dependency('sqlite3')
-if sqlite.found()
-  conf.set('HAVE_SQLITE', '1')
-endif
 passim = dependency('passim', version: '>= 0.1.6', required: get_option('passim'), fallback: ['passim', 'passim_dep'])
 if passim.found()
   conf.set('HAVE_PASSIM', '1')
