@@ -30,6 +30,7 @@ typedef struct {
 struct _FuDeviceEvent {
 	GObject parent_instance;
 	gchar *id;
+	gchar *id_uncompressed;
 	GPtrArray *values; /* element-type FuDeviceEventBlob */
 };
 
@@ -422,7 +423,10 @@ fu_device_event_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlag
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
 
-	if (self->id != NULL) {
+	if (self->id_uncompressed != NULL && (flags & FWUPD_CODEC_FLAG_COMPRESSED) == 0) {
+		json_builder_set_member_name(builder, "Id");
+		json_builder_add_string_value(builder, self->id_uncompressed);
+	} else if (self->id != NULL) {
 		json_builder_set_member_name(builder, "Id");
 		json_builder_add_string_value(builder, self->id);
 	}
@@ -438,6 +442,24 @@ fu_device_event_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlag
 		} else {
 			g_warning("invalid GType %s, ignoring", g_type_name(blob->gtype));
 		}
+	}
+}
+
+static void
+fu_device_event_set_id(FuDeviceEvent *self, const gchar *id)
+{
+	g_return_if_fail(FU_IS_DEVICE_EVENT(self));
+	g_return_if_fail(id != NULL);
+
+	g_clear_pointer(&self->id, g_free);
+	g_clear_pointer(&self->id_uncompressed, g_free);
+
+	/* already a truncated SHA1 hash? */
+	if (g_str_has_prefix(id, "#")) {
+		self->id = g_strdup(id);
+	} else {
+		self->id_uncompressed = g_strdup(id);
+		self->id = fu_device_event_build_id(id);
 	}
 }
 
@@ -459,14 +481,7 @@ fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error
 		if (gtype == G_TYPE_STRING) {
 			const gchar *str = json_node_get_string(member_node);
 			if (g_strcmp0(member_name, "Id") == 0) {
-				/* already a truncated SHA1 hash? */
-				if (g_str_has_prefix(str, "#")) {
-					g_free(self->id);
-					self->id = g_strdup(str);
-				} else {
-					g_free(self->id);
-					self->id = fu_device_event_build_id(str);
-				}
+				fu_device_event_set_id(self, str);
 			} else {
 				fu_device_event_set_str(self, member_name, str);
 			}
@@ -493,6 +508,7 @@ fu_device_event_finalize(GObject *object)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(object);
 	g_free(self->id);
+	g_free(self->id_uncompressed);
 	g_ptr_array_unref(self->values);
 	G_OBJECT_CLASS(fu_device_event_parent_class)->finalize(object);
 }
@@ -524,6 +540,6 @@ fu_device_event_new(const gchar *id)
 {
 	FuDeviceEvent *self = g_object_new(FU_TYPE_DEVICE_EVENT, NULL);
 	if (id != NULL)
-		self->id = fu_device_event_build_id(id);
+		fu_device_event_set_id(self, id);
 	return FU_DEVICE_EVENT(self);
 }

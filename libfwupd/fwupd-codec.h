@@ -36,6 +36,14 @@ typedef enum {
 	 * Since: 2.0.0
 	 */
 	FWUPD_CODEC_FLAG_TRUSTED = 1 << 0,
+	/**
+	 * FWUPD_CODEC_FLAG_COMPRESSED:
+	 *
+	 * Compress values to the smallest possible size.
+	 *
+	 * Since: 2.0.8
+	 */
+	FWUPD_CODEC_FLAG_COMPRESSED = 1 << 1,
 } FwupdCodecFlags;
 
 struct _FwupdCodecInterface {

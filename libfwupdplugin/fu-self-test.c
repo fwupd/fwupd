@@ -2225,7 +2225,7 @@ fu_device_event_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	json = fwupd_codec_to_json_string(FWUPD_CODEC(event1), FWUPD_CODEC_FLAG_NONE, &error);
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(event1), FWUPD_CODEC_FLAG_COMPRESSED, &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(json,
 			==,
@@ -2261,6 +2261,25 @@ fu_device_event_func(void)
 	g_assert_error(error_copy, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_cmpstr(error_copy->message, ==, "invalid event type for key Age");
 	g_assert_false(ret);
+}
+
+static void
+fu_device_event_uncompressed_func(void)
+{
+	g_autofree gchar *json = NULL;
+	g_autoptr(FuDeviceEvent) event = fu_device_event_new("foo:bar:baz");
+	g_autoptr(GError) error = NULL;
+
+	/* uncompressed */
+	fu_device_event_set_str(event, "Name", "Richard");
+	json = fwupd_codec_to_json_string(FWUPD_CODEC(event), FWUPD_CODEC_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(json,
+			==,
+			"{\n"
+			"  \"Id\" : \"foo:bar:baz\",\n"
+			"  \"Name\" : \"Richard\"\n"
+			"}");
 }
 
 static void
@@ -6953,6 +6972,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
+	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);
 	g_test_add_func("/fwupd/device{event-donor}", fu_device_event_donor_func);
 	g_test_add_func("/fwupd/device{vfuncs}", fu_device_vfuncs_func);
 	g_test_add_func("/fwupd/device{instance-ids}", fu_device_instance_ids_func);

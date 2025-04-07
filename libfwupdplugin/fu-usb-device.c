@@ -2991,7 +2991,10 @@ fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags f
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
 			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    builder,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
