@@ -17,7 +17,7 @@ See <https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf> f
 
 This plugin supports the following protocol ID:
 
-* `org.uefi.kekx2`
+* `org.uefi.dbx2`
 
 ## GUID Generation
 
