@@ -562,9 +562,6 @@ static void
 fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(codec);
-	GHashTableIter iter;
-	const gchar *key;
-	const gchar *value;
 	g_autoptr(FuFirmware) dp_list = NULL;
 
 	fwupd_codec_json_append(builder, "Name", fu_firmware_get_id(FU_FIRMWARE(self)));
@@ -573,9 +570,17 @@ fu_efi_load_option_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecF
 					"Kind",
 					fu_efi_load_option_kind_to_string(self->kind));
 	}
-	g_hash_table_iter_init(&iter, self->metadata);
-	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
-		fwupd_codec_json_append(builder, key, value);
+	if (g_hash_table_size(self->metadata) > 0) {
+		GHashTableIter iter;
+		const gchar *key;
+		const gchar *value;
+		json_builder_set_member_name(builder, "Metadata");
+		json_builder_begin_object(builder);
+		g_hash_table_iter_init(&iter, self->metadata);
+		while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value))
+			fwupd_codec_json_append(builder, key, value);
+		json_builder_end_object(builder);
+	}
 	dp_list =
 	    fu_firmware_get_image_by_gtype(FU_FIRMWARE(self), FU_TYPE_EFI_DEVICE_PATH_LIST, NULL);
 	if (dp_list != NULL)
