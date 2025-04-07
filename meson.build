@@ -168,7 +168,6 @@ add_project_arguments('-D_DEFAULT_SOURCE', language: 'c')
 # needed for symlink() and BYTE_ORDER
 add_project_arguments('-D_BSD_SOURCE', language: 'c')
 add_project_arguments('-D__BSD_VISIBLE', language: 'c')
-add_project_arguments('-D_XOPEN_SOURCE=700', language: 'c')
 
 # needed for memfd_create()
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
@@ -255,6 +254,7 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
 
+readline = dependency('readline', required: build_daemon)
 sqlite = dependency('sqlite3')
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')

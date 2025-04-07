@@ -68,6 +68,7 @@ BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
+BuildRequires: readline-devel
 %if 0%{?have_passim}
 BuildRequires: passim-devel
 %endif

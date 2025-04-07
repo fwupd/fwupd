@@ -101,6 +101,8 @@ find $MINGW32BINDIR \
 	-o -name libssh2-1.dll \
 	-o -name libssl-3-x64.dll \
 	-o -name libssp-0.dll \
+	-o -name libtermcap-0.dll \
+	-o -name libreadline8.dll \
 	-o -name libtasn1-6.dll \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
