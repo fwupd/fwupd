@@ -1050,6 +1050,7 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
@@ -1063,6 +1064,7 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
 	g_assert_nonnull(device);
+	fu_device_set_plugin(device, "test");
 
 	/* version convert */
 	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -1078,6 +1080,9 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	metadata_post = fu_device_report_metadata_post(device);
 	if (metadata_post != NULL)
 		g_debug("got %u metadata items", g_hash_table_size(metadata_post));
+
+	/* security attrs */
+	fu_device_add_security_attrs(device, attrs);
 
 	/* quirk kvs */
 	ret = fu_device_set_quirk_kv(device,
