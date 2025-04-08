@@ -725,6 +725,10 @@ fu_engine_load_release(FuEngine *self,
 		}
 	}
 
+	/* post-ensure checks */
+	if (!fu_release_check_version(release, component, install_flags, error))
+		return FALSE;
+
 	/* add any client-side BKC tags */
 	if (!fu_engine_add_local_release_metadata(self, release, error))
 		return FALSE;
@@ -6327,6 +6331,11 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 			if (rel != NULL) {
 				g_autoptr(FuRelease) release = fu_release_new();
 				g_autoptr(GError) error_local = NULL;
+				g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+
+				fu_engine_request_add_flag(request,
+							   FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS);
+				fu_release_set_request(release, request);
 				fu_release_set_device(release, device);
 				if (!fu_engine_load_release(self,
 							    release,
