@@ -11,6 +11,8 @@
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-struct.h"
 
+#define FU_BNR_DP_IEEE_OUI 0x006065
+
 #define FU_BNR_DP_DEVICE_HEADER_OFFSET 0x00A00
 #define FU_BNR_DP_DEVICE_DATA_OFFSET   0x00900
 
@@ -494,9 +496,18 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
 	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 
-	/* DpauxDevice->setup */
+	/* FuDpauxDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_bnr_dp_device_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* check if device dpcd matches before writing anything else to the device */
+	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != FU_BNR_DP_IEEE_OUI) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device id doesn't match");
+		return FALSE;
+	}
 
 	st_header = fu_bnr_dp_device_fw_header(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error);
 	if (st_header == NULL)
