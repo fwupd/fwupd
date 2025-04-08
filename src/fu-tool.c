@@ -2158,6 +2158,9 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 				     error))
 		return FALSE;
 
+	if (priv->as_json)
+		return TRUE;
+
 	fu_console_print_literal(priv->console, _("Successfully disabled remote"));
 	return TRUE;
 }
@@ -2231,6 +2234,9 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 				     "true",
 				     error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	fu_console_print_literal(priv->console, _("Successfully enabled remote"));
 	return TRUE;
