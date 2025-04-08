@@ -1934,6 +1934,14 @@ fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error
 		return fu_util_get_device_by_id(priv, values[0], error);
 	}
 
+	if (priv->as_json) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "device ID required");
+		return NULL;
+	}
+
 	/* get all devices from daemon */
 	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devices == NULL)
