@@ -595,6 +595,9 @@ fu_engine_requirements_version_lowest_func(gconstpointer user_data)
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
 	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_release_check_version(release, component, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_true(
 	    g_str_has_prefix(error->message, "Specified firmware is older than the minimum"));
@@ -992,6 +995,9 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
 	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_release_check_version(release, component, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(
 	    g_strstr_len(error->message, -1, "Firmware version formats were different"));
@@ -1038,6 +1044,9 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	fu_release_set_device(release, device);
 	fu_release_set_request(release, request);
 	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_release_check_version(release, component, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "Device only supports version upgrades"));
 	g_assert_false(ret);
