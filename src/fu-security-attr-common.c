@@ -231,6 +231,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return g_strdup(_("UEFI memory protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+		/* TRANSLATORS: Title: is UEFI db up-to-date */
+		return g_strdup(_("UEFI db"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -419,6 +423,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
 		/* TRANSLATORS: Title: is UEFI early-boot memory protection turned on */
 		return _("UEFI Memory Protection");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+		/* TRANSLATORS: Title: is UEFI db up-to-date */
+		return _("UEFI db");
 	}
 	return NULL;
 }
@@ -617,6 +625,11 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI system can set up memory attributes at boot which prevent "
 			 "common exploits from running.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("The UEFI db contains the list of valid certificates that can be used to "
+			 "authorize what EFI binaries are allowed to run.");
 	}
 	return NULL;
 }

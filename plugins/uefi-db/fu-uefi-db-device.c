@@ -87,6 +87,49 @@ fu_uefi_db_device_write_firmware(FuDevice *device,
 }
 
 static void
+fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+{
+	GPtrArray *children = fu_device_get_children(device);
+	gboolean seen_old = FALSE;
+	gboolean seen_new = FALSE;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fu_device_security_attr_new(device, FWUPD_SECURITY_ATTR_ID_UEFI_DB);
+	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_ACTION_CONFIG_FW);
+	fu_security_attrs_append(attrs, attr);
+
+	/* look for both versions of the Microsoft UEFI CA */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index(children, i);
+		if (fu_device_has_instance_id(child,
+					      "UEFI\\CRT_A5B7C551CEDC06B94D0C5B920F473E03C2F142F2",
+					      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
+			seen_new = TRUE;
+			break;
+		}
+		if (fu_device_has_instance_id(child,
+					      "UEFI\\CRT_03DE12BE14CA397DF20CEE646C7D9B727FCCE5F8",
+					      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
+			seen_old = TRUE;
+			break;
+		}
+	}
+
+	if (!seen_new && !seen_old) {
+		/* user is using a custom UEFI db, just ignore this HSI attribute */
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+	} else if (seen_new) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	} else {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+	}
+}
+
+static void
 fu_uefi_db_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -114,5 +157,6 @@ fu_uefi_db_device_class_init(FuUefiDbDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_uefi_db_device_probe;
 	device_class->write_firmware = fu_uefi_db_device_write_firmware;
+	device_class->add_security_attrs = fu_uefi_db_device_add_security_attrs;
 	device_class->set_progress = fu_uefi_db_device_set_progress;
 }
