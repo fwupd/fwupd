@@ -54,6 +54,7 @@ typedef struct {
 	gchar *update_request_id;
 	gchar *update_message;
 	gchar *update_image;
+	gchar *fwupd_version;
 	gchar *proxy_guid;
 	FuDevice *proxy;    /* noref */
 	FuDevice *target;   /* ref */
@@ -3814,6 +3815,7 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autoptr(FuDevice) parent = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -3840,15 +3842,29 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		const gchar *gtype_str;
 		const gchar *id;
 
-		/* we have to propagate this to preserve compat with older emulation files */
-		event = fu_device_load_event(FU_DEVICE(self), event_id, NULL);
-		if (event == NULL) {
-			g_debug("falling back to simulated device for old emulation");
-			parent =
-			    fu_backend_get_device_parent(priv->backend, self, subsystem, error);
-			if (parent != self)
-				fu_device_set_target(parent, self);
-			return g_steal_pointer(&parent);
+		/* we might have to propagate this to preserve compat with older emulation files */
+		if (priv->fwupd_version != NULL &&
+		    fu_version_compare(priv->fwupd_version,
+				       "2.0.8",
+				       FWUPD_VERSION_FORMAT_TRIPLET) >= 0) {
+			event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+			if (event == NULL)
+				return NULL;
+			if (!fu_device_event_check_error(event, error))
+				return NULL;
+		} else {
+			event = fu_device_load_event(FU_DEVICE(self), event_id, NULL);
+			if (event == NULL) {
+				g_debug("falling back for emulation recorded by fwupd %s",
+					priv->fwupd_version);
+				parent = fu_backend_get_device_parent(priv->backend,
+								      self,
+								      subsystem,
+								      error);
+				if (parent != self)
+					fu_device_set_target(parent, self);
+				return g_steal_pointer(&parent);
+			}
 		}
 
 		/* missing GType is 'no parent found' */
@@ -3892,11 +3908,19 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* call into the backend */
-	parent = fu_backend_get_device_parent(priv->backend, self, subsystem, error);
-	if (parent == NULL)
+	parent = fu_backend_get_device_parent(priv->backend, self, subsystem, &error_local);
+	if (parent == NULL) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
-	if (!fu_device_probe(parent, error))
+	}
+	if (!fu_device_probe(parent, &error_local)) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
+	}
 
 	/* save response */
 	if (event != NULL) {
@@ -4066,6 +4090,50 @@ fu_device_set_update_image(FuDevice *self, const gchar *update_image)
 	g_free(priv->update_image);
 	priv->update_image = g_strdup(update_image);
 	g_object_notify(G_OBJECT(self), "update-image");
+}
+
+/**
+ * fu_device_get_fwupd_version:
+ * @self: a #FuDevice
+ *
+ * Gets the fwupd version that created the emulation.
+ *
+ * Returns: a version, e.g. `2.0.8`, or %NULL if unset
+ *
+ * Since: 2.0.8
+ **/
+const gchar *
+fu_device_get_fwupd_version(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->fwupd_version;
+}
+
+/**
+ * fu_device_set_fwupd_version:
+ * @self: a #FuDevice
+ * @fwupd_version: (nullable): the version, e.g. `2.0.8`
+ *
+ * Sets the fwupd version that created the emulation.
+ *
+ * NOTE: This can only be set on devices with the %FWUPD_DEVICE_FLAG_EMULATED flag set.
+ *
+ * Since: 2.0.8
+ **/
+void
+fu_device_set_fwupd_version(FuDevice *self, const gchar *fwupd_version)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED));
+
+	/* not changed */
+	if (g_strcmp0(priv->fwupd_version, fwupd_version) == 0)
+		return;
+
+	g_free(priv->fwupd_version);
+	priv->fwupd_version = g_strdup(fwupd_version);
 }
 
 /**
@@ -4792,6 +4860,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_codec_string_append(str, idt, "FwupdVersion", priv->fwupd_version);
 	fwupd_codec_string_append(str, idt, "ProxyGuid", priv->proxy_guid);
 	fwupd_codec_string_append_int(str, idt, "RemoveDelay", priv->remove_delay);
 	fwupd_codec_string_append_int(str, idt, "AcquiesceDelay", priv->acquiesce_delay);
@@ -6407,6 +6476,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_set_modified_usec(self, priv_donor->modified_usec);
 		if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 			fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
+		if (priv->fwupd_version == NULL && fu_device_get_fwupd_version(donor) != NULL)
+			fu_device_set_fwupd_version(self, fu_device_get_fwupd_version(donor));
 		if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
 			fu_device_set_update_request_id(self, priv_donor->update_request_id);
 		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY) &&
@@ -7979,6 +8050,7 @@ fu_device_finalize(GObject *object)
 	g_free(priv->update_request_id);
 	g_free(priv->update_message);
 	g_free(priv->update_image);
+	g_free(priv->fwupd_version);
 	g_free(priv->proxy_guid);
 	g_free(priv->custom_flags);
 

@@ -2782,6 +2782,7 @@ fu_backend_emulate_func(void)
 	g_autofree gchar *json3 = NULL;
 	g_autoptr(FuBackend) backend = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *json1 = "{"
@@ -2908,6 +2909,12 @@ fu_backend_emulate_func(void)
 	g_assert_nonnull(json3);
 	g_debug("%s", json3);
 	g_assert_cmpstr(json3, ==, json2);
+
+	/* missing event, new path */
+	fu_device_set_fwupd_version(device, PACKAGE_VERSION);
+	device2 = fu_device_get_backend_parent_with_subsystem(device, "usb", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(device2);
 }
 
 static void

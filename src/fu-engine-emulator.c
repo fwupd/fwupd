@@ -123,6 +123,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 {
 	/* not always correct, but we want to remain compatible with all the old emulation files */
 	json_builder_begin_object(json_builder);
+	fwupd_codec_json_append(json_builder, "FwupdVersion", PACKAGE_VERSION);
 	json_builder_set_member_name(json_builder, "UsbDevices");
 	json_builder_begin_array(json_builder);
 	for (guint i = 0; i < devices->len; i++) {
