@@ -367,6 +367,7 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	JsonArray *json_array;
 	JsonObject *json_object;
+	const gchar *fwupd_version;
 	g_autoptr(GPtrArray) devices_added =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autoptr(GPtrArray) devices_remove = NULL;
@@ -388,6 +389,10 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	/* remain compatible with all the old emulation files */
 	if (!json_object_has_member(json_object, "UsbDevices"))
 		return TRUE;
+
+	/* if recorded */
+	fwupd_version =
+	    json_object_get_string_member_with_default(json_object, "FwupdVersion", NULL);
 
 	/* four steps:
 	 *
@@ -425,6 +430,9 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 
 		/* create device */
 		device_tmp = g_object_new(device_gtype, "context", priv->ctx, NULL);
+		fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED);
+		if (fwupd_version != NULL)
+			fu_device_set_fwupd_version(device_tmp, fwupd_version);
 		if (!fwupd_codec_from_json(FWUPD_CODEC(device_tmp), node_tmp, error))
 			return FALSE;
 		if (fu_device_get_backend_id(device_tmp) == NULL) {
@@ -481,7 +489,6 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* convert from FuUdevDevice to the superclass, e.g. FuHidrawDevice */
-		fu_device_add_flag(donor, FWUPD_DEVICE_FLAG_EMULATED);
 		if (!fu_device_probe(donor, &error_local)) {
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_propagate_error(error, g_steal_pointer(&error_local));

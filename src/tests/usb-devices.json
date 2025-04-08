@@ -1,4 +1,5 @@
 {
+  "FwupdVersion": "1.2.3",
   "UsbDevices": [
     {
       "PlatformId": "usb:01:00:06",
