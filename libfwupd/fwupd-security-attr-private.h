@@ -396,6 +396,14 @@ G_BEGIN_DECLS
  * Since: 2.0.7
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION "org.fwupd.hsi.Uefi.MemoryProtection"
+/**
+ * FWUPD_SECURITY_ATTR_ID_UEFI_DB:
+ *
+ * Host Security ID attribute for UEFI db certificate store
+ *
+ * Since: 2.0.8
+ **/
+#define FWUPD_SECURITY_ATTR_ID_UEFI_DB "org.fwupd.hsi.Uefi.Db"
 
 FwupdSecurityAttr *
 fwupd_security_attr_copy(FwupdSecurityAttr *self) G_GNUC_NON_NULL(1);

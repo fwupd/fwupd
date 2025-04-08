@@ -1,0 +1,21 @@
+{
+  "id": "org.fwupd.hsi.Uefi.Db",
+  "name": "UEFI db",
+  "description": [
+    "The UEFI db contains the list of valid certificates that is used to authorize what EFI binaries are allowed to run."
+  ],
+  "failure-impact": [
+    "Distribution-provided signed bootloader binaries may not boot on any system that does not have the new Microsoft UEFI certificate installed in the db."
+  ],
+  "failure-results": {
+    "not-valid": "the certificate store is not up to date"
+  },
+  "success-results": {
+    "not-found": "the certificate store does not contain any Microsoft UEFI certificate",
+    "valid": "the certificate store has the Microsoft UEFI 2023 certificate installed"
+  },
+  "references": {
+    "https://wiki.ubuntu.com/UEFI/SecureBoot/Testing": "Ubuntu SecureBoot Wiki Page"
+  },
+  "fwupd-version": "2.0.8"
+}
