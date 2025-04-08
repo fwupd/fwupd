@@ -3185,6 +3185,9 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 					error))
 		return FALSE;
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(priv->console, _("Successfully disabled remote"));
 	return TRUE;
