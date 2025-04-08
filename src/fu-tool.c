@@ -1666,7 +1666,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* show warnings */
-	if (devices_latest->len > 0) {
+	if (devices_latest->len > 0 && !priv->as_json) {
 		fu_console_print_literal(priv->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available */
@@ -1676,7 +1676,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_unsupported->len > 0) {
+	if (devices_unsupported->len > 0 && !priv->as_json) {
 		fu_console_print_literal(priv->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
@@ -1686,7 +1686,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_pending->len > 0) {
+	if (devices_pending->len > 0 && !priv->as_json) {
 		fu_console_print_literal(
 		    priv->console,
 		    /* TRANSLATORS: message letting the user there is an update
@@ -1709,7 +1709,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* we don't want to ask anything */
-	if (priv->no_reboot_check) {
+	if (priv->no_reboot_check || priv->as_json) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
