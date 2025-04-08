@@ -1352,12 +1352,13 @@ fu_util_install_stream(FuUtilPrivate *priv,
 			/* is this component valid for the device */
 			fu_release_set_device(release, device);
 			fu_release_set_request(release, priv->request);
-			if (!fu_release_load(release,
-					     cabinet,
-					     component,
-					     NULL,
-					     priv->flags,
-					     &error_local)) {
+			if (!fu_engine_load_release(priv->engine,
+						    release,
+						    cabinet,
+						    component,
+						    NULL,
+						    priv->flags,
+						    &error_local)) {
 				g_debug("loading release failed on %s:%s failed: %s",
 					fu_device_get_id(device),
 					xb_node_query_text(component, "id", NULL),

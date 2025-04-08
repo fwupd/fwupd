@@ -678,7 +678,7 @@ fu_engine_add_trusted_report(FuEngine *self, FuRelease *release)
 	}
 }
 
-static gboolean
+gboolean
 fu_engine_load_release(FuEngine *self,
 		       FuRelease *release,
 		       FuCabinet *cabinet,
@@ -687,7 +687,12 @@ fu_engine_load_release(FuEngine *self,
 		       FwupdInstallFlags install_flags,
 		       GError **error)
 {
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(FU_IS_RELEASE(release), FALSE);
 	g_return_val_if_fail(cabinet == NULL || FU_IS_CABINET(cabinet), FALSE);
+	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
+	g_return_val_if_fail(rel == NULL || XB_IS_NODE(rel), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* load release from XML */
 	fu_release_set_config(release, self->config);

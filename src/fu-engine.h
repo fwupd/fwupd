@@ -262,6 +262,14 @@ void
 fu_engine_set_silo(FuEngine *self, XbSilo *silo) G_GNUC_NON_NULL(1, 2);
 XbNode *
 fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device) G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_engine_load_release(FuEngine *self,
+		       FuRelease *release,
+		       FuCabinet *cabinet,
+		       XbNode *component,
+		       XbNode *rel,
+		       FwupdInstallFlags install_flags,
+		       GError **error) G_GNUC_NON_NULL(1, 2, 4);
 gchar *
 fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
 gboolean
