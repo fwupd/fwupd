@@ -69,6 +69,9 @@ fu_test_self_init(FuTest *self)
 		g_assert_no_error(error);
 		g_assert_true(ret);
 		fu_redfish_plugin_set_credentials(self->smc_plugin, "smc_username", "password2");
+		ret = fu_redfish_plugin_reload(self->smc_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 		ret = fu_plugin_runner_coldplug(self->smc_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -86,6 +89,9 @@ fu_test_self_init(FuTest *self)
 		fu_redfish_plugin_set_credentials(self->unlicensed_plugin,
 						  "unlicensed_username",
 						  "password2");
+		ret = fu_redfish_plugin_reload(self->unlicensed_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 		ret = fu_plugin_runner_coldplug(self->unlicensed_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);

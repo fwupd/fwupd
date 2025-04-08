@@ -69,6 +69,12 @@ def index():
     if request.authorization["username"] == HARDCODED_DELL_USERNAME:
         res["Vendor"] = "Dell"
 
+    if request.authorization["username"] in (
+        HARDCODED_SMC_USERNAME,
+        HARDCODED_UNL_USERNAME,
+    ):
+        res["Vendor"] = "SMCI"
+
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 

@@ -344,7 +344,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	    json_object_has_member(json_obj, "MultipartHttpPushUri")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "MultipartHttpPushUri");
 		if (tmp != NULL) {
-			if (fu_redfish_backend_has_smc_update_path(json_obj)) {
+			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
+			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;
