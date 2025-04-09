@@ -1102,6 +1102,10 @@ msgstr "Dumpa SMBIOS-data från en fil"
 msgid "Duration"
 msgstr "Tid"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULERINGSFIL [ARKIVFIL]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Varje system bör ha test för att säkerställa den fasta programvarans säkerhet."
@@ -2483,6 +2487,10 @@ msgstr "Kärnan som körs är för gammal"
 msgid "Runtime Suffix"
 msgstr "Exekveringssuffix"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "AVSNITT"
@@ -2993,6 +3001,18 @@ msgstr "TPM PCR0 skiljer sig från rekonstruktion."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "UEFI-plattformsnyckeln används för att avgöra om enhetsprogramvara kommer från en betrodd källa."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "UEFI-certifikatlagringen är nu uppdaterad"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "UEFI-databasen innehåller listan med giltiga certifikat som kan användas för att auktorisera vilka EFI-binärer som tillåts köra."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "UEFI-systemet kan konfigurera minnesattribut vid uppstart som förhindrar vanliga attackmetoder från att köras."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Demonen har läst in tredjepartskod och stöds inte längre av uppströmsutvecklarna!"
@@ -3136,6 +3156,10 @@ msgstr "UEFI ESP-partition kanske inte konfigurerats korrekt"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI-minnesskydd"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "UEFI-plattformsnyckel"
@@ -3160,6 +3184,10 @@ msgstr "UEFI-uppstartstjänstvariabler"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "UEFI-kapseluppdateringar är inte tillgängliga eller aktiverade i konfiguration för fast programvara"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI-db"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-verktyg"
@@ -3167,6 +3195,26 @@ msgstr "UEFI dbx-verktyg"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Fast UEFI-programvara kan inte uppdateras i äldre BIOS-läge"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI-minnesskydd"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI-minnesskydd aktiverat och låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI-minnesskydd aktiverat men inte låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI-minnesskydd är nu låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI-minnesskydd är nu olåst"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3479,6 +3527,10 @@ msgstr "[FIL FILSIG FJÄRR-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILNAMN1] [FILNAMN2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSION]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON] [TIMEOUT]"

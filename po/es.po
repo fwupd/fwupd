@@ -4,7 +4,7 @@
 #
 # Translators:
 # Adolfo Jayme-Barrientos, 2021
-# Adolfo Jayme-Barrientos, 2021
+# Adolfo Jayme Barrientos, 2021
 # César Enrique García <cquike@gmail.com>, 2023
 # D Marzal, 2024
 # Francisco Serrador, 2022-2025

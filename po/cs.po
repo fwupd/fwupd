@@ -31,7 +31,7 @@ msgstr[3] "Zbývají %.0f minuty"
 #. * is the device that updates all the other firmware on the system
 #, c-format
 msgid "%s BMC Update"
-msgstr "Aktualizace pro zařízení pro vestavěnou zprávu (BMC) %s"
+msgstr "Aktualizace zařízení pro vestavěnou zprávu (BMC) %s"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
@@ -91,12 +91,12 @@ msgstr "Aktualizace pro displej %s"
 #. * cradled in, or lowered onto
 #, c-format
 msgid "%s Dock Update"
-msgstr "Aktualizace doku %s"
+msgstr "Aktualizace pro dok %s"
 
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
-msgstr "%s aktualizace disku"
+msgstr "%s aktualizace pro disk"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -107,39 +107,39 @@ msgstr "Aktualizace vestavěného řadiče (EC) v %s"
 #. TRANSLATORS: a device that can read your fingerprint pattern
 #, c-format
 msgid "%s Fingerprint Reader Update"
-msgstr "Aktualizace čtečky otisků prstů %s"
+msgstr "Aktualizace pro čtečku otisků prstů %s"
 
 #. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
 #, c-format
 msgid "%s Flash Drive Update"
-msgstr "%s aktualizace flash disku"
+msgstr "%s aktualizace pro flash disk"
 
 #. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
 #. * the "video card"
 #, c-format
 msgid "%s GPU Update"
-msgstr "%s aktualizace GPU"
+msgstr "%s aktualizace pro GPU"
 
 #. TRANSLATORS: a large pressure-sensitive drawing area typically used
 #. * by artists and digital artists
 #, c-format
 msgid "%s Graphics Tablet Update"
-msgstr "Aktualizace grafického tabletu %s"
+msgstr "Aktualizace pro grafický tablet %s"
 
 #. TRANSLATORS: two miniature speakers attached to your ears
 #, c-format
 msgid "%s Headphones Update"
-msgstr "Aktualizace sluchátek %s"
+msgstr "Aktualizace pro sluchátka %s"
 
 #. TRANSLATORS: headphones with an integrated microphone
 #, c-format
 msgid "%s Headset Update"
-msgstr "Aktualizace náhlavní soupravy %s"
+msgstr "Aktualizace pro náhlavní soupravu %s"
 
 #. TRANSLATORS: an input device used by gamers, e.g. a joystick
 #, c-format
 msgid "%s Input Controller Update"
-msgstr "Aktualizace herního ovladače %s"
+msgstr "Aktualizace pro herní ovladač %s"
 
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
@@ -161,13 +161,13 @@ msgstr "Aktualizace pro myš %s"
 #. * PCI card, not the logical wired connection
 #, c-format
 msgid "%s Network Interface Update"
-msgstr "Aktualizace síťové karty %s"
+msgstr "Aktualizace pro síťovou kartu %s"
 
 #. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
 #. * SATA or NVMe disk
 #, c-format
 msgid "%s SSD Update"
-msgstr "%s aktualizace SSD"
+msgstr "%s aktualizace pro SSD"
 
 #. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
 #, c-format
@@ -201,13 +201,13 @@ msgstr "Aktualizace pro touchpad %s"
 #. * by plugging in a USB cable -- which may or may not also provide power
 #, c-format
 msgid "%s USB Dock Update"
-msgstr "Aktualizace USB doku %s"
+msgstr "Aktualizace pro USB dok %s"
 
 #. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
 #. * device that stays in the USB port so the wireless peripheral works
 #, c-format
 msgid "%s USB Receiver Update"
-msgstr "Aktualizace USB přijímače %s"
+msgstr "Aktualizace pro USB přijímač %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -361,7 +361,7 @@ msgstr "(zastaralé)"
 
 #. TRANSLATORS: HSI event title
 msgid "A TPM PCR is now an invalid value"
-msgstr "PCR registr v TPM má nyní neplatnou hodnotu"
+msgstr "PCR registr v TPM nyní má neplatnou hodnotu"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
@@ -421,7 +421,7 @@ msgstr "Alternativa (alias) pro %s"
 
 #. TRANSLATORS: HSI event title
 msgid "All TPM PCRs are now valid"
-msgstr "Všechny PCR registry jsou nyní platné"
+msgstr "Všechny TPM PCR registry jsou nyní platné"
 
 #. TRANSLATORS: HSI event title
 msgid "All TPM PCRs are valid"
@@ -1117,6 +1117,10 @@ msgstr "Vypsat data SMBIOS ze souboru"
 msgid "Duration"
 msgstr "Délka instalace"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "SOUBOR-EMULACE [SOUBOR-ARCHIVU]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Každý systém by měl mít testy pro zajištění zabezpečení firmware."
@@ -1336,7 +1340,7 @@ msgstr "Podpis souboru"
 
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
-msgstr "Odkud soubor"
+msgstr "Původ souboru"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -2504,6 +2508,10 @@ msgstr "Provozované jádro systému je příliš staré"
 msgid "Runtime Suffix"
 msgstr "Přípona běhového prostředí"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "Soupiska použitého software"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "SEKCE"
@@ -2896,12 +2904,12 @@ msgstr "Režim System management je používán firmwarem pro přístup k rezide
 
 #. TRANSLATORS: as in laptop battery power
 msgid "System power is too low"
-msgstr "Akumulátor zařízení je příliš vybitý"
+msgstr "Akumulátor stroje je příliš vybitý"
 
 #. TRANSLATORS: as in laptop battery power
 #, c-format
 msgid "System power is too low (%u%%, requires %u%%)"
-msgstr "Akumulátor zařízení je příliš vybitý (%u%%, vyžaduje %u%%)"
+msgstr "Akumulátor stroje je příliš vybitý (%u%%, vyžaduje %u%%)"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
@@ -2959,7 +2967,7 @@ msgstr "Označeno k emulaci"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
-msgstr "„Poskrvněno“"
+msgstr "„Poskvrněno“"
 
 #. show the user the entire data blob
 msgid "Target"
@@ -3018,6 +3026,18 @@ msgstr "PCR0 v TPM se liší od rekonstrukce."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "UEFI Platform Key slouží ke ověřování zda software na zařízení pochází z důvěryhodného zdroje."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "UEFI úložiště certifikátů je nyní aktuální"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "UEFI db obsahuje seznam platných certifikátů, které je možné použít pro pověřování toho, které EFI spustitelné soubory budou možné spouštět."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "UEFI systém může nastavovat atributy paměti při startu, které brání spouštění běžných exploitů"
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Proces služby načetl spustitelný kód, pocházející od třetí strany. Vývojáři původního procesu služby už proto jeho podporu nemají ve svých rukou!"
@@ -3033,7 +3053,7 @@ msgstr "Systémové hodiny nemají správný čas – stahování souborů se kv
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been re-inserted."
-msgstr "Aktualizace bude pokračovat po odpojení a připojení USB kabelu."
+msgstr "Aktualizace bude pokračovat opětovném připojení USB kabelu."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
@@ -3161,6 +3181,10 @@ msgstr "Je možné, že UEFI ESP oddíl není správně uspořádán"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Nezjištěn (či nenastaven) UEFI ESP oddíl"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI ochrana paměti"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Klíč platformy v UEFI"
@@ -3185,6 +3209,10 @@ msgstr "Proměnné UEFI bootservice"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Nejsou k dispozici (nebo jsou vypnuté v nastavení firmware) aktualizace typu UEFI capsule"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI db"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Nástroj pro UEFI dbx"
@@ -3192,6 +3220,26 @@ msgstr "Nástroj pro UEFI dbx"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "UEFI firmware není možné aktualizovat, pokud je přepnutý do režimu legacy BIOS"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI ochrana paměti"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI ochrana paměti zapnuta a uzamčena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI ochrana paměti zapnuta, ale neuzamčena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI ochrana paměti je nyní uzamčena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI ochrana paměti je nyní odemčena"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3441,7 +3489,7 @@ msgstr "Sledovat změny hardwaru"
 #. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
 #. update
 msgid "Will measure elements of system integrity around an update"
-msgstr "Zkontroluje neporušenost prvků systému po aktualizaci"
+msgstr "Zkontroluje prvky neporušenosti systému po aktualizaci"
 
 #. TRANSLATORS: decompressing images from a container firmware
 msgid "Writing file:"
@@ -3506,6 +3554,10 @@ msgstr "[SOUBOR PODPIS_SOUBORU IDENTIF-VZDÁLENÉHO-ZDROJE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[SOUBOR1] [SOUBOR2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[VERZE-FWUPD]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON] [TIMEOUT]"

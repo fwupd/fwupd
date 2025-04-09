@@ -2418,6 +2418,10 @@ msgstr "Działające jądro jest za stare"
 msgid "Runtime Suffix"
 msgstr "Przyrostek uruchamiania"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "SEKCJA"
@@ -3035,6 +3039,10 @@ msgstr "Partycja ESP UEFI może nie być poprawnie skonfigurowana"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Nie wykryto lub nie skonfigurowano partycji ESP UEFI"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Ochrona pamięci UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Klucz platformy UEFI"
@@ -3058,6 +3066,26 @@ msgstr "Narzędzie bazy dbx dla UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Nie można aktualizować oprogramowania sprzętowego UEFI w trybie przestarzałego BIOS-u"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Ochrona pamięci UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Ochrona pamięci UEFI jest włączona i zablokowana"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Ochrona pamięci UEFI jest włączona, ale nie jest zablokowana"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Ochrona pamięci UEFI jest teraz zablokowana"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Ochrona pamięci UEFI jest teraz odblokowana"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3372,6 +3400,10 @@ msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[WERSJA-FWUPD]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[REASON] [TIMEOUT]"

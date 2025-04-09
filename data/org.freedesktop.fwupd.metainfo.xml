@@ -38,6 +38,32 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.8" date="2025-04-09">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add the updated UEFI db as a new HSI attribute</li>
+          <li>Add two new plugins that can update the UEFI Signature Database and KEK</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add /sys/firmware/efi/efivars to ReadWritePaths</li>
+          <li>Avoid any DPAUX IO if the BnR DPCD does not match</li>
+          <li>Be more careful falling back to older emulation versions</li>
+          <li>Detect the Firehose protocol features if not automatically sent</li>
+          <li>Do not match SMC Redfish method on non-Supermicro hardware</li>
+          <li>Do not show prompts or messages in --json mode</li>
+          <li>Fix a critical warning when enumerating DTH135K0C</li>
+          <li>Make the EFI LOADOPT either a path or ShimHive when setting metadata</li>
+          <li>Match lowercase directory names when checking for ESP</li>
+          <li>Only allow UEFI capsule updates on UEFI-capable architectures</li>
+          <li>Set the version format when using fwupdtool install offline</li>
+          <li>Support segment value 0 in the ccgx-dmc image parser</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.7" date="2025-03-25">
       <description>
         <p>
