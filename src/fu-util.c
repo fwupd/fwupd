@@ -3486,8 +3486,6 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* allow all actions */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
 	if (ret)
 		fu_util_display_current_message(priv);
