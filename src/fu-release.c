@@ -520,6 +520,15 @@ fu_release_verfmts_to_string(GPtrArray *verfmts)
 }
 
 static gboolean
+fu_release_check_verfmt_compatible(FuRelease *self, FwupdVersionFormat fmt_rel)
+{
+	FwupdVersionFormat fmt_dev = fu_device_get_version_format(self->device);
+	if (fmt_dev == FWUPD_VERSION_FORMAT_BCD && fmt_rel == FWUPD_VERSION_FORMAT_PAIR)
+		return TRUE;
+	return fmt_dev == fmt_rel;
+}
+
+static gboolean
 fu_release_check_verfmt(FuRelease *self,
 			GPtrArray *verfmts,
 			FwupdInstallFlags flags,
@@ -544,7 +553,7 @@ fu_release_check_verfmt(FuRelease *self,
 		XbNode *verfmt = g_ptr_array_index(verfmts, i);
 		const gchar *tmp = xb_node_get_text(verfmt);
 		FwupdVersionFormat fmt_rel = fwupd_version_format_from_string(tmp);
-		if (fmt_dev == fmt_rel)
+		if (fu_release_check_verfmt_compatible(self, fmt_rel))
 			return TRUE;
 	}
 	verfmts_str = fu_release_verfmts_to_string(verfmts);
