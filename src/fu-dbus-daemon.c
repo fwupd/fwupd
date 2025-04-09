@@ -832,6 +832,12 @@ fu_dbus_daemon_install_with_helper_device(FuMainAuthHelper *helper,
 	fu_device_ensure_from_component(device, component);
 	fu_device_incorporate_from_component(device, component);
 
+	/* post-ensure checks */
+	if (!fu_release_check_version(release, component, helper->flags, &error_local)) {
+		g_ptr_array_add(helper->errors, g_steal_pointer(&error_local));
+		return TRUE;
+	}
+
 	/* install each intermediate release */
 	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
