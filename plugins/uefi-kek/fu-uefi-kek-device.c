@@ -103,7 +103,7 @@ fu_uefi_kek_device_init(FuUefiKekDevice *self)
 {
 	fu_device_set_physical_id(FU_DEVICE(self), "KEK");
 	fu_device_set_name(FU_DEVICE(self), "UEFI Key Exchange Key");
-	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_device_add_icon(FU_DEVICE(self), "application-certificate");
 }
