@@ -16,7 +16,7 @@ enum FuUswidPayloadCompression {
 #[derive(New, ValidateStream, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructUswid {
-    magic: Guid == 0x53424F4DD6BA2EACA3E67A52AAEE3BAF,
+    magic: Guid == "4d4f4253-bad6-ac2e-a3e6-7a52aaee3baf",
     hdrver: u8,
     hdrsz: u16le = $struct_size,
     payloadsz: u32le,
