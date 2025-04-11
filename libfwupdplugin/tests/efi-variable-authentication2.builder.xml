@@ -1,0 +1,12 @@
+<firmware gtype="FuEfiVariableAuthentication2">
+  <firmware gtype="FuEfiSignature">
+    <kind>sha256</kind>
+    <owner>77fa9abd-0359-4d32-bd60-28f4e78f784b</owner>
+    <checksum>418ad44c79e3fddd6a0574b24fcf0fb8fee4b3ff2be635d21a5c0852bdea635c</checksum>
+  </firmware>
+  <firmware gtype="FuEfiSignature">
+    <kind>sha256</kind>
+    <owner>77fa9abd-0359-4d32-bd60-28f4e78f784b</owner>
+    <checksum>819ebd0aeb8f0b73d237a02d9344ad1fd6fae6ad763cacf1694a6d13c1986cde</checksum>
+  </firmware>
+</firmware>
