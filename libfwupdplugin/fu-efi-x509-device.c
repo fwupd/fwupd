@@ -30,6 +30,8 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 {
 	FuEfiX509Device *self = FU_EFI_X509_DEVICE(device);
 	FuEfiX509DevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *subject_name;
+	const gchar *subject_vendor;
 
 	/* sanity check */
 	if (priv->sig == NULL) {
@@ -37,22 +39,19 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* these have to exist */
-	fu_device_add_instance_strsafe(device,
-				       "VENDOR",
-				       fu_efi_x509_signature_get_subject_vendor(priv->sig));
-	fu_device_add_instance_strsafe(device,
-				       "NAME",
-				       fu_efi_x509_signature_get_subject_name(priv->sig));
-	if (!fu_device_build_instance_id(device, error, "UEFI", "VENDOR", "NAME", NULL))
-		return FALSE;
-	fu_device_set_name(device, fu_efi_x509_signature_get_subject_name(priv->sig));
-	fu_device_set_vendor(device, fu_efi_x509_signature_get_subject_vendor(priv->sig));
+	/* the O= key may not exist */
+	subject_name = fu_efi_x509_signature_get_subject_name(priv->sig);
+	subject_vendor = fu_efi_x509_signature_get_subject_vendor(priv->sig);
+	fu_device_add_instance_strsafe(device, "VENDOR", subject_vendor);
+	fu_device_add_instance_strsafe(device, "NAME", subject_name);
+	fu_device_build_instance_id(device, NULL, "UEFI", "VENDOR", "NAME", NULL);
+	fu_device_set_name(device, subject_name != NULL ? subject_name : "Unknown");
+	fu_device_set_vendor(device, subject_vendor != NULL ? subject_vendor : "Unknown");
 	fu_device_set_version_raw(device, fu_firmware_get_version_raw(FU_FIRMWARE(priv->sig)));
 	fu_device_set_logical_id(device, fu_firmware_get_id(FU_FIRMWARE(priv->sig)));
 	fu_device_build_vendor_id(device,
 				  "UEFI",
-				  fu_efi_x509_signature_get_subject_vendor(priv->sig));
+				  subject_vendor != NULL ? subject_vendor : "UNKNOWN");
 
 	/* success */
 	fu_device_add_instance_strup(device, "CRT", fu_firmware_get_id(FU_FIRMWARE(priv->sig)));
