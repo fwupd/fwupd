@@ -55,6 +55,7 @@
 #include <libfwupdplugin/fu-efi-section.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efi-signature.h>
+#include <libfwupdplugin/fu-efi-variable-authentication2.h>
 #include <libfwupdplugin/fu-efi-volume.h>
 #include <libfwupdplugin/fu-efi-x509-device.h>
 #include <libfwupdplugin/fu-efi-x509-signature.h>

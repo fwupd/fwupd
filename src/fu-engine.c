@@ -8364,6 +8364,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "efi-file", FU_TYPE_EFI_FILE);
 	fu_context_add_firmware_gtype(self->ctx, "efi-signature", FU_TYPE_EFI_SIGNATURE);
 	fu_context_add_firmware_gtype(self->ctx, "efi-signature-list", FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_context_add_firmware_gtype(self->ctx,
+				      "efi-variable-authentication2",
+				      FU_TYPE_EFI_VARIABLE_AUTHENTICATION2);
 	fu_context_add_firmware_gtype(self->ctx, "efi-load-option", FU_TYPE_EFI_LOAD_OPTION);
 	fu_context_add_firmware_gtype(self->ctx,
 				      "efi-device-path-list",

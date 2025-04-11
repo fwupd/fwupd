@@ -5277,6 +5277,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_VARIABLE_AUTHENTICATION2,
+		"efi-variable-authentication2.builder.xml",
+		"bd08e81e9c86490dc1ffb32b1e3332606eb0fa97",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
 		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
