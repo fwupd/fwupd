@@ -7647,6 +7647,8 @@ fu_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flag
 {
 	FuDevice *self = FU_DEVICE(codec);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	FwupdCodecInterface *fwupd_dev_interface =
+	    g_type_interface_peek_parent(FWUPD_CODEC_GET_IFACE(codec));
 
 	if (fu_device_get_created_usec(self) != 0) {
 #if GLIB_CHECK_VERSION(2, 80, 0)
@@ -7660,6 +7662,8 @@ fu_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flag
 		json_builder_set_member_name(builder, "Created");
 		json_builder_add_string_value(builder, str);
 	}
+
+	fwupd_dev_interface->add_json(codec, builder, flags);
 
 	/* subclassed */
 	if (device_class->add_json != NULL)
