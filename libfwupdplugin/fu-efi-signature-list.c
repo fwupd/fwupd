@@ -28,10 +28,6 @@
  * See also: [class@FuFirmware]
  */
 
-struct _FuEfiSignatureList {
-	FuFirmware parent_instance;
-};
-
 G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
 
 const guint8 FU_EFI_SIGLIST_HEADER_MAGIC[] = {0x26, 0x16, 0xC4, 0xC1, 0x4C};
