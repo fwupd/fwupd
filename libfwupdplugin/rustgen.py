@@ -7,6 +7,7 @@
 
 import os
 import sys
+import uuid
 import argparse
 
 from enum import Enum
@@ -446,7 +447,18 @@ class StructItem:
             if val.startswith('"') and val.endswith('"'):
                 return val[1:-1]
             raise ValueError(f"string default {val} needs double quotes")
-        if self.type == Type.GUID or (self.type == Type.U8 and self.n_elements):
+        if self.type == Type.GUID:
+            if val.startswith("0x"):
+                guid = uuid.UUID(bytes_le=bytes.fromhex(val[2:]))
+                raise ValueError(f"integer {val} expected, expected: {guid}")
+            if not val.startswith('"'):
+                raise ValueError(f"string expected, got: {val}")
+            uuid2 = uuid.UUID(val[1:-1])
+            val_hex = ""
+            for value in uuid2.bytes_le:
+                val_hex += f"\\x{value:x}"
+            return val_hex
+        if self.type == Type.U8 and self.n_elements:
             if not val.startswith("0x"):
                 raise ValueError(f"0x prefix for hex number expected, got: {val}")
             if len(val) != (self.size * 2) + 2:
