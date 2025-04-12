@@ -112,6 +112,9 @@ if build_daemon
       # for BLKSSZGET
       device_allows += ['block-blkext']
     endif
+    if get_option('plugin_modem_manager').allowed()
+      device_allows += ['char-wwan_port']
+    endif
     foreach device_allow: device_allows
       dynamic_options += ['DeviceAllow=' + device_allow + ' rw']
     endforeach
