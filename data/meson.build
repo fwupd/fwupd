@@ -59,12 +59,14 @@ if build_daemon
     install_dir: join_paths(datadir, 'dbus-1', 'system.d')
   )
 
+  build_conf = configuration_data()
+  build_conf.set('libexecdir', libexecdir)
+
   if libsystemd.found()
-    con2 = configuration_data()
-    con2.set('libexecdir', libexecdir)
-    con2.set('bindir', bindir)
-    con2.set('datadir', datadir)
-    con2.set('localstatedir', localstatedir)
+    build_conf.set('bindir', bindir)
+    build_conf.set('datadir', datadir)
+    build_conf.set('localstatedir', localstatedir)
+    build_conf.set('systemd_service', 'SystemdService=fwupd.service')
     rw_directories = []
     if allow_uefi_capsule
       rw_directories += [
@@ -154,14 +156,14 @@ if build_daemon
     if not supported_build
       dynamic_options += ['Environment="G_DEBUG=fatal-criticals"']
     endif
-    con2.set('dynamic_options', '\n'.join(dynamic_options))
-    con2.set('motd_dir', motd_dir)
+    build_conf.set('dynamic_options', '\n'.join(dynamic_options))
+    build_conf.set('motd_dir', motd_dir)
 
     # replace @dynamic_options@
     configure_file(
       input: 'fwupd.service.in',
       output: 'fwupd.service',
-      configuration: con2,
+      configuration: build_conf,
       install: true,
       install_dir: systemdunitdir,
     )
@@ -170,27 +172,21 @@ if build_daemon
     configure_file(
       input: 'fwupd.shutdown.in',
       output: 'fwupd.shutdown',
-      configuration: con2,
+      configuration: build_conf,
       install: true,
       install_dir: systemd_shutdown_dir,
     )
+  else
+    build_conf.set('systemd_service', '')
   endif
 
-  if libsystemd.found()
-    con2 = configuration_data()
-    con2.set('libexecdir', libexecdir)
-
-    # replace @libexecdir@
-    configure_file(
-      input: 'org.freedesktop.fwupd.service.in',
-      output: 'org.freedesktop.fwupd.service',
-      configuration: con2,
-      install: true,
-      install_dir: join_paths(datadir,
-                              'dbus-1',
-                              'system-services'),
-    )
-  endif
+  configure_file(
+    input: 'org.freedesktop.fwupd.service.in',
+    output: 'org.freedesktop.fwupd.service',
+    configuration: build_conf,
+    install: true,
+    install_dir: join_paths(datadir, 'dbus-1', 'system-services'),
+  )
 
   if launchctl.found()
     con2 = configuration_data()
