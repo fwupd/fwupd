@@ -3,5 +3,5 @@ Name=org.freedesktop.fwupd
 Documentation=https://fwupd.org/
 Exec=@libexecdir@/fwupd/fwupd
 User=root
-SystemdService=fwupd.service
 AssumedAppArmorLabel=unconfined
+@systemd_service@
