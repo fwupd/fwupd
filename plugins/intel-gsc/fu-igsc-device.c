@@ -754,12 +754,17 @@ fu_igsc_device_write_firmware(FuDevice *device,
 	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_FWIM, error);
 	if (stream_payload == NULL)
 		return FALSE;
-	return fu_igsc_device_write_blob(self,
-					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
-					 fw_info,
-					 stream_payload,
-					 progress,
-					 error);
+	if (!fu_igsc_device_write_blob(self,
+				       FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
+				       fw_info,
+				       stream_payload,
+				       progress,
+				       error))
+		return FALSE;
+
+	/* restart */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	return TRUE;
 }
 
 static gboolean
