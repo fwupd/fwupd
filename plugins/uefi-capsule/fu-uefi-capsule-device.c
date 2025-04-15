@@ -546,7 +546,11 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_id(device, priv->fw_class);
 
 	/* set versions */
+	g_autofree gchar *version =
+		fu_version_from_uint32(priv->fw_version,
+				   fu_device_get_version_format(self));
 	fu_device_set_version_raw(device, priv->fw_version);
+	fu_device_set_version(device, version);
 	if (priv->fw_version_lowest != 0) {
 		g_autofree gchar *version_lowest =
 		    fu_version_from_uint32(priv->fw_version_lowest,
