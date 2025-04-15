@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/e07ae12eefb6dc1b9985b5759a017a74160a587361db2e4e63c4032d1af5d7d2-CalDigit-TS4-combind-050322-secure-Cus-22.cab",
-      "emulation-url": "https://fwupd.org/downloads/e755191ff3c7d26777273262eff0be266758ebe5b79685cd44d14d491ab6107a-CalDigit-TS4-combind-050322-secure-Cus-22.zip",
+      "url": "e07ae12eefb6dc1b9985b5759a017a74160a587361db2e4e63c4032d1af5d7d2-CalDigit-TS4-combind-050322-secure-Cus-22.cab",
+      "emulation-url": "e755191ff3c7d26777273262eff0be266758ebe5b79685cd44d14d491ab6107a-CalDigit-TS4-combind-050322-secure-Cus-22.zip",
       "components": [
         {
           "version": "F907.14.10",
@@ -15,8 +15,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/d685ab1fa73a63a797172d498370d8717a6d80c70fff527be051baeaf8ac2bb8-CalDigit-TS4-combind-121022-secure-Cus-37.cab",
-      "emulation-url": "https://fwupd.org/downloads/21c81548a6126f806966497613bc6e33ddd5b3dc045e7cc83b27abd64ba6afd8-CalDigit-TS4-combind-121022-secure-Cus-37.zip",
+      "url": "d685ab1fa73a63a797172d498370d8717a6d80c70fff527be051baeaf8ac2bb8-CalDigit-TS4-combind-121022-secure-Cus-37.cab",
+      "emulation-url": "21c81548a6126f806966497613bc6e33ddd5b3dc045e7cc83b27abd64ba6afd8-CalDigit-TS4-combind-121022-secure-Cus-37.zip",
       "components": [
         {
           "version": "F907.14.13",

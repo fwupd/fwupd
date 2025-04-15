@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/6cf165037a381eb29c183319e031def6b87e3ce955781ecf73f28751a1365db2-kh08p-bcm5719-0.4.62.cab",
+      "url": "6cf165037a381eb29c183319e031def6b87e3ce955781ecf73f28751a1365db2-kh08p-bcm5719-0.4.62.cab",
       "components": [
         {
           "version": "0.4.62",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/c786be1c525ad062c5af8983474a9412f83f5251efb767fe9cb414a3a124b8ce-kh08p-bcm5719-0.4.64.cab",
+      "url": "c786be1c525ad062c5af8983474a9412f83f5251efb767fe9cb414a3a124b8ce-kh08p-bcm5719-0.4.64.cab",
       "components": [
         {
           "version": "0.4.64",

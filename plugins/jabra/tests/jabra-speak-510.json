@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/45f88c50e79cfd30b6599df463463578d52f2fe9-Jabra-SPEAK_510-2.10.cab",
+      "url": "45f88c50e79cfd30b6599df463463578d52f2fe9-Jabra-SPEAK_510-2.10.cab",
       "components": [
         {
           "version": "2.10",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/c0523a98ef72508b5c7ddd687418b915ad5f4eb9-Jabra-SPEAK_510-2.14.cab",
+      "url": "c0523a98ef72508b5c7ddd687418b915ad5f4eb9-Jabra-SPEAK_510-2.14.cab",
       "components": [
         {
           "version": "2.14",

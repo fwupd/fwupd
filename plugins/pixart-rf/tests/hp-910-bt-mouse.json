@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/85bf9dca11caefcdc58112e2f0487a8596971e3a078d01ead7547ab792d51378-hp-910-white-bt-mouse-2.2.0.cab",
+      "url": "85bf9dca11caefcdc58112e2f0487a8596971e3a078d01ead7547ab792d51378-hp-910-white-bt-mouse-2.2.0.cab",
       "components": [
         {
           "version": "2.2.0",

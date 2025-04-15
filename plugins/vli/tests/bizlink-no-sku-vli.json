@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/e0d6f62140663744f114d59b1ec48dd3e4743006bb06d0643efe178b8bdb2a04-BizLink-Cayenne_New.cab",
+      "url": "e0d6f62140663744f114d59b1ec48dd3e4743006bb06d0643efe178b8bdb2a04-BizLink-Cayenne_New.cab",
       "components": [
         {
           "name": "tier1",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/baf2f1a78334b7722d913ffa468240f728a09d91d0d2f755ff5515d4fed111c1-BizLink-Cayenne_Old.cab",
+      "url": "baf2f1a78334b7722d913ffa468240f728a09d91d0d2f755ff5515d4fed111c1-BizLink-Cayenne_Old.cab",
       "components": [
         {
           "name": "tier1",

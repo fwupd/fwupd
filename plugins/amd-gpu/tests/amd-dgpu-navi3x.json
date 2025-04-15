@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/5885a99e908d37ae8cad445cb2b06f1c93d468d36fa53a2355604ba0116fbba5-D704_XT_A0_20GB_MBA_NAVI31_Baseline_PRD004B_69818.cab",
-      "emulation-url": "https://fwupd.org/downloads/808f6a085f8a59a8db62d08921e786e15d252eb3cf5069ee4c0b991e4a250cf1-navi31.zip",
+      "url": "5885a99e908d37ae8cad445cb2b06f1c93d468d36fa53a2355604ba0116fbba5-D704_XT_A0_20GB_MBA_NAVI31_Baseline_PRD004B_69818.cab",
+      "emulation-url": "808f6a085f8a59a8db62d08921e786e15d252eb3cf5069ee4c0b991e4a250cf1-navi31.zip",
       "components": [
         {
           "version": "114",

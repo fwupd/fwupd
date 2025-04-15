@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/fa73c8393027e7231776c917486b2e3f417e412e3b1c0cea0be90a57df600e08-SteelSeries_Nova_5_Headset_1.6.0.cab",
-      "emulation-url": "https://fwupd.org/downloads/272e4725290ff7d64419cfbe57e97021695c9014fb03e9bd6087db99a7e09707-SteelSeries_Nova_5_Headset_1.6.0.zip",
+      "url": "fa73c8393027e7231776c917486b2e3f417e412e3b1c0cea0be90a57df600e08-SteelSeries_Nova_5_Headset_1.6.0.cab",
+      "emulation-url": "272e4725290ff7d64419cfbe57e97021695c9014fb03e9bd6087db99a7e09707-SteelSeries_Nova_5_Headset_1.6.0.zip",
       "components": [
         {
           "version": "1.6.0",
@@ -15,8 +15,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/6317a70eef744dabe4d70931962da42fd419bdebe5436dcf939a889782fe33e1-SteelSeries_Nova_5_Headset_1.7.0.cab",
-      "emulation-url": "https://fwupd.org/downloads/46850811d0c25e739d8016da2a5a83fd64b57c6303c9cbbca25312a603ba1321-SteelSeries_Nova_5_Headset_1.7.0.zip",
+      "url": "6317a70eef744dabe4d70931962da42fd419bdebe5436dcf939a889782fe33e1-SteelSeries_Nova_5_Headset_1.7.0.cab",
+      "emulation-url": "46850811d0c25e739d8016da2a5a83fd64b57c6303c9cbbca25312a603ba1321-SteelSeries_Nova_5_Headset_1.7.0.zip",
       "components": [
         {
           "version": "1.7.0",

@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/0d9314e86d28f78f5dc37d71c5cc5205b681334fe64b28f1ec95b5eedc6e1ea6-Wacom-CTL-4100WL-1.10.cab",
+      "url": "0d9314e86d28f78f5dc37d71c5cc5205b681334fe64b28f1ec95b5eedc6e1ea6-Wacom-CTL-4100WL-1.10.cab",
       "components": [
         {
           "name": "bluetooth",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/cfec6515263c0d358d40d7b8fb6472214015225210dfa2db8dd307e896f03dcf-Wacom-CTL-4100WL-1.11.cab",
+      "url": "cfec6515263c0d358d40d7b8fb6472214015225210dfa2db8dd307e896f03dcf-Wacom-CTL-4100WL-1.11.cab",
       "components": [
         {
           "name": "bluetooth",

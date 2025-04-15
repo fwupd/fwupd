@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/3c3123b6eaa89d5469553b301210a9e4cb06efa98a1cb7c6847a1d10bb0a0c4b-servo_micro_v2.4.0.cab",
-      "emulation-url": "https://fwupd.org/downloads/86fd0f1ae48eec0aad0ec97eaebc5bb8aa67fe03485f7b5824e6e1e9dfab42a6-servo_micro_v2.4.0.zip",
+      "url": "3c3123b6eaa89d5469553b301210a9e4cb06efa98a1cb7c6847a1d10bb0a0c4b-servo_micro_v2.4.0.cab",
+      "emulation-url": "86fd0f1ae48eec0aad0ec97eaebc5bb8aa67fe03485f7b5824e6e1e9dfab42a6-servo_micro_v2.4.0.zip",
       "components": [
         {
           "version": "2.4.0",
@@ -15,8 +15,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/1dc362734f138e71fa838ac5503491d297715d7e9bccc0424a62c4a5c68526cc-servo_micro_v2.4.17.cab",
-      "emulation-url": "https://fwupd.org/downloads/4e85ebbd498b25b1528151745f86b167363629665f4a2580a472773ea176dc14-servo_micro_v2.4.17.zip",
+      "url": "1dc362734f138e71fa838ac5503491d297715d7e9bccc0424a62c4a5c68526cc-servo_micro_v2.4.17.cab",
+      "emulation-url": "4e85ebbd498b25b1528151745f86b167363629665f4a2580a472773ea176dc14-servo_micro_v2.4.17.zip",
       "components": [
         {
           "version": "2.4.17",

@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/6a0134766c26c73cc08f3d30f0bb84d94d035b50f702e39506abdcab9a8f658f-Logitech-Unifying-RQR24.11_B0036.cab",
-      "emulation-url": "https://fwupd.org/downloads/67a9b3088294dc0f7b2d5397ba2eb6c5cd514e6c2899f84a77cb5930e5bb17ab-Logitech-Unifying-RQR24.11_B0036.zip",
+      "url": "6a0134766c26c73cc08f3d30f0bb84d94d035b50f702e39506abdcab9a8f658f-Logitech-Unifying-RQR24.11_B0036.cab",
+      "emulation-url": "67a9b3088294dc0f7b2d5397ba2eb6c5cd514e6c2899f84a77cb5930e5bb17ab-Logitech-Unifying-RQR24.11_B0036.zip",
       "components": [
         {
           "version": "RQR24.11_B0036",

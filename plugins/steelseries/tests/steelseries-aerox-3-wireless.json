@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/41e25df1ee09f3c05a4799e4fc325115bd5ba9490309c76c545f3e3a88c1c9b9-aerox-3-wireless-dongle.cab",
+      "url": "41e25df1ee09f3c05a4799e4fc325115bd5ba9490309c76c545f3e3a88c1c9b9-aerox-3-wireless-dongle.cab",
       "components": [
         {
           "version": "1.4.2",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/de803999ea8f8c71268bb8ed771c230907b78e9ca8435212f977bfa859cc5f2b-aerox-3-wireless-mouse.cab",
+      "url": "de803999ea8f8c71268bb8ed771c230907b78e9ca8435212f977bfa859cc5f2b-aerox-3-wireless-mouse.cab",
       "components": [
         {
           "version": "1.10.9",
@@ -28,8 +28,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/596d1032e7c916822ffae84a48d5f84d641808be761723536c0d82bb83ac077f-aerox-3-wireless-dongle.cab",
-      "emulation-url": "https://fwupd.org/downloads/ce35aed86ad2bab08931a07c29524a2f173f10ab7f1c244083a607d64331eefa-aerox-3-wireless-dongle_1.11.4_USB-C.emulation.zip",
+      "url": "596d1032e7c916822ffae84a48d5f84d641808be761723536c0d82bb83ac077f-aerox-3-wireless-dongle.cab",
+      "emulation-url": "ce35aed86ad2bab08931a07c29524a2f173f10ab7f1c244083a607d64331eefa-aerox-3-wireless-dongle_1.11.4_USB-C.emulation.zip",
       "components": [
         {
           "version": "1.11.4",
@@ -41,8 +41,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/f1453976fe7ea27522524872327ad5aab6fba0c962df719ac05253439d7d72a9-aerox-3-wireless-mouse.cab",
-      "emulation-url": "https://fwupd.org/downloads/01958299662917005d9b499074d9624207e8762d7ed1d826b72e962bf4d36895-aerox-3-wireless-mouse_1.11.4_USB-C.emulation.zip",
+      "url": "f1453976fe7ea27522524872327ad5aab6fba0c962df719ac05253439d7d72a9-aerox-3-wireless-mouse.cab",
+      "emulation-url": "01958299662917005d9b499074d9624207e8762d7ed1d826b72e962bf4d36895-aerox-3-wireless-mouse_1.11.4_USB-C.emulation.zip",
       "components": [
         {
           "version": "1.11.4",

@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/5a909ed2e4997518a8be94003042a53ed2d3bb7676f23745d6da0b21875cf03f-bnr-dp-0.13-test.cab",
-      "emulation-url": "https://fwupd.org/downloads/2d65498250eab4800c250b9499c3595be165762154f41dbfa1118797f5004636-bnr-dp-0.13-dpaux-dpcd-check-minimal.zip",
+      "url": "5a909ed2e4997518a8be94003042a53ed2d3bb7676f23745d6da0b21875cf03f-bnr-dp-0.13-test.cab",
+      "emulation-url": "2d65498250eab4800c250b9499c3595be165762154f41dbfa1118797f5004636-bnr-dp-0.13-dpaux-dpcd-check-minimal.zip",
       "components": [
         {
           "version": "0.13",

@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/d16b682de56c42b134f1e5af7f9926c62dc246df851648e49aa1d1d0e5b38532-Wacom-Intuos_BT-M_MainFW-1.66.cab",
-      "emulation-url": "https://fwupd.org/downloads/48a669a65a69b999afdb172882959e30c25b61d3095f47b04d9207b019be74cf-Wacom-Intuos_BT-M_MainFW-1.66.zip",
+      "url": "d16b682de56c42b134f1e5af7f9926c62dc246df851648e49aa1d1d0e5b38532-Wacom-Intuos_BT-M_MainFW-1.66.cab",
+      "emulation-url": "48a669a65a69b999afdb172882959e30c25b61d3095f47b04d9207b019be74cf-Wacom-Intuos_BT-M_MainFW-1.66.zip",
       "components": [
         {
           "name": "main",
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/1ee4f3dc9fd08acd4c6bc833b25e7061f85ddd40122148d66940cd3ddd748920-Wacom-Intuos_BT-M_BluetoothFW-1.12.cab",
+      "url": "1ee4f3dc9fd08acd4c6bc833b25e7061f85ddd40122148d66940cd3ddd748920-Wacom-Intuos_BT-M_BluetoothFW-1.12.cab",
       "components": [
         {
           "name": "bluetooth",

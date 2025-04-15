@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/6531c7a26d54f9dacbc24f81e8b26e37dd630fe22a417cd2ce6e13ea3b6fd105-Logitech-RBM16-RBM16.00_B0009.cab",
+      "url": "6531c7a26d54f9dacbc24f81e8b26e37dd630fe22a417cd2ce6e13ea3b6fd105-Logitech-RBM16-RBM16.00_B0009.cab",
       "components": [
         {
           "version": "RBM16.00_B0009",
@@ -15,7 +15,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/422d8c719d859b4ef321d95aa9e21f8d0d899ac924b9ca3ed76b1d745224e8e4-Logitech-RBM16-RBM16.00_B0010.cab",
+      "url": "422d8c719d859b4ef321d95aa9e21f8d0d899ac924b9ca3ed76b1d745224e8e4-Logitech-RBM16-RBM16.00_B0010.cab",
       "components": [
         {
           "version": "RBM16.00_B0010",

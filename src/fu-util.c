@@ -923,6 +923,27 @@ fu_util_device_test_remove_emulated_devices(FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_util_maybe_expand_basename(FuUtilPrivate *priv, const gchar *maybe_basename, GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	if (g_str_has_prefix(maybe_basename, "https://"))
+		return g_strdup(maybe_basename);
+	if (g_str_has_prefix(maybe_basename, "/"))
+		return g_strdup(maybe_basename);
+
+	/* find LVFS remote */
+	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
+	if (remote == NULL)
+		return NULL;
+	if (fwupd_remote_get_firmware_base_uri(remote)) {
+		g_debug("no FirmwareBaseURI set in lvfs.conf, using default");
+		return g_strdup_printf("https://fwupd.org/downloads/%s", maybe_basename);
+	}
+	return g_strdup_printf("%s/%s", fwupd_remote_get_firmware_base_uri(remote), maybe_basename);
+}
+
 static gboolean
 fu_util_device_test_step(FuUtilPrivate *priv,
 			 FuUtilDeviceTestHelper *helper,
@@ -930,16 +951,20 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 			 GError **error)
 {
 	JsonArray *json_array;
-	const gchar *emulation_url = NULL;
 
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
+		g_autofree gchar *emulation_url = NULL;
 
 		/* just ignore anything without emulation data */
 		if (json_object_has_member(json_obj, "emulation-url")) {
-			emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+			const gchar *url_tmp =
+			    json_object_get_string_member(json_obj, "emulation-url");
 
+			emulation_url = fu_util_maybe_expand_basename(priv, url_tmp, error);
+			if (emulation_url == NULL)
+				return FALSE;
 			emulation_filename =
 			    fu_util_download_if_required(priv, emulation_url, error);
 			if (emulation_filename == NULL) {
@@ -971,10 +996,14 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 
 	/* download file if required */
 	if (json_object_has_member(json_obj, "url")) {
-		const gchar *url = json_object_get_string_member(json_obj, "url");
+		const gchar *url_tmp = json_object_get_string_member(json_obj, "url");
 		g_autofree gchar *filename = NULL;
+		g_autofree gchar *url = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		url = fu_util_maybe_expand_basename(priv, url_tmp, error);
+		if (url == NULL)
+			return FALSE;
 		filename = fu_util_download_if_required(priv, url, error);
 		if (filename == NULL) {
 			g_prefix_error(error, "failed to download %s: ", url);

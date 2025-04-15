@@ -3,9 +3,9 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.3.cab",
+      "url": "{{vendor}}-{{example}}-1.2.3.cab",
       "emulation-file": "@enumeration_datadir@/{{vendor}}-{{example}}-setup.json",
-      "emulation-url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.3.zip",
+      "emulation-url": "{{vendor}}-{{example}}-1.2.3.zip",
       "components": [
         {
           "version": "1.2.3",
@@ -16,8 +16,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.4.cab",
-      "emulation-url": "https://fwupd.org/downloads/{{vendor}}-{{example}}-1.2.4.zip",
+      "url": "{{vendor}}-{{example}}-1.2.4.cab",
+      "emulation-url": "{{vendor}}-{{example}}-1.2.4.zip",
       "components": [
         {
           "version": "1.2.4",

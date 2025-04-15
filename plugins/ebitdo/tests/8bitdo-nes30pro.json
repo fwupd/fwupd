@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/5b7c4df860695bf000967e140682082b44cea2c033da27fabeffc91be5d2d30c-8Bitdo-SFC30PRO_NES30PRO-4.01.cab",
+      "url": "5b7c4df860695bf000967e140682082b44cea2c033da27fabeffc91be5d2d30c-8Bitdo-SFC30PRO_NES30PRO-4.01.cab",
       "components": [
         {
           "version": "4.01",
