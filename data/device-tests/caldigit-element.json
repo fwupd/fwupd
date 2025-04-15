@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/cc7e51c0f8acb853adf6ca25e99cd6ea41e47f4b2da75a1922bdcc814f05c5a7-CalDigit-Element_DMC15-TBT36.cab",
+      "url": "cc7e51c0f8acb853adf6ca25e99cd6ea41e47f4b2da75a1922bdcc814f05c5a7-CalDigit-Element_DMC15-TBT36.cab",
       "components": [
         {
           "version": "36.0",
@@ -20,7 +20,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/b8fa86d745d9c8f4f207c7782a4a09c7381ad19e3733cc8574acde36d250c88a-CalDigit-Element_DMC16-TBT40.cab",
+      "url": "b8fa86d745d9c8f4f207c7782a4a09c7381ad19e3733cc8574acde36d250c88a-CalDigit-Element_DMC16-TBT40.cab",
       "components": [
         {
           "version": "40.84",

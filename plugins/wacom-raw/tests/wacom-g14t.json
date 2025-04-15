@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/80bfa20d1ace301fe5c4a2b514c4b58cf108992483ed92b6195296b4e54db13e-G14T_5309_v0002_rev07.cab",
-      "emulation-url": "https://fwupd.org/downloads/d1eefe9a81a62807755f815f6fc8eae06dd479e7238513740f347eaf5d3f01ac-G14T_5309_v0002_rev07.zip",
+      "url": "80bfa20d1ace301fe5c4a2b514c4b58cf108992483ed92b6195296b4e54db13e-G14T_5309_v0002_rev07.cab",
+      "emulation-url": "d1eefe9a81a62807755f815f6fc8eae06dd479e7238513740f347eaf5d3f01ac-G14T_5309_v0002_rev07.zip",
       "components": [
         {
           "version": "0002.07",

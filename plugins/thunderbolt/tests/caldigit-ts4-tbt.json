@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/78f0eb25da781a88a2a9a1191a32b6c7f8c8a61664a42dcb6b156a1b87d525e4-CalDigit-TS4_TBT39.cab",
+      "url": "78f0eb25da781a88a2a9a1191a32b6c7f8c8a61664a42dcb6b156a1b87d525e4-CalDigit-TS4_TBT39.cab",
       "components": [
         {
           "version": "39.82",

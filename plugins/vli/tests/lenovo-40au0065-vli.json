@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/3b183e21869e4fce8bc81b3357de2fd1ee47b35e272e26169ebaee88faa39e03-Lenovo-Mini_Dock_New.cab",
+      "url": "3b183e21869e4fce8bc81b3357de2fd1ee47b35e272e26169ebaee88faa39e03-Lenovo-Mini_Dock_New.cab",
       "components": [
         {
           "name": "tier1",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/f55a307af1dc66d46bc12460ced828b31b2ee2a78c1d58d4f474958c2c6d134e-Lenovo-Mini_Dock_Old.cab",
+      "url": "f55a307af1dc66d46bc12460ced828b31b2ee2a78c1d58d4f474958c2c6d134e-Lenovo-Mini_Dock_Old.cab",
       "components": [
         {
           "name": "tier1",

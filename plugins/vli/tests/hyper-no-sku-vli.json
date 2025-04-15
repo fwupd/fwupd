@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/ecfebc47d63a5319e35da39bd6124b80e90138a208bc9134c9d1b256b232a704-Hyper-USB-C_Hub.cab",
+      "url": "ecfebc47d63a5319e35da39bd6124b80e90138a208bc9134c9d1b256b232a704-Hyper-USB-C_Hub.cab",
       "components": [
         {
           "name": "tier1",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/1694cceda16068b24d7627caace4bd373ecae73aca891f610dec0fe5a4d1207c-Hyper-USB-C_Hub_Old.cab",
+      "url": "1694cceda16068b24d7627caace4bd373ecae73aca891f610dec0fe5a4d1207c-Hyper-USB-C_Hub_Old.cab",
       "components": [
         {
           "name": "tier1",

@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/454f1034f5efeb531163d90852ef33afd3fafeeb-Logitech-K780-MPK01.02_B0021.cab",
+      "url": "454f1034f5efeb531163d90852ef33afd3fafeeb-Logitech-K780-MPK01.02_B0021.cab",
       "components": [
         {
           "version": "MPK01.02_B0021",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/b0dffe84c6d3681e7ae5f27509781bc1cf924dd7-Logitech-K780-MPK01.03_B0024.cab",
+      "url": "b0dffe84c6d3681e7ae5f27509781bc1cf924dd7-Logitech-K780-MPK01.03_B0024.cab",
       "components": [
         {
           "version": "MPK01.03_B0024",

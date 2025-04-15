@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/9ef0bb237baf8043f3ff16db5a8dd23bfd63fc24ea0eca2a6af3285792aa283b-Lenovo-USB-C_to_HDMI.cab",
+      "url": "9ef0bb237baf8043f3ff16db5a8dd23bfd63fc24ea0eca2a6af3285792aa283b-Lenovo-USB-C_to_HDMI.cab",
       "components": [
         {
           "version": "130.4.22.1",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/5b06a36aa0f2b99fc33f43a26a553d95c2d8ac46a7f5a2e45a840570456fe29b-Lenovo-USB-C_to_HDMI.cab",
+      "url": "5b06a36aa0f2b99fc33f43a26a553d95c2d8ac46a7f5a2e45a840570456fe29b-Lenovo-USB-C_to_HDMI.cab",
       "components": [
         {
           "version": "130.4.23.1",

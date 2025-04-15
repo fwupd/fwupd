@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/eab97d7e745e372e435dbd76404c3929730ac082-Jabra-SPEAK_410-1.8.cab",
+      "url": "eab97d7e745e372e435dbd76404c3929730ac082-Jabra-SPEAK_410-1.8.cab",
       "components": [
         {
           "version": "1.8",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/50a03efc5df333a948e159854ea40e1a3786c34c-Jabra-SPEAK_410-1.11.cab",
+      "url": "50a03efc5df333a948e159854ea40e1a3786c34c-Jabra-SPEAK_410-1.11.cab",
       "components": [
         {
           "version": "1.11",

@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/ac64be4971c96c777bd503eede3b2b1999df32f425740ac22ea29c5b92a0c31d-F867_V0414_Release.cab",
-      "emulation-url": "https://fwupd.org/downloads/1dd8da35a6ce2305c58f9a87a84c5ab586a34e0eebce08c0850593490ad2a139-F867_V0414_Release.zip",
+      "url": "ac64be4971c96c777bd503eede3b2b1999df32f425740ac22ea29c5b92a0c31d-F867_V0414_Release.cab",
+      "emulation-url": "1dd8da35a6ce2305c58f9a87a84c5ab586a34e0eebce08c0850593490ad2a139-F867_V0414_Release.zip",
       "components": [
         {
           "version": "0414",
