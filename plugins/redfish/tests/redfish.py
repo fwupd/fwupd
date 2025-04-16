@@ -458,9 +458,7 @@ def fwupdate_smc():
             json.dumps(res),
             status=202,
             mimetype="application/json",
-            headers={
-                "Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"
-            },
+            headers={"Location": "/redfish/v1/TaskService/Tasks/546"},
         )
     elif filecontents == "stuck":
         res = {
@@ -528,7 +526,7 @@ def fwupdate():
         json.dumps(res),
         status=202,
         mimetype="application/json",
-        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/545"},
+        headers={"Location": "/redfish/v1/TaskService/Tasks/545"},
     )
 
 
@@ -557,7 +555,7 @@ def startupdate():
         json.dumps(res),
         status=202,
         mimetype="application/json",
-        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"},
+        headers={"Location": "/redfish/v1/TaskService/Tasks/546"},
     )
 
 
