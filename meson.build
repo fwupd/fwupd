@@ -242,7 +242,7 @@ endif
 conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 
 # FreeBSD is missing some libusb symbols
-libusb = dependency('libusb-1.0', version : '>= 0.1.12')
+libusb = dependency('libusb-1.0', version : '>= 0.1.27')
 conf.set_quoted('LIBUSB_VERSION', libusb.version())
 if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
   conf.set('HAVE_LIBUSB_SET_OPTION', '1')
