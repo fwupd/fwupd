@@ -5,24 +5,21 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <glib.h>
-
-#include "fu-engine-request.h"
-#include "glibconfig.h"
-#include "gparcelable.h"
 #define G_LOG_DOMAIN "FuMain"
 
 #include "config.h"
 
-#include <android/binder_parcel.h>
-#include <android/binder_status.h>
-#include <android/persistable_bundle.h>
-
+#include <glib.h>
 // AOSP binder service management
 #include <android/binder_ibinder.h>
 #include <android/binder_manager.h>
+#include <android/binder_parcel.h>
 #include <android/binder_process.h>
+#include <android/binder_status.h>
+#include <android/persistable_bundle.h>
 
+#include "fu-engine-request.h"
+#include "gparcelable.h"
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
 #endif
@@ -43,6 +40,7 @@ struct _FuBinderDaemon {
 	gboolean async;
 	gulong presence_id;
 	AIBinder_Class *binder_class;
+	AIBinder_Class *listener_binder_class;
 	AIBinder *binder;
 	gint binder_fd;
 	GPtrArray *event_listener_binders;
@@ -74,6 +72,8 @@ fu_binder_daemon_device_array_to_persistable_bundle(FuBinderDaemon *self,
 	}
 	maybe_device_array = g_variant_new_maybe(G_VARIANT_TYPE("aa{sv}"), device_array);
 
+	g_debug("get_devices %s", g_variant_print(maybe_device_array, TRUE));
+
 	gp_parcel_write_variant(parcel, maybe_device_array, error);
 }
 
@@ -99,7 +99,6 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 		// return local_reply;
 	}
 
-	AParcel *packet_parcel = out;
 	// TODO: Should I be writing success after success? (does it reset cursor position)
 	AParcel_writeStatusHeader(out, status_header);
 	fu_binder_daemon_device_array_to_persistable_bundle(self, request, devices, out, &error);
@@ -141,15 +140,16 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 	const char *device_id = NULL;
 	g_autoptr(GError) err = NULL;
 
-	nstatus = AParcel_readString(in, &device_id, parcel_string_allocator);
+	// status_header = AStatus_fromServiceSpecificErrorWithMessage(EX_TRANSACTION_FAILED, "TODO:
+	// Fail");
+
+	nstatus = AParcel_readString(in, (void *)&device_id, parcel_string_allocator);
 	if (nstatus != STATUS_OK) {
 		AStatus *status = AStatus_fromStatus(nstatus);
 		g_warning("read parcel string status is %s", AStatus_getDescription(status));
 	}
 
 	g_warning("string is %s", device_id);
-	device_id = "2082b5e0-7a64-478a-b1b2-e3404fab6dad";
-	g_warning("pretend string is %s", device_id);
 
 	nstatus = AParcel_readParcelFileDescriptor(in, &firmware_fd);
 	if (nstatus != STATUS_OK) {
@@ -199,24 +199,12 @@ listener_on_transact(AIBinder *binder, transaction_code_t code, const AParcel *i
 	// TODO: Do we need to transact??
 }
 
-static AIBinder_Class *
-get_listener_class(void)
-{
-	static AIBinder_Class *listener_class = NULL;
-	if (!listener_class) {
-		listener_class = AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
-						       listener_on_create,
-						       listener_on_destroy,
-						       listener_on_transact);
-	}
-
-	return listener_class;
-}
-
 typedef struct ListenerDeathCookie {
 	FuBinderDaemon *daemon;
 	AIBinder *listener_binder;
 } ListenerDeathCookie;
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(ListenerDeathCookie, g_free)
 
 static void
 listener_on_binder_died(void *cookie)
@@ -247,6 +235,8 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 {
 	// TODO: Get binder service from `in`
 	AIBinder *event_listener_remote_object = NULL;
+	g_autoptr(ListenerDeathCookie) death_cookie = NULL;
+	AIBinder_DeathRecipient *death_recipient;
 	binder_status_t nstatus = STATUS_OK;
 	nstatus = AParcel_readStrongBinder(in, &event_listener_remote_object);
 	if (nstatus != STATUS_OK) {
@@ -255,22 +245,23 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 	}
 	g_info("strong binder  %p\n", event_listener_remote_object);
 
-	// BtHfpAgCallbacks_associateClass
-	const AIBinder_Class *listener_class = get_listener_class();
-	AIBinder_associateClass(event_listener_remote_object, listener_class);
+	AIBinder_associateClass(event_listener_remote_object, self->listener_binder_class);
 
 	g_ptr_array_add(self->event_listener_binders, event_listener_remote_object);
 
 	// TODO: events seem slow, do I need to pump an fd??? ABinderProcess_setupPolling
 	//   or is our pumping blocking the thread?
 
-	ListenerDeathCookie *death_cookie = g_malloc0(sizeof(ListenerDeathCookie));
+	death_cookie = g_malloc0(sizeof(ListenerDeathCookie));
 	death_cookie->listener_binder = event_listener_remote_object;
 	death_cookie->daemon = self;
 
-	AIBinder_DeathRecipient *dr = AIBinder_DeathRecipient_new(listener_on_binder_died);
-	AIBinder_DeathRecipient_setOnUnlinked(dr, listener_death_recipient_on_unlinked);
-	AIBinder_linkToDeath(event_listener_remote_object, dr, death_cookie);
+	death_recipient = AIBinder_DeathRecipient_new(listener_on_binder_died);
+	AIBinder_DeathRecipient_setOnUnlinked(death_recipient,
+					      listener_death_recipient_on_unlinked);
+	AIBinder_linkToDeath(event_listener_remote_object,
+			     death_recipient,
+			     g_steal_pointer(&death_cookie));
 
 	// TODO: die
 	// AIBinder_linkToDeath(AIBinder *binder, AIBinder_DeathRecipient *recipient, void *cookie)
@@ -596,6 +587,11 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 						   binder_class_on_create,
 						   binder_class_on_destroy,
 						   binder_class_on_transact);
+
+	self->listener_binder_class = AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
+							    listener_on_create,
+							    listener_on_destroy,
+							    listener_on_transact);
 }
 
 static void
