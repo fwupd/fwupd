@@ -110,6 +110,7 @@ fu_dfota_updater_parse_upload_result(FuDfotaUpdater *self,
 				     gsize *size,
 				     GError **error)
 {
+	guint64 val = 0;
 	g_autoptr(GBytes) result_bytes = NULL;
 	g_autoptr(GRegex) result_regex = NULL;
 	g_autoptr(GMatchInfo) match_info = NULL;
@@ -162,8 +163,9 @@ fu_dfota_updater_parse_upload_result(FuDfotaUpdater *self,
 
 	g_debug("parsed checksum '%s' and size '%s'", checksum_match, size_match);
 
-	if (!g_ascii_string_to_unsigned(size_match, 10, 0, G_MAXSIZE, size, error))
+	if (!g_ascii_string_to_unsigned(size_match, 10, 0, G_MAXSIZE, &val, error))
 		return FALSE;
+	*size = (gsize)val;
 
 	*checksum = g_steal_pointer(&checksum_match);
 
