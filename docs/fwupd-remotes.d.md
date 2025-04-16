@@ -60,6 +60,12 @@ The `[fwupd Remote]` section can contain the following parameters:
   legacy metadata and `.xml.xz` for the more modern format.
   Only prefixes of `http://`, `https://` and `file://` are supported here.
 
+**FirmwareBaseURI=**
+
+  The optional base URL of the cabinet archives to download.
+  If not specified the `MetadataURI` base URL is used.
+  Only prefixes of `http://`, `https://` and `file://` are supported here.
+
 **ApprovalRequired=false**
 
   If set to `true` then only releases allow-listed with `fwupdmgr set-approved-firmware` will show
