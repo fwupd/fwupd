@@ -372,6 +372,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
     sources: [
       'fu-binder-client.c',
       'fu-debug.c',
+      'gparcelable.c',
     ],
     include_directories: [
       root_incdir,
@@ -388,6 +389,26 @@ if host_machine.system() == 'android' and binder_ndk.found()
       fwupd,
       fwupdplugin,
       fwupdutil,
+    ],
+    install: true,
+  )
+  gparcelable_test = executable(
+    'fwupd-gparcelable-test',
+    sources: [
+      'gparcelable-test.c',
+      'gparcelable.c',
+    ],
+    include_directories: [
+      root_incdir,
+      fwupd_incdir,
+      binder_ndk_platform_incdir,
+    ],
+    dependencies: [
+      libfwupd_deps,
+      binder_ndk,
+    ],
+    link_with: [
+      fwupd,
     ],
     install: true,
   )

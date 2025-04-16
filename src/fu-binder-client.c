@@ -1,27 +1,39 @@
 /*
  * Copyright 2024 Richard Hughes <richard@hughsie.com>
+ * Copyright 2025 Colin Kinloch <colin.kinloch@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include "glib.h"
-#include "glibconfig.h"
-
-#include <android/binder_ibinder.h>
-#include <android/binder_parcel.h>
-#include <android/binder_status.h>
-#include <android/persistable_bundle.h>
-#include <stdlib.h>
 #define G_LOG_DOMAIN "FuMain"
 
 #include "config.h"
+
+#include <android/binder_ibinder.h>
+#include <android/binder_manager.h>
+#include <android/binder_parcel.h>
+#include <android/binder_process.h>
+#include <android/binder_status.h>
+#include <android/persistable_bundle.h>
+#include <glib.h>
+#include <glib/gi18n.h>
+#include <stdlib.h>
+
+#include "fwupd-common-private.h"
+#include "fwupd-error.h"
+
 #include "fu-binder-aidl.h"
 #include "fu-debug.h"
 #include "fu-util-common.h"
+#include "gparcelable.h"
 
-#include <android/binder_manager.h>
-#include <android/binder_process.h>
-#include <glib/gi18n.h>
+/* custom return codes */
+#define EXIT_NOTHING_TO_DO 2
+#define EXIT_NOT_FOUND	   3
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
 
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
@@ -108,39 +120,16 @@ fu_self_free(FuUtil *self)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_self_free)
 
-static bool
-parcelable_array_allocator(gpointer user_data, gint32 length)
-{
-	GPtrArray **ptr_array = (GPtrArray **)user_data;
-	g_warning("allocate %p to %d ", user_data, length);
-	*ptr_array = g_ptr_array_sized_new(length);
-	return TRUE;
-}
-
-static binder_status_t
-read_parcelable_element(const AParcel *parcel, gpointer user_data, gsize index)
-{
-	GPtrArray **ptr_array = (GPtrArray **)user_data;
-	g_warning("setting element %ld to %p ", index, parcel);
-	g_ptr_array_insert(*ptr_array, index, parcel);
-	return STATUS_OK;
-}
-
-// TODO: APersistableBundle_stringAllocator that allocates g_variant_dict (context) entries?
-char *
-bundle_string_allocator(gint32 size_bytes, void *context)
-{
-	return g_malloc0(size_bytes);
-}
-
 static gboolean
 fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	AParcel *in = NULL;
-	AParcel *out = NULL;
-	AStatus *status = NULL;
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(AStatus) status = NULL;
+	g_autoptr(GVariant) val = NULL;
 	binder_status_t nstatus = STATUS_OK;
-	GPtrArray *device_parcels = NULL;
+	GVariantBuilder builder;
+	const GVariantType *vtype = G_VARIANT_TYPE("maa{sv}");
 
 	g_warning("get devices");
 
@@ -154,65 +143,18 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	nstatus = AParcel_readStatusHeader(out, &status);
-
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
 		g_warning("couldn't read status header %s", AStatus_getDescription(status));
 	}
-
-	nstatus = AStatus_getStatus(status);
-	if (nstatus != STATUS_OK) {
-		g_warning("status not okay %s", AStatus_getDescription(status));
+	if (!AStatus_isOk(status)) {
+		g_warning("status header not okay %s", AStatus_getDescription(status));
 	}
 
-	// TODO: gp_parcel_read_variant with type "aa{sv}" to decode array of PersistantBundles
-	nstatus = AParcel_readParcelableArray(out,
-					      (void *)&device_parcels,
-					      parcelable_array_allocator,
-					      read_parcelable_element);
-
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("couldn't decode parcellable array %s", AStatus_getDescription(status));
-	}
-
-	g_warning("device list size is %d", device_parcels->len);
-
-	for (guint i = 0; i < device_parcels->len; i++) {
-		const AParcel *parcel = g_ptr_array_index(device_parcels, i);
-		gint32 is_some = 0;
-		AParcel_readInt32(parcel, &is_some);
-		g_warning("is null is %d", is_some);
-		if (is_some) {
-			APersistableBundle *bundle = APersistableBundle_new();
-			char *str_keys[256] = {0};
-			gint32 str_keys_len;
-
-			nstatus = APersistableBundle_readFromParcel(parcel, &bundle);
-			if (nstatus != STATUS_OK) {
-				status = AStatus_fromStatus(nstatus);
-				g_warning("couldn't decode persistable bundle %s",
-					  AStatus_getDescription(status));
-			}
-
-			// Why return the length that I provided?
-			str_keys_len = APersistableBundle_getStringKeys(bundle,
-									(gchar **)&str_keys,
-									G_N_ELEMENTS(str_keys),
-									bundle_string_allocator,
-									NULL);
-			for (char **iter_key = str_keys; *iter_key; iter_key++) {
-				char *val = NULL;
-				g_warning(" - bundle str key is %s", *iter_key);
-				APersistableBundle_getString(bundle,
-							     *iter_key,
-							     &val,
-							     bundle_string_allocator,
-							     NULL);
-				g_warning(" - - value: %s", val);
-			}
-		}
-	}
+	g_variant_builder_init(&builder, vtype);
+	gp_parcel_to_variant(&builder, out, vtype, error);
+	val = g_variant_builder_end(&builder);
+	g_message("device list variant: %s", g_variant_print(val, TRUE));
 
 	return TRUE;
 }
@@ -257,9 +199,19 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 static gboolean
 fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	AParcel *in = NULL;
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(AStatus) status = NULL;
+	g_autoptr(GVariant) val = NULL;
+	binder_status_t nstatus = STATUS_OK;
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
+	g_auto(GVariantBuilder) builder;
+
+	/* for now we ignore the requested device */
+	id = FWUPD_DEVICE_ID_ANY;
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 
@@ -268,8 +220,39 @@ fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (filename == NULL)
 		return FALSE;
 
+	istr = fwupd_unix_input_stream_from_fn(filename, error);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+	val = g_variant_new("(sha{sv})", id, g_unix_input_stream_get_fd(istr), &builder);
+	g_message("encoding install params %s", g_variant_print(val, TRUE));
+
+	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
+
+	gp_parcel_write_variant(in, val, error);
+
+	nstatus = AIBinder_transact(priv->fwupd_binder,
+				    FWUPD_BINDER_CALL_INSTALL,
+				    &in,
+				    &out,
+				    FLAG_ONEWAY);
+
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_warning("Failed to transact local-install %s", AStatus_getDescription(status));
+	}
+
 	g_warning("local install %s", filename);
 	return TRUE;
+}
+
+static void
+fu_util_print_error(FuUtilPrivate *priv, const GError *error)
+{
+	if (priv->as_json) {
+		fu_util_print_error_as_json(priv->console, error);
+		return;
+	}
+	fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
 }
 
 static void *
@@ -291,20 +274,6 @@ fwupd_service_on_transact(AIBinder *binder,
 {
 	// TODO: Do we need to transact??
 	return STATUS_OK;
-}
-
-static AIBinder_Class *
-get_listener_class(void)
-{
-	static AIBinder_Class *listener_class = NULL;
-	if (!listener_class) {
-		listener_class = AIBinder_Class_define(BINDER_DEFAULT_IFACE,
-						       fwupd_service_on_create,
-						       fwupd_service_on_destroy,
-						       fwupd_service_on_transact);
-	}
-
-	return listener_class;
 }
 
 static int
@@ -334,8 +303,40 @@ main(int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autoptr(GError) error = NULL;
-	binder_status_t nstatus = STATUS_OK;
 	gboolean ret;
+	gboolean verbose = FALSE;
+	gboolean version = FALSE;
+	g_autofree gchar *cmd_descriptions = NULL;
+	const AIBinder_Class *fwupd_binder_class = AIBinder_Class_define(BINDER_DEFAULT_IFACE,
+									 fwupd_service_on_create,
+									 fwupd_service_on_destroy,
+									 fwupd_service_on_transact);
+
+	const GOptionEntry options[] = {{"verbose",
+					 'v',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &verbose,
+					 /* TRANSLATORS: command line option */
+					 N_("Show extra debugging information"),
+					 NULL},
+					{"version",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &version,
+					 /* TRANSLATORS: command line option */
+					 N_("Show client and daemon versions"),
+					 NULL},
+					{"json",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &priv->as_json,
+					 /* TRANSLATORS: command line option */
+					 N_("Output in JSON format"),
+					 NULL},
+					{NULL}};
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
@@ -360,6 +361,38 @@ main(int argc, char *argv[])
 			      _("Install a firmware file in cabinet format on this hardware"),
 			      fu_util_local_install);
 
+	/* set verbose? */
+	if (verbose) {
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
+	} else {
+		// g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
+	}
+
+	/* get a list of the commands */
+	priv->context = g_option_context_new(NULL);
+	cmd_descriptions = fu_util_cmd_array_to_string(cmd_array);
+	g_option_context_set_summary(priv->context, cmd_descriptions);
+	g_option_context_set_description(
+	    priv->context,
+	    /* TRANSLATORS: CLI description */
+	    _("This tool allows an administrator to query and control the "
+	      "fwupd daemon, allowing them to perform actions such as "
+	      "installing or downgrading firmware."));
+
+	/* TRANSLATORS: program name */
+	g_set_application_name(_("Firmware Utility"));
+	g_option_context_add_main_entries(priv->context, options, NULL);
+	ret = g_option_context_parse(priv->context, &argc, &argv, &error);
+	if (!ret) {
+		fu_console_print(priv->console,
+				 "%s: %s",
+				 /* TRANSLATORS: the user didn't read the man page */
+				 _("Failed to parse arguments"),
+				 error->message);
+		return EXIT_FAILURE;
+	}
+
 	g_option_context_add_group(context, fu_debug_get_option_group());
 	if (!g_option_context_parse(context, &argc, &argv, &error)) {
 		g_printerr("Failed to parse arguments: %s\n", error->message);
@@ -370,12 +403,46 @@ main(int argc, char *argv[])
 	ABinderProcess_setupPolling(&priv->binder_fd);
 	g_idle_add(poll_binder_process, priv);
 
-	priv->fwupd_binder = AServiceManager_waitForService(BINDER_SERVICE_NAME);
-	const AIBinder_Class *fwupd_binder_class = get_listener_class();
+	priv->fwupd_binder = AServiceManager_checkService(BINDER_SERVICE_NAME);
+
+	/* fail if daemon doesn't exist */
+	if (!priv->fwupd_binder) {
+		/* TRANSLATORS: could not contact the fwupd service over binder */
+		g_set_error_literal(&error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    _("Failed to connect to daemon"));
+		fu_util_print_error(priv, error);
+		return EXIT_FAILURE;
+	}
+
 	AIBinder_associateClass(priv->fwupd_binder, fwupd_binder_class);
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
+
+	if (!ret) {
+#ifdef SUPPORTED_BUILD
+		/* sanity check */
+		if (error == NULL) {
+			g_critical("exec failed but no error set!");
+			return EXIT_FAILURE;
+		}
+#endif
+		fu_util_print_error(priv, error);
+		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
+			g_autofree gchar *cmd = g_strdup_printf("%s --help", g_get_prgname());
+			g_autoptr(GString) str = g_string_new("\n");
+			/* TRANSLATORS: explain how to get help,
+			 * where $1 is something like 'fwupdmgr --help' */
+			g_string_append_printf(str, _("Use %s for help"), cmd);
+			fu_console_print_literal(priv->console, str->str);
+		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			return EXIT_NOTHING_TO_DO;
+		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+			return EXIT_NOT_FOUND;
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }
