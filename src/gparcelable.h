@@ -23,4 +23,15 @@ APersistableBundle *
 gp_vardict_to_persistable_bundle(GVariant *vardict, GError **error);
 
 binder_status_t
-gp_parcel_write_variant(AParcel *parcel, GVariant *variant, GError **error);
+gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error);
+
+void
+gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
+				 APersistableBundle *bundle,
+				 GError **error);
+
+void
+gp_parcel_to_variant(GVariantBuilder *builder,
+		     const AParcel *parcel,
+		     const GVariantType *type,
+		     GError **error);
