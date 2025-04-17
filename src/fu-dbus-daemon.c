@@ -226,6 +226,13 @@ fu_dbus_daemon_create_request(FuDbusDaemon *self, const gchar *sender, GError **
 	}
 
 	/* are we root and therefore trusted? */
+	if (self->proxy_uid == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "org.freedesktop.DBus is not available");
+		return NULL;
+	}
 	value = g_dbus_proxy_call_sync(self->proxy_uid,
 				       "GetConnectionUnixUser",
 				       g_variant_new("(s)", sender),
