@@ -2734,14 +2734,8 @@ fu_dbus_daemon_dbus_bus_acquired_cb(GDBusConnection *connection,
 	FuDbusDaemon *self = FU_DBUS_DAEMON(user_data);
 	g_autoptr(GError) error = NULL;
 
-	fu_dbus_daemon_set_connection(self, connection);
-	if (!fu_dbus_daemon_register_object(self, &error)) {
-		g_warning("cannot register object: %s", error->message);
-		return;
-	}
-
 	/* connect to D-Bus directly */
-	self->proxy_uid = g_dbus_proxy_new_sync(self->connection,
+	self->proxy_uid = g_dbus_proxy_new_sync(connection,
 						G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
 						    G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
 						NULL,
@@ -2752,6 +2746,12 @@ fu_dbus_daemon_dbus_bus_acquired_cb(GDBusConnection *connection,
 						&error);
 	if (self->proxy_uid == NULL) {
 		g_warning("cannot connect to DBus: %s", error->message);
+		return;
+	}
+
+	fu_dbus_daemon_set_connection(self, connection);
+	if (!fu_dbus_daemon_register_object(self, &error)) {
+		g_warning("cannot register object: %s", error->message);
 		return;
 	}
 }
