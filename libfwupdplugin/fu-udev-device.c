@@ -2131,10 +2131,13 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 			return NULL;
 		uevent_lines = g_strsplit(str, "\n", -1);
 		for (guint i = 0; uevent_lines[i] != NULL; i++) {
-			g_autofree gchar **kvs = g_strsplit(uevent_lines[i], "=", 2);
-			g_hash_table_insert(priv->properties,
-					    g_steal_pointer(&kvs[0]),
-					    g_steal_pointer(&kvs[1]));
+			/* only split KEY=VALUE */
+			if (g_strstr_len(uevent_lines[i], -1, "=") != NULL) {
+				g_autofree gchar **kvs = g_strsplit(uevent_lines[i], "=", 2);
+				g_hash_table_insert(priv->properties,
+						    g_steal_pointer(&kvs[0]),
+						    g_steal_pointer(&kvs[1]));
+			}
 		}
 		priv->properties_valid = TRUE;
 	}

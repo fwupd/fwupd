@@ -38,6 +38,7 @@
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
 #include "fu-test-device.h"
+#include "fu-udev-device-private.h"
 #include "fu-volume-private.h"
 
 static GMainLoop *_test_loop = NULL;
@@ -6363,6 +6364,20 @@ fu_plugin_efi_signature_list_func(void)
 }
 
 static void
+fu_device_udev_func(void)
+{
+	g_autofree gchar *prop = NULL;
+	g_autofree gchar *sysfs_path = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuUdevDevice) udev_device = fu_udev_device_new(ctx, sysfs_path);
+	g_autoptr(GError) error = NULL;
+
+	prop = fu_udev_device_read_property(udev_device, "MODALIAS", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(prop, ==, "hdaudio:v10EC0298r00100103a01");
+}
+
+static void
 fu_cab_checksum_func(void)
 {
 	guint8 buf[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
@@ -6984,6 +6999,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
+	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
 	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);
 	g_test_add_func("/fwupd/device{event-donor}", fu_device_event_donor_func);
