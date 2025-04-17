@@ -49,6 +49,20 @@ fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 	return g_steal_pointer(&str);
 }
 
+static size_t
+fu_redfish_multipart_device_location_headers_callback(char *ptr,
+						      size_t size,
+						      size_t nmemb,
+						      void *location)
+{
+	char **loc_str = (char **)location;
+	if ((size * nmemb) > 16 && g_ascii_strncasecmp(ptr, "Location:", 9) == 0) {
+		/* The string also includes \r\n at the end */
+		*loc_str = g_strndup(ptr + 10, (size * nmemb) - 12);
+	}
+	return size * nmemb;
+}
+
 static gboolean
 fu_redfish_multipart_device_write_firmware(FuDevice *device,
 					   FuFirmware *firmware,
@@ -91,6 +105,10 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	(void)curl_mime_data(part, g_bytes_get_data(fw, NULL), g_bytes_get_size(fw));
 
 	(void)curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+	(void)curl_easy_setopt(curl,
+			       CURLOPT_HEADERFUNCTION,
+			       fu_redfish_multipart_device_location_headers_callback);
+	(void)curl_easy_setopt(fu_redfish_request_get_curl(request), CURLOPT_HEADERDATA, &location);
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_redfish_request_perform(request,
@@ -108,22 +126,24 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 	}
 
 	/* prefer the header, otherwise fall back to the response */
-	json_obj = fu_redfish_request_get_json_object(request);
-	if (json_object_has_member(json_obj, "TaskMonitor")) {
-		const gchar *tmp = json_object_get_string_member(json_obj, "TaskMonitor");
-		g_debug("task manager for cleanup is %s", tmp);
-	}
+	if (location == NULL || g_utf8_strlen(location, 1) == 0) {
+		json_obj = fu_redfish_request_get_json_object(request);
+		if (json_object_has_member(json_obj, "TaskMonitor")) {
+			const gchar *tmp = json_object_get_string_member(json_obj, "TaskMonitor");
+			g_debug("task manager for cleanup is %s", tmp);
+		}
 
-	/* poll the task for progress */
-	if (!json_object_has_member(json_obj, "@odata.id")) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no task returned for %s",
-			    fu_redfish_backend_get_push_uri_path(backend));
-		return FALSE;
+		/* poll the task for progress */
+		if (!json_object_has_member(json_obj, "@odata.id")) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no task returned for %s",
+				    fu_redfish_backend_get_push_uri_path(backend));
+			return FALSE;
+		}
+		location = json_object_get_string_member(json_obj, "@odata.id");
 	}
-	location = json_object_get_string_member(json_obj, "@odata.id");
 	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 
