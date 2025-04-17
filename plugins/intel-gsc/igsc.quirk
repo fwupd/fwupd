@@ -121,3 +121,10 @@ Name = PVC
 [MEI\VEN_8086&DEV_56C1]
 Name = ATS-M3
 Flags = has-aux,has-oprom
+
+[MEI\VEN_8086&DEV_E20B]
+Name = BMG_G2
+Flags = has-oprom
+[MEI\VEN_8086&DEV_E20C]
+Name = BMG_G21
+Flags = has-oprom
