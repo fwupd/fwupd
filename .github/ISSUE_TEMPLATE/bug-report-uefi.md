@@ -21,6 +21,7 @@ Please provide the version of the daemon and client.
 
 ```shell
 fwupdtool get-report-metadata
+fwupdtool hwids
 ```
 
 Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):
