@@ -513,7 +513,7 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		       GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *url = NULL;
+	const gchar *path_suffix = NULL;
 	g_autoptr(curlptr) tmp_uri = NULL;
 	g_autoptr(CURLU) uri = curl_url();
 
@@ -526,9 +526,7 @@ fwupd_remote_build_uri(FwupdRemote *self,
 	/* the LVFS can't accept basic auth on an endpoint not expecting authentication */
 	if (!g_str_has_suffix(url_noauth, "/auth") &&
 	    (priv->username != NULL || priv->password != NULL)) {
-		url = g_strdup_printf("%s/auth", url_noauth);
-	} else {
-		url = g_strdup(url_noauth);
+		path_suffix = "auth";
 	}
 
 	/* create URI, substituting if required */
@@ -537,44 +535,48 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		g_autofree gchar *path_new = NULL;
 		g_autoptr(curlptr) path = NULL;
 		g_autoptr(CURLU) uri_tmp = curl_url();
-		if (curl_url_set(uri_tmp, CURLUPART_URL, url, 0) != CURLUE_OK) {
+
+		if (curl_url_set(uri_tmp, CURLUPART_URL, url_noauth, 0) != CURLUE_OK) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "Failed to parse url '%s'",
-				    url);
+				    "failed to parse url '%s'",
+				    url_noauth);
 			return NULL;
 		}
 		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_basename(path);
-		path_new = g_build_filename(priv->firmware_base_uri, basename, NULL);
+		path_new = g_build_filename(priv->firmware_base_uri, basename, path_suffix, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
-		/* use the base URI of the metadata to build the full path */
-	} else if (g_strstr_len(url, -1, "/") == NULL) {
+	} else if (g_strstr_len(url_noauth, -1, "/") == NULL) {
 		g_autofree gchar *basename = NULL;
 		g_autofree gchar *path_new = NULL;
 		g_autoptr(curlptr) path = NULL;
+
+		/* use the base URI of the metadata to build the full path */
 		if (curl_url_set(uri, CURLUPART_URL, priv->metadata_uri, 0) != CURLUE_OK) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "Failed to parse url '%s'",
+				    "failed to parse url '%s'",
 				    priv->metadata_uri);
 			return NULL;
 		}
 		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_dirname(path);
-		path_new = g_build_filename(basename, url, NULL);
+		path_new = g_build_filename(basename, url_noauth, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
-		/* a normal URI */
 	} else {
+		g_autofree gchar *url = g_build_filename(url_noauth, path_suffix, NULL);
+
+		/* a normal URI */
 		if (curl_url_set(uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "Failed to parse URI '%s'",
+				    "failed to parse URI '%s'",
 				    url);
 			return NULL;
 		}
