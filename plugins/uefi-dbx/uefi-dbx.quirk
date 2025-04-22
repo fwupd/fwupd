@@ -186,6 +186,12 @@ Flags = no-dbx-updates
 [b6eb0c7f-0bfc-5a3f-b2d7-cd2a38aa6d17]
 Flags = no-dbx-updates
 
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=8C6A
+[baddb32a-7407-56a8-b1ff-cadefcf2fce7]
+Flags = no-dbx-updates
+
 # Manufacturer=LENOVO
 # Family=ideacentre 300-20ISH
 [fbc17b82-0f29-561d-be80-578285ec4477]
