@@ -1017,6 +1017,9 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 	if (priv->bos_descriptors_valid)
 		return TRUE;
 
+	/* clear any old descriptors */
+	g_ptr_array_set_size(priv->bos_descriptors, 0);
+
 	/* libusb or kernel */
 	if (priv->usb_device != NULL) {
 		gint rc;
