@@ -4913,6 +4913,16 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 			fwupd_codec_string_append(str, idt, "PrivateFlags", tmps);
 		}
 	}
+	if (priv->instance_hash != NULL) {
+		GHashTableIter iter;
+		gpointer key, value;
+		g_hash_table_iter_init(&iter, priv->instance_hash);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			g_autofree gchar *title =
+			    g_strdup_printf("InstanceKey[%s]", (const gchar *)key);
+			fwupd_codec_string_append(str, idt, title, value);
+		}
+	}
 	if (priv->inhibits != NULL) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		for (GList *l = values; l != NULL; l = l->next) {

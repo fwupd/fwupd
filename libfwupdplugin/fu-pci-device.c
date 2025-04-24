@@ -349,6 +349,7 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 	fu_device_set_physical_id(device, physical_id);
 
 	/* success */
+	fu_pci_device_ensure_subsys_instance_id(self);
 	return TRUE;
 }
 
