@@ -120,18 +120,76 @@ fu_self_free(FuUtil *self)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_self_free)
 
-static gboolean
-fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
+static GPtrArray *
+fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **error)
 {
 	AParcel *in = NULL;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GPtrArray) array = NULL;
 	binder_status_t nstatus = STATUS_OK;
 	GVariantBuilder builder;
+	// TODO: gparcelable: fwupd_codec expects a tuple if vtype is tuple produce tuple
+	// const GVariantType *vtype = G_VARIANT_TYPE("(maa{sv})");
 	const GVariantType *vtype = G_VARIANT_TYPE("maa{sv}");
 
-	g_warning("get devices");
+	// TODO: create GetUpgrades request
+
+	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
+	gp_parcel_write_variant(&in, g_variant_new("(s)", device_id), error);
+
+	nstatus =
+	    AIBinder_transact(priv->fwupd_binder, FWUPD_BINDER_CALL_GET_UPGRADES, &in, &out, 0);
+
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_warning("get_device transaction returned %s", AStatus_getDescription(status));
+	}
+
+	nstatus = AParcel_readStatusHeader(out, &status);
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_warning("couldn't read status header %s", AStatus_getDescription(status));
+	}
+	if (!AStatus_isOk(status)) {
+		g_warning("status header not okay %s", AStatus_getDescription(status));
+	}
+
+	g_variant_builder_init(&builder, vtype);
+	gp_parcel_to_variant(&builder, out, vtype, error);
+	val = g_variant_builder_end(&builder);
+	GVariant *child = g_variant_get_maybe(val);
+	val = g_variant_new_tuple(&child, 1);
+
+	// TODO: gparcelable only supports signed int types and doubles
+	//  fwupd_codec_array_from_variant uses switch(prop_id) to map types
+	//  Maybe we can add a fwupd_codec_get_type_for_prop(FWUPD_TYPE_DEVICE, key) -> GVariantType
+	//   to aid in AParcel to FwupdCodec conversion
+	//  Maybe something depending on json code? (js Number type)
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, error);
+	if (array == NULL) {
+		// error?
+		return NULL;
+	}
+	fwupd_device_array_ensure_parents(array);
+
+	return g_steal_pointer(&array);
+}
+
+static GPtrArray *
+fu_util_get_devices_call(FuUtilPrivate *priv, GError **error)
+{
+	AParcel *in = NULL;
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(AStatus) status = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	binder_status_t nstatus = STATUS_OK;
+	GVariantBuilder builder;
+	// TODO: gparcelable: fwupd_codec expects a tuple if vtype is tuple produce tuple
+	// const GVariantType *vtype = G_VARIANT_TYPE("(maa{sv})");
+	const GVariantType *vtype = G_VARIANT_TYPE("maa{sv}");
 
 	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
 	nstatus =
@@ -154,7 +212,114 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_variant_builder_init(&builder, vtype);
 	gp_parcel_to_variant(&builder, out, vtype, error);
 	val = g_variant_builder_end(&builder);
-	g_message("device list variant: %s", g_variant_print(val, TRUE));
+	GVariant *child = g_variant_get_maybe(val);
+	val = g_variant_new_tuple(&child, 1);
+
+	// TODO: gparcelable only supports signed int types and doubles
+	//  fwupd_codec_array_from_variant uses switch(prop_id) to map types
+	//  Maybe we can add a fwupd_codec_get_type_for_prop(FWUPD_TYPE_DEVICE, key) -> GVariantType
+	//   to aid in AParcel to FwupdCodec conversion
+	//  Maybe something depending on json code? (js Number type)
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, error);
+	if (array == NULL) {
+		// error?
+		return NULL;
+	}
+	fwupd_device_array_ensure_parents(array);
+
+	return g_steal_pointer(&array);
+}
+
+// Taken from FuUtil
+static void
+fu_util_build_device_tree_node(FuUtilPrivate *priv, FuUtilNode *root, FwupdDevice *dev)
+{
+	FuUtilNode *root_child = g_node_append_data(root, g_object_ref(dev));
+	if (fwupd_device_get_release_default(dev) != NULL)
+		g_node_append_data(root_child, g_object_ref(fwupd_device_get_release_default(dev)));
+}
+
+// Taken from FuUtil
+static gboolean
+fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
+	FwupdDevice *dev = n->data;
+
+	/* root node */
+	if (dev == NULL)
+		return FALSE;
+
+	/* release */
+	if (FWUPD_IS_RELEASE(n->data))
+		return FALSE;
+
+	/* an interesting child, so include the parent */
+	for (FuUtilNode *c = n->children; c != NULL; c = c->next) {
+		if (c->data != NULL)
+			return FALSE;
+	}
+
+	/* not interesting, clear the node data */
+	if (!fwupd_device_match_flags(dev,
+				      priv->filter_device_include,
+				      priv->filter_device_exclude))
+		g_clear_object(&n->data);
+	else if (!priv->show_all && !fu_util_is_interesting_device(dev))
+		g_clear_object(&n->data);
+
+	/* continue */
+	return FALSE;
+}
+
+// Taken from FuUtil
+static void
+fu_util_build_device_tree(FuUtilPrivate *priv, FuUtilNode *root, GPtrArray *devs)
+{
+	/* add the top-level parents */
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
+		if (fwupd_device_get_parent(dev_tmp) != NULL)
+			continue;
+		fu_util_build_device_tree_node(priv, root, dev_tmp);
+	}
+
+	/* children */
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
+		FuUtilNode *root_parent;
+
+		if (fwupd_device_get_parent(dev_tmp) == NULL)
+			continue;
+		root_parent = g_node_find(root,
+					  G_PRE_ORDER,
+					  G_TRAVERSE_ALL,
+					  fwupd_device_get_parent(dev_tmp));
+		if (root_parent == NULL)
+			continue;
+		fu_util_build_device_tree_node(priv, root_parent, dev_tmp);
+	}
+
+	/* prune children that are not updatable */
+	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, priv);
+}
+
+static gboolean
+fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
+	g_autoptr(GPtrArray) devs = fu_util_get_devices_call(priv, error);
+
+	/* print */
+	if (devs->len > 0)
+		fu_util_build_device_tree(priv, root, devs);
+	if (g_node_n_children(root) == 0) {
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: nothing attached that can be upgraded */
+					 _("No hardware detected with firmware update capability"));
+		return TRUE;
+	}
+	fu_util_print_node(priv->console, priv->client, root);
 
 	return TRUE;
 }
@@ -253,6 +418,144 @@ fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 		return;
 	}
 	fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
+}
+
+// static gboolean
+// fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
+//{
+
+//}
+
+static gboolean
+fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	gboolean supported = FALSE;
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
+	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
+	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
+
+	g_warning("get-upgrades");
+
+	/* are the remotes very old */
+	// if (!fu_util_perhaps_refresh_remotes(priv, error))
+	//	return FALSE;
+
+	/* handle both forms */
+	if (g_strv_length(values) == 0) {
+		g_warning("get dev call");
+		devices = fu_util_get_devices_call(priv, error);
+		g_warning("got dev call %p", devices);
+		// fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+	} else if (g_strv_length(values) == 1) {
+		// TODO: get by id
+		FwupdDevice *device = NULL; // fu_util_get_device_by_id(priv, values[0], error);
+		if (device == NULL)
+			return FALSE;
+		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		g_ptr_array_add(devices, device);
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+		FuUtilNode *child;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
+			continue;
+		if (!fwupd_device_match_flags(dev,
+					      priv->filter_device_include,
+					      priv->filter_device_exclude))
+			continue;
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			g_ptr_array_add(devices_no_support, dev);
+			continue;
+		}
+		supported = TRUE;
+
+		/* get the releases for this device and filter for validity */
+		rels = fu_util_get_upgrades_call(priv, fwupd_device_get_id(dev), &error_local);
+		/*fwupd_client_get_upgrades(priv->client,
+						 fwupd_device_get_id(dev),
+						 priv->cancellable,
+						 &error_local);*/
+		if (rels == NULL) {
+			g_ptr_array_add(devices_no_upgrades, dev);
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug("%s", error_local->message);
+			continue;
+		}
+		child = g_node_append_data(root, g_object_ref(dev));
+
+		/* add all releases */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, j);
+			if (!fwupd_release_match_flags(rel,
+						       priv->filter_release_include,
+						       priv->filter_release_exclude))
+				continue;
+			g_node_append_data(child, g_object_ref(rel));
+		}
+	}
+
+	/* devices that have no updates available for whatever reason */
+	if (devices_no_support->len > 0) {
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: message letting the user know no device
+					  * upgrade available due to missing on LVFS */
+					 _("Devices with no available firmware updates: "));
+		for (guint i = 0; i < devices_no_support->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+		}
+	}
+	if (devices_no_upgrades->len > 0) {
+		fu_console_print_literal(
+		    priv->console,
+		    /* TRANSLATORS: message letting the user know no device upgrade available */
+		    _("Devices with the latest available firmware version:"));
+		for (guint i = 0; i < devices_no_upgrades->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
+			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+		}
+	}
+
+	/* nag? */
+	// if (!fu_util_perhaps_show_unreported(priv, error))
+	//	return FALSE;
+
+	/* no devices supported by LVFS or all are filtered */
+	if (!supported) {
+		g_warning("hah supported? %d", supported);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: this is an error string */
+				    _("No updatable devices"));
+		return FALSE;
+	}
+	/* no updates available */
+	if (g_node_n_nodes(root, G_TRAVERSE_ALL) <= 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: this is an error string */
+				    _("No updates available"));
+		return FALSE;
+	}
+
+	fu_util_print_node(priv->console, priv->client, root);
 }
 
 static void *
@@ -360,7 +663,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Install a firmware file in cabinet format on this hardware"),
 			      fu_util_local_install);
-
+	fu_util_cmd_array_add(cmd_array,
+			      "get-updates,get-upgrades",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Gets the list of updates for connected hardware"),
+			      fu_util_get_upgrades);
 	/* set verbose? */
 	if (verbose) {
 		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
@@ -400,6 +709,9 @@ main(int argc, char *argv[])
 	}
 
 	/* connect to the daemon */
+	// TODO: Maybe create FuClientBinder
+	// priv->client = fwupd_client_new();
+	// fwupd_client_set_main_context(priv->client, priv->main_ctx);
 	ABinderProcess_setupPolling(&priv->binder_fd);
 	g_idle_add(poll_binder_process, priv);
 

@@ -17,6 +17,7 @@ enum fu_binder_calls {
 				      in @nullable PersistableBundle options); */
 	FWUPD_BINDER_CALL_ADD_EVENT_LISTENER, /* void addEventListener(IFwupdEventListener
 						 listener); */
+	FWUPD_BINDER_CALL_GET_UPGRADES,	      /* PersistableBundle[] getUpgrades(in String id); */
 };
 
 enum fu_listener_binder_calls {

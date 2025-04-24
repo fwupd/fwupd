@@ -12,4 +12,5 @@ interface IFwupd {
         //   We could just provide a PersistableBundle containing all properties?
         //   Or we could split properties into groups, percentage maybe is an event, [daemon version, host vendor/product/machine_id] don't change frequently
         //     * Daemon info {version, tainted, interactive}
+        PersistableBundle[] getUpdates(in String id);
 }
