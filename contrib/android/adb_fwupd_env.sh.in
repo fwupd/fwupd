@@ -8,6 +8,7 @@
 # _android_build/adb_fwupd_env.sh fwupdtool get-devices -vv
 # _android_build/adb_fwupd_env.sh fwupd-binder --verbose
 
+FWUPD_PREFIX=@FWUPD_PREFIX@
 FWUPD_BINDIR=@FWUPD_BINDIR@
 FWUPD_LIBDIR=@FWUPD_LIBDIR@
 FWUPD_LIBEXECDIR=@FWUPD_LIBEXECDIR@
@@ -17,6 +18,7 @@ FWUPD_LIBDIR_PKG=@FWUPD_LIBDIR_PKG@
 adb -e shell -t \
  G_MESSAGES_DEBUG=all \
  FWUPD_POLKIT_NOCHECK=1 \
+ CACHE_DIRECTORY=${FWUPD_PREFIX}/cache \
  FWUPD_LOCKDIR="${FWUPD_LOCALSTATEDIR}/run" \
  LD_LIBRARY_PATH="${FWUPD_LIBDIR_PKG}:${FWUPD_LIBDIR}" \
  PATH="\${PATH}:${FWUPD_BINDIR}:${FWUPD_LIBEXECDIR}/fwupd" \
