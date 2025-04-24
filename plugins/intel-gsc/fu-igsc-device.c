@@ -379,7 +379,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 					    fw_code_version->data,
 					    fw_code_version->len,
 					    error)) {
-		g_prefix_error(error, "cannot cannot get fw version: ");
+		g_prefix_error(error, "cannot get fw version: ");
 		return FALSE;
 	}
 	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
@@ -391,7 +391,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	/* get hardware SKU if supported */
 	if (g_strcmp0(self->project, "DG02") == 0) {
 		if (!fu_igsc_device_get_config(self, error)) {
-			g_prefix_error(error, "cannot cannot get SKU: ");
+			g_prefix_error(error, "cannot get SKU: ");
 			return FALSE;
 		}
 	}
