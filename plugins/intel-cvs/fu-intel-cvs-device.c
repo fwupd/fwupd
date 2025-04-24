@@ -286,6 +286,7 @@ fu_intel_cvs_device_init(FuIntelCvsDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_icon(FU_DEVICE(self), "camera-video");
 	fu_device_set_name(FU_DEVICE(self), "Camera");
 	fu_device_set_summary(FU_DEVICE(self), "Computer Vision Sensing Camera");
