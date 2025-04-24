@@ -166,7 +166,7 @@ fu_mei_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_mei_device_set_uuid(self, uuid);
-	fu_device_add_instance_id(device, uuid);
+	fu_device_add_instance_id_full(device, uuid, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
 
 	/* for quirk matches */
 	fu_device_build_instance_id_full(device,
