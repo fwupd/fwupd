@@ -106,6 +106,43 @@ fu_binder_daemon_method_get_devices(FuBinderDaemon *self,
 	return STATUS_OK;
 }
 
+static binder_status_t
+fu_binder_daemon_method_get_upgrades(FuBinderDaemon *self,
+				     FuEngineRequest *request,
+				     const AParcel *in,
+				     AParcel *out)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FwupdCodecFlags flags = fu_engine_request_get_converter_flags(request);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_auto(GVariantBuilder) builder;
+	const gchar *device_id;
+
+	g_variant_builder_init(&builder, "(s)");
+
+	gp_parcel_to_variant(&builder, in, G_VARIANT_TYPE("(s)"), error);
+	GVariant *parameters = g_variant_builder_end(&builder);
+
+	g_variant_get(parameters, "(&s)", &device_id);
+	// if (!fu_dbus_daemon_device_id_valid(device_id, &error)) {
+	//	fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+	//	return;
+	// }
+
+	releases = fu_engine_get_upgrades(engine, request, device_id, &error);
+	if (releases == NULL) {
+	}
+
+	if (fu_engine_config_get_show_device_private(fu_engine_get_config(engine)))
+		flags |= FWUPD_CODEC_FLAG_TRUSTED;
+	g_autoptr(GVariant) tuple_release_array = fwupd_codec_array_to_variant(releases, flags);
+
+	g_warning("done get-upgrades");
+
+	return STATUS_OK;
+}
+
 static bool
 parcel_string_allocator(void *stringData, int32_t length, char **buffer)
 {
@@ -553,6 +590,7 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 	    fu_binder_daemon_method_get_devices,	/* getDevices */
 	    fu_binder_daemon_method_install,		/* install */
 	    fu_binder_daemon_method_add_event_listener, /* addEventListener */
+	    fu_binder_daemon_method_get_upgrades,	/* getUpgrades */
 	};
 
 	/* build request */
