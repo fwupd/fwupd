@@ -133,6 +133,7 @@ fu_mei_device_pci_probe(FuMeiDevice *self, GError **error)
 			      pci_donor,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
+				  FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS |
 				  FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 
 	/* success */
