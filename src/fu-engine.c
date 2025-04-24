@@ -6290,7 +6290,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 		fu_device_convert_instance_ids(device);
 
 	/* device still has no GUIDs set! */
-	if (device_guids->len == 0 && fu_device_get_children(device)->len == 0) {
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) && device_guids->len == 0 &&
+	    fu_device_get_children(device)->len == 0) {
 		g_warning("no GUIDs for device %s [%s]",
 			  fu_device_get_name(device),
 			  fu_device_get_id(device));
