@@ -26,16 +26,7 @@ typedef struct {
 	gchar *name;
 } FuUefiDevicePrivate;
 
-static void
-fu_uefi_device_codec_iface_init(FwupdCodecInterface *iface);
-
-G_DEFINE_TYPE_EXTENDED(FuUefiDevice,
-		       fu_uefi_device,
-		       FU_TYPE_DEVICE,
-		       0,
-		       G_ADD_PRIVATE(FuUefiDevice)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						 fu_uefi_device_codec_iface_init));
+G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE);
 
 #define GET_PRIVATE(o) (fu_uefi_device_get_instance_private(o))
 
@@ -285,10 +276,9 @@ fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_uefi_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_uefi_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUefiDevice *self = FU_UEFI_DEVICE(codec);
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(device);
 
@@ -326,11 +316,9 @@ fu_uefi_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 }
 
 static gboolean
-fu_uefi_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_uefi_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUefiDevice *self = FU_UEFI_DEVICE(codec);
-	JsonObject *json_object = json_node_get_object(json_node);
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
 
 	tmp = json_object_get_string_member_with_default(json_object, "Guid", NULL);
@@ -398,13 +386,8 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	device_class->probe = fu_uefi_device_probe;
 	device_class->dump_firmware = fu_uefi_device_dump_firmware;
 	device_class->incorporate = fu_uefi_device_incorporate;
-}
-
-static void
-fu_uefi_device_codec_iface_init(FwupdCodecInterface *iface)
-{
-	iface->add_json = fu_uefi_device_add_json;
-	iface->from_json = fu_uefi_device_from_json;
+	device_class->from_json = fu_uefi_device_from_json;
+	device_class->add_json = fu_uefi_device_add_json;
 }
 
 FuUefiDevice *

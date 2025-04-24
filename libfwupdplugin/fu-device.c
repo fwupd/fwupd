@@ -140,15 +140,7 @@ enum { SIGNAL_CHILD_ADDED, SIGNAL_CHILD_REMOVED, SIGNAL_REQUEST, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
-static void
-fu_device_codec_iface_init(FwupdCodecInterface *iface);
-
-G_DEFINE_TYPE_EXTENDED(FuDevice,
-		       fu_device,
-		       FWUPD_TYPE_DEVICE,
-		       0,
-		       G_ADD_PRIVATE(FuDevice)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC, fu_device_codec_iface_init));
+G_DEFINE_TYPE_WITH_PRIVATE(FuDevice, fu_device, FWUPD_TYPE_DEVICE);
 
 #define GET_PRIVATE(o) (fu_device_get_instance_private(o))
 
@@ -7652,10 +7644,10 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 	g_set_object(&priv->target, target);
 }
 
-static void
-fu_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+/* private; used to save an emulated device */
+void
+fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuDevice *self = FU_DEVICE(codec);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	if (fu_device_get_created_usec(self) != 0) {
@@ -7676,23 +7668,12 @@ fu_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flag
 		device_class->add_json(self, builder, flags);
 }
 
-static gboolean
-fu_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+/* private; used to load an emulated device */
+gboolean
+fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error)
 {
-	FuDevice *self = FU_DEVICE(codec);
-	JsonObject *json_object;
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
 
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
 	if (tmp != NULL) {
@@ -7715,13 +7696,6 @@ fu_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static void
-fu_device_codec_iface_init(FwupdCodecInterface *iface)
-{
-	iface->add_json = fu_device_add_json;
-	iface->from_json = fu_device_from_json;
 }
 
 static void
