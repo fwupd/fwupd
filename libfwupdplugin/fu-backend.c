@@ -407,11 +407,21 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 	json_array = json_object_get_array_member(json_object, "UsbDevices");
 	for (guint i = 0; i < json_array_get_length(json_array); i++) {
 		JsonNode *node_tmp = json_array_get_element(json_array, i);
-		JsonObject *object_tmp = json_node_get_object(node_tmp);
+		JsonObject *object_tmp;
 		FuDevice *device_old;
 		g_autoptr(FuDevice) device_tmp = NULL;
 		const gchar *device_gtypestr;
 		GType device_gtype;
+
+		/* sanity check */
+		if (!JSON_NODE_HOLDS_OBJECT(node_tmp)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "not JSON object");
+			return FALSE;
+		}
+		object_tmp = json_node_get_object(node_tmp);
 
 		/* get the GType */
 		device_gtypestr =
@@ -433,7 +443,7 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		fu_device_add_flag(device_tmp, FWUPD_DEVICE_FLAG_EMULATED);
 		if (fwupd_version != NULL)
 			fu_device_set_fwupd_version(device_tmp, fwupd_version);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(device_tmp), node_tmp, error))
+		if (!fu_device_from_json(device_tmp, object_tmp, error))
 			return FALSE;
 		if (fu_device_get_backend_id(device_tmp) == NULL) {
 			g_set_error(error,
@@ -532,7 +542,7 @@ fu_backend_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags fla
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
 		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(device), builder, FWUPD_CODEC_FLAG_NONE);
+		fu_device_add_json(device, builder, FWUPD_CODEC_FLAG_NONE);
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);

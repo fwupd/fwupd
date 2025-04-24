@@ -93,3 +93,9 @@ FuBackend *
 fu_device_get_backend(FuDevice *self);
 void
 fu_device_set_backend(FuDevice *self, FuBackend *backend);
+
+void
+fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error) G_GNUC_NON_NULL(1, 2);
