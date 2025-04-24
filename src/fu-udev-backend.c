@@ -586,17 +586,11 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 		}
 
 		class_fn = g_build_filename(sysfsdir, "class", subsystem, NULL);
-		if (g_file_test(class_fn, G_FILE_TEST_EXISTS)) {
+		if (g_file_test(class_fn, G_FILE_TEST_EXISTS))
 			fu_udev_backend_coldplug_subsystem(self, class_fn);
-			fu_progress_step_done(progress);
-			continue;
-		}
 		bus_fn = g_build_filename(sysfsdir, "bus", subsystem, "devices", NULL);
-		if (g_file_test(bus_fn, G_FILE_TEST_EXISTS)) {
+		if (g_file_test(bus_fn, G_FILE_TEST_EXISTS))
 			fu_udev_backend_coldplug_subsystem(self, bus_fn);
-			fu_progress_step_done(progress);
-			continue;
-		}
 		fu_progress_step_done(progress);
 	}
 
