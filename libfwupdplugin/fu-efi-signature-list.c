@@ -86,7 +86,7 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 	sigs_newest = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	sigs_values = g_hash_table_get_values(hash);
 	for (GList *l = sigs_values; l != NULL; l = l->next) {
-		FuEfiX509Signature *sig = FU_EFI_X509_SIGNATURE(l->data);
+		FuEfiSignature *sig = FU_EFI_SIGNATURE(l->data);
 		g_ptr_array_add(sigs_newest, g_object_ref(sig));
 	}
 
