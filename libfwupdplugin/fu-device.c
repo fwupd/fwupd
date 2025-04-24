@@ -6461,6 +6461,17 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_add_possible_plugin(self, possible_plugin);
 		}
 	}
+	if (flag & FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS) {
+		if (priv_donor->instance_hash != NULL) {
+			GHashTableIter iter;
+			gpointer key, value;
+			g_hash_table_iter_init(&iter, priv_donor->instance_hash);
+			while (g_hash_table_iter_next(&iter, &key, &value)) {
+				if (fu_device_get_instance_str(self, key) == NULL)
+					fu_device_add_instance_str(self, key, value);
+			}
+		}
+	}
 
 	/* everything else */
 	if (flag == FU_DEVICE_INCORPORATE_FLAG_ALL) {
@@ -6524,17 +6535,6 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			while (g_hash_table_iter_next(&iter, &key, &value)) {
 				if (fu_device_get_metadata(self, key) == NULL)
 					fu_device_set_metadata(self, key, value);
-			}
-		}
-
-		/* copy all instance ID keys if not already set */
-		if (priv_donor->instance_hash != NULL) {
-			GHashTableIter iter;
-			gpointer key, value;
-			g_hash_table_iter_init(&iter, priv_donor->instance_hash);
-			while (g_hash_table_iter_next(&iter, &key, &value)) {
-				if (fu_device_get_instance_str(self, key) == NULL)
-					fu_device_add_instance_str(self, key, value);
 			}
 		}
 

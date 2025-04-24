@@ -264,6 +264,14 @@ typedef enum {
 	 * Since: 2.0.6
 	 **/
 	FU_DEVICE_INCORPORATE_FLAG_GTYPE = 1ull << 19,
+	/**
+	 * FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS:
+	 *
+	 * Set the device instance keys.
+	 *
+	 * Since: 2.0.9
+	 **/
+	FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS = 1ull << 20,
 	/*< private >*/
 	FU_DEVICE_INCORPORATE_FLAG_ALL = G_MAXUINT64,
 } FuDeviceIncorporateFlags;
