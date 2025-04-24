@@ -509,10 +509,16 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (json_object_get_boolean_member(member, "Updateable"))
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP))
-		fu_device_inhibit(dev, "is-backup", "Is a backup partition");
-	else
-		fu_device_uninhibit(dev, "is-backup");
+
+	/* not useful to export */
+	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is a backup partition",
+			    fu_device_get_backend_id(dev));
+		return FALSE;
+	}
 
 	/* use related items to set extra instance IDs */
 	if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
