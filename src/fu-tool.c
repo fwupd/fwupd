@@ -1496,13 +1496,28 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_install_release(FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
+fu_util_install_release(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *rel, GError **error)
 {
 	FwupdRemote *remote;
 	GPtrArray *locations;
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_auto(GStrv) argv = NULL;
+
+	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		const gchar *name = fwupd_device_get_name(dev);
+		g_autofree gchar *str = NULL;
+
+		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
+		str = g_strdup_printf(_("%s is not currently updatable"), name);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "%s: %s",
+			    str,
+			    fwupd_device_get_update_error(dev));
+		return FALSE;
+	}
 
 	/* get the default release only until other parts of fwupd can cope */
 	locations = fwupd_release_get_locations(rel);
@@ -1658,7 +1673,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 				return FALSE;
 		}
 
-		if (!fu_util_install_release(priv, rel, &error_local)) {
+		if (!fu_util_install_release(priv, dev, rel, &error_local)) {
 			fu_console_print_literal(priv->console, error_local->message);
 			continue;
 		}
@@ -1779,7 +1794,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-	if (!fu_util_install_release(priv, rel, error))
+	if (!fu_util_install_release(priv, FWUPD_DEVICE(dev), rel, error))
 		return FALSE;
 	fu_util_display_current_message(priv);
 
@@ -4077,7 +4092,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (!fu_util_install_release(priv, rel, error))
+	if (!fu_util_install_release(priv, FWUPD_DEVICE(dev), rel, error))
 		return FALSE;
 	fu_util_display_current_message(priv);
 
