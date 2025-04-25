@@ -13,19 +13,10 @@ G_DECLARE_DERIVABLE_TYPE(FuIntelMeHeciDevice,
 			 fu_intel_me_heci_device,
 			 FU,
 			 INTEL_ME_HECI_DEVICE,
-			 FuMeiDevice)
+			 FuMkhiDevice)
 
 struct _FuIntelMeHeciDeviceClass {
-	FuMeiDeviceClass parent_class;
+	FuMkhiDeviceClass parent_class;
 };
 
 #define FU_INTEL_ME_HECI_DEVICE_FLAG_LEAKED_KM "leaked-km"
-
-GByteArray *
-fu_intel_me_heci_device_read_file(FuIntelMeHeciDevice *self, const gchar *filename, GError **error);
-GByteArray *
-fu_intel_me_heci_device_read_file_ex(FuIntelMeHeciDevice *self,
-				     guint32 file_id,
-				     guint32 section,
-				     guint32 datasz_req,
-				     GError **error);

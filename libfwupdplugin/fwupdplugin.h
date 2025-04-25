@@ -91,6 +91,7 @@
 #include <libfwupdplugin/fu-linear-firmware.h>
 #include <libfwupdplugin/fu-mei-device.h>
 #include <libfwupdplugin/fu-mem.h>
+#include <libfwupdplugin/fu-mkhi-device.h>
 #include <libfwupdplugin/fu-msgpack-item.h>
 #include <libfwupdplugin/fu-msgpack.h>
 #include <libfwupdplugin/fu-oprom-device.h>

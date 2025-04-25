@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include "fu-intel-me-mkhi-struct.h"
+#include <fwupd.h>
 
 GString *
 fu_intel_me_convert_checksum(GByteArray *buf, GError **error);
-gboolean
-fu_intel_me_mkhi_result_to_error(FuMkhiStatus result, GError **error);

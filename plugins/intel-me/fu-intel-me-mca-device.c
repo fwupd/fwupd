@@ -31,11 +31,7 @@ fu_intel_me_mca_device_add_checksum_for_id(FuIntelMeMcaDevice *self,
 	 * Icelake/Jasperlake/Cometlake: 0x20 (SHA256)
 	 * Elkhartlake/Tigerlake/Alderlake/Raptorlake: 0x30 (SHA384)
 	 */
-	buf = fu_intel_me_heci_device_read_file_ex(FU_INTEL_ME_HECI_DEVICE(self),
-						   file_id,
-						   section,
-						   0x40,
-						   error);
+	buf = fu_mkhi_device_read_file_ex(FU_MKHI_DEVICE(self), file_id, section, 0x40, error);
 	if (buf == NULL)
 		return FALSE;
 
