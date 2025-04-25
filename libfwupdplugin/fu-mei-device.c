@@ -16,16 +16,6 @@
 #ifdef HAVE_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#ifdef HAVE_SELECT_H
-#include <sys/select.h>
-#endif
-
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "fu-bytes.h"
 #include "fu-dump.h"
@@ -381,27 +371,16 @@ fu_mei_device_read(FuMeiDevice *self,
 		   guint timeout_ms,
 		   GError **error)
 {
-	gssize rc;
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	rc = read(fu_io_channel_unix_get_fd(io_channel), buf, bufsz);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "read failed %u: %s",
-			    (guint)rc,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	fu_dump_raw(G_LOG_DOMAIN, "read", buf, rc);
-	if (bytes_read != NULL)
-		*bytes_read = (gsize)rc;
-	return TRUE;
+	return fu_udev_device_read(FU_UDEV_DEVICE(self),
+				   buf,
+				   bufsz,
+				   bytes_read,
+				   timeout_ms,
+				   FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+				   error);
 }
 
 /**
@@ -425,71 +404,15 @@ fu_mei_device_write(FuMeiDevice *self,
 		    guint timeout_ms,
 		    GError **error)
 {
-#ifdef HAVE_SELECT_H
-	struct timeval tv;
-	gssize written;
-	gssize rc;
-	fd_set set;
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
-	guint fd = fu_io_channel_unix_get_fd(io_channel);
-
 	g_return_val_if_fail(FU_IS_MEI_DEVICE(self), FALSE);
 	g_return_val_if_fail(buf != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	tv.tv_sec = timeout_ms / 1000;
-	tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-	fu_dump_raw(G_LOG_DOMAIN, "write", buf, bufsz);
-	written = write(fd, buf, bufsz);
-	if (written < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "write failed with status %" G_GSSIZE_FORMAT " %s",
-			    written,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	if ((gsize)written != bufsz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "only wrote %" G_GSSIZE_FORMAT " of %" G_GSIZE_FORMAT,
-			    written,
-			    bufsz);
-		return FALSE;
-	}
-
-	FD_ZERO(&set);
-	FD_SET(fd, &set);
-	rc = select(fd + 1, &set, NULL, NULL, &tv);
-	if (rc > 0 && FD_ISSET(fd, &set))
-		return TRUE;
-
-	/* timed out */
-	if (rc == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "write failed on timeout with status");
-		return FALSE;
-	}
-
-	/* rc < 0 */
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_WRITE,
-		    "write failed on select with status %" G_GSSIZE_FORMAT,
-		    rc);
-	return FALSE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "linux/select.h not supported");
-	return FALSE;
-#endif
+	return fu_udev_device_write(FU_UDEV_DEVICE(self),
+				    buf,
+				    bufsz,
+				    timeout_ms,
+				    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+				    error);
 }
 
 static void

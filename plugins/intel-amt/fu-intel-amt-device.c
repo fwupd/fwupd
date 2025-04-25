@@ -8,19 +8,19 @@
 
 #include "config.h"
 
-#include "fu-intel-me-amt-device.h"
-#include "fu-intel-me-amt-struct.h"
+#include "fu-intel-amt-device.h"
+#include "fu-intel-amt-struct.h"
 
-struct _FuIntelMeAmtDevice {
+struct _FuIntelAmtDevice {
 	FuMeiDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuIntelMeAmtDevice, fu_intel_me_amt_device, FU_TYPE_MEI_DEVICE)
+G_DEFINE_TYPE(FuIntelAmtDevice, fu_intel_amt_device, FU_TYPE_MEI_DEVICE)
 
 #define FU_AMT_STATUS_HOST_IF_EMPTY_RESPONSE 0x4000
 
 static gboolean
-fu_intel_me_amt_device_status_set_error(guint32 status, GError **error)
+fu_intel_amt_device_status_set_error(guint32 status, GError **error)
 {
 	if (status == FU_AMT_STATUS_SUCCESS)
 		return TRUE;
@@ -52,7 +52,7 @@ fu_intel_me_amt_device_status_set_error(guint32 status, GError **error)
 }
 
 static GByteArray *
-fu_intel_me_amt_device_host_if_call(FuIntelMeAmtDevice *self, GByteArray *inbuf, GError **error)
+fu_intel_amt_device_host_if_call(FuIntelAmtDevice *self, GByteArray *inbuf, GError **error)
 {
 	gsize outbufsz;
 	g_autoptr(GByteArray) outbuf = g_byte_array_new();
@@ -76,9 +76,9 @@ fu_intel_me_amt_device_host_if_call(FuIntelMeAmtDevice *self, GByteArray *inbuf,
 }
 
 static gboolean
-fu_intel_me_amt_device_get_provisioning_state(FuIntelMeAmtDevice *self,
-					      FuAmtProvisioningState *provisioning_state,
-					      GError **error)
+fu_intel_amt_device_get_provisioning_state(FuIntelAmtDevice *self,
+					   FuAmtProvisioningState *provisioning_state,
+					   GError **error)
 {
 	g_autofree struct FuAmtHostIfRespHeader *response = NULL;
 	g_autoptr(GByteArray) data = NULL;
@@ -86,7 +86,7 @@ fu_intel_me_amt_device_get_provisioning_state(FuIntelMeAmtDevice *self,
 	    fu_amt_host_if_msg_provisioning_state_request_new();
 	g_autoptr(FuAmtHostIfMsgProvisioningStateResponse) st_res = NULL;
 
-	data = fu_intel_me_amt_device_host_if_call(self, st_req, error);
+	data = fu_intel_amt_device_host_if_call(self, st_req, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -95,7 +95,7 @@ fu_intel_me_amt_device_get_provisioning_state(FuIntelMeAmtDevice *self,
 	    fu_amt_host_if_msg_provisioning_state_response_parse(data->data, data->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	if (!fu_intel_me_amt_device_status_set_error(
+	if (!fu_intel_amt_device_status_set_error(
 		fu_amt_host_if_msg_provisioning_state_response_get_status(st_res),
 		error))
 		return FALSE;
@@ -107,16 +107,16 @@ fu_intel_me_amt_device_get_provisioning_state(FuIntelMeAmtDevice *self,
 }
 
 static gboolean
-fu_intel_me_amt_device_open(FuDevice *device, GError **error)
+fu_intel_amt_device_open(FuDevice *device, GError **error)
 {
 	/* open then create context */
-	if (!FU_DEVICE_CLASS(fu_intel_me_amt_device_parent_class)->open(device, error))
+	if (!FU_DEVICE_CLASS(fu_intel_amt_device_parent_class)->open(device, error))
 		return FALSE;
 	return fu_mei_device_connect(FU_MEI_DEVICE(device), 0, error);
 }
 
 static gboolean
-fu_intel_me_amt_device_ensure_version(FuIntelMeAmtDevice *self, GError **error)
+fu_intel_amt_device_ensure_version(FuIntelAmtDevice *self, GError **error)
 {
 	guint32 version_count;
 	g_autoptr(FuAmtHostIfMsgCodeVersionRequest) st_req =
@@ -126,7 +126,7 @@ fu_intel_me_amt_device_ensure_version(FuIntelMeAmtDevice *self, GError **error)
 	g_autoptr(GString) version_bl = g_string_new(NULL);
 	g_autoptr(GString) version_fw = g_string_new(NULL);
 
-	data = fu_intel_me_amt_device_host_if_call(self, st_req, error);
+	data = fu_intel_amt_device_host_if_call(self, st_req, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -134,7 +134,7 @@ fu_intel_me_amt_device_ensure_version(FuIntelMeAmtDevice *self, GError **error)
 	st_res = fu_amt_host_if_msg_code_version_response_parse(data->data, data->len, 0x0, error);
 	if (st_res == NULL)
 		return FALSE;
-	if (!fu_intel_me_amt_device_status_set_error(
+	if (!fu_intel_amt_device_status_set_error(
 		fu_amt_host_if_msg_code_version_response_get_status(st_res),
 		error))
 		return FALSE;
@@ -203,19 +203,19 @@ fu_intel_me_amt_device_ensure_version(FuIntelMeAmtDevice *self, GError **error)
 }
 
 static gboolean
-fu_intel_me_amt_device_setup(FuDevice *device, GError **error)
+fu_intel_amt_device_setup(FuDevice *device, GError **error)
 {
-	FuIntelMeAmtDevice *self = FU_INTEL_ME_AMT_DEVICE(device);
+	FuIntelAmtDevice *self = FU_INTEL_AMT_DEVICE(device);
 	FuAmtProvisioningState provisioning_state = FU_AMT_PROVISIONING_STATE_UNPROVISIONED;
 
 	/* get versions */
-	if (!fu_intel_me_amt_device_ensure_version(self, error)) {
+	if (!fu_intel_amt_device_ensure_version(self, error)) {
 		g_prefix_error(error, "failed to check version: ");
 		return FALSE;
 	}
 
 	/* get provisioning state */
-	if (!fu_intel_me_amt_device_get_provisioning_state(self, &provisioning_state, error)) {
+	if (!fu_intel_amt_device_get_provisioning_state(self, &provisioning_state, error)) {
 		g_prefix_error(error, "failed to get provisioning state: ");
 		return FALSE;
 	}
@@ -231,7 +231,7 @@ fu_intel_me_amt_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_intel_me_amt_device_init(FuIntelMeAmtDevice *self)
+fu_intel_amt_device_init(FuIntelAmtDevice *self)
 {
 	fu_device_set_logical_id(FU_DEVICE(self), "AMT");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_INTEL_ME);
@@ -245,9 +245,9 @@ fu_intel_me_amt_device_init(FuIntelMeAmtDevice *self)
 }
 
 static void
-fu_intel_me_amt_device_class_init(FuIntelMeAmtDeviceClass *klass)
+fu_intel_amt_device_class_init(FuIntelAmtDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->open = fu_intel_me_amt_device_open;
-	device_class->setup = fu_intel_me_amt_device_setup;
+	device_class->open = fu_intel_amt_device_open;
+	device_class->setup = fu_intel_amt_device_setup;
 }

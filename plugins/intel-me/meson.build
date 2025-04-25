@@ -5,13 +5,11 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('intel-me.quirk')
 plugin_builtins += static_library('fu_plugin_intel_me',
   rustgen.process(
-    'fu-intel-me-amt.rs',
     'fu-intel-me-mkhi.rs',
   ),
   sources: [
     'fu-intel-me-common.c',
     'fu-intel-me-plugin.c',
-    'fu-intel-me-amt-device.c',
     'fu-intel-me-heci-device.c',
     'fu-intel-me-mca-device.c',
     'fu-intel-me-mkhi-device.c',

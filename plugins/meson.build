@@ -64,6 +64,7 @@ plugins = {
   'hpi-cfu': false,
   'huddly-usb': false,
   'hughski-colorhug': false,
+  'intel-amt': false,
   'intel-cvs': false,
   'intel-gsc': false,
   'intel-me': false,

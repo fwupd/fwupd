@@ -1,0 +1,413 @@
+{
+  "FwupdVersion": "2.0.9",
+  "UsbDevices": [
+    {
+      "Created": "2025-04-25T12:50:23.117556Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:16.0/0000:00:16.0-12f80028-b4b7-4b2d-aca8-46e0ff65814c",
+      "DeviceFile": "/dev/mei0",
+      "Subsystem": "mei",
+      "Vendor": 32902,
+      "Model": 41274,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "mei"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MEI_CL_VERSION=1\nMEI_CL_UUID=12f80028-b4b7-4b2d-aca8-46e0ff65814c\nMEI_CL_NAME=\nMODALIAS=mei::12f80028-b4b7-4b2d-aca8-46e0ff65814c:01:"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x31"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x222e"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "ReadAttr:Attr=uuid",
+          "Data": "12f80028-b4b7-4b2d-aca8-46e0ff65814c"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x31"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x222e"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x31"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x222e"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "ReadAttr:Attr=uuid",
+          "Data": "12f80028-b4b7-4b2d-aca8-46e0ff65814c"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:16.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:00:16.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_me"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_me\nPCI_CLASS=78000\nPCI_ID=8086:A13A\nPCI_SUBSYS_ID=17AA:222E\nPCI_SLOT_NAME=0000:00:16.0\nMODALIAS=pci:v00008086d0000A13Asv000017AAsd0000222Ebc07sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xa13a"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x078000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x31"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x222e"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:00:16.0"
+        },
+        {
+          "Id": "Ioctl:Request=0xc0104801,Data=KAD4Ere0LUusqEbg/2WBTA==,Length=0x10",
+          "DataOut": "ABQAAAG0LUusqEbg/2WBTA=="
+        }
+      ]
+    }
+  ]
+}
