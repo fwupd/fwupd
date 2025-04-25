@@ -68,6 +68,7 @@
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-fit-firmware.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
+#include <libfwupdplugin/fu-heci-device.h>
 #include <libfwupdplugin/fu-hid-descriptor.h>
 #include <libfwupdplugin/fu-hid-device.h>
 #include <libfwupdplugin/fu-hid-report-item.h>
