@@ -24,7 +24,7 @@ fu_intel_me_mkhi_device_add_checksum_for_filename(FuIntelMeMkhiDevice *self,
 	g_autoptr(GString) checksum = NULL;
 
 	/* read from the MFS */
-	buf = fu_intel_me_heci_device_read_file(FU_INTEL_ME_HECI_DEVICE(self), filename, error);
+	buf = fu_heci_device_read_file(FU_HECI_DEVICE(self), filename, error);
 	if (buf == NULL)
 		return FALSE;
 

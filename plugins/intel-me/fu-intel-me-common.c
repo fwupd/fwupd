@@ -6,37 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
-
 #include "fu-intel-me-common.h"
-#include "fu-intel-me-mkhi-struct.h"
-
-gboolean
-fu_intel_me_mkhi_result_to_error(FuMkhiStatus result, GError **error)
-{
-	if (result == FU_MKHI_STATUS_SUCCESS)
-		return TRUE;
-
-	switch (result) {
-	case FU_MKHI_STATUS_NOT_SUPPORTED:
-	case FU_MKHI_STATUS_NOT_AVAILABLE:
-	case FU_MKHI_STATUS_NOT_SET:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not supported [0x%x]",
-			    result);
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "generic failure [0x%x]",
-			    result);
-		break;
-	}
-	return FALSE;
-}
 
 GString *
 fu_intel_me_convert_checksum(GByteArray *buf, GError **error)

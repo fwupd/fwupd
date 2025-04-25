@@ -41,9 +41,13 @@ enum FuMkhiStatus {
 enum FuMkhiCommand {
     ReadFile = 0x02,
     ReadFileEx = 0x0A,
+    ArbhSvnCommit = 0x1B,
+    ArbhSvnGetInfo = 0x1C,
     // not real commands, but makes debugging easier
     ReadFileResponse = 0x82,
     ReadFileExResponse = 0x8A,
+    ArbhSvnCommitResponse = 0x9B,
+    ArbhSvnGetInfoResponse = 0x9C,
 }
 
 #[derive(New, Default)]
@@ -92,4 +96,39 @@ struct FuMkhiReadFileExResponse {
     result: u8,
     data_size: u32le,
     // payload here
+}
+
+
+#[repr(u8)]
+enum FuMkhiArbhSvnInfoEntryUsageId {
+    CseRbe = 3,
+}
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuMkhiArbhSvnInfoEntry {
+    usage_id: FuMkhiArbhSvnInfoEntryUsageId,
+    _flags: u8,
+    executing: u8,
+    min_allowed: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuMkhiArbhSvnGetInfoRequest {
+    group_id: FuMkhiGroupId == Mca,
+    command: FuMkhiCommand == ArbhSvnGetInfo,
+    reserved: u8,
+    result: u8 == 0x0,
+}
+
+#[derive(Parse, Default)]
+#[repr(C, packed)]
+struct FuMkhiArbhSvnGetInfoResponse {
+    group_id: FuMkhiGroupId == Mca,
+    command: FuMkhiCommand == ArbhSvnGetInfoResponse,
+    _rsvd: u8,
+    result: u8,
+    num_entries: u32le,
+    // FuMkhiArbhSvnInfoEntry entries[]
 }
