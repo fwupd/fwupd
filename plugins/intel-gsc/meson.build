@@ -19,4 +19,6 @@ plugin_builtins += static_library('fu_plugin_igsc',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+enumeration_data += files('tests/intel-gsc-setup.json')
+device_tests += files('tests/intel-gsc.json')
 endif

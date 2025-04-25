@@ -6425,10 +6425,17 @@ fu_device_udev_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuUdevDevice) udev_device = fu_udev_device_new(ctx, sysfs_path);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) attrs = NULL;
 
 	prop = fu_udev_device_read_property(udev_device, "MODALIAS", &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(prop, ==, "hdaudio:v10EC0298r00100103a01");
+
+	/* list all the files in the directory */
+	attrs = fu_udev_device_list_sysfs(udev_device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(attrs);
+	g_assert_cmpint(attrs->len, >, 10);
 }
 
 static void
