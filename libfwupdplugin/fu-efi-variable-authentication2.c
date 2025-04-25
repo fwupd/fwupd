@@ -6,10 +6,10 @@
 
 #define G_LOG_DOMAIN "FuEfiVariableAuthentication2"
 
-#include "fu-efi-variable-authentication2.h"
-
 #include "config.h"
+
 #include "fu-efi-struct.h"
+#include "fu-efi-variable-authentication2.h"
 #include "fu-partial-input-stream.h"
 
 /**
