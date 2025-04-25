@@ -1,0 +1,143 @@
+option(
+    'decoder_arm',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_arm64',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_armthumb',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_delta',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'decoder_ia64',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_lzma1',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'decoder_lzma2',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'decoder_lz',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'decoder_powerpc',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_sparc',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'decoder_x86',
+    type: 'boolean',
+    value: true,
+)
+
+option(
+    'encoder_arm',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_arm64',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_armthumb',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_delta',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'encoder_ia64',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_lzma1',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'encoder_lzma2',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'encoder_lz',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'encoder_powerpc',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_sparc',
+    type: 'boolean',
+    value: false,
+)
+option(
+    'encoder_x86',
+    type: 'boolean',
+    value: true,
+)
+
+option(
+    'filter_simple',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'filter_lzma1',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'filter_lz',
+    type: 'boolean',
+    value: true,
+)
+option(
+    'filter_delta',
+    type: 'boolean',
+    value: true,
+)
+
+option(
+    'nls',
+    type: 'feature',
+)
+
+option(
+    'threads',
+    type: 'feature',
+    value: 'auto',
+)
