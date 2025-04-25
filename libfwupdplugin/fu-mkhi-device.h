@@ -26,3 +26,10 @@ fu_mkhi_device_read_file_ex(FuMkhiDevice *self,
 			    guint32 section,
 			    guint32 datasz_req,
 			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+
+gboolean
+fu_mkhi_device_arbh_svn_get_info(FuMkhiDevice *self,
+				 guint8 usage_id,
+				 guint8 *executing,
+				 guint8 *min_allowed,
+				 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);

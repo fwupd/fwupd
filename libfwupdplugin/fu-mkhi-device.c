@@ -203,6 +203,103 @@ fu_mkhi_device_read_file_ex(FuMkhiDevice *self,
 	return g_steal_pointer(&bufout);
 }
 
+/**
+ * fu_mkhi_device_arbh_svn_get_info:
+ * @self: a #FuMkhiDevice
+ * @usage_id: usage ID, e.g. %FU_MKHI_ARBH_SVN_INFO_ENTRY_USAGE_ID_CSE_RBE
+ * @executing: (out) (nullable): currently executing SVN
+ * @min_allowed: (out) (nullable): minimal allowed SVN
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads the ARBH SVN for a specific usage ID.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.9
+ **/
+gboolean
+fu_mkhi_device_arbh_svn_get_info(FuMkhiDevice *self,
+				 guint8 usage_id,
+				 guint8 *executing,
+				 guint8 *min_allowed,
+				 GError **error)
+{
+	guint32 num_entries;
+	gsize offset = 0;
+	gboolean found_usage = FALSE;
+	g_autoptr(FuMkhiArbhSvnGetInfoRequest) st_req = fu_mkhi_arbh_svn_get_info_request_new();
+	g_autoptr(FuMkhiArbhSvnGetInfoResponse) st_res = NULL;
+	g_autoptr(GByteArray) bufout = g_byte_array_new();
+	g_autoptr(GByteArray) buf_res = g_byte_array_new();
+
+	g_return_val_if_fail(FU_IS_MKHI_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* request */
+	if (!fu_mei_device_write(FU_MEI_DEVICE(self),
+				 st_req->data,
+				 st_req->len,
+				 FU_MKHI_DEVICE_TIMEOUT,
+				 error))
+		return FALSE;
+
+	/* response */
+	fu_byte_array_set_size(buf_res, fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)), 0x0);
+	if (!fu_mei_device_read(FU_MEI_DEVICE(self),
+				buf_res->data,
+				buf_res->len,
+				NULL,
+				FU_MKHI_DEVICE_TIMEOUT,
+				error))
+		return FALSE;
+	st_res = fu_mkhi_arbh_svn_get_info_response_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
+		return FALSE;
+	if (!fu_mkhi_device_result_to_error(fu_mkhi_arbh_svn_get_info_response_get_result(st_res),
+					    error))
+		return FALSE;
+
+	/* verify we got what we asked for */
+	num_entries = fu_mkhi_arbh_svn_get_info_response_get_num_entries(st_res);
+	offset += st_res->len;
+	for (guint32 i = 0; i < num_entries; i++) {
+		g_autoptr(FuMkhiArbhSvnInfoEntry) st_entry = NULL;
+
+		/* parse each entry */
+		st_entry =
+		    fu_mkhi_arbh_svn_info_entry_parse(buf_res->data, buf_res->len, offset, error);
+		if (st_entry == NULL)
+			return FALSE;
+
+		/* matches */
+		if (fu_mkhi_arbh_svn_info_entry_get_usage_id(st_entry) == usage_id) {
+			found_usage = TRUE;
+			if (executing != NULL)
+				*executing = fu_mkhi_arbh_svn_info_entry_get_executing(st_entry);
+			if (min_allowed != NULL)
+				*min_allowed =
+				    fu_mkhi_arbh_svn_info_entry_get_min_allowed(st_entry);
+			break;
+		}
+
+		/* next */
+		offset += st_entry->len;
+	}
+
+	/* did not find */
+	if (!found_usage) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "no entry for usage ID 0x%x",
+			    usage_id);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_mkhi_device_init(FuMkhiDevice *self)
 {
