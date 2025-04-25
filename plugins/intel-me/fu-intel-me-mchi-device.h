@@ -10,9 +10,9 @@
 
 #include "fu-intel-me-heci-device.h"
 
-#define FU_TYPE_INTEL_ME_MCA_DEVICE (fu_intel_me_mca_device_get_type())
-G_DECLARE_FINAL_TYPE(FuIntelMeMcaDevice,
-		     fu_intel_me_mca_device,
+#define FU_TYPE_INTEL_ME_MCHI_DEVICE (fu_intel_me_mchi_device_get_type())
+G_DECLARE_FINAL_TYPE(FuIntelMeMchiDevice,
+		     fu_intel_me_mchi_device,
 		     FU,
-		     INTEL_ME_MCA_DEVICE,
+		     INTEL_ME_MCHI_DEVICE,
 		     FuIntelMeHeciDevice)

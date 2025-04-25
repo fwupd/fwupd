@@ -8,7 +8,7 @@ GType = FuIntelMeAmtDevice
 Plugin = intel_me
 GType = FuIntelMeMkhiDevice
 
-# MCA?
+# MCHI
 [dd17041c-09ea-4b17-a271-5b989867ec65]
 Plugin = intel_me
-GType = FuIntelMeMcaDevice
+GType = FuIntelMeMchiDevice
