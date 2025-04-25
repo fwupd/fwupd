@@ -7,19 +7,19 @@
 #include "config.h"
 
 #include "fu-intel-me-common.h"
-#include "fu-intel-me-mca-device.h"
+#include "fu-intel-me-mchi-device.h"
 
-struct _FuIntelMeMcaDevice {
+struct _FuIntelMeMchiDevice {
 	FuIntelMeHeciDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuIntelMeMcaDevice, fu_intel_me_mca_device, FU_TYPE_INTEL_ME_HECI_DEVICE)
+G_DEFINE_TYPE(FuIntelMeMchiDevice, fu_intel_me_mchi_device, FU_TYPE_INTEL_ME_HECI_DEVICE)
 
 static gboolean
-fu_intel_me_mca_device_add_checksum_for_id(FuIntelMeMcaDevice *self,
-					   guint32 file_id,
-					   guint32 section,
-					   GError **error)
+fu_intel_me_mchi_device_add_checksum_for_id(FuIntelMeMchiDevice *self,
+					    guint32 file_id,
+					    guint32 section,
+					    GError **error)
 {
 	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(GString) checksum = NULL;
@@ -46,9 +46,9 @@ fu_intel_me_mca_device_add_checksum_for_id(FuIntelMeMcaDevice *self,
 }
 
 static gboolean
-fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
+fu_intel_me_mchi_device_setup(FuDevice *device, GError **error)
 {
-	FuIntelMeMcaDevice *self = FU_INTEL_ME_MCA_DEVICE(device);
+	FuIntelMeMchiDevice *self = FU_INTEL_ME_MCHI_DEVICE(device);
 	const guint32 file_ids[] = {0x40002300, /* CometLake: OEM Public Key Hash */
 				    0x40005B00, /* TigerLake: 1st OEM Public Key Hash */
 				    0x40005C00 /* TigerLake: 2nd OEM Public Key Hash */,
@@ -57,10 +57,10 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 	/* look for all the possible OEM Public Key hashes using the CML+ method */
 	for (guint i = 0; file_ids[i] != G_MAXUINT32; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_intel_me_mca_device_add_checksum_for_id(self,
-								file_ids[i],
-								0x0,
-								&error_local)) {
+		if (!fu_intel_me_mchi_device_add_checksum_for_id(self,
+								 file_ids[i],
+								 0x0,
+								 &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 				continue;
@@ -85,9 +85,9 @@ fu_intel_me_mca_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+fu_intel_me_mchi_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
-	FuIntelMeMcaDevice *self = FU_INTEL_ME_MCA_DEVICE(device);
+	FuIntelMeMchiDevice *self = FU_INTEL_ME_MCHI_DEVICE(device);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
@@ -111,7 +111,7 @@ fu_intel_me_mca_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *att
 }
 
 static void
-fu_intel_me_mca_device_init(FuIntelMeMcaDevice *self)
+fu_intel_me_mchi_device_init(FuIntelMeMchiDevice *self)
 {
 	fu_device_set_logical_id(FU_DEVICE(self), "MCA");
 	fu_device_set_name(FU_DEVICE(self), "BootGuard Configuration");
@@ -121,9 +121,9 @@ fu_intel_me_mca_device_init(FuIntelMeMcaDevice *self)
 }
 
 static void
-fu_intel_me_mca_device_class_init(FuIntelMeMcaDeviceClass *klass)
+fu_intel_me_mchi_device_class_init(FuIntelMeMchiDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->setup = fu_intel_me_mca_device_setup;
-	device_class->add_security_attrs = fu_intel_me_mca_device_add_security_attrs;
+	device_class->setup = fu_intel_me_mchi_device_setup;
+	device_class->add_security_attrs = fu_intel_me_mchi_device_add_security_attrs;
 }
