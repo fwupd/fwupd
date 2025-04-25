@@ -1,0 +1,17 @@
+{
+  "name": "Intel AMT",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/intel-amt-setup.json",
+      "components": [
+        {
+          "version": "11.8.93.4323",
+          "guids": [
+            "d39310dc-e5d7-5eb2-945d-22011cbd3157"
+          ]
+        }
+      ]
+    }
+  ]
+}
