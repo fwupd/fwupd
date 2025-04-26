@@ -14,3 +14,5 @@ G_DECLARE_FINAL_TYPE(FuLogitechBulkcontrollerChild,
 		     FU,
 		     LOGITECH_BULKCONTROLLER_CHILD,
 		     FuDevice)
+
+#define FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE "pheripheral-update"

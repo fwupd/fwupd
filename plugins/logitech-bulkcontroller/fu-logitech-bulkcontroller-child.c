@@ -22,6 +22,17 @@ fu_logitech_bulkcontroller_child_write_firmware(FuDevice *device,
 						GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
+	/*
+	 * need to reopen the device, as at composite_cleanup time, parent device gets closed
+	 *
+	 * set the flag, to let parent know that firmware update is for child, no need to wait for
+	 * replug event, after child firmware is updated
+	 *
+	 */
+	if (!fu_device_open(proxy, error))
+		return FALSE;
+	fu_device_add_private_flag(proxy,
+				   FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
 	return fu_device_write_firmware(proxy, firmware, progress, flags, error);
 }
 
