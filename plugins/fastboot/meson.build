@@ -13,5 +13,8 @@ plugin_builtins += static_library('fu_plugin_fastboot',
   dependencies: plugin_deps,
 )
 
-enumeration_data += files('tests/fastboot-google-sargo-setup.json')
-device_tests += files('tests/fastboot-google-sargo.json')
+if not supported_build
+  plugin_quirks += files('ci.quirk')
+  enumeration_data += files('tests/fastboot-google-sargo-setup.json')
+  device_tests += files('tests/fastboot-google-sargo.json')
+endif
