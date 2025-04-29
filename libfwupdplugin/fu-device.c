@@ -1555,6 +1555,10 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(FU_IS_DEVICE(child));
 
+	/* if parent is emulated, child must be too */
+	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED))
+		fu_device_add_flag(child, FWUPD_DEVICE_FLAG_EMULATED);
+
 	/* make tests easier */
 	fu_device_convert_instance_ids(child);
 
