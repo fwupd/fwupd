@@ -9,7 +9,7 @@ if [ "$CI_NETWORK" = "true" ]; then
                 cp fwupd-test-firmware/installed-tests/* $1 -LRv
         #copy data for self-tests into the source tree
         else
-                cp fwupd-test-firmware/ci-tests/* . -R
+                cp fwupd-test-firmware/ci-tests/* . -Rv
         fi
         rm -rf fwupd-test-firmware
 fi
