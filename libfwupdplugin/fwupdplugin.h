@@ -100,6 +100,7 @@
 #include <libfwupdplugin/fu-path.h>
 #include <libfwupdplugin/fu-pci-device.h>
 #include <libfwupdplugin/fu-pefile-firmware.h>
+#include <libfwupdplugin/fu-pkcs7.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-plugin.h>
 #include <libfwupdplugin/fu-progress.h>
@@ -114,6 +115,7 @@
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-bos-descriptor.h>
 #include <libfwupdplugin/fu-v4l-device.h>
+#include <libfwupdplugin/fu-x509-certificate.h>
 // #include <libfwupdplugin/fu-usb-common.h>
 #include <libfwupdplugin/fu-uefi-device.h>
 #include <libfwupdplugin/fu-usb-device.h>

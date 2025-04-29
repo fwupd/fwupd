@@ -16,21 +16,7 @@
 #include "fu-efi-x509-signature-private.h"
 #include "fu-string.h"
 #include "fu-version-common.h"
-
-#ifdef HAVE_GNUTLS
-static void
-fu_efi_x509_signature_gnutls_datum_deinit(gnutls_datum_t *d)
-{
-	gnutls_free(d->data);
-	gnutls_free(d);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_datum_t, fu_efi_x509_signature_gnutls_datum_deinit)
-G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
-#pragma clang diagnostic pop
-#endif
+#include "fu-x509-certificate.h"
 
 /**
  * FuEfiX509Signature:
@@ -225,18 +211,8 @@ fu_efi_x509_signature_parse(FuFirmware *firmware,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-#ifdef HAVE_GNUTLS
 	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);
-	gchar buf[1024] = {'\0'};
-	guchar key_id[20] = {'\0'};
-	gsize key_idsz = sizeof(key_id);
-	gnutls_datum_t d = {0};
-	gnutls_x509_dn_t dn = {0x0};
-	gsize bufsz = sizeof(buf);
-	int rc;
-	g_autofree gchar *key_idstr = NULL;
-	g_auto(gnutls_x509_crt_t) crt = NULL;
-	g_autoptr(gnutls_datum_t) subject = NULL;
+	g_autoptr(FuX509Certificate) crt = fu_x509_certificate_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	/* set bytes */
@@ -248,72 +224,14 @@ fu_efi_x509_signature_parse(FuFirmware *firmware,
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
 		return FALSE;
-	d.size = g_bytes_get_size(blob);
-	d.data = (unsigned char *)g_bytes_get_data(blob, NULL);
-	rc = gnutls_x509_crt_init(&crt);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "crt_init: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(crt), blob, 0x0, flags, error))
 		return FALSE;
-	}
-	rc = gnutls_x509_crt_import(crt, &d, GNUTLS_X509_FMT_DER);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "crt_import: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
-		return FALSE;
-	}
-
-	/* issuer */
-	if (gnutls_x509_crt_get_issuer_dn(crt, buf, &bufsz) == GNUTLS_E_SUCCESS) {
-		g_autofree gchar *str = fu_strsafe((const gchar *)buf, bufsz);
-		fu_efi_x509_signature_set_issuer(self, str);
-	}
-
-	/* subject */
-	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
-	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
-		g_autofree gchar *str = NULL;
-		gnutls_x509_dn_get_str(dn, subject);
-		str = fu_strsafe((const gchar *)subject->data, subject->size);
-		fu_efi_x509_signature_set_subject(self, str);
-	}
-
-	/* key ID */
-	rc = gnutls_x509_crt_get_key_id(crt, 0, key_id, &key_idsz);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to get key ID: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
-		return FALSE;
-	}
-	key_idstr = g_compute_checksum_for_data(G_CHECKSUM_SHA1, key_id, key_idsz);
-	if (key_idstr == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to calculate key ID for 0x%x bytes",
-			    (guint)key_idsz);
-		return FALSE;
-	}
-	fu_firmware_set_id(firmware, key_idstr);
+	fu_firmware_set_id(firmware, fu_firmware_get_id(FU_FIRMWARE(crt)));
+	fu_efi_x509_signature_set_issuer(self, fu_x509_certificate_get_issuer(crt));
+	fu_efi_x509_signature_set_subject(self, fu_x509_certificate_get_subject(crt));
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no GnuTLS support");
-	return FALSE;
-#endif
 }
 
 static gchar *

@@ -14,3 +14,6 @@ G_DECLARE_FINAL_TYPE(FuEfiVariableAuthentication2,
 		     FU,
 		     EFI_VARIABLE_AUTHENTICATION2,
 		     FuEfiSignatureList)
+
+GPtrArray *
+fu_efi_variable_authentication2_get_signers(FuEfiVariableAuthentication2 *self) G_GNUC_NON_NULL(1);
