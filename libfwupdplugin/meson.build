@@ -155,6 +155,7 @@ fwupdplugin_src = [
   'fu-path.c', # fuzzing
   'fu-pefile-firmware.c', # fuzzing
   'fu-pci-device.c',
+  'fu-pkcs7.c',
   'fu-oprom-device.c',
   'fu-plugin.c',
   'fu-progress.c', # fuzzing
@@ -183,6 +184,7 @@ fwupdplugin_src = [
   'fu-version-common.c', # fuzzing
   'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
+  'fu-x509-certificate.c',
 ]
 
 if host_machine.system() in ['linux', 'android']
@@ -299,6 +301,7 @@ fwupdplugin_headers = [
   'fu-path.h',
   'fu-pefile-firmware.h',
   'fu-pci-device.h',
+  'fu-pkcs7.h',
   'fu-plugin.h',
   'fu-plugin-private.h',
   'fu-progress.h',
@@ -336,6 +339,7 @@ fwupdplugin_headers = [
   'fu-v4l-device.h',
   'fu-version-common.h',
   'fu-volume.h',
+  'fu-x509-certificate.h',
 ]
 
 introspection_deps = [

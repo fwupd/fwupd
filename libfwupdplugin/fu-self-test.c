@@ -6338,6 +6338,60 @@ fu_plugin_efi_x509_signature_func(void)
 }
 
 static void
+fu_plugin_efi_variable_authentication2_func(void)
+{
+	FuFirmware *signer;
+	gboolean ret;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) efi_x509 = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(FU_TYPE_EFI_VARIABLE_AUTHENTICATION2, NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GPtrArray) signers = NULL;
+
+	/* parse file */
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "KEKUpdate.bin", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_test_skip("Missing KEKUpdate.bin");
+		return;
+	}
+	file = g_file_new_for_path(fn);
+	ret = fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	str = fu_firmware_to_string(firmware);
+	g_debug("%s", str);
+
+	/* get EFI sig */
+	efi_x509 = fu_firmware_get_image_by_id(firmware,
+					       "dec64d7746d983db3774829a00bf829d9f19e9cf",
+					       &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(efi_x509);
+	g_assert_cmpstr("C=US,O=Microsoft Corporation,CN=Microsoft RSA Devices Root CA 2021",
+			==,
+			fu_efi_x509_signature_get_issuer(FU_EFI_X509_SIGNATURE(efi_x509)));
+	g_assert_cmpstr("C=US,O=Microsoft Corporation,CN=Microsoft Corporation KEK 2K CA 2023",
+			==,
+			fu_efi_x509_signature_get_subject(FU_EFI_X509_SIGNATURE(efi_x509)));
+
+	/* get signer */
+	signers =
+	    fu_efi_variable_authentication2_get_signers(FU_EFI_VARIABLE_AUTHENTICATION2(firmware));
+	g_assert_nonnull(signers);
+	g_assert_cmpint(signers->len, ==, 1);
+
+	signer = g_ptr_array_index(signers, 0);
+	g_assert_cmpstr("CN=DO NOT TRUST - AMI Test PK",
+			==,
+			fu_x509_certificate_get_issuer(FU_X509_CERTIFICATE(signer)));
+	g_assert_cmpstr("CN=DO NOT TRUST - AMI Test PK",
+			==,
+			fu_x509_certificate_get_subject(FU_X509_CERTIFICATE(signer)));
+}
+
+static void
 fu_plugin_efi_signature_list_func(void)
 {
 	FuEfiX509Signature *sig;
@@ -6954,6 +7008,8 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/efi-load-option{hive}", fu_efi_load_option_hive_func);
 	g_test_add_func("/fwupd/efi-x509-signature", fu_plugin_efi_x509_signature_func);
 	g_test_add_func("/fwupd/efi-signature-list", fu_plugin_efi_signature_list_func);
+	g_test_add_func("/fwupd/efi-variable-authentication2",
+			fu_plugin_efi_variable_authentication2_func);
 	g_test_add_func("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func("/fwupd/efivar{bootxxxx}", fu_efivar_boot_func);
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
