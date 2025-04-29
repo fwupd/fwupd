@@ -41,7 +41,7 @@ G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
  */
 
 struct _FuEfiX509Signature {
-	FuFirmware parent_instance;
+	FuEfiSignature parent_instance;
 	gchar *issuer;
 	gchar *subject;
 	gchar *subject_name;
