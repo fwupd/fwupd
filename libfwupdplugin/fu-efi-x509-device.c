@@ -32,6 +32,7 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 	FuEfiX509DevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *subject_name;
 	const gchar *subject_vendor;
+	g_autofree gchar *logical_id = NULL;
 
 	/* sanity check */
 	if (priv->sig == NULL) {
@@ -48,7 +49,13 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 	fu_device_set_name(device, subject_name != NULL ? subject_name : "Unknown");
 	fu_device_set_vendor(device, subject_vendor != NULL ? subject_vendor : "Unknown");
 	fu_device_set_version_raw(device, fu_firmware_get_version_raw(FU_FIRMWARE(priv->sig)));
-	fu_device_set_logical_id(device, fu_firmware_get_id(FU_FIRMWARE(priv->sig)));
+
+	/* the device ID (and thus the logical ID) needs to stay the same between versions */
+	logical_id = g_strdup_printf("%s:%s",
+				     subject_name != NULL ? subject_name : "UNKNOWN",
+				     subject_vendor != NULL ? subject_vendor : "UNKNOWN");
+	fu_device_set_logical_id(device, logical_id);
+
 	fu_device_build_vendor_id(device,
 				  "UEFI",
 				  subject_vendor != NULL ? subject_vendor : "UNKNOWN");
