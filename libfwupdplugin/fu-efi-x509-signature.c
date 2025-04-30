@@ -129,6 +129,20 @@ fu_efi_x509_signature_set_subject_name(FuEfiX509Signature *self, const gchar *na
 }
 
 /* private */
+gchar *
+fu_efi_x509_signature_build_dedupe_key(FuEfiX509Signature *self)
+{
+	g_return_val_if_fail(FU_IS_EFI_X509_SIGNATURE(self), NULL);
+
+	/* in 2023 Microsoft renamed "Microsoft Windows Production PCA" -> "Windows UEFI CA" */
+	if (g_strcmp0(self->subject_vendor, "Microsoft") == 0 &&
+	    g_strcmp0(self->subject_name, "Microsoft Windows Production PCA") == 0) {
+		return g_strdup("Microsoft:Windows UEFI CA");
+	}
+	return g_strdup_printf("%s:%s", self->subject_vendor, self->subject_name);
+}
+
+/* private */
 void
 fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject)
 {

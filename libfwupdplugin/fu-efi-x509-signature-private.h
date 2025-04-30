@@ -15,3 +15,5 @@ fu_efi_x509_signature_set_issuer(FuEfiX509Signature *self, const gchar *issuer) 
 void
 fu_efi_x509_signature_set_subject(FuEfiX509Signature *self, const gchar *subject)
     G_GNUC_NON_NULL(1);
+gchar *
+fu_efi_x509_signature_build_dedupe_key(FuEfiX509Signature *self) G_GNUC_NON_NULL(1);
