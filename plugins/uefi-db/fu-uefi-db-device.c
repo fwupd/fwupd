@@ -105,13 +105,13 @@ fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
 		if (fu_device_has_instance_id(child,
-					      "UEFI\\CRT_A5B7C551CEDC06B94D0C5B920F473E03C2F142F2",
+					      "UEFI\\CRT_7CD7437C555F89E7C2B50E21937E420C4E583E80",
 					      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
 			seen_new = TRUE;
 			break;
 		}
 		if (fu_device_has_instance_id(child,
-					      "UEFI\\CRT_03DE12BE14CA397DF20CEE646C7D9B727FCCE5F8",
+					      "UEFI\\CRT_E30CF09DABEAB32A6E3B07A7135245DE05FFB658",
 					      FU_DEVICE_INSTANCE_FLAG_VISIBLE)) {
 			seen_old = TRUE;
 			break;
