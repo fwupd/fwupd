@@ -62,10 +62,7 @@ fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
 		g_autofree gchar *key = NULL;
 
 		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_X509) {
-			key = g_strdup_printf(
-			    "%s:%s",
-			    fu_efi_x509_signature_get_subject_vendor(FU_EFI_X509_SIGNATURE(sig)),
-			    fu_efi_x509_signature_get_subject_name(FU_EFI_X509_SIGNATURE(sig)));
+			key = fu_efi_x509_signature_build_dedupe_key(FU_EFI_X509_SIGNATURE(sig));
 		} else {
 			key = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
 		}
