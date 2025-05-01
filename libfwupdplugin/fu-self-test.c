@@ -4174,8 +4174,11 @@ fu_firmware_oprom_func(void)
 	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 1024);
 
 	/* re-parse to get the CPD image */
-	ret =
-	    fu_firmware_parse_bytes(firmware2, data_bin, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(firmware2,
+				      data_bin,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	img1 = fu_firmware_get_image_by_id(firmware2, "cpd", &error);
@@ -5401,7 +5404,8 @@ fu_firmware_builder_round_trip_func(void)
 		ret = fu_firmware_parse_bytes(firmware3,
 					      blob,
 					      0x0,
-					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						  FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 					      &error);
 		if (!ret)
 			g_prefix_error(&error, "%s: ", map[i].xml_fn);

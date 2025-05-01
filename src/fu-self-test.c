@@ -1135,6 +1135,9 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	firmware = g_object_new(gtype, NULL);
 	g_assert_nonnull(firmware);
 
+	/* ensure we have data set even if parsing fails */
+	fu_firmware_set_bytes(firmware, fw);
+
 	/* version convert */
 	if (fu_firmware_get_version_format(firmware) != FWUPD_VERSION_FORMAT_UNKNOWN)
 		fu_firmware_set_version_raw(firmware, 0);
@@ -1145,7 +1148,8 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 		ret = fu_firmware_parse_bytes(firmware,
 					      fw,
 					      0x0,
-					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+						  FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 					      NULL);
 		g_assert_false(ret);
 	}
@@ -3102,13 +3106,14 @@ fu_engine_install_loop_restart_func(gconstpointer user_data)
 	fu_device_set_metadata_integer(device, "nr-attach", 0);
 
 	stream_fw = g_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL);
-	ret = fu_engine_install_blob(engine,
-				     device,
-				     stream_fw,
-				     progress,
-				     FWUPD_INSTALL_FLAG_NO_HISTORY,
-				     FWUPD_FEATURE_FLAG_NONE,
-				     &error);
+	ret =
+	    fu_engine_install_blob(engine,
+				   device,
+				   stream_fw,
+				   progress,
+				   FWUPD_INSTALL_FLAG_NO_HISTORY | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				   FWUPD_FEATURE_FLAG_NONE,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -5402,7 +5407,7 @@ fu_common_cabinet_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
 				       stream,
 				       0x0,
-				       FU_FIRMWARE_PARSE_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

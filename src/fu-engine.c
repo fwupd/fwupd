@@ -3415,7 +3415,7 @@ fu_engine_install_loop(FuEngine *self,
 						      device_id,
 						      stream_fw,
 						      fu_progress_get_child(progress),
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
@@ -3438,7 +3438,7 @@ fu_engine_install_loop(FuEngine *self,
 						      device_id,
 						      stream_fw,
 						      fu_progress_get_child(progress),
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
