@@ -20,7 +20,8 @@ fu_engine_request_get_sender(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void
 fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlag flag) G_GNUC_NON_NULL(1);
+fu_engine_request_has_flag(FuEngineRequest *self,
+			   FuEngineRequestFlag flag) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self) G_GNUC_NON_NULL(1);
 void

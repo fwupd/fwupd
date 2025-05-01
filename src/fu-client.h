@@ -29,4 +29,4 @@ fu_client_get_feature_flags(FuClient *self) G_GNUC_NON_NULL(1);
 void
 fu_client_remove_flag(FuClient *self, FuClientFlag flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_client_has_flag(FuClient *self, FuClientFlag flag) G_GNUC_NON_NULL(1);
+fu_client_has_flag(FuClient *self, FuClientFlag flag) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
