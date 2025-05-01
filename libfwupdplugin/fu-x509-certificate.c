@@ -12,6 +12,7 @@
 #endif
 
 #include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-string.h"
 #include "fu-x509-certificate.h"
 
@@ -129,7 +130,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 	g_autoptr(GString) key_idstr = g_string_new(NULL);
 
 	/* parse certificate */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
 	d.size = g_bytes_get_size(blob);
