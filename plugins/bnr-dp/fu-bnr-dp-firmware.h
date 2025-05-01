@@ -39,5 +39,5 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpFactoryData *st_factory_data,
 			 const FuStructBnrDpPayloadHeader *st_active_header,
 			 const FuStructBnrDpPayloadHeader *st_fw_header,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);

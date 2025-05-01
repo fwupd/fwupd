@@ -85,7 +85,7 @@ main(int argc, char **argv)
 		g_autoptr(GFile) file = g_file_new_for_path(argv[1]);
 		if (!fu_firmware_parse_file(FU_FIRMWARE(cab_firmware),
 					    file,
-					    FWUPD_INSTALL_FLAG_NONE,
+					    FU_FIRMWARE_PARSE_FLAG_NONE,
 					    &error)) {
 			g_printerr("Failed to parse %s: %s\n", argv[1], error->message);
 			return EXIT_FAILURE;

@@ -54,7 +54,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);

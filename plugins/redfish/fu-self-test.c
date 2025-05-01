@@ -489,7 +489,7 @@ fu_test_redfish_hpe_update_func(gconstpointer user_data)
 					      dev,
 					      stream_fw,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -528,7 +528,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 					      dev,
 					      firmware,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -540,7 +540,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 					      dev,
 					      firmware,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
 	g_assert_false(ret);
@@ -581,7 +581,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 					      dev,
 					      firmware1,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -594,7 +594,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 					      dev,
 					      firmware2,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_ALREADY_PENDING);

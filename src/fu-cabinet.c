@@ -885,7 +885,7 @@ fu_cabinet_sign(FuCabinet *self,
 static gboolean
 fu_cabinet_parse(FuFirmware *firmware,
 		 GInputStream *stream,
-		 FwupdInstallFlags flags,
+		 FuFirmwareParseFlags flags,
 		 GError **error)
 {
 	FuCabinet *self = FU_CABINET(firmware);

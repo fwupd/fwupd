@@ -57,7 +57,7 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuHidReportItem *self = FU_HID_REPORT_ITEM(firmware);

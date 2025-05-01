@@ -39,7 +39,7 @@ fu_intel_cvs_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_intel_cvs_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuIntelCvsFirmware *self = FU_INTEL_CVS_FIRMWARE(firmware);

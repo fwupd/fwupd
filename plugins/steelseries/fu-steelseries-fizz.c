@@ -639,7 +639,7 @@ fu_steelseries_fizz_read_firmware_fs(FuSteelseriesFizz *self,
 
 	fu_dump_raw(G_LOG_DOMAIN, "Firmware", buf, size);
 	blob = g_bytes_new_take(g_steal_pointer(&buf), size);
-	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return NULL;
 
 	/* success */

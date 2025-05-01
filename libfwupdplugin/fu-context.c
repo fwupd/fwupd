@@ -132,7 +132,10 @@ fu_context_get_fdt(FuContext *self, GError **error)
 		g_autoptr(GFile) file = fu_context_get_fdt_file(error);
 		if (file == NULL)
 			return NULL;
-		if (!fu_firmware_parse_file(fdt_tmp, file, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+		if (!fu_firmware_parse_file(fdt_tmp,
+					    file,
+					    FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+					    error)) {
 			g_prefix_error(error, "failed to parse FDT: ");
 			return NULL;
 		}
@@ -1874,7 +1877,7 @@ fu_context_esp_load_pe_file(const gchar *filename, GError **error)
 	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
 	g_autoptr(GFile) file = g_file_new_for_path(filename);
 	fu_firmware_set_filename(firmware, filename);
-	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return NULL;
 	}

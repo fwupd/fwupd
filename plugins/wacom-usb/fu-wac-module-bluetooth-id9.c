@@ -148,7 +148,7 @@ static FuFirmware *
 fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 					     GInputStream *stream,
 					     FuProgress *progress,
-					     FwupdInstallFlags flags,
+					     FuFirmwareParseFlags flags,
 					     GError **error)
 {
 	const guint8 *blob;

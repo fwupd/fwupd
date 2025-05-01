@@ -102,7 +102,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 				 gsize hdr_offset,
 				 gsize strtab_offset,
 				 GPtrArray *regions,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	g_autofree gchar *sect_id = NULL;
@@ -206,7 +206,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 static gboolean
 fu_pefile_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);

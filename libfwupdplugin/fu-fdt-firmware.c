@@ -322,7 +322,7 @@ fu_fdt_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_fdt_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuFdtFirmware *self = FU_FDT_FIRMWARE(firmware);

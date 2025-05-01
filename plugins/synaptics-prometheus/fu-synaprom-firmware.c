@@ -50,7 +50,7 @@ fu_synaprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_synaprom_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);

@@ -50,7 +50,7 @@ fu_genesys_usbhub_codesign_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 					  GInputStream *stream,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuGenesysUsbhubCodesignFirmware *self = FU_GENESYS_USBHUB_CODESIGN_FIRMWARE(firmware);

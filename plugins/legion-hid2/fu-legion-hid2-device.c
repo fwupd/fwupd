@@ -142,7 +142,7 @@ static FuFirmware *
 fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
 				       FuProgress *progress,
-				       FwupdInstallFlags flags,
+				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
 	guint32 version;

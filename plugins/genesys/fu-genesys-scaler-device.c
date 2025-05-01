@@ -1659,7 +1659,7 @@ static FuFirmware *
 fu_genesys_scaler_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);

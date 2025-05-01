@@ -37,7 +37,7 @@ fu_elf_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_elf_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	gsize offset_secthdr = 0;

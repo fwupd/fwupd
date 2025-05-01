@@ -37,7 +37,7 @@ fu_fpc_ff2_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_fpc_ff2_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuFpcFf2Firmware *self = FU_FPC_FF2_FIRMWARE(firmware);

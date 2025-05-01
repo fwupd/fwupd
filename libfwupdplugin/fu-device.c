@@ -5182,7 +5182,7 @@ fu_device_write_firmware(FuDevice *self,
  * fu_device_prepare_firmware:
  * @self: a #FuDevice
  * @stream: a #GInputStream
- * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
  * Prepares the firmware by calling an optional device-specific vfunc for the
@@ -5201,7 +5201,7 @@ FuFirmware *
 fu_device_prepare_firmware(FuDevice *self,
 			   GInputStream *stream,
 			   FuProgress *progress,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
@@ -5306,7 +5306,7 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 		return NULL;
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuFirmware) firmware = g_object_new(priv->firmware_gtype, NULL);
-		if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+		if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 			return NULL;
 		return g_steal_pointer(&firmware);
 	}

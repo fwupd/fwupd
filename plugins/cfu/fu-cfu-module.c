@@ -84,7 +84,7 @@ static FuFirmware *
 fu_cfu_module_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
 			       FuProgress *progress,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();

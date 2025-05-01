@@ -861,7 +861,7 @@ static FuFirmware *
 fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);

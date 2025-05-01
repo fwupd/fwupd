@@ -445,7 +445,7 @@ static FuFirmware *
 fu_vli_pd_device_prepare_firmware(FuDevice *device,
 				  GInputStream *stream,
 				  FuProgress *progress,
-				  FwupdInstallFlags flags,
+				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE(device);

@@ -356,7 +356,7 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
@@ -612,7 +612,7 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 static gboolean
 fu_intel_thunderbolt_nvm_check_compatible(FuFirmware *firmware,
 					  FuFirmware *firmware_other,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
@@ -647,7 +647,7 @@ fu_intel_thunderbolt_nvm_check_compatible(FuFirmware *firmware,
 			    priv_other->device_id);
 		return FALSE;
 	}
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		if (priv->model_id != priv_other->model_id) {
 			g_set_error(error,
 				    FWUPD_ERROR,

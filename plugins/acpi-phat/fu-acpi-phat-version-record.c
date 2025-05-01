@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuAcpiPhatVersionRecord, fu_acpi_phat_version_record, FU_TYPE_FIRM
 static gboolean
 fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 				  GInputStream *stream,
-				  FwupdInstallFlags flags,
+				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
 	gsize offset = 0;
@@ -44,7 +44,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(firmware_tmp,
 					      stream_tmp,
 					      0x0,
-					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))

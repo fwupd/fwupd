@@ -2848,7 +2848,7 @@ fu_engine_prepare_firmware(FuEngine *self,
 			   const gchar *device_id,
 			   GInputStream *stream,
 			   FuProgress *progress,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
@@ -3415,7 +3415,7 @@ fu_engine_install_loop(FuEngine *self,
 						      device_id,
 						      stream_fw,
 						      fu_progress_get_child(progress),
-						      flags,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
@@ -3438,7 +3438,7 @@ fu_engine_install_loop(FuEngine *self,
 						      device_id,
 						      stream_fw,
 						      fu_progress_get_child(progress),
-						      flags,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
@@ -4547,7 +4547,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
 				      stream,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      error))
 		return NULL;
 	return g_steal_pointer(&cabinet);
@@ -4644,7 +4644,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 		cabinet,
 		component,
 		rel,
-		FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+		FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 		    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER,
 		&error_reqs)) {
 		if (!fu_device_has_inhibit(dev, "not-found"))
@@ -5134,7 +5134,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	FwupdInstallFlags install_flags =
-	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
+	    FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 	    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
 	/* get all releases */

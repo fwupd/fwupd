@@ -190,7 +190,7 @@ fu_csv_entry_parse_token_cb(GString *token, guint token_idx, gpointer user_data,
 static gboolean
 fu_csv_entry_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   FwupdInstallFlags flags,
+		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuCsvEntry *self = FU_CSV_ENTRY(firmware);

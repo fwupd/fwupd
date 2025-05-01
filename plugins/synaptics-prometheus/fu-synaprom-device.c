@@ -232,7 +232,7 @@ FuFirmware *
 fu_synaprom_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	guint32 product_id;
@@ -251,7 +251,7 @@ fu_synaprom_device_prepare_firmware(FuDevice *device,
 	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
 	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS &&
 	    product_id != FU_SYNAPROM_PRODUCT_TRITON) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
+		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 			g_warning("MFW metadata not compatible, "
 				  "got 0x%02x expected 0x%02x or 0x%02x",
 				  product_id,

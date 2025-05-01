@@ -33,7 +33,7 @@ fu_aver_hid_firmware_parse_archive_cb(FuArchive *self,
 static gboolean
 fu_aver_hid_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;

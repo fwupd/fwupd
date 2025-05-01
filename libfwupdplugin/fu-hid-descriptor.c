@@ -52,7 +52,7 @@ fu_hid_descriptor_count_table_dupes(GPtrArray *table, FuHidReportItem *item)
 static gboolean
 fu_hid_descriptor_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	gsize offset = 0;

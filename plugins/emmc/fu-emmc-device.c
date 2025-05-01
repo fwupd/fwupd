@@ -333,7 +333,7 @@ static FuFirmware *
 fu_emmc_device_prepare_firmware(FuDevice *device,
 				GInputStream *stream,
 				FuProgress *progress,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE(device);

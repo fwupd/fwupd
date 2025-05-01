@@ -642,7 +642,7 @@ static FuFirmware *
 fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_ccgx_dmc_firmware_new();

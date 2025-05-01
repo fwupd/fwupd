@@ -297,7 +297,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 	/* vendor ID */
 	if (g_strcmp0(xb_node_get_text(req), "vendor-id") == 0) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
+		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID)
 			return TRUE;
 		return fu_engine_requirements_check_vendor_id(self, req, device_actual, error);
 	}

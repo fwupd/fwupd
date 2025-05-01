@@ -609,7 +609,7 @@ static FuFirmware *
 fu_elantp_hid_haptic_device_prepare_firmware(FuDevice *device,
 					     GInputStream *stream,
 					     FuProgress *progress,
-					     FwupdInstallFlags flags,
+					     FuFirmwareParseFlags flags,
 					     GError **error)
 {
 	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);

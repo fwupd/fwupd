@@ -441,7 +441,7 @@ static FuFirmware *
 fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);

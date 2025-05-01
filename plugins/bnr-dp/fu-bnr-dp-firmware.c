@@ -270,7 +270,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 static gboolean
 fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
@@ -490,7 +490,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpFactoryData *st_factory_data,
 			 const FuStructBnrDpPayloadHeader *st_active_header,
 			 const FuStructBnrDpPayloadHeader *st_fw_header,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	guint64 active_version = 0;

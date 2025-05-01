@@ -39,7 +39,7 @@ fu_dbxtool_get_siglist_system(FuContext *ctx, GError **error)
 					 error);
 	if (blob == NULL)
 		return NULL;
-	if (!fu_firmware_parse_bytes(dbx, blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(dbx, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return NULL;
 	return g_steal_pointer(&dbx);
 }
@@ -50,7 +50,7 @@ fu_dbxtool_get_siglist_local(const gchar *filename, GError **error)
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
 	file = g_file_new_for_path(filename);
-	if (!fu_firmware_parse_file(siglist, file, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_file(siglist, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
 	return g_steal_pointer(&siglist);
 }
@@ -280,7 +280,7 @@ main(int argc, char *argv[])
 		if (!fu_firmware_parse_bytes(dbx_update,
 					     blob,
 					     0x0,
-					     FWUPD_INSTALL_FLAG_NONE,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
 					     &error)) {
 			/* TRANSLATORS: could not parse file */
 			g_printerr("%s: %s\n", _("Failed to parse local dbx"), error->message);
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 			g_print("%s\n", _("Validating ESP contents…"));
 			if (!fu_uefi_dbx_signature_list_validate(ctx,
 								 FU_EFI_SIGNATURE_LIST(dbx_update),
-								 FWUPD_INSTALL_FLAG_NONE,
+								 FU_FIRMWARE_PARSE_FLAG_NONE,
 								 &error)) {
 				g_printerr("%s: %s\n",
 					   /* TRANSLATORS: something with a blocked hash exists

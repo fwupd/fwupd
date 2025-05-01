@@ -56,7 +56,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 static gboolean
 fu_archive_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;

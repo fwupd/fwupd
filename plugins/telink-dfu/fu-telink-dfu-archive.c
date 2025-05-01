@@ -22,7 +22,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 				FuArchive *archive,
 				JsonObject *obj,
 				guint i,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	struct {
@@ -123,7 +123,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 static gboolean
 fu_telink_dfu_archive_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuTelinkDfuArchive *self = FU_TELINK_DFU_ARCHIVE(firmware);

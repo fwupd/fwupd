@@ -55,8 +55,7 @@ fu_{{vendor_example}}_firmware_validate(FuFirmware *firmware,
 
 static gboolean
 fu_{{vendor_example}}_firmware_parse(FuFirmware *firmware,
-				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 GInputStream *stream, FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	Fu{{VendorExample}}Firmware *self = FU_{{VENDOR_EXAMPLE}}_FIRMWARE(firmware);

@@ -210,7 +210,7 @@ static gboolean
 fu_fit_firmware_verify_image(FuFirmware *firmware,
 			     GInputStream *stream,
 			     FuFirmware *img,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
@@ -245,7 +245,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 	fu_dump_bytes(G_LOG_DOMAIN, "data", blob);
 
 	/* verify any hashes we recognize */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		g_autoptr(GPtrArray) img_hashes = fu_firmware_get_images(img);
 		for (guint i = 0; i < img_hashes->len; i++) {
 			FuFirmware *img_hash = g_ptr_array_index(img_hashes, i);
@@ -274,7 +274,7 @@ fu_fit_firmware_verify_image(FuFirmware *firmware,
 static gboolean
 fu_fit_firmware_verify_configuration(FuFirmware *firmware,
 				     FuFirmware *img,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	/* sanity check */
@@ -291,7 +291,7 @@ fu_fit_firmware_verify_configuration(FuFirmware *firmware,
 static gboolean
 fu_fit_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	g_autoptr(FuFirmware) img_cfgs = NULL;

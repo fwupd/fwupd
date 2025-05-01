@@ -66,7 +66,10 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	self->yoffset = fu_uefi_read_file_as_uint64(bgrtdir, "yoffset");
 	imagefn = g_build_filename(bgrtdir, "image", NULL);
 	file = g_file_new_build_filename(bgrtdir, "image", NULL);
-	if (!fu_firmware_parse_file(FU_FIRMWARE(bmp_image), file, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_file(FU_FIRMWARE(bmp_image),
+				    file,
+				    FU_FIRMWARE_PARSE_FLAG_NONE,
+				    error)) {
 		g_prefix_error(error, "BGRT image invalid: ");
 		return FALSE;
 	}

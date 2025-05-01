@@ -54,7 +54,7 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	partial_stream = fu_partial_input_stream_new(stream, offset, bufsz, error);
 	if (partial_stream == NULL)
 		return FALSE;
-	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	fu_firmware_set_id(img, id);
 	return fu_firmware_add_image_full(firmware, img, error);
@@ -82,7 +82,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
 					      0x0,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      error))
 			return FALSE;
 		sig_id = g_strdup_printf("%s-signature", id);
@@ -398,7 +398,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 static gboolean
 fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
@@ -434,7 +434,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	self->checksum = fu_struct_rmi_img_get_checksum(st_img);
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum_calculated =
 		    fu_synaptics_rmi_generate_checksum(buf + 4, bufsz - 4);
 		if (self->checksum != checksum_calculated) {

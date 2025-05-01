@@ -43,7 +43,7 @@ static FuFirmware *
 fu_usi_dock_child_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);

@@ -32,7 +32,7 @@ static gboolean
 fu_acpi_phat_record_parse(FuFirmware *firmware,
 			  GInputStream *stream,
 			  gsize *offset,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	guint16 record_length = 0;
@@ -98,7 +98,7 @@ fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   FwupdInstallFlags flags,
+		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
@@ -142,7 +142,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 	}
 
 	/* verify checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
 		g_autoptr(GInputStream) stream_tmp =
 		    fu_partial_input_stream_new(stream, 0, length, error);

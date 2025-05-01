@@ -271,7 +271,7 @@ fu_amd_gpu_atom_firmware_parse_config_filename(FuAmdGpuAtomFirmware *self,
 static gboolean
 fu_amd_gpu_atom_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	FuAmdGpuAtomFirmware *self = FU_AMD_GPU_ATOM_FIRMWARE(firmware);

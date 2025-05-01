@@ -114,7 +114,7 @@ fu_dfuse_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize off
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);

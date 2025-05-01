@@ -65,7 +65,7 @@ fu_usb_interface_parse_extra(FuUsbInterface *self, const guint8 *buf, gsize bufs
 		if (!fu_firmware_parse_bytes(FU_FIRMWARE(img),
 					     bytes,
 					     offset,
-					     FWUPD_INSTALL_FLAG_NONE,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
 					     error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
@@ -361,7 +361,7 @@ fu_usb_interface_add_endpoint(FuUsbInterface *self, FuUsbEndpoint *endpoint)
 static gboolean
 fu_usb_interface_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuUsbInterface *self = FU_USB_INTERFACE(firmware);

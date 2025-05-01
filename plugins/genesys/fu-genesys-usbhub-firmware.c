@@ -213,7 +213,7 @@ fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
@@ -295,7 +295,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* calculate checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_genesys_usbhub_firmware_verify_checksum(stream_trunc, error))
 			return FALSE;
 	}
@@ -312,7 +312,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) firmware_sub = NULL;
 		firmware_sub = fu_firmware_new_from_gtypes(stream,
 							   offset,
-							   flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+							   flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 							   error,
 							   FU_TYPE_GENESYS_USBHUB_DEV_FIRMWARE,
 							   FU_TYPE_GENESYS_USBHUB_PD_FIRMWARE,

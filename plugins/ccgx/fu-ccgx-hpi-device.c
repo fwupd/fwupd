@@ -1093,7 +1093,7 @@ static FuFirmware *
 fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
@@ -1117,7 +1117,7 @@ fu_ccgx_hpi_device_prepare_firmware(FuDevice *device,
 			    fw_silicon_id);
 		return NULL;
 	}
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		fw_app_type = fu_ccgx_firmware_get_app_type(FU_CCGX_FIRMWARE(firmware));
 		if (fw_app_type != self->fw_app_type) {
 			g_set_error(error,

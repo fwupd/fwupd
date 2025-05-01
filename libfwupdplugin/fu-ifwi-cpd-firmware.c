@@ -120,7 +120,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware, GInputStream *stream, 
 		if (!fu_firmware_parse_stream(img,
 					      partial_stream,
 					      0x0,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      error))
 			return FALSE;
 
@@ -147,7 +147,7 @@ fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);

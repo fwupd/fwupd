@@ -609,7 +609,7 @@ static FuFirmware *
 fu_qc_s5gen2_device_prepare_firmware(FuDevice *device,
 				     GInputStream *stream,
 				     FuProgress *progress,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);

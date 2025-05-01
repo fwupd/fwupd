@@ -503,7 +503,7 @@ static FuFirmware *
 fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
@@ -535,7 +535,7 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* verify if correct device */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		const guint16 vid =
 		    fu_synaptics_cape_firmware_get_vid(FU_SYNAPTICS_CAPE_FIRMWARE(firmware));
 		const guint16 pid =

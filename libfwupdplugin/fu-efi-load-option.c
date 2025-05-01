@@ -292,7 +292,7 @@ fu_efi_load_option_parse_optional(FuEfiLoadOption *self,
 static gboolean
 fu_efi_load_option_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);

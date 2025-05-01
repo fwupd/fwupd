@@ -104,7 +104,7 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 static gboolean
 fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuJabraGnpFirmware *self = FU_JABRA_GNP_FIRMWARE(firmware);

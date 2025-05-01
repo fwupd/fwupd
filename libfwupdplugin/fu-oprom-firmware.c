@@ -116,7 +116,7 @@ fu_oprom_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize off
 static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	FuOpromFirmware *self = FU_OPROM_FIRMWARE(firmware);
@@ -167,7 +167,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) img = NULL;
 		img = fu_firmware_new_from_gtypes(stream,
 						  expansion_header_offset,
-						  FWUPD_INSTALL_FLAG_NONE,
+						  FU_FIRMWARE_PARSE_FLAG_NONE,
 						  error,
 						  FU_TYPE_IFWI_CPD_FIRMWARE,
 						  FU_TYPE_FIRMWARE,

@@ -54,7 +54,7 @@ static FuFirmware *
 fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
 					FuProgress *progress,
-					FwupdInstallFlags flags,
+					FuFirmwareParseFlags flags,
 					GError **error)
 {
 	FuPxiReceiverDevice *parent;

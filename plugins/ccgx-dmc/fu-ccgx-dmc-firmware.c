@@ -90,7 +90,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 				   GInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
@@ -157,7 +157,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 	}
 
 	/* check checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 csumbuf[DMC_HASH_SIZE] = {0x0};
 		gsize csumbufsz = sizeof(csumbuf);
 		g_checksum_get_digest(csum, csumbuf, &csumbufsz);
@@ -178,7 +178,7 @@ static gboolean
 fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 				 guint8 image_count,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
@@ -259,7 +259,7 @@ fu_ccgx_dmc_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);

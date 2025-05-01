@@ -190,7 +190,7 @@ static FuFirmware *
 fu_fresco_pd_device_prepare_firmware(FuDevice *device,
 				     GInputStream *stream,
 				     FuProgress *progress,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	FuFrescoPdDevice *self = FU_FRESCO_PD_DEVICE(device);

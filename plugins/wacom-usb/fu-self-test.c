@@ -31,7 +31,7 @@ fu_wac_firmware_parse_func(void)
 		return;
 	}
 	file = g_file_new_for_path(fn);
-	ret = fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	ret = fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

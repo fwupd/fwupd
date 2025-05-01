@@ -44,7 +44,7 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 static gboolean
 fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE(firmware);

@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuSynapticsCapeHidFirmware,
 static gboolean
 fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 				     GInputStream *stream,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	FuSynapticsCapeHidFirmware *self = FU_SYNAPTICS_CAPE_HID_FIRMWARE(firmware);

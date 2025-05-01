@@ -144,7 +144,7 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 static gboolean
 fu_uefi_update_info_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuUefiUpdateInfo *self = FU_UEFI_UPDATE_INFO(firmware);
@@ -172,7 +172,7 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(dpbuf),
 					      stream,
 					      FU_STRUCT_EFI_UPDATE_INFO_SIZE,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      error)) {
 			g_prefix_error(error, "failed to parse dpbuf: ");
 			return FALSE;

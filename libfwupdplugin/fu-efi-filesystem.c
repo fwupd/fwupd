@@ -29,7 +29,7 @@ G_DEFINE_TYPE(FuEfiFilesystem, fu_efi_filesystem, FU_TYPE_FIRMWARE)
 static gboolean
 fu_efi_filesystem_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	gsize offset = 0;
@@ -65,7 +65,7 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
 					      0x0,
-					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error)) {
 			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;

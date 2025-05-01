@@ -1388,7 +1388,7 @@ static FuFirmware *
 fu_dfu_device_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
 			       FuProgress *progress,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	return fu_firmware_new_from_gtypes(stream,
@@ -1415,7 +1415,7 @@ fu_dfu_device_write_firmware(FuDevice *device,
 	/* open it */
 	if (!fu_dfu_device_refresh_and_clear(self, error))
 		return FALSE;
-	if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
+	if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}
