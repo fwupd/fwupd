@@ -609,7 +609,7 @@ static FuFirmware *
 fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
 					     GInputStream *stream,
 					     FuProgress *progress,
-					     FwupdInstallFlags flags,
+					     FuFirmwareParseFlags flags,
 					     GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);

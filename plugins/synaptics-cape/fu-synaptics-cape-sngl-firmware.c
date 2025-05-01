@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuSynapticsCapeSnglFirmware,
 static gboolean
 fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 				      GInputStream *stream,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuSynapticsCapeSnglFirmware *self = FU_SYNAPTICS_CAPE_SNGL_FIRMWARE(firmware);
@@ -62,7 +62,7 @@ fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* check CRC */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 crc_calc = 0xFFFFFFFF;
 		g_autoptr(GInputStream) stream_tmp = NULL;
 

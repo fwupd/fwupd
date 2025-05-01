@@ -437,7 +437,7 @@ static FuFirmware *
 fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuIntelUsb4Device *self = FU_INTEL_USB4_DEVICE(device);
@@ -453,7 +453,7 @@ fu_intel_usb4_device_prepare_firmware(FuDevice *device,
 	fw_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	fw_model_id = fu_intel_thunderbolt_nvm_get_model_id(FU_INTEL_THUNDERBOLT_NVM(firmware));
 	if (self->nvm_vendor_id != fw_vendor_id || self->nvm_model_id != fw_model_id) {
-		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -538,7 +538,7 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	blob = g_bytes_new(buf, sizeof(buf));
-	if (!fu_firmware_parse_bytes(fw, blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_bytes(fw, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		g_prefix_error(error, "NVM parse error: ");
 		return FALSE;
 	}

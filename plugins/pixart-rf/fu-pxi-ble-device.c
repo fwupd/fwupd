@@ -81,7 +81,7 @@ static FuFirmware *
 fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 				   GInputStream *stream,
 				   FuProgress *progress,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
@@ -109,7 +109,7 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 
 		/* check is compatible with hardware */
 		model_name = fu_pxi_firmware_get_model_name(FU_PXI_FIRMWARE(firmware));
-		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 			if (self->model_name == NULL || model_name == NULL) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -289,7 +289,11 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 
 	/* parse the descriptor, but use the defaults if it fails */
 	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
-	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
+	if (!fu_firmware_parse_bytes(descriptor,
+				     fw,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     &error_local)) {
 		g_debug("failed to parse descriptor: %s", error_local->message);
 		return TRUE;
 	}

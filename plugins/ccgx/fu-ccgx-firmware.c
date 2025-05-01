@@ -80,7 +80,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCcgxFirmwareRecord, fu_ccgx_firmware_record_free
 static gboolean
 fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 			    GString *token,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	guint16 buflen;
@@ -125,7 +125,7 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 	rcd->data = g_bytes_new(data->data, data->len);
 
 	/* verify 2s complement checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum_file;
 		if (!fu_firmware_strparse_uint8_safe(token->str,
 						     token->len,
@@ -161,7 +161,7 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 }
 
 static gboolean
-fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, GError **error)
+fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FuFirmwareParseFlags flags, GError **error)
 {
 	FuCcgxFirmwareRecord *rcd;
 	gsize bufsz = 0;
@@ -232,7 +232,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 		return FALSE;
 	}
 	checksum_calc = 1 + ~checksum_calc;
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (fu_struct_ccgx_metadata_hdr_get_fw_checksum(st_metadata) != checksum_calc) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -281,7 +281,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 
 typedef struct {
 	FuCcgxFirmware *self;
-	FwupdInstallFlags flags;
+	FuFirmwareParseFlags flags;
 } FuCcgxFirmwareTokenHelper;
 
 static gboolean
@@ -345,7 +345,7 @@ fu_ccgx_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_ccgx_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);

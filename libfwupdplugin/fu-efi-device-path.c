@@ -91,7 +91,7 @@ fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
 static gboolean
 fu_efi_device_path_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);

@@ -155,7 +155,7 @@ fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
 static gboolean
 fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);

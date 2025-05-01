@@ -44,7 +44,7 @@ fu_efi_image_func(void)
 			g_test_skip(msg);
 			return;
 		}
-		ret = fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, &error);
+		ret = fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 

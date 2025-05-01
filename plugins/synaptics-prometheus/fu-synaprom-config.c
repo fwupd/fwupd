@@ -110,7 +110,7 @@ static FuFirmware *
 fu_synaprom_config_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
@@ -144,7 +144,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 		return NULL;
 	}
 	if (fu_struct_synaprom_cfg_hdr_get_product(st_hdr) != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
+		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 			g_warning("CFG metadata not compatible, "
 				  "got 0x%02x expected 0x%02x",
 				  fu_struct_synaprom_cfg_hdr_get_product(st_hdr),
@@ -162,7 +162,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 	}
 	if (fu_struct_synaprom_cfg_hdr_get_id1(st_hdr) != self->configid1 ||
 	    fu_struct_synaprom_cfg_hdr_get_id2(st_hdr) != self->configid2) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
+		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 			g_warning("CFG version not compatible, "
 				  "got %u:%u expected %u:%u",
 				  fu_struct_synaprom_cfg_hdr_get_id1(st_hdr),

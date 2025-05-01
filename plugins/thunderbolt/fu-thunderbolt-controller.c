@@ -141,7 +141,7 @@ fu_thunderbolt_controller_read_status_block(FuThunderboltController *self, GErro
 	istr_partial = g_memory_input_stream_new_from_bytes(blob);
 	firmware = fu_firmware_new_from_gtypes(istr_partial,
 					       0x0,
-					       FWUPD_INSTALL_FLAG_NO_SEARCH,
+					       FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					       error,
 					       FU_TYPE_INTEL_THUNDERBOLT_NVM,
 					       FU_TYPE_FIRMWARE,

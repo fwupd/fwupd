@@ -570,7 +570,7 @@ fu_coswid_firmware_free(void *ptr)
 static gboolean
 fu_coswid_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 #ifdef HAVE_CBOR

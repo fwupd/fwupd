@@ -145,7 +145,7 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	FuIgscOpromFirmware *self = FU_IGSC_OPROM_FIRMWARE(firmware);

@@ -39,7 +39,7 @@ fu_test_synaprom_firmware_func(void)
 	g_assert_cmpint(sz, ==, 294);
 	g_assert_cmpint(buf[0], ==, 0x01);
 	g_assert_cmpint(buf[1], ==, 0x00);
-	ret = fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, &error);
+	ret = fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -67,7 +67,7 @@ fu_test_synaprom_firmware_func(void)
 	firmware2 = fu_synaprom_device_prepare_firmware(FU_DEVICE(device),
 							stream,
 							progress,
-							FWUPD_INSTALL_FLAG_NONE,
+							FU_FIRMWARE_PARSE_FLAG_NONE,
 							&error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware2);

@@ -68,7 +68,7 @@ fu_efi_device_path_list_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdC
 static gboolean
 fu_efi_device_path_list_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	gsize offset = 0;

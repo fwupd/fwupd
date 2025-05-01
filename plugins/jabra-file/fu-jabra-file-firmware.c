@@ -71,7 +71,7 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 static gboolean
 fu_jabra_file_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	FuJabraFileFirmware *self = FU_JABRA_FILE_FIRMWARE(firmware);

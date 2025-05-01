@@ -39,7 +39,7 @@ fu_intel_thunderbolt_firmware_nvm_valid_farb_pointer(guint32 pointer)
 static gboolean
 fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	const guint32 farb_offsets[] = {0x0, 0x1000};

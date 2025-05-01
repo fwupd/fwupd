@@ -874,7 +874,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 		return FALSE;
 	ds20 = fu_firmware_new_from_gtypes(stream,
 					   0x0,
-					   FWUPD_INSTALL_FLAG_NONE,
+					   FU_FIRMWARE_PARSE_FLAG_NONE,
 					   error,
 					   FU_TYPE_USB_DEVICE_FW_DS20,
 					   FU_TYPE_USB_DEVICE_MS_DS20,
@@ -974,7 +974,7 @@ fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GErr
 	if (!fu_firmware_parse_stream(firmware,
 				      stream,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
@@ -1856,7 +1856,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(cfg_descriptor),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			g_ptr_array_add(priv->cfg_descriptors, g_steal_pointer(&cfg_descriptor));
@@ -1865,7 +1865,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(iface),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
@@ -1875,7 +1875,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(ep),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			if (iface_last == NULL) {
@@ -1889,7 +1889,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(hid_descriptor),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			if (iface_last == NULL) {

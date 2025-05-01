@@ -1142,8 +1142,11 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 	/* parse nonsense */
 	if (gtype != FU_TYPE_FIRMWARE &&
 	    !fu_firmware_has_flag(FU_FIRMWARE(firmware), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)) {
-		ret =
-		    fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, NULL);
+		ret = fu_firmware_parse_bytes(firmware,
+					      fw,
+					      0x0,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+					      NULL);
 		g_assert_false(ret);
 	}
 
@@ -5080,7 +5083,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5399,7 +5402,7 @@ fu_common_cabinet_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5846,7 +5849,7 @@ fu_common_store_cab_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5916,7 +5919,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet1),
 				      blob1,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5947,7 +5950,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet2),
 				      blob2,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5981,7 +5984,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet3),
 				      blob3,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6010,7 +6013,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet4),
 				      blob4,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6044,7 +6047,7 @@ fu_common_store_cab_unsigned_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6097,7 +6100,7 @@ fu_common_store_cab_sha256_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6130,7 +6133,7 @@ fu_common_store_cab_folder_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6165,7 +6168,7 @@ fu_common_store_cab_error_no_metadata_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -6197,7 +6200,7 @@ fu_common_store_cab_error_wrong_size_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -6227,7 +6230,7 @@ fu_common_store_cab_error_missing_file_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -6256,7 +6259,7 @@ fu_common_store_cab_error_size_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);
@@ -6287,7 +6290,7 @@ fu_common_store_cab_error_wrong_checksum_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_false(ret);

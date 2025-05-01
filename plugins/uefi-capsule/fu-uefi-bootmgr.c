@@ -142,7 +142,7 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 		if (!fu_firmware_parse_bytes(FU_FIRMWARE(loadopt_tmp),
 					     loadopt_blob_tmp,
 					     0x0,
-					     FWUPD_INSTALL_FLAG_NONE,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
 					     &error_local)) {
 			g_debug("%s -> load option was invalid: %s", name, error_local->message);
 			continue;
@@ -230,7 +230,7 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 	g_autoptr(GPtrArray) shim_entries = NULL;
 
 	file = g_file_new_for_path(source_shim);
-	if (!fu_firmware_parse_file(shim, file, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_file(shim, file, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", source_shim);
 		return FALSE;
 	}
@@ -255,7 +255,7 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 	if (!fu_firmware_parse_bytes(current_sbatlevel,
 				     current_sbatlevel_bytes,
 				     0x0,
-				     FWUPD_INSTALL_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error)) {
 		g_prefix_error(error, "failed to load SbatLevelRT: ");
 		return FALSE;

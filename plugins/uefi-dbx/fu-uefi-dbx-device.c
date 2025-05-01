@@ -121,7 +121,7 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 						   error);
 	if (dbx_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse_bytes(dbx, dbx_blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(dbx, dbx_blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return FALSE;
 
 	/* add the last checksum to the device */
@@ -158,7 +158,7 @@ static FuFirmware *
 fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);

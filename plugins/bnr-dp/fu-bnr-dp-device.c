@@ -641,7 +641,7 @@ static FuFirmware *
 fu_bnr_dp_device_prepare_firmware(FuDevice *device,
 				  GInputStream *stream,
 				  FuProgress *progress,
-				  FwupdInstallFlags flags,
+				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
 	FuBnrDpDevice *self = FU_BNR_DP_DEVICE(device);

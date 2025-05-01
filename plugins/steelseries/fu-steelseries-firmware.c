@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuSteelseriesFirmware, fu_steelseries_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_steelseries_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	FuSteelseriesFirmware *self = FU_STEELSERIES_FIRMWARE(firmware);
@@ -52,7 +52,7 @@ fu_steelseries_firmware_parse(FuFirmware *firmware,
 					   error))
 		return FALSE;
 	if (checksum_tmp != checksum) {
-		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,

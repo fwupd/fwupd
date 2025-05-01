@@ -273,7 +273,11 @@ fu_uefi_capsule_device_load_update_info(FuUefiCapsuleDevice *self, GError **erro
 	fw = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_FWUPDATE, varname, NULL, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse_bytes(FU_FIRMWARE(info), fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(info),
+				     fw,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     error))
 		return NULL;
 	return g_steal_pointer(&info);
 }
@@ -673,7 +677,7 @@ static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
 					FuProgress *progress,
-					FwupdInstallFlags flags,
+					FuFirmwareParseFlags flags,
 					GError **error)
 {
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);

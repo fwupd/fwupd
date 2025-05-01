@@ -273,7 +273,7 @@ static FuFirmware *
 fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 				   GInputStream *stream,
 				   FuProgress *progress,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	FuAmdGpuDevice *self = FU_AMDGPU_DEVICE(device);

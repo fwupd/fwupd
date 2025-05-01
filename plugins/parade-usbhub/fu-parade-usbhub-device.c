@@ -1138,7 +1138,7 @@ static FuFirmware *
 fu_parade_usbhub_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_parade_usbhub_firmware_new();

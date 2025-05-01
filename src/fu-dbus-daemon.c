@@ -52,11 +52,6 @@ struct _FuDbusDaemon {
 
 G_DEFINE_TYPE(FuDbusDaemon, fu_dbus_daemon, FU_TYPE_DAEMON)
 
-#define FU_DAEMON_INSTALL_FLAG_MASK_SAFE                                                           \
-	(FWUPD_INSTALL_FLAG_ALLOW_OLDER | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |                     \
-	 FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_FORCE |                       \
-	 FWUPD_INSTALL_FLAG_NO_HISTORY | FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
-
 static void
 fu_dbus_daemon_engine_changed_cb(FuEngine *engine, FuDbusDaemon *self)
 {
@@ -1314,7 +1309,7 @@ fu_dbus_daemon_method_set_approved_firmware(FuDbusDaemon *self,
 	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
 	helper = g_new0(FuMainAuthHelper, 1);
 	helper->self = self;
-	helper->flags = FWUPD_INSTALL_FLAG_NO_SEARCH;
+	helper->flags = FU_FIRMWARE_PARSE_FLAG_NO_SEARCH;
 	helper->request = g_object_ref(request);
 	helper->invocation = g_object_ref(invocation);
 	helper->checksums = g_ptr_array_new_with_free_func(g_free);
@@ -2221,19 +2216,6 @@ fu_dbus_daemon_method_install(FuDbusDaemon *self,
 			helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 
 		g_variant_unref(prop_value);
-	}
-
-	/* verify the client didn't send "internal" flags like no-search */
-	if (helper->flags & ~FU_DAEMON_INSTALL_FLAG_MASK_SAFE) {
-		FwupdInstallFlags flags_unsafe = helper->flags & ~FU_DAEMON_INSTALL_FLAG_MASK_SAFE;
-		g_set_error(&error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "client sent unsupported flag: 0x%x [%s]",
-			    (guint)flags_unsafe,
-			    fwupd_install_flags_to_string(flags_unsafe));
-		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
-		return;
 	}
 
 	/* get stream */

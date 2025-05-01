@@ -113,7 +113,7 @@ fu_efi_signature_get_owner(FuEfiSignature *self)
 static gboolean
 fu_efi_signature_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);

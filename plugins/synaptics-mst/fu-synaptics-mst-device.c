@@ -1372,7 +1372,7 @@ static FuFirmware *
 fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE(device);
@@ -1384,7 +1384,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 	/* check firmware and board ID match */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_private_flag(device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
 		guint16 board_id =
 		    fu_synaptics_mst_firmware_get_board_id(FU_SYNAPTICS_MST_FIRMWARE(firmware));

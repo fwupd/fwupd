@@ -124,7 +124,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware, GInputStream *stre
 static gboolean
 fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
 				     GInputStream *stream,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_mcuboot_parent_class)

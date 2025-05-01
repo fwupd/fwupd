@@ -47,7 +47,11 @@ fu_pkcs7_parse_x509_certificate(FuPkcs7 *self, gnutls_datum_t *data, GError **er
 
 	/* parse as a X.509 certificate */
 	blob = g_bytes_new(data->data, data->size);
-	if (!fu_firmware_parse_bytes(FU_FIRMWARE(crt), blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(crt),
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     error))
 		return FALSE;
 	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(crt));
 
@@ -57,7 +61,10 @@ fu_pkcs7_parse_x509_certificate(FuPkcs7 *self, gnutls_datum_t *data, GError **er
 #endif
 
 static gboolean
-fu_pkcs7_parse(FuFirmware *firmware, GInputStream *stream, FwupdInstallFlags flags, GError **error)
+fu_pkcs7_parse(FuFirmware *firmware,
+	       GInputStream *stream,
+	       FuFirmwareParseFlags flags,
+	       GError **error)
 {
 #ifdef HAVE_GNUTLS
 	FuPkcs7 *self = FU_PKCS7(firmware);

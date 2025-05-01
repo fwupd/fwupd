@@ -36,7 +36,7 @@ fu_acpi_phat_health_record_export(FuFirmware *firmware,
 static gboolean
 fu_acpi_phat_health_record_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD(firmware);

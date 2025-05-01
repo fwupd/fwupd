@@ -272,7 +272,7 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 		if (!fu_firmware_parse_bytes(FU_FIRMWARE(edid),
 					     blob,
 					     0x0,
-					     FWUPD_INSTALL_FLAG_NONE,
+					     FU_FIRMWARE_PARSE_FLAG_NONE,
 					     error))
 			return FALSE;
 		g_set_object(&priv->edid, edid);

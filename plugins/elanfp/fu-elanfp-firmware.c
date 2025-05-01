@@ -50,7 +50,7 @@ fu_elanfp_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elanfp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuElanfpFirmware *self = FU_ELANFP_FIRMWARE(firmware);
@@ -137,7 +137,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(img,
 					      stream_tmp,
 					      0x0,
-					      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, img, error))

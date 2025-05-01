@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_IHEX_FIRMWARE)
 static gboolean
 fu_analogix_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_CLASS(fu_analogix_firmware_parent_class);

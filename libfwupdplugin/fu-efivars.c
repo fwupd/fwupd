@@ -825,7 +825,7 @@ fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
 	if (!fu_firmware_parse_bytes(FU_FIRMWARE(loadopt),
 				     blob,
 				     0x0,
-				     FWUPD_INSTALL_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error))
 		return NULL;
 	fu_firmware_set_idx(FU_FIRMWARE(loadopt), idx);

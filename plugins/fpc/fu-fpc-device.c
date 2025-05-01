@@ -54,7 +54,7 @@ static FuFirmware *
 fu_fpc_device_prepare_firmware(FuDevice *device,
 			       GInputStream *stream,
 			       FuProgress *progress,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	return fu_firmware_new_from_gtypes(stream,

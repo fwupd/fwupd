@@ -157,7 +157,7 @@ fu_usb_device_ds20_sort_by_platform_ver_cb(gconstpointer a, gconstpointer b)
 static gboolean
 fu_usb_device_ds20_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuUsbDeviceDs20 *self = FU_USB_DEVICE_DS20(firmware);

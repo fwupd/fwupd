@@ -32,8 +32,11 @@ fu_uefi_update_esp_valid_func(void)
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
-	firmware =
-	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 }
@@ -56,8 +59,11 @@ fu_uefi_update_esp_invalid_func(void)
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
-	firmware =
-	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(firmware);
 }
@@ -81,8 +87,11 @@ fu_uefi_update_esp_no_backup_func(void)
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
 	fu_device_add_private_flag(device, "no-esp-backup");
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
-	firmware =
-	    fu_device_prepare_firmware(device, stream, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(firmware);
 }
@@ -133,7 +142,7 @@ fu_uefi_bitmap_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(bmp_image),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

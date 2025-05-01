@@ -29,7 +29,7 @@ fu_genesys_usbhub_dev_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
 				     GInputStream *stream,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	gsize code_size = 0;
@@ -51,7 +51,7 @@ fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* calculate checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_genesys_usbhub_firmware_verify_checksum(stream_trunc, error)) {
 			g_prefix_error(error, "not valid for dev: ");
 			return FALSE;

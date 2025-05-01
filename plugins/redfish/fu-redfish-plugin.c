@@ -250,7 +250,7 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 		if (!fu_firmware_parse_bytes(FU_FIRMWARE(smbios),
 					     type42_blob,
 					     0x0,
-					     FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error)) {
 			g_prefix_error(error, "failed to parse SMBIOS entry type 42: ");
 			return FALSE;

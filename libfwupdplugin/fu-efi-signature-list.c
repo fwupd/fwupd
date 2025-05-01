@@ -158,7 +158,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig),
 					      stream,
 					      offset_tmp,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
@@ -205,7 +205,7 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);

@@ -335,7 +335,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	if (!fu_firmware_parse_bytes(FU_FIRMWARE(bmp_image),
 				     blob,
 				     0x0,
-				     FWUPD_INSTALL_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error)) {
 		g_prefix_error(error, "splash invalid: ");
 		return FALSE;
@@ -763,7 +763,7 @@ fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error
 	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	fn = g_build_filename(path, "UEFI", NULL);
 	file = g_file_new_for_path(fn);
-	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
 	return g_steal_pointer(&firmware);
 }

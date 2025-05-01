@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuHailuckKbdFirmware, fu_hailuck_kbd_firmware, FU_TYPE_IHEX_FIRMWA
 static gboolean
 fu_hailuck_kbd_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	GPtrArray *records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));

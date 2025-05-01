@@ -192,7 +192,7 @@ fu_igsc_aux_firmware_parse_extension(FuIgscAuxFirmware *self, FuFirmware *fw, GE
 static gboolean
 fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuIgscAuxFirmware *self = FU_IGSC_AUX_FIRMWARE(firmware);

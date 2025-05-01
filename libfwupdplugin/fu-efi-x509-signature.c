@@ -222,7 +222,7 @@ fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
 static gboolean
 fu_efi_x509_signature_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuEfiX509Signature *self = FU_EFI_X509_SIGNATURE(firmware);

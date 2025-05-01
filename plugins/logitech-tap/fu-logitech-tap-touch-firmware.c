@@ -122,7 +122,7 @@ fu_logitech_tap_touch_firmware_calculate_basic_cb(const guint8 *buf,
 static gboolean
 fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 				     GInputStream *stream,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	FuLogitechTapTouchFirmware *self = FU_LOGITECH_TAP_TOUCH_FIRMWARE(firmware);

@@ -32,7 +32,7 @@ fu_acpi_phat_version_element_export(FuFirmware *firmware,
 static gboolean
 fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 				   GInputStream *stream,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);

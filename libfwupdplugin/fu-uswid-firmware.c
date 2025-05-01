@@ -61,7 +61,7 @@ fu_uswid_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize off
 static gboolean
 fu_uswid_firmware_parse(FuFirmware *firmware,
 			GInputStream *stream,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	FuUswidFirmware *self = FU_USWID_FIRMWARE(firmware);
@@ -165,7 +165,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_bytes(firmware_coswid,
 					     fw2,
 					     0x0,
-					     flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))

@@ -572,7 +572,7 @@ static FuFirmware *
 fu_jabra_file_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuJabraFileDevice *self = FU_JABRA_FILE_DEVICE(device);

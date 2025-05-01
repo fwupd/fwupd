@@ -1093,7 +1093,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:
 	 *
-	 * Ignore firmware CRCs and checksums.
+	 * This is now unused; see #FuFirmwareParseFlags.
 	 *
 	 * Since: 1.5.0
 	 */
@@ -1101,7 +1101,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_IGNORE_VID_PID:
 	 *
-	 * Ignore firmware vendor and project checks.
+	 * This is now unused; see #FuFirmwareParseFlags.
 	 *
 	 * Since: 1.5.0
 	 */
@@ -1109,7 +1109,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_NO_SEARCH:
 	 *
-	 * Do not use heuristics when parsing the image.
+	 * This is now unused; see #FuFirmwareParseFlags.
 	 *
 	 * Since: 1.5.0
 	 */

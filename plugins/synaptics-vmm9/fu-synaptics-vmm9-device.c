@@ -378,7 +378,7 @@ static FuFirmware *
 fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuSynapticsVmm9Device *self = FU_SYNAPTICS_VMM9_DEVICE(device);
@@ -396,7 +396,7 @@ fu_synaptics_vmm9_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* verify this firmware is for this hardware */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		if (self->board_id !=
 		    fu_synaptics_vmm9_firmware_get_board_id(FU_SYNAPTICS_VMM9_FIRMWARE(firmware))) {
 			g_set_error(error,
@@ -524,7 +524,7 @@ fu_synaptics_vmm9_device_read_firmware(FuDevice *device, FuProgress *progress, G
 
 	/* parse */
 	fw = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
 
 	/* success */

@@ -25,7 +25,7 @@ G_DEFINE_TYPE(FuAmdKriaImageFirmware, fu_amd_kria_image_firmware, FU_TYPE_FIRMWA
 static gboolean
 fu_amd_kria_image_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	const gchar *buf;

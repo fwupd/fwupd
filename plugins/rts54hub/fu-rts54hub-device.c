@@ -512,7 +512,7 @@ static FuFirmware *
 fu_rts54hub_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	guint8 tmp = 0;

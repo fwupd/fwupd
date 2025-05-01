@@ -160,7 +160,7 @@ fu_srec_firmware_record_get_type(void)
 
 typedef struct {
 	FuSrecFirmware *self;
-	FwupdInstallFlags flags;
+	FuFirmwareParseFlags flags;
 	gboolean got_eof;
 } FuSrecFirmwareTokenHelper;
 
@@ -231,7 +231,7 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 	}
 
 	/* checksum check */
-	if ((helper->flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((helper->flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 rec_csum = 0;
 		guint8 rec_csum_expected;
 		for (guint8 i = 0; i < rec_count; i++) {
@@ -373,7 +373,7 @@ fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_srec_firmware_tokenize(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuSrecFirmware *self = FU_SREC_FIRMWARE(firmware);
@@ -397,7 +397,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware,
 static gboolean
 fu_srec_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuSrecFirmware *self = FU_SREC_FIRMWARE(firmware);

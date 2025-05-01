@@ -145,7 +145,11 @@ fu_efi_variable_authentication2_parse_pkcs7_certs(FuEfiVariableAuthentication2 *
 
 	/* parse PKCS#7 blob */
 	blob = g_bytes_new(buf->data, buf->len);
-	if (!fu_firmware_parse_bytes(FU_FIRMWARE(pkcs7), blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(pkcs7),
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     error))
 		return FALSE;
 
 	/* add certificates that signed this variable */
@@ -162,7 +166,7 @@ fu_efi_variable_authentication2_parse_pkcs7_certs(FuEfiVariableAuthentication2 *
 static gboolean
 fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 				      GInputStream *stream,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuEfiVariableAuthentication2 *self = FU_EFI_VARIABLE_AUTHENTICATION2(firmware);

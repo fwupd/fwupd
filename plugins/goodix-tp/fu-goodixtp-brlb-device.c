@@ -394,7 +394,7 @@ static FuFirmware *
 fu_goodixtp_brlb_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);

@@ -30,7 +30,7 @@ fu_ti_tps6598x_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	guint8 verbuf[3] = {0x0};

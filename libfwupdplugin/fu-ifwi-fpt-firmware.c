@@ -46,7 +46,7 @@ fu_ifwi_fpt_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	guint32 num_of_entries;

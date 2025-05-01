@@ -24,7 +24,7 @@ G_DEFINE_TYPE(FuAmdKriaPersistentFirmware, fu_amd_kria_persistent_firmware, FU_T
 static gboolean
 fu_amd_kria_persistent_firmware_parse(FuFirmware *firmware,
 				      GInputStream *stream,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuAmdKriaPersistentFirmware *self = FU_AMD_KRIA_PERSISTENT_FIRMWARE(firmware);

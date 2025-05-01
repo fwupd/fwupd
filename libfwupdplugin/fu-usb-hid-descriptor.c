@@ -148,7 +148,7 @@ fu_usb_hid_descriptor_set_blob(FuUsbHidDescriptor *self, GBytes *blob)
 static gboolean
 fu_usb_hid_descriptor_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuUsbHidDescriptor *self = FU_USB_HID_DESCRIPTOR(firmware);

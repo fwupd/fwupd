@@ -325,7 +325,7 @@ static FuFirmware *
 fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
 				       FuProgress *progress,
-				       FwupdInstallFlags flags,
+				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);

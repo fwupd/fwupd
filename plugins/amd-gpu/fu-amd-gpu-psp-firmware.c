@@ -133,7 +133,11 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		ish = fu_struct_image_slot_header_parse_stream(stream, loc, error);
 		if (ish == NULL)
 			return FALSE;
-		if (!fu_firmware_parse_stream(ish_img, stream, loc, FWUPD_INSTALL_FLAG_NONE, error))
+		if (!fu_firmware_parse_stream(ish_img,
+					      stream,
+					      loc,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      error))
 			return FALSE;
 		fu_firmware_set_addr(ish_img, loc);
 		fu_firmware_add_image(firmware, ish_img);
@@ -141,7 +145,11 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		/* parse the csm image */
 		loc = fu_struct_image_slot_header_get_loc_csm(ish);
 		fu_firmware_set_addr(csm_img, loc);
-		if (!fu_firmware_parse_stream(csm_img, stream, loc, FWUPD_INSTALL_FLAG_NONE, error))
+		if (!fu_firmware_parse_stream(csm_img,
+					      stream,
+					      loc,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      error))
 			return FALSE;
 
 		loc = fu_struct_image_slot_header_get_loc(ish);
@@ -172,7 +180,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(l2_img,
 					      l2_stream,
 					      0x0,
-					      FWUPD_INSTALL_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      error))
 			return FALSE;
 		fu_firmware_add_image(ish_img, l2_img);
@@ -191,7 +199,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 static gboolean
 fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	FuAmdGpuPspFirmware *self = FU_AMD_GPU_PSP_FIRMWARE(firmware);
