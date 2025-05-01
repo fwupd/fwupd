@@ -1869,6 +1869,26 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 						      error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
+
+			/* the next descriptor is the custom one, so just add as a child */
+			if (fu_usb_interface_get_class(iface) ==
+			    FU_USB_CLASS_APPLICATION_SPECIFIC) {
+				g_autoptr(FuUsbDescriptor) img =
+				    g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
+				if (!fu_firmware_parse_stream(
+					FU_FIRMWARE(img),
+					stream,
+					offset + fu_usb_base_hdr_get_length(st_base),
+					FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+					error))
+					return FALSE;
+				if (!fu_firmware_add_image_full(FU_FIRMWARE(iface),
+								FU_FIRMWARE(img),
+								error))
+					return FALSE;
+				offset += fu_firmware_get_size(FU_FIRMWARE(img));
+			}
+
 			g_set_object(&iface_last, iface);
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_ENDPOINT) {
 			g_autoptr(FuUsbEndpoint) ep = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
