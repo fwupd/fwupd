@@ -204,3 +204,8 @@ Flags = no-dbx-updates
 # Family=Galaxy Book2 360
 [c4cd9095-8757-593c-8cbd-c7c281c699a7]
 Flags = no-dbx-updates
+
+# Manufacturer=CHUWI Innovation And Technology(ShenZhen)co.,Ltd
+# ProductName=MiniBook X
+[52e98239-4cfc-5a22-bf17-98539e439dd9]
+Flags = no-dbx-updates
