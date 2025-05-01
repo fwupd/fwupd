@@ -62,7 +62,7 @@ fu_uefi_update_esp_invalid_func(void)
 	firmware = fu_device_prepare_firmware(device,
 					      stream,
 					      progress,
-					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(firmware);

@@ -93,6 +93,24 @@ typedef enum {
 	 * Since: 2.0.9
 	 */
 	FU_FIRMWARE_PARSE_FLAG_NO_SEARCH = 1 << 8,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM:
+	 *
+	 * Keep a reference to the parsed stream.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM = 1 << 10,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB:
+	 *
+	 * Keep a reference to the parsed blob in-memory.
+	 *
+	 * This allows the stream to be closed even when the firmware needs to be re-parsed.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB = 1 << 11,
 } FuFirmwareParseFlags;
 
 struct _FuFirmwareClass {

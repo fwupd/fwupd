@@ -1074,6 +1074,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
+	g_autoptr(GInputStream) partial_stream = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
@@ -1136,26 +1137,36 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* save stream */
 	if (offset == 0) {
-		g_set_object(&priv->stream, stream);
+		partial_stream = g_object_ref(stream);
 	} else {
-		g_autoptr(GInputStream) partial_stream =
-		    fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
+		partial_stream = fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL) {
 			g_prefix_error(error, "failed to cut firmware: ");
 			return FALSE;
 		}
+	}
+
+	/* cache */
+	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_input_stream_read_bytes(partial_stream, 0x0, priv->streamsz, NULL, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_firmware_set_bytes(self, blob);
+	}
+	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM) {
 		g_set_object(&priv->stream, partial_stream);
 	}
 
 	/* optional */
 	if (klass->tokenize != NULL) {
-		if (!klass->tokenize(self, priv->stream, flags, error))
+		if (!klass->tokenize(self, partial_stream, flags, error))
 			return FALSE;
 	}
 
 	/* optional */
 	if (klass->parse != NULL)
-		return klass->parse(self, priv->stream, flags, error);
+		return klass->parse(self, partial_stream, flags, error);
 
 	/* verify alignment */
 	if (streamsz % (1ull << priv->alignment) != 0) {
