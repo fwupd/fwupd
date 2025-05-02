@@ -182,6 +182,12 @@ Flags = no-dbx-updates
 
 # Manufacturer=HP
 # BaseboardManufacturer=HP
+# BaseboardProduct=878C
+[4fc65dfe-4dd8-5d24-86f9-3d05e926f379]
+Flags = no-dbx-updates
+
+# Manufacturer=HP
+# BaseboardManufacturer=HP
 # BaseboardProduct=88F9
 [b6eb0c7f-0bfc-5a3f-b2d7-cd2a38aa6d17]
 Flags = no-dbx-updates
