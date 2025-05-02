@@ -254,7 +254,10 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
 
-readline = dependency('readline', required: build_daemon)
+readline = dependency('readline', required: get_option('readline'))
+if readline.found() and get_option('readline').allowed()
+  conf.set('HAVE_READLINE', '1')
+endif
 sqlite = dependency('sqlite3')
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')

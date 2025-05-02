@@ -10,8 +10,11 @@
 
 #include <glib/gi18n.h>
 #include <stdio.h>
+
+#ifdef HAVE_READLINE
 #include <readline/history.h>
 #include <readline/readline.h>
+#endif
 
 #include "fu-console.h"
 
@@ -138,6 +141,21 @@ fu_console_print_kv(FuConsole *self, const gchar *title, const gchar *msg)
 		title_len = 0;
 	}
 }
+
+#ifndef HAVE_READLINE
+static gchar *
+readline(const gchar *prompt) /* nocheck:name */
+{
+	char buffer[64] = {0};
+
+	if (prompt != NULL)
+		g_print("%s\n", prompt);
+	if (!fgets(buffer, sizeof(buffer), stdin))
+		return NULL;
+	g_strdelimit(buffer, "\n", '\0');
+	return g_strndup(buffer, sizeof(buffer));
+}
+#endif
 
 guint
 fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)

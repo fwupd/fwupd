@@ -75,6 +75,10 @@ option('libarchive',
   type: 'feature',
   description: 'libarchive support',
 )
+option('readline',
+  type: 'feature',
+  description: 'readline support',
+)
 option('libdrm',
   type: 'feature',
   description: 'libdrm support',
