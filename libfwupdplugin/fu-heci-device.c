@@ -220,7 +220,6 @@ fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,
 	gboolean found_usage = FALSE;
 	g_autoptr(FuMkhiArbhSvnGetInfoRequest) st_req = fu_mkhi_arbh_svn_get_info_request_new();
 	g_autoptr(FuMkhiArbhSvnGetInfoResponse) st_res = NULL;
-	g_autoptr(GByteArray) bufout = g_byte_array_new();
 	g_autoptr(GByteArray) buf_res = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_HECI_DEVICE(self), FALSE);
