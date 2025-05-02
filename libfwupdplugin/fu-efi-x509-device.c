@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fu-archive-firmware.h"
+#include "fu-efi-variable-authentication2.h"
 #include "fu-efi-x509-device.h"
 #include "fu-version-common.h"
 
@@ -71,6 +73,22 @@ fu_efi_x509_device_convert_version(FuDevice *device, guint64 version_raw)
 	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
 }
 
+static FuFirmware *
+fu_efi_x509_device_prepare_firmware(FuDevice *self,
+				    GInputStream *stream,
+				    FuProgress *progress,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
+{
+	return fu_firmware_new_from_gtypes(stream,
+					   0x0,
+					   flags,
+					   error,
+					   FU_TYPE_EFI_VARIABLE_AUTHENTICATION2,
+					   FU_TYPE_ARCHIVE_FIRMWARE,
+					   G_TYPE_INVALID);
+}
+
 static gboolean
 fu_efi_x509_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
@@ -80,6 +98,16 @@ fu_efi_x509_device_write_firmware(FuDevice *device,
 {
 	FuDeviceClass *device_class;
 	FuDevice *proxy;
+	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+
+	/* not an archive */
+	if (imgs->len == 0)
+		g_ptr_array_add(imgs, g_object_ref(firmware));
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_steps(progress, imgs->len);
 
 	/* process by the parent */
 	proxy = fu_device_get_proxy(device);
@@ -91,7 +119,25 @@ fu_efi_x509_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	device_class = FU_DEVICE_GET_CLASS(proxy);
-	return device_class->write_firmware(proxy, firmware, progress, flags, error);
+
+	/* install each blob */
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		g_autoptr(GBytes) fw = NULL;
+
+		g_debug("installing %s", fu_firmware_get_id(img));
+		fw = fu_firmware_get_bytes(img, error);
+		if (fw == NULL)
+			return FALSE;
+		if (!device_class->write_firmware(proxy, img, progress, flags, error)) {
+			g_prefix_error(error, "failed to write %s: ", fu_firmware_get_id(img));
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
+
+	/* success! */
+	return TRUE;
 }
 
 static void
@@ -99,9 +145,9 @@ fu_efi_x509_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 80, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
@@ -137,6 +183,7 @@ fu_efi_x509_device_class_init(FuEfiX509DeviceClass *klass)
 	object_class->finalize = fu_efi_x509_device_finalize;
 	device_class->probe = fu_efi_x509_device_probe;
 	device_class->convert_version = fu_efi_x509_device_convert_version;
+	device_class->prepare_firmware = fu_efi_x509_device_prepare_firmware;
 	device_class->write_firmware = fu_efi_x509_device_write_firmware;
 	device_class->set_progress = fu_efi_x509_device_set_progress;
 }
