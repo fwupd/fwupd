@@ -52,6 +52,7 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "ProtocolVer", priv->protocol_version);
 }
 
+#ifdef HAVE_MEI_H
 static gboolean
 fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 {
@@ -62,6 +63,7 @@ fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 	priv->uuid = g_strdup(uuid);
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_mei_device_pci_probe(FuMeiDevice *self, GError **error)
