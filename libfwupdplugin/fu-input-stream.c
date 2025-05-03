@@ -777,20 +777,3 @@ fu_input_stream_find(GInputStream *stream,
 		    (guint)bufsz);
 	return FALSE;
 }
-
-/**
- * fu_input_stream_locker_unref:
- * @stream: a #GInputStream
- *
- * Closes an input stream and then unrefs it.
- *
- * Since: 2.0.7
- **/
-void
-fu_input_stream_locker_unref(FuInputStreamLocker *stream)
-{
-	g_autoptr(GError) error_local = NULL;
-	if (!g_input_stream_close(stream, NULL, &error_local))
-		g_warning("failed to close input stream: %s", error_local->message);
-	g_object_unref(stream);
-}
