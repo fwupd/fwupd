@@ -17,6 +17,7 @@
     "valid": "all PCRs from 0 to 7 must have non-empty measurements"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://github.com/google/security-research/blob/master/pocs/bios/tpm-carte-blanche/writeup.md": "TPM Carte Blanche"
   },

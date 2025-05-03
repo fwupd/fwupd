@@ -13,6 +13,7 @@
   "success-results": {
     "locked": "device is fused"
   },
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "hsi-level": 1,
   "fwupd-version": "1.8.0"
 }

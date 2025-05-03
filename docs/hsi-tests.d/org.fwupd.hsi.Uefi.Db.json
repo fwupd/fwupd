@@ -14,6 +14,7 @@
     "not-found": "the certificate store does not contain any Microsoft UEFI certificate",
     "valid": "the certificate store has the Microsoft UEFI 2023 certificate installed"
   },
+  "resolution": "Apply the LVFS KEK update for your hardware, and then apply the LVFS db update.",
   "references": {
     "https://wiki.ubuntu.com/UEFI/SecureBoot/Testing": "Ubuntu SecureBoot Wiki Page"
   },

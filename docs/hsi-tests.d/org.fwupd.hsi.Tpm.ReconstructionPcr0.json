@@ -20,6 +20,7 @@
     "valid": "all correct"
   },
   "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.kernel.org/doc/html/latest/security/tpm/tpm_event_log.html": "Linux Kernel TPM Documentation"
   },

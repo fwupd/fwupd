@@ -18,6 +18,7 @@
     "supported": "CET feature support by the platform"
   },
   "hsi-level": 3,
+  "resolution": "Check your CPU supports CET, and ensure the feature is enabled in the UEFI setup screen.",
   "references": {
     "https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf": "Intel CET Technology Preview"
   },

@@ -16,6 +16,7 @@
     "enabled": "microcode mitigation is supported, enabled and locked"
   },
   "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/technical-documentation/gather-data-sampling.html": "Gather Data Sampling"
   },

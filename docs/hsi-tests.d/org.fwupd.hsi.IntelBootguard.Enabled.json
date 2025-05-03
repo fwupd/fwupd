@@ -19,6 +19,7 @@
     "enabled": "detected and enabled"
   },
   "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://github.com/coreboot/coreboot/blob/master/src/soc/intel/jasperlake/include/soc/me.h": "Coreboot documentation"
   },
