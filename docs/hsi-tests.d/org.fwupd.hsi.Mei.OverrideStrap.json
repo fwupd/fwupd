@@ -15,6 +15,7 @@
     "locked": "device in in normal runtime mode"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt": "Chromium documentation for Intel ME"
   },

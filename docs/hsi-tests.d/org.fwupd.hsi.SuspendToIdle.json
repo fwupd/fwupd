@@ -15,5 +15,6 @@
     "enabled": "suspend-to-idle being used"
   },
   "hsi-level": 3,
+  "resolution": "Change this setting in the UEFI setup screen, if supported.",
   "fwupd-version": "1.5.0"
 }

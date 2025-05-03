@@ -20,6 +20,7 @@
     "enabled": "rollback protection enabled"
   },
   "hsi-level": 4,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.psacertified.org/blog/anti-rollback-explained/": "Rollback protection",
     "https://www.amd.com/en/technologies/pro-security": "AMD Secure Processor",

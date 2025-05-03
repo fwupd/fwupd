@@ -15,6 +15,7 @@
     "valid": "ACM protected"
   },
   "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "requires": [
     "CPUID\\VID_GenuineIntel"
   ],

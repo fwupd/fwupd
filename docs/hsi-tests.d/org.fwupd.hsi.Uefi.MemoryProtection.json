@@ -18,6 +18,7 @@
     "locked": "memory is not executable or writable"
   },
   "hsi-level": 3,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://aka.ms/WHCP": "Microsoft Windows WHCP"
   },

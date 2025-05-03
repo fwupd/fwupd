@@ -17,6 +17,7 @@
     "encrypted": "detected and enabled"
   },
   "hsi-level": 4,
+  "resolution": "Ensure that the motherboard and CPU support this feature, and ensure it is enabled in the UEFI setup screen.",
   "references": {
     "https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html": "Intel TME Press Release",
     "https://en.wikichip.org/wiki/x86/sme": "WikiChip SME Overview"

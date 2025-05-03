@@ -18,6 +18,7 @@
     "enabled": "SMAP features are detected and enabled"
   },
   "hsi-level": 4,
+  "resolution": "Ensure that the CPU supports this feature, and then contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention": "SMAP Wikipedia Page"
   },

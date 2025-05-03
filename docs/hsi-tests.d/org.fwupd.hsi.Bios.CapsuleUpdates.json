@@ -13,6 +13,7 @@
   "success-results": {
     "enabled": "BIOS capsule updates enabled"
   },
+  "resolution": "Turn on 'firmware updates' in the UEFI firmware setup.",
   "hsi-level": 1,
   "fwupd-version": "1.9.6"
 }

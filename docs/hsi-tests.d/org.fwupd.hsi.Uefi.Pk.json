@@ -16,6 +16,7 @@
     "valid": "valid key"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://wiki.ubuntu.com/UEFI/SecureBoot/Testing": "Ubuntu SecureBoot Wiki Page"
   },

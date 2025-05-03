@@ -21,6 +21,7 @@
     "If the kernel module has loaded but you still don't have data this is NOT a fwupd bug. You will have to contact ",
     "your motherboard or system manufacturer to enable reporting this information."
   ],
+  "resolution": "Contact the silicon vendor and ask them to submit new HSI tests for fwupd.",
   "hsi-level": 1,
   "fwupd-version": "1.8.0"
 }
