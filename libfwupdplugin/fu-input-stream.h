@@ -106,9 +106,3 @@ fu_input_stream_find(GInputStream *stream,
 		     gsize bufsz,
 		     gsize *offset,
 		     GError **error) G_GNUC_NON_NULL(1, 2);
-
-/* useful to close file descriptors backing the input stream */
-typedef GInputStream FuInputStreamLocker;
-void
-fu_input_stream_locker_unref(FuInputStreamLocker *stream) G_GNUC_NON_NULL(1);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuInputStreamLocker, fu_input_stream_locker_unref);

@@ -5811,17 +5811,17 @@ fu_partial_input_stream_closed_base_func(void)
 	gboolean ret;
 	gssize rc;
 	guint8 buf[2] = {0x0};
+	g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream = NULL;
+	g_autoptr(GInputStream) base_stream = g_memory_input_stream_new_from_bytes(blob);
 
-	{
-		g_autoptr(GBytes) blob = g_bytes_new_static("12345678", 8);
-		g_autoptr(FuInputStreamLocker) base_stream =
-		    g_memory_input_stream_new_from_bytes(blob);
-		stream = fu_partial_input_stream_new(base_stream, 2, 4, &error);
-		g_assert_no_error(error);
-		g_assert_nonnull(stream);
-	}
+	stream = fu_partial_input_stream_new(base_stream, 2, 4, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(stream);
+	ret = g_input_stream_close(base_stream, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	ret = g_seekable_seek(G_SEEKABLE(stream), 0x0, G_SEEK_SET, NULL, &error);
 	g_assert_no_error(error);
