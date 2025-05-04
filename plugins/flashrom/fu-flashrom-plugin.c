@@ -217,7 +217,7 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
 	fu_flashrom_plugin_device_set_version(plugin, device);
 	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))
-		g_warning("failed to set bios info: %s", error_local->message);
+		g_debug("failed to set bios info: %s", error_local->message);
 	if (!fu_device_setup(device, error))
 		return NULL;
 
