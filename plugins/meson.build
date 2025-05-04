@@ -94,7 +94,6 @@ plugins = {
   'mtd': false,
   'nordic-hid': false,
   'nvme': false,
-  'optionrom': false,
   'parade-lspcon': false,
   'parade-usbhub': false,
   'pci-bcr': false,
