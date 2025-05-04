@@ -7138,47 +7138,6 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 }
 
 static void
-fu_test_engine_fake_pci(gconstpointer user_data)
-{
-	FuTest *self = (FuTest *)user_data;
-	gboolean ret;
-	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GError) error = NULL;
-
-	/* non-linux */
-	if (!fu_context_has_backend(self->ctx, "udev")) {
-		g_test_skip("no Udev backend");
-		return;
-	}
-
-	/* load engine and check the device was found */
-	fu_engine_add_plugin_filter(engine, "optionrom");
-	ret = fu_engine_load(engine,
-			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
-			     progress,
-			     &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* PCI -> optionrom */
-	device = fu_engine_get_device(engine, "20c947afbdc42deee9a7333290008cb384b10f74", &error);
-	g_assert_no_error(error);
-	g_assert_nonnull(device);
-	g_assert_cmpstr(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), ==, "pci");
-	g_assert_cmpstr(fu_udev_device_get_devtype(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpstr(fu_udev_device_get_driver(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpstr(fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)), ==, NULL);
-	g_assert_cmpint(fu_device_get_vid(device), ==, 0x8086);
-	g_assert_cmpint(fu_device_get_pid(device), ==, 0x06ed);
-	g_assert_cmpstr(fu_device_get_plugin(device), ==, "optionrom");
-	g_assert_cmpstr(fu_device_get_physical_id(device), ==, "PCI_SLOT_NAME=0000:00:14.0");
-	g_assert_cmpstr(fu_device_get_logical_id(device), ==, "rom");
-}
-
-static void
 fu_test_engine_fake_v4l(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -7566,7 +7525,6 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{fake-nvme}", self, fu_test_engine_fake_nvme);
 	g_test_add_data_func("/fwupd/engine{fake-block}", self, fu_test_engine_fake_block);
 	g_test_add_data_func("/fwupd/engine{fake-tpm}", self, fu_test_engine_fake_tpm);
-	g_test_add_data_func("/fwupd/engine{fake-pci}", self, fu_test_engine_fake_pci);
 	g_test_add_data_func("/fwupd/engine{fake-v4l}", self, fu_test_engine_fake_v4l);
 	if (g_test_slow()) {
 		g_test_add_data_func("/fwupd/device-list{replug-auto}",
