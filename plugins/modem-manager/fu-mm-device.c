@@ -194,11 +194,15 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 	MMModemFirmware *modem_fw = mm_object_peek_modem_firmware(omodem);
 	MMModem *modem = mm_object_peek_modem(omodem);
-	MMModemPortInfo *ports = NULL;
+	MMModemPortInfo *used_ports = NULL;
+	guint n_used_ports = 0;
+#if MM_CHECK_VERSION(1, 26, 0)
+	MMModemPortInfo *ignored_ports = NULL;
+	guint n_ignored_ports = 0;
+#endif // MM_CHECK_VERSION(1, 26, 0)
 	const gchar **device_ids;
 	const gchar *sysfs_path;
 	const gchar *version;
-	guint n_ports = 0;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 
 	/* inhibition uid is the modem interface 'Device' property, which may
@@ -240,25 +244,43 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	fu_device_set_backend_id(FU_DEVICE(self), mm_object_get_path(omodem));
 
 	/* look for the AT and QMI/MBIM ports */
-	if (!mm_modem_get_ports(modem, &ports, &n_ports)) {
+	if (!mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get port information");
 		return FALSE;
 	}
-	for (guint i = 0; i < n_ports; i++) {
-		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", ports[i].name);
-		if (ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+	for (guint i = 0; i < n_used_ports; i++) {
+		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", used_ports[i].name);
+		if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
 			continue;
-		if (ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
-		    g_pattern_match_simple("wwan*qcdm*", ports[i].name)) {
+		if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
+		    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
 			fu_mm_device_add_port(self, MM_MODEM_PORT_TYPE_QCDM, device_file);
 		} else {
-			fu_mm_device_add_port(self, ports[i].type, device_file);
+			fu_mm_device_add_port(self, used_ports[i].type, device_file);
 		}
 	}
-	mm_modem_port_info_array_free(ports, n_ports);
+	mm_modem_port_info_array_free(used_ports, n_used_ports);
+
+#if MM_CHECK_VERSION(1, 26, 0)
+	if (!mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to get ignored port information");
+		return FALSE;
+	}
+	for (guint i = 0; i < n_ignored_ports; i++) {
+		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", ignored_ports[i].name);
+		if (ignored_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+			continue;
+
+		fu_mm_device_add_port(self, ignored_ports[i].type, device_file);
+	}
+	mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
+#endif // MM_CHECK_VERSION(1, 26, 0)
 
 	/* add properties to fwupd device */
 	if (mm_modem_get_manufacturer(modem) != NULL)
