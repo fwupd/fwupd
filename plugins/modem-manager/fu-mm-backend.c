@@ -126,10 +126,14 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	MMModemFirmware *modem_fw;
 	MMModemFirmwareUpdateMethod update_methods;
-	MMModemPortInfo *ports = NULL;
+	MMModemPortInfo *used_ports = NULL;
+	guint n_used_ports = 0;
+#if MM_CHECK_VERSION(1, 26, 0)
+	MMModemPortInfo *ignored_ports = NULL;
+	guint n_ignored_ports = 0;
+#endif // MM_CHECK_VERSION(1, 26, 0)
 	const gchar **device_ids;
 	guint64 ports_bitmask = 0;
-	guint n_ports = 0;
 	GType gtype = G_TYPE_INVALID;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 	struct {
@@ -190,20 +194,37 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		return NULL;
 	}
 
-	if (!mm_modem_get_ports(modem, &ports, &n_ports)) {
+	if (!mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get port information");
 		return NULL;
 	}
-	for (guint i = 0; i < n_ports; i++) {
+	for (guint i = 0; i < n_used_ports; i++) {
 		g_debug("found port %s: %s",
-			ports[i].name,
-			fu_mm_device_port_type_to_string(ports[i].type));
-		FU_BIT_SET(ports_bitmask, ports[i].type);
+			used_ports[i].name,
+			fu_mm_device_port_type_to_string(used_ports[i].type));
+		FU_BIT_SET(ports_bitmask, used_ports[i].type);
 	}
-	mm_modem_port_info_array_free(ports, n_ports);
+	mm_modem_port_info_array_free(used_ports, n_used_ports);
+
+#if MM_CHECK_VERSION(1, 26, 0)
+	if (!mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to get port information");
+		return NULL;
+	}
+	for (guint i = 0; i < n_ignored_ports; i++) {
+		g_debug("found port %s: %s",
+			ignored_ports[i].name,
+			fu_mm_device_port_type_to_string(ignored_ports[i].type));
+		FU_BIT_SET(ports_bitmask, ignored_ports[i].type);
+	}
+	mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
+#endif // MM_CHECK_VERSION(1, 26, 0)
 
 	/* find the correct GType */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
