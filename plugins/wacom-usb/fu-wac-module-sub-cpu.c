@@ -81,7 +81,7 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 {
 	GPtrArray *chunks = g_ptr_array_new_with_free_func(g_free);
 	guint record_num = 0;
-	g_autoptr(GPtrArray) records = fu_srec_firmware_get_records(srec_firmware);
+	GPtrArray *records = fu_srec_firmware_get_records(srec_firmware);
 
 	*data_len = 0;
 	while (record_num < records->len) {
