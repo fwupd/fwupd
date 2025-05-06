@@ -217,3 +217,9 @@ Flags = no-dbx-updates
 # ProductName=MiniBook X
 [52e98239-4cfc-5a22-bf17-98539e439dd9]
 Flags = no-dbx-updates
+
+# Manufacturer=HUAWEI
+# BaseboardManufacturer=HUAWEI
+# BaseboardProduct=BOHK-WAX9X-PCB
+[a98d46c9-ed25-54da-8510-ef9035cecdd1]
+Flags = no-dbx-updates
