@@ -336,6 +336,7 @@ fu_efivar_space_used_impl(GError **error)
 	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
 	g_autoptr(GFileInfo) info_fs = NULL;
 	g_autoptr(GError) error_local = NULL;
+g_debug("%s", path);
 
 	/* this is only supported in new kernels */
 	info_fs = g_file_query_info(file_fs,

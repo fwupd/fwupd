@@ -38,6 +38,23 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.30" date="2025-05-07">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add several devices with broken firmware to the UEFI dbx blocklist</li>
+          <li>Add /sys/firmware/efi/efivars to ReadWritePaths</li>
+          <li>Do not export Redfish backup partitions as devices</li>
+          <li>Do not show messages or prompt for answers in `fwupdtool --json` mode</li>
+          <li>Fix a crash when installing some Wacom firmware types</li>
+          <li>Fix deploying RMM updates on the Dell Kestrel dock</li>
+          <li>Fix SMBIOS parsing for SPI ROM size >= 16MiB</li>
+          <li>Never allow updating updatable-hidden devices with fwupdtool</li>
+          <li>Recognize a very old dbx hash to allow upgrades to continue</li>
+          <li>Reduce the Dell dock HID timeout, as retries already cover it</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.29" date="2025-03-18">
       <description>
         <p>

@@ -2,9 +2,9 @@ fwupd Release Notes
 
 Write release entries:
 
- * ../../contrib/generate-release.py
- * copy into ../../data/org.freedesktop.fwupd.metainfo.xml
- * appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
+    ../../contrib/generate-release.py
+    # copy into ../../data/org.freedesktop.fwupd.metainfo.xml
+    appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
 2. Commit changes to git:
 
