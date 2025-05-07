@@ -90,6 +90,7 @@ warning_flags = [
   '-Wno-suggest-attribute=format',
   '-Wno-typedef-redefinition',
   '-Wno-unknown-warning-option',
+  '-Wno-unterminated-string-initialization', # all moved to rustgen in main
   '-Wno-unused-parameter',
   '-Wno-nonnull-compare',
   '-Wno-analyzer-use-of-uninitialized-value', # incompatible with g_autoptr()
