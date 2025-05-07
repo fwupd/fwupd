@@ -2247,7 +2247,8 @@ msgstr "Se till att du har volymåterställningsnyckeln innan du fortsätter."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Ange en siffra mellan 0 och %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Ange antingen %s eller %s:"

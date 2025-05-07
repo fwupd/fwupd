@@ -15,9 +15,9 @@ Check IFD parsing (if the files are available):
 
 Write release entries:
 
- * ../../contrib/generate-release.py
- * copy into ../../data/org.freedesktop.fwupd.metainfo.xml
- * appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
+    ../../contrib/generate-release.py
+    # copy into ../../data/org.freedesktop.fwupd.metainfo.xml
+    appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
 Update translations:
 

@@ -1102,6 +1102,10 @@ msgstr "Zrzuca dane SMBIOS z pliku"
 msgid "Duration"
 msgstr "Czas trwania"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "PLIK-EMULACJI [PLIK-ARCHIWUM]"
+
 #. TRANSLATORS: command description
 msgid "Emulate a device using a JSON manifest"
 msgstr "Emuluje urządzenie za pomocą manifestu JSON"
@@ -2186,7 +2190,8 @@ msgstr "Przed kontynuacją proszę się upewnić, że posiadany jest klucz odzys
 msgid "Please enter a number from 0 to %u: "
 msgstr "Proszę podać liczbę od 0 do %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Proszę podać %s lub %s:"
@@ -2896,6 +2901,10 @@ msgstr "LVFS to wolny serwis działający jako niezależny podmiot prawny niemaj
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "PCR0 TPM różni się od rekonstrukcji."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Przechowalnia certyfikatów UEFI jest teraz aktualna"
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Usługa wczytała kod firmy trzeciej i nie jest już wspierana przez jej programistów!"
@@ -3058,6 +3067,10 @@ msgstr "Zmienne usługi uruchamiania UEFI"
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone w konfiguracji oprogramowania sprzętowego"
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "Baza danych UEFI"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"

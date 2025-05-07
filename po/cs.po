@@ -2268,7 +2268,8 @@ msgstr "Než budete pokračovat, zajistěte si, abyste měli k dispozici záchra
 msgid "Please enter a number from 0 to %u: "
 msgstr "Zadejte prosím číslo od 0 do %u:"
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Zadejte buď %s nebo %s: "

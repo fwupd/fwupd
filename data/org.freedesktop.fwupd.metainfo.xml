@@ -38,6 +38,44 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.9" date="2025-05-07">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add some documentation about updating the KEK and db</li>
+          <li>Allow installing multiple db certificate updates at the same time</li>
+          <li>Show what certificate signed the EFI authenticated variable</li>
+          <li>Use readline to look up inputs from user, and make it optional</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add several devices with broken firmware to the UEFI dbx blocklist</li>
+          <li>Constructing the authenticated URI properly when using FirmwareBaseURI</li>
+          <li>Do not enumerate non-updatable OptionROM devices</li>
+          <li>Do not export Redfish backup partitions as devices</li>
+          <li>Fix a crash when installing some Wacom firmware types</li>
+          <li>Fix a crash when parsing uevents that are not KEY=VALUE</li>
+          <li>Fix parsing the DFU descriptor when not using libusb</li>
+          <li>Fix PK and KEK enumeration failure on some systems</li>
+          <li>Fix SMBIOS parsing for ROM size >= 16MiB</li>
+          <li>Include a resolution for more of the HSI failures</li>
+          <li>Include more output when using fwupdtool get-devices --json</li>
+          <li>Never allow updating updatable-hidden devices with fwupdtool</li>
+          <li>Properly handle redfish location redirect when installing firmware</li>
+          <li>Recognize a very old dbx hash to allow upgrades</li>
+          <li>Require a reboot after updating Intel CVS devices</li>
+          <li>Rework the MEI code so that a device can use more than one interface</li>
+          <li>Rewrite the ModemManger plugin to be simpler and more supportable</li>
+          <li>Simplify parsing USB descriptors</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Intel Arc Battlemage GPUs</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.8" date="2025-04-09">
       <description>
         <p>

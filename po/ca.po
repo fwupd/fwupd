@@ -1097,6 +1097,10 @@ msgstr "Aboca les dades al SMBIOS des d'un fitxer."
 msgid "Duration"
 msgstr "Durada"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "FITXER-DEMULACIÓ [ARXIU-FITXER]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Cada sistema haurà de tenir proves per a assegurar la seguretat del microprogramari."
@@ -2238,7 +2242,8 @@ msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del 
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Introduïu %s o %s:"
@@ -2992,6 +2997,14 @@ msgstr "El PCR0 del TPM difereix de la reconstrucció."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "La clau de la plataforma UEFI s'empra per a determinar si el programari del dispositiu prové d'una font de confiança."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "El magatzem de certificats UEFI ja està actualitzat"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "La base de dades UEFI conté la llista dels certificats vàlids que es poden usar per a autoritzar quins binaris EFI es poden executar."
+
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "El sistema UEFI pot configurar atributs de memòria a l'arrencada que impedeixen que s’executin els explotadors habituals."
@@ -3166,6 +3179,10 @@ msgstr "Variables del servei d'arrencada UEFI"
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitades a la configuració del microprogramari"
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "Bd UEFI"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"

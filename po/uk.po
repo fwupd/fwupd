@@ -2265,7 +2265,8 @@ msgstr "Будь ласка, переконайтеся, що у вас є кл�
 msgid "Please enter a number from 0 to %u: "
 msgstr "Будь ласка, введіть число від 0 до %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Будь ласка, введіть %s або %s: "

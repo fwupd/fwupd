@@ -1102,6 +1102,10 @@ msgstr "SMBIOS-Daten aus einer Datei ausgeben"
 msgid "Duration"
 msgstr "Dauer"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULATIONSDATEI [ARCHIVDATEI]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Jedes System sollte Tests haben, um die Sicherheit der Firmware zu gewährleisten."
@@ -2243,7 +2247,8 @@ msgstr "Bitte stellen Sie sicher, dass Sie den Wiederherstellungsschlüssel für
 msgid "Please enter a number from 0 to %u: "
 msgstr "Bitte geben Sie eine Zahl von 0 bis %u ein: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Bitte geben Sie entweder %s oder %s ein: "
@@ -2997,6 +3002,14 @@ msgstr "Das TPM PCR0 unterscheidet sich von der Rekonstruktion."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "Der UEFI-Plattformschlüssel wird verwendet, um festzustellen, ob die Gerätesoftware aus einer vertrauenswürdigen Quelle stammt."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Der UEFI-Zertifikatspeicher ist jetzt auf dem neuesten Stand"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "Die UEFI-DB enthält die Liste der gültigen Zertifikate, die zur Autorisierung der EFI-Binärdateien verwendet werden können."
+
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
 msgstr "Das UEFI-System kann beim Booten Speicherattribute einrichten, die die Ausführung gängiger Exploits verhindern."
@@ -3171,6 +3184,10 @@ msgstr "UEFI-Bootdienst-Variablen"
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Aktualisierung der UEFI-Kapsel nicht verfügbar oder in der Firmware-Einrichtung aktiviert"
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI-DB"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"

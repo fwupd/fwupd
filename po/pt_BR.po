@@ -6,7 +6,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2015
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
-# F Bausch, 2024
+# F Bausch, 2024-2025
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
 msgid ""
@@ -1109,6 +1109,10 @@ msgstr "Despeja dados SMBIOS a partir de um arquivo"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Duração"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "ARQUIVO-DE-EMULAÇÃO [ARQUIVO-DE-ARQUIVAMENTO]"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
@@ -2254,7 +2258,8 @@ msgstr "Certifique-se de ter a chave de recuperação de volume antes de continu
 msgid "Please enter a number from 0 to %u: "
 msgstr "Por favor, insira um número de 0 a %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Por favor, insira %s ou %s: "
@@ -3009,6 +3014,14 @@ msgstr "O TPM PCR0 diverge da reconstrução."
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "A chave de plataforma UEFI é usada para determinar se o software do dispositivo vem de uma fonte confiável."
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "O armazenamento de certificados UEFI agora está atualizado"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "O banco de dados UEFI contém a lista de certificados válidos que podem ser usados para autorizar quais binários EFI podem ser executados."
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."

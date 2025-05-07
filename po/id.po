@@ -2147,7 +2147,8 @@ msgstr "Pastikan Anda memiliki kunci pemulihan volume sebelum melanjutkan."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Silakan masukkan angka dari 0 hingga %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Silakan masukkan %s atau %s: "
