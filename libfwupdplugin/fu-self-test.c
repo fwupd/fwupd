@@ -3459,6 +3459,7 @@ fu_efivar_func(void)
 	guint32 attr = 0;
 	guint64 total;
 	g_autofree gchar *sysfsfwdir = NULL;
+	g_autofree gchar *sysfsfwdir_mut = NULL;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) names = NULL;
@@ -3469,7 +3470,7 @@ fu_efivar_func(void)
 #endif
 
 	/* these tests will write */
-	sysfsfwdir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
+	sysfsfwdir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir, TRUE);
 
 	/* check supported */
@@ -3490,7 +3491,11 @@ fu_efivar_func(void)
 	names = fu_efivar_get_names(FU_EFIVAR_GUID_EFI_GLOBAL, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(names);
-	g_assert_cmpint(names->len, ==, 2);
+	g_assert_cmpint(names->len, ==, 5);
+
+	/* now mutable */
+	sysfsfwdir_mut = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir_mut, TRUE);
 
 	/* write and read a key */
 	ret = fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
