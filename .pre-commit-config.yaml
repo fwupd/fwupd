@@ -73,11 +73,6 @@ repos:
       language: script
       entry: ./contrib/run-tests.sh
       stages: [push]
-    - id: clang-format
-      name: clang-format
-      language: script
-      entry: ./contrib/reformat-code.py
-      types: [c]
     - id: check-license
       name: Check license header
       types_or: [shell, c, python]
