@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '1.9.30',
+  version: '1.9.31',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.62.0',
   default_options: ['warning_level=2', 'c_std=c11'],
@@ -480,8 +480,8 @@ endif
 umockdev = dependency('umockdev-1.0', required: false)
 
 if build_standalone
-  libflashrom = dependency('flashrom', 
-                            fallback: ['flashrom', 'flashrom_dep'], 
+  libflashrom = dependency('flashrom',
+                            fallback: ['flashrom', 'flashrom_dep'],
                             required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
 endif
 
