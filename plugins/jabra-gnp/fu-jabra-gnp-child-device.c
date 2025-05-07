@@ -830,7 +830,7 @@ static FuFirmware *
 fu_jabra_gnp_child_device_prepare_firmware(FuDevice *device,
 					   GInputStream *stream,
 					   FuProgress *progress,
-					   FwupdInstallFlags flags,
+					   FuFirmwareParseFlags flags,
 					   GError **error)
 {
 	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
