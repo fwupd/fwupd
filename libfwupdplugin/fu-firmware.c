@@ -2327,9 +2327,7 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	if (priv->stream != NULL) {
 		g_autofree gchar *dataszstr = g_strdup_printf("0x%x", (guint)priv->streamsz);
 		g_autofree gchar *datastr = NULL;
-		if (priv->streamsz > 0x100) {
-			datastr = g_strdup("[GInputStream]");
-		} else {
+		if (priv->streamsz <= 0x100) {
 			g_autoptr(GByteArray) buf = fu_input_stream_read_byte_array(priv->stream,
 										    0x0,
 										    priv->streamsz,
@@ -2345,13 +2343,18 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 				} else {
 					datastr = g_base64_encode(buf->data, buf->len);
 				}
-			} else {
-				datastr = g_strdup("[??GInputStream??]");
 			}
 		}
-		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
+		xb_builder_node_insert_text(bn,
+					    "data",
+					    datastr,
+					    "type",
+					    "GInputStream",
+					    "size",
+					    dataszstr,
+					    NULL);
 	} else if (priv->bytes != NULL && g_bytes_get_size(priv->bytes) == 0) {
-		xb_builder_node_insert_text(bn, "data", NULL, NULL);
+		xb_builder_node_insert_text(bn, "data", NULL, "type", "GBytes", NULL);
 	} else if (priv->bytes != NULL) {
 		gsize bufsz = 0;
 		const guint8 *buf = g_bytes_get_data(priv->bytes, &bufsz);
@@ -2362,7 +2365,14 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		} else {
 			datastr = g_base64_encode(buf, bufsz);
 		}
-		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
+		xb_builder_node_insert_text(bn,
+					    "data",
+					    datastr,
+					    "type",
+					    "GBytes",
+					    "size",
+					    dataszstr,
+					    NULL);
 	}
 
 	/* chunks */
