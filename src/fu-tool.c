@@ -2895,6 +2895,9 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* match the behavior of the daemon as we're printing the children */
+	priv->parse_flags |= FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM;
+
 	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
 	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
