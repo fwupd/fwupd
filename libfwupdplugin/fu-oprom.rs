@@ -1,15 +1,30 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[repr(u16le)]
+enum FuOpromMachineType {
+    X64,
+}
+
+#[repr(u16le)]
+enum FuOpromSubsystem {
+    EfiBootSrvDrv,
+}
+
+#[repr(u16le)]
+enum FuOpromCompressionType {
+    None,
+}
+
 #[derive(New, ValidateStream, ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructOprom {
     signature: u16le == 0xAA55,
     image_size: u16le,		// of 512 bytes
     init_func_entry_point: u32le,
-    subsystem: u16le,
-    machine_type: u16le,
-    compression_type: u16le,
+    subsystem: FuOpromSubsystem,
+    machine_type: FuOpromMachineType,
+    compression_type: FuOpromCompressionType,
     _reserved: [u8; 8],
     efi_image_offset: u16le,
     pci_header_offset: u16le = $struct_size,

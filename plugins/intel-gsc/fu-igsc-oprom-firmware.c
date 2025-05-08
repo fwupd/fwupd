@@ -159,33 +159,33 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 
 	/* check sanity */
 	if (fu_oprom_firmware_get_subsystem(FU_OPROM_FIRMWARE(firmware)) !=
-	    FU_OPROM_FIRMWARE_SUBSYSTEM_EFI_BOOT_SRV_DRV) {
+	    FU_OPROM_SUBSYSTEM_EFI_BOOT_SRV_DRV) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid subsystem, got 0x%x, expected 0x%x",
 			    fu_oprom_firmware_get_subsystem(FU_OPROM_FIRMWARE(firmware)),
-			    (guint)FU_OPROM_FIRMWARE_SUBSYSTEM_EFI_BOOT_SRV_DRV);
+			    (guint)FU_OPROM_SUBSYSTEM_EFI_BOOT_SRV_DRV);
 		return FALSE;
 	}
 	if (fu_oprom_firmware_get_machine_type(FU_OPROM_FIRMWARE(firmware)) !=
-	    FU_OPROM_FIRMWARE_MACHINE_TYPE_X64) {
+	    FU_OPROM_MACHINE_TYPE_X64) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid machine type, got 0x%x, expected 0x%x",
 			    fu_oprom_firmware_get_machine_type(FU_OPROM_FIRMWARE(firmware)),
-			    (guint)FU_OPROM_FIRMWARE_MACHINE_TYPE_X64);
+			    (guint)FU_OPROM_MACHINE_TYPE_X64);
 		return FALSE;
 	}
 	if (fu_oprom_firmware_get_compression_type(FU_OPROM_FIRMWARE(firmware)) !=
-	    FU_OPROM_FIRMWARE_COMPRESSION_TYPE_NONE) {
+	    FU_OPROM_COMPRESSION_TYPE_NONE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid compression type, got 0x%x, expected 0x%x (uncompressed)",
 			    fu_oprom_firmware_get_compression_type(FU_OPROM_FIRMWARE(firmware)),
-			    (guint)FU_OPROM_FIRMWARE_COMPRESSION_TYPE_NONE);
+			    (guint)FU_OPROM_COMPRESSION_TYPE_NONE);
 		return FALSE;
 	}
 

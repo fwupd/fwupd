@@ -16,7 +16,6 @@
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
 #include "fu-oprom-firmware.h"
-#include "fu-oprom-struct.h"
 #include "fu-string.h"
 
 /**
@@ -28,9 +27,9 @@
  */
 
 typedef struct {
-	guint16 machine_type;
-	guint16 subsystem;
-	guint16 compression_type;
+	FuOpromMachineType machine_type;
+	FuOpromSubsystem subsystem;
+	FuOpromCompressionType compression_type;
 	guint16 vendor_id;
 	guint16 device_id;
 } FuOpromFirmwarePrivate;
@@ -47,11 +46,11 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
  *
  * Gets the machine type.
  *
- * Returns: an integer
+ * Returns: a #FuOpromMachineType
  *
  * Since: 1.8.2
  **/
-guint16
+FuOpromMachineType
 fu_oprom_firmware_get_machine_type(FuOpromFirmware *self)
 {
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -65,11 +64,11 @@ fu_oprom_firmware_get_machine_type(FuOpromFirmware *self)
  *
  * Gets the machine type.
  *
- * Returns: an integer
+ * Returns: a #FuOpromSubsystem
  *
  * Since: 1.8.2
  **/
-guint16
+FuOpromSubsystem
 fu_oprom_firmware_get_subsystem(FuOpromFirmware *self)
 {
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -83,11 +82,11 @@ fu_oprom_firmware_get_subsystem(FuOpromFirmware *self)
  *
  * Gets the machine type.
  *
- * Returns: an integer
+ * Returns: a #FuOpromCompressionType
  *
  * Since: 1.8.2
  **/
-guint16
+FuOpromCompressionType
 fu_oprom_firmware_get_compression_type(FuOpromFirmware *self)
 {
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
