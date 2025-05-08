@@ -79,14 +79,18 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, flags, error)) {
+		g_prefix_error(error, "failed to parse as FuIfwiFptFirmware: ");
 		return FALSE;
+	}
 
 	stream_info = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),
 							  FU_IFWI_FPT_FIRMWARE_IDX_INFO,
 							  error);
-	if (stream_info == NULL)
+	if (stream_info == NULL) {
+		g_prefix_error(error, "info not found: ");
 		return FALSE;
+	}
 
 	/* check metadata header format */
 	st_md1 = fu_struct_igsc_fwu_image_metadata_v1_parse_stream(stream_info, 0x0, error);

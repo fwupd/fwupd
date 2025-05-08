@@ -20,14 +20,14 @@ struct FuStructIgscFwVersion {
 
 #[derive(ParseStream)]
 #[repr(C, packed)]
-struct FuStructIgscOpromSubsystemDeviceId {
+struct FuIgscFwdataDeviceInfo2 {
     subsys_vendor_id: u16le,
     subsys_device_id: u16le,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, New)]
 #[repr(C, packed)]
-struct FuStructIgscOpromSubsystemDevice4Id {
+struct FuIgscFwdataDeviceInfo4 {
     vendor_id: u16le,
     device_id: u16le,
     subsys_vendor_id: u16le,
@@ -111,4 +111,30 @@ enum FuIgscFwuHeciCommandId {
     Status,                 // get status of most recent update
     GetGfxDataUpdateInfo,   // get signed firmware data info
     GetSubsystemIds,        // get subsystem ids (VID/DID)
+}
+
+#[derive(ParseStream)]
+#[repr(C, packed)]
+struct FuStructIgscFwdataVersion {
+    oem_manuf_data_version: u32le,
+    major_version: u16le,
+    major_vcn: u16le,
+}
+
+#[repr(C, packed)]
+struct FuStructIgscFwdataUpdateExt {
+    extension_type: u32le,
+    extension_length: u32le,
+    oem_manuf_data_version: u32le,
+    major_vcn: u16le,
+    flags: u16le,
+}
+
+enum FuIgscFwuExtType {
+    DeviceIds           = 0x25,
+    FwdataUpdate        = 0x1D,
+    DeviceType          = 0x07,
+    SignedPackageInfo   = 0x0F,
+    IfwiPartMan         = 0x16,
+    DeviceIdArray       = 0x37,
 }

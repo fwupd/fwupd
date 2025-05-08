@@ -13,15 +13,8 @@
 struct _FuIgscOpromFirmware {
 	FuOpromFirmware parent_instance;
 	guint16 major_version;
-	GPtrArray *device_infos; /* of FuIgscFwdataDeviceInfo */
+	GPtrArray *device_infos; /* of FuIgscFwdataDeviceInfo4 */
 };
-
-typedef struct {
-	guint16 vendor_id; /* may be 0x0 */
-	guint16 device_id; /* may be 0x0 */
-	guint16 subsys_vendor_id;
-	guint16 subsys_device_id;
-} FuIgscFwdataDeviceInfo;
 
 G_DEFINE_TYPE(FuIgscOpromFirmware, fu_igsc_oprom_firmware, FU_TYPE_OPROM_FIRMWARE)
 
@@ -58,14 +51,16 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 	g_return_val_if_fail(FU_IS_IGSC_OPROM_FIRMWARE(self), FALSE);
 
 	for (guint i = 0; i < self->device_infos->len; i++) {
-		FuIgscFwdataDeviceInfo *info = g_ptr_array_index(self->device_infos, i);
-		if (info->vendor_id == 0x0 && info->device_id == 0x0 &&
-		    info->subsys_vendor_id == subsys_vendor_id &&
-		    info->subsys_device_id == subsys_device_id)
+		FuIgscFwdataDeviceInfo4 *info = g_ptr_array_index(self->device_infos, i);
+		if (fu_igsc_fwdata_device_info4_get_vendor_id(info) == 0x0 &&
+		    fu_igsc_fwdata_device_info4_get_device_id(info) == 0x0 &&
+		    fu_igsc_fwdata_device_info4_get_subsys_vendor_id(info) == subsys_vendor_id &&
+		    fu_igsc_fwdata_device_info4_get_subsys_device_id(info) == subsys_device_id)
 			return TRUE;
-		if (info->vendor_id == vendor_id && info->device_id == device_id &&
-		    info->subsys_vendor_id == subsys_vendor_id &&
-		    info->subsys_device_id == subsys_device_id)
+		if (fu_igsc_fwdata_device_info4_get_vendor_id(info) == vendor_id &&
+		    fu_igsc_fwdata_device_info4_get_device_id(info) == device_id &&
+		    fu_igsc_fwdata_device_info4_get_subsys_vendor_id(info) == subsys_vendor_id &&
+		    fu_igsc_fwdata_device_info4_get_subsys_device_id(info) == subsys_device_id)
 			return TRUE;
 	}
 
@@ -81,13 +76,6 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 	return FALSE;
 }
 
-/* extension types */
-#define MFT_EXT_TYPE_DEVICE_TYPE	 7
-#define MDF_EXT_TYPE_MODULE_ATTR	 10
-#define MFT_EXT_TYPE_SIGNED_PACKAGE_INFO 15
-#define MFT_EXT_TYPE_IFWI_PART_MAN	 22
-#define MFT_EXT_TYPE_DEVICE_ID_ARRAY	 55
-
 static gboolean
 fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw, GError **error)
 {
@@ -100,41 +88,32 @@ fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_TYPE) {
+	if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_TYPE) {
 		for (gsize offset = 0; offset < streamsz;
-		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE_ID_SIZE) {
-			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
-			g_autoptr(GByteArray) st = NULL;
-			st = fu_struct_igsc_oprom_subsystem_device_id_parse_stream(stream,
-										   offset,
-										   error);
+		     offset += FU_IGSC_FWDATA_DEVICE_INFO2_SIZE) {
+			g_autoptr(FuIgscFwdataDeviceInfo2) st = NULL;
+			g_autoptr(FuIgscFwdataDeviceInfo4) st4 = fu_igsc_fwdata_device_info4_new();
+			st = fu_igsc_fwdata_device_info2_parse_stream(stream, offset, error);
 			if (st == NULL)
 				return FALSE;
-			info->subsys_vendor_id =
-			    fu_struct_igsc_oprom_subsystem_device_id_get_subsys_vendor_id(st);
-			info->subsys_device_id =
-			    fu_struct_igsc_oprom_subsystem_device_id_get_subsys_device_id(st);
-			g_ptr_array_add(self->device_infos, g_steal_pointer(&info));
+			fu_igsc_fwdata_device_info4_set_vendor_id(st4, 0x0);
+			fu_igsc_fwdata_device_info4_set_device_id(st4, 0x0);
+			fu_igsc_fwdata_device_info4_set_subsys_vendor_id(
+			    st4,
+			    fu_igsc_fwdata_device_info2_get_subsys_vendor_id(st));
+			fu_igsc_fwdata_device_info4_set_subsys_device_id(
+			    st4,
+			    fu_igsc_fwdata_device_info2_get_subsys_device_id(st));
+			g_ptr_array_add(self->device_infos, g_steal_pointer(&st4));
 		}
-	} else if (fu_firmware_get_idx(fw) == MFT_EXT_TYPE_DEVICE_ID_ARRAY) {
+	} else if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_ID_ARRAY) {
 		for (gsize offset = 0; offset < streamsz;
-		     offset += FU_STRUCT_IGSC_OPROM_SUBSYSTEM_DEVICE4_ID_SIZE) {
-			g_autofree FuIgscFwdataDeviceInfo *info = g_new0(FuIgscFwdataDeviceInfo, 1);
-			g_autoptr(GByteArray) st = NULL;
-			st = fu_struct_igsc_oprom_subsystem_device4_id_parse_stream(stream,
-										    offset,
-										    error);
+		     offset += FU_IGSC_FWDATA_DEVICE_INFO4_SIZE) {
+			g_autoptr(FuIgscFwdataDeviceInfo4) st = NULL;
+			st = fu_igsc_fwdata_device_info4_parse_stream(stream, offset, error);
 			if (st == NULL)
 				return FALSE;
-			info->vendor_id =
-			    fu_struct_igsc_oprom_subsystem_device4_id_get_vendor_id(st);
-			info->device_id =
-			    fu_struct_igsc_oprom_subsystem_device4_id_get_device_id(st);
-			info->subsys_vendor_id =
-			    fu_struct_igsc_oprom_subsystem_device4_id_get_subsys_vendor_id(st);
-			info->subsys_device_id =
-			    fu_struct_igsc_oprom_subsystem_device4_id_get_subsys_device_id(st);
-			g_ptr_array_add(self->device_infos, g_steal_pointer(&info));
+			g_ptr_array_add(self->device_infos, g_steal_pointer(&st));
 		}
 	}
 
