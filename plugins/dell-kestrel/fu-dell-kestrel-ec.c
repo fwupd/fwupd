@@ -73,6 +73,23 @@ fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 	return dev_entry != NULL;
 }
 
+gboolean
+fu_dell_kestrel_ec_is_chunk_supported(FuDevice *device, FuDellKestrelEcDevType dev_type)
+{
+	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(device);
+	guint8 chunk_support = 0;
+
+	switch (dev_type) {
+	case FU_DELL_KESTREL_EC_DEV_TYPE_RMM:
+		return FALSE;
+	case FU_DELL_KESTREL_EC_DEV_TYPE_PD:
+		chunk_support = fu_struct_dell_kestrel_dock_data_get_chunk_support(self->dock_data);
+		return (chunk_support & FU_DELL_KESTREL_DOCK_DATA_CHUNK_SUPPORT_BITMAP_PD);
+	default:
+		return TRUE;
+	}
+}
+
 const gchar *
 fu_dell_kestrel_ec_devicetype_to_str(FuDellKestrelEcDevType dev_type,
 				     FuDellKestrelEcDevSubtype subtype,
