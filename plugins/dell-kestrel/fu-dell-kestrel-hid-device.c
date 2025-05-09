@@ -13,7 +13,7 @@
 G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DEVICE)
 
 /* Used for EC HID communication */
-#define FU_DELL_KESTREL_HID_TIMEOUT	     300
+#define FU_DELL_KESTREL_HID_TIMEOUT	     3000
 #define FU_DELL_KESTREL_HID_CMD_FWUPDATE     0xAB
 #define FU_DELL_KESTREL_HID_EXT_FWUPDATE     0x80
 #define FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE  0x00
@@ -82,7 +82,7 @@ fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *self, gpointer user_data,
 					0x0,
 					outbuffer,
 					192,
-					FU_DELL_KESTREL_HID_TIMEOUT * 3,
+					FU_DELL_KESTREL_HID_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
 }
@@ -213,6 +213,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 						FuProgress *progress,
 						FuDellKestrelEcDevType dev_type,
 						guint chunk_idx,
+						guint chunks_num,
 						GError **error)
 {
 	/* progress */
@@ -229,8 +230,9 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 		if (page == NULL)
 			return FALSE;
 
-		g_debug("sending chunk: %u, page: %u/%u.",
+		g_debug("sending chunk: %u/%u, page: %u/%u.",
 			chunk_idx,
+			chunks_num - 1,
 			j,
 			fu_chunk_array_length(pages) - 1);
 
@@ -314,6 +316,7 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 	gsize fw_sz = 0;
 	gsize chunk_sz = fu_dell_kestrel_hid_device_get_chunk_size(dev_type);
 	guint chunk_delay = fu_dell_kestrel_hid_device_get_chunk_delaytime(dev_type);
+	guint chunks_num = 0;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -337,13 +340,14 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 					       FU_CHUNK_ADDR_OFFSET_NONE,
 					       FU_CHUNK_PAGESZ_NONE,
 					       chunk_sz);
+	chunks_num = fu_chunk_array_length(chunks);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
+	fu_progress_set_steps(progress, chunks_num);
 
 	/* iterate the chunks */
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
+	for (guint i = 0; i < chunks_num; i++) {
 		FuDellKestrelHidEcChunkResponse resp =
 		    FU_DELL_KESTREL_HID_EC_CHUNK_RESPONSE_UNKNOWN;
 		g_autoptr(FuChunk) chk = NULL;
@@ -370,6 +374,7 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 			fu_progress_get_child(progress),
 			dev_type,
 			i,
+			chunks_num,
 			error))
 			return FALSE;
 
