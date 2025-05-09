@@ -82,7 +82,7 @@ fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *self, gpointer user_data,
 					0x0,
 					outbuffer,
 					192,
-					FU_DELL_KESTREL_HID_TIMEOUT * 3,
+					FU_DELL_KESTREL_HID_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
 }
@@ -213,6 +213,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 						FuProgress *progress,
 						FuDellKestrelEcDevType dev_type,
 						guint chunk_idx,
+						guint chunks_num,
 						GError **error)
 {
 	/* progress */
@@ -229,8 +230,9 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 		if (page == NULL)
 			return FALSE;
 
-		g_debug("sending chunk: %u, page: %u/%u.",
+		g_debug("sending chunk: %u/%u, page: %u/%u.",
 			chunk_idx,
+			chunks_num - 1,
 			j,
 			fu_chunk_array_length(pages) - 1);
 
@@ -370,6 +372,7 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 			fu_progress_get_child(progress),
 			dev_type,
 			i,
+			fu_chunk_array_length(chunks),
 			error))
 			return FALSE;
 
