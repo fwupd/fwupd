@@ -172,7 +172,7 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(dpbuf),
 					      stream,
 					      FU_STRUCT_EFI_UPDATE_INFO_SIZE,
-					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      flags,
 					      error)) {
 			g_prefix_error(error, "failed to parse dpbuf: ");
 			return FALSE;

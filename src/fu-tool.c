@@ -1119,7 +1119,7 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	archive_file_old = g_file_new_for_path(values[0]);
 	if (!fu_firmware_parse_file(FU_FIRMWARE(cabinet),
 				    archive_file_old,
-				    FU_FIRMWARE_PARSE_FLAG_NONE,
+				    FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				    error))
 		return FALSE;
 	if (!fu_cabinet_sign(cabinet, cert, privkey, FU_CABINET_SIGN_FLAG_NONE, error))
@@ -2894,6 +2894,9 @@ fu_util_firmware_parse(FuUtilPrivate *priv, gchar **values, GError **error)
 			    firmware_type);
 		return FALSE;
 	}
+
+	/* match the behavior of the daemon as we're printing the children */
+	priv->parse_flags |= FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM;
 
 	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
