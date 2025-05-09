@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include "fu-dell-kestrel-ec.h"
 #include "fu-dell-kestrel-hid-device.h"
 #include "fu-dell-kestrel-hid-struct.h"
 
@@ -17,9 +18,7 @@ G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DE
 #define FU_DELL_KESTREL_HID_CMD_FWUPDATE     0xAB
 #define FU_DELL_KESTREL_HID_EXT_FWUPDATE     0x80
 #define FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE  0x00
-#define FU_DELL_KESTREL_HID_DEV_EC_CHUNK_SZ  160000
-#define FU_DELL_KESTREL_HID_DEV_PD_CHUNK_SZ  190000
-#define FU_DELL_KESTREL_HID_DEV_ANY_CHUNK_SZ 180000
+#define FU_DELL_KESTREL_HID_DEV_ANY_CHUNK_SZ 120000
 #define FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ  G_MAXSIZE
 #define FU_DELL_KESTREL_HID_DATA_PAGE_SZ     192
 #define FU_DELL_KESTREL_HID_RESPONSE_LENGTH  0x03
@@ -192,19 +191,12 @@ fu_dell_kestrel_hid_device_get_chunk_delaytime(FuDellKestrelEcDevType dev_type)
 }
 
 static gsize
-fu_dell_kestrel_hid_device_get_chunk_size(FuDellKestrelEcDevType dev_type)
+fu_dell_kestrel_hid_device_get_chunk_size(FuDellKestrelHidDevice *self,
+					  FuDellKestrelEcDevType dev_type)
 {
-	/* return the max chunk size in bytes */
-	switch (dev_type) {
-	case FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC:
-		return FU_DELL_KESTREL_HID_DEV_EC_CHUNK_SZ;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_PD:
-		return FU_DELL_KESTREL_HID_DEV_PD_CHUNK_SZ;
-	case FU_DELL_KESTREL_EC_DEV_TYPE_RMM:
-		return FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ;
-	default:
+	if (fu_dell_kestrel_ec_is_chunk_supported(FU_DEVICE(self), dev_type))
 		return FU_DELL_KESTREL_HID_DEV_ANY_CHUNK_SZ;
-	}
+	return FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ;
 }
 
 static gboolean
@@ -314,7 +306,7 @@ fu_dell_kestrel_hid_device_write_firmware(FuDellKestrelHidDevice *self,
 					  GError **error)
 {
 	gsize fw_sz = 0;
-	gsize chunk_sz = fu_dell_kestrel_hid_device_get_chunk_size(dev_type);
+	gsize chunk_sz = fu_dell_kestrel_hid_device_get_chunk_size(self, dev_type);
 	guint chunk_delay = fu_dell_kestrel_hid_device_get_chunk_delaytime(dev_type);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
