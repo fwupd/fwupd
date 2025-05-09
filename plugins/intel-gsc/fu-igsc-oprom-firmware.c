@@ -195,7 +195,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 static void
 fu_igsc_oprom_firmware_init(FuIgscOpromFirmware *self)
 {
-	self->device_infos = g_ptr_array_new_with_free_func(g_free);
+	self->device_infos =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_igsc_fwdata_device_info4_unref);
 }
 
 static void
