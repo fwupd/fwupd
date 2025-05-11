@@ -119,3 +119,11 @@ Additionally, the list of approved firmware can be supplemented using
 ## Other frontends
 
 fwupdmgr is a command line client, but various additional graphical frontends are enumerated in the [fwupdmgr man page](https://fwupd.github.io/libfwupdplugin/fwupdmgr.html#description).
+
+## Packaging notes
+
+If you are working or maintaining a package of fwupd downstream, please consider the following notes.
+
+- The Meson build option `systemd_unit_user` should be used carefully, and the specified user (or resulting group) should be inaccessible to
+  unprivileged system users. Otherwise, this may pose a risk for privilege escalation. The default value for this setting (`DynamicUser=true`) is
+  secure and should be used in the general case.
