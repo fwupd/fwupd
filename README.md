@@ -138,3 +138,11 @@ fwupdmgr is a command line client, but various additional graphical frontends ar
 
 - [Coverity](https://scan.coverity.com/) - static analyzer for Java, C/C++, C#, JavaScript, Ruby, and Python code.
 - [PVS-Studio](https://pvs-studio.com/en/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
+
+## Packaging notes
+
+If you are working or maintaining a package of fwupd downstream, please consider the following notes.
+
+- The Meson build option `systemd_unit_user` should be used carefully, and the specified user (or resulting group) should be inaccessible to
+  unprivileged system users. Otherwise, this may pose a risk for privilege escalation. The default value for this setting (`DynamicUser=true`) is
+  secure and should be used in the general case.
