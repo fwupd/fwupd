@@ -1001,12 +1001,9 @@ static gboolean
 fu_jabra_gnp_child_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuJabraGnpChildDevice *self = FU_JABRA_GNP_CHILD_DEVICE(device);
-	/* ota device needs some time to restart and reconnect */
-	if (self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD) {
-		fu_device_sleep_full(FU_DEVICE(self), 45000, progress);
-		fu_device_set_remove_delay(FU_DEVICE(self), 10000);
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
+	fu_device_sleep_full(FU_DEVICE(self), 45000, progress);
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
+
 	return TRUE;
 }
 

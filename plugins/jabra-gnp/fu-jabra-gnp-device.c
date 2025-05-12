@@ -1136,19 +1136,6 @@ fu_jabra_gnp_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_jabra_gnp_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	/* ota device needs some time to restart and reconnect */
-	if (self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD) {
-		fu_device_sleep_full(FU_DEVICE(self), 45000, progress);
-		fu_device_set_remove_delay(FU_DEVICE(self), 10000);
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_jabra_gnp_device_set_quirk_kv(FuDevice *device,
 				 const gchar *key,
 				 const gchar *value,
@@ -1206,7 +1193,6 @@ fu_jabra_gnp_device_class_init(FuJabraGnpDeviceClass *klass)
 	device_class->probe = fu_jabra_gnp_device_probe;
 	device_class->setup = fu_jabra_gnp_device_setup;
 	device_class->write_firmware = fu_jabra_gnp_device_write_firmware;
-	device_class->attach = fu_jabra_gnp_device_attach;
 	device_class->set_quirk_kv = fu_jabra_gnp_device_set_quirk_kv;
 	device_class->set_progress = fu_jabra_gnp_device_set_progress;
 }
