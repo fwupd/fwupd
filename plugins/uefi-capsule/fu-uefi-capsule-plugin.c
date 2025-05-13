@@ -1066,8 +1066,8 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 		if (!fu_uefi_capsule_plugin_coldplug_device(plugin, dev, &error_device)) {
 			if (g_error_matches(error_device, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_warning("skipping device that failed coldplug: %s",
-					  error_device->message);
+				g_debug("skipping device that failed coldplug: %s",
+					error_device->message);
 				continue;
 			}
 			g_propagate_error(error, g_steal_pointer(&error_device));
