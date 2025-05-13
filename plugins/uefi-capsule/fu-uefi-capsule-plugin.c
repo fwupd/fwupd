@@ -1290,8 +1290,8 @@ fu_uefi_capsule_plugin_cleanup_bootnext(FuUefiCapsulePlugin *self, GError **erro
 	g_debug("EFI LoadOption: %s", loadoptstr);
 	if (g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(loadopt)), "Linux Firmware Updater") == 0 ||
 	    g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(loadopt)), "Linux-Firmware-Updater") == 0) {
-		g_warning("BootNext was not deleted automatically, so removing: "
-			  "this normally indicates a BIOS bug");
+		g_debug("BootNext was not deleted automatically, so removing: "
+			"this normally indicates a BIOS bug");
 		if (!fu_efivar_delete(FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", error))
 			return FALSE;
 	}
