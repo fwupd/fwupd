@@ -32,6 +32,10 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* not us */
+	if (!FU_IS_UDEV_DEVICE(device))
+		return TRUE;
+
 	/* only enumerate number 0 */
 	if (fu_udev_device_get_number(FU_UDEV_DEVICE(device)) != 0) {
 		g_set_error_literal(error,

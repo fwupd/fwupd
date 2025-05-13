@@ -1253,6 +1253,21 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 			g_debug("ignoring: %s", error_local->message);
 	}
 
+	/* run the backend-device-added action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		GArray *device_gtypes = fu_plugin_get_device_gtypes(plugin);
+		if (device_gtypes == NULL || device_gtypes->len == 0) {
+			g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_plugin_runner_backend_device_added(plugin,
+								   device_nop,
+								   progress,
+								   &error_local))
+				g_debug("ignoring: %s", error_local->message);
+		}
+	}
+
 	/* create each custom device with a context only */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
