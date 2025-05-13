@@ -897,13 +897,8 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
 	self->acpi_uefi = fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi);
-	if (self->acpi_uefi == NULL) {
+	if (self->acpi_uefi == NULL)
 		g_debug("failed to load ACPI UEFI table: %s", error_acpi_uefi->message);
-	} else {
-		/* we do not need to read from this again */
-		if (!fu_firmware_set_stream(self->acpi_uefi, NULL, error))
-			return FALSE;
-	}
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
