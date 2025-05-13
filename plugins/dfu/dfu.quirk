@@ -442,7 +442,39 @@ RemoveDelay = 9000
 Plugin = dfu
 Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
 RemoveDelay = 180000
+[USB\VID_095D&PID_92C8]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
 [USB\VID_095D&PID_92C7]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+RemoveDelay = 180000
+
+# Poly Studio V72
+[USB\VID_095D&PID_92D8]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
+[USB\VID_095D&PID_92DA]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
+[USB\VID_095D&PID_92D9]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
+RemoveDelay = 180000
+
+# Poly Studio V12
+[USB\VID_095D&PID_92D2]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
+[USB\VID_095D&PID_92D4]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload,index-force-detach
+RemoveDelay = 180000
+[USB\VID_095D&PID_92D3]
 Plugin = dfu
 Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 180000
