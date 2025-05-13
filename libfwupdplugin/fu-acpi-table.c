@@ -159,7 +159,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "CRC failed, expected %02x, got %02x",
+				    "CRC failed, expected 0x%02x, got 0x%02x",
 				    (guint)checksum - checksum_actual,
 				    checksum);
 			return FALSE;
