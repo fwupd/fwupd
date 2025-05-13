@@ -1,4 +1,5 @@
 if allow_uefi_capsule
+subdir('tests')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -105,6 +106,8 @@ if get_option('tests')
   e = executable(
     'uefi-self-test',
     rustgen.process('fu-uefi.rs'),
+    uefi_insyde_blob,
+    fwupdx64_efi_signed,
     sources: [
       'fu-self-test.c',
     ],

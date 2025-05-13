@@ -8,4 +8,5 @@
 
 #include <fwupdplugin.h>
 
+#define FU_TYPE_UEFI_CAPSULE_PLUGIN (fu_uefi_capsule_plugin_get_type())
 G_DECLARE_FINAL_TYPE(FuUefiCapsulePlugin, fu_uefi_capsule_plugin, FU, UEFI_CAPSULE_PLUGIN, FuPlugin)

@@ -22,7 +22,9 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 			     const gchar *target_app,
 			     GError **error)
 {
-	const gchar *argv_mkconfig[] = {"", "-o", "/boot/grub/grub.cfg", NULL};
+	g_autofree gchar *bootdir = fu_path_from_kind(FU_PATH_KIND_HOSTFS_BOOT);
+	g_autofree gchar *fn_grub_cfg = NULL;
+	const gchar *argv_mkconfig[] = {"", "-o", "grub.cfg", NULL};
 	const gchar *argv_reboot[] = {"", "fwupd", NULL};
 	gboolean exists_mkconfig = FALSE;
 	g_autofree gchar *grub_mkconfig = NULL;
@@ -33,14 +35,16 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* find grub.conf */
-	if (!fu_device_query_file_exists(FU_DEVICE(device),
-					 argv_mkconfig[2],
-					 &exists_mkconfig,
-					 error))
+	fn_grub_cfg = g_build_filename(bootdir, "grub", "grub.cfg", NULL);
+	if (!fu_device_query_file_exists(FU_DEVICE(device), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
-	if (!exists_mkconfig)
-		argv_mkconfig[2] = "/boot/grub2/grub.cfg";
-	if (!fu_device_query_file_exists(device, argv_mkconfig[2], &exists_mkconfig, error))
+
+	/* try harder */
+	if (!exists_mkconfig) {
+		g_free(fn_grub_cfg);
+		fn_grub_cfg = g_build_filename(bootdir, "grub2", "grub.cfg", NULL);
+	}
+	if (!fu_device_query_file_exists(device, fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
 	if (!exists_mkconfig) {
 		g_set_error_literal(error,
@@ -84,6 +88,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 
 	/* refresh GRUB configuration */
 	argv_mkconfig[0] = grub_mkconfig;
+	argv_mkconfig[2] = fn_grub_cfg;
 	if (!g_spawn_sync(NULL,
 			  (gchar **)argv_mkconfig,
 			  NULL,
@@ -96,6 +101,10 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 			  error))
 		return FALSE;
 	g_debug("%s", output);
+
+	/* skip for self tests */
+	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
+		return TRUE;
 
 	/* make fwupd default */
 	argv_reboot[0] = grub_reboot;
@@ -160,10 +169,6 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_bytes_set_contents(fn, fixed_fw, error))
 		return FALSE;
-
-	/* skip for self tests */
-	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
-		return TRUE;
 
 	/* enable debugging in the EFI binary */
 	if (!fu_uefi_capsule_device_perhaps_enable_debugging(self, error))
