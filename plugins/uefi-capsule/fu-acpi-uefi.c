@@ -85,7 +85,7 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)
-		 ->parse(FU_FIRMWARE(self), fw, offset, FWUPD_INSTALL_FLAG_NONE, error))
+		 ->parse(FU_FIRMWARE(self), fw, offset, flags, error))
 		return FALSE;
 
 	/* check signature and read flags */
