@@ -355,10 +355,6 @@ fu_uefi_bootmgr_bootnext(FuEfivars *efivars,
 	g_autoptr(FuEfiDevicePathList) dp_buf = NULL;
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 
-	/* skip for self tests */
-	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
-		return TRUE;
-
 	/* if secure boot was turned on this might need to be installed separately */
 	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL)

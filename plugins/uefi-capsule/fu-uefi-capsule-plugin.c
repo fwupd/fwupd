@@ -40,7 +40,8 @@ static void
 fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 {
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
-	fu_backend_add_string(self->backend, idt, str);
+	if (self->backend != NULL)
+		fu_backend_add_string(self->backend, idt, str);
 	fwupd_codec_string_append_int(str, idt, "ScreenWidth", self->screen_width);
 	fwupd_codec_string_append_int(str, idt, "ScreenHeight", self->screen_height);
 	if (self->bgrt != NULL) {
@@ -59,6 +60,7 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 	gsize offset = 0;
 	g_autofree gchar *fn = g_file_get_path(self->fwupd_efi_file);
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *version_safe = NULL;
 	g_autoptr(GBytes) buf = NULL;
 	g_autoptr(GBytes) ubuf = NULL;
 
@@ -85,9 +87,10 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 		g_prefix_error(error, "converting %s: ", fn);
 		return FALSE;
 	}
+	version_safe = fu_version_ensure_semver(version, FWUPD_VERSION_FORMAT_PAIR);
 
 	/* success */
-	fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", version);
+	fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", version_safe);
 	return TRUE;
 }
 
@@ -843,10 +846,6 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_acpi_uefi = NULL;
-
-	/* don't let user's environment influence test suite failures */
-	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
-		return TRUE;
 
 	/* for the uploaded report */
 	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc"))

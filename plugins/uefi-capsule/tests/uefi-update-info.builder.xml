@@ -1,0 +1,7 @@
+<firmware gtype="FuUefiUpdateInfo">
+  <guid>697bd920-12cf-4da9-8385-996909bc6559</guid>
+  <capsule_fn>foo.cap</capsule_fn>
+  <capsule_flags>0x1</capsule_flags>
+  <hw_inst>0x2</hw_inst>
+  <status>attempt-update</status>
+</firmware>

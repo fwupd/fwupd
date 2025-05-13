@@ -425,12 +425,6 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	g_autoptr(GBytes) dp_blob = NULL;
 	g_autoptr(GByteArray) st_inf = fu_struct_efi_update_info_new();
 
-	/* set the body as the device path */
-	if (g_getenv("FWUPD_UEFI_TEST") != NULL) {
-		g_debug("not building device path, in tests....");
-		return TRUE;
-	}
-
 	/* convert to EFI device path */
 	dp_buf = fu_uefi_capsule_device_build_dp_buf(priv->esp, capsule_path, error);
 	if (dp_buf == NULL)
