@@ -1244,6 +1244,15 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 		fu_plugin_runner_add_security_attrs(plugin, attrs);
 	}
 
+	/* run the post-reboot action */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		g_autoptr(FuDevice) device_nop = fu_device_new(self->ctx);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_plugin_runner_reboot_cleanup(plugin, device_nop, &error_local))
+			g_debug("ignoring: %s", error_local->message);
+	}
+
 	/* create each custom device with a context only */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
