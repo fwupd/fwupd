@@ -305,6 +305,7 @@ fu_uefi_cod_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_cod_device_init(FuUefiCodDevice *self)
 {
+	fu_device_add_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
 	fu_device_set_summary(FU_DEVICE(self),
 			      "UEFI System Resource Table device (Updated via capsule-on-disk)");
 }
