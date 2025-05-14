@@ -235,11 +235,13 @@ fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecur
 			}
 			if ((data_attr & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS) > 0 &&
 			    (data_attr & FU_EFIVARS_ATTR_RUNTIME_ACCESS) == 0) {
+				g_autofree gchar *flags =
+				    fu_uefi_capsule_plugin_efivars_attrs_to_string(data_attr);
 				g_debug("%s-%s attr of size 0x%x had flags %s",
 					name,
 					guids[j],
 					(guint)data_sz,
-					fu_uefi_capsule_plugin_efivars_attrs_to_string(data_attr));
+					flags);
 				fwupd_security_attr_add_metadata(attr, "guid", guids[j]);
 				fwupd_security_attr_add_metadata(attr, "name", name);
 				fwupd_security_attr_add_flag(
