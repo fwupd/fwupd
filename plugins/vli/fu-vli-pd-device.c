@@ -896,7 +896,7 @@ fu_vli_pd_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_vli_pd_device_init(FuVliPdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_HUB);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.pd");
 	fu_device_set_summary(FU_DEVICE(self), "USB power distribution device");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);

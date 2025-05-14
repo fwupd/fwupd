@@ -307,7 +307,7 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_RESET_CMOS);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK);
 }

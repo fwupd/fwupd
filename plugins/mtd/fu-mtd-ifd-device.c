@@ -78,7 +78,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 static void
 fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
 }
 
 static void

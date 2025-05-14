@@ -569,7 +569,7 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 
 	/* add icons */
 	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
-		fu_device_add_icon(device, "computer");
+		fu_device_add_icon(device, FU_DEVICE_ICON_COMPUTER);
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
 	}
 

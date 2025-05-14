@@ -495,7 +495,7 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "NVM Express solid state drive");
-	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_FORCE_ALIGN);

@@ -637,7 +637,7 @@ fu_ebitdo_device_probe(FuDevice *device, GError **error)
 	fu_device_set_vendor(device, "8BitDo");
 
 	/* add a hardcoded icon name */
-	fu_device_add_icon(device, "input-gaming");
+	fu_device_add_icon(device, FU_DEVICE_ICON_INPUT_GAMING);
 
 	/* only the bootloader can do the update */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {

@@ -865,7 +865,7 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_icon(FU_DEVICE(self), "usb-receiver");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_RECEIVER);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");

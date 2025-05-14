@@ -105,7 +105,7 @@ fu_uefi_kek_device_init(FuUefiKekDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "UEFI Key Exchange Key");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
-	fu_device_add_icon(FU_DEVICE(self), "application-certificate");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
 }
 
 static void

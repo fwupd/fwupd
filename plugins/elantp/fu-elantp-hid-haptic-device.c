@@ -1107,7 +1107,7 @@ fu_elantp_hid_haptic_device_init(FuElantpHidHapticDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_add_icon(FU_DEVICE(self), "input-touchpad");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp.haptic");
 	fu_device_set_name(FU_DEVICE(self), "HapticPad EEPROM");
 	fu_device_set_logical_id(FU_DEVICE(self), "eeprom");
