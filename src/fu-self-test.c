@@ -25,6 +25,7 @@
 #include "fu-context-private.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-efivars-private.h"
 #include "fu-engine-config.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-requirements.h"
@@ -7408,6 +7409,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSDIR", sysfsdir, TRUE);
 	(void)g_setenv("FWUPD_SELF_TEST", "1", TRUE);
 	(void)g_setenv("FWUPD_MACHINE_ID", "test", TRUE);
+	(void)g_setenv("FWUPD_EFIVARS", "dummy", TRUE);
 
 	/* ensure empty tree */
 	fu_self_test_mkroot();
@@ -7415,6 +7417,14 @@ main(int argc, char **argv)
 	/* do not save silo */
 	self->ctx = fu_context_new();
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* build a plausible EFI system */
+	ret = fu_efivars_set_secure_boot(fu_context_get_efivars(self->ctx), TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_efivars_set_boot_current(fu_context_get_efivars(self->ctx), 0x0000, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
