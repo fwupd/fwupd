@@ -911,9 +911,11 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 static gboolean
 fu_uefi_capsule_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuUefiCapsuleDevice *device_uefi = FU_UEFI_CAPSULE_DEVICE(device);
+	/* not us */
+	if (!FU_IS_UEFI_CAPSULE_DEVICE(device))
+		return TRUE;
 
-	if (fu_uefi_capsule_device_get_kind(device_uefi) !=
+	if (fu_uefi_capsule_device_get_kind(FU_UEFI_CAPSULE_DEVICE(device)) !=
 	    FU_UEFI_CAPSULE_DEVICE_KIND_DELL_TPM_FIRMWARE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
