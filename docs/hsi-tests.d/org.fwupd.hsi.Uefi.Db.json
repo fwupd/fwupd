@@ -16,6 +16,7 @@
   },
   "resolution": "Apply the LVFS KEK update for your hardware, and then apply the LVFS db update.",
   "references": {
+    "https://fwupd.github.io/libfwupdplugin/uefi-db.html": "fwupd Documentation for UEFI Secure Boot Certificates",
     "https://wiki.ubuntu.com/UEFI/SecureBoot/Testing": "Ubuntu SecureBoot Wiki Page"
   },
   "fwupd-version": "2.0.8"
