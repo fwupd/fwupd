@@ -863,7 +863,7 @@ fu_bcm57xx_recovery_device_init(FuBcm57xxRecoveryDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
-	fu_device_add_icon(FU_DEVICE(self), "network-wired");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 	fu_device_set_logical_id(FU_DEVICE(self), "recovery");
 
 	/* other values are set from a quirk */

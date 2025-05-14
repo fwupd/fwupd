@@ -80,7 +80,7 @@ fu_dell_kestrel_dpmux_init(FuDellKestrelDpmux *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.kestrel");
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x413C");
-	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_THUNDERBOLT);
 	fu_device_set_summary(FU_DEVICE(self), "Dell Dock Retimer");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

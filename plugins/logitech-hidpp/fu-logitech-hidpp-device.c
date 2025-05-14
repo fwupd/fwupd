@@ -88,21 +88,21 @@ static const gchar *
 fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 {
 	if (kind == FU_HIDPP_DEVICE_KIND_KEYBOARD)
-		return "input-keyboard";
+		return FU_DEVICE_ICON_INPUT_KEYBOARD;
 	if (kind == FU_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
-		return "pda"; // ish
+		return FU_DEVICE_ICON_PDA; // ish
 	if (kind == FU_HIDPP_DEVICE_KIND_NUMPAD)
-		return "input-dialpad";
+		return FU_DEVICE_ICON_INPUT_DIALPAD;
 	if (kind == FU_HIDPP_DEVICE_KIND_MOUSE)
-		return "input-mouse";
+		return FU_DEVICE_ICON_INPUT_MOUSE;
 	if (kind == FU_HIDPP_DEVICE_KIND_TOUCHPAD)
-		return "input-touchpad";
+		return FU_DEVICE_ICON_INPUT_TOUCHPAD;
 	if (kind == FU_HIDPP_DEVICE_KIND_TRACKBALL)
-		return "input-mouse"; // ish
+		return FU_DEVICE_ICON_INPUT_MOUSE; // ish
 	if (kind == FU_HIDPP_DEVICE_KIND_PRESENTER)
-		return "pda"; // ish
+		return FU_DEVICE_ICON_PDA; // ish
 	if (kind == FU_HIDPP_DEVICE_KIND_RECEIVER)
-		return "preferences-desktop-keyboard";
+		return FU_DEVICE_ICON_USB_RECEIVER;
 	return NULL;
 }
 

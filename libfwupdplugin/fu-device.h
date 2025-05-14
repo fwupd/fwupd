@@ -840,6 +840,261 @@ fu_device_new(FuContext *ctx);
  */
 #define FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART "install-loop-restart"
 
+/* standard icons */
+
+/**
+ * FU_DEVICE_ICON_COMPUTER:
+ *
+ * A generic icon of a computer.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_COMPUTER "computer"
+
+/**
+ * FU_DEVICE_ICON_GPU:
+ *
+ * A generic icon of a gpu.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_GPU "gpu"
+
+/**
+ * FU_DEVICE_ICON_AC_ADAPTER:
+ *
+ * A generic icon of an AC adapter.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_AC_ADAPTER "ac-adapter"
+
+/**
+ * FU_DEVICE_ICON_DOCK:
+ *
+ * A generic icon of a dock.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_DOCK "dock"
+
+/**
+ * FU_DEVICE_ICON_DOCK_USB:
+ *
+ * An icon of a dock attached via USB.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_DOCK_USB "dock-usb"
+
+/**
+ * FU_DEVICE_ICON_USB_HUB:
+ *
+ * An icon of a hub of USB devices.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_USB_HUB "usb-hub"
+
+/**
+ * FU_DEVICE_ICON_THUNDERBOLT:
+ *
+ * A generic icon of a thunderbolt device.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_THUNDERBOLT "thunderbolt"
+
+/**
+ * FU_DEVICE_ICON_MEMORY:
+ *
+ * A generic icon of a memory card.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_MEMORY "media-memory"
+
+/**
+ * FU_DEVICE_ICON_MODEM:
+ *
+ * An icon of a modem.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_MODEM "modem"
+
+/**
+ * FU_DEVICE_ICON_NETWORK_WIRED:
+ *
+ * A generic icon of a wired connection.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_NETWORK_WIRED "network-wired"
+
+/**
+ * FU_DEVICE_ICON_NETWORK_WIRELESS:
+ *
+ * A generic icon of a wireless connection.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_NETWORK_WIRELESS "network-wireless"
+
+/**
+ * FU_DEVICE_ICON_DRIVE_HARDDISK:
+ *
+ * A generic icon of a hard disk drive.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_DRIVE_HARDDISK "drive-harddisk"
+
+/**
+ * FU_DEVICE_ICON_DRIVE_SSD:
+ *
+ * A generic icon of a hard disk drive.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_DRIVE_SSD "drive-harddisk-solidstate"
+
+/**
+ * FU_DEVICE_ICON_DRIVE_MULTIDISK:
+ *
+ * A generic icon of a multidisk drive.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_DRIVE_MULTIDISK "drive-multidisk"
+
+/**
+ * FU_DEVICE_ICON_AUDIO_CARD:
+ *
+ * An icon of an audio card.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_AUDIO_CARD "audio-card"
+
+/**
+ * FU_DEVICE_ICON_VIDEO_DISPLAY:
+ *
+ * A generic icon of a display.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_VIDEO_DISPLAY "video-display"
+
+/**
+ * FU_DEVICE_ICON_INPUT_TOUCHPAD:
+ *
+ * A generic icon of a touchpad.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_TOUCHPAD "input-touchpad"
+
+/**
+ * FU_DEVICE_ICON_INPUT_KEYBOARD:
+ *
+ * A generic icon of a keyboard.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_KEYBOARD "input-keyboard"
+
+/**
+ * FU_DEVICE_ICON_INPUT_MOUSE:
+ *
+ * A generic icon of a mouse.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_MOUSE "input-mouse"
+
+/**
+ * FU_DEVICE_ICON_INPUT_DIALPAD:
+ *
+ * A generic icon of a dialpad.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_DIALPAD "input-dialpad"
+
+/**
+ * FU_DEVICE_ICON_INPUT_GAMING:
+ *
+ * A generic icon of a gaming controller.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_GAMING "input-gaming"
+
+/**
+ * FU_DEVICE_ICON_INPUT_TABLET:
+ *
+ * A generic icon of a drawing tablet.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_INPUT_TABLET "input-tablet"
+
+/**
+ * FU_DEVICE_ICON_AUTH_FINGERPRINT:
+ *
+ * A generic icon of a fingerprint reader.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_AUTH_FINGERPRINT "auth-fingerprint"
+
+/**
+ * FU_DEVICE_ICON_USB_RECEIVER:
+ *
+ * A generic icon of an USB receiver.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_USB_RECEIVER "usb-receiver"
+
+/**
+ * FU_DEVICE_ICON_PDA:
+ *
+ * A generic icon of a PDA.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_PDA "pda"
+
+/**
+ * FU_DEVICE_ICON_WEB_CAMERA:
+ *
+ * A generic icon of a web camera.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_WEB_CAMERA "camera-web"
+
+/**
+ * FU_DEVICE_ICON_VIDEO_CAMERA:
+ *
+ * A generic icon of a video camera.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_VIDEO_CAMERA "camera-video"
+
+/**
+ * FU_DEVICE_ICON_APPLICATION_CERTIFICATE:
+ *
+ * A generic icon of a certificate.
+ *
+ * Since: 2.0.10
+ */
+#define FU_DEVICE_ICON_APPLICATION_CERTIFICATE "application-certificate"
+
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);

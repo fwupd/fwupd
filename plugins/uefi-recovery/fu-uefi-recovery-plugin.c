@@ -38,7 +38,7 @@ fu_uefi_recovery_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_metadata(device, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
-	fu_device_add_icon(device, "computer");
+	fu_device_add_icon(device, FU_DEVICE_ICON_COMPUTER);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *hwid = g_ptr_array_index(hwids, i);
 		fu_device_add_instance_id(device, hwid);

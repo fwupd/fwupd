@@ -254,7 +254,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			version = g_strdup_printf("%02x.%02x.%02x", val[1], val[2], val[3]);
 			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 			fu_device_set_version(child, version);
-			fu_device_add_icon(child, "thunderbolt");
+			fu_device_add_icon(child, FU_DEVICE_ICON_THUNDERBOLT);
 			fu_device_set_name(child, "Thunderbolt 4 Controller");
 		} else if (g_strcmp0(components[i].name, "DP5x") == 0) {
 			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
@@ -265,7 +265,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			version = g_strdup_printf("%d.%02d.%03d", val[2], val[3], val[4]);
 			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 			fu_device_set_version(child, version);
-			fu_device_add_icon(child, "video-display");
+			fu_device_add_icon(child, FU_DEVICE_ICON_VIDEO_DISPLAY);
 			fu_device_set_name(child, "Display Port 5");
 		} else if (g_strcmp0(components[i].name, "DP6x") == 0) {
 			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
@@ -285,7 +285,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 				fu_device_set_name(child, "Display Port 6");
 			}
 			fu_device_set_version(child, version);
-			fu_device_add_icon(child, "video-display");
+			fu_device_add_icon(child, FU_DEVICE_ICON_VIDEO_DISPLAY);
 		} else if (g_strcmp0(components[i].name, "USB3") == 0) {
 			if ((val[3] == 0x00 && val[4] == 0x00) ||
 			    (val[3] == 0xFF && val[4] == 0xFF)) {
@@ -328,7 +328,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 			version = g_strdup_printf("%u.%u.%u", (guint)(val[2] >> 4), val[3], val[4]);
 			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 			fu_device_set_version(child, version);
-			fu_device_add_icon(child, "network-wired");
+			fu_device_add_icon(child, FU_DEVICE_ICON_NETWORK_WIRED);
 			fu_device_set_name(child, "Ethernet Adapter");
 		} else if (g_strcmp0(components[i].name, "MCU") == 0) {
 			if ((val[0] == 0x00 && val[1] == 0x00) ||
@@ -817,7 +817,7 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
-	fu_device_add_icon(FU_DEVICE(self), "dock");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK);
 }
 
 static void

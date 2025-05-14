@@ -835,7 +835,7 @@ fu_bnr_dp_device_init(FuBnrDpDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_vendor(FU_DEVICE(self), "B&R Industrial Automation GmbH");
 	fu_device_add_protocol(FU_DEVICE(self), "com.br-automation.dpaux");
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_BNR_DP_FIRMWARE_SIZE_MAX);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);

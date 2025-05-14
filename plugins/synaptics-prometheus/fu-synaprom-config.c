@@ -218,7 +218,7 @@ fu_synaprom_config_init(FuSynapromConfig *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "cfg");
 	fu_device_set_name(FU_DEVICE(self), "Prometheus IOTA Config");
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader config");
-	fu_device_add_icon(FU_DEVICE(self), "auth-fingerprint");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AUTH_FINGERPRINT);
 }
 
 static void

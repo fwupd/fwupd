@@ -712,7 +712,7 @@ fu_vli_pd_parade_device_init(FuVliPdParadeDevice *self)
 	self->device_kind = FU_VLI_DEVICE_KIND_PS186;
 	self->page2 = 0x14;
 	self->page7 = 0x1E;
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);

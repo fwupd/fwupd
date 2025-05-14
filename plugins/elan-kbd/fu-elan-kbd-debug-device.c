@@ -64,7 +64,7 @@ fu_elan_kbd_debug_device_init(FuElanKbdDebugDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.elan.kbd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_icon(FU_DEVICE(self), "input-keyboard");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_KEYBOARD);
 }
 
 static void

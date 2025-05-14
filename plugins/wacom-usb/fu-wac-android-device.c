@@ -18,7 +18,7 @@ static void
 fu_wac_android_device_init(FuWacAndroidDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.wacom.usb");
-	fu_device_add_icon(FU_DEVICE(self), "input-tablet");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TABLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_inhibit(FU_DEVICE(self),
 			  "hw",

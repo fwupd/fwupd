@@ -40,23 +40,23 @@ static void
 fu_redfish_device_set_device_class(FuRedfishDevice *self, const gchar *tmp)
 {
 	if (g_strcmp0(tmp, "NetworkController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "network-wired");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 		return;
 	}
 	if (g_strcmp0(tmp, "MassStorageController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "drive-multidisk");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_MULTIDISK);
 		return;
 	}
 	if (g_strcmp0(tmp, "DisplayController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "video-display");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 		return;
 	}
 	if (g_strcmp0(tmp, "DockingStation") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "dock");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK);
 		return;
 	}
 	if (g_strcmp0(tmp, "WirelessController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "network-wireless");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRELESS);
 		return;
 	}
 	g_debug("no icon mapping for %s", tmp);
@@ -330,10 +330,10 @@ fu_redfish_device_set_name(FuRedfishDevice *self, const gchar *name)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	} else if (g_str_has_prefix(name, "DISK-")) {
 		name += 5;
-		fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	} else if (g_str_has_prefix(name, "POWER-")) {
 		name += 6;
-		fu_device_add_icon(FU_DEVICE(self), "ac-adapter");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AC_ADAPTER);
 		fu_device_set_summary(FU_DEVICE(self), "Redfish power supply unit");
 	} else {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);

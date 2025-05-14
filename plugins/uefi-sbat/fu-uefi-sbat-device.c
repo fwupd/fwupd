@@ -202,7 +202,7 @@ fu_uefi_sbat_device_init(FuUefiSbatDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Generation number based revocation mechanism");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.uefi.sbat");
-	fu_device_add_icon(FU_DEVICE(self), "application-certificate");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);

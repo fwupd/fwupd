@@ -646,7 +646,7 @@ fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
-	fu_device_add_icon(FU_DEVICE(self), "network-wired");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 
 	/* other values are set from a quirk */
 	fu_device_set_firmware_size(FU_DEVICE(self), BCM_FIRMWARE_SIZE);

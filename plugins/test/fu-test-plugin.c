@@ -23,7 +23,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	fu_device_set_id(device, "FakeDevice");
 	fu_device_add_instance_id(device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name(device, "Integrated_Webcam(TM)");
-	fu_device_add_icon(device, "preferences-desktop-keyboard");
+	fu_device_add_icon(device, FU_DEVICE_ICON_WEB_CAMERA);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);

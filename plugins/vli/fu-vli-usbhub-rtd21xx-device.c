@@ -537,7 +537,7 @@ fu_vli_usbhub_rtd21xx_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_vli_usbhub_rtd21xx_device_init(FuVliUsbhubRtd21xxDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
