@@ -128,7 +128,7 @@ fwupd_enums_func(void)
 			break;
 		g_assert_cmpint(fwupd_remote_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_INSTALL_FLAG_ONLY_EMULATED; i *= 2) {
 		const gchar *tmp = fwupd_install_flags_to_string(i);
 		if (tmp == NULL)
 			continue;

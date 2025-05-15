@@ -956,6 +956,14 @@ fu_dbus_daemon_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 		XbNode *component = g_ptr_array_index(components, i);
 		for (guint j = 0; j < devices_possible->len; j++) {
 			FuDevice *device = g_ptr_array_index(devices_possible, j);
+
+			/* emulating */
+			if ((helper->flags & FWUPD_INSTALL_FLAG_ONLY_EMULATED) &&
+			    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+				g_debug("skipping non-emulated %s", fu_device_get_id(device));
+				continue;
+			}
+
 			g_debug("testing device %u [%s] with component %u",
 				j,
 				fu_device_get_id(device),
