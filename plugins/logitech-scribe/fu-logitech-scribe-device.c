@@ -480,9 +480,9 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "init");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "start-transfer");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "device-write-blocks");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "device-write-blocks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "uninit");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "uninit");
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
