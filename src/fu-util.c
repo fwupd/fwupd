@@ -1456,6 +1456,7 @@ fu_util_device_emulate(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
 	helper->use_emulation = TRUE;
+	priv->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 	priv->filter_device_include |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_util_device_test_full(priv, values, helper, error);
 }
@@ -5043,6 +5044,7 @@ main(int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean only_emulated = FALSE;
 	gboolean only_p2p = FALSE;
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
@@ -5110,6 +5112,14 @@ main(int argc, char *argv[])
 	     &allow_branch_switch,
 	     /* TRANSLATORS: command line option */
 	     N_("Allow switching firmware branch"),
+	     NULL},
+	    {"only-emulated",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &only_emulated,
+	     /* TRANSLATORS: command line option */
+	     N_("Only install onto emulated devices"),
 	     NULL},
 	    {"force",
 	     '\0',
@@ -5756,6 +5766,8 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (only_emulated)
+		priv->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 	if (force) {
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;

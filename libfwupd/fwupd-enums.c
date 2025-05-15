@@ -857,6 +857,8 @@ fwupd_install_flags_from_string(const gchar *str)
 		return FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (g_strcmp0(str, "ignore-requirements") == 0)
 		return FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+	if (g_strcmp0(str, "only-emulated") == 0)
+		return FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 
 	return FWUPD_INSTALL_FLAG_UNKNOWN;
 }
@@ -888,5 +890,7 @@ fwupd_install_flags_to_string(FwupdInstallFlags install_flags)
 		return "allow-branch-switch";
 	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
 		return "ignore-requirements";
+	if (install_flags == FWUPD_INSTALL_FLAG_ONLY_EMULATED)
+		return "only-emulated";
 	return NULL;
 }

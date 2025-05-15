@@ -69,6 +69,7 @@ _fwupdmgr_opts=(
 	'--no-safety-check'
 	'--no-remote-check'
 	'--no-security-fix'
+	'--only-emulated'
 	'--show-all'
 	'--sign'
 	'--filter'

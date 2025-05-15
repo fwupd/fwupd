@@ -1122,6 +1122,14 @@ typedef enum {
 	 * Since: 1.9.21
 	 */
 	FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS = 1 << 9,
+	/**
+	 * FWUPD_INSTALL_FLAG_ONLY_EMULATED:
+	 *
+	 * Only install to emulated devices.
+	 *
+	 * Since: 2.0.10
+	 */
+	FWUPD_INSTALL_FLAG_ONLY_EMULATED = 1 << 10,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdInstallFlags;
