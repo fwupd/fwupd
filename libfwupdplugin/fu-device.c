@@ -4272,6 +4272,8 @@ fu_device_remove_flag(FuDevice *self, FwupdDeviceFlags flag)
 void
 fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	/* none is not used as an "exported" flag */
 	if (flag == FWUPD_DEVICE_FLAG_NONE)
 		return;
@@ -4311,6 +4313,17 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	/* do not let devices be updated until back in range */
 	if (flag & FWUPD_DEVICE_FLAG_UNREACHABLE)
 		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
+
+	/* fixup and maybe show a warning if the remove delay was forgotten */
+	if ((flag & FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) && priv->remove_delay == 0) {
+		priv->remove_delay = FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE;
+#ifndef SUPPORTED_BUILD
+		g_critical("FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG added but remove delay is unset! -- "
+			   "add something like fu_device_set_remove_delay(FU_DEVICE(self), "
+			   "FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE) to the %s _init()",
+			   G_OBJECT_TYPE_NAME(self));
+#endif
+	}
 }
 
 /**
