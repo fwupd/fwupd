@@ -483,7 +483,6 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25, "device-write-blocks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "uninit");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 73, NULL);
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
@@ -562,8 +561,6 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	 * image file pushed. Device validates and uploads new image on inactive partition. Reboots
 	 * wait for RemoveDelay duration
 	 */
-	fu_device_sleep_full(FU_DEVICE(self), 60 * 1000, fu_progress_get_child(progress));
-	fu_progress_step_done(progress);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success! */
@@ -655,6 +652,7 @@ fu_logitech_scribe_device_init(FuLogitechScribeDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
