@@ -4240,6 +4240,7 @@ fu_device_list_better_than_func(gconstpointer user_data)
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
+	fu_device_set_remove_delay(device1, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_plugin_device_add(plugin1, device1);
 
 	/* should be ignored */
