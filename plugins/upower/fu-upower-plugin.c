@@ -96,7 +96,7 @@ fu_upower_plugin_update_battery(FuPlugin *plugin)
 
 	on_battery = g_dbus_proxy_get_cached_property(self->proxy_manager, "OnBattery");
 	if (on_battery == NULL) {
-		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
 		return;
 	}
 	if (g_variant_get_boolean(on_battery))
