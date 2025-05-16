@@ -1023,6 +1023,9 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
+
 	/* print all POST requests */
 	for (guint i = 0; i < priv->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
