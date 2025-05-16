@@ -2030,6 +2030,79 @@ fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 }
 
 static gboolean
+fu_util_get_report_metadata_as_json(FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
+{
+	GPtrArray *plugins;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* daemon metadata */
+	metadata = fu_engine_get_report_metadata(priv->engine, error);
+	if (metadata == NULL)
+		return FALSE;
+	fwupd_codec_json_append_map(builder, "daemon", metadata);
+
+	/* device metadata */
+	devices = fu_engine_get_devices(priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+	json_builder_set_member_name(builder, "devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(GHashTable) metadata_post = NULL;
+		g_autoptr(GHashTable) metadata_pre = NULL;
+
+		locker = fu_device_locker_new(device, error);
+		if (locker == NULL)
+			return FALSE;
+		metadata_pre = fu_device_report_metadata_pre(device);
+		metadata_post = fu_device_report_metadata_post(device);
+		if (metadata_pre == NULL && metadata_post == NULL)
+			continue;
+
+		json_builder_begin_object(builder);
+		json_builder_set_member_name(builder, fu_device_get_id(device));
+		json_builder_begin_array(builder);
+		if (metadata_pre != NULL) {
+			json_builder_begin_object(builder);
+			fwupd_codec_json_append_map(builder, "pre", metadata_pre);
+			json_builder_end_object(builder);
+		}
+		if (metadata_post != NULL) {
+			json_builder_begin_object(builder);
+			fwupd_codec_json_append_map(builder, "post", metadata_post);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+
+	/* plugin metadata */
+	plugins = fu_engine_get_plugins(priv->engine);
+	json_builder_set_member_name(builder, "plugins");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
+		if (fu_plugin_get_report_metadata(plugin) == NULL)
+			continue;
+		json_builder_begin_object(builder);
+		fwupd_codec_json_append_map(builder,
+					    fu_plugin_get_name(plugin),
+					    fu_plugin_get_report_metadata(plugin));
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
@@ -2049,6 +2122,16 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 				  error))
 		return FALSE;
 	fu_progress_step_done(priv->progress);
+
+	/* not for human consumption */
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		if (!fu_util_get_report_metadata_as_json(priv, builder, error))
+			return FALSE;
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 
 	/* daemon metadata */
 	metadata = fu_engine_get_report_metadata(priv->engine, error);
