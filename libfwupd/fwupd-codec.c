@@ -717,3 +717,35 @@ fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **val
 		json_builder_add_string_value(builder, value[i]);
 	json_builder_end_array(builder);
 }
+
+/**
+ * fwupd_codec_json_append_map:
+ * @builder: (not nullable): a #JsonBuilder
+ * @key: (not nullable): a string
+ * @value: (element-type utf8 utf8): a hash table
+ *
+ * Appends a key and string hash map to a JSON builder.
+ *
+ * Since: 2.0.10
+ */
+void
+fwupd_codec_json_append_map(JsonBuilder *builder, const gchar *key, GHashTable *value)
+{
+	GHashTableIter iter;
+	gpointer hash_key, hash_value;
+
+	g_return_if_fail(JSON_IS_BUILDER(builder));
+	g_return_if_fail(key != NULL);
+
+	if (value == NULL)
+		return;
+	json_builder_set_member_name(builder, key);
+	json_builder_begin_object(builder);
+	g_hash_table_iter_init(&iter, value);
+	while (g_hash_table_iter_next(&iter, &hash_key, &hash_value)) {
+		fwupd_codec_json_append(builder,
+					(const gchar *)hash_key,
+					(const gchar *)hash_value);
+	}
+	json_builder_end_object(builder);
+}

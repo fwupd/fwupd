@@ -123,6 +123,9 @@ void
 fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
     G_GNUC_NON_NULL(1, 2);
 void
+fwupd_codec_json_append_map(JsonBuilder *builder, const gchar *key, GHashTable *value)
+    G_GNUC_NON_NULL(1, 2);
+void
 fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)
     G_GNUC_NON_NULL(1, 2);
 void
