@@ -2472,12 +2472,14 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		has_pending = TRUE;
-		fu_console_print(
-		    priv->console,
-		    "%s %s…",
-		    /* TRANSLATORS: shown when shutting down to switch to the new version */
-		    _("Activating firmware update"),
-		    fu_device_get_name(device));
+		if (!priv->as_json) {
+			fu_console_print(
+			    priv->console,
+			    "%s %s…",
+			    /* TRANSLATORS: shown when shutting down to switch to the new version */
+			    _("Activating firmware update"),
+			    fu_device_get_name(device));
+		}
 		if (!fu_engine_activate(priv->engine,
 					fu_device_get_id(device),
 					fu_progress_get_child(priv->progress),
