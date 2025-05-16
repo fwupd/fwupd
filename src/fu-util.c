@@ -2242,10 +2242,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		fu_console_print(priv->console,
-				 "%s %s",
-				 _("Updating"),
-				 fwupd_remote_get_id(remote));
+		if (!priv->as_json)
+			fu_console_print(priv->console,
+					 "%s %s",
+					 _("Updating"),
+					 fwupd_remote_get_id(remote));
 		if (!fwupd_client_refresh_remote(priv->client,
 						 remote,
 						 priv->download_flags,
@@ -2278,6 +2279,9 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 			    "--force");
 		return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* get devices from daemon */
 	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
@@ -2340,6 +2344,9 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 					  priv->cancellable,
 					  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- the user can do this by-hand too */
 	fu_console_print_literal(priv->console, _("Successfully refreshed metadata manually"));
