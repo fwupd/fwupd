@@ -11,6 +11,7 @@
 struct _FuUefiPkDevice {
 	FuUefiDevice parent_instance;
 	gboolean has_pk_test_key;
+	gchar *key_id;
 };
 
 G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_UEFI_DEVICE)
@@ -45,6 +46,20 @@ fu_uefi_pk_device_check(FuUefiPkDevice *self, const gchar *str, GError **error)
 	return TRUE;
 }
 
+const gchar *
+fu_uefi_pk_device_get_key_id(FuUefiPkDevice *self)
+{
+	g_return_val_if_fail(FU_IS_UEFI_PK_DEVICE(self), NULL);
+	return self->key_id;
+}
+
+static void
+fu_uefi_pk_device_set_key_id(FuUefiPkDevice *self, const gchar *key_id)
+{
+	g_free(self->key_id);
+	self->key_id = g_strdup(key_id);
+}
+
 static gboolean
 fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *sig, GError **error)
 {
@@ -68,9 +83,10 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 	fu_device_set_name(FU_DEVICE(self), subject_name != NULL ? subject_name : "Unknown");
 	fu_device_set_vendor(FU_DEVICE(self), subject_vendor != NULL ? subject_vendor : "Unknown");
 	fu_device_set_version_raw(FU_DEVICE(self), fu_firmware_get_version_raw(FU_FIRMWARE(sig)));
+	fu_uefi_pk_device_set_key_id(self, fu_firmware_get_id(FU_FIRMWARE(sig)));
 
 	/* success, certificate was parsed correctly */
-	fu_device_add_instance_strup(FU_DEVICE(self), "CRT", fu_firmware_get_id(FU_FIRMWARE(sig)));
+	fu_device_add_instance_strup(FU_DEVICE(self), "CRT", self->key_id);
 	return fu_device_build_instance_id(FU_DEVICE(self), error, "UEFI", "CRT", NULL);
 }
 
@@ -149,9 +165,19 @@ fu_uefi_pk_device_init(FuUefiPkDevice *self)
 }
 
 static void
+fu_uefi_pk_device_finalize(GObject *object)
+{
+	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(object);
+	g_free(self->key_id);
+	G_OBJECT_CLASS(fu_uefi_pk_device_parent_class)->finalize(object);
+}
+
+static void
 fu_uefi_pk_device_class_init(FuUefiPkDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_uefi_pk_device_finalize;
 	device_class->to_string = fu_uefi_pk_device_to_string;
 	device_class->add_security_attrs = fu_uefi_pk_device_add_security_attrs;
 	device_class->probe = fu_uefi_pk_device_probe;
