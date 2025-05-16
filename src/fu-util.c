@@ -4818,6 +4818,10 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	if (!fwupd_client_fix_host_security_attr(priv->client, values[0], priv->cancellable, error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fixed successfully"));
 	return TRUE;
@@ -4932,6 +4936,10 @@ fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 						  priv->cancellable,
 						  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fix reverted successfully"));
 	return TRUE;
