@@ -690,6 +690,9 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
+
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(priv->console, _("Successfully installed firmware"));
 
@@ -2998,7 +3001,7 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 			    fwupd_device_get_update_error(dev));
 		return FALSE;
 	}
-	if (!priv->no_safety_check && !priv->assume_yes) {
+	if (!priv->as_json && !priv->no_safety_check && !priv->assume_yes) {
 		const gchar *title = fwupd_client_get_host_product(priv->client);
 		if (!fu_util_prompt_warning(priv->console, dev, rel, title, error))
 			return FALSE;
