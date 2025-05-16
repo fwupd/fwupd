@@ -2045,6 +2045,7 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (fu_plugin_get_report_metadata(plugin) == NULL)
 			continue;
+		fwupd_codec_string_append(str, 1, fu_plugin_get_name(plugin), "");
 		fu_util_report_metadata_to_string(fu_plugin_get_report_metadata(plugin), 3, str);
 	}
 	fu_progress_step_done(priv->progress);
