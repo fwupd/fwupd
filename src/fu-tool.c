@@ -627,6 +627,49 @@ fu_util_get_device(FuUtilPrivate *priv, const gchar *id, GError **error)
 }
 
 static gboolean
+fu_util_get_updates_as_json(FuUtilPrivate *priv, GPtrArray *devices, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fu_engine_get_upgrades(priv->engine,
+					      priv->request,
+					      fwupd_device_get_id(dev),
+					      &error_local);
+		if (rels == NULL) {
+			g_debug("no upgrades: %s", error_local->message);
+			continue;
+		}
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, j);
+			if (!fwupd_release_match_flags(rel,
+						       priv->filter_release_include,
+						       priv->filter_release_exclude))
+				continue;
+			fwupd_device_add_release(dev, rel);
+		}
+
+		/* add to builder */
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -661,6 +704,10 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_updates_as_json(priv, devices, error);
 
 	fwupd_device_array_ensure_parents(devices);
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
