@@ -561,7 +561,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	 * image file pushed. Device validates and uploads new image on inactive partition. Reboots
 	 * wait for RemoveDelay duration
 	 */
-	// fu_device_sleep_full(FU_DEVICE(self), 60 * 1000, fu_progress_get_child(progress));
+	fu_device_sleep_full(FU_DEVICE(self), 60 * 1000, progress);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success! */
