@@ -88,38 +88,15 @@ fu_powerd_plugin_rescan(FuPlugin *plugin, GVariant *parameters)
 	/* plugged in */
 	if (power_type == FU_POWERD_EXTERNAL_POWER_AC ||
 	    power_type == FU_POWERD_EXTERNAL_POWER_USB) {
-		switch (current_state) {
-		case FU_POWERD_BATTERY_STATE_CHARGING:
-			fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
-			break;
-		case FU_POWERD_BATTERY_STATE_FULLY_CHARGED:
-			fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
-			break;
-		default:
-			fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
-			break;
-		}
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
 		return;
 	}
 
-	/* fallback */
-	switch (current_state) {
-	case FU_POWERD_BATTERY_STATE_CHARGING:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
-		break;
-	case FU_POWERD_BATTERY_STATE_DISCHARGING:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
-		break;
-	case FU_POWERD_BATTERY_STATE_EMPTY:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_EMPTY);
-		break;
-	case FU_POWERD_BATTERY_STATE_FULLY_CHARGED:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
-		break;
-	default:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
-		break;
-	}
+	if (current_state == FU_POWERD_BATTERY_STATE_FULLY_CHARGED ||
+	    current_state == FU_POWERD_BATTERY_STATE_CHARGING)
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
+	else
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY);
 }
 
 static void
