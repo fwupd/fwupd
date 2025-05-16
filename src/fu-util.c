@@ -3761,6 +3761,9 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: success message -- where activation is making the new
 	 * firmware take effect, usually after updating offline */
 	fu_console_print_literal(priv->console, _("Successfully activated all devices"));
