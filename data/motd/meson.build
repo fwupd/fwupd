@@ -18,6 +18,9 @@ if libsystemd.found()
       con2.set('user', 'DynamicUser=yes')
       warning('Using systemd DynamicUser for fwupd-refresh.service. See https://github.com/systemd/systemd/issues/22737 for possible implications')
   else
+      if get_option('systemd_unit_user') != 'root'
+        warning('fwupd-refresh.service is run with user "', get_option('systemd_unit_user'), '". This may be a security risk. See https://github.com/fwupd/fwupd/README.md#systemd-service for more information.')
+      endif
       dynamic_options = [
                          'ProtectSystem=strict',
                          'ProtectHome=read-only',
