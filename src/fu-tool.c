@@ -2327,6 +2327,9 @@ fu_util_disable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error
 	if (!fu_util_set_test_devices_enabled(priv, FALSE, error))
 		return FALSE;
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: comment explaining result of command */
 	fu_console_print_literal(priv->console, _("Successfully disabled test devices"));
 
