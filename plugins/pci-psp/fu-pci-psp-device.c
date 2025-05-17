@@ -13,6 +13,10 @@
 
 #include "fu-pci-psp-device.h"
 
+#define FU_CPU_AGESA_SMBIOS_TYPE   40
+#define FU_CPU_AGESA_SMBIOS_LENGTH 0x0E
+#define FU_CPU_AGESA_SMBIOS_OFFSET 4
+
 struct _FuPciPspDevice {
 	FuUdevDevice parent_instance;
 	gboolean supported;
@@ -21,10 +25,44 @@ struct _FuPciPspDevice {
 G_DEFINE_TYPE(FuPciPspDevice, fu_pci_psp_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
+fu_pci_psp_device_ensure_agesa_version(FuPciPspDevice *self, GError **error)
+{
+	const gchar *agesa_stream;
+	g_auto(GStrv) split = NULL;
+	g_autofree gchar *summary = NULL;
+
+	/* get the AGESA stream e.g. `AGESA!V9 StrixKrackanPI-FP8 1.1.0.0a` */
+	agesa_stream = fu_device_get_smbios_string(FU_DEVICE(self),
+						   FU_CPU_AGESA_SMBIOS_TYPE,
+						   FU_CPU_AGESA_SMBIOS_LENGTH,
+						   FU_CPU_AGESA_SMBIOS_OFFSET,
+						   error);
+	if (agesa_stream == NULL) {
+		g_prefix_error(error, "no SMBIOS data: ");
+		return FALSE;
+	}
+	split = g_strsplit(agesa_stream, " ", 3);
+	if (g_strv_length(split) != 3) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid format: %s",
+			    agesa_stream);
+		return FALSE;
+	}
+	summary = g_strdup_printf("AGESA %s %s", split[1], split[2]);
+
+	fu_device_set_summary(FU_DEVICE(self), summary);
+	return TRUE;
+}
+
+static gboolean
 fu_pci_psp_device_probe(FuDevice *device, GError **error)
 {
+	FuPciPspDevice *self = FU_PCI_PSP_DEVICE(device);
 	g_autofree gchar *attr_bootloader_version = NULL;
 	g_autofree gchar *attr_tee_version = NULL;
+	g_autoptr(GError) error_agesa = NULL;
 	g_autoptr(GError) error_boot = NULL;
 	g_autoptr(GError) error_tee = NULL;
 
@@ -46,6 +84,9 @@ fu_pci_psp_device_probe(FuDevice *device, GError **error)
 		g_info("failed to read bootloader version: %s", error_tee->message);
 	else
 		fu_device_set_version(device, attr_tee_version);
+
+	if (!fu_pci_psp_device_ensure_agesa_version(self, &error_agesa))
+		g_info("failed to read AGESA stream: %s", error_agesa->message);
 
 	return TRUE;
 }
