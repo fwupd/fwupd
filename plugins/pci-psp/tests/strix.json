@@ -1,0 +1,32 @@
+{
+  "FwupdVersion": "2.0.9",
+  "UsbDevices": [
+    {
+      "Name": "Secure Processor",
+      "DeviceId": "c54ab0237d7a8db8c717b68e0be78e4374a2a079",
+      "ParentDeviceId": "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
+      "CompositeId": "4bde70ba4e39b28f9eab1628f9dd6e6244c03027",
+      "Guid": [
+        "92c96a95-c187-5183-ae27-eab2f47e0f63"
+      ],
+      "Summary": "AGESA StrixKrackanPI-FP8 1.1.0.0a",
+      "Plugin": "pci_psp",
+      "Flags": [
+        "internal",
+        "emulation-tag",
+        "can-emulation-tag"
+      ],
+      "Vendor": "Advanced Micro Devices, Inc.",
+      "VendorIds": [
+        "PCI:0x1022"
+      ],
+      "Version": "00.3e.04.74",
+      "VersionBootloader": "74.04.3e.00",
+      "VersionFormat": "plain",
+      "Icons": [
+        "computer"
+      ],
+      "Created": 1747517544
+    }
+  ]
+}

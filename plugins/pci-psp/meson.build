@@ -14,4 +14,5 @@ plugin_builtins += static_library('fu_plugin_pci_psp',
   dependencies: plugin_deps,
 )
 umockdev_tests += files('pci_psp_test.py')
+enumeration_data += files('tests/strix.json')
 endif
