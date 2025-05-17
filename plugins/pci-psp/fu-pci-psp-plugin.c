@@ -31,6 +31,23 @@ fu_pci_psp_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_PCI_PSP_DEVICE);
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "cpu");
+}
+
+static void
+fu_pci_psp_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
+{
+	if (g_strcmp0(fu_device_get_plugin(dev), "cpu") == 0)
+		fu_plugin_cache_add(plugin, "cpu", dev);
+}
+
+static void
+fu_pci_psp_plugin_device_added(FuPlugin *plugin, FuDevice *device)
+{
+	FuDevice *cpu_device = fu_plugin_cache_lookup(plugin, "cpu");
+	if (cpu_device == NULL)
+		return;
+	fu_pci_psp_device_set_cpu(FU_PCI_PSP_DEVICE(device), FU_PROCESSOR_DEVICE(cpu_device));
 }
 
 static void
@@ -38,4 +55,6 @@ fu_pci_psp_plugin_class_init(FuPciPspPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_pci_psp_plugin_constructed;
+	plugin_class->device_added = fu_pci_psp_plugin_device_added;
+	plugin_class->device_registered = fu_pci_psp_plugin_device_registered;
 }
