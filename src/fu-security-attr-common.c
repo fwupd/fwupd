@@ -235,6 +235,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return g_strdup(_("UEFI db"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: Title: can a user load malicious CPU microcode patches */
+		return g_strdup(_("AMD microcode signature"));
+	}
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
 }
@@ -427,6 +431,10 @@ fu_security_attr_get_title(FwupdSecurityAttr *attr)
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DB) == 0) {
 		/* TRANSLATORS: Title: is UEFI db up-to-date */
 		return _("UEFI db");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: Title: can a user load malicious CPU microcode patches */
+		return _("AMD Microcode Signature");
 	}
 	return NULL;
 }
@@ -630,6 +638,14 @@ fu_security_attr_get_description(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: longer description */
 		return _("The UEFI db contains the list of valid certificates that can be used to "
 			 "authorize what EFI binaries are allowed to run.");
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_MEMORY_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: can a user load malicious CPU microcode patches */
+		return g_strdup(_("AMD microcode signature"));
+	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN) == 0) {
+		/* TRANSLATORS: longer description */
+		return _("An attacker can load malicious CPU microcode patches on AMD systems.");
 	}
 	return NULL;
 }
