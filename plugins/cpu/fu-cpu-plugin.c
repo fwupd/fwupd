@@ -37,6 +37,7 @@ fu_cpu_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "ProcessorMitigationsRequired");
 	fu_context_add_quirk_key(ctx, "ProcessorSinkcloseMicrocodeVersion");
+	fu_context_add_quirk_key(ctx, "ProcessorEntrysignPspVersion");
 	fu_context_add_quirk_key(ctx, "ProcessorKind");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_BEFORE, "msr");
 }

@@ -305,6 +305,8 @@ ProcessorKind = intel-p4-prescott
 ProcessorKind = intel-p4-cedarmill
 
 # Affected by Sinkclose
+[CPUID\PRO_0&FAM_17&MOD_01]
+ProcessorEntrysignPspVersion = 00.07.00.88
 [CPUID\PRO_0&FAM_17&MOD_01&STP_2]
 ProcessorMitigationsRequired = sinkclose
 ProcessorSinkcloseMicrocodeVersion = 0x0800126f
