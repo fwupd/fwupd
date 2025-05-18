@@ -983,6 +983,83 @@ fu_device_get_contents_bytes(FuDevice *self,
 }
 
 /**
+ * fu_device_get_smbios_string:
+ * @self: a #FuDevice
+ * @type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @length: expected length of the structure, or %FU_SMBIOS_STRUCTURE_LENGTH_ANY
+ * @offset: a SMBIOS offset
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a hardware SMBIOS string.
+ *
+ * The @type and @offset can be referenced from the DMTF SMBIOS specification:
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 2.0.10
+ **/
+const gchar *
+fu_device_get_smbios_string(FuDevice *self,
+			    guint8 type,
+			    guint8 length,
+			    guint8 offset,
+			    GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	FuDeviceEvent *event = NULL;
+	const gchar *str;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetSmbiosString:"
+					   "Type=0x%02x,"
+					   "Length=0x%02x,"
+					   "Offset=0x%02x",
+					   type,
+					   length,
+					   offset);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
+			return NULL;
+		return fu_device_event_get_str(event, "Data", error);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* use context */
+	str = fu_context_get_smbios_string(priv->ctx, type, length, offset, &error_local);
+	if (str == NULL) {
+		if (event != NULL)
+			fu_device_event_set_error(event, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return NULL;
+	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", str);
+
+	/* success */
+	return str;
+}
+
+/**
  * fu_device_query_file_exists:
  * @self: a #FuDevice
  * @filename: filename
