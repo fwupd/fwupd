@@ -1415,6 +1415,12 @@ fu_device_get_contents_bytes(FuDevice *self,
 gboolean
 fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exists, GError **error)
     G_GNUC_NON_NULL(1, 2, 3);
+const gchar *
+fu_device_get_smbios_string(FuDevice *self,
+			    guint8 type,
+			    guint8 length,
+			    guint8 offset,
+			    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
 fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin) G_GNUC_NON_NULL(1, 2);
 
