@@ -119,6 +119,10 @@ struct FuStructIgscFwdataVersion {
     oem_manuf_data_version: u32le,
     major_version: u16le,
     major_vcn: u16le,
+    key_index: u8,
+    _reserved1: [u8; 3],
+    data_arb_svn: u32le,
+    _reserved2: [u8; 16],
 }
 
 #[repr(C, packed)]
