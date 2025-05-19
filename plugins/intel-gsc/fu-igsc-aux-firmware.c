@@ -16,8 +16,8 @@ struct _FuIgscAuxFirmware {
 	guint32 oem_version;
 	guint16 major_version;
 	guint16 major_vcn;
+	guint32 data_arb_svn;
 	GPtrArray *device_infos; /* of FuIgscFwdataDeviceInfo4 */
-	gboolean has_manifest_ext;
 };
 
 G_DEFINE_TYPE(FuIgscAuxFirmware, fu_igsc_aux_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
@@ -29,7 +29,7 @@ fu_igsc_aux_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 	fu_xmlb_builder_insert_kx(bn, "oem_version", self->oem_version);
 	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
 	fu_xmlb_builder_insert_kx(bn, "major_vcn", self->major_vcn);
-	fu_xmlb_builder_insert_kb(bn, "has_manifest_ext", self->has_manifest_ext);
+	fu_xmlb_builder_insert_kx(bn, "data_arb_svn", self->data_arb_svn);
 	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
 }
 
@@ -86,13 +86,13 @@ fu_igsc_aux_firmware_get_major_vcn(FuIgscAuxFirmware *self)
 }
 
 static gboolean
-fu_igsc_aux_firmware_parse_version(FuIgscAuxFirmware *self, GError **error)
+fu_igsc_aux_firmware_parse_info(FuIgscAuxFirmware *self, GError **error)
 {
 	g_autoptr(FuStructIgscFwdataVersion) st = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
 	stream = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),
-						     FU_IFWI_FPT_FIRMWARE_IDX_SDTA,
+						     FU_IFWI_FPT_FIRMWARE_IDX_INFO,
 						     error);
 	if (stream == NULL)
 		return FALSE;
@@ -104,41 +104,7 @@ fu_igsc_aux_firmware_parse_version(FuIgscAuxFirmware *self, GError **error)
 	self->oem_version = fu_struct_igsc_fwdata_version_get_oem_manuf_data_version(st);
 	self->major_vcn = fu_struct_igsc_fwdata_version_get_major_vcn(st);
 	self->major_version = fu_struct_igsc_fwdata_version_get_major_version(st);
-	return TRUE;
-}
-
-static gboolean
-fu_igsc_aux_firmware_parse_extension(FuIgscAuxFirmware *self, FuFirmware *fw, GError **error)
-{
-	g_autoptr(GInputStream) stream = NULL;
-
-	/* get data */
-	stream = fu_firmware_get_stream(fw, error);
-	if (stream == NULL)
-		return FALSE;
-
-	if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_TYPE) {
-		for (gsize offset = 0; offset < fu_firmware_get_size(fw);
-		     offset += FU_IGSC_FWDATA_DEVICE_INFO4_SIZE) {
-			g_autoptr(FuIgscFwdataDeviceInfo4) st = NULL;
-			st = fu_igsc_fwdata_device_info4_parse_stream(stream, offset, error);
-			if (st == NULL)
-				return FALSE;
-			g_ptr_array_add(self->device_infos, g_steal_pointer(&st));
-		}
-	} else if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_FWDATA_UPDATE) {
-		if (fu_firmware_get_size(fw) != FU_STRUCT_IGSC_FWDATA_UPDATE_EXT_SIZE) {
-			g_set_error(
-			    error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "signed data update manifest ext was 0x%x bytes and expected 0x%x",
-			    (guint)fu_firmware_get_size(fw),
-			    (guint)FU_STRUCT_IGSC_FWDATA_UPDATE_EXT_SIZE);
-			return FALSE;
-		}
-		self->has_manifest_ext = TRUE;
-	}
+	self->data_arb_svn = fu_struct_igsc_fwdata_version_get_data_arb_svn(st);
 
 	/* success */
 	return TRUE;
@@ -151,6 +117,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	FuIgscAuxFirmware *self = FU_IGSC_AUX_FIRMWARE(firmware);
+	gboolean has_manifest_ext = FALSE;
 	g_autoptr(FuFirmware) fw_cpd = fu_ifwi_cpd_firmware_new();
 	g_autoptr(FuFirmware) fw_manifest = NULL;
 	g_autoptr(GInputStream) stream_dataimg = NULL;
@@ -181,10 +148,12 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	imgs = fu_firmware_get_images(fw_manifest);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		if (!fu_igsc_aux_firmware_parse_extension(self, img, error))
+		if (!fu_igsc_fwdata_device_info_parse(self->device_infos, img, error))
 			return FALSE;
+		if (fu_firmware_get_idx(img) == FU_IGSC_FWU_EXT_TYPE_FWDATA_UPDATE)
+			has_manifest_ext = TRUE;
 	}
-	if (!self->has_manifest_ext || self->device_infos->len == 0) {
+	if (!has_manifest_ext || self->device_infos->len == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -193,8 +162,10 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* parse the info block */
-	if (!fu_igsc_aux_firmware_parse_version(self, error))
+	if (!fu_igsc_aux_firmware_parse_info(self, error)) {
+		g_prefix_error(error, "failed to parse info block: ");
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
