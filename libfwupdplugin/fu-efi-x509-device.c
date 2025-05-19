@@ -98,11 +98,15 @@ fu_efi_x509_device_write_firmware(FuDevice *device,
 {
 	FuDeviceClass *device_class;
 	FuDevice *proxy;
-	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* not an archive */
-	if (imgs->len == 0)
+	if (FU_IS_EFI_VARIABLE_AUTHENTICATION2(firmware)) {
+		imgs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(imgs, g_object_ref(firmware));
+	} else {
+		imgs = fu_firmware_get_images(firmware);
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
