@@ -9,6 +9,7 @@
 #include <curl/curl.h>
 #include <jcat.h>
 
+#include "fwupd-binder-variant-hack.h"
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -1580,9 +1581,9 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
 			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "Type") == 0)
-			fwupd_remote_set_kind(self, g_variant_get_uint32(value));
+			fwupd_remote_set_kind(self, fwupd_codec_variant_get_uint32(value));
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_FLAGS) == 0)
-			fwupd_remote_set_flags(self, g_variant_get_uint64(value));
+			fwupd_remote_set_flags(self, fwupd_codec_variant_get_uint64(value));
 	}
 	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
@@ -1616,9 +1617,9 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 		} else if (g_strcmp0(key, "Priority") == 0) {
 			priv->priority = g_variant_get_int32(value);
 		} else if (g_strcmp0(key, "ModificationTime") == 0) {
-			priv->mtime = g_variant_get_uint64(value);
+			priv->mtime = fwupd_codec_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "RefreshInterval") == 0) {
-			priv->refresh_interval = g_variant_get_uint64(value);
+			priv->refresh_interval = fwupd_codec_variant_get_uint64(value);
 		} else if (g_strcmp0(key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "AutomaticReports") == 0) {
