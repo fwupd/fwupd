@@ -13,7 +13,7 @@
 G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DEVICE)
 
 /* Used for EC HID communication */
-#define FU_DELL_KESTREL_HID_TIMEOUT	     300
+#define FU_DELL_KESTREL_HID_TIMEOUT	     3000
 #define FU_DELL_KESTREL_HID_CMD_FWUPDATE     0xAB
 #define FU_DELL_KESTREL_HID_EXT_FWUPDATE     0x80
 #define FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE  0x00
