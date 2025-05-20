@@ -148,10 +148,12 @@ convert_check(GVariant *in_val, const GVariantType *type, GError **error)
 	AParcel_setDataPosition(parcel, 0);
 
 	g_message("Converting from parcel");
+	g_debug(" - gvb_init %s", g_variant_type_peek_string(type));
 	g_variant_builder_init(&builder, type);
 	if (!gp_parcel_to_variant(&builder, parcel, type, error)) {
 		return FALSE;
 	}
+	g_debug(" - gvb_end");
 	out_val = g_variant_builder_end(&builder);
 
 	g_message(" - Finished - ");
@@ -756,6 +758,56 @@ test_14(void)
 	return TRUE;
 }
 
+static gboolean
+test_15(void)
+{
+	const GVariantType *type = G_VARIANT_TYPE("(aa{sv})");
+	g_auto(GVariantBuilder) builder;
+	GVariantType *ctype = NULL;
+	g_autoptr(GVariant) in_val = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_message("- - - start test %s", g_variant_type_peek_string(type));
+
+	g_debug(" - gvb_init %s", g_variant_type_peek_string(type));
+	g_variant_builder_init(&builder, type);
+
+	// open array
+	ctype = g_variant_type_first(type);
+	g_debug(" - gvb_open %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_open(&builder, ctype);
+
+	// open vardict
+	ctype = g_variant_type_element(ctype);
+	g_debug(" - gvb_open %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_open(&builder, ctype);
+	g_debug(" - gvb_add {&sv}");
+	g_variant_builder_add(&builder, "{&sv}", "key", g_variant_new_string("value"));
+	g_debug(" - gvb_add {&sv}");
+	g_variant_builder_add(&builder, "{&sv}", "key2", g_variant_new_string("value2"));
+	// close vardict
+	g_debug(" - gvb_close");
+	g_variant_builder_close(&builder);
+
+	// close array
+	g_debug(" - gvb_close");
+	g_variant_builder_close(&builder);
+
+	g_debug(" - gvb_end");
+	in_val = g_variant_builder_end(&builder);
+
+	convert_check(in_val, type, &error);
+
+	if (error)
+		g_warning("error converting \"%s\" error: %s",
+			  g_variant_type_peek_string(type),
+			  error->message);
+
+	g_message("- - - end test %s", g_variant_type_peek_string(type));
+
+	return TRUE;
+}
+
 typedef gboolean (*TestFunc)(void);
 
 int
@@ -776,6 +828,7 @@ main(void)
 	    test_12,
 	    test_13,
 	    test_14,
+	    test_15,
 	};
 	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
 		g_warning("test_%d", i + 1);
