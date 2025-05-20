@@ -579,7 +579,7 @@ fwupd_service_on_transact(AIBinder *binder,
 	return STATUS_OK;
 }
 
-static int
+static gboolean
 poll_binder_process(void *user_data)
 {
 	// Daemon *daemon = user_data;
