@@ -256,7 +256,10 @@ fu_device_event_check_error(FuDeviceEvent *self, GError **error)
 	const gchar *message;
 
 	g_return_val_if_fail(FU_IS_DEVICE_EVENT(self), FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* nothing to do */
+	if (error == NULL)
+		return TRUE;
 
 	/* anything set */
 	code = fu_device_event_get_i64(self, "Error", NULL);
