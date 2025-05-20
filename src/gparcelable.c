@@ -525,6 +525,7 @@ parcelable_array_allocator_builder(gpointer user_data, gint32 length)
 		g_debug("array builder unwrapping maybe type %s",
 			g_variant_type_peek_string(ptr_array->type));
 		if (ptr_array->is_in_tuple) {
+			g_debug(" - gvb_open %s", g_variant_type_peek_string(ptr_array->type));
 			g_variant_builder_open(ptr_array->builder, ptr_array->type);
 		}
 		ptr_array->type = g_variant_type_element(ptr_array->type);
@@ -537,16 +538,21 @@ parcelable_array_allocator_builder(gpointer user_data, gint32 length)
 			ptr_array->is_root ? "is" : "isn't",
 			ptr_array->is_in_tuple ? "is" : "isn't");
 		// open array (close in when the final element is written)
-		if (!ptr_array->is_root)
+		if (!ptr_array->is_root || ptr_array->is_in_tuple) {
+			g_debug(" - gvb_open %s", g_variant_type_peek_string(ptr_array->type));
 			g_variant_builder_open(ptr_array->builder, ptr_array->type);
+		}
 	} else {
 		g_debug("array builder add empty array %s",
 			g_variant_type_peek_string(ptr_array->type));
 		// write an empty array
 		if (ptr_array->is_maybe) {
+			g_debug(" - gvb_open %s", g_variant_type_peek_string(ptr_array->type));
 			g_variant_builder_open(ptr_array->builder, ptr_array->type);
+			g_debug(" - gvb_close");
 			g_variant_builder_close(ptr_array->builder);
 			if (ptr_array->is_in_tuple) {
+				g_debug(" - gvb_close");
 				g_variant_builder_close(ptr_array->builder);
 			}
 		}
@@ -603,11 +609,15 @@ read_parcelable_element_builder(const AParcel *parcel, gpointer user_data, gsize
 
 	if (index == (gsize)ptr_array->length - 1) {
 		g_debug("builder close array builder");
-		if (!ptr_array->is_root)
+		if (!ptr_array->is_root || ptr_array->is_in_tuple) {
+			g_debug(" - gvb_close");
 			g_variant_builder_close(ptr_array->builder);
+		}
 
-		if (ptr_array->is_maybe && ptr_array->is_in_tuple)
+		if (ptr_array->is_maybe && ptr_array->is_in_tuple) {
+			g_debug(" - gvb_close");
 			g_variant_builder_close(ptr_array->builder);
+		}
 	}
 	return STATUS_OK;
 }
@@ -722,6 +732,7 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 				AParcel_readInt32(parcel, &is_some);
 				if (is_some) {
 					// Open maybe vardict to indicate not null
+					g_debug(" - gvb_open %s", g_variant_type_peek_string(type));
 					g_variant_builder_open(builder, type);
 					g_debug("maybe vardict type entry type is %s",
 						g_variant_type_peek_string(element_type));
@@ -735,9 +746,13 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 						    "read persistable bundle from parcel is %s",
 						    AStatus_getDescription(status));
 					}
+					g_debug(" - gvb_open %s",
+						g_variant_type_peek_string(element_type));
 					g_variant_builder_open(builder, element_type);
 					gp_persistable_bundle_to_vardict(builder, bundle, error);
+					g_debug(" - gvb_close");
 					g_variant_builder_close(builder);
+					g_debug(" - gvb_close");
 					g_variant_builder_close(builder);
 				}
 
@@ -774,6 +789,7 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 		case G_VARIANT_CLASS_TUPLE:
 			// Parcels don't have maybe
 			// open tuple
+			g_debug(" - gvb_open %s", g_variant_type_peek_string(element_type));
 			g_variant_builder_open(builder, element_type);
 			if (!gp_parcel_to_variant_inner(builder,
 							parcel,
@@ -783,6 +799,7 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 							error)) {
 				return FALSE;
 			}
+			g_debug(" - gvb_close");
 			g_variant_builder_close(builder);
 			break;
 		default:
@@ -794,6 +811,7 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 		g_debug("This should be a tuple");
 		// builder is already in the tuple, no need to open
 		// g_warning("open %s", g_variant_type_peek_string(type));
+		// g_debug(" - gvb_open %s", g_variant_type_peek_string(TYPE));
 		// g_variant_builder_open(builder, type);
 		for (const GVariantType *itype = g_variant_type_first(type); itype;
 		     itype = g_variant_type_next(itype)) {
@@ -875,8 +893,10 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 				g_warning("read persistable bundle from parcel is %s",
 					  AStatus_getDescription(status));
 			}
+			g_debug(" - gvb_open %s", g_variant_type_peek_string(type));
 			g_variant_builder_open(builder, type);
 			gp_persistable_bundle_to_vardict(builder, bundle, error);
+			g_debug(" - gvb_close");
 			g_variant_builder_close(builder);
 			break;
 		case G_VARIANT_CLASS_STRING: {
@@ -1017,6 +1037,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 						 &val,
 						 bundle_string_allocator,
 						 NULL)) {
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
@@ -1042,6 +1063,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 		bool val;
 
 		if (APersistableBundle_getBoolean(bundle, key, &val)) {
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
@@ -1066,6 +1088,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 		gint32 val;
 
 		if (APersistableBundle_getInt(bundle, key, &val)) {
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
@@ -1090,6 +1113,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 		gint64 val;
 
 		if (APersistableBundle_getLong(bundle, key, &val)) {
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
@@ -1132,6 +1156,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 						       strv_size,
 						       bundle_string_allocator,
 						       NULL)) {
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
@@ -1161,8 +1186,10 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 		g_autoptr(APersistableBundle) sub_bundle = APersistableBundle_new();
 
 		if (APersistableBundle_getPersistableBundle(bundle, key, &sub_bundle)) {
+			g_debug(" - gvb_init a{sv}");
 			g_variant_builder_init(&sub_bundle_builder, G_VARIANT_TYPE("a{sv}"));
 			gp_persistable_bundle_to_vardict(&sub_bundle_builder, sub_bundle, error);
+			g_debug(" - gvb_add {&sv}");
 			g_variant_builder_add(builder,
 					      "{&sv}",
 					      g_steal_pointer(&key),
