@@ -30,7 +30,7 @@ gp_persistable_bundle_to_vardict(GVariantBuilder *builder,
 				 APersistableBundle *bundle,
 				 GError **error);
 
-void
+gboolean
 gp_parcel_to_variant(GVariantBuilder *builder,
 		     const AParcel *parcel,
 		     const GVariantType *type,
