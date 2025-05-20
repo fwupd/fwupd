@@ -6,8 +6,23 @@
 enum FuLegionHid2Command {
     GetVersion = 0x01,
     GetMcuId = 0x02,
+    GetPlTest = 0xDF,
     StartIap = 0xE1,
     IcReset = 0xEF,
+}
+
+#[repr(u8)]
+enum FuLegionHid2PlTest {
+    TpManufacturer = 0x2,
+    AgSensorManufacturer = 0x3,
+    TpVersion = 0x4,
+}
+
+#[repr(u8)]
+enum FuLegionHid2TpMan {
+    None = 0x0,
+    BetterLife = 0x1,
+    Sipo = 0x2,
 }
 
 #[repr(u8)]
@@ -41,6 +56,22 @@ struct FuStructLegionGetMcuId {
 struct FuStructLegionMcuId {
     id: [u8; 12],
     reserved: [u8; 52],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructLegionGetPlTest {
+    cmd: u8 == 0xDF,
+    index: u8,
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructLegionGetPlTestResult {
+    cmd: u8,
+    index: u8,
+    content: u8,
+    reserved: [u8; 61],
 }
 
 #[derive(New, Default)]
