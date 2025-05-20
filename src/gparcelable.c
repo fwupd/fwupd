@@ -295,8 +295,8 @@ gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 						 G_VARIANT_TYPE_STRING)) {
 				g_debug(" - value is %s", g_variant_get_string(child, NULL));
 			}
-			g_warning("gp_parcel_write_variant process maybe value %s",
-				  g_variant_get_type_string(child));
+			g_debug("gp_parcel_write_variant process maybe value %s",
+				g_variant_get_type_string(child));
 			status = gp_parcel_write_variant(parcel, child, error);
 			g_variant_unref(child);
 		} else {
@@ -330,7 +330,7 @@ gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 		break;
 	case G_VARIANT_CLASS_STRING:
 		array_data = g_variant_get_string(value, &fixed_array_size);
-		g_message("  adding string \"%s\" to parcel", (gchar *)array_data);
+		g_debug("  adding string \"%s\" to parcel", (gchar *)array_data);
 		status = AParcel_writeString(parcel, array_data, fixed_array_size);
 		break;
 
@@ -424,11 +424,11 @@ gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 		// iter tuple children calling parcel_write_variant, I think? Parcels are tuples?
 		g_variant_iter_init(&iter, value);
 		while ((child = g_variant_iter_next_value(&iter))) {
-			g_warning("gp_parcel_write_variant process tuple value %s, %s",
-				  g_variant_get_type_string(child),
-				  g_variant_print(child, TRUE));
+			g_debug("gp_parcel_write_variant process tuple value %s, %s",
+				g_variant_get_type_string(child),
+				g_variant_print(child, TRUE));
 			status = gp_parcel_write_variant(parcel, child, error);
-			g_warning("gp_parcel_write_variant finish process tuple value");
+			g_debug("gp_parcel_write_variant finish process tuple value");
 			g_variant_unref(child);
 			if (error && *error) {
 				break;
@@ -459,6 +459,14 @@ gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 	return status;
 }
 
+static gboolean
+gp_parcel_to_variant_inner(GVariantBuilder *builder,
+			   const AParcel *parcel,
+			   const GVariantType *type,
+			   gboolean is_root,
+			   gboolean is_in_tuple,
+			   GError **error);
+
 // TODO: AParcel to GVariant
 // binder_status_t
 // gp_parcel_read
@@ -475,24 +483,73 @@ typedef struct {
 	const GVariantType *type;
 	GError **error;
 	gint32 length;
-	// TODO: Should this be indicated by maybe `m` in type
 	gboolean to_open;
 	gboolean is_null;
+	gboolean is_maybe;
+	gboolean is_in_tuple;
+	gboolean is_root;
 } BuilderArray;
 
 static bool
 parcelable_array_allocator_builder(gpointer user_data, gint32 length)
 {
 	BuilderArray *ptr_array = user_data;
-	g_message("builder allocate %p to %d", user_data, length);
+	g_debug("builder allocate %p to %d", user_data, length);
 
 	// length -1 designates a null array
 	ptr_array->length = length;
 	ptr_array->is_null = length < 0;
-	if (ptr_array->to_open && !ptr_array->is_null) {
-		g_message("builder open array builder %s",
-			  g_variant_type_peek_string(ptr_array->type));
-		g_variant_builder_open(ptr_array->builder, ptr_array->type);
+	ptr_array->is_maybe = g_variant_type_is_maybe(ptr_array->type);
+
+	// TODO: If we are currently in a tuple we must acknowledge the null maybe
+	//   However if the builder is a bare maybe array we must not
+	//   Is this a bug in GVariantBuilder?
+
+	// We are in a maybe
+	if (ptr_array->is_maybe) {
+		// the parcelable is null don't write anything
+		if (ptr_array->is_null) {
+			g_debug("array builder maybe is null %s",
+				g_variant_type_peek_string(ptr_array->type));
+			// unless we are in a container that requires us to write
+			if (ptr_array->is_in_tuple) {
+				g_variant_builder_add_value(
+				    ptr_array->builder,
+				    g_variant_new_maybe(g_variant_type_element(ptr_array->type),
+							NULL));
+			}
+			return TRUE;
+		}
+		// update the type to the real array type
+		// do we need to open the maybe?
+		g_debug("array builder unwrapping maybe type %s",
+			g_variant_type_peek_string(ptr_array->type));
+		if (ptr_array->is_in_tuple) {
+			g_variant_builder_open(ptr_array->builder, ptr_array->type);
+		}
+		ptr_array->type = g_variant_type_element(ptr_array->type);
+		ptr_array->is_root = FALSE;
+	}
+
+	if (length > 0) {
+		g_debug("array builder open array %s, %s root, %s in tuple",
+			g_variant_type_peek_string(ptr_array->type),
+			ptr_array->is_root ? "is" : "isn't",
+			ptr_array->is_in_tuple ? "is" : "isn't");
+		// open array (close in when the final element is written)
+		if (!ptr_array->is_root)
+			g_variant_builder_open(ptr_array->builder, ptr_array->type);
+	} else {
+		g_debug("array builder add empty array %s",
+			g_variant_type_peek_string(ptr_array->type));
+		// write an empty array
+		if (ptr_array->is_maybe) {
+			g_variant_builder_open(ptr_array->builder, ptr_array->type);
+			g_variant_builder_close(ptr_array->builder);
+			if (ptr_array->is_in_tuple) {
+				g_variant_builder_close(ptr_array->builder);
+			}
+		}
 	}
 
 	return TRUE;
@@ -506,7 +563,7 @@ read_parcelable_element_builder(const AParcel *parcel, gpointer user_data, gsize
 	gint32 is_some = TRUE;
 	const GVariantType *element_type = g_variant_type_element(ptr_array->type);
 	gboolean is_maybe = g_variant_type_is_maybe(element_type);
-	g_message("builder setting element %ld to %p", index, parcel);
+	g_debug("builder setting element %ld to %p", index, parcel);
 
 	// Pass generic maybe to next stage
 	if (!is_maybe) {
@@ -516,15 +573,19 @@ read_parcelable_element_builder(const AParcel *parcel, gpointer user_data, gsize
 	// Skip non-maybe non-null values
 	if (is_some) {
 		if (ptr_array->to_open) {
-			gp_parcel_to_variant(ptr_array->builder,
-					     parcel,
-					     element_type,
-					     ptr_array->error);
+			gp_parcel_to_variant_inner(ptr_array->builder,
+						   parcel,
+						   element_type,
+						   FALSE,
+						   FALSE,
+						   ptr_array->error);
 		} else {
-			gp_parcel_to_variant(ptr_array->builder,
-					     parcel,
-					     ptr_array->type,
-					     ptr_array->error);
+			gp_parcel_to_variant_inner(ptr_array->builder,
+						   parcel,
+						   ptr_array->type,
+						   FALSE,
+						   FALSE,
+						   ptr_array->error);
 		}
 	}
 	// if (is_maybe) {
@@ -540,9 +601,13 @@ read_parcelable_element_builder(const AParcel *parcel, gpointer user_data, gsize
 	// NULL));
 	// }
 
-	if (ptr_array->to_open && index == (gsize)ptr_array->length - 1) {
-		g_message("builder close array builder");
-		g_variant_builder_close(ptr_array->builder);
+	if (index == (gsize)ptr_array->length - 1) {
+		g_debug("builder close array builder");
+		if (!ptr_array->is_root)
+			g_variant_builder_close(ptr_array->builder);
+
+		if (ptr_array->is_maybe && ptr_array->is_in_tuple)
+			g_variant_builder_close(ptr_array->builder);
 	}
 	return STATUS_OK;
 }
@@ -566,12 +631,67 @@ parcel_nullable_string_allocator(void *string_data, gint32 length, gchar **buffe
 	return TRUE;
 }
 
+// AParcel_stringArrayElementAllocator
+static bool
+parcel_string_array_element_allocator(gpointer array_data,
+				      gsize index,
+				      gint32 length,
+				      gchar **buffer)
+{
+	GStrv *strvp = (GStrv *)array_data;
+	GStrv strv = (GStrv)*strvp;
+
+	g_debug("parcel_string_array_element_allocator %d", length);
+
+	return parcel_nullable_string_allocator((void *)&(strv[index]), length, buffer);
+}
+
+// AParcel_stringArrayAllocator
+static bool
+parcel_string_array_allocator(gpointer array_data, gint32 length)
+{
+	GStrv *strv = (GStrv *)array_data;
+
+	g_debug("parcel_string_array_allocator %d", length);
+
+	if (length < 0)
+		return false;
+
+	*strv = g_new0(gchar *, length + 1);
+
+	return true;
+}
+
 // TODO: Rewrite this to reduce depth of switch claueses checking type
-void
+/* The type should be the same as used to create the builder
+ * For example:
+ * ```
+ * g_variant_builder_init(&builder, type);
+ * gp_parcel_to_variant(&builder, parcel, type, &error);
+ * ```
+ * or
+ * ```
+ * g_variant_builder_open(&builder, type);
+ * gp_parcel_to_variant(&builder, parcel, type, &error);
+ * g_variant_builder_close(&builder);
+ * ```
+ */
+gboolean
 gp_parcel_to_variant(GVariantBuilder *builder,
 		     const AParcel *parcel,
 		     const GVariantType *type,
 		     GError **error)
+{
+	return gp_parcel_to_variant_inner(builder, parcel, type, TRUE, FALSE, error);
+}
+
+static gboolean
+gp_parcel_to_variant_inner(GVariantBuilder *builder,
+			   const AParcel *parcel,
+			   const GVariantType *type,
+			   gboolean is_root,
+			   gboolean is_in_tuple,
+			   GError **error)
 {
 	// Builder types take the inner value
 	//  where type is 'maa{sv}' and parcel contains null, don't write just return (we aren't in
@@ -585,26 +705,26 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 	APersistableBundle *bundle;
 	gint32 is_some;
 
-	g_message("gp_parcel_to_variant %s", g_variant_type_peek_string(type));
+	g_debug("gp_parcel_to_variant %s", g_variant_type_peek_string(type));
 
 	switch (g_variant_type_peek_string(type)[0]) {
 	// element_type = g_variant_type_element(type);
 	case G_VARIANT_CLASS_MAYBE:
 		element_type = g_variant_type_element(type);
-		g_message("  child %s", g_variant_type_peek_string(element_type));
+		g_debug("  child %s", g_variant_type_peek_string(element_type));
 		// TODO: Handle maybe types
 		switch (g_variant_type_peek_string(element_type)[0]) {
 		case G_VARIANT_CLASS_ARRAY:
 			element_type_2 = g_variant_type_element(element_type);
 			switch (g_variant_type_peek_string(element_type_2)[0]) {
 			case G_VARIANT_CLASS_DICT_ENTRY:
-				g_message("we are a maybe dict, not a maybe array");
+				g_debug("we are a maybe dict, not a maybe array");
 				AParcel_readInt32(parcel, &is_some);
 				if (is_some) {
 					// Open maybe vardict to indicate not null
 					g_variant_builder_open(builder, type);
-					g_message("vardict type entry type is %s",
-						  g_variant_type_peek_string(element_type));
+					g_debug("maybe vardict type entry type is %s",
+						g_variant_type_peek_string(element_type));
 					// TODO: Extract persistable bundle from parcel
 					bundle = APersistableBundle_new();
 					nstatus =
@@ -623,15 +743,22 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 
 				break;
 			default:
+				// TODO: this is a maybe array, first we must open maybe (if not
+				// null)
 				// TODO: Array header is length or "-1" for null
 				ba = g_malloc0(sizeof(BuilderArray));
 				ba->error = error;
 				ba->builder = builder;
 				// TODO: Rather than `to_open = TRUE`
 				// `g_variant_type_new_maybe(element_type)`?
-				ba->type = element_type;
+				ba->type = type;
 				ba->to_open = TRUE;
+				ba->is_maybe = TRUE;
+				// We're in a maybe
+				ba->is_in_tuple = is_in_tuple;
+				ba->is_root = TRUE;
 
+				g_debug("build maybe parcelable array");
 				nstatus =
 				    AParcel_readParcelableArray(parcel,
 								(void *)ba,
@@ -642,18 +769,21 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 					g_warning("couldn't read parcelable array %s",
 						  AStatus_getDescription(status));
 				}
-
-				// TODO: This gives a warning that the builder type doesn't match
-				// the maybe type
-				if (ba->is_null && g_variant_type_is_tuple(type)) {
-					// If we are in a ~container~ _tuple_ we explicitly write a
-					// maybe "nothing"
-					g_message(" writing null");
-					g_variant_builder_add_value(
-					    builder,
-					    g_variant_new_maybe(element_type, NULL));
-				}
 			}
+			break;
+		case G_VARIANT_CLASS_TUPLE:
+			// Parcels don't have maybe
+			// open tuple
+			g_variant_builder_open(builder, element_type);
+			if (!gp_parcel_to_variant_inner(builder,
+							parcel,
+							element_type,
+							FALSE,
+							TRUE,
+							error)) {
+				return FALSE;
+			}
+			g_variant_builder_close(builder);
 			break;
 		default:
 			g_warning("Cannot decode type \"%s\" from Parcel",
@@ -661,23 +791,64 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 		}
 		break;
 	case G_VARIANT_CLASS_TUPLE:
+		g_debug("This should be a tuple");
+		// builder is already in the tuple, no need to open
+		// g_warning("open %s", g_variant_type_peek_string(type));
+		// g_variant_builder_open(builder, type);
 		for (const GVariantType *itype = g_variant_type_first(type); itype;
 		     itype = g_variant_type_next(itype)) {
-			gp_parcel_to_variant(builder, parcel, itype, error);
+			if (!gp_parcel_to_variant_inner(builder, parcel, itype, FALSE, TRUE, error))
+				return FALSE;
 		}
+		// g_warning("close %s", g_variant_type_peek_string(type));
+		// g_variant_builder_close(builder);
 		break;
 	case G_VARIANT_CLASS_STRING: {
 		g_autofree gchar *string_data = NULL;
-		g_message("moving string from parcel to variant");
+		g_debug("moving string from parcel to variant");
 		nstatus = AParcel_readString(parcel,
 					     (void *)&string_data,
 					     parcel_nullable_string_allocator);
-		g_message("string is \"%s\"", string_data);
+		g_debug("string is \"%s\"", string_data);
 		g_variant_builder_add_value(
 		    builder,
 		    g_variant_new_take_string(g_steal_pointer(&string_data)));
 		break;
 	}
+	// TODO: read (u8, i8, u16, i16, f32)
+	case G_VARIANT_CLASS_BYTE: {
+		guint8 value = 0;
+		// Change of signedness here
+		AParcel_readByte(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_byte(value));
+	} break;
+	// case G_VARIANT_CLASS_UINT16: No AParcel_readUint16
+	// case G_VARIANT_CLASS_INT16: No AParcel_readInt16
+	case G_VARIANT_CLASS_UINT32: {
+		guint32 value = 0;
+		AParcel_readUint32(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_uint32(value));
+	} break;
+	case G_VARIANT_CLASS_INT32: {
+		gint32 value = 0;
+		AParcel_readInt32(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_int32(value));
+	} break;
+	case G_VARIANT_CLASS_UINT64: {
+		guint64 value = 0;
+		AParcel_readUint64(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_uint64(value));
+	} break;
+	case G_VARIANT_CLASS_INT64: {
+		gint64 value = 0;
+		AParcel_readInt64(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_int64(value));
+	} break;
+	case G_VARIANT_CLASS_DOUBLE: {
+		gdouble value = 0;
+		AParcel_readDouble(parcel, &value);
+		g_variant_builder_add_value(builder, g_variant_new_double(value));
+	} break;
 	case G_VARIANT_CLASS_HANDLE: {
 		gint fd = 0;
 		AParcel_readParcelFileDescriptor(parcel, &fd);
@@ -686,16 +857,17 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 	}
 	case G_VARIANT_CLASS_ARRAY:
 		element_type = g_variant_type_element(type);
-		g_message("  child %s", g_variant_type_peek_string(element_type));
-		g_message("arrayish type is %s class %c",
-			  g_variant_type_peek_string(type),
-			  g_variant_type_peek_string(element_type)[0]);
+		g_debug("  child %s", g_variant_type_peek_string(element_type));
+		g_debug("arrayish type is %s class %c",
+			g_variant_type_peek_string(type),
+			g_variant_type_peek_string(element_type)[0]);
 
 		switch (g_variant_type_peek_string(element_type)[0]) {
 		case G_VARIANT_CLASS_DICT_ENTRY:
-			g_message("vardict type entry type is %s",
-				  g_variant_type_peek_string(element_type));
+			g_debug("vardict type entry type is %s",
+				g_variant_type_peek_string(element_type));
 			// TODO: Extract persistable bundle from parcel
+			// TODO: is_some?
 			bundle = APersistableBundle_new();
 			nstatus = APersistableBundle_readFromParcel(parcel, &bundle);
 			if (nstatus != STATUS_OK) {
@@ -707,16 +879,31 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 			gp_persistable_bundle_to_vardict(builder, bundle, error);
 			g_variant_builder_close(builder);
 			break;
+		case G_VARIANT_CLASS_STRING: {
+			g_auto(GStrv) strv = NULL;
+
+			AParcel_readStringArray(parcel,
+						(void *)&strv,
+						parcel_string_array_allocator,
+						parcel_string_array_element_allocator);
+			g_variant_builder_add_value(builder, g_variant_new_strv(strv, -1));
+		} break;
+		// TODO: Typed arrays (u8, char, bool, i32, u32, f32, i64, u64, f64)
 		default:
+			// TODO: Check we can use array type and default to error
 			ba = g_malloc0(sizeof(BuilderArray));
 			ba->error = error;
 			ba->builder = builder;
-			ba->type = element_type;
+			ba->type = type;
+			ba->to_open = TRUE;
+			ba->is_in_tuple = is_in_tuple;
+			ba->is_root = TRUE;
 
-			g_warning(" - - - - - process parcelable array %s %s",
-				  g_variant_type_peek_string(type),
-				  g_variant_type_peek_string(element_type));
+			g_debug(" - - - - - process parcelable array %s %s",
+				g_variant_type_peek_string(type),
+				g_variant_type_peek_string(element_type));
 
+			g_debug("build parcelable array");
 			nstatus = AParcel_readParcelableArray(parcel,
 							      (void *)ba,
 							      parcelable_array_allocator_builder,
@@ -725,12 +912,14 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 				status = AStatus_fromStatus(nstatus);
 				// g_warning("couldn't read parcelable array %s",
 				// AStatus_getDescription(status));
-				g_set_error(error,
-					    GP_ERROR,
-					    nstatus,
-					    "couldn't read parcelable array %s",
-					    AStatus_getDescription(status));
-				return;
+				if (*error == NULL) {
+					g_set_error(error,
+						    GP_ERROR,
+						    nstatus,
+						    "couldn't read parcelable array %s",
+						    AStatus_getDescription(status));
+				}
+				return FALSE;
 			}
 
 			// TODO: This gives a warning that the builder type doesn't match the maybe
@@ -738,7 +927,7 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 			if (ba->is_null && g_variant_type_is_tuple(type)) {
 				// If we are in a ~container~ _tuple_ we explicitly write a maybe
 				// "nothing"
-				g_message(" writing null");
+				g_debug(" writing null");
 				g_variant_builder_add_value(
 				    builder,
 				    g_variant_new_maybe(element_type, NULL));
@@ -777,11 +966,17 @@ gp_parcel_to_variant(GVariantBuilder *builder,
 		}
 		break;
 	default:
-		g_warning("Cannot decode type \"%s\" from Parcel",
-			  g_variant_type_peek_string(type));
+		g_set_error(error,
+			    GP_ERROR,
+			    0,
+			    "Cannot decode type \"%s\" from Parcel",
+			    g_variant_type_peek_string(type));
+		return FALSE;
 	}
 
-	g_message("finish %s", g_variant_type_peek_string(type));
+	g_debug("finish %s", g_variant_type_peek_string(type));
+
+	return TRUE;
 }
 
 // TODO: APersistableBundle to GVariant
