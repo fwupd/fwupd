@@ -702,10 +702,12 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	g_option_context_add_group(context, fu_debug_get_option_group());
-	if (!g_option_context_parse(context, &argc, &argv, &error)) {
-		g_printerr("Failed to parse arguments: %s\n", error->message);
-		return EXIT_FAILURE;
+	/* set verbose? */
+	if (verbose) {
+		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
+	} else {
+		//g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
 
 	/* connect to the daemon */
