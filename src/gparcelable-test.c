@@ -10,7 +10,7 @@
 
 #include <fcntl.h>
 #include <glib.h>
-#include <glib/gstdio.h>
+#include <unistd.h>
 #if HAS_BINDER_NDK
 #include <android/binder_parcel.h>
 #include <android/binder_status.h>
@@ -864,7 +864,7 @@ test_16(guint *result)
 
 	// add string s
 	ctype = g_variant_type_first(type);
-	g_debug(" - gvb_open %s", g_variant_type_peek_string(ctype));
+	g_debug(" - gvb_add_value %s", g_variant_type_peek_string(ctype));
 	g_variant_builder_add_value(&builder, g_variant_new_string("*"));
 
 	// add handle h
@@ -883,6 +883,64 @@ test_16(guint *result)
 	in_val = g_variant_builder_end(&builder);
 
 	convert_check(in_val, type, &error, result);
+
+	close(fd);
+
+	if (error) {
+		g_warning("error converting \"%s\" error: %s",
+			  g_variant_type_peek_string(type),
+			  error->message);
+		*result |= 4;
+	}
+
+	g_message("- - - end test %s", g_variant_type_peek_string(type));
+
+	return TRUE;
+}
+
+static gboolean
+test_17(guint *result)
+{
+	const GVariantType *type = G_VARIANT_TYPE("(sha{sv})");
+	g_auto(GVariantBuilder) builder;
+	GVariantType *ctype = NULL;
+	g_auto(GVariantDict) vardict;
+	g_autoptr(GVariant) in_val = NULL;
+	g_autoptr(GError) error = NULL;
+	gint fd = -1;
+
+	g_debug(" - gvb_init %s", g_variant_type_peek_string(type));
+	g_variant_builder_init(&builder, type);
+
+	// add string s
+	ctype = g_variant_type_first(type);
+	g_debug(" - gvb_add_value %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_add_value(&builder, g_variant_new_string("*"));
+
+	// add handle h
+	ctype = g_variant_type_next(ctype);
+	g_debug(" - gvb_add_value %s", g_variant_type_peek_string(ctype));
+	fd = open("/dev/null", O_RDWR, 0);
+	g_variant_builder_add_value(&builder, g_variant_new_handle(fd));
+
+	// open vardict
+	ctype = g_variant_type_next(ctype);
+	g_debug(" - gvb_open %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_open(&builder, ctype);
+	g_debug(" - gvb_add {&sv}");
+	g_variant_builder_add(&builder, "{&sv}", "key", g_variant_new_string("value"));
+	g_debug(" - gvb_add {&sv}");
+	g_variant_builder_add(&builder, "{&sv}", "key2", g_variant_new_string("value2"));
+	// close vardict
+	g_debug(" - gvb_close");
+	g_variant_builder_close(&builder);
+
+	g_debug(" - gvb_end");
+	in_val = g_variant_builder_end(&builder);
+
+	convert_check(in_val, type, &error, result);
+
+	close(fd);
 
 	if (error) {
 		g_warning("error converting \"%s\" error: %s",
@@ -918,6 +976,7 @@ main(void)
 	    test_14,
 	    test_15,
 	    test_16,
+	    test_17,
 	};
 
 	const guint results[G_N_ELEMENTS(tests)] = {0};
