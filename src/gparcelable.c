@@ -242,7 +242,11 @@ gp_parcel_write_null(AParcel *parcel, const GVariantType *type, GError **error)
 			element_type = g_variant_type_element(element_type);
 		}
 		switch (g_variant_type_peek_string(element_type)[0]) {
-		case G_VARIANT_CLASS_DICT_ENTRY:
+		case G_VARIANT_CLASS_DICT_ENTRY: {
+			// In the case of a null Bundle
+			// TODO: Test this
+			AParcel_writeInt32(parcel, 0);
+		} break;
 		case G_VARIANT_CLASS_ARRAY:
 			status =
 			    AParcel_writeParcelableArray(parcel,
@@ -730,6 +734,9 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 			case G_VARIANT_CLASS_DICT_ENTRY:
 				g_debug("we are a maybe dict, not a maybe array");
 				AParcel_readInt32(parcel, &is_some);
+				g_debug("  dict is_some %d", is_some);
+				// PersistableBundle_writeToParcel writes "0" if empty
+				// AParcel_writeParcelable writes "1" if not-null, "0" if null
 				if (is_some) {
 					// Open maybe vardict to indicate not null
 					g_debug(" - gvb_open %s", g_variant_type_peek_string(type));
@@ -754,6 +761,10 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 					g_variant_builder_close(builder);
 					g_debug(" - gvb_close");
 					g_variant_builder_close(builder);
+				} else {
+					g_variant_builder_add_value(
+					    builder,
+					    g_variant_new_maybe(element_type, NULL));
 				}
 
 				break;

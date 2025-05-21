@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include <fcntl.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #if HAS_BINDER_NDK
 #include <android/binder_parcel.h>
 #include <android/binder_status.h>
@@ -81,6 +83,13 @@ variant_loose_equal(GVariant *a, GVariant *b)
 	}
 
 	switch (vclass) {
+	case G_VARIANT_CLASS_HANDLE: {
+		// Is it possible to check if a fd exported by binder matches the source?
+		gint a_fd = g_variant_get_handle(a);
+		gint b_fd = g_variant_get_handle(b);
+		// Just check they're equally wrong or positive
+		return (a_fd == b_fd) || (a_fd >= 0 && b_fd >= 0);
+	} break;
 	case G_VARIANT_CLASS_MAYBE: {
 		g_autoptr(GVariant) child_a = g_variant_get_maybe(a);
 		g_autoptr(GVariant) child_b = g_variant_get_maybe(b);
@@ -122,7 +131,7 @@ variant_loose_equal(GVariant *a, GVariant *b)
 }
 
 static gboolean
-convert_check(GVariant *in_val, const GVariantType *type, GError **error)
+convert_check(GVariant *in_val, const GVariantType *type, GError **error, guint *result)
 {
 	g_auto(GVariantBuilder) builder;
 	g_autoptr(AParcel) parcel = AParcel_create();
@@ -170,11 +179,13 @@ convert_check(GVariant *in_val, const GVariantType *type, GError **error)
 
 	if (variant_loose_equal(in_val, out_val)) {
 		g_message("  input and output variants loose match 🟩");
+		*result |= 1;
 	} else {
 		g_warning("  input and output variants do not loose match 🟥");
 	}
 
 	if (g_variant_equal(in_val, out_val)) {
+		*result |= 2;
 		g_message("  input and output variants match 🟩");
 	} else {
 		// This is unavoidable as Bundles store values in c++ std::maps which are sorted by
@@ -186,7 +197,7 @@ convert_check(GVariant *in_val, const GVariantType *type, GError **error)
 }
 
 static gboolean
-test_1(void)
+test_1(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("mama{sv}");
 	g_auto(GVariantBuilder) builder;
@@ -199,12 +210,14 @@ test_1(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -212,7 +225,7 @@ test_1(void)
 }
 
 static gboolean
-test_2(void)
+test_2(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("mama{sv}");
 	g_auto(GVariantBuilder) builder;
@@ -227,12 +240,14 @@ test_2(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -240,7 +255,7 @@ test_2(void)
 }
 
 static gboolean
-test_3(void)
+test_3(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("m(mama{sv}i)");
 	g_auto(GVariantBuilder) builder;
@@ -258,12 +273,14 @@ test_3(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -271,7 +288,7 @@ test_3(void)
 }
 
 static gboolean
-test_4(void)
+test_4(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("aa{sv}");
 	g_auto(GVariantBuilder) builder;
@@ -289,12 +306,14 @@ test_4(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -303,7 +322,7 @@ test_4(void)
 
 // Array of vardicts
 static gboolean
-test_5(void)
+test_5(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("aa{sv}");
 	g_auto(GVariantBuilder) builder;
@@ -328,12 +347,14 @@ test_5(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -342,7 +363,7 @@ test_5(void)
 
 // nested vardict
 static gboolean
-test_6(void)
+test_6(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("aa{sv}");
 	g_auto(GVariantBuilder) builder;
@@ -375,12 +396,14 @@ test_6(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -388,7 +411,7 @@ test_6(void)
 }
 
 static gboolean
-test_7(void)
+test_7(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(ss)");
 	g_auto(GVariantBuilder) builder;
@@ -404,12 +427,14 @@ test_7(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -417,7 +442,7 @@ test_7(void)
 }
 
 static gboolean
-test_8(void)
+test_8(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(ia{sv})");
 	g_auto(GVariantBuilder) builder;
@@ -435,12 +460,14 @@ test_8(void)
 
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -448,7 +475,7 @@ test_8(void)
 }
 
 static gboolean
-test_9(void)
+test_9(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("maa{sv}");
 	GVariantType *ctype = NULL;
@@ -494,12 +521,14 @@ test_9(void)
 	// end tuple
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -507,7 +536,7 @@ test_9(void)
 }
 
 static gboolean
-test_10(void)
+test_10(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(maa{sv}i)");
 	GVariantType *ctype = NULL;
@@ -561,12 +590,14 @@ test_10(void)
 	// end tuple
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -575,7 +606,7 @@ test_10(void)
 
 /* empty array */
 static gboolean
-test_11(void)
+test_11(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("aa{sv}");
 	GVariantType *ctype = NULL;
@@ -595,12 +626,14 @@ test_11(void)
 	// end array
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -609,7 +642,7 @@ test_11(void)
 
 /* empty array */
 static gboolean
-test_12(void)
+test_12(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("maa{sv}");
 	GVariantType *ctype = NULL;
@@ -633,12 +666,14 @@ test_12(void)
 	// end maybe
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -647,7 +682,7 @@ test_12(void)
 
 /* empty array */
 static gboolean
-test_13(void)
+test_13(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(maa{sv})");
 	GVariantType *ctype = NULL;
@@ -680,12 +715,14 @@ test_13(void)
 	// end tuple
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -693,7 +730,7 @@ test_13(void)
 }
 
 static gboolean
-test_14(void)
+test_14(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(i(maa{sv})i)");
 	GVariantType *ctype = NULL;
@@ -746,12 +783,14 @@ test_14(void)
 	// end tuple
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
@@ -759,7 +798,7 @@ test_14(void)
 }
 
 static gboolean
-test_15(void)
+test_15(guint *result)
 {
 	const GVariantType *type = G_VARIANT_TYPE("(aa{sv})");
 	g_auto(GVariantBuilder) builder;
@@ -796,19 +835,68 @@ test_15(void)
 	g_debug(" - gvb_end");
 	in_val = g_variant_builder_end(&builder);
 
-	convert_check(in_val, type, &error);
+	convert_check(in_val, type, &error, result);
 
-	if (error)
+	if (error) {
 		g_warning("error converting \"%s\" error: %s",
 			  g_variant_type_peek_string(type),
 			  error->message);
+		*result |= 4;
+	}
 
 	g_message("- - - end test %s", g_variant_type_peek_string(type));
 
 	return TRUE;
 }
 
-typedef gboolean (*TestFunc)(void);
+static gboolean
+test_16(guint *result)
+{
+	const GVariantType *type = G_VARIANT_TYPE("(shma{sv})");
+	g_auto(GVariantBuilder) builder;
+	GVariantType *ctype = NULL;
+	g_autoptr(GVariant) in_val = NULL;
+	g_autoptr(GError) error = NULL;
+	gint fd = -1;
+
+	g_debug(" - gvb_init %s", g_variant_type_peek_string(type));
+	g_variant_builder_init(&builder, type);
+
+	// add string s
+	ctype = g_variant_type_first(type);
+	g_debug(" - gvb_open %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_add_value(&builder, g_variant_new_string("*"));
+
+	// add handle h
+	ctype = g_variant_type_next(ctype);
+	g_debug(" - gvb_add_value %s", g_variant_type_peek_string(ctype));
+	fd = open("/dev/null", O_RDWR, 0);
+	g_variant_builder_add_value(&builder, g_variant_new_handle(fd));
+
+	// add null maybe
+	ctype = g_variant_type_next(ctype);
+	g_debug(" - gvb_add_value %s", g_variant_type_peek_string(ctype));
+	g_variant_builder_add_value(&builder,
+				    g_variant_new_maybe(g_variant_type_element(ctype), NULL));
+
+	g_debug(" - gvb_end");
+	in_val = g_variant_builder_end(&builder);
+
+	convert_check(in_val, type, &error, result);
+
+	if (error) {
+		g_warning("error converting \"%s\" error: %s",
+			  g_variant_type_peek_string(type),
+			  error->message);
+		*result |= 4;
+	}
+
+	g_message("- - - end test %s", g_variant_type_peek_string(type));
+
+	return TRUE;
+}
+
+typedef gboolean (*TestFunc)(guint *result);
 
 int
 main(void)
@@ -829,11 +917,28 @@ main(void)
 	    test_13,
 	    test_14,
 	    test_15,
+	    test_16,
 	};
+
+	const guint results[G_N_ELEMENTS(tests)] = {0};
+
 	for (guint i = 0; i < G_N_ELEMENTS(tests); i++) {
 		g_warning("test_%d", i + 1);
-		if (!(tests[i] && tests[i]())) {
+		if (!(tests[i] && tests[i](&results[i]))) {
 			return EXIT_FAILURE;
+		}
+	}
+
+	g_message(" --- results --- ");
+	for (guint i = 0; i < G_N_ELEMENTS(results); i++) {
+		g_message("test_%d", i + 1);
+
+		if (results[i] & 4) {
+			g_message("  error");
+		} else {
+			g_message(" loose: %s, g_variant_equal: %s",
+				  results[i] & 1 ? "🟩" : "🟥",
+				  results[i] & 2 ? "🟩" : "🟥");
 		}
 	}
 
