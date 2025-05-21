@@ -5281,7 +5281,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->as_json,
 	     /* TRANSLATORS: command line option */
-	     N_("Output in JSON format"),
+	     N_("Output in JSON format (disables all interactive prompts)"),
 	     NULL},
 	    {"no-security-fix",
 	     '\0',
