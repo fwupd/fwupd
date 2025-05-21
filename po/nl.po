@@ -1088,10 +1088,6 @@ msgstr "OK!"
 msgid "Old version"
 msgstr "Oude versie"
 
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Uitvoer in JSON-formaat"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "PAD"

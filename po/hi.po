@@ -1989,10 +1989,6 @@ msgid "Only version upgrades are allowed"
 msgstr "केवल संस्करण उन्नयन की अनुमति है"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON प्रारूप में आउटपुट"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "तयशुदा ESP पथ अधिलेखित करें"
 

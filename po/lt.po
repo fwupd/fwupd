@@ -1134,10 +1134,6 @@ msgid "Only show single PCR value"
 msgstr "Rodyti tik vieną PCR reikšmę"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Išvestis JSON formatu"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Nustelbti numatytąjį ESS (angl. ESP) kelią"
 

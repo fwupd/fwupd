@@ -1911,10 +1911,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Csak verziófrissítések engedélyezettek"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Kiment JSON-formátumban"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Az alapértelmezett ESP-útvonal felülbírálása"
 

@@ -2173,6 +2173,10 @@ msgid "Old version"
 msgstr "Versão antiga"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Só instala em dispositivos emulados"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra apenas valor único de PCR"
 
@@ -2186,8 +2190,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Apenas atualizações de versão são permitidas"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Saída em formato JSON"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Saída no formato JSON (desabilita todos os prompts interativos)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

@@ -1780,10 +1780,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Sono consentiti solo avanzamenti di versione"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Output in formato JSON"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Sovrascrive il percorso ESP predefinito"
 
