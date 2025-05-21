@@ -39,9 +39,6 @@ gp_parcel_variant_array_element_writer(AParcel *parcel, const void *array_data, 
 	GVariant *child = g_variant_get_child_value(user_data->value, index);
 	binder_status_t nstatus = STATUS_OK;
 
-	// TODO: do some values require a nullable flag?
-	// AParcel_writeInt32(parcel, 1);//parcel
-
 	g_debug("gp_parcel_variant_array_element_writer %ld %s",
 		index,
 		g_variant_get_type_string(child));
@@ -245,6 +242,7 @@ gp_parcel_write_null(AParcel *parcel, const GVariantType *type, GError **error)
 		case G_VARIANT_CLASS_DICT_ENTRY: {
 			// In the case of a null Bundle
 			// TODO: Test this
+			g_debug("write is_some 0");
 			AParcel_writeInt32(parcel, 0);
 		} break;
 		case G_VARIANT_CLASS_ARRAY:
@@ -354,8 +352,9 @@ gp_parcel_write_variant(AParcel *parcel, GVariant *value, GError **error)
 			if (error && *error)
 				break;
 			/* Write nullable flag */
+			g_debug("write is_some %d", !!bundle);
 			status = AParcel_writeInt32(parcel, !!bundle);
-			if (status != STATUS_OK)
+			if (status != STATUS_OK || !bundle)
 				break;
 			/* Write persistable bundle */
 			status = APersistableBundle_writeToParcel(bundle, parcel);
@@ -577,7 +576,12 @@ read_parcelable_element_builder(const AParcel *parcel, gpointer user_data, gsize
 
 	// Pass generic maybe to next stage
 	if (!is_maybe) {
+		// We handle is_some in gp_parcel_to_variant_inner so we must reset the position
+		// This check is probably redundant
+		gint pos = AParcel_getDataPosition(parcel);
 		AParcel_readInt32(parcel, &is_some);
+		AParcel_setDataPosition(parcel, pos);
+		g_debug("read is_some %d", is_some);
 	}
 
 	// Skip non-maybe non-null values
@@ -734,6 +738,7 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 			case G_VARIANT_CLASS_DICT_ENTRY:
 				g_debug("we are a maybe dict, not a maybe array");
 				AParcel_readInt32(parcel, &is_some);
+				g_debug("read is_some %d", is_some);
 				g_debug("  dict is_some %d", is_some);
 				// PersistableBundle_writeToParcel writes "0" if empty
 				// AParcel_writeParcelable writes "1" if not-null, "0" if null
@@ -749,9 +754,9 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 					    APersistableBundle_readFromParcel(parcel, &bundle);
 					if (nstatus != STATUS_OK) {
 						status = AStatus_fromStatus(nstatus);
-						g_warning(
-						    "read persistable bundle from parcel is %s",
-						    AStatus_getDescription(status));
+						g_warning("read maybe persistable bundle from "
+							  "parcel is %s",
+							  AStatus_getDescription(status));
 					}
 					g_debug(" - gvb_open %s",
 						g_variant_type_peek_string(element_type));
@@ -895,20 +900,28 @@ gp_parcel_to_variant_inner(GVariantBuilder *builder,
 		case G_VARIANT_CLASS_DICT_ENTRY:
 			g_debug("vardict type entry type is %s",
 				g_variant_type_peek_string(element_type));
-			// TODO: Extract persistable bundle from parcel
-			// TODO: is_some?
-			bundle = APersistableBundle_new();
-			nstatus = APersistableBundle_readFromParcel(parcel, &bundle);
-			if (nstatus != STATUS_OK) {
-				status = AStatus_fromStatus(nstatus);
-				g_warning("read persistable bundle from parcel is %s",
-					  AStatus_getDescription(status));
+			AParcel_readInt32(parcel, &is_some);
+			g_debug("vardict is_some %d", is_some);
+			if (is_some) {
+				bundle = APersistableBundle_new();
+				nstatus = APersistableBundle_readFromParcel(parcel, &bundle);
+				if (nstatus != STATUS_OK) {
+					status = AStatus_fromStatus(nstatus);
+					g_warning("read persistable bundle from parcel is %s",
+						  AStatus_getDescription(status));
+				}
+				g_debug(" - gvb_open %s", g_variant_type_peek_string(type));
+				g_variant_builder_open(builder, type);
+				gp_persistable_bundle_to_vardict(builder, bundle, error);
+				g_debug(" - gvb_close");
+				g_variant_builder_close(builder);
+			} else {
+				g_set_error_literal(
+				    error,
+				    GP_ERROR,
+				    STATUS_UNEXPECTED_NULL,
+				    "Input Bundle was null but output wasn't \"maybe\"");
 			}
-			g_debug(" - gvb_open %s", g_variant_type_peek_string(type));
-			g_variant_builder_open(builder, type);
-			gp_persistable_bundle_to_vardict(builder, bundle, error);
-			g_debug(" - gvb_close");
-			g_variant_builder_close(builder);
 			break;
 		case G_VARIANT_CLASS_STRING: {
 			g_auto(GStrv) strv = NULL;
