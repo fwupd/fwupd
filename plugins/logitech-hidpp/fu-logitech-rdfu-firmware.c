@@ -375,7 +375,7 @@ fu_logitech_rdfu_firmware_export(FuFirmware *firmware,
 {
 	FuLogitechRdfuFirmware *self = FU_LOGITECH_RDFU_FIRMWARE(firmware);
 
-	if (self->payload_name != NULL)
+	if (self->model_id != NULL)
 		fu_xmlb_builder_insert_kv(bn, "modelId", self->model_id);
 	if (self->payload_name != NULL)
 		fu_xmlb_builder_insert_kv(bn, "payload", self->payload_name);
