@@ -120,53 +120,133 @@ fu_self_free(FuUtil *self)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_self_free)
 
+/* Attempts to set error from the parcel status
+ * sets error and returns FALSE if the header is invalid or contains an error
+ */
+static gboolean
+fu_util_binder_parcel_read_header(AParcel *parcel, GError **error)
+{
+	binder_status_t nstatus = STATUS_OK;
+	g_autoptr(AStatus) status = NULL;
+	binder_exception_t ex_code = EX_NONE;
+	const gchar *message;
+
+	if (parcel == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Attempting to read header of NULL parcel");
+		return FALSE;
+	}
+
+	// TODO: Is it worth reporting AParcel_getDataPosition(parcel); to the caller?
+	nstatus = AParcel_readStatusHeader(parcel, &status);
+
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to read transaction header %s",
+			    AStatus_getDescription(status));
+		return FALSE;
+	}
+
+	if (!AStatus_isOk(status)) {
+		ex_code = AStatus_getExceptionCode(status);
+		message = AStatus_getMessage(status);
+
+		if (ex_code == EX_SERVICE_SPECIFIC) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    AStatus_getServiceSpecificError(status),
+					    message);
+		} else {
+#ifndef SUPPORTED_BUILD
+			g_critical(
+			    "AStatus: Binder error could not be not converted to FwupdError %s",
+			    AStatus_getDescription(status));
+#endif
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, message);
+		}
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_transact(FuUtilPrivate *priv,
+		 transaction_code_t code,
+		 GVariant *parameters,
+		 binder_flags_t flags,
+		 AParcel **out,
+		 GError **error)
+{
+	AParcel *in = NULL;
+	g_autoptr(AParcel) pending_in = NULL;
+	g_autoptr(AStatus) status = NULL;
+	binder_status_t nstatus = STATUS_OK;
+
+	AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+
+	if (parameters)
+		if (gp_parcel_write_variant(pending_in, parameters, error) != STATUS_OK)
+			return FALSE;
+
+	in = g_steal_pointer(&pending_in);
+	nstatus = AIBinder_transact(priv->fwupd_binder, code, &in, out, flags);
+
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Binder transaction %d returned %s",
+			    code,
+			    AStatus_getDescription(status));
+		return FALSE;
+	}
+
+	if (*out == NULL) {
+		// A transaction with STATUS_OK should always have an output parcel
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Binder transaction succeeded but didn't return a value");
+		return FALSE;
+	}
+
+	if (!fu_util_binder_parcel_read_header(*out, error)) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static GPtrArray *
 fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **error)
 {
-	AParcel *in = NULL;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GVariant) parameters = NULL;
 	g_autoptr(GPtrArray) array = NULL;
-	binder_status_t nstatus = STATUS_OK;
 	GVariantBuilder builder;
-	// TODO: gparcelable: fwupd_codec expects a tuple if vtype is tuple produce tuple
-	// const GVariantType *vtype = G_VARIANT_TYPE("(maa{sv})");
-	const GVariantType *vtype = G_VARIANT_TYPE("maa{sv}");
+	const GVariantType *vtype = G_VARIANT_TYPE("(aa{sv})");
 
-	// TODO: create GetUpgrades request
+	parameters = g_variant_new("(s)", device_id);
 
-	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
-	gp_parcel_write_variant(&in, g_variant_new("(s)", device_id), error);
-
-	nstatus =
-	    AIBinder_transact(priv->fwupd_binder, FWUPD_BINDER_CALL_GET_UPGRADES, &in, &out, 0);
-
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("get_device transaction returned %s", AStatus_getDescription(status));
-	}
-
-	nstatus = AParcel_readStatusHeader(out, &status);
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("couldn't read status header %s", AStatus_getDescription(status));
-	}
-	if (!AStatus_isOk(status)) {
-		g_warning("status header not okay %s", AStatus_getDescription(status));
+	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_UPGRADES, parameters, 0, &out, error)) {
+		return NULL;
 	}
 
 	g_variant_builder_init(&builder, vtype);
-	gp_parcel_to_variant(&builder, out, vtype, error);
+	if (!gp_parcel_to_variant(&builder, out, vtype, error)) {
+		return NULL;
+	}
 	val = g_variant_builder_end(&builder);
-	GVariant *child = g_variant_get_maybe(val);
-	val = g_variant_new_tuple(&child, 1);
 
-	// TODO: gparcelable only supports signed int types and doubles
-	//  fwupd_codec_array_from_variant uses switch(prop_id) to map types
-	//  Maybe we can add a fwupd_codec_get_type_for_prop(FWUPD_TYPE_DEVICE, key) -> GVariantType
-	//   to aid in AParcel to FwupdCodec conversion
-	//  Maybe something depending on json code? (js Number type)
 	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, error);
 	if (array == NULL) {
 		// error?
@@ -180,52 +260,55 @@ fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **
 static GPtrArray *
 fu_util_get_devices_call(FuUtilPrivate *priv, GError **error)
 {
-	AParcel *in = NULL;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GPtrArray) array = NULL;
-	binder_status_t nstatus = STATUS_OK;
 	GVariantBuilder builder;
-	// TODO: gparcelable: fwupd_codec expects a tuple if vtype is tuple produce tuple
-	// const GVariantType *vtype = G_VARIANT_TYPE("(maa{sv})");
-	const GVariantType *vtype = G_VARIANT_TYPE("maa{sv}");
+	const GVariantType *vtype = G_VARIANT_TYPE("(aa{sv})");
 
-	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
-	nstatus =
-	    AIBinder_transact(priv->fwupd_binder, FWUPD_BINDER_CALL_GET_DEVICES, &in, &out, 0);
-
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("get_device transaction returned %s", AStatus_getDescription(status));
-	}
-
-	nstatus = AParcel_readStatusHeader(out, &status);
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("couldn't read status header %s", AStatus_getDescription(status));
-	}
-	if (!AStatus_isOk(status)) {
-		g_warning("status header not okay %s", AStatus_getDescription(status));
+	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_DEVICES, NULL, 0, &out, error)) {
+		return NULL;
 	}
 
 	g_variant_builder_init(&builder, vtype);
-	gp_parcel_to_variant(&builder, out, vtype, error);
+	if (!gp_parcel_to_variant(&builder, out, vtype, error)) {
+		return NULL;
+	}
 	val = g_variant_builder_end(&builder);
-	GVariant *child = g_variant_get_maybe(val);
-	val = g_variant_new_tuple(&child, 1);
 
-	// TODO: gparcelable only supports signed int types and doubles
-	//  fwupd_codec_array_from_variant uses switch(prop_id) to map types
-	//  Maybe we can add a fwupd_codec_get_type_for_prop(FWUPD_TYPE_DEVICE, key) -> GVariantType
-	//   to aid in AParcel to FwupdCodec conversion
-	//  Maybe something depending on json code? (js Number type)
 	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_DEVICE, error);
 	if (array == NULL) {
-		// error?
 		return NULL;
 	}
 	fwupd_device_array_ensure_parents(array);
+
+	return g_steal_pointer(&array);
+}
+
+static GPtrArray *
+fu_util_get_remotes_call(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	GVariantBuilder builder;
+	const GVariantType *vtype = G_VARIANT_TYPE("(aa{sv})");
+
+	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_REMOTES, NULL, 0, &out, error)) {
+		return NULL;
+	}
+
+	g_variant_builder_init(&builder, vtype);
+	if (!gp_parcel_to_variant(&builder, out, vtype, error)) {
+		return NULL;
+	}
+	val = g_variant_builder_end(&builder);
+
+	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_REMOTE, error);
+	if (array == NULL) {
+		return NULL;
+	}
 
 	return g_steal_pointer(&array);
 }
@@ -310,6 +393,9 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = fu_util_get_devices_call(priv, error);
 
+	if (devs == NULL)
+		return FALSE;
+
 	/* print */
 	if (devs->len > 0)
 		fu_util_build_device_tree(priv, root, devs);
@@ -364,16 +450,14 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 static gboolean
 fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	AParcel *in = NULL;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
-	binder_status_t nstatus = STATUS_OK;
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
-	g_auto(GVariantBuilder) builder;
+	FwupdInstallFlags install_flags = priv->flags;
 
 	/* for now we ignore the requested device */
 	id = FWUPD_DEVICE_ID_ANY;
@@ -386,28 +470,32 @@ fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	istr = fwupd_unix_input_stream_from_fn(filename, error);
+	if (istr == NULL)
+		return FALSE;
 
-	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-	val = g_variant_new("(sha{sv})", id, g_unix_input_stream_get_fd(istr), &builder);
+	{
+		g_auto(GVariantBuilder) builder;
+		g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "reason",
+				      g_variant_new_string("user-action"));
+		if (filename != NULL) {
+			g_variant_builder_add(&builder,
+					      "{sv}",
+					      "filename",
+					      g_variant_new_string(filename));
+		}
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      "install-flags",
+				      g_variant_new_uint64(install_flags));
+
+		val = g_variant_new("(sha{sv})", id, g_unix_input_stream_get_fd(istr), &builder);
+	}
 	g_message("encoding install params %s", g_variant_print(val, TRUE));
 
-	AIBinder_prepareTransaction(priv->fwupd_binder, &in);
-
-	gp_parcel_write_variant(in, val, error);
-
-	nstatus = AIBinder_transact(priv->fwupd_binder,
-				    FWUPD_BINDER_CALL_INSTALL,
-				    &in,
-				    &out,
-				    FLAG_ONEWAY);
-
-	if (nstatus != STATUS_OK) {
-		status = AStatus_fromStatus(nstatus);
-		g_warning("Failed to transact local-install %s", AStatus_getDescription(status));
-	}
-
-	g_warning("local install %s", filename);
-	return TRUE;
+	return fu_util_transact(priv, FWUPD_BINDER_CALL_INSTALL, val, 0, &out, error);
 }
 
 static void
@@ -420,11 +508,30 @@ fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 	fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
 }
 
-// static gboolean
-// fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
-//{
+static gboolean
+fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
+	g_autoptr(GPtrArray) remotes = NULL;
 
-//}
+	remotes = fu_util_get_remotes_call(priv, error);
+	if (remotes == NULL)
+		return FALSE;
+
+	if (remotes->len == 0) {
+		/* TRANSLATORS: no repositories to download from */
+		fu_console_print_literal(priv->console, _("No remotes available"));
+		return TRUE;
+	}
+
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
+		g_node_append_data(root, g_object_ref(remote_tmp));
+	}
+	fu_util_print_node(priv->console, priv->client, root);
+
+	return TRUE;
+}
 
 static gboolean
 fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
@@ -435,17 +542,13 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
 	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
 
-	g_warning("get-upgrades");
-
 	/* are the remotes very old */
 	// if (!fu_util_perhaps_refresh_remotes(priv, error))
 	//	return FALSE;
 
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
-		g_warning("get dev call");
 		devices = fu_util_get_devices_call(priv, error);
-		g_warning("got dev call %p", devices);
 		// fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
@@ -537,7 +640,6 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* no devices supported by LVFS or all are filtered */
 	if (!supported) {
-		g_warning("hah supported? %d", supported);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
@@ -556,6 +658,8 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	fu_util_print_node(priv->console, priv->client, root);
+
+	return TRUE;
 }
 
 static void *
@@ -606,6 +710,11 @@ main(int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autoptr(GError) error = NULL;
+	gboolean force = FALSE;
+	gboolean allow_branch_switch = FALSE;
+	gboolean allow_older = FALSE;
+	gboolean allow_reinstall = FALSE;
+	gboolean no_history = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
@@ -631,6 +740,30 @@ main(int argc, char *argv[])
 					 /* TRANSLATORS: command line option */
 					 N_("Show client and daemon versions"),
 					 NULL},
+					{"allow-reinstall",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &allow_reinstall,
+					 /* TRANSLATORS: command line option */
+					 N_("Allow reinstalling existing firmware versions"),
+					 NULL},
+					{"allow-older",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &allow_older,
+					 /* TRANSLATORS: command line option */
+					 N_("Allow downgrading firmware versions"),
+					 NULL},
+					{"allow-branch-switch",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &allow_branch_switch,
+					 /* TRANSLATORS: command line option */
+					 N_("Allow switching firmware branch"),
+					 NULL},
 					{"json",
 					 '\0',
 					 0,
@@ -638,6 +771,22 @@ main(int argc, char *argv[])
 					 &priv->as_json,
 					 /* TRANSLATORS: command line option */
 					 N_("Output in JSON format"),
+					 NULL},
+					{"no-history",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &no_history,
+					 /* TRANSLATORS: command line option */
+					 N_("Do not write to the history database"),
+					 NULL},
+					{"force",
+					 '\0',
+					 0,
+					 G_OPTION_ARG_NONE,
+					 &force,
+					 /* TRANSLATORS: command line option */
+					 N_("Force the action by relaxing some runtime checks"),
 					 NULL},
 					{NULL}};
 
@@ -670,13 +819,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Gets the list of updates for connected hardware"),
 			      fu_util_get_upgrades);
-	/* set verbose? */
-	if (verbose) {
-		(void)g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-		(void)g_setenv("FWUPD_VERBOSE", "1", FALSE);
-	} else {
-		// g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
-	}
+	fu_util_cmd_array_add(cmd_array,
+			      "get-remotes",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Gets the configured remotes"),
+			      fu_util_get_remotes);
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
@@ -709,6 +857,20 @@ main(int argc, char *argv[])
 	} else {
 		//g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, fu_util_ignore_cb, NULL);
 	}
+
+	/* set flags */
+	if (allow_reinstall)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (allow_older)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	if (allow_branch_switch)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (force) {
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+	}
+	if (no_history)
+		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* connect to the daemon */
 	// TODO: Maybe create FuClientBinder

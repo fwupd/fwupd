@@ -73,6 +73,17 @@ fu_daemon_get_pending_stop(FuDaemon *self)
 	return priv->pending_stop;
 }
 
+gboolean
+fu_daemon_device_id_valid(const gchar *device_id, GError **error)
+{
+	if (g_strcmp0(device_id, FWUPD_DEVICE_ID_ANY) == 0)
+		return TRUE;
+	if (device_id != NULL && strlen(device_id) >= 4)
+		return TRUE;
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid device ID: %s", device_id);
+	return FALSE;
+}
+
 static gboolean
 fu_daemon_schedule_housekeeping_cb(gpointer user_data)
 {
