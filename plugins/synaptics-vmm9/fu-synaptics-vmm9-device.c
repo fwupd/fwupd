@@ -341,6 +341,7 @@ fu_synaptics_vmm9_device_open(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to DISABLE_RC before ENABLE_RC: ");
 		return FALSE;
 	}
+	fu_device_sleep(device, 10);
 	if (!fu_synaptics_vmm9_device_command(self,
 					      FU_SYNAPTICS_VMM9_RC_CTRL_ENABLE_RC,
 					      0x0, /* offset */
