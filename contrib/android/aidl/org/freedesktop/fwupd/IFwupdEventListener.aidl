@@ -1,9 +1,10 @@
 package org.freedesktop.fwupd;
 
 interface IFwupdEventListener {
-    void onChanged();
-    void onDeviceAdded(in PersistableBundle device);
-    void onDeviceRemoved(in PersistableBundle device);
-    void onDeviceChanged(in PersistableBundle device);
-    void onDeviceRequest(in PersistableBundle request);
+    oneway void onChanged();
+    oneway void onDeviceAdded(in PersistableBundle device);
+    oneway void onDeviceRemoved(in PersistableBundle device);
+    oneway void onDeviceChanged(in PersistableBundle device);
+    oneway void onDeviceRequest(in PersistableBundle request);
+    oneway void onPropertiesChanged(in PersistableBundle properties);
 }
