@@ -64,6 +64,12 @@ VendorId = UEFI:Microsoft
 [UEFI\CRT_2128ED80A17DA1DE2A9C8CC7AADE9D44A80182B15B57A08681DC7E2EFBEC848D]
 VendorId = UEFI:Microsoft
 
+# Manufacturer=AiStone
+# BaseboardManufacturer=AiStone
+# BaseboardProduct=X5KK4NAG
+[916406dd-3efc-5181-956b-8b26e31dce6e]
+Flags = no-dbx-updates
+
 # Manufacturer=Apple Inc.
 [80f95c96-a739-5ef5-8482-3d65cb39ff55]
 Flags = no-dbx-updates
