@@ -244,6 +244,16 @@ fu_efi_x509_signature_parse(FuFirmware *firmware,
 	fu_efi_x509_signature_set_issuer(self, fu_x509_certificate_get_issuer(crt));
 	fu_efi_x509_signature_set_subject(self, fu_x509_certificate_get_subject(crt));
 
+	/* no year in the subject, fall back */
+	if (fu_firmware_get_version_raw(FU_FIRMWARE(self)) == 0) {
+		g_autoptr(GDateTime) dt = fu_x509_certificate_get_activation_time(crt);
+		if (dt != NULL) {
+			g_debug("falling back to activation time %u",
+				(guint)g_date_time_get_year(dt));
+			fu_firmware_set_version_raw(FU_FIRMWARE(self), g_date_time_get_year(dt));
+		}
+	}
+
 	/* success */
 	return TRUE;
 }

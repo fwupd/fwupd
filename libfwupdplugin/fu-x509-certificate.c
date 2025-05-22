@@ -43,6 +43,7 @@ struct _FuX509Certificate {
 	FuFirmware parent_instance;
 	gchar *issuer;
 	gchar *subject;
+	GDateTime *activation_time;
 };
 
 G_DEFINE_TYPE(FuX509Certificate, fu_x509_certificate, FU_TYPE_FIRMWARE)
@@ -109,6 +110,34 @@ fu_x509_certificate_get_subject(FuX509Certificate *self)
 	return self->subject;
 }
 
+static void
+fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
+{
+	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
+	if (self->activation_time != NULL)
+		g_date_time_unref(self->activation_time);
+	self->activation_time = g_date_time_new_from_unix_utc(activation_time);
+}
+
+/**
+ * fu_x509_certificate_get_activation_time:
+ * @self: A #FuX509Certificate
+ *
+ * Returns the certificate activation time.
+ *
+ * Returns: (transfer full): a #GDateTime, or %NULL for unset
+ *
+ * Since: 2.0.11
+ **/
+GDateTime *
+fu_x509_certificate_get_activation_time(FuX509Certificate *self)
+{
+	g_return_val_if_fail(FU_IS_X509_CERTIFICATE(self), NULL);
+	if (self->activation_time == NULL)
+		return NULL;
+	return g_date_time_ref(self->activation_time);
+}
+
 static gboolean
 fu_x509_certificate_parse(FuFirmware *firmware,
 			  GInputStream *stream,
@@ -122,6 +151,7 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 	gsize key_idsz = sizeof(key_id);
 	gnutls_datum_t d = {0};
 	gnutls_x509_dn_t dn = {0x0};
+	gint64 ts;
 	gsize bufsz = sizeof(buf);
 	int rc;
 	g_auto(gnutls_x509_crt_t) crt = NULL;
@@ -174,6 +204,17 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 		fu_x509_certificate_set_subject(self, str);
 	}
 
+	/* activation_time */
+	ts = (gint64)gnutls_x509_crt_get_activation_time(crt);
+	if (ts == -1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to get activation time");
+		return FALSE;
+	}
+	fu_x509_certificate_set_activation_time(self, ts);
+
 	/* key ID */
 	rc = gnutls_x509_crt_get_key_id(crt, 0, key_id, &key_idsz);
 	if (rc < 0) {
@@ -208,6 +249,8 @@ fu_x509_certificate_finalize(GObject *obj)
 	FuX509Certificate *self = FU_X509_CERTIFICATE(obj);
 	g_free(self->issuer);
 	g_free(self->subject);
+	if (self->activation_time != NULL)
+		g_date_time_unref(self->activation_time);
 	G_OBJECT_CLASS(fu_x509_certificate_parent_class)->finalize(obj);
 }
 
