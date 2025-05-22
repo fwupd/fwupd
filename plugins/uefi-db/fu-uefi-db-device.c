@@ -27,7 +27,10 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add each subdevice */
-	siglist = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
+	siglist = fu_device_read_firmware(device,
+					  progress,
+					  FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+					  error);
 	if (siglist == NULL) {
 		g_prefix_error(error, "failed to parse db: ");
 		return FALSE;

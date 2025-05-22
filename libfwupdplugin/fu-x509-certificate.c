@@ -146,6 +146,8 @@ fu_x509_certificate_parse(FuFirmware *firmware,
 			    rc);
 		return FALSE;
 	}
+	if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM)
+		gnutls_x509_crt_set_flags(crt, GNUTLS_X509_CRT_FLAG_IGNORE_SANITY);
 	rc = gnutls_x509_crt_import(crt, &d, GNUTLS_X509_FMT_DER);
 	if (rc < 0) {
 		g_set_error(error,
