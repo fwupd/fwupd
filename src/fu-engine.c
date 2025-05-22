@@ -3338,7 +3338,7 @@ fu_engine_firmware_read(FuEngine *self,
 		g_prefix_error(error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	return fu_device_read_firmware(device, progress, error);
+	return fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 }
 
 static gboolean

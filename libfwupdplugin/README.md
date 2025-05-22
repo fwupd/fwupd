@@ -178,3 +178,7 @@ Remember: Plugins should be upstream!
 * `fu_context_get_smbios_string()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
 * `fu_context_get_smbios_integer()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
 * `fu_context_get_smbios_data()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
+
+## 2.0.11
+
+* `fu_device_read_firmware()`: Add `FuFirmwareParseFlags` to `fu_device_read_firmware`.

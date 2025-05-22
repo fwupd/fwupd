@@ -5352,6 +5352,7 @@ fu_device_prepare_firmware(FuDevice *self,
  * fu_device_read_firmware:
  * @self: a #FuDevice
  * @progress: a #FuProgress
+ * @flags: #FuFirmwareParseFlags, e.g. %FU_FIRMWARE_PARSE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
@@ -5363,10 +5364,13 @@ fu_device_prepare_firmware(FuDevice *self,
  *
  * Returns: (transfer full): a #FuFirmware, or %NULL for error
  *
- * Since: 1.0.8
+ * Since: 2.0.11, although a simpler version was added in 1.0.8
  **/
 FuFirmware *
-fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
+fu_device_read_firmware(FuDevice *self,
+			FuProgress *progress,
+			FuFirmwareParseFlags flags,
+			GError **error)
 {
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
@@ -5396,7 +5400,7 @@ fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 		return NULL;
 	if (priv->firmware_gtype != G_TYPE_INVALID) {
 		g_autoptr(FuFirmware) firmware = g_object_new(priv->firmware_gtype, NULL);
-		if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
+		if (!fu_firmware_parse_bytes(firmware, fw, 0x0, flags, error))
 			return NULL;
 		return g_steal_pointer(&firmware);
 	}

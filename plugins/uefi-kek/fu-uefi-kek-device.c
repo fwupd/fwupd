@@ -27,7 +27,7 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add each subdevice */
-	siglist = fu_device_read_firmware(device, progress, error);
+	siglist = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (siglist == NULL) {
 		g_prefix_error(error, "failed to parse kek: ");
 		return FALSE;

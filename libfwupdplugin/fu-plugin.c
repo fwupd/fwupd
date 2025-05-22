@@ -808,7 +808,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		return FALSE;
 	if (!fu_device_detach_full(device, progress, error))
 		return FALSE;
-	firmware = fu_device_read_firmware(device, progress, error);
+	firmware = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (firmware == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_device_attach_full(device, progress, &error_local))
