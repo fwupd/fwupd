@@ -201,7 +201,10 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
-	kek = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
+	kek = fu_device_read_firmware(device,
+				      progress,
+				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				      error);
 	if (kek == NULL) {
 		g_prefix_error(error, "failed to parse KEK: ");
 		return FALSE;
