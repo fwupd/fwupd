@@ -303,6 +303,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION "org.fwupd.hsi.Amd.RollbackProtection"
 /**
+ * FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN:
+ *
+ * Host Security ID attribute for entry sign protection of AMD platform firmware
+ *
+ * Since: 2.0.10
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN "org.fwupd.hsi.Amd.EntrySign"
+/**
  * FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION:
  *
  * Host Security ID attribute for SPI Write protection
