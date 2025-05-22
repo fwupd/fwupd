@@ -1295,6 +1295,7 @@ fu_device_prepare_firmware(FuDevice *self,
 FuFirmware *
 fu_device_read_firmware(FuDevice *self,
 			FuProgress *progress,
+			FuFirmwareParseFlags flags,
 			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_device_dump_firmware(FuDevice *self,

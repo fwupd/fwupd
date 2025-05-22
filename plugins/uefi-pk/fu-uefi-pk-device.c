@@ -99,7 +99,7 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
 
-	pk = fu_device_read_firmware(device, progress, error);
+	pk = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 	if (pk == NULL) {
 		g_prefix_error(error, "failed to parse PK: ");
 		return FALSE;
