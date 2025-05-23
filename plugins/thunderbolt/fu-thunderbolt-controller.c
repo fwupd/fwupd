@@ -343,6 +343,8 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	/* set up signed payload attribute */
 	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST && self->gen >= 3)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	else if (self->gen == 3)
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 
 	/* success */
 	return TRUE;
