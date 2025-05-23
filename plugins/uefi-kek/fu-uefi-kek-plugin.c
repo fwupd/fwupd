@@ -24,6 +24,7 @@ static void
 fu_uefi_kek_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_pk");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UEFI_KEK_DEVICE);
 }
 
