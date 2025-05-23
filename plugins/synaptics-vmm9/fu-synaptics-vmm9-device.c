@@ -84,8 +84,18 @@ fu_synaptics_vmm9_device_command_cb(FuDevice *self, gpointer user_data, GError *
 	if (st == NULL)
 		return FALSE;
 
-	/* sanity check */
+	/* check if RC mode is already enabled */
 	st_payload = fu_struct_hid_get_command_get_payload(st);
+	if (fu_struct_hid_payload_get_sts(st_payload) == FU_SYNAPTICS_VMM9_RC_STS_INVALID &&
+	    fu_struct_hid_payload_get_ctrl(st_payload) == FU_SYNAPTICS_VMM9_RC_CTRL_ENABLE_RC) {
+		g_debug(
+		    "RC already enabled, sts is %s [0x%x]",
+		    fu_synaptics_vmm9_rc_sts_to_string(fu_struct_hid_payload_get_sts(st_payload)),
+		    fu_struct_hid_payload_get_sts(st_payload));
+		return TRUE;
+	}
+
+	/* sanity check */
 	if (fu_struct_hid_payload_get_sts(st_payload) != FU_SYNAPTICS_VMM9_RC_STS_SUCCESS) {
 		g_set_error(
 		    error,
