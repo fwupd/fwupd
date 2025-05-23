@@ -249,7 +249,6 @@ fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **
 
 	array = fwupd_codec_array_from_variant(val, FWUPD_TYPE_RELEASE, error);
 	if (array == NULL) {
-		// error?
 		return NULL;
 	}
 	fwupd_device_array_ensure_parents(array);

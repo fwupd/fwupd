@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include <glib/glib.h>
+#include <glib.h>
 
 // TODO: This is a hack to work around android bundles not supporting signed numbers
 static guint64
