@@ -1,3 +1,11 @@
+# Lenovo ThinkPad Thunderbolt 5 Smart Dock
+[USB\VID_17EF&PID_310D]
+Plugin = ccgx_dmc
+Summary = Dock Management Controller Device
+Name = ThinkPad Thunderbolt 5 Smart Dock
+CcgxDmcTriggerCode = 1200
+RemoveDelay = 120000
+
 # Lenovo ThinkPad Universal USB-C Dock
 [USB\VID_17EF&PID_30A9]
 Plugin = ccgx_dmc
