@@ -88,7 +88,8 @@ struct FuStructLegionFactoryReset {
 struct FuStructLegionStartIap {
     cmd: u8 == 0xE1,
     data: [char; 7] == "UPGRADE",
-    reserved: [u8; 57],
+    reset: u8 == 0x01, // 0x01 for reset, 0x00 for no reset
+    reserved: [u8; 56],
 }
 
 #[derive(New, Getters)]
