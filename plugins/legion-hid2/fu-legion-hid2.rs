@@ -8,6 +8,7 @@ enum FuLegionHid2Command {
     GetMcuId = 0x02,
     GetPlTest = 0xDF,
     StartIap = 0xE1,
+    FactoryReset = 0xEE,
     IcReset = 0xEF,
 }
 
@@ -72,6 +73,14 @@ struct FuStructLegionGetPlTestResult {
     index: u8,
     content: u8,
     reserved: [u8; 61],
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructLegionFactoryReset {
+    cmd: u8 == 0xEE,
+    data: [char; 7] == "RESTORE",
+    reserved: [u8; 57],
 }
 
 #[derive(New, Default)]
