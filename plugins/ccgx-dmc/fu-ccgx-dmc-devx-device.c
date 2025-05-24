@@ -299,8 +299,10 @@ fu_ccgx_dmc_devx_device_probe(FuDevice *device, GError **error)
 
 	/* version, if possible */
 	if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_DMC) {
-		version = fu_ccgx_dmc_devx_device_version_dmc_bfw(self, offset);
-		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+		/*version = fu_ccgx_dmc_devx_device_version_dmc_bfw(self, offset);*/
+		/*fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);*/
+                version = fu_ccgx_dmc_devx_device_version_dmc_app(self, offset);
+                fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	} else if (device_version_type == FU_CCGX_DMC_DEVX_DEVICE_TYPE_HX3) {
 		version = fu_ccgx_dmc_devx_device_version_hx3(self, offset);
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
