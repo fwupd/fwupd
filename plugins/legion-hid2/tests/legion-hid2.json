@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "7976f433d469946007e29682c84f87d87696c4a667d3f82fb2e22dd2d15f2d6c-0_0_3_6.cab",
-      "emulation-url": "8897ce2e5215fdd13d033aff1700253afe84231f47cd34b9d2ecf797682eb3ab-legionhid2_0036.zip",
+      "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
+      "emulation-url": "c9306f015d47f04828b3affd7a8f9efd7ee6c8992cd83c0cc440fae396b0a17e-0036_0038.zip",
       "components": [
         {
-          "version": "0.0.3.6",
+          "version": "0.0.3.8",
           "guids": [
             "65619675-fec6-5035-801d-7f5e59fd9749"
           ]
