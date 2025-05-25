@@ -6,18 +6,27 @@
 
 #include "config.h"
 
-#include "fu-legion-hid2-child-device.h"
+#include "fu-legion-hid2-bl-device.h"
 #include "fu-legion-hid2-device.h"
 #include "fu-legion-hid2-firmware.h"
+#include "fu-legion-hid2-sipo-device.h"
 #include "fu-legion-hid2-struct.h"
 
 struct _FuLegionHid2Device {
 	FuHidDevice parent_instance;
+	guint8 manufacturer;
 };
 
 G_DEFINE_TYPE(FuLegionHid2Device, fu_legion_hid2_device, FU_TYPE_HID_DEVICE)
 
 #define FU_LEGION_HID2_DEVICE_TIMEOUT 200 /* ms */
+
+static void
+fu_legion_hid2_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuLegionHid2Device *self = FU_LEGION_HID2_DEVICE(device);
+	fwupd_codec_string_append_int(str, idt, "ChipManufacturer", self->manufacturer);
+}
 
 static gboolean
 fu_legion_hid2_device_transfer(FuLegionHid2Device *self,
@@ -123,20 +132,42 @@ fu_legion_hid2_device_probe(FuDevice *device, GError **error)
  * to be non-fatal or the MCU won't enumerate.
  */
 static void
-fu_legion_hid2_device_setup_child(FuLegionHid2Device *self)
+fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self)
 {
-	g_autoptr(FuDevice) child = fu_legion_hid2_child_device_new(FU_DEVICE(self));
+	g_autoptr(GByteArray) cmd = fu_struct_legion_get_pl_test_new();
+	g_autoptr(GByteArray) tp_man = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(GByteArray) tp_ver = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuDevice) child = NULL;
 	g_autoptr(GError) error_child = NULL;
 
-	if (!fu_device_probe(child, &error_child)) {
-		g_info("%s", error_child->message);
+	/* determine which vendor touchpad */
+	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_MANUFACTURER);
+	if (!fu_legion_hid2_device_transfer(self, cmd, tp_man, &error_child)) {
+		g_debug("failed to get touchpad manufacturer: %s", error_child->message);
+		return;
+	}
+	self->manufacturer = fu_struct_legion_get_pl_test_result_get_content(tp_man);
+	switch (self->manufacturer) {
+	case FU_LEGION_HID2_TP_MAN_BETTER_LIFE:
+		child = fu_legion_hid2_bl_device_new(FU_DEVICE(self));
+		break;
+	case FU_LEGION_HID2_TP_MAN_SIPO:
+		child = fu_legion_hid2_sipo_device_new(FU_DEVICE(self));
+		break;
+	default:
+	case FU_LEGION_HID2_TP_MAN_NONE:
+		g_info("no touchpad found, skipping child device setup");
 		return;
 	}
 
-	if (!fu_device_setup(child, &error_child)) {
-		g_info("%s", error_child->message);
+	/* lookup firmware from MCU (*NOT* from touchpad directly) */
+	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_VERSION);
+	if (!fu_legion_hid2_device_transfer(self, cmd, tp_ver, &error_child)) {
+		g_debug("failed to get touchpad version: %s", error_child->message);
 		return;
 	}
+
+	fu_device_set_version_raw(child, fu_struct_legion_get_pl_test_result_get_content(tp_ver));
 
 	fu_device_add_child(FU_DEVICE(self), child);
 }
@@ -158,7 +189,7 @@ fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 	if (!fu_legion_hid2_device_ensure_mcu_id(device, error))
 		return FALSE;
 
-	fu_legion_hid2_device_setup_child(FU_LEGION_HID2_DEVICE(device));
+	fu_legion_hid2_device_setup_touchpad(FU_LEGION_HID2_DEVICE(device));
 
 	/* success */
 	return TRUE;
@@ -534,6 +565,7 @@ static void
 fu_legion_hid2_device_class_init(FuLegionHid2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_legion_hid2_device_to_string;
 	device_class->setup = fu_legion_hid2_device_setup;
 	device_class->probe = fu_legion_hid2_device_probe;
 	device_class->prepare_firmware = fu_legion_hid2_device_prepare_firmware;
