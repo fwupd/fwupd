@@ -2635,18 +2635,20 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
-	} else if (g_strv_length(values) == 1) {
-		FwupdDevice *device = fu_util_get_device_by_id(priv, values[0], error);
-		if (device == NULL)
-			return FALSE;
-		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-		g_ptr_array_add(devices, device);
 	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
+		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			g_ptr_array_add(devices, device);
+		}
 	}
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 
@@ -5378,7 +5380,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Gets the list of updates for connected hardware"),
+			      _("Gets the list of updates for all specified devices, or all "
+				"devices if unspecified"),
 			      fu_util_get_updates);
 	fu_util_cmd_array_add(cmd_array,
 			      "update,upgrade",
