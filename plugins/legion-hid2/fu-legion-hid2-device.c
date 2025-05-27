@@ -172,7 +172,6 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 				       GError **error)
 {
 	guint32 version;
-	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_legion_hid2_firmware_new();
 
 	/* sanity check */
@@ -181,18 +180,9 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 
 	version = fu_legion_hid2_firmware_get_version(firmware);
 	if (fu_device_get_version_raw(device) > version) {
-		version_str = fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "downgrading from %s to %s is not supported",
-				    fu_device_get_version(device),
-				    version_str);
-			return NULL;
-		}
-		g_warning("firmware %s is a downgrade but is being force installed anyway",
-			  version_str);
+		g_autofree gchar *version_str =
+		    fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
+		g_info("downgrading to firmware %s", version_str);
 	}
 
 	return g_steal_pointer(&firmware);
