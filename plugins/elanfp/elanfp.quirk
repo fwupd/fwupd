@@ -13,3 +13,6 @@ Flags = usb-bulk-transfer,enforce-requires
 [USB\VID_04F3&PID_0CA3]
 Plugin = elanfp
 Flags = usb-bulk-transfer,enforce-requires
+[USB\VID_04F3&PID_0CA8]
+Plugin = elanfp
+Flags = usb-bulk-transfer,enforce-requires
