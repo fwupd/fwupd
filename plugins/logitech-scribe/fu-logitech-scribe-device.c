@@ -561,6 +561,8 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	 * image file pushed. Device validates and uploads new image on inactive partition. Reboots
 	 * wait for RemoveDelay duration
 	 */
+	fu_device_sleep_full(FU_DEVICE(self), 60 * 1000, progress);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success! */
 	return TRUE;
@@ -651,6 +653,8 @@ fu_logitech_scribe_device_init(FuLogitechScribeDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
+	fu_device_set_remove_delay(FU_DEVICE(self), 2 * 60 * 1000);
+	fu_device_set_install_duration(FU_DEVICE(self), 120);
 }
 
 static void
