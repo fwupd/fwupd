@@ -1,6 +1,7 @@
 _fwupdmgr_cmd_list=(
 	'activate'
 	'block-firmware'
+	'check-reboot-needed'
 	'clear-results'
 	'disable-remote'
 	'device-test'
@@ -312,7 +313,7 @@ _fwupdmgr()
 	esac
 
 	case $arg in
-	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade|report-export)
+	activate|check-reboot-needed|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade|report-export)
 		#device ID
 		if [[ "$args" = "2" ]]; then
 			_show_device_ids
