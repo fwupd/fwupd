@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#define ALGOLTEK_USBCR_VENDOR_ID 0x58f
+
 #define FU_TYPE_ALGOLTEK_USBCR_DEVICE (fu_algoltek_usbcr_device_get_type())
 G_DECLARE_FINAL_TYPE(FuAlgoltekUsbcrDevice,
 		     fu_algoltek_usbcr_device,
