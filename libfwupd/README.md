@@ -4,7 +4,6 @@
 
 * Typedef `FwupdFeatureFlags` to `guint64` so it's the same size on all platforms
 * Remove `FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM`
-* Remove `FWUPD_INSTALL_FLAG_IGNORE_VID_PID`
 * Remove `FWUPD_INSTALL_FLAG_NO_SEARCH`
 
 ## Migration from Version 2.0.0
