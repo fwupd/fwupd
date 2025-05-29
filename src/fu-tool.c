@@ -1544,7 +1544,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* success */
-	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
+	return TRUE;
 }
 
 static gboolean
