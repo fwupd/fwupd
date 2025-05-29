@@ -582,6 +582,58 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 }
 
 static gboolean
+fu_util_check_reboot_needed(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* handle both forms */
+	if (g_strv_length(values) == 0) {
+		g_autoptr(GPtrArray) devices =
+		    fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *device = g_ptr_array_index(devices, i);
+
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	} else {
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	}
+
+	if (!(priv->completion_flags &
+	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no rebooting needed */
+				    _("No reboot is necessary"));
+		return FALSE;
+	}
+
+	if (priv->as_json)
+		return TRUE;
+
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -5330,6 +5382,12 @@ main(int argc, char *argv[])
 	fu_console_set_main_context(priv->console, priv->main_ctx);
 
 	/* add commands */
+	fu_util_cmd_array_add(cmd_array,
+			      "check-reboot-needed",
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Check if any devices are pending a reboot to complete update"),
+			      fu_util_check_reboot_needed);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-devices,get-topology",
 			      NULL,
