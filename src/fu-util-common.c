@@ -2422,6 +2422,26 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("The UEFI certificate store is now up to date")},
+		     /* ------------------------------------------*/
+		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("AMD microcode signature vulnerability detected")},
+		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      NULL},
+		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("AMD microcode signature vulnerability fixed")},
+		     {FWUPD_SECURITY_ATTR_ID_AMD_ENTRY_SIGN,
+		      FWUPD_SECURITY_ATTR_RESULT_LOCKED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,
+		      /* TRANSLATORS: HSI event title */
+		      _("AMD microcode signature vulnerability broken")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
