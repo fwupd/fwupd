@@ -431,6 +431,14 @@ fu_algoltek_usbcr_device_probe(FuDevice *device, GError **error)
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_algoltek_usbcr_device_parent_class)->probe(device, error))
 		return FALSE;
+	if (fu_device_get_vid(device) != ALGOLTEK_USBCR_VENDOR_ID) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "vendor id 0x%x not supported",
+			    fu_device_get_vid(device));
+		return FALSE;
+	}
 
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "usb", error);
