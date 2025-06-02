@@ -11,6 +11,8 @@
 #include "fu-algoltek-usbcr-firmware.h"
 #include "fu-algoltek-usbcr-struct.h"
 
+#define FU_ALGOLTEK_USBCR_VENDOR_ID 0x58f
+
 struct _FuAlgoltekUsbcrDevice {
 	FuBlockDevice parent_instance;
 };
@@ -431,7 +433,7 @@ fu_algoltek_usbcr_device_probe(FuDevice *device, GError **error)
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_algoltek_usbcr_device_parent_class)->probe(device, error))
 		return FALSE;
-	if (fu_device_get_vid(device) != ALGOLTEK_USBCR_VENDOR_ID) {
+	if (fu_device_get_vid(device) != FU_ALGOLTEK_USBCR_VENDOR_ID) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
