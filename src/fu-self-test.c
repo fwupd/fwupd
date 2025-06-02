@@ -7034,6 +7034,45 @@ fu_config_migrate_1_7_func(void)
 }
 
 static void
+fu_engine_report_metadata_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GList) keys = NULL;
+	const gchar *keys_exist[] = {
+	    "BatteryLevel",
+	    "BatteryThreshold",
+	    "CompileVersion(org.freedesktop.fwupd)",
+	    "CpuArchitecture",
+	    "DistroId",
+	    "DistroVersion",
+	    "FwupdSupported",
+	    "PlatformArchitecture",
+	    "RuntimeVersion(org.freedesktop.fwupd)",
+	    "SELinux",
+	};
+
+	/* check report metadata */
+	metadata = fu_engine_get_report_metadata(engine, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(metadata);
+
+	keys = g_list_sort(g_hash_table_get_keys(metadata), (GCompareFunc)g_strcmp0);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup(metadata, key);
+		g_debug("%s=%s", key, value);
+	}
+	for (guint i = 0; i < G_N_ELEMENTS(keys_exist); i++) {
+		const gchar *value = g_hash_table_lookup(metadata, keys_exist[i]);
+		if (value == NULL)
+			g_warning("no %s in metadata", keys_exist[i]);
+	}
+}
+
+static void
 fu_engine_machine_hash_func(void)
 {
 	gsize sz = 0;
@@ -7579,6 +7618,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_device_list_replug_user_func);
 	g_test_add_func("/fwupd/engine{machine-hash}", fu_engine_machine_hash_func);
+	g_test_add_data_func("/fwupd/engine{report-metadata}",
+			     self,
+			     fu_engine_report_metadata_func);
 	g_test_add_data_func("/fwupd/engine{require-hwid}", self, fu_engine_require_hwid_func);
 	g_test_add_data_func("/fwupd/engine{requires-reboot}",
 			     self,
