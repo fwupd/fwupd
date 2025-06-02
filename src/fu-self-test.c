@@ -5124,7 +5124,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5890,7 +5890,7 @@ fu_common_store_cab_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5960,7 +5960,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet1),
 				      blob1,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -5991,7 +5991,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet2),
 				      blob2,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6025,7 +6025,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet3),
 				      blob3,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6054,7 +6054,7 @@ fu_common_store_cab_artifact_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet4),
 				      blob4,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6088,7 +6088,7 @@ fu_common_store_cab_unsigned_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6141,7 +6141,7 @@ fu_common_store_cab_sha256_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -6174,7 +6174,7 @@ fu_common_store_cab_folder_func(void)
 	ret = fu_firmware_parse_bytes(FU_FIRMWARE(cabinet),
 				      blob,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

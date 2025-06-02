@@ -4928,7 +4928,7 @@ fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_firmware_parse_bytes(FU_FIRMWARE(cab_file),
 				     cab_blob,
 				     0x0,
-				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				     error))
 		return FALSE;
 
