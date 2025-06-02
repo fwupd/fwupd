@@ -4570,7 +4570,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
 				      stream,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				      error))
 		return NULL;
 	return g_steal_pointer(&cabinet);
