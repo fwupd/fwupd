@@ -162,6 +162,7 @@ fu_common_get_kernel_cmdline_impl(GError **error)
 	    "showopts",
 	    "splash",
 	    "swap",
+	    "systemd.machine_id",
 	    "systemd.mask",
 	    "systemd.show_status",
 	    "systemd.unit",
