@@ -1868,6 +1868,27 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_get_report_metadata_selinux(GHashTable *hash, GError **error)
+{
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	g_autofree gchar *filename = g_build_filename(sysfsdir, "fs", "selinux", "enforce", NULL);
+
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+		g_debug("no %s, skipping", filename);
+		return TRUE;
+	}
+	if (!g_file_get_contents(filename, &buf, NULL, error))
+		return FALSE;
+	if (g_strcmp0(buf, "1") == 0) {
+		g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("enforcing"));
+		return TRUE;
+	}
+	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("permissive"));
+	return TRUE;
+}
+
 static void
 fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean value)
 {
@@ -1935,6 +1956,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (!fu_engine_get_report_metadata_lsb_release(hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
+		return NULL;
+	if (!fu_engine_get_report_metadata_selinux(hash, error))
 		return NULL;
 
 	/* these affect the report credibility */
