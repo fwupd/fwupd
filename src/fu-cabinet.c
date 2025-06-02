@@ -900,11 +900,18 @@ fu_cabinet_parse(FuFirmware *firmware,
 
 	/* decompress and calculate container hashes */
 	if (stream != NULL) {
+		if ((flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM) == 0 &&
+		    (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB) == 0) {
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "FuCabinet requires FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM or "
+			    "FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB for accurate checksums");
+			return FALSE;
+		}
 		if (!FU_FIRMWARE_CLASS(fu_cabinet_parent_class)
-			 ->parse(firmware,
-				 stream,
-				 flags | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				 error))
+			 ->parse(firmware, stream, flags, error))
 			return FALSE;
 		self->container_checksum =
 		    fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA1, error);
