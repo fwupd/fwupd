@@ -483,6 +483,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94, "device-write-blocks");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "end-transfer");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "uninit");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "sleep");
 
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
@@ -562,6 +563,7 @@ fu_logitech_scribe_device_write_firmware(FuDevice *device,
 	 * wait for RemoveDelay duration
 	 */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;
