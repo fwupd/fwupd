@@ -8,7 +8,3 @@ BatteryThreshold = 30
 
 [HP]
 BatteryThreshold = 50
-
-# Framework
-[2185e781-ed4b-5fc2-8839-b5ddb1e7d649]
-Flags = discharging-when-fully-changed

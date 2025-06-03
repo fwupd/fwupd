@@ -129,7 +129,6 @@ fwupdplugin_src = [
   'fu-hwids-smbios.c', # fuzzing
   'fu-i2c-device.c',
   'fu-ifd-bios.c', # fuzzing
-  'fu-ifd-common.c', # fuzzing
   'fu-ifd-firmware.c', # fuzzing
   'fu-ifd-image.c', # fuzzing
   'fu-ifwi-cpd-firmware.c', # fuzzing
@@ -275,7 +274,6 @@ fwupdplugin_headers = [
   'fu-hwids.h',
   'fu-i2c-device.h',
   'fu-ifd-bios.h',
-  'fu-ifd-common.h',
   'fu-ifd-firmware.h',
   'fu-ifd-image.h',
   'fu-ifwi-cpd-firmware.h',

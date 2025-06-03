@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fwupd-error.h"
+
 #include "fu-unix-seekable-input-stream.h"
 
 struct _FuUnixSeekableInputStream {
@@ -29,7 +31,7 @@ fu_unix_seekable_input_stream_tell(GSeekable *seekable)
 {
 	goffset rc = lseek(g_unix_input_stream_get_fd(G_UNIX_INPUT_STREAM(seekable)), 0, SEEK_CUR);
 	if (rc < 0)
-		g_critical("cannot tell FuUnixSeekableInputStream: %s", g_strerror(errno));
+		g_critical("cannot tell FuUnixSeekableInputStream: %s", fwupd_strerror(errno));
 	return rc;
 }
 
@@ -75,7 +77,7 @@ fu_unix_seekable_input_stream_seek(GSeekable *seekable,
 			    G_IO_ERROR, /* nocheck:error */
 			    g_io_error_from_errno(errno),
 			    "Error seeking file descriptor: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	return TRUE;

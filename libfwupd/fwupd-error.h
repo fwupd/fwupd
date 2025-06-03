@@ -206,5 +206,7 @@ FwupdError
 fwupd_error_from_string(const gchar *error);
 void
 fwupd_error_convert(GError **perror);
+const gchar *
+fwupd_strerror(gint errnum);
 
 G_END_DECLS

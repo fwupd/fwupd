@@ -42,30 +42,16 @@ fu_vli_usbhub_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 }
 
 static gboolean
-fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
-			     GInputStream *stream,
-			     FuFirmwareParseFlags flags,
-			     GError **error)
+fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
+				     GInputStream *stream,
+				     guint8 strapping1,
+				     GError **error)
 {
-	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE(firmware);
 	guint16 adr_ofs = 0;
 	guint16 version = 0x0;
 	guint32 adr_ofs32 = 0;
 	guint8 tmp = 0x0;
-	guint8 fwtype = 0x0;
-	guint8 strapping1;
-	g_autoptr(GByteArray) st = NULL;
 
-	/* map into header */
-	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, 0x0, error);
-	if (st == NULL) {
-		g_prefix_error(error, "failed to read header: ");
-		return FALSE;
-	}
-	self->dev_id = fu_struct_vli_usbhub_hdr_get_dev_id(st);
-	strapping1 = fu_struct_vli_usbhub_hdr_get_strapping1(st);
-
-	/* get firmware versions */
 	switch (self->dev_id) {
 	case 0x0d12:
 		/* VL81x */
@@ -136,7 +122,35 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 
 	/* version is set */
 	if (version != 0x0)
-		fu_firmware_set_version_raw(firmware, version);
+		fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
+	return TRUE;
+}
+
+static gboolean
+fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
+			     GInputStream *stream,
+			     FuFirmwareParseFlags flags,
+			     GError **error)
+{
+	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE(firmware);
+	guint16 adr_ofs = 0;
+	guint8 tmp = 0x0;
+	guint8 fwtype = 0x0;
+	guint8 strapping1;
+	g_autoptr(GByteArray) st = NULL;
+
+	/* map into header */
+	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, 0x0, error);
+	if (st == NULL) {
+		g_prefix_error(error, "failed to read header: ");
+		return FALSE;
+	}
+	self->dev_id = fu_struct_vli_usbhub_hdr_get_dev_id(st);
+	strapping1 = fu_struct_vli_usbhub_hdr_get_strapping1(st);
+
+	/* get firmware versions */
+	if (!fu_vli_usbhub_firmware_parse_version(self, stream, strapping1, error))
+		return FALSE;
 
 	/* get device type from firmware image */
 	switch (self->dev_id) {

@@ -2173,10 +2173,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Vain versioiden päivitykset ovat sallittuja"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Tuloste JSON-muodossa"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Ohita oletusarvoinen ESP-polku"
 

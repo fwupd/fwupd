@@ -76,6 +76,11 @@ enum FuDellKestrelDockSku {
     T5,
 }
 
+enum FuDellKestrelDockDataChunkSupportBitmap {
+    Ec = 1 << 0,
+    Pd = 1 << 1,
+}
+
 #[repr(C, packed)]
 #[derive(New, Getters, Parse)]
 struct FuStructDellKestrelDockData {
@@ -94,7 +99,7 @@ struct FuStructDellKestrelDockData {
     reserved: u32le,
     reserved: u32le,
     reserved: u32le,
-    reserved: u8,
+    chunk_support: u8,
     dock_status: u32le,
     reserved: u16le,
     reserved: u16le,

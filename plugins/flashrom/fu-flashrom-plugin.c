@@ -131,18 +131,24 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 		if (!fu_memread_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL))
 			return FALSE;
 
+		/* need to read extended ROM size */
 		if (bios_sz == 0xff) {
-			/* Need to read extended ROM size */
-			if (!fu_memread_uint8_safe(buf, bufsz, 0x18, &bios_sz, NULL))
-				return FALSE;
+			guint16 bios_sz_ext = 0x0;
 
 			/* Bits 15-14 scale, 13-0 size
 			 *  00 scale -> MiB
 			 *  01 scale -> GiB
 			 *  others reserved
 			 */
-			firmware_size = (bios_sz & 0x3ff) * (1024 * 1024);
-			if (bios_sz & 0xc000)
+			if (!fu_memread_uint16_safe(buf,
+						    bufsz,
+						    0x18,
+						    &bios_sz_ext,
+						    G_LITTLE_ENDIAN,
+						    error))
+				return FALSE;
+			firmware_size = (bios_sz_ext & 0x3ff) * (1024 * 1024);
+			if (bios_sz_ext & 0xc000)
 				firmware_size *= 1024;
 		} else {
 			firmware_size = (bios_sz + 1) * 64 * 1024;

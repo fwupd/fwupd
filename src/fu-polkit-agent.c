@@ -209,7 +209,7 @@ fu_polkit_agent_open(FuPolkitAgent *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to create pipe: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 
@@ -227,7 +227,7 @@ fu_polkit_agent_open(FuPolkitAgent *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed to fork TTY ask password agent: %s",
-			    g_strerror(-r));
+			    fwupd_strerror(-r));
 		fu_polkit_agent_close_nointr_nofail(pipe_fd[1]);
 		fu_polkit_agent_close_nointr_nofail(pipe_fd[0]);
 		return FALSE;

@@ -282,7 +282,7 @@ fu_uefi_plugin_fake_esp_new(void)
 
 	/* make fu_uefi_get_esp_path_for_os() distro-neutral */
 	tmpdir_efi = g_build_filename(tmpdir, "EFI", "systemd", NULL);
-	g_mkdir_with_parents(tmpdir_efi, 0700);
+	g_assert_cmpint(g_mkdir_with_parents(tmpdir_efi, 0700), ==, 0);
 
 	/* success */
 	return g_steal_pointer(&esp);

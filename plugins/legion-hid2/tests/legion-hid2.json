@@ -3,11 +3,11 @@
   "interactive": false,
   "steps": [
     {
-      "url": "76ea95f3d3fa893a70de6716a9b34115365f4cb3ac57f290190ce9de20935f9d-firmware.cab",
-      "emulation-url": "05162d6d3cf6c595da613fcd5c57415022c08e57a76454b7c19de533492bc3f2-legion-hid2.zip",
+      "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
+      "emulation-url": "c9306f015d47f04828b3affd7a8f9efd7ee6c8992cd83c0cc440fae396b0a17e-0036_0038.zip",
       "components": [
         {
-          "version": "0.0.2.4",
+          "version": "0.0.3.8",
           "guids": [
             "65619675-fec6-5035-801d-7f5e59fd9749"
           ]

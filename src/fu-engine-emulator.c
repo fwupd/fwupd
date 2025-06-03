@@ -133,7 +133,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
 		json_builder_begin_object(json_builder);
-		fwupd_codec_to_json(FWUPD_CODEC(device), json_builder, FWUPD_CODEC_FLAG_NONE);
+		fu_device_add_json(device, json_builder, FWUPD_CODEC_FLAG_NONE);
 		json_builder_end_object(json_builder);
 	}
 	json_builder_end_array(json_builder);

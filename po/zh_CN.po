@@ -1251,10 +1251,6 @@ msgid "Only version upgrades are allowed"
 msgstr "只允许版本升级"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "以 JSON 格式输出"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "覆盖默认的 ESP 路径"
 

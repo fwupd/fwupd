@@ -571,7 +571,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to open socket: %s",
 #ifdef HAVE_ERRNO_H
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 			    "unspecified error");
 #endif

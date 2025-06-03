@@ -145,10 +145,13 @@ static void
 fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 {
 	if (g_pattern_match_simple("???\\VID_????", device_id)) {
-		g_autofree gchar *vendor_id = g_strdup_printf("USB:0x%s", device_id + 8);
+		g_autofree gchar *prefix = g_strndup(device_id, 3);
+		g_autofree gchar *vendor_id = NULL;
+
 		fu_device_add_instance_id_full(FU_DEVICE(self),
 					       device_id,
 					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+		vendor_id = g_strdup_printf("%s:0x%s", prefix, device_id + 8);
 		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 		return;
 	}

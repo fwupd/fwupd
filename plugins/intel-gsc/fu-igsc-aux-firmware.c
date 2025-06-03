@@ -176,8 +176,6 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 	    fu_firmware_get_image_by_idx(fw_cpd, FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST, error);
 	if (fw_manifest == NULL)
 		return FALSE;
-	g_warning("MOO:\n%s", fu_firmware_to_string(fw_cpd));
-	g_warning("MOO:\n%s", fu_firmware_to_string(fw_manifest));
 
 	/* parse all the manifest extensions */
 	imgs = fu_firmware_get_images(fw_manifest);

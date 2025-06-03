@@ -95,6 +95,7 @@ static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 				 GInputStream *stream,
 				 gsize *offset,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuEfiSignatureKind sig_kind = FU_EFI_SIGNATURE_KIND_UNKNOWN;
@@ -155,11 +156,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 			sig = fu_efi_signature_new(sig_kind);
 		}
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
-		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig),
-					      stream,
-					      offset_tmp,
-					      FU_FIRMWARE_PARSE_FLAG_NONE,
-					      error))
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_tmp, flags, error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
@@ -216,7 +213,7 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {
-		if (!fu_efi_signature_list_parse_list(self, stream, &offset, error))
+		if (!fu_efi_signature_list_parse_list(self, stream, &offset, flags, error))
 			return FALSE;
 	}
 

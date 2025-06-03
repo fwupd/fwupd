@@ -284,5 +284,16 @@ echo "Run security tests (json)..."
 fwupdmgr security --json
 rc=$?; if [ $rc != $EXPECTED ]; then error $rc; fi
 
+# ---
+echo "Check reboot behavior"
+fwupdmgr quit
+fwupdtool modify-config test NeedsReboot true
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+fwupdmgr update $device -y
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+fwupdmgr check-reboot-needed $device --json
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+fwupdtool modify-config test NeedsReboot false
+
 # success!
 exit 0

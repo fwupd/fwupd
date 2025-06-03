@@ -1109,7 +1109,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_NO_SEARCH:
 	 *
-	 * This is now unused; see #FuFirmwareParseFlags.
+	 * This is now only for internal use.
 	 *
 	 * Since: 1.5.0
 	 */

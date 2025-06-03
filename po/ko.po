@@ -1917,10 +1917,6 @@ msgid "Only version upgrades are allowed"
 msgstr "버전 업그레이드만 가능합니다"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON 형식으로 출력"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "기본 ESP 경로 재정의"
 

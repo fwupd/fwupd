@@ -11,11 +11,7 @@ enum FuCpuVendor {
 enum FuPowerState {
     Unknown,
     Ac,                     // On AC power
-    AcCharging,             // Charging on AC
-    AcFullyCharged,         // Fully charged on AC
     Battery,                // On system battery
-    BatteryDischarging,     // System battery discharging
-    BatteryEmpty,           // System battery empty
 }
 
 #[derive(ToString)]

@@ -6,6 +6,6 @@ multiple_rels_test_firmware = custom_target('multiple-rels-test-firmware',
   ],
   output: 'multiple-rels-1.2.4.cab',
   command: [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcab, '--create', '@OUTPUT@', '@INPUT@',
   ],
 )

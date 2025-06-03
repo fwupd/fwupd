@@ -43,6 +43,16 @@ This plugin requires read/write access to `/dev/bus/usb`.
 
 This plugin has been available since fwupd version `1.2.0`.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### Rts54BlockSize
+
+Defines the amount of data transferred in a single USB transaction, defaulting to 4096 bytes.
+
+Since: 2.0.11
+
 ## Owners
 
 Anyone can submit a pull request to modify this plugin, but the following people should be

@@ -1802,10 +1802,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Samo nadogradnje inačice su dopuštene"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Izlaz u JSON formatu"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zaobiđi zadanu ESP putanju"
 

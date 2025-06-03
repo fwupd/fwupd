@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '2.0.9',
+  version: '2.0.11',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.3.0',
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -445,6 +445,9 @@ if cc.has_function('sigaction')
 endif
 if cc.has_function('memfd_create')
   conf.set('HAVE_MEMFD_CREATE', '1')
+endif
+if cc.has_function('strerrordesc_np')
+  conf.set('HAVE_STRERRORDESC_NP', '1')
 endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')

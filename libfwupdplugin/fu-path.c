@@ -152,7 +152,7 @@ fu_path_mkdir(const gchar *dirname, GError **error)
 			    FWUPD_ERROR_INTERNAL,
 			    "Failed to create '%s': %s",
 			    dirname,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	return TRUE;
@@ -601,7 +601,7 @@ fu_path_make_absolute(const gchar *filename, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot resolve path: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 #else
@@ -610,7 +610,7 @@ fu_path_make_absolute(const gchar *filename, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "cannot resolve path: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 #endif

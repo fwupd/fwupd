@@ -38,6 +38,34 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.10" date="2025-05-21">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Include the AGESA version as the summary of the AMD secure processor device</li>
+          <li>Include the UEFI PK certificate key ID in the uploaded problem report</li>
+          <li>Provide a way for the client to restrict the GUID list to an emulated device</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not allow dbx updates on the HP Elitebook 845 Gen10</li>
+          <li>Do not warn about BIOS bugs we can easily work around</li>
+          <li>Fix a regression in fwupdmgr emulation-save when recording some devices</li>
+          <li>Fix a regression preventing installation of KEKs</li>
+          <li>Fix a small memory leak when getting security attributes</li>
+          <li>Never write a UX capsule when using Capsule-On-Disk</li>
+          <li>Use the 'OnBattery' property from upower to tell if plugged in</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo Legion Touchpad</li>
+          <li>Logitech MX Mechanical</li>
+          <li>Poly Studio V72 and V12</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.9" date="2025-05-07">
       <description>
         <p>

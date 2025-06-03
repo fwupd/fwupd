@@ -582,6 +582,58 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 }
 
 static gboolean
+fu_util_check_reboot_needed(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* handle both forms */
+	if (g_strv_length(values) == 0) {
+		g_autoptr(GPtrArray) devices =
+		    fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *device = g_ptr_array_index(devices, i);
+
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	} else {
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	}
+
+	if (!(priv->completion_flags &
+	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no rebooting needed */
+				    _("No reboot is necessary"));
+		return FALSE;
+	}
+
+	if (priv->as_json)
+		return TRUE;
+
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -690,6 +742,9 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
+
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(priv->console, _("Successfully installed firmware"));
 
@@ -2242,10 +2297,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		fu_console_print(priv->console,
-				 "%s %s",
-				 _("Updating"),
-				 fwupd_remote_get_id(remote));
+		if (!priv->as_json)
+			fu_console_print(priv->console,
+					 "%s %s",
+					 _("Updating"),
+					 fwupd_remote_get_id(remote));
 		if (!fwupd_client_refresh_remote(priv->client,
 						 remote,
 						 priv->download_flags,
@@ -2278,6 +2334,9 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 			    "--force");
 		return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* get devices from daemon */
 	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
@@ -2340,6 +2399,9 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 					  priv->cancellable,
 					  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- the user can do this by-hand too */
 	fu_console_print_literal(priv->console, _("Successfully refreshed metadata manually"));
@@ -2625,18 +2687,20 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
-	} else if (g_strv_length(values) == 1) {
-		FwupdDevice *device = fu_util_get_device_by_id(priv, values[0], error);
-		if (device == NULL)
-			return FALSE;
-		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-		g_ptr_array_add(devices, device);
 	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
+		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			g_ptr_array_add(devices, device);
+		}
 	}
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 
@@ -2991,7 +3055,7 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 			    fwupd_device_get_update_error(dev));
 		return FALSE;
 	}
-	if (!priv->no_safety_check && !priv->assume_yes) {
+	if (!priv->as_json && !priv->no_safety_check && !priv->assume_yes) {
 		const gchar *title = fwupd_client_get_host_product(priv->client);
 		if (!fu_util_prompt_warning(priv->console, dev, rel, title, error))
 			return FALSE;
@@ -3255,6 +3319,9 @@ fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
 					priv->cancellable,
 					error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message for a per-remote setting change */
 	fu_console_print_literal(priv->console, _("Successfully modified remote"));
@@ -3750,6 +3817,9 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 					   error))
 			return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- where activation is making the new
 	 * firmware take effect, usually after updating offline */
@@ -4802,6 +4872,10 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	if (!fwupd_client_fix_host_security_attr(priv->client, values[0], priv->cancellable, error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fixed successfully"));
 	return TRUE;
@@ -4916,6 +4990,10 @@ fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 						  priv->cancellable,
 						  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fix reverted successfully"));
 	return TRUE;
@@ -5257,7 +5335,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->as_json,
 	     /* TRANSLATORS: command line option */
-	     N_("Output in JSON format"),
+	     N_("Output in JSON format (disables all interactive prompts)"),
 	     NULL},
 	    {"no-security-fix",
 	     '\0',
@@ -5304,6 +5382,12 @@ main(int argc, char *argv[])
 	fu_console_set_main_context(priv->console, priv->main_ctx);
 
 	/* add commands */
+	fu_util_cmd_array_add(cmd_array,
+			      "check-reboot-needed",
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Check if any devices are pending a reboot to complete update"),
+			      fu_util_check_reboot_needed);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-devices,get-topology",
 			      NULL,
@@ -5354,7 +5438,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Gets the list of updates for connected hardware"),
+			      _("Gets the list of updates for all specified devices, or all "
+				"devices if unspecified"),
 			      fu_util_get_updates);
 	fu_util_cmd_array_add(cmd_array,
 			      "update,upgrade",

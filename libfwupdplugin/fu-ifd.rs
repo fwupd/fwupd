@@ -33,3 +33,11 @@ struct FuStructIfdFcba {
     flill: u32le,
     flill1: u32le,
 }
+
+#[derive(ToBitString)]
+#[repr(C, packed)]
+enum FuIfdAccess {
+    None = 0,
+    Read = 1 << 0,
+    Write = 1 << 1,
+}

@@ -762,6 +762,83 @@ fu_hpi_cfu_device_send_append_untransmitted(FuHpiCfuDevice *self,
 	return TRUE;
 }
 
+static void
+fu_hpi_cfu_device_handler_set_status_report_25(FuHpiCfuDevice *self,
+					       guint8 status,
+					       gboolean lastpacket)
+{
+	switch (status) {
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_SKIP:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_REJECT:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_COMMAND_READY:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_CMD_NOT_SUPPORTED:
+		g_warning("check_update_content: reason: %s",
+			  fu_hpi_cfu_firmware_update_offer_to_string(status));
+		self->state = FU_HPI_CFU_STATE_UPDATE_MORE_OFFERS;
+		break;
+
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_ACCEPT:
+		g_debug("check_update_content: reason: %s",
+			fu_hpi_cfu_firmware_update_offer_to_string(status));
+		if (lastpacket) {
+			g_debug("check_update_content: reason: %s for last_packet_sent",
+				fu_hpi_cfu_firmware_update_offer_to_string(status));
+			self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
+		} else
+			self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+		break;
+
+	case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_BUSY:
+		g_warning("check_update_content: reason:%s",
+			  fu_hpi_cfu_firmware_update_offer_to_string(status));
+		self->state = FU_HPI_CFU_STATE_NOTIFY_ON_READY;
+		break;
+
+	default:
+		g_warning("check_update_content: FU_HPI_CFU_STATE_ERROR");
+		self->state = FU_HPI_CFU_STATE_ERROR;
+		break;
+	}
+}
+
+static void
+fu_hpi_cfu_device_handler_set_status_report_22(FuHpiCfuDevice *self,
+					       guint8 status,
+					       gboolean lastpacket)
+{
+	switch (status) {
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_PREPARE:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_WRITE:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_COMPLETE:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_VERIFY:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_CRC:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_SIGNATURE:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_VERSION:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_SWAP_PENDING:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_INVALID_ADDR:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_NO_OFFER:
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_INVALID:
+		self->state = FU_HPI_CFU_STATE_ERROR;
+		g_warning("check_update_content: reason:%s",
+			  fu_cfu_content_status_to_string(status));
+		g_debug("check_update_content: %s",
+			fu_hpi_cfu_firmware_update_status_to_string(status));
+		break;
+
+	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_SUCCESS:
+		g_debug("check_update_content: SUCCESS");
+		if (lastpacket) {
+			self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
+		} else
+			self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
+		break;
+	default:
+		g_warning("check_update_content: status none");
+		self->state = FU_HPI_CFU_STATE_ERROR;
+		break;
+	}
+}
+
 static gboolean
 fu_hpi_cfu_device_handler_check_update_content(FuHpiCfuDevice *self,
 					       FuProgress *progress,
@@ -850,73 +927,11 @@ fu_hpi_cfu_device_handler_check_update_content(FuHpiCfuDevice *self,
 		self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
 
 	if (report_id == 0x25) {
-		g_debug("check_update_content: report_id:%d", report_id == FIRMWARE_REPORT_ID);
-		switch (status) {
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_SKIP:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_REJECT:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_COMMAND_READY:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_CMD_NOT_SUPPORTED:
-			g_warning("check_update_content: reason: %s",
-				  fu_hpi_cfu_firmware_update_offer_to_string(status));
-			self->state = FU_HPI_CFU_STATE_UPDATE_MORE_OFFERS;
-			break;
-
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_ACCEPT:
-			g_debug("check_update_content: reason: %s",
-				fu_hpi_cfu_firmware_update_offer_to_string(status));
-			if (lastpacket) {
-				g_debug("check_update_content: reason: %s for last_packet_sent",
-					fu_hpi_cfu_firmware_update_offer_to_string(status));
-				self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-			} else
-				self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
-			break;
-
-		case FU_HPI_CFU_FIRMWARE_UPDATE_OFFER_BUSY:
-			g_warning("check_update_content: reason:%s",
-				  fu_hpi_cfu_firmware_update_offer_to_string(status));
-			self->state = FU_HPI_CFU_STATE_NOTIFY_ON_READY;
-			break;
-
-		default:
-			g_warning("check_update_content: FU_HPI_CFU_STATE_ERROR");
-			self->state = FU_HPI_CFU_STATE_ERROR;
-			break;
-		}
+		g_debug("check_update_content: report_id:0x%x", report_id);
+		fu_hpi_cfu_device_handler_set_status_report_25(self, status, lastpacket);
 	} else if (report_id == 0x22) {
-		g_debug("check_update_content: report_id:0x22");
-		switch (status) {
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_PREPARE:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_WRITE:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_COMPLETE:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_VERIFY:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_CRC:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_SIGNATURE:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_VERSION:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_SWAP_PENDING:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_INVALID_ADDR:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_NO_OFFER:
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_ERROR_INVALID:
-			self->state = FU_HPI_CFU_STATE_ERROR;
-			g_warning("check_update_content: reason:%s",
-				  fu_cfu_content_status_to_string(status));
-			g_debug("check_update_content: %s",
-				fu_hpi_cfu_firmware_update_status_to_string(status));
-			break;
-
-		case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_SUCCESS:
-			g_debug("check_update_content: SUCCESS");
-			if (lastpacket) {
-				self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-			} else
-				self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
-			break;
-
-		default:
-			g_warning("check_update_content: status none.");
-			self->state = FU_HPI_CFU_STATE_ERROR;
-			break;
-		}
+		g_debug("check_update_content: report_id:0x%x", report_id);
+		fu_hpi_cfu_device_handler_set_status_report_22(self, status, lastpacket);
 	}
 
 	/* success */

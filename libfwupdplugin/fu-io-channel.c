@@ -118,7 +118,7 @@ fu_io_channel_seek(FuIOChannel *self, gsize offset, GError **error)
 #endif
 			    "failed to seek to 0x%04x: %s",
 			    (guint)offset,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -284,7 +284,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_FOUND,
 					    "failed to write: %s",
-					    g_strerror(errno));
+					    fwupd_strerror(errno));
 				return FALSE;
 			}
 			g_set_error(error,
@@ -333,7 +333,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_FOUND,
 						    "failed to write: %s",
-						    g_strerror(errno));
+						    fwupd_strerror(errno));
 					return FALSE;
 				}
 				g_set_error(error,
@@ -342,7 +342,7 @@ fu_io_channel_write_raw(FuIOChannel *self,
 					    "failed to write %" G_GSIZE_FORMAT " bytes to %i: %s",
 					    datasz,
 					    self->fd,
-					    g_strerror(errno));
+					    fwupd_strerror(errno));
 				return FALSE;
 			}
 			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
@@ -429,7 +429,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 #endif
 					    "failed to read %i: %s",
 					    self->fd,
-					    g_strerror(errno));
+					    fwupd_strerror(errno));
 				fwupd_error_convert(error);
 				return NULL;
 			}
@@ -478,7 +478,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 #endif
 					    "failed to read %i: %s",
 					    self->fd,
-					    g_strerror(errno));
+					    fwupd_strerror(errno));
 				fwupd_error_convert(error);
 				return NULL;
 			}
@@ -659,7 +659,7 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GE
 #endif
 			    "failed to open %s: %s",
 			    filename,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return NULL;
 	}
@@ -697,7 +697,7 @@ fu_io_channel_virtual_new(const gchar *name, GError **error)
 #endif
 			    "failed to create %s: %s",
 			    name,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return NULL;
 	}

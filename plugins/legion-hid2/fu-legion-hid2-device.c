@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-legion-hid2-child-device.h"
 #include "fu-legion-hid2-device.h"
 #include "fu-legion-hid2-firmware.h"
 #include "fu-legion-hid2-struct.h"
@@ -117,6 +118,29 @@ fu_legion_hid2_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/*
+ * older MCU firmware doesn't support TP child commands, so setup needs to
+ * to be non-fatal or the MCU won't enumerate.
+ */
+static void
+fu_legion_hid2_device_setup_child(FuLegionHid2Device *self)
+{
+	g_autoptr(FuDevice) child = fu_legion_hid2_child_device_new(FU_DEVICE(self));
+	g_autoptr(GError) error_child = NULL;
+
+	if (!fu_device_probe(child, &error_child)) {
+		g_info("%s", error_child->message);
+		return;
+	}
+
+	if (!fu_device_setup(child, &error_child)) {
+		g_info("%s", error_child->message);
+		return;
+	}
+
+	fu_device_add_child(FU_DEVICE(self), child);
+}
+
 static gboolean
 fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 {
@@ -134,6 +158,8 @@ fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 	if (!fu_legion_hid2_device_ensure_mcu_id(device, error))
 		return FALSE;
 
+	fu_legion_hid2_device_setup_child(FU_LEGION_HID2_DEVICE(device));
+
 	/* success */
 	return TRUE;
 }
@@ -146,7 +172,6 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 				       GError **error)
 {
 	guint32 version;
-	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_legion_hid2_firmware_new();
 
 	/* sanity check */
@@ -155,18 +180,9 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 
 	version = fu_legion_hid2_firmware_get_version(firmware);
 	if (fu_device_get_version_raw(device) > version) {
-		version_str = fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "downgrading from %s to %s is not supported",
-				    fu_device_get_version(device),
-				    version_str);
-			return NULL;
-		}
-		g_warning("firmware %s is a downgrade but is being force installed anyway",
-			  version_str);
+		g_autofree gchar *version_str =
+		    fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
+		g_info("downgrading to firmware %s", version_str);
 	}
 
 	return g_steal_pointer(&firmware);

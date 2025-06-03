@@ -542,7 +542,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed to connect to netlink: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	if (bind(self->netlink_fd, (void *)&nls, sizeof(nls))) {
@@ -550,7 +550,7 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "bind to udev socket failed: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	source = g_unix_fd_source_new(self->netlink_fd, G_IO_IN);

@@ -1868,6 +1868,27 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_get_report_metadata_selinux(GHashTable *hash, GError **error)
+{
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+	g_autofree gchar *filename = g_build_filename(sysfsdir, "fs", "selinux", "enforce", NULL);
+
+	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+		g_debug("no %s, skipping", filename);
+		return TRUE;
+	}
+	if (!g_file_get_contents(filename, &buf, NULL, error))
+		return FALSE;
+	if (g_strcmp0(buf, "1") == 0) {
+		g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("enforcing"));
+		return TRUE;
+	}
+	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("permissive"));
+	return TRUE;
+}
+
 static void
 fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean value)
 {
@@ -1935,6 +1956,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	if (!fu_engine_get_report_metadata_lsb_release(hash, error))
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
+		return NULL;
+	if (!fu_engine_get_report_metadata_selinux(hash, error))
 		return NULL;
 
 	/* these affect the report credibility */
@@ -3338,7 +3361,7 @@ fu_engine_firmware_read(FuEngine *self,
 		g_prefix_error(error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	return fu_device_read_firmware(device, progress, error);
+	return fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, error);
 }
 
 static gboolean
@@ -4547,7 +4570,7 @@ fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
 				      stream,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				      error))
 		return NULL;
 	return g_steal_pointer(&cabinet);
@@ -4644,7 +4667,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 		cabinet,
 		component,
 		rel,
-		FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+		FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 		    FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH | FWUPD_INSTALL_FLAG_ALLOW_OLDER,
 		&error_reqs)) {
 		if (!fu_device_has_inhibit(dev, "not-found"))
@@ -5134,7 +5157,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	FwupdInstallFlags install_flags =
-	    FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
+	    FWUPD_INSTALL_FLAG_IGNORE_VID_PID | FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 	    FWUPD_INSTALL_FLAG_ALLOW_REINSTALL | FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 
 	/* get all releases */

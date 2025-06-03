@@ -7,7 +7,7 @@
 #pragma once
 
 #include "fu-firmware.h"
-#include "fu-ifd-common.h"
+#include "fu-ifd-struct.h"
 
 #define FU_TYPE_IFD_IMAGE (fu_ifd_image_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuIfdImage, fu_ifd_image, FU, IFD_IMAGE, FuFirmware)

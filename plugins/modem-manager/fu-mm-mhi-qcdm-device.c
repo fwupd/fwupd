@@ -52,7 +52,7 @@ fu_mm_mhi_qcdm_device_search_path_locker_new(FuMmMhiQcdmDevice *self, GError **e
 			    FWUPD_ERROR_INTERNAL,
 			    "Failed to create '%s': %s",
 			    mm_fw_dir,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 	locker = fu_kernel_search_path_locker_new(mm_fw_dir, error);

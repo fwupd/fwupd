@@ -222,8 +222,7 @@ fu_intel_cvs_device_write_firmware(FuDevice *device,
 		}
 	}
 
-	/* wait for hardware to re-appear */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/* success */
 	return TRUE;
 }
 

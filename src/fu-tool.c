@@ -627,6 +627,49 @@ fu_util_get_device(FuUtilPrivate *priv, const gchar *id, GError **error)
 }
 
 static gboolean
+fu_util_get_updates_as_json(FuUtilPrivate *priv, GPtrArray *devices, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fu_engine_get_upgrades(priv->engine,
+					      priv->request,
+					      fwupd_device_get_id(dev),
+					      &error_local);
+		if (rels == NULL) {
+			g_debug("no upgrades: %s", error_local->message);
+			continue;
+		}
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, j);
+			if (!fwupd_release_match_flags(rel,
+						       priv->filter_release_include,
+						       priv->filter_release_exclude))
+				continue;
+			fwupd_device_add_release(dev, rel);
+		}
+
+		/* add to builder */
+		json_builder_begin_object(builder);
+		fwupd_codec_to_json(FWUPD_CODEC(dev), builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(priv->console, builder, error);
+}
+
+static gboolean
 fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -647,20 +690,25 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		devices = fu_engine_get_devices(priv->engine, error);
 		if (devices == NULL)
 			return FALSE;
-	} else if (g_strv_length(values) == 1) {
-		FuDevice *device;
-		device = fu_util_get_device(priv, values[0], error);
-		if (device == NULL)
-			return FALSE;
-		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-		g_ptr_array_add(devices, device);
 	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
-	}
+		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FuDevice *device = fu_util_get_device(priv, values[idx], error);
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			g_ptr_array_add(devices, device);
+		}
+        }
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_updates_as_json(priv, devices, error);
 
 	fwupd_device_array_ensure_parents(devices);
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
@@ -976,6 +1024,9 @@ fu_util_update_device_changed_cb(FwupdClient *client, FwupdDevice *device, FuUti
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
+
 	/* print all POST requests */
 	for (guint i = 0; i < priv->post_requests->len; i++) {
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
@@ -1493,7 +1544,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* success */
-	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
+	return TRUE;
 }
 
 static gboolean
@@ -1980,6 +2031,79 @@ fu_util_report_metadata_to_string(GHashTable *metadata, guint idt, GString *str)
 }
 
 static gboolean
+fu_util_get_report_metadata_as_json(FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
+{
+	GPtrArray *plugins;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* daemon metadata */
+	metadata = fu_engine_get_report_metadata(priv->engine, error);
+	if (metadata == NULL)
+		return FALSE;
+	fwupd_codec_json_append_map(builder, "daemon", metadata);
+
+	/* device metadata */
+	devices = fu_engine_get_devices(priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+	json_builder_set_member_name(builder, "devices");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_autoptr(GHashTable) metadata_post = NULL;
+		g_autoptr(GHashTable) metadata_pre = NULL;
+
+		locker = fu_device_locker_new(device, error);
+		if (locker == NULL)
+			return FALSE;
+		metadata_pre = fu_device_report_metadata_pre(device);
+		metadata_post = fu_device_report_metadata_post(device);
+		if (metadata_pre == NULL && metadata_post == NULL)
+			continue;
+
+		json_builder_begin_object(builder);
+		json_builder_set_member_name(builder, fu_device_get_id(device));
+		json_builder_begin_array(builder);
+		if (metadata_pre != NULL) {
+			json_builder_begin_object(builder);
+			fwupd_codec_json_append_map(builder, "pre", metadata_pre);
+			json_builder_end_object(builder);
+		}
+		if (metadata_post != NULL) {
+			json_builder_begin_object(builder);
+			fwupd_codec_json_append_map(builder, "post", metadata_post);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+
+	/* plugin metadata */
+	plugins = fu_engine_get_plugins(priv->engine);
+	json_builder_set_member_name(builder, "plugins");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
+		if (fu_plugin_get_report_metadata(plugin) == NULL)
+			continue;
+		json_builder_begin_object(builder);
+		fwupd_codec_json_append_map(builder,
+					    fu_plugin_get_name(plugin),
+					    fu_plugin_get_report_metadata(plugin));
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
@@ -1999,6 +2123,16 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 				  error))
 		return FALSE;
 	fu_progress_step_done(priv->progress);
+
+	/* not for human consumption */
+	if (priv->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		if (!fu_util_get_report_metadata_as_json(priv, builder, error))
+			return FALSE;
+		json_builder_end_object(builder);
+		return fu_util_print_builder(priv->console, builder, error);
+	}
 
 	/* daemon metadata */
 	metadata = fu_engine_get_report_metadata(priv->engine, error);
@@ -2045,6 +2179,7 @@ fu_util_get_report_metadata(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (fu_plugin_get_report_metadata(plugin) == NULL)
 			continue;
+		fwupd_codec_string_append(str, 1, fu_plugin_get_name(plugin), "");
 		fu_util_report_metadata_to_string(fu_plugin_get_report_metadata(plugin), 3, str);
 	}
 	fu_progress_step_done(priv->progress);
@@ -2142,6 +2277,9 @@ fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
 				     values[2],
 				     error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	fu_console_print_literal(priv->console, _("Successfully modified remote"));
 	return TRUE;
@@ -2276,6 +2414,9 @@ fu_util_disable_test_devices(FuUtilPrivate *priv, gchar **values, GError **error
 
 	if (!fu_util_set_test_devices_enabled(priv, FALSE, error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: comment explaining result of command */
 	fu_console_print_literal(priv->console, _("Successfully disabled test devices"));
@@ -2416,12 +2557,14 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		has_pending = TRUE;
-		fu_console_print(
-		    priv->console,
-		    "%s %s…",
-		    /* TRANSLATORS: shown when shutting down to switch to the new version */
-		    _("Activating firmware update"),
-		    fu_device_get_name(device));
+		if (!priv->as_json) {
+			fu_console_print(
+			    priv->console,
+			    "%s %s…",
+			    /* TRANSLATORS: shown when shutting down to switch to the new version */
+			    _("Activating firmware update"),
+			    fu_device_get_name(device));
+		}
 		if (!fu_engine_activate(priv->engine,
 					fu_device_get_id(device),
 					fu_progress_get_child(priv->progress),
@@ -4785,7 +4928,7 @@ fu_util_build_cabinet(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_firmware_parse_bytes(FU_FIRMWARE(cab_file),
 				     cab_blob,
 				     0x0,
-				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 				     error))
 		return FALSE;
 
@@ -5045,7 +5188,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->as_json,
 	     /* TRANSLATORS: command line option */
-	     N_("Output in JSON format"),
+	     N_("Output in JSON format (disables all interactive prompts)"),
 	     NULL},
 	    {NULL}};
 
@@ -5127,7 +5270,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Gets the list of updates for connected hardware"),
+			      _("Gets the list of updates for all specified devices, or all "
+				"devices if unspecified"),
 			      fu_util_get_updates);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-devices,get-topology",

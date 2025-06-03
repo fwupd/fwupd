@@ -881,8 +881,8 @@ fu_context_state_func(void)
 	g_assert_cmpint(fu_context_get_display_state(ctx), ==, FU_DISPLAY_STATE_UNKNOWN);
 	g_assert_cmpint(fu_context_get_battery_level(ctx), ==, FWUPD_BATTERY_LEVEL_INVALID);
 
-	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
-	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
+	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY);
+	fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY);
 	fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
 	fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
 	fu_context_set_display_state(ctx, FU_DISPLAY_STATE_CONNECTED);
@@ -890,7 +890,7 @@ fu_context_state_func(void)
 	fu_context_set_battery_level(ctx, 50);
 	fu_context_set_battery_level(ctx, 50);
 
-	g_assert_cmpint(fu_context_get_power_state(ctx), ==, FU_POWER_STATE_BATTERY_DISCHARGING);
+	g_assert_cmpint(fu_context_get_power_state(ctx), ==, FU_POWER_STATE_BATTERY);
 	g_assert_cmpint(fu_context_get_lid_state(ctx), ==, FU_LID_STATE_CLOSED);
 	g_assert_cmpint(fu_context_get_display_state(ctx), ==, FU_DISPLAY_STATE_CONNECTED);
 	g_assert_cmpint(fu_context_get_battery_level(ctx), ==, 50);
@@ -2310,7 +2310,7 @@ fu_device_vfuncs_func(void)
 	g_assert_false(ret);
 	g_clear_error(&error);
 
-	firmware = fu_device_read_firmware(device, progress, &error);
+	firmware = fu_device_read_firmware(device, progress, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_null(firmware);
 	g_clear_error(&error);

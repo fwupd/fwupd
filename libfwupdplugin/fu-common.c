@@ -232,11 +232,7 @@ fu_common_align_up(gsize value, guint8 alignment)
 gboolean
 fu_power_state_is_ac(FuPowerState power_state)
 {
-	if (power_state == FU_POWER_STATE_UNKNOWN || power_state == FU_POWER_STATE_AC ||
-	    power_state == FU_POWER_STATE_AC_CHARGING ||
-	    power_state == FU_POWER_STATE_AC_FULLY_CHARGED)
-		return TRUE;
-	return FALSE;
+	return power_state != FU_POWER_STATE_BATTERY;
 }
 
 /**

@@ -128,15 +128,97 @@ fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(FuDevi
 	return g_steal_pointer(&buf);
 }
 
+static GByteArray *
+fu_logitech_bulkcontroller_usb_msg_parse_msg_response(Logi__Device__Proto__UsbMsg *usb_msg,
+						      FuLogitechBulkcontrollerProtoId *proto_id,
+						      GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	if (usb_msg->response == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no USB response");
+		return NULL;
+	}
+	switch (usb_msg->response->payload_case) {
+	case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_GET_DEVICE_INFO_RESPONSE:
+		if (usb_msg->response->get_device_info_response) {
+			const gchar *tmp = usb_msg->response->get_device_info_response->payload;
+			*proto_id = kProtoId_GetDeviceInfoResponse;
+			if (tmp != NULL)
+				g_byte_array_append(buf, (const guint8 *)tmp, strlen(tmp));
+		}
+		break;
+	case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_TRANSITION_TO_DEVICEMODE_RESPONSE:
+		if (usb_msg->response->transition_to_devicemode_response) {
+			*proto_id = kProtoId_TransitionToDeviceModeResponse;
+			if (!usb_msg->response->transition_to_devicemode_response->success) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "transition mode request failed. error: %u",
+					    (guint)usb_msg->response
+						->transition_to_devicemode_response->error);
+				return NULL;
+			}
+		}
+		break;
+	default:
+		break;
+	};
+
+	/* success */
+	return g_steal_pointer(&buf);
+}
+
+static GByteArray *
+fu_logitech_bulkcontroller_usb_msg_parse_msg_event(Logi__Device__Proto__UsbMsg *usb_msg,
+						   FuLogitechBulkcontrollerProtoId *proto_id,
+						   GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	if (usb_msg->response == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no USB event");
+		return NULL;
+	}
+	switch (usb_msg->event->payload_case) {
+	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_KONG_EVENT:
+		if (usb_msg->event->kong_event) {
+			const gchar *tmp = usb_msg->event->kong_event->mqtt_event;
+			*proto_id = kProtoId_KongEvent;
+			if (tmp != NULL)
+				g_byte_array_append(buf, (const guint8 *)tmp, strlen(tmp));
+		}
+		break;
+	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_HANDSHAKE_EVENT:
+		if (usb_msg->event->handshake_event)
+			*proto_id = kProtoId_HandshakeEvent;
+		break;
+	case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_CRASH_DUMP_AVAILABLE_EVENT:
+		*proto_id = kProtoId_CrashDumpAvailableEvent;
+		break;
+	default:
+		break;
+	};
+
+	/* success */
+	return g_steal_pointer(&buf);
+}
+
 GByteArray *
 fu_logitech_bulkcontroller_proto_manager_decode_message(const guint8 *data,
 							guint32 len,
 							FuLogitechBulkcontrollerProtoId *proto_id,
 							GError **error)
 {
-	g_autoptr(GByteArray) buf_decoded = g_byte_array_new();
+	g_autoptr(GByteArray) buf = NULL;
 	Logi__Device__Proto__UsbMsg *usb_msg =
 	    logi__device__proto__usb_msg__unpack(NULL, len, (const unsigned char *)data);
+
+	/* sanity check */
 	if (usb_msg == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -147,81 +229,25 @@ fu_logitech_bulkcontroller_proto_manager_decode_message(const guint8 *data,
 
 	switch (usb_msg->message_case) {
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_ACK:
+		buf = g_byte_array_new();
 		*proto_id = kProtoId_Ack;
 		break;
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_RESPONSE:
-		if (!usb_msg->response) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "no USB response");
+		buf =
+		    fu_logitech_bulkcontroller_usb_msg_parse_msg_response(usb_msg, proto_id, error);
+		if (buf == NULL)
 			return NULL;
-		}
-		switch (usb_msg->response->payload_case) {
-		case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_GET_DEVICE_INFO_RESPONSE:
-			if (usb_msg->response->get_device_info_response) {
-				const gchar *tmp =
-				    usb_msg->response->get_device_info_response->payload;
-				*proto_id = kProtoId_GetDeviceInfoResponse;
-				if (tmp != NULL)
-					g_byte_array_append(buf_decoded,
-							    (const guint8 *)tmp,
-							    strlen(tmp));
-			}
-			break;
-		case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_TRANSITION_TO_DEVICEMODE_RESPONSE:
-			if (usb_msg->response->transition_to_devicemode_response) {
-				*proto_id = kProtoId_TransitionToDeviceModeResponse;
-				if (!usb_msg->response->transition_to_devicemode_response
-					 ->success) {
-					g_set_error(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_SUPPORTED,
-						    "transition mode request failed. error: %u",
-						    (guint)usb_msg->response
-							->transition_to_devicemode_response->error);
-					return NULL;
-				}
-			}
-			break;
-		default:
-			break;
-		};
 		break;
 	case LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_EVENT:
-		if (!usb_msg->response) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "no USB event");
+		buf = fu_logitech_bulkcontroller_usb_msg_parse_msg_event(usb_msg, proto_id, error);
+		if (buf == NULL)
 			return NULL;
-		}
-		switch (usb_msg->event->payload_case) {
-		case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_KONG_EVENT:
-			if (usb_msg->event->kong_event) {
-				const gchar *tmp = usb_msg->event->kong_event->mqtt_event;
-				*proto_id = kProtoId_KongEvent;
-				if (tmp != NULL)
-					g_byte_array_append(buf_decoded,
-							    (const guint8 *)tmp,
-							    strlen(tmp));
-			}
-			break;
-		case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_HANDSHAKE_EVENT:
-			if (usb_msg->event->handshake_event) {
-				*proto_id = kProtoId_HandshakeEvent;
-			}
-			break;
-		case LOGI__DEVICE__PROTO__EVENT__PAYLOAD_CRASH_DUMP_AVAILABLE_EVENT:
-			*proto_id = kProtoId_CrashDumpAvailableEvent;
-			break;
-		default:
-			break;
-		};
 		break;
 	default:
+		buf = g_byte_array_new();
+		g_debug("ignoring invalid message case 0x%x", usb_msg->message_case);
 		break;
 	};
 	logi__device__proto__usb_msg__free_unpacked(usb_msg, NULL);
-	return g_steal_pointer(&buf_decoded);
+	return g_steal_pointer(&buf);
 }

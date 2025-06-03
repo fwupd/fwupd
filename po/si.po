@@ -1420,10 +1420,6 @@ msgid "Only version upgrades are allowed"
 msgstr "අනුවාද උත්ශ්‍රේණි කිරීමට පමණක් අවසර ඇත"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON ආකෘතියෙන් ප්‍රතිදානය"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "පෙරනිමි ESP මාර්ගය අභිබවා යන්න"
 

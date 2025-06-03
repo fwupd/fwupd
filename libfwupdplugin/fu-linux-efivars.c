@@ -76,7 +76,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get flags: %s",
-				    g_strerror(errno));
+				    fwupd_strerror(errno));
 			return FALSE;
 		}
 	} else {
@@ -105,7 +105,7 @@ fu_linux_efivars_set_immutable_fd(int fd, gboolean value, gboolean *value_old, G
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to set flags: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	return TRUE;
@@ -128,7 +128,7 @@ fu_linux_efivars_set_immutable(const gchar *fn, gboolean value, gboolean *value_
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
 			    "failed to open: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	istr = g_unix_input_stream_new(fd, TRUE);
@@ -448,7 +448,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "failed to open %s: %s",
 			    fn,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 	ostr = g_unix_output_stream_new(fd, TRUE);
