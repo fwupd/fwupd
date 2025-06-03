@@ -1021,3 +1021,9 @@ LIBFWUPD_2.0.10 {
     fwupd_codec_json_append_map;
   local: *;
 } LIBFWUPD_2.0.7;
+
+LIBFWUPD_2.0.11 {
+  global:
+    fwupd_strerror;
+  local: *;
+} LIBFWUPD_2.0.10;

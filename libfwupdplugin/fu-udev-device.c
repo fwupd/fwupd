@@ -1245,7 +1245,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "ioctl error: %s [%i]",
-			    g_strerror(errno),
+			    fwupd_strerror(errno),
 			    errno);
 #else
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unspecified ioctl error");
@@ -1334,7 +1334,7 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 #endif
 			    "failed to read from port 0x%04x: %s",
 			    (guint)port,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -1442,7 +1442,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 #endif
 			    "failed to write to port %04x: %s",
 			    (guint)port,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return FALSE;
 	}

@@ -344,11 +344,11 @@ static const gchar *
 fu_dell_dock_hid_tbt_map_error(guint32 code)
 {
 	if (code == 1)
-		return g_strerror(EINVAL);
+		return fwupd_strerror(EINVAL);
 	if (code == 2)
-		return g_strerror(EPERM);
+		return fwupd_strerror(EPERM);
 
-	return g_strerror(EIO);
+	return fwupd_strerror(EIO);
 }
 
 gboolean
