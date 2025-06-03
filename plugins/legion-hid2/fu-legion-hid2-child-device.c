@@ -48,7 +48,7 @@ fu_legion_hid2_child_device_transfer(FuLegionHid2ChildDevice *self,
 	}
 	if (res != NULL) {
 		if (!fu_hid_device_get_report(hid_dev,
-					      req->data[0],
+					      res->data[0],
 					      res->data,
 					      res->len,
 					      FU_LEGION_HID2_CHILD_DEVICE_TIMEOUT,
