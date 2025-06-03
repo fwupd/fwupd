@@ -250,3 +250,22 @@ fwupd_error_convert(GError **perror)
 	error->domain = FWUPD_ERROR;
 	error->code = FWUPD_ERROR_INTERNAL;
 }
+
+/**
+ * fwupd_strerror:
+ *
+ * Returns an untranslated string corresponding to the given error code, e.g. “no such process”.
+ *
+ * Returns: string describing the error code
+ *
+ * Since: 2.0.11
+ **/
+const gchar *
+fwupd_strerror(gint errnum) /* nocheck:name */
+{
+#ifdef HAVE_STRERRORDESC_NP
+	return strerrordesc_np(errnum);
+#else
+	return g_strerror(errnum); /* nocheck:blocked */
+#endif
+}

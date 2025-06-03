@@ -216,6 +216,7 @@ class Checker:
             "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
             "g_ascii_strtoull(": "Use fu_strtoull() instead",
             "g_ascii_strtoll(": "Use fu_strtoll() instead",
+            "g_strerror(": "Use fwupd_strerror() instead",
             "g_random_int_range(": "Use a predicatable token instead",
             "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",

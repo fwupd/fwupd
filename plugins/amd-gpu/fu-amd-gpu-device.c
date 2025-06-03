@@ -182,7 +182,7 @@ fu_amd_gpu_device_set_marketing_name(FuAmdGpuDevice *self)
 			fu_device_set_name(FU_DEVICE(self), marketing_name);
 		amdgpu_device_deinitialize(device_handle);
 	} else
-		g_warning("unable to set marketing name: %s", g_strerror(r));
+		g_warning("unable to set marketing name: %s", fwupd_strerror(r));
 }
 
 static gboolean

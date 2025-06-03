@@ -793,7 +793,7 @@ fu_bcm57xx_recovery_device_open(FuDevice *device, GError **error)
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "could not mmap %s: %s",
 				    fn,
-				    g_strerror(errno));
+				    fwupd_strerror(errno));
 			return FALSE;
 		}
 	}

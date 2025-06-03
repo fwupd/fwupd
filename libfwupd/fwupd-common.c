@@ -535,7 +535,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "failed to seek: %s",
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM(g_unix_input_stream_new(fd, TRUE));
