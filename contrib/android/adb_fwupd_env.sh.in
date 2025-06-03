@@ -8,6 +8,9 @@
 # _android_build/adb_fwupd_env.sh fwupdtool get-devices -vv
 # _android_build/adb_fwupd_env.sh fwupd-binder --verbose
 
+# Assume we're wireless debugging
+ADB_FLAGS="${ADB_FLAGS=-e}"
+
 FWUPD_PREFIX=@FWUPD_PREFIX@
 FWUPD_BINDIR=@FWUPD_BINDIR@
 FWUPD_LIBDIR=@FWUPD_LIBDIR@
@@ -15,7 +18,7 @@ FWUPD_LIBEXECDIR=@FWUPD_LIBEXECDIR@
 FWUPD_LOCALSTATEDIR=@FWUPD_LOCALSTATEDIR@
 FWUPD_LIBDIR_PKG=@FWUPD_LIBDIR_PKG@
 
-adb -e shell -t \
+adb ${ADB_FLAGS} shell -t \
  G_MESSAGES_DEBUG=all \
  FWUPD_POLKIT_NOCHECK=1 \
  CACHE_DIRECTORY=${FWUPD_PREFIX}/cache \

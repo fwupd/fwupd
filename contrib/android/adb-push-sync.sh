@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+set -x
+# Assume we're wireless debugging
+ADB_FLAGS="${ADB_FLAGS=-e}"
 
-adb -e shell mkdir -p ${2}
+adb ${ADB_FLAGS} shell mkdir -p ${2}
 
 # This is about the same speed as adb push but actually replaces files
 # After excludes it is faster
@@ -22,7 +25,7 @@ time tar -z \
  --exclude="include" \
  --exclude="bin/g*" \
  --exclude="bin/json-glib*" \
- -O -c -C "${1}" . | dd status=progress | adb -e shell "tar -z -x -C ${2} -f -"
+ -O -c -C "${1}" . | dd status=progress | adb ${ADB_FLAGS} shell "tar -z -x -C ${2} -f -"
 
 
 exit 0
