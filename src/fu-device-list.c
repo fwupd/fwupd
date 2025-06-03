@@ -928,7 +928,9 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 	do {
 		g_autoptr(GPtrArray) devices_wfr_tmp = NULL;
 		g_usleep(1000);
-		g_main_context_iteration(NULL, FALSE);
+		while (g_main_context_iteration(NULL, FALSE)) {
+			/* nothing needs to be done here */
+		};
 		devices_wfr_tmp = fu_device_list_get_wait_for_replug(self);
 		if (devices_wfr_tmp->len == 0)
 			break;
