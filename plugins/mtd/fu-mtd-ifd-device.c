@@ -31,9 +31,10 @@ fu_mtd_ifd_device_add_security_attr_desc(FuMtdIfdDevice *self, FuSecurityAttrs *
 	/* check each */
 	for (guint i = 0; i < G_N_ELEMENTS(regions); i++) {
 		FuIfdAccess ifd_access = fu_ifd_image_get_access(self->img, regions[i]);
+		g_autofree gchar *ifd_accessstr = fu_ifd_access_to_string(ifd_access);
 		fwupd_security_attr_add_metadata(attr,
 						 fu_ifd_region_to_string(regions[i]),
-						 fu_ifd_access_to_string(ifd_access));
+						 ifd_accessstr);
 		ifd_access_global |= ifd_access;
 	}
 	if (ifd_access_global & FU_IFD_ACCESS_WRITE) {
