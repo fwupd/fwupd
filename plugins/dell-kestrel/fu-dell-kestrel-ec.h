@@ -57,4 +57,4 @@ fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevSubtype subtype,
 				  FuDellKestrelEcDevInstance instance);
 gboolean
-fu_dell_kestrel_ec_is_chunk_supported(FuDevice *device, FuDellKestrelEcDevType dev_type);
+fu_dell_kestrel_ec_is_chunk_supported(FuDellKestrelEc *self, FuDellKestrelEcDevType dev_type);
