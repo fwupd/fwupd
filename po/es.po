@@ -589,6 +589,11 @@ msgstr "Se requiere autenticación para actualizar las sumas de verificación al
 msgid "Automatic Reporting"
 msgstr "Informes Automáticos"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Inhibido automáticamente en %u ms…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "¿Subo automáticamente cada vez?"
@@ -1107,6 +1112,10 @@ msgstr "Vuelca datos SMBIOS desde un archivo"
 msgid "Duration"
 msgstr "Duración"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULACIÓN-ARCHIVO [ARCHIVADOR-ARCHIVO]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Cada sistema tendría pruebas para verificar la seguridad del firmware."
@@ -1279,7 +1288,7 @@ msgstr "Erróneo en carga dbx del sistema"
 
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
-msgstr "Error al bloquear"
+msgstr "Incorrecto al bloquear"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -1301,7 +1310,7 @@ msgstr "Ha fallado al interpretar indicadores para %s"
 
 #. TRANSLATORS: could not parse file
 msgid "Failed to parse local dbx"
-msgstr "Intérprete erróneo del dbx local"
+msgstr "Intérprete incorrecto del dbx local"
 
 #. TRANSLATORS: a feature is something like "can show an image"
 msgid "Failed to set front-end features"
@@ -1310,7 +1319,7 @@ msgstr "Erróneo al fijar características de front-end"
 #. TRANSLATORS: something with a blocked hash exists
 #. * in the users ESP -- which would be bad!
 msgid "Failed to validate ESP contents"
-msgstr "Error al validar el contenido de ESP"
+msgstr "Incorrecto al validar el contenido de ESP"
 
 #. TRANSLATORS: item is FALSE
 msgid "False"
@@ -1531,10 +1540,6 @@ msgstr "Obtiene el listado de firmware aprobado"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Obtiene el listado de firmware bloqueado"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obtiene el listado de actualizaciones para hardware conectado"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2155,7 +2160,7 @@ msgstr "No compatible"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
-msgstr "APROBADO"
+msgstr "Aceptar"
 
 #. TRANSLATORS: this is for the device tests
 msgid "OK!"
@@ -2164,6 +2169,10 @@ msgstr "¡Perfecto!"
 #. TRANSLATORS: the firmware old version
 msgid "Old version"
 msgstr "Versión anterior"
+
+#. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Solamente instalar en dispositivos emulados"
 
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
@@ -2177,6 +2186,10 @@ msgstr "Solamente utilizar redes pareja a pareja cuando descargue archivos"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Solamente las modernizaciones de versión están permitidas"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Salida en formato JSON (desactiva todos los intérpretes interactivos)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2488,6 +2501,10 @@ msgstr "Ejecutando kernel que es demasiado antiguo"
 msgid "Runtime Suffix"
 msgstr "Sufijo de tiempo de ejecución"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "SECCIÓN"
@@ -2570,7 +2587,7 @@ msgstr "Endurecimiento de seguridad para HSI"
 #. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
 msgid "See %s for more details."
-msgstr "Vea %s para más detalles."
+msgstr "Consulte %s para más detalles."
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -2599,7 +2616,7 @@ msgid "Set a BIOS setting"
 msgstr "Fije un parámetro de la BIOS"
 
 msgid "Set one or more BIOS settings"
-msgstr "Fije uno o más parámetros de BIOS"
+msgstr "Establece uno o más parámetros de BIOS"
 
 #. TRANSLATORS: command description
 msgid "Set or remove an EFI boot hive entry"
@@ -3000,6 +3017,18 @@ msgstr "El PCR0 TPM difiere desde reconstrucción."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "La Clave de Plataforma UEFI es utilizada para determinar si el software del dispositivo viene desde un origen confiado."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "El almacenaje de certificado UEFI está ahora actualizado."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "La BdD UEFI contiene el listado de certificados válidos que pueden ser utilizados para autorizar que binarios EFI están permitidos a ejecutar."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "El sistema UEFI puede configurar atributos de memoria al arrancar lo cual previene exploits comunes desde ejecuciones."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "¡El demonio ha cargado código de 3ª parte y ya no está mantenido por los desarrolladores actuales!"
@@ -3141,7 +3170,11 @@ msgstr "La partición ESP de la UEFI puede que no esté correctamente configurad
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition not detected or configured"
-msgstr "Partición ESP UEFI no detectada o configurada"
+msgstr "Partición ESP de la UEFI no detectada o configurada"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Protección de Memoria UEFI"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
@@ -3167,6 +3200,10 @@ msgstr "Variables de servicio de arranque UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Actualizaciones de cápsulas UEFI no disponible o activada en configuración de firmware"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "BdD UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilidad dbx UEFI"
@@ -3174,6 +3211,26 @@ msgstr "Utilidad dbx UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Firmware UEFI no puede ser actualizado en modo de BIOS heredada"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Protección de memoria UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Protección de memoria UEFI activada y bloqueada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Protección de memoria UEFI activada pero no bloqueada "
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Ahora la protección de memoria UEFI está bloqueada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Ahora la protección de memoria UEFI está desbloqueada"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3381,7 +3438,7 @@ msgstr "Válido"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "Validación de contenidos ESP…"
+msgstr "Validación de contenido ESP…"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
@@ -3405,7 +3462,7 @@ msgstr "Versión[fwupd]"
 
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
-msgstr "AVISO:"
+msgstr "AVISO"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"
@@ -3487,6 +3544,14 @@ msgstr "[ARCHIVO FIRMA_ARCH ID-REMOTO]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[ARCHIVO-NOMBRE1] [ARCHIVO-NOMBRE2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[VERSIÓN-FWUPD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[RAZÓN] [T_AGOTADO]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

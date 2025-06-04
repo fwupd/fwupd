@@ -1525,10 +1525,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Obté la llista del microprogramari bloquejat."
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obté la llista d'actualitzacions per al maquinari connectat."
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Obté els alliberaments per a un dispositiu."
 
@@ -2157,6 +2153,10 @@ msgid "Old version"
 msgstr "Versió antiga"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Instal·la només en els dispositius emulats"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
 
@@ -2168,6 +2168,10 @@ msgstr "Usa només la xarxa d'igual a igual per a baixar els fitxers"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Només es permeten actualitzacions de la versió"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Sortida en el format JSON (desactiva totes les indicacions interactives)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

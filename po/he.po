@@ -790,10 +790,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "מקבל את רשימת הקושחות החסומות"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "מקבל את רשימת העדכונים לחומרה שמחוברת"
-
-#. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "מקבל את התוצאות מהעדכון האחרון"
 

@@ -1338,10 +1338,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Lekéri a tiltott belső vezérlőprogramok listáját"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Lekéri a frissítések listáját a csatlakoztatott hardverhez"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 

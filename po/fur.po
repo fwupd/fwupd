@@ -671,10 +671,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Al oten la liste dai firmware blocâts"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Al oten la liste di inzornaments pal hardware tacât"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Al oten lis publicazions par un dispositîf"
 

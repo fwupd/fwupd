@@ -926,10 +926,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "获取受阻固件的列表"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "获取已连接硬件的可用更新列表"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "获取用于设备的发行版本"
 

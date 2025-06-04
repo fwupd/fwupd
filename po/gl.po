@@ -328,10 +328,6 @@ msgstr "Obten os remotos configurados"
 msgid "Gets the host security attributes"
 msgstr "Obtén os atributos de seguranza do equipo"
 
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obtén a lista de actualizacións para o hardware conectado"
-
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguranza do equipo:"

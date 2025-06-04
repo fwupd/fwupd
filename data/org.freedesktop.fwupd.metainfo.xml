@@ -38,6 +38,41 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.11" date="2025-06-04">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new check-reboot-needed command for scripts to use</li>
+          <li>Read the SELinux state in the report failure metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add some notes in the README about security-relevant build flags</li>
+          <li>Add support for the Dell dock ownership command</li>
+          <li>Add the subsystem VIDPID when provided by ModemManager</li>
+          <li>Allow changing the rts54hub block size from a quirk entry</li>
+          <li>Allow Legion HID2 downgrades without --force, and clear config on upgrades</li>
+          <li>Allow specifying multiple DEVICE-IDs for the get-updates command</li>
+          <li>Cache the stream when parsing the processed cabinet to fix the report upload</li>
+          <li>Do not allow DBX updates on the AiStone X5KK4NAG</li>
+          <li>Do not use translated low-level error messages in the failure report</li>
+          <li>Fall back to the activation date if the X.509 cert has no suitable subject</li>
+          <li>Fix newer Synaptics VMM9 devices by adding a delay after disabling RC</li>
+          <li>Ignore some sanity checks when parsing PK, KEK and db certificates</li>
+          <li>Increase timeout requested by logitech RDFU devices</li>
+          <li>Never include systemd.machine_id in the failure report</li>
+          <li>Parse the correct VendorID from the ModemManager device ID</li>
+          <li>Process all pending event sources when waiting for replug</li>
+          <li>Use the UEFI PK report attributes for the other UEFI plugins</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Lenovo Thunderbolt 5 Smart Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.10" date="2025-05-21">
       <description>
         <p>

@@ -1395,10 +1395,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "अवरुद्ध फर्मवेयर की सूची प्राप्त करता है"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "जुड़े हार्डवेयर के लिए अद्यतनों की सूची प्राप्त करता है"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "उपकरण के लिए रिलीज़ प्राप्त करता है"
 

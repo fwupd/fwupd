@@ -1535,10 +1535,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Obține lista firmware-ului blocat"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obține lista de actualizări pentru hardware-ul conectat"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Obține versiunile pentru un dispozitiv"
 
@@ -2168,6 +2164,10 @@ msgid "Old version"
 msgstr "Versiunea veche"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Se instalează numai pe dispozitive emulate"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Afișează doar o singură valoare PCR"
 
@@ -2179,6 +2179,10 @@ msgstr "Utilizează numai rețele „peer-to-peer” atunci când descarcă fiș
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Sunt permise numai actualizările de versiune"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Ieșire în format JSON (dezactivează toate solicitările interactive)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

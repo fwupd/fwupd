@@ -228,10 +228,6 @@ msgid "Gets the configured remotes"
 msgstr "Добавља подешена удаљена места"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Добави списак свих ажурирања за повезани уређај"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Добавља издања за уређај"
 

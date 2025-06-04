@@ -1345,10 +1345,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "설치 방지된 펌웨어 목록 가져오기"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "연결한 하드웨어의 업데이트 목록을 가져옵니다"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "장치 펌웨어 릴리스 가져오기"
 

@@ -1549,10 +1549,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Získat seznam blokovaných firmwarů"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Vypsat seznam aktualizací pro připojený hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Vypsat vydání pro zařízení"
 

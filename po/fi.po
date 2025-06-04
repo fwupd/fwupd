@@ -1528,10 +1528,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Hakee estettyjen laiteohjelmistojen luettelon"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Hae luettelo liitettyjen laitteiden päivityksistä"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Hakee laitteen julkaisut"
 

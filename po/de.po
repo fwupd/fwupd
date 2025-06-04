@@ -1530,10 +1530,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Holt die Liste der blockierten Firmware"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Ermittelt die Liste der Aktualisierungen für angeschlossene Hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Ermittelt die Versionen für ein Gerät"
 

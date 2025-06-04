@@ -788,10 +788,6 @@ msgid "Gets details about a firmware file"
 msgstr "Verkrijgt details over een firmware-bestand"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Verkrijgt een lijst van updates voor verbonden hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Verkrijgt de resultaten van de laatste update"
 

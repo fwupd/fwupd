@@ -1546,10 +1546,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Отримує список заблокованих мікропрограм"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Отримує список оновлень для з’єднаного обладнання"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Отримує випуски для пристрою"
 

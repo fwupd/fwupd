@@ -6,7 +6,7 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
 # Milo Ivir <mail@milotype.de>, 2020-2021
-# Milo Ivir <mail@milotype.de>, 2023
+# Milo Ivir <mail@milotype.de>, 2023,2025
 # Milo Ivir <mail@milotype.de>, 2021
 # gogo <trebelnik2@gmail.com>, 2016-2023
 msgid ""
@@ -621,6 +621,10 @@ msgstr "Naredba nije pronađena"
 msgid "Community supported"
 msgstr "Podržano od strane zajednice"
 
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Uspoređuje dvije inačice radi jednakosti"
+
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Predložena promjena podešavanja"
@@ -1153,7 +1157,7 @@ msgstr "Firmver BIOS područje štiti memoriju firmvera uređaja od nevlaštenog
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
-msgstr "Osnovni URI frimvera"
+msgstr "Osnovni URI firmvera"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -1271,6 +1275,10 @@ msgid "Get all enabled plugins registered with the system"
 msgstr "Prikaži sve omogućene priključke registrirane sa sustavom"
 
 #. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Nabavi sve poznate formate inačica"
+
+#. TRANSLATORS: command description
 msgid "Get device report metadata"
 msgstr "Preuzmi metapodatke izvještaja uređaja"
 
@@ -1293,10 +1301,6 @@ msgstr "Preuzima popis odobrenih firmvera"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Preuzima popis blokiranih firmvera"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Prikaži popis nadopuna za povezani hardver"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -1805,6 +1809,10 @@ msgstr "Samo nadogradnje inačice su dopuštene"
 msgid "Override the default ESP path"
 msgstr "Zaobiđi zadanu ESP putanju"
 
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "P2P firmver"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "PUTANJA"
@@ -2008,6 +2016,9 @@ msgstr "Zahtijeva učitača pokretanja"
 #. TRANSLATORS: metadata is downloaded
 msgid "Requires internet connection"
 msgstr "Potreban je pristup internetu"
+
+msgid "Reset daemon configuration"
+msgstr "Resetiraj podešavanja pozadinskog programa"
 
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
@@ -2359,6 +2370,10 @@ msgstr "Prebaci ogranak sa %s na %s?"
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Zamijeni ogranak firmvera na uređaju"
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "Sinkroniziraj inačice firmvera s odabranom konfiguracijom"
 
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"

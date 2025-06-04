@@ -902,10 +902,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Henter listen over blokerede firmware"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Henter listen over opdateringer for tilsluttet hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Henter resultaterne fra en enhed"
 

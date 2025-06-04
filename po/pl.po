@@ -1504,10 +1504,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Uzyskuje listę zablokowanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Uzyskuje listę aktualizacji dla podłączonego sprzętu"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Uzyskuje wydania dla urządzenia"
 
@@ -2109,6 +2105,10 @@ msgid "Old version"
 msgstr "Poprzednia wersja"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Instaluje tylko na emulowanych urządzeniach"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Wyświetla tylko jedną wartość PCR"
 
@@ -2120,6 +2120,10 @@ msgstr "Używa tylko sieci P2P podczas pobierania plików"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Dozwolone są tylko aktualizacje wersji"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Wyjście w formacie JSON (wyłącza wszystkie interaktywne zapytania)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

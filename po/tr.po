@@ -723,10 +723,6 @@ msgid "Gets details about a firmware file"
 msgstr "Donanım yazılımı dosyasıyla ilgili ayrıntıları al"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Bağlı donanım için güncelleme listesini al"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Bir aygıt için sürümleri alır"
 

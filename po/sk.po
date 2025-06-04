@@ -133,10 +133,6 @@ msgid "Gets details about a firmware file"
 msgstr "Získa podrobnosti o súbore firmvéru"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Získa zoznam aktualizácií pre pripojený hardvér"
-
-#. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Získa výsledky z poslednej aktualizácie"
 

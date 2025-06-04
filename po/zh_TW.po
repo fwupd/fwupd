@@ -889,10 +889,6 @@ msgid "Gets the list of approved firmware"
 msgstr "取得已批准韌體的清單"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "取得連接硬體的更新清單"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "取得裝置的發行版本"
 

@@ -790,10 +790,6 @@ msgid "Gets the configured remotes"
 msgstr "Получить настроенные репозитории"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Получить список обновлений для подключенного оборудования"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Получить релизы для устройства"
 

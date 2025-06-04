@@ -1050,10 +1050,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "අවහිර කළ ස්ථිරාංග ලැයිස්තුව ලබා ගනී"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "සම්බන්ධිත දෘඩාංග සඳහා යාවත්කාලීන ලැයිස්තුව ලබා ගනී"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "උපාංගයක් සඳහා නිකුත් කිරීම් ලබා ගනී"
 

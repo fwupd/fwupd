@@ -875,10 +875,6 @@ msgid "Gets the configured remotes"
 msgstr "Gauna sukonfigūruotas nuotolines saugyklas"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Gauna naujinimų sąrašą prijungtai aparatinei įrangai"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Gauna laidas įrenginiui"
 

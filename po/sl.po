@@ -1546,10 +1546,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Pridobi seznam blokirane vdelane programske opreme"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Pridobi seznam posodobitev za priključeno strojno opremo"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Pridobi izdaje za napravo"
 
