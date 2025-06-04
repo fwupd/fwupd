@@ -423,6 +423,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 
 	/* the device is probably in bootloader mode and the last SoftDevice FW upgrade failed */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO) &&
+	    !fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU) &&
 	    !radio_ok) {
 		g_debug("no radio found, creating a fake one for recovery");
 		if (!fu_logitech_hidpp_device_create_radio_child(self, 1, 0, error)) {
