@@ -196,13 +196,6 @@ GType = FuLogitechHidppDevice
 Flags = add-radio,ble,rebind-attach,no-request-required
 InstallDuration = 270
 
-# MX Mechanical
-[HIDRAW\VEN_046D&MOD_B34E00000000]
-Plugin = logitech_hidpp
-GType = FuLogitechHidppDevice
-Flags = ~add-radio
-InstallDuration = 308
-
 # MX Mechanical (BLE direct)
 [HIDRAW\VEN_046D&DEV_B34E]
 Plugin = logitech_hidpp
