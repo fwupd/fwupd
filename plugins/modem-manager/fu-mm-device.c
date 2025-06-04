@@ -172,6 +172,11 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 			fu_device_add_instance_id(FU_DEVICE(self), device_id);
 		return;
 	}
+	if (g_pattern_match_simple("???\\SSVID_????&SSPID_????", device_id) ||
+	    g_pattern_match_simple("???\\SSVID_????&SSPID_????&NAME_*", device_id)) {
+		fu_device_add_instance_id(FU_DEVICE(self), device_id);
+		return;
+	}
 	if (g_pattern_match_simple("???\\SSVID_????&SSPID_????&REV_????&CARRIER_*", device_id)) {
 		if (!fu_device_has_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH))
 			fu_device_add_instance_id(FU_DEVICE(self), device_id);
