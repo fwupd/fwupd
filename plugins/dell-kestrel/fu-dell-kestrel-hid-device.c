@@ -194,8 +194,13 @@ static gsize
 fu_dell_kestrel_hid_device_get_chunk_size(FuDellKestrelHidDevice *self,
 					  FuDellKestrelEcDevType dev_type)
 {
-	if (fu_dell_kestrel_ec_is_chunk_supported(FU_DEVICE(self), dev_type))
+	if (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_RMM)
+		return FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ;
+
+	if (FU_IS_DELL_KESTREL_EC(self) &&
+	    fu_dell_kestrel_ec_is_chunk_supported(FU_DELL_KESTREL_EC(self), dev_type))
 		return FU_DELL_KESTREL_HID_DEV_ANY_CHUNK_SZ;
+
 	return FU_DELL_KESTREL_HID_DEV_NO_CHUNK_SZ;
 }
 
