@@ -7049,7 +7049,6 @@ fu_engine_report_metadata_func(gconstpointer user_data)
 	    "DistroId",
 	    "DistroVersion",
 	    "FwupdSupported",
-	    "PlatformArchitecture",
 	    "RuntimeVersion(org.freedesktop.fwupd)",
 	    "SELinux",
 	};
