@@ -118,3 +118,13 @@ Flags = updatable
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
+
+#HP Portable USB-C Hub
+[USB\VID_03F0&PID_AE4A]
+Plugin = rts54hub
+Name = HP Portable USB-C Hub
+Flags = updatable
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x30000
+Rts54BlockSize = 0x100
