@@ -63,6 +63,38 @@ Summary = Foxconn T99W373 5G modem with eSIM for DW5932e
 [PCI\VID_105B&PID_E0F9]
 Summary = Foxconn T99W373 5G modem without eSIM for DW5932e
 
+# T99W515 Foxconn variant based on SDX72
+[PCI\VID_105B&PID_E118]
+Summary = Foxconn T99W515 5G modem
+
+# T99W640(DW5934e with eSIM) based on SDX72
+[PCI\VID_105B&PID_E11D]
+Summary = Foxconn T99W640 5G modem with eSIM for DW5934e
+
+# T99W640 (DW5934e without eSIM) based on SDX72
+[PCI\VID_105B&PID_E11E]
+Summary = Foxconn T99W640 5G modem without eSIM for DW5934e
+
+# T99W696.01 based on SDX61
+[PCI\SSVID_105B&SSPID_E142]
+Summary = Foxconn T99W696.01 5G modem for Lenovo
+
+# T99W696.02 based on SDX61
+[PCI\SSVID_105B&SSPID_E143]
+Summary = Foxconn T99W696.02 5G modem for Lenovo
+
+# T99W696.03 based on SDX61
+[PCI\SSVID_105B&SSPID_E144]
+Summary = Foxconn T99W696.03 5G modem for Lenovo
+
+# T99W696.04 based on SDX61
+[PCI\SSVID_105B&SSPID_E145]
+Summary = Foxconn T99W696.04 5G modem for Lenovo
+
+# T99W696.00 based on SDX61
+[PCI\SSVID_105B&SSPID_E146]
+Summary = Foxconn T99W696.00 5G modem
+
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
 GType = FuMmFastbootDevice
