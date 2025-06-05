@@ -4,7 +4,19 @@
   "steps": [
     {
       "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
-      "emulation-url": "c9306f015d47f04828b3affd7a8f9efd7ee6c8992cd83c0cc440fae396b0a17e-0036_0038.zip",
+      "emulation-url": "23bd1f020956963a10badd4c705877844ae1ecec533d8558706bbf7720f9d634-no_legos_0038_hidraw.zip",
+      "components": [
+        {
+          "version": "0.0.3.8",
+          "guids": [
+            "65619675-fec6-5035-801d-7f5e59fd9749"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
+      "emulation-url": "ac963a09da109f6896e5e7f8c5dd3366fc2f6dbdd7689758509fd30cf14e1942-legos_0038_hidraw.zip",
       "components": [
         {
           "version": "0.0.3.8",

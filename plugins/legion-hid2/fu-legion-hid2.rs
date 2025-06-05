@@ -5,7 +5,6 @@
 #[repr(u32)]
 enum FuLegionHid2Command {
     GetVersion = 0x01,
-    GetMcuId = 0x02,
     GetPlTest = 0xDF,
     StartIap = 0xE1,
     IcReset = 0xEF,
@@ -35,6 +34,7 @@ enum FuLegionHid2ReportId {
 #[repr(C, packed)]
 struct FuStructLegionGetVersion {
     cmd: u8 == 0x01,
+    reserved: [u8; 63],
 }
 
 #[derive(New, Getters)]
@@ -45,18 +45,13 @@ struct FuStructLegionVersion {
     reserved: [u8; 59],
 }
 
-#[derive(New, Default)]
-#[repr(C, packed)]
-struct FuStructLegionGetMcuId {
-    cmd: u8 == 0x02,
-}
-
-#[derive(New, Getters)]
-#[repr(C, packed)]
-struct FuStructLegionMcuId {
-    id: [u8; 12],
-    reserved: [u8; 52],
-}
+//Get MCU ID, unused by fwupd
+//#[derive(New, Getters)]
+//#[repr(C, packed)]
+//struct FuStructLegionMcuId {
+//    id: [u8; 12],
+//    reserved: [u8; 52],
+//}
 
 #[derive(New, Default)]
 #[repr(C, packed)]

@@ -6,6 +6,11 @@
 
 #include "config.h"
 
+#ifdef HAVE_HIDRAW_H
+#include <linux/hidraw.h>
+#include <linux/input.h>
+#endif
+
 #include "fu-legion-hid2-bl-device.h"
 #include "fu-legion-hid2-device.h"
 #include "fu-legion-hid2-firmware.h"
@@ -13,20 +18,12 @@
 #include "fu-legion-hid2-struct.h"
 
 struct _FuLegionHid2Device {
-	FuHidDevice parent_instance;
-	guint8 manufacturer;
+	FuHidrawDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLegionHid2Device, fu_legion_hid2_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuLegionHid2Device, fu_legion_hid2_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define FU_LEGION_HID2_DEVICE_TIMEOUT 200 /* ms */
-
-static void
-fu_legion_hid2_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuLegionHid2Device *self = FU_LEGION_HID2_DEVICE(device);
-	fwupd_codec_string_append_int(str, idt, "ChipManufacturer", self->manufacturer);
-}
 
 static gboolean
 fu_legion_hid2_device_transfer(FuLegionHid2Device *self,
@@ -35,26 +32,25 @@ fu_legion_hid2_device_transfer(FuLegionHid2Device *self,
 			       GError **error)
 {
 	if (req != NULL) {
-		if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
-					      req->data[0],
-					      req->data,
-					      req->len,
-					      FU_LEGION_HID2_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
-					      error)) {
-			g_prefix_error(error, "failed to send packet: ");
+		if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+					  req->data,
+					  req->len,
+					  FU_LEGION_HID2_DEVICE_TIMEOUT,
+					  FU_IO_CHANNEL_FLAG_NONE,
+					  error)) {
+			g_prefix_error(error, "failed to write packet: ");
 			return FALSE;
 		}
 	}
 	if (res != NULL) {
-		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
-					      res->data[0],
-					      res->data,
-					      res->len,
-					      FU_LEGION_HID2_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
-					      error)) {
-			g_prefix_error(error, "failed to receive packet: ");
+		if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+					 res->data,
+					 res->len,
+					 NULL,
+					 FU_LEGION_HID2_DEVICE_TIMEOUT,
+					 FU_IO_CHANNEL_FLAG_NONE,
+					 error)) {
+			g_prefix_error(error, "failed to read packet: ");
 			return FALSE;
 		}
 	}
@@ -68,62 +64,16 @@ fu_legion_hid2_device_convert_version(FuDevice *device, guint64 version_raw)
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
-static void
-fu_legion_hid2_device_set_progress(FuDevice *self, FuProgress *progress)
-{
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 6, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 76, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 17, "attach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
-}
-
 static gboolean
-fu_legion_hid2_device_ensure_version(FuDevice *device, GError **error)
+fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 {
-	guint32 version;
 	g_autoptr(GByteArray) cmd = fu_struct_legion_get_version_new();
 	g_autoptr(GByteArray) result = fu_struct_legion_version_new();
 
-	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device), cmd, result, error))
+	if (!fu_legion_hid2_device_transfer(self, cmd, result, error))
 		return FALSE;
-	version = fu_struct_legion_version_get_version(result);
-	fu_device_set_version_raw(device, version);
+	fu_device_set_version_raw(FU_DEVICE(self), fu_struct_legion_version_get_version(result));
 
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_ensure_mcu_id(FuDevice *device, GError **error)
-{
-	g_autoptr(GByteArray) cmd = fu_struct_legion_get_mcu_id_new();
-	g_autoptr(GByteArray) result = fu_struct_legion_mcu_id_new();
-
-	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device), cmd, result, error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_probe(FuDevice *device, GError **error)
-{
-	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
-		fu_hid_device_set_ep_addr_in(FU_HID_DEVICE(device), 0x81);
-		fu_hid_device_set_ep_addr_out(FU_HID_DEVICE(device), 1);
-	} else {
-		fu_hid_device_set_interface(FU_HID_DEVICE(device), 3);
-		fu_hid_device_set_ep_addr_in(FU_HID_DEVICE(device), 0x84);
-		fu_hid_device_set_ep_addr_out(FU_HID_DEVICE(device), 0x4);
-	}
-
-	/* FuHidDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_legion_hid2_device_parent_class)->probe(device, error))
-		return FALSE;
-
-	/* success */
 	return TRUE;
 }
 
@@ -132,7 +82,7 @@ fu_legion_hid2_device_probe(FuDevice *device, GError **error)
  * to be non-fatal or the MCU won't enumerate.
  */
 static void
-fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self)
+fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 {
 	g_autoptr(GByteArray) cmd = fu_struct_legion_get_pl_test_new();
 	g_autoptr(GByteArray) tp_man = fu_struct_legion_get_pl_test_result_new();
@@ -146,8 +96,7 @@ fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self)
 		g_debug("failed to get touchpad manufacturer: %s", error_child->message);
 		return;
 	}
-	self->manufacturer = fu_struct_legion_get_pl_test_result_get_content(tp_man);
-	switch (self->manufacturer) {
+	switch (fu_struct_legion_get_pl_test_result_get_content(tp_man)) {
 	case FU_LEGION_HID2_TP_MAN_BETTER_LIFE:
 		child = fu_legion_hid2_bl_device_new(FU_DEVICE(self));
 		break;
@@ -173,23 +122,169 @@ fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self)
 }
 
 static gboolean
-fu_legion_hid2_device_setup(FuDevice *device, GError **error)
+fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self, GError **error)
 {
-	/* HidDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_legion_hid2_device_parent_class)->setup(device, error))
+	guint64 version = 0;
+	g_autoptr(FuDevice) child = NULL;
+	g_autofree gchar *tp_version = NULL;
+	g_autofree gchar *manufacturer = NULL;
+	g_autoptr(FuDevice) hid_device = NULL;
+
+	/* get parent */
+	hid_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "hid", error);
+	if (hid_device == NULL)
 		return FALSE;
 
-	/* can't use anything but write and reset in IAP mode */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+	manufacturer = fu_udev_device_read_property(FU_UDEV_DEVICE(hid_device),
+						    "LEGOS_TP_MANUFACTURER",
+						    error);
+	if (manufacturer == NULL)
+		return FALSE;
+	tp_version =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(hid_device), "LEGOS_TP_VERSION", error);
+	if (tp_version == NULL)
+		return FALSE;
+
+	if (g_strcmp0(manufacturer, "SIPO") == 0) {
+		child = fu_legion_hid2_sipo_device_new(FU_DEVICE(self));
+	} else if (g_strcmp0(manufacturer, "BetterLife") == 0) {
+		child = fu_legion_hid2_bl_device_new(FU_DEVICE(self));
+	} else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "unknown touchpad manufacturer '%s'",
+			    manufacturer);
+		return FALSE;
+	}
+
+	if (!fu_strtoull(tp_version, &version, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
+		return FALSE;
+	}
+
+	fu_device_set_version_raw(child, version);
+	fu_device_add_child(FU_DEVICE(self), child);
+
+	return TRUE;
+}
+
+static gboolean
+fu_legion_hid2_device_setup_version(FuLegionHid2Device *self, GError **error)
+{
+	FuDevice *device = FU_DEVICE(self);
+
+	/* compatibility with older releases that used USB Instance ID */
+	fu_device_add_instance_u16(device, "VID", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "PID", fu_device_get_pid(device));
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_GENERIC |
+					     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
+					     FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "USB",
+					 "VID",
+					 "PID",
+					 NULL);
+
+	/* version set from kernel core */
+	if (fu_device_get_version_raw(device) != 0)
 		return TRUE;
 
-	if (!fu_legion_hid2_device_ensure_version(device, error))
+	/* fallback to direct communication */
+	if (!fu_legion_hid2_device_ensure_version(self, error))
 		return FALSE;
 
-	if (!fu_legion_hid2_device_ensure_mcu_id(device, error))
+	return TRUE;
+}
+
+static gboolean
+fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	gint desc_size = 0;
+	struct hidraw_report_descriptor rpt_desc = {0x0};
+	g_autoptr(FuDevice) hid_device = NULL;
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(FuHidReport) report = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device));
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	/* Get Report Descriptor Size */
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESCSIZE,
+			      (guint8 *)&desc_size,
+			      sizeof(desc_size),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
 		return FALSE;
 
-	fu_legion_hid2_device_setup_touchpad(FU_LEGION_HID2_DEVICE(device));
+	rpt_desc.size = desc_size;
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESC,
+			      (guint8 *)&rpt_desc,
+			      sizeof(rpt_desc),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
+		return FALSE;
+	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
+
+	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
+	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
+		return FALSE;
+	}
+
+	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+					       error,
+					       "usage-page",
+					       0xFFA0,
+					       "usage",
+					       0x01,
+					       "collection",
+					       0x01,
+					       NULL);
+	if (report == NULL)
+		return FALSE;
+
+	imgs = fu_firmware_get_images(descriptor);
+	if (imgs->len != 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "HID descriptor does not contain exactly 4 reports");
+		return FALSE;
+	}
+
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return FALSE;
+#endif /* HAVE_HIDRAW_H */
+}
+
+static gboolean
+fu_legion_hid2_device_setup(FuDevice *device, GError **error)
+{
+	g_autoptr(GError) error_touchpad = NULL;
+
+	if (!fu_legion_hid2_device_validate_descriptor(device, error))
+		return FALSE;
+
+	if (!fu_legion_hid2_device_setup_version(FU_LEGION_HID2_DEVICE(device), error))
+		return FALSE;
+
+	if (!fu_legion_hid2_device_setup_touchpad(FU_LEGION_HID2_DEVICE(device), &error_touchpad)) {
+		g_debug("failed to setup touchpad from HID properties: %s",
+			error_touchpad->message);
+		fu_legion_hid2_device_setup_touchpad_direct(FU_LEGION_HID2_DEVICE(device));
+	}
 
 	/* success */
 	return TRUE;
@@ -219,331 +314,28 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
-static GByteArray *
-fu_legion_hid2_device_tlv(FuLegionHid2Device *self, GByteArray *cmd, GError **error)
-{
-	g_autoptr(GByteArray) result = fu_struct_legion_iap_tlv_new();
-	const guint8 *value;
-	guint8 expected;
-	guint16 tag;
-
-	if (fu_struct_legion_iap_tlv_get_tag(cmd) == FU_LEGION_IAP_HOST_TAG_IAP_UPDATE)
-		expected = FU_LEGION_IAP_ERROR_IAP_CERTIFIED;
-	else
-		expected = FU_LEGION_IAP_ERROR_IAP_OK;
-
-	if (!fu_legion_hid2_device_transfer(self, cmd, result, error))
-		return NULL;
-
-	tag = fu_struct_legion_iap_tlv_get_tag(result);
-	if (tag != FU_LEGION_IAP_DEVICE_TAG_IAP_ACK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "failed to transmit TLV, result: %u",
-			    tag);
-		return NULL;
-	}
-	value = fu_struct_legion_iap_tlv_get_value(result, NULL);
-	if (value[0] != expected) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "failed to transmit TLV, data: %u",
-			    value[0]);
-		return NULL;
-	}
-
-	return g_steal_pointer(&result);
-}
-
-static gboolean
-fu_legion_hid2_device_unlock_flash(FuLegionHid2Device *self, GError **error)
-{
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UNLOCK);
-
-	result = fu_legion_hid2_device_tlv(self, cmd, error);
-	if (result == NULL) {
-		g_prefix_error(error, "failed to unlock: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_verify_signature(FuLegionHid2Device *self, GError **error)
-{
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UPDATE);
-
-	result = fu_legion_hid2_device_tlv(self, cmd, error);
-	if (result == NULL) {
-		g_prefix_error(error, "failed to verify signature: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_verify_code(FuLegionHid2Device *self, GError **error)
-{
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_VERIFY);
-
-	result = fu_legion_hid2_device_tlv(self, cmd, error);
-	if (result == NULL) {
-		g_prefix_error(error, "failed to verify code: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_write_data_chunks(FuLegionHid2Device *self,
-					FuChunkArray *chunks,
-					FuProgress *progress,
-					guint16 tag,
-					GError **error)
-{
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) req = fu_struct_legion_iap_tlv_new();
-		g_autoptr(GByteArray) res = NULL;
-
-		fu_struct_legion_iap_tlv_set_tag(req, tag);
-
-		chk = fu_chunk_array_index(chunks, i, error);
-		if (chk == NULL)
-			return FALSE;
-
-		if (!fu_struct_legion_iap_tlv_set_value(req,
-							fu_chunk_get_data(chk),
-							fu_chunk_get_data_sz(chk),
-							error))
-			return FALSE;
-
-		fu_struct_legion_iap_tlv_set_length(req, fu_chunk_get_data_sz(chk));
-
-		res = fu_legion_hid2_device_tlv(self, req, error);
-		if (res == NULL) {
-			g_prefix_error(error, "failed to write data chunks: ");
-			return FALSE;
-		}
-
-		fu_progress_step_done(progress);
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_wait_for_complete_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
-	const guint8 *value;
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_CARRY);
-
-	result = fu_legion_hid2_device_tlv(FU_LEGION_HID2_DEVICE(device), cmd, error);
-	if (result == NULL) {
-		g_prefix_error(error, "failed to verify code: ");
-		return FALSE;
-	}
-	value = fu_struct_legion_iap_tlv_get_value(result, NULL);
-	if (value[1] < 100) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_BUSY,
-			    "device is %d percent done",
-			    value[1]);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_write_data(FuLegionHid2Device *self,
-				 FuFirmware *firmware,
-				 FuProgress *progress,
-				 GError **error)
-{
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	stream = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_PAYLOAD, error);
-	if (stream == NULL)
-		return FALSE;
-
-	chunks = fu_chunk_array_new_from_stream(stream,
-						FU_CHUNK_ADDR_OFFSET_NONE,
-						FU_CHUNK_PAGESZ_NONE,
-						FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE,
-						error);
-	if (chunks == NULL)
-		return FALSE;
-	if (!fu_legion_hid2_device_write_data_chunks(self,
-						     chunks,
-						     progress,
-						     FU_LEGION_IAP_HOST_TAG_IAP_DATA,
-						     error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_write_sig(FuLegionHid2Device *self,
-				FuFirmware *firmware,
-				FuProgress *progress,
-				GError **error)
-{
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
-	stream = fu_firmware_get_image_by_id_stream(firmware, FU_FIRMWARE_ID_SIGNATURE, error);
-	if (stream == NULL)
-		return FALSE;
-
-	chunks = fu_chunk_array_new_from_stream(stream,
-						FU_CHUNK_ADDR_OFFSET_NONE,
-						FU_CHUNK_PAGESZ_NONE,
-						FU_STRUCT_LEGION_IAP_TLV_SIZE_VALUE,
-						error);
-	if (chunks == NULL)
-		return FALSE;
-	if (!fu_legion_hid2_device_write_data_chunks(self,
-						     chunks,
-						     progress,
-						     FU_LEGION_IAP_HOST_TAG_IAP_SIGNATURE,
-						     error))
-		return FALSE;
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_write_firmware(FuDevice *device,
-				     FuFirmware *firmware,
-				     FuProgress *progress,
-				     FwupdInstallFlags flags,
-				     GError **error)
-{
-	FuLegionHid2Device *self = FU_LEGION_HID2_DEVICE(device);
-
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 29, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 29, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 19, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 19, NULL);
-
-	if (!fu_legion_hid2_device_unlock_flash(self, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_legion_hid2_device_write_data(self,
-					      firmware,
-					      fu_progress_get_child(progress),
-					      error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_legion_hid2_device_write_sig(self,
-					     firmware,
-					     fu_progress_get_child(progress),
-					     error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_legion_hid2_device_verify_signature(self, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_device_retry_full(device,
-				  fu_legion_hid2_device_wait_for_complete_cb,
-				  50,
-				  200,
-				  NULL,
-				  error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	if (!fu_legion_hid2_device_verify_code(self, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* restart dev is moved to attach command! */
-
-	return TRUE;
-}
-
 static gboolean
 fu_legion_hid2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(GByteArray) cmd = NULL;
 	g_autoptr(GByteArray) result = NULL;
-	guint ret;
-
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
+	g_autoptr(GError) error_local = NULL;
 
 	cmd = fu_struct_legion_start_iap_new();
 	result = fu_struct_legion_iap_result_new();
 
-	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device), cmd, result, error))
-		return FALSE;
-
-	ret = fu_struct_legion_iap_result_get_ret(result);
-	if (ret != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "failed to enable IAP, result: %u",
-			    ret);
-		return FALSE;
+	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device),
+					    cmd,
+					    result,
+					    &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_debug("%s", error_local->message);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 	}
-
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
-	return TRUE;
-}
-
-static gboolean
-fu_legion_hid2_device_attach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	g_autoptr(GByteArray) cmd = NULL;
-	g_autoptr(GByteArray) result = NULL;
-	g_autoptr(GError) error_attach = NULL;
-
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
-
-	cmd = fu_struct_legion_iap_tlv_new();
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_RESTART);
-
-	result = fu_legion_hid2_device_tlv(FU_LEGION_HID2_DEVICE(device), cmd, &error_attach);
-	if (result == NULL)
-		g_debug("failed to attach: %s", error_attach->message);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
@@ -559,19 +351,16 @@ fu_legion_hid2_device_init(FuLegionHid2Device *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void
 fu_legion_hid2_device_class_init(FuLegionHid2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->to_string = fu_legion_hid2_device_to_string;
 	device_class->setup = fu_legion_hid2_device_setup;
-	device_class->probe = fu_legion_hid2_device_probe;
 	device_class->prepare_firmware = fu_legion_hid2_device_prepare_firmware;
 	device_class->convert_version = fu_legion_hid2_device_convert_version;
-	device_class->write_firmware = fu_legion_hid2_device_write_firmware;
 	device_class->detach = fu_legion_hid2_device_detach;
-	device_class->attach = fu_legion_hid2_device_attach;
-	device_class->set_progress = fu_legion_hid2_device_set_progress;
 }
