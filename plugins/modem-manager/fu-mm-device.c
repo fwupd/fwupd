@@ -141,48 +141,130 @@ fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **
 	return fu_mm_device_writeln(autosuspend_delay_filename, buf, error);
 }
 
-static void
+void
 fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 {
-	if (g_pattern_match_simple("???\\VID_????", device_id)) {
-		g_autofree gchar *prefix = g_strndup(device_id, 3);
-		g_autofree gchar *vendor_id = NULL;
+	g_autofree gchar *subsys_pid = NULL;
+	g_autofree gchar *subsys_vid = NULL;
+	g_auto(GStrv) instancestrs = NULL;
+	g_auto(GStrv) subsys_instancestr = NULL;
 
-		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       device_id,
-					       FU_DEVICE_INSTANCE_FLAG_QUIRKS);
-		vendor_id = g_strdup_printf("%s:0x%s", prefix, device_id + 8);
-		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+	/* parse the ModemManager InstanceID lookalike */
+	subsys_instancestr = g_strsplit(device_id, "\\", 2);
+	if (subsys_instancestr[1] == NULL)
 		return;
+	instancestrs = g_strsplit(subsys_instancestr[1], "&", -1);
+	for (guint i = 0; instancestrs[i] != NULL; i++) {
+		g_auto(GStrv) kv = g_strsplit(instancestrs[i], "_", 2);
+		if (g_strcmp0(kv[0], "VID") == 0 || g_strcmp0(kv[0], "PID") == 0 ||
+		    g_strcmp0(kv[0], "REV") == 0 || g_strcmp0(kv[0], "NAME") == 0 ||
+		    g_strcmp0(kv[0], "CARRIER") == 0) {
+			fu_device_add_instance_str(FU_DEVICE(self), kv[0], kv[1]);
+		} else if (g_strcmp0(kv[0], "SSVID") == 0) {
+			subsys_vid = g_strdup(kv[1]);
+		} else if (g_strcmp0(kv[0], "SSPID") == 0) {
+			subsys_pid = g_strdup(kv[1]);
+		} else {
+			g_debug("ignoring instance attribute '%s'", instancestrs[i]);
+		}
 	}
-	if (g_pattern_match_simple("???\\VID_????&PID_????", device_id) ||
-	    g_pattern_match_simple("???\\VID_????&PID_????&NAME_*", device_id)) {
-		fu_device_add_instance_id(FU_DEVICE(self), device_id);
-		return;
+
+	/* convert nonstandard SSVID+SSPID to SUBSYS */
+	if (subsys_vid != NULL && subsys_pid != NULL) {
+		g_autofree gchar *subsys = g_strdup_printf("%s%s", subsys_vid, subsys_pid);
+		fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
 	}
-	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????", device_id) ||
-	    g_pattern_match_simple("???\\VID_????&PID_????&REV_????&NAME_*", device_id)) {
+
+	/* add all possible instance IDs */
+	fu_device_build_instance_id_full(FU_DEVICE(self),
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 subsys_instancestr[0],
+					 "VID",
+					 NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    subsys_instancestr[0],
+				    "VID",
+				    "PID",
+				    NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    subsys_instancestr[0],
+				    "VID",
+				    "PID",
+				    "NAME",
+				    NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    subsys_instancestr[0],
+				    "VID",
+				    "PID",
+				    "SUBSYS",
+				    NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    subsys_instancestr[0],
+				    "VID",
+				    "PID",
+				    "SUBSYS",
+				    "NAME",
+				    NULL);
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    subsys_instancestr[0],
+					    "VID",
+					    "PID",
+					    "REV",
+					    NULL);
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    subsys_instancestr[0],
+					    "VID",
+					    "PID",
+					    "REV",
+					    "NAME",
+					    NULL);
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    subsys_instancestr[0],
+					    "VID",
+					    "PID",
+					    "SUBSYS",
+					    "REV",
+					    NULL);
+	}
+	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH)) {
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    subsys_instancestr[0],
+					    "VID",
+					    "PID",
+					    "CARRIER",
+					    NULL);
 		if (fu_device_has_private_flag(FU_DEVICE(self),
-					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV))
-			fu_device_add_instance_id(FU_DEVICE(self), device_id);
-		return;
+					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+			fu_device_build_instance_id(FU_DEVICE(self),
+						    NULL,
+						    subsys_instancestr[0],
+						    "VID",
+						    "PID",
+						    "REV",
+						    "CARRIER",
+						    NULL);
+			fu_device_build_instance_id(FU_DEVICE(self),
+						    NULL,
+						    subsys_instancestr[0],
+						    "VID",
+						    "PID",
+						    "SUBSYS",
+						    "REV",
+						    "CARRIER",
+						    NULL);
+		}
 	}
-	if (g_pattern_match_simple("???\\VID_????&PID_????&REV_????&CARRIER_*", device_id)) {
-		if (!fu_device_has_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH))
-			fu_device_add_instance_id(FU_DEVICE(self), device_id);
-		return;
-	}
-	if (g_pattern_match_simple("???\\SSVID_????&SSPID_????", device_id) ||
-	    g_pattern_match_simple("???\\SSVID_????&SSPID_????&NAME_*", device_id)) {
-		fu_device_add_instance_id(FU_DEVICE(self), device_id);
-		return;
-	}
-	if (g_pattern_match_simple("???\\SSVID_????&SSPID_????&REV_????&CARRIER_*", device_id)) {
-		if (!fu_device_has_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH))
-			fu_device_add_instance_id(FU_DEVICE(self), device_id);
-		return;
-	}
-	g_warning("failed to add instance ID %s", device_id);
 }
 
 static void
