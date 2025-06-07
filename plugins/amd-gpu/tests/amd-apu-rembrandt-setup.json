@@ -1,0 +1,125 @@
+{
+  "FwupdVersion": "2.0.12",
+  "UsbDevices": [
+    {
+      "Created": "2025-06-07T03:59:14.963714Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:e2:00.0",
+      "DeviceFile": "/dev/dri/card0",
+      "Subsystem": "pci",
+      "Driver": "amdgpu",
+      "BindId": "0000:e2:00.0",
+      "Vendor": 4098,
+      "Model": 5761,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "amdgpu"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=amdgpu\nPCI_CLASS=30000\nPCI_ID=1002:1681\nPCI_SUBSYS_ID=17AA:3827\nPCI_SLOT_NAME=0000:e2:00.0\nMODALIAS=pci:v00001002d00001681sv000017AAsd00003827bc03sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x1002"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x1681"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=amdgpu\nPCI_CLASS=30000\nPCI_ID=1002:1681\nPCI_SUBSYS_ID=17AA:3827\nPCI_SLOT_NAME=0000:e2:00.0\nMODALIAS=pci:v00001002d00001681sv000017AAsd00003827bc03sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x1002"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x1681"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadAttr:Attr=vbios_version",
+          "Data": "113-REMBRANDT-X37"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0xc3"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x17aa"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x3827"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:e2:00.0"
+        },
+        {
+          "Id": "DrmAmdgpuSetDeviceFile:Base=/sys/devices/pci0000:00/0000:00:08.1/0000:e2:00.0",
+          "Filename": "/dev/dri/card0"
+        },
+        {
+          "Id": "FileExists:Filename=/sys/devices/pci0000:00/0000:00:08.1/0000:e2:00.0/rom",
+          "Exists": 0
+        },
+        {
+          "Id": "FileExists:Filename=/sys/devices/pci0000:00/0000:00:08.1/0000:e2:00.0/psp_vbflash",
+          "Exists": 0
+        },
+        {
+          "Id": "FileExists:Filename=/sys/devices/pci0000:00/0000:00:08.1/0000:e2:00.0/psp_vbflash_status",
+          "Exists": 0
+        },
+        {
+          "Id": "Ioctl:Request=0x40206445,Query=0x1b,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0xc8",
+          "DataOut": "UmVtYnJhbmR0IEdlbmVyaWMgVkJJT1MAICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgADExMy1SRU1CUkFORFQtWDM3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3ABEgAAAAADAzMi4wMTcuMDAwLjA1NS4wMDAwMDAAUm1iR2VuZXJpMjAyMi8wNC8xMiAwNjoyMQAAAAAAAAAAAAAAAAAAAAA="
+        }
+      ]
+    }
+  ]
+}
