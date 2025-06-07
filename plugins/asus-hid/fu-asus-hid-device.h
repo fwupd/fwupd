@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_ASUS_HID_DEVICE (fu_asus_hid_device_get_type())
-G_DECLARE_FINAL_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU, ASUS_HID_DEVICE, FuHidDevice)
+G_DECLARE_FINAL_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU, ASUS_HID_DEVICE, FuHidrawDevice)
 
 gboolean
 fu_asus_hid_device_write_firmware(FuDevice *device,

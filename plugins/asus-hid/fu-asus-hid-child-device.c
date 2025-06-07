@@ -34,28 +34,24 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 					  guint8 report,
 					  GError **error)
 {
-	FuHidDevice *hid_dev = FU_HID_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuHidrawDevice *hid_dev = FU_HIDRAW_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 
 	if (req != NULL) {
-		if (!fu_hid_device_set_report(hid_dev,
-					      report,
-					      req->data,
-					      req->len,
-					      FU_ASUS_HID_CHILD_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_set_feature(hid_dev,
+						  req->data,
+						  req->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
 	if (res != NULL) {
-		if (!fu_hid_device_get_report(hid_dev,
-					      report,
-					      res->data,
-					      res->len,
-					      FU_ASUS_HID_CHILD_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_get_feature(hid_dev,
+						  res->data,
+						  res->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to receive packet: ");
 			return FALSE;
 		}
