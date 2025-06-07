@@ -44,3 +44,5 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, G
 gboolean
 fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
     G_GNUC_NON_NULL(1);
+void
+fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id) G_GNUC_NON_NULL(1, 2);
