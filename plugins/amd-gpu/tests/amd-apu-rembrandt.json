@@ -1,0 +1,17 @@
+{
+  "name": "AMD Rembrandt",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/amd-apu-rembrandt-setup.json",
+      "components": [
+        {
+          "version": "X37",
+          "guids": [
+            "ef25c32d-937d-5dc5-be95-71a0a7cc5722"
+          ]
+        }
+      ]
+    }
+  ]
+}
