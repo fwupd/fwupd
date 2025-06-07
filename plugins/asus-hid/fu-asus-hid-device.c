@@ -6,17 +6,22 @@
 
 #include "config.h"
 
+#ifdef HAVE_HIDRAW_H
+#include <linux/hidraw.h>
+#include <linux/input.h>
+#endif
+
 #include "fu-asus-hid-child-device.h"
 #include "fu-asus-hid-device.h"
 #include "fu-asus-hid-struct.h"
 
 struct _FuAsusHidDevice {
-	FuHidDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	guint8 num_mcu;
 	gulong child_added_id;
 };
 
-G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define FU_ASUS_HID_DEVICE_TIMEOUT 200 /* ms */
 
@@ -27,28 +32,22 @@ fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
 				    guint8 report,
 				    GError **error)
 {
-	FuHidDevice *hid_dev = FU_HID_DEVICE(self);
-
 	if (req != NULL) {
-		if (!fu_hid_device_set_report(hid_dev,
-					      report,
-					      req->data,
-					      req->len,
-					      FU_ASUS_HID_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+						  req->data,
+						  req->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
 	if (res != NULL) {
-		if (!fu_hid_device_get_report(hid_dev,
-					      report,
-					      res->data,
-					      res->len,
-					      FU_ASUS_HID_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+						  res->data,
+						  res->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to receive packet: ");
 			return FALSE;
 		}
@@ -86,19 +85,79 @@ fu_asus_hid_device_child_added_cb(FuDevice *device, FuDevice *child, gpointer us
 }
 
 static gboolean
+fu_asus_hid_device_validate_descriptor(FuDevice *device, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	gint desc_size = 0;
+	struct hidraw_report_descriptor rpt_desc = {0x0};
+	g_autoptr(FuDevice) hid_device = NULL;
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(FuHidReport) report = NULL;
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device));
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	/* Get Report Descriptor Size */
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESCSIZE,
+			      (guint8 *)&desc_size,
+			      sizeof(desc_size),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
+		return FALSE;
+
+	rpt_desc.size = desc_size;
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESC,
+			      (guint8 *)&rpt_desc,
+			      sizeof(rpt_desc),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error))
+		return FALSE;
+	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
+
+	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
+	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
+		return FALSE;
+	}
+
+	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+					       error,
+					       "usage-page",
+					       0xFF31,
+					       "usage",
+					       0x76,
+					       "collection",
+					       0x01,
+					       NULL);
+	if (report == NULL)
+		return FALSE;
+
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return FALSE;
+#endif /* HAVE_HIDRAW_H */
+}
+
+static gboolean
 fu_asus_hid_device_probe(FuDevice *device, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
-
-	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
 	for (guint i = 0; i < self->num_mcu; i++) {
 		g_autoptr(FuDevice) dev_tmp = fu_asus_hid_child_device_new(device, i);
 		fu_device_add_child(device, dev_tmp);
 	}
 
-	/* FuHidDevice->probe */
-	return FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->probe(device, error);
+	return TRUE;
 }
 
 static gboolean
@@ -106,13 +165,12 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
 
-	/* HidDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->setup(device, error))
-		return FALSE;
-
 	/* bootloader mode won't know about children */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
+
+	if (!fu_asus_hid_device_validate_descriptor(device, error))
+		return FALSE;
 
 	if (!fu_asus_hid_device_init_seq(self, error))
 		return FALSE;
