@@ -6,21 +6,20 @@
       "emulation-file": "@enumeration_datadir@/asus-hid-setup.json",
       "components": [
         {
-          "version": "0.2",
           "guids": [
-            "40e5a299-fe27-5e3b-a4a3-6649aeef4875"
+            "45b53fed-74ce-542f-aaca-9ba6783c89be"
           ]
         },
         {
-          "version": "311",
+          "version": "319",
           "guids": [
-            "f7765461-3ff4-52a0-a4d8-d782b1f885ab"
+            "ae89f87e-0e1a-563c-afd2-f300c04676aa"
           ]
         },
         {
-          "version": "311",
+          "version": "319",
           "guids": [
-            "545ddbd6-f041-5d86-bfd7-4764193e0a17"
+            "6b00f0ca-abb2-5cc4-bb85-b7392998d51e"
           ]
         }
       ]
