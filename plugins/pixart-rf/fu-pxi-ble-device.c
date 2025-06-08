@@ -186,7 +186,7 @@ fu_pxi_ble_device_get_feature(FuPxiBleDevice *self, guint8 *buf, guint bufsz, GE
 }
 
 static gboolean
-fu_pxi_ble_device_search_hid_feature_report_id(FuFirmware *descriptor,
+fu_pxi_ble_device_search_hid_feature_report_id(FuHidDescriptor *descriptor,
 					       guint16 usage_page,
 					       guint8 *report_id,
 					       GError **error)
@@ -195,7 +195,7 @@ fu_pxi_ble_device_search_hid_feature_report_id(FuFirmware *descriptor,
 	g_autoptr(FuHidReport) report = NULL;
 
 	/* check ota retransmit feature report usage page exists */
-	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+	report = fu_hid_descriptor_find_report(descriptor,
 					       error,
 					       "usage-page",
 					       usage_page,
@@ -218,7 +218,7 @@ fu_pxi_ble_device_search_hid_feature_report_id(FuFirmware *descriptor,
 }
 
 static gboolean
-fu_pxi_ble_device_search_hid_input_report_id(FuFirmware *descriptor,
+fu_pxi_ble_device_search_hid_input_report_id(FuHidDescriptor *descriptor,
 					     guint16 usage_page,
 					     guint8 *report_id,
 					     GError **error)
@@ -227,7 +227,7 @@ fu_pxi_ble_device_search_hid_input_report_id(FuFirmware *descriptor,
 	g_autoptr(FuFirmware) item_id = NULL;
 
 	/* check ota retransmit feature report usage page exist or not */
-	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+	report = fu_hid_descriptor_find_report(descriptor,
 					       error,
 					       "usage-page",
 					       usage_page,
@@ -252,51 +252,16 @@ fu_pxi_ble_device_search_hid_input_report_id(FuFirmware *descriptor,
 static gboolean
 fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	gint desc_size = 0;
-	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local1 = NULL;
 	g_autoptr(GError) error_local2 = NULL;
 	g_autoptr(GError) error_local3 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	struct hidraw_report_descriptor rpt_desc = {0x0};
-
-	/* Get Report Descriptor Size */
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRDESCSIZE,
-			      (guint8 *)&desc_size,
-			      sizeof(desc_size),
-			      NULL,
-			      FU_PXI_DEVICE_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
-			      error))
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
+	if (descriptor == NULL)
 		return FALSE;
-
-	rpt_desc.size = desc_size;
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRDESC,
-			      (guint8 *)&rpt_desc,
-			      sizeof(rpt_desc),
-			      NULL,
-			      FU_PXI_DEVICE_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
-			      error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
-
-	/* parse the descriptor, but use the defaults if it fails */
-	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
-	if (!fu_firmware_parse_bytes(descriptor,
-				     fw,
-				     0x0,
-				     FU_FIRMWARE_PARSE_FLAG_NONE,
-				     &error_local)) {
-		g_debug("failed to parse descriptor: %s", error_local->message);
-		return TRUE;
-	}
 
 	/* check ota retransmit feature report usage page exists */
 	if (!fu_pxi_ble_device_search_hid_feature_report_id(descriptor,
@@ -333,13 +298,6 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 
 	/* success */
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE
-#endif
 }
 
 static gboolean

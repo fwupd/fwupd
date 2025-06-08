@@ -6,11 +6,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
-
 #include "fu-legion-hid2-bl-device.h"
 #include "fu-legion-hid2-device.h"
 #include "fu-legion-hid2-firmware.h"
@@ -200,45 +195,14 @@ fu_legion_hid2_device_setup_version(FuLegionHid2Device *self, GError **error)
 static gboolean
 fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
-	gint desc_size = 0;
-	struct hidraw_report_descriptor rpt_desc = {0x0};
-	g_autoptr(FuDevice) hid_device = NULL;
-	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(device));
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	/* Get Report Descriptor Size */
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRDESCSIZE,
-			      (guint8 *)&desc_size,
-			      sizeof(desc_size),
-			      NULL,
-			      5000,
-			      FU_IOCTL_FLAG_NONE,
-			      error))
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	if (descriptor == NULL)
 		return FALSE;
-
-	rpt_desc.size = desc_size;
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRDESC,
-			      (guint8 *)&rpt_desc,
-			      sizeof(rpt_desc),
-			      NULL,
-			      5000,
-			      FU_IOCTL_FLAG_NONE,
-			      error))
-		return FALSE;
-	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
-
-	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
-	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
-		return FALSE;
-	}
-
-	report = fu_hid_descriptor_find_report(FU_HID_DESCRIPTOR(descriptor),
+	report = fu_hid_descriptor_find_report(descriptor,
 					       error,
 					       "usage-page",
 					       0xFFA0,
@@ -250,7 +214,7 @@ fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 	if (report == NULL)
 		return FALSE;
 
-	imgs = fu_firmware_get_images(descriptor);
+	imgs = fu_firmware_get_images(FU_FIRMWARE(descriptor));
 	if (imgs->len != 4) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -260,13 +224,6 @@ fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 	}
 
 	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "<linux/hidraw.h> not available");
-	return FALSE;
-#endif /* HAVE_HIDRAW_H */
 }
 
 static gboolean
