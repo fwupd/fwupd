@@ -742,6 +742,24 @@ fu_coswid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, G
 	return NULL;
 }
 
+/**
+ * fu_coswid_firmware_get_product:
+ * @self: a #FuCoswidFirmware
+ *
+ * Gets the product name.
+ *
+ * Returns: string, or %NULL for unset
+ *
+ * Since: 2.0.12
+ **/
+const gchar *
+fu_coswid_firmware_get_product(FuCoswidFirmware *self)
+{
+	FuCoswidFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_COSWID_FIRMWARE(self), NULL);
+	return priv->product;
+}
+
 #ifdef HAVE_CBOR
 
 static void
