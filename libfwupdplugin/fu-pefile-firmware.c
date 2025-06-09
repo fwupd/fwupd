@@ -173,16 +173,22 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	fu_firmware_set_idx(img, idx);
 
 	/* add data */
-	if (fu_struct_pe_coff_section_get_size_of_raw_data(st) > 0) {
+	if (fu_struct_pe_coff_section_get_virtual_size(st) > 0) {
 		guint32 sect_offset = fu_struct_pe_coff_section_get_pointer_to_raw_data(st);
+		guint32 sect_size = fu_struct_pe_coff_section_get_virtual_size(st);
 		g_autoptr(GInputStream) img_stream = NULL;
 
+		/* use the raw data size if the section is compressed */
+		if (fu_struct_pe_coff_section_get_virtual_size(st) >
+		    fu_struct_pe_coff_section_get_size_of_raw_data(st)) {
+			g_debug("virtual size 0x%x bigger than raw data, truncating to 0x%x",
+				sect_size,
+				fu_struct_pe_coff_section_get_size_of_raw_data(st));
+			sect_size = fu_struct_pe_coff_section_get_size_of_raw_data(st);
+		}
+
 		fu_firmware_set_offset(img, sect_offset);
-		img_stream =
-		    fu_partial_input_stream_new(stream,
-						sect_offset,
-						fu_struct_pe_coff_section_get_size_of_raw_data(st),
-						error);
+		img_stream = fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
 		if (img_stream == NULL) {
 			g_prefix_error(error, "failed to cut raw PE data: ");
 			return FALSE;
