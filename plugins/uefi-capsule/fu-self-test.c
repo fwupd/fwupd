@@ -263,6 +263,10 @@ fu_uefi_cod_device_func(void)
 			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT);
 }
 
+#ifndef EFI_OS_DIR
+#define EFI_OS_DIR "systemd"
+#endif
+
 static FuVolume *
 fu_uefi_plugin_fake_esp_new(void)
 {
@@ -281,7 +285,7 @@ fu_uefi_plugin_fake_esp_new(void)
 	fu_volume_set_partition_uuid(esp, "00000000-0000-0000-0000-000000000000");
 
 	/* make fu_uefi_get_esp_path_for_os() distro-neutral */
-	tmpdir_efi = g_build_filename(tmpdir, "EFI", "systemd", NULL);
+	tmpdir_efi = g_build_filename(tmpdir, "EFI", EFI_OS_DIR, NULL);
 	g_assert_cmpint(g_mkdir_with_parents(tmpdir_efi, 0700), ==, 0);
 
 	/* success */
@@ -533,7 +537,7 @@ fu_uefi_plugin_nvram_func(void)
 	/* check UX splash was created */
 	g_assert_true(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/systemd/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
 	g_assert_true(fu_efivars_exists(fu_context_get_efivars(ctx),
 					FU_EFIVARS_GUID_FWUPDATE,
 					"fwupd-ux-capsule"));
@@ -541,7 +545,7 @@ fu_uefi_plugin_nvram_func(void)
 	/* check FW was created */
 	g_assert_true(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/systemd/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 	g_assert_true(fu_efivars_exists(fu_context_get_efivars(ctx),
 					FU_EFIVARS_GUID_FWUPDATE,
 					"fwupd-ux-capsule"));
@@ -582,13 +586,13 @@ fu_uefi_plugin_nvram_func(void)
 	/* check both files and variables no longer exist */
 	g_assert_false(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/systemd/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
 	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
 					 FU_EFIVARS_GUID_FWUPDATE,
 					 "fwupd-ux-capsule"));
 	g_assert_false(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/systemd/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
 					 FU_EFIVARS_GUID_FWUPDATE,
 					 "fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1-0"));
@@ -782,7 +786,7 @@ fu_uefi_plugin_grub_func(void)
 	g_assert_true(ret);
 	g_assert_true(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/systemd/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-cc4cbfa9-bf9d-540b-b92b-172ce31013c1.cap"));
 
 	/* cleanup */
 	fu_uefi_plugin_esp_rmtree(esp);
