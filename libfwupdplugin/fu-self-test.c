@@ -22,7 +22,6 @@
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
-#include "fu-coswid-firmware.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"

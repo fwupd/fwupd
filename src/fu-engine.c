@@ -46,7 +46,6 @@
 #include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
-#include "fu-coswid-firmware.h"
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
