@@ -17,3 +17,5 @@ struct _FuCoswidFirmwareClass {
 
 FuFirmware *
 fu_coswid_firmware_new(void);
+const gchar *
+fu_coswid_firmware_get_product(FuCoswidFirmware *self) G_GNUC_NON_NULL(1);
