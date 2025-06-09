@@ -53,7 +53,7 @@ fu_uefi_capsule_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 }
 
 static gboolean
-fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error)
+fu_uefi_capsule_plugin_fwupd_efi_parse_fallback(FuUefiCapsulePlugin *self, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
 	const guint8 needle[] = "f\0w\0u\0p\0d\0-\0e\0f\0i\0 \0v\0e\0r\0s\0i\0o\0n\0 ";
@@ -91,6 +91,64 @@ fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error
 
 	/* success */
 	fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", version_safe);
+	return TRUE;
+}
+
+static void
+fu_uefi_capsule_plugin_fwupd_efi_add_sbom(FuUefiCapsulePlugin *self,
+					  const gchar *product,
+					  const gchar *version)
+{
+	FuContext *ctx = fu_plugin_get_context(FU_PLUGIN(self));
+	if (g_strcmp0(product, "fwupdx64") == 0) {
+		fu_context_add_runtime_version(ctx, "org.freedesktop.fwupd-efi", version);
+		return;
+	}
+	if (g_strcmp0(product, "gnu-efi") == 0) {
+		fu_context_add_runtime_version(ctx, "com.github.ncroxon.gnu-efi", version);
+		return;
+	}
+}
+
+static gboolean
+fu_uefi_capsule_plugin_fwupd_efi_parse_sbom(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autoptr(FuFirmware) fw = fu_pefile_firmware_new();
+	g_autoptr(FuFirmware) fw_sbom = NULL;
+	g_autoptr(GPtrArray) fw_coswids = NULL;
+
+	if (!fu_firmware_parse_file(fw, self->fwupd_efi_file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return FALSE;
+	fw_sbom = fu_firmware_get_image_by_id(fw, ".sbom", error);
+	if (fw_sbom == NULL)
+		return FALSE;
+	fw_coswids = fu_firmware_get_images(fw_sbom);
+	for (guint i = 0; i < fw_coswids->len; i++) {
+		FuFirmware *fw_coswid = g_ptr_array_index(fw_coswids, i);
+		if (!FU_IS_COSWID_FIRMWARE(fw_coswid))
+			continue;
+		fu_uefi_capsule_plugin_fwupd_efi_add_sbom(
+		    self,
+		    fu_coswid_firmware_get_product(FU_COSWID_FIRMWARE(fw_coswid)),
+		    fu_firmware_get_version(fw_coswid));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_capsule_plugin_fwupd_efi_parse(FuUefiCapsulePlugin *self, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* try parsing the SBOM, then fall back to a well-known token */
+	if (!fu_uefi_capsule_plugin_fwupd_efi_parse_sbom(self, &error_local)) {
+		g_debug("failed to parse SBOM, using fallback: %s", error_local->message);
+		return fu_uefi_capsule_plugin_fwupd_efi_parse_fallback(self, error);
+	}
+
+	/* success */
 	return TRUE;
 }
 
