@@ -537,7 +537,7 @@ fu_uefi_plugin_nvram_func(void)
 	/* check UX splash was created */
 	g_assert_true(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/" EFI_OS_DIR "/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-" FU_EFIVARS_GUID_UX_CAPSULE ".cap"));
 	g_assert_true(fu_efivars_exists(fu_context_get_efivars(ctx),
 					FU_EFIVARS_GUID_FWUPDATE,
 					"fwupd-ux-capsule"));
@@ -586,7 +586,7 @@ fu_uefi_plugin_nvram_func(void)
 	/* check both files and variables no longer exist */
 	g_assert_false(fu_uefi_plugin_esp_file_exists(
 	    esp,
-	    "EFI/" EFI_OS_DIR "/fw/fwupd-3b8c8162-188c-46a4-aec9-be43f1d65697.cap"));
+	    "EFI/" EFI_OS_DIR "/fw/fwupd-" FU_EFIVARS_GUID_UX_CAPSULE ".cap"));
 	g_assert_false(fu_efivars_exists(fu_context_get_efivars(ctx),
 					 FU_EFIVARS_GUID_FWUPDATE,
 					 "fwupd-ux-capsule"));
