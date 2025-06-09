@@ -45,6 +45,8 @@ fu_efi_image_func(void)
 			return;
 		}
 		ret = fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
+		if (!ret)
+			g_prefix_error(&error, "%s: ", map[i].basename);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 

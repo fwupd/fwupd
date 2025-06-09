@@ -5418,6 +5418,8 @@ fu_firmware_builder_round_trip_func(void)
 			g_assert_nonnull(blob2);
 			g_assert_no_error(error);
 			ret = fu_bytes_compare(blob2, blob, &error);
+			if (!ret)
+				g_prefix_error(&error, "%s: ", map[i].xml_fn);
 			g_assert_no_error(error);
 			g_assert_true(ret);
 		}
