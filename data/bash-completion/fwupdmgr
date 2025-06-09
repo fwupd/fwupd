@@ -118,6 +118,7 @@ fwupd_modify_config_opts=(
 	'P2pPolicy'
 	'ReleaseDedupe'
 	'ReleasePriority'
+	'RequireImmutableEnumeration'
 	'ShowDevicePrivate'
 	'TestDevices'
 	'TrustedReports'

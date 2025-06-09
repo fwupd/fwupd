@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuEp963XPlugin, fu_ep963x_plugin, FU_TYPE_PLUGIN)
 static void
 fu_ep963x_plugin_init(FuEp963XPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

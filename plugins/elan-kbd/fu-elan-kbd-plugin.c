@@ -21,6 +21,7 @@ G_DEFINE_TYPE(FuElanKbdPlugin, fu_elan_kbd_plugin, FU_TYPE_PLUGIN)
 static void
 fu_elan_kbd_plugin_init(FuElanKbdPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

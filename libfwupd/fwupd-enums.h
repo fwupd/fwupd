@@ -1026,6 +1026,15 @@ typedef enum {
 	 */
 	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
 	/**
+	 * FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION:
+	 *
+	 * Some devices supported by the plugin may cause a device to momentarily
+	 * stop working while probing.
+	 *
+	 * Since: 2.0.12
+	 */
+	FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION = 1ull << 19,
+	/**
 	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
 	 *
 	 * The plugin flag is unknown.

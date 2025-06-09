@@ -1648,6 +1648,7 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 	case FWUPD_PLUGIN_FLAG_TEST_ONLY:
+	case FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION:
 		return fu_console_color_format(plugin_flag_str, FU_CONSOLE_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:

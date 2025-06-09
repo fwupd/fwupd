@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuSynapticsVmm9Plugin, fu_synaptics_vmm9_plugin, FU_TYPE_PLUGIN)
 static void
 fu_synaptics_vmm9_plugin_init(FuSynapticsVmm9Plugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

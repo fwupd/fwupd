@@ -84,6 +84,7 @@ fu_usi_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static void
 fu_usi_dock_plugin_init(FuUsiDockPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

@@ -862,17 +862,29 @@ fu_engine_modify_config(FuEngine *self,
 	/* check keys are valid */
 	if (g_strcmp0(section, "fwupd") == 0) {
 		const gchar *keys[] = {
-		    "ArchiveSizeMax",	 "ApprovedFirmware",
-		    "BlockedFirmware",	 "DisabledDevices",
-		    "DisabledPlugins",	 "EnumerateAllDevices",
-		    "EspLocation",	 "HostBkc",
-		    "IdleTimeout",	 "IgnorePower",
-		    "OnlyTrusted",	 "P2pPolicy",
-		    "ReleaseDedupe",	 "ReleasePriority",
-		    "ShowDevicePrivate", "TestDevices",
-		    "TrustedReports",	 "TrustedUids",
-		    "UpdateMotd",	 "UriSchemes",
-		    "VerboseDomains",	 NULL,
+		    "ArchiveSizeMax",
+		    "ApprovedFirmware",
+		    "BlockedFirmware",
+		    "DisabledDevices",
+		    "DisabledPlugins",
+		    "EnumerateAllDevices",
+		    "EspLocation",
+		    "HostBkc",
+		    "IdleTimeout",
+		    "IgnorePower",
+		    "OnlyTrusted",
+		    "P2pPolicy",
+		    "ReleaseDedupe",
+		    "ReleasePriority",
+		    "RequireImmutableEnumeration",
+		    "ShowDevicePrivate",
+		    "TestDevices",
+		    "TrustedReports",
+		    "TrustedUids",
+		    "UpdateMotd",
+		    "UriSchemes",
+		    "VerboseDomains",
+		    NULL,
 		};
 		if (!g_strv_contains(keys, key)) {
 			g_set_error(error,
@@ -6520,6 +6532,14 @@ fu_engine_is_uid_trusted(FuEngine *self, guint64 calling_uid)
 	return FALSE;
 }
 
+gboolean
+fu_engine_plugin_allows_enumeration(FuEngine *self, FuPlugin *plugin)
+{
+	if (!fu_engine_config_get_require_immutable_enumeration(self->config))
+		return TRUE;
+	return !fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
+}
+
 static gboolean
 fu_engine_is_test_plugin_disabled(FuEngine *self, FuPlugin *plugin)
 {
@@ -7345,7 +7365,8 @@ fu_engine_plugins_init(FuEngine *self, FuProgress *progress, GError **error)
 		/* is disabled */
 		if (fu_engine_is_plugin_name_disabled(self, name) ||
 		    fu_engine_is_test_plugin_disabled(self, plugin) ||
-		    !fu_engine_is_plugin_name_enabled(self, name)) {
+		    !fu_engine_is_plugin_name_enabled(self, name) ||
+		    !fu_engine_plugin_allows_enumeration(self, plugin)) {
 			g_ptr_array_add(plugins_disabled, g_strdup(name));
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			fu_progress_step_done(progress);
