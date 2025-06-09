@@ -182,3 +182,7 @@ Remember: Plugins should be upstream!
 ## 2.0.11
 
 * `fu_device_read_firmware()`: Add `FuFirmwareParseFlags` to `fu_device_read_firmware`.
+
+## 2.0.12
+
+* Plugins that don't allow devices to function 100% through probe should use `FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION`

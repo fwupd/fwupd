@@ -120,6 +120,7 @@ fwupd_modify_config_opts=(
 	'P2pPolicy'
 	'ReleaseDedupe'
 	'ReleasePriority'
+	'RequireImmutableEnumeration'
 	'ShowDevicePrivate'
 	'TestDevices'
 	'TrustedReports'
@@ -378,7 +379,7 @@ _fwupdtool()
 			return 0
 		elif [[ "$args" = "4" ]]; then
 			case $prev in
-			EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe|TestDevices)
+			EnumerateAllDevices|OnlyTrusted|IgnorePower|UpdateMotd|ShowDevicePrivate|ReleaseDedupe|RequireImmutableEnumeration|TestDevices)
 				COMPREPLY=( $(compgen -W "True False" -- "$cur") )
 				;;
 			AnotherWriteRequired|NeedsActivation|NeedsReboot|RegistrationSupported|RequestSupported|WriteSupported)

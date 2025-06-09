@@ -456,6 +456,7 @@ fu_dell_kestrel_plugin_prepare(FuPlugin *plugin,
 static void
 fu_dell_kestrel_plugin_init(FuDellKestrelPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

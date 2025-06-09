@@ -304,6 +304,7 @@ fu_dell_dock_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GErr
 static void
 fu_dell_dock_plugin_init(FuDellDockPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

@@ -1175,6 +1175,72 @@ fu_engine_plugin_firmware_gtype(FuTest *self, GType gtype)
 }
 
 static void
+fu_engine_test_plugin_mutable_enumeration(gconstpointer user_data)
+{
+	const gchar *fake_localconf_fn = "/tmp/fwupd-self-test/var/etc/fwupd/fwupd.conf";
+	FuTest *self = (FuTest *)user_data;
+	g_autoptr(FuEngine) engine = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	gboolean ret;
+
+	/* ensure empty tree */
+	fu_self_test_mkroot();
+
+	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
+
+	ret = fu_path_mkdir_parent(fake_localconf_fn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = g_file_set_contents(fake_localconf_fn,
+				  "# use `man 5 fwupd.conf` for documentation\n"
+				  "[fwupd]\n"
+				  "RequireImmutableEnumeration=true\n",
+				  -1,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	engine = fu_engine_new(self->ctx);
+	g_assert_nonnull(engine);
+
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* engine requires, plugin doesn't have */
+	ret = fu_engine_plugin_allows_enumeration(engine, plugin);
+	g_assert_true(ret);
+
+	/* engine requires, plugin does have */
+	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
+	ret = fu_engine_plugin_allows_enumeration(engine, plugin);
+	g_assert_false(ret);
+
+	/* clear config and reload engine */
+	fu_self_test_mkroot();
+	g_clear_object(&engine);
+
+	engine = fu_engine_new(self->ctx);
+	g_assert_nonnull(engine);
+
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* engine requires, plugin does have */
+	ret = fu_engine_plugin_allows_enumeration(engine, plugin);
+	g_assert_true(ret);
+
+	/* drop flag, engine shouldn't care */
+	fu_plugin_remove_flag(plugin, FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
+	ret = fu_engine_plugin_allows_enumeration(engine, plugin);
+	g_assert_true(ret);
+}
+
+static void
 fu_engine_plugin_gtypes_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -7702,6 +7768,9 @@ main(int argc, char **argv)
 			     self,
 			     fu_engine_requirements_sibling_device_func);
 	g_test_add_data_func("/fwupd/engine{plugin-gtypes}", self, fu_engine_plugin_gtypes_func);
+	g_test_add_data_func("/fwupd/plugin/mutable",
+			     self,
+			     fu_engine_test_plugin_mutable_enumeration);
 	g_test_add_data_func("/fwupd/plugin{composite}", self, fu_plugin_composite_func);
 	g_test_add_data_func("/fwupd/plugin{composite-multistep}",
 			     self,

@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuTelinkDfuPlugin, fu_telink_dfu_plugin, FU_TYPE_PLUGIN)
 static void
 fu_telink_dfu_plugin_init(FuTelinkDfuPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

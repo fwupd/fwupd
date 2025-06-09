@@ -289,3 +289,5 @@ fu_engine_fix_host_security_attr(FuEngine *self, const gchar *appstream_id, GErr
 gboolean
 fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GError **error)
     G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_engine_plugin_allows_enumeration(FuEngine *self, FuPlugin *plugin) G_GNUC_NON_NULL(1, 2);

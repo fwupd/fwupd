@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuRts54HidPlugin, fu_rts54hid_plugin, FU_TYPE_PLUGIN)
 static void
 fu_rts54hid_plugin_init(FuRts54HidPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void
