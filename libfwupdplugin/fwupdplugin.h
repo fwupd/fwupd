@@ -32,6 +32,7 @@
 #include <libfwupdplugin/fu-config.h>
 #include <libfwupdplugin/fu-context-helper.h>
 #include <libfwupdplugin/fu-context.h>
+#include <libfwupdplugin/fu-coswid-firmware.h>
 #include <libfwupdplugin/fu-crc.h>
 #include <libfwupdplugin/fu-csv-entry.h>
 #include <libfwupdplugin/fu-csv-firmware.h>
