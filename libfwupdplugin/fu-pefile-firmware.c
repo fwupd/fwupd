@@ -11,6 +11,7 @@
 #include "fu-bytes.h"
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
+#include "fu-linear-firmware.h"
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
 #include "fu-pefile-struct.h"
@@ -72,7 +73,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 
 	/* create new firmware */
 	if (g_strcmp0(sect_id, ".sbom") == 0) {
-		img = fu_coswid_firmware_new();
+		img = fu_linear_firmware_new(FU_TYPE_COSWID_FIRMWARE);
 	} else if (g_strcmp0(sect_id, ".sbat") == 0 || g_strcmp0(sect_id, ".sbata") == 0 ||
 		   g_strcmp0(sect_id, ".sbatl") == 0) {
 		img = fu_csv_firmware_new();
