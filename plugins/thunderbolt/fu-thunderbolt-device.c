@@ -461,6 +461,7 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	priv->retries = 50;
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_THUNDERBOLT);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
