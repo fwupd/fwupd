@@ -762,23 +762,43 @@ fu_coswid_firmware_get_product(FuCoswidFirmware *self)
 
 #ifdef HAVE_CBOR
 
-static void
-fu_coswid_firmware_write_hash(cbor_item_t *root, FuCoswidFirmwareHash *hash)
+static gboolean
+fu_coswid_firmware_write_hash(cbor_item_t *root, FuCoswidFirmwareHash *hash, GError **error)
 {
 	g_autoptr(cbor_item_t) item_hash = cbor_new_definite_array(2);
 	g_autoptr(cbor_item_t) item_hash_alg_id = cbor_build_uint8(hash->alg_id);
 	g_autoptr(cbor_item_t) item_hash_value =
 	    cbor_build_bytestring(hash->value->data, hash->value->len);
-	if (!cbor_array_push(item_hash, item_hash_alg_id))
-		g_critical("failed to push to definite array");
-	if (!cbor_array_push(item_hash, item_hash_value))
-		g_critical("failed to push to definite array");
-	if (!cbor_array_push(root, item_hash))
-		g_critical("failed to push to indefinite array");
+	if (!cbor_array_push(item_hash, item_hash_alg_id)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push hash alg-id to definite array");
+		return FALSE;
+	}
+	if (!cbor_array_push(item_hash, item_hash_value)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push hash value to definite array");
+		return FALSE;
+	}
+	if (!cbor_array_push(root, item_hash)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push hash to indefinite array");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
-static void
-fu_coswid_firmware_write_payload(cbor_item_t *root, FuCoswidFirmwarePayload *payload)
+static gboolean
+fu_coswid_firmware_write_payload(cbor_item_t *root,
+				 FuCoswidFirmwarePayload *payload,
+				 GError **error)
 {
 	g_autoptr(cbor_item_t) item_payload = cbor_new_indefinite_map();
 	g_autoptr(cbor_item_t) item_file = cbor_new_indefinite_map();
@@ -792,14 +812,62 @@ fu_coswid_firmware_write_payload(cbor_item_t *root, FuCoswidFirmwarePayload *pay
 		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
 		for (guint j = 0; j < payload->hashes->len; j++) {
 			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
-			fu_coswid_firmware_write_hash(item_hashes, hash);
+			if (!fu_coswid_firmware_write_hash(item_hashes, hash, error)) {
+				g_prefix_error(error, "failed to add payload: ");
+				return FALSE;
+			}
 		}
 		fu_coswid_write_tag_item(item_file, FU_COSWID_TAG_HASH, item_hashes);
 	}
 	fu_coswid_write_tag_item(item_payload, FU_COSWID_TAG_FILE, item_file);
-	if (!cbor_array_push(root, item_payload))
-		g_critical("failed to push to indefinite array");
+	if (!cbor_array_push(root, item_payload)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push payload to indefinite array");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
+
+static gboolean
+fu_coswid_firmware_write_entity(cbor_item_t *root, FuCoswidFirmwareEntity *entity, GError **error)
+{
+	g_autoptr(cbor_item_t) item_entity = cbor_new_indefinite_map();
+	g_autoptr(cbor_item_t) item_roles = cbor_new_indefinite_array();
+	if (entity->name != NULL) {
+		fu_coswid_write_tag_string(item_entity, FU_COSWID_TAG_ENTITY_NAME, entity->name);
+	}
+	if (entity->regid != NULL) {
+		fu_coswid_write_tag_string(item_entity, FU_COSWID_TAG_REG_ID, entity->regid);
+	}
+	for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
+		if (FU_BIT_IS_SET(entity->roles, j)) {
+			g_autoptr(cbor_item_t) item_role = cbor_build_uint8(j);
+			if (!cbor_array_push(item_roles, item_role)) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "failed to push entity to indefinite array");
+				return FALSE;
+			}
+		}
+	}
+	fu_coswid_write_tag_item(item_entity, FU_COSWID_TAG_ROLE, item_roles);
+	if (!cbor_array_push(root, item_entity)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to push entity to indefinite array");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 #endif
 
 static GByteArray *
@@ -857,28 +925,8 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(cbor_item_t) item_entities = cbor_new_indefinite_array();
 		for (guint i = 0; i < priv->entities->len; i++) {
 			FuCoswidFirmwareEntity *entity = g_ptr_array_index(priv->entities, i);
-			g_autoptr(cbor_item_t) item_entity = cbor_new_indefinite_map();
-			g_autoptr(cbor_item_t) item_roles = cbor_new_indefinite_array();
-			if (entity->name != NULL) {
-				fu_coswid_write_tag_string(item_entity,
-							   FU_COSWID_TAG_ENTITY_NAME,
-							   entity->name);
-			}
-			if (entity->regid != NULL) {
-				fu_coswid_write_tag_string(item_entity,
-							   FU_COSWID_TAG_REG_ID,
-							   entity->regid);
-			}
-			for (guint j = 0; j < FU_COSWID_ENTITY_ROLE_LAST; j++) {
-				if (FU_BIT_IS_SET(entity->roles, j)) {
-					g_autoptr(cbor_item_t) item_role = cbor_build_uint8(j);
-					if (!cbor_array_push(item_roles, item_role))
-						g_critical("failed to push to indefinite array");
-				}
-			}
-			fu_coswid_write_tag_item(item_entity, FU_COSWID_TAG_ROLE, item_roles);
-			if (!cbor_array_push(item_entities, item_entity))
-				g_critical("failed to push to indefinite array");
+			if (!fu_coswid_firmware_write_entity(item_entities, entity, error))
+				return NULL;
 		}
 		fu_coswid_write_tag_item(root, FU_COSWID_TAG_ENTITY, item_entities);
 	}
@@ -895,8 +943,13 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 							   link->href);
 			}
 			fu_coswid_write_tag_s8(item_link, FU_COSWID_TAG_REL, link->rel);
-			if (!cbor_array_push(item_links, item_link))
-				g_critical("failed to push to indefinite array");
+			if (!cbor_array_push(item_links, item_link)) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "failed to push link to indefinite array");
+				return NULL;
+			}
 		}
 		fu_coswid_write_tag_item(root, FU_COSWID_TAG_LINK, item_links);
 	}
@@ -906,7 +959,8 @@ fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(cbor_item_t) item_payloads = cbor_new_indefinite_array();
 		for (guint i = 0; i < priv->payloads->len; i++) {
 			FuCoswidFirmwarePayload *payload = g_ptr_array_index(priv->payloads, i);
-			fu_coswid_firmware_write_payload(item_payloads, payload);
+			if (!fu_coswid_firmware_write_payload(item_payloads, payload, error))
+				return NULL;
 		}
 		fu_coswid_write_tag_item(root, FU_COSWID_TAG_PAYLOAD, item_payloads);
 	}
