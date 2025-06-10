@@ -11,12 +11,12 @@
 #include "fu-asus-hid-struct.h"
 
 struct _FuAsusHidDevice {
-	FuHidDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	guint8 num_mcu;
 	gulong child_added_id;
 };
 
-G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuAsusHidDevice, fu_asus_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 #define FU_ASUS_HID_DEVICE_TIMEOUT 200 /* ms */
 
@@ -27,28 +27,22 @@ fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
 				    guint8 report,
 				    GError **error)
 {
-	FuHidDevice *hid_dev = FU_HID_DEVICE(self);
-
 	if (req != NULL) {
-		if (!fu_hid_device_set_report(hid_dev,
-					      report,
-					      req->data,
-					      req->len,
-					      FU_ASUS_HID_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+						  req->data,
+						  req->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
 	if (res != NULL) {
-		if (!fu_hid_device_get_report(hid_dev,
-					      report,
-					      res->data,
-					      res->len,
-					      FU_ASUS_HID_DEVICE_TIMEOUT,
-					      FU_HID_DEVICE_FLAG_IS_FEATURE,
-					      error)) {
+		if (!fu_hidraw_device_get_feature(FU_HIDRAW_DEVICE(self),
+						  res->data,
+						  res->len,
+						  FU_IOCTL_FLAG_NONE,
+						  error)) {
 			g_prefix_error(error, "failed to receive packet: ");
 			return FALSE;
 		}
@@ -86,19 +80,41 @@ fu_asus_hid_device_child_added_cb(FuDevice *device, FuDevice *child, gpointer us
 }
 
 static gboolean
+fu_asus_hid_device_validate_descriptor(FuDevice *device, GError **error)
+{
+	g_autoptr(FuHidDescriptor) descriptor = NULL;
+	g_autoptr(FuHidReport) report = NULL;
+
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	if (descriptor == NULL)
+		return FALSE;
+	report = fu_hid_descriptor_find_report(descriptor,
+					       error,
+					       "usage-page",
+					       0xFF31,
+					       "usage",
+					       0x76,
+					       "collection",
+					       0x01,
+					       NULL);
+	if (report == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_asus_hid_device_probe(FuDevice *device, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
-
-	fu_hid_device_set_interface(FU_HID_DEVICE(device), 0);
 
 	for (guint i = 0; i < self->num_mcu; i++) {
 		g_autoptr(FuDevice) dev_tmp = fu_asus_hid_child_device_new(device, i);
 		fu_device_add_child(device, dev_tmp);
 	}
 
-	/* FuHidDevice->probe */
-	return FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->probe(device, error);
+	return TRUE;
 }
 
 static gboolean
@@ -106,13 +122,12 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
 
-	/* HidDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_asus_hid_device_parent_class)->setup(device, error))
-		return FALSE;
-
 	/* bootloader mode won't know about children */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
+
+	if (!fu_asus_hid_device_validate_descriptor(device, error))
+		return FALSE;
 
 	if (!fu_asus_hid_device_init_seq(self, error))
 		return FALSE;

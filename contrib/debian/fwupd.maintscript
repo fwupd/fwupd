@@ -2,6 +2,7 @@
 rm_conffile /etc/fwupd.conf 1.0.0~
 rm_conffile /etc/fwupd/remotes.d/fwupd.conf 1.2.7~
 rm_conffile /etc/dbus-1/system.d/org.freedesktop.fwupd.conf 1.3.2~
+rm_conffile /etc/modules-load.d/fwupd-i2c.conf 2.0.12~
 rm_conffile /etc/modules-load.d/fwupd-msr.conf 1.5.3~
 rm_conffile /etc/modules-load.d/fwupd-platform-integrity.conf 1.5.3~
 rm_conffile /etc/fwupd/ata.conf 1.5.5~

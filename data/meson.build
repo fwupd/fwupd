@@ -168,6 +168,11 @@ if build_daemon
       install_dir: systemdunitdir,
     )
 
+    # for various plugins
+    install_data(['fwupd-i2c.conf'],
+      install_dir: systemd_modules_load_dir,
+    )
+
     # for activation
     configure_file(
       input: 'fwupd.shutdown.in',

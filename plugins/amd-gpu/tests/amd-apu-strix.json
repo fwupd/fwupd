@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/amd-apu-setup.json",
+      "emulation-file": "@enumeration_datadir@/amd-apu-strix-setup.json",
       "components": [
         {
           "version": "1",

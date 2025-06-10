@@ -29,6 +29,67 @@ G_DEFINE_TYPE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
 
 #define FU_HIDRAW_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
 
+/**
+ * fu_hidraw_device_parse_descriptor:
+ * @self: a #FuHidrawDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Retrieves and parses the HID descriptor.
+ *
+ * Returns: (transfer full): a #FuHidDescriptor, or %NULL on error
+ *
+ * Since: 2.0.12
+ **/
+FuHidDescriptor *
+fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	gint desc_size = 0;
+	struct hidraw_report_descriptor rpt_desc = {0x0};
+	g_autoptr(FuFirmware) descriptor = fu_hid_descriptor_new();
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(GBytes) fw = NULL;
+
+	/* Get Report Descriptor Size */
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESCSIZE,
+			      (guint8 *)&desc_size,
+			      sizeof(desc_size),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error(error, "failed to get report descriptor size: ");
+		return NULL;
+	}
+
+	rpt_desc.size = desc_size;
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRDESC,
+			      (guint8 *)&rpt_desc,
+			      sizeof(rpt_desc),
+			      NULL,
+			      5000,
+			      FU_IOCTL_FLAG_NONE,
+			      error)) {
+		g_prefix_error(error, "failed to get report descriptor: ");
+		return NULL;
+	}
+	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
+
+	fw = g_bytes_new(rpt_desc.value, rpt_desc.size);
+	if (!fu_firmware_parse_bytes(descriptor, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return NULL;
+	return FU_HID_DESCRIPTOR(g_steal_pointer(&descriptor));
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return NULL;
+#endif /* HAVE_HIDRAW_H */
+}
+
 static gboolean
 fu_hidraw_device_probe_usb(FuHidrawDevice *self, GError **error)
 {
@@ -52,6 +113,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 {
 	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
 	g_autofree gchar *prop_id = NULL;
+	g_autofree gchar *version = NULL;
 	g_auto(GStrv) split = NULL;
 	g_autoptr(FuDevice) hid_device = NULL;
 
@@ -128,6 +190,23 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 			if (!fu_hidraw_device_probe_usb(self, error))
 				return FALSE;
 		}
+	}
+
+	version =
+	    fu_udev_device_read_property(FU_UDEV_DEVICE(hid_device), "HID_FIRMWARE_VERSION", NULL);
+	if (version != NULL) {
+		guint64 hid_version = 0;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_strtoull(version,
+				 &hid_version,
+				 0x0,
+				 G_MAXUINT64,
+				 FU_INTEGER_BASE_AUTO,
+				 &error_local)) {
+			g_info("failed to parse HID_FIRMWARE_VERSION: %s", error_local->message);
+		} else
+			fu_device_set_version_raw(FU_DEVICE(self), hid_version);
 	}
 
 	/* set the hidraw device */
