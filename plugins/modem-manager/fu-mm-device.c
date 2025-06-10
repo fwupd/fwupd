@@ -149,6 +149,13 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 	g_auto(GStrv) instancestrs = NULL;
 	g_auto(GStrv) subsys_instancestr = NULL;
 
+	/* add vendor ID */
+	if (g_pattern_match_simple("???\\VID_????", device_id)) {
+		g_autofree gchar *prefix = g_strndup(device_id, 3);
+		g_autofree gchar *vendor_id = g_strdup_printf("%s:0x%s", prefix, device_id + 8);
+		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
+	}
+
 	/* parse the ModemManager InstanceID lookalike */
 	subsys_instancestr = g_strsplit(device_id, "\\", 2);
 	if (subsys_instancestr[1] == NULL)
