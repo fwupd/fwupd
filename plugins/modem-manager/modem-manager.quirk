@@ -1,67 +1,122 @@
 
 # DW5821e
 [USB\VID_413C&PID_81D7]
+GType = FuMmFastbootDevice
 Summary = Dell DW5821e LTE modem
 CounterpartGuid = USB\VID_413C&PID_81D6
 
 # DW5821e/eSIM
 [USB\VID_413C&PID_81E0]
+GType = FuMmFastbootDevice
 Summary = Dell DW5821e/eSIM LTE modem
 CounterpartGuid = USB\VID_413C&PID_81E1
 
 # T77W968
 [USB\VID_0489&PID_E0B4]
+GType = FuMmFastbootDevice
 Summary = Foxconn T77w968 LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B7
 
 # T77W968/eSIM
 [USB\VID_0489&PID_E0B5]
+GType = FuMmFastbootDevice
 Summary = Foxconn T77w968/eSIM LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B8
 
 # T99W265 with MBIM only
 [USB\VID_0489&PID_E0DA]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W265 LTE modem with MBIM only
 
 # T99W265 with MBIM and Serial port
 [USB\VID_0489&PID_E0DB]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W265 LTE modem with MBIM and Serial
 
 # T99W175 based on QC LE1.2
 [PCI\VID_105B&PID_E0AB]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
 
 # T99W175(DW5930e with eSIM)
 [PCI\VID_105B&PID_E0B0]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem with eSIM for DW5930e
 
 # T99W175(DW5930e without eSIM)
 [PCI\VID_105B&PID_E0B1]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem without eSIM for DW5930e
 
 # T99W175 based on QC LE1.4
 [PCI\VID_105B&PID_E0BF]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
 
 # T99W175 variant
 [PCI\VID_105B&PID_E0C3]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
 
 # T99W368 Foxconn variant based on SDX65
 [PCI\VID_105B&PID_E0D8]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W368 5G modem
 
 # T99W373 Foxconn variant based on SDX62
 [PCI\VID_105B&PID_E0D9]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem
 
 # T99W373(DW5932e with eSIM) based on SDX62
 [PCI\VID_105B&PID_E0F5]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem with eSIM for DW5932e
 
 # T99W373 (DW5932e without eSIM) based on SDX62
 [PCI\VID_105B&PID_E0F9]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem without eSIM for DW5932e
+
+# T99W640 Foxconn variant based on SDX72
+[PCI\VID_105B&PID_E118]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem
+
+# T99W640(DW5934e with eSIM) based on SDX72
+[PCI\VID_105B&PID_E11D]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem with eSIM for DW5934e
+
+# T99W640 (DW5934e without eSIM) based on SDX72
+[PCI\VID_105B&PID_E11E]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem without eSIM for DW5934e
+
+# T99W696.01 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE142]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.01 5G modem for Lenovo
+
+# T99W696.02 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE143]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.02 5G modem for Lenovo
+
+# T99W696.03 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE144]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.03 5G modem for Lenovo
+
+# T99W696.04 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE145]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.04 5G modem for Lenovo
+
+# T99W696.00 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE146]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.00 5G modem
 
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
