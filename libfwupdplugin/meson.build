@@ -142,7 +142,7 @@ fwupdplugin_src = [
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
-  'fu-linear-firmware.c',
+  'fu-linear-firmware.c', # fuzzing
   'fu-lzma-common.c', # fuzzing
   'fu-mei-device.c',
   'fu-mem.c', # fuzzing
