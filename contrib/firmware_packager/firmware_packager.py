@@ -38,7 +38,7 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <project_license>proprietary</project_license>
   <developer_name>{developer_name}</developer_name>
   <releases>
-    <release version="{release_version}" timestamp="{timestamp}">
+    <release version="{release_version}" date="{date}">
       <description>
         <p>{release_description}</p>
       </description>
@@ -56,7 +56,7 @@ def make_firmware_metainfo(firmware_info, dst):
     local_info = vars(firmware_info)
     local_info["firmware_id"] = local_info["device_guid"][0:8]
     firmware_metainfo = firmware_metainfo_template.format(
-        **local_info, timestamp=time.time()
+        **local_info, date=time.strftime("%Y-%m-%d")
     )
 
     with open(os.path.join(dst, "firmware.metainfo.xml"), "w") as f:
