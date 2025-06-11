@@ -687,7 +687,6 @@ endif
 
 if libsystemd.found()
   summary({
-    'systemd_unit_user': get_option('systemd_unit_user'),
     'systemd unit dir': systemdunitdir,
     'systemd shutdown dir': systemd_shutdown_dir,
     'systemd modules dir': systemd_modules_load_dir,

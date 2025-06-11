@@ -1,1 +1,0 @@
-u @systemd_unit_user@ - "Firmware update daemon" @localstatedir@/lib/fwupd
