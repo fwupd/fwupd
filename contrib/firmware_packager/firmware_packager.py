@@ -28,7 +28,7 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <name>{firmware_name}</name>
   <summary>{firmware_summary}</summary>
   <description>
-    {firmware_description}
+    <p>{firmware_description}</p>
   </description>
   <provides>
     <firmware type="flashed">{device_guid}</firmware>
@@ -40,7 +40,7 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <releases>
     <release version="{release_version}" timestamp="{timestamp}">
       <description>
-        {release_description}
+        <p>{release_description}</p>
       </description>
     </release>
   </releases>
