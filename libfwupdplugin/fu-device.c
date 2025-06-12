@@ -985,6 +985,81 @@ fu_device_get_contents_bytes(FuDevice *self,
 }
 
 /**
+ * fu_device_get_contents:
+ * @self: a #FuDevice
+ * @filename: full path to a file
+ * @count: maximum number of bytes to read
+ * @progress: (nullable): optional #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads a blob of ASCII text from the file, emulating if required.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL on error
+ *
+ * Since: 2.0.12
+ **/
+gchar *
+fu_device_get_contents(FuDevice *self,
+		       const gchar *filename,
+		       gsize count,
+		       FuProgress *progress,
+		       GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GInputStream) istr = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(filename != NULL, NULL);
+	g_return_val_if_fail(progress == NULL || FU_IS_PROGRESS(progress), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup_printf("GetContents:Filename=%s", filename);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_strdup(fu_device_event_get_str(event, "Data", error));
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* open for reading */
+	istr = fu_input_stream_from_path(filename, error);
+	if (istr == NULL)
+		return NULL;
+	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
+	if (blob == NULL)
+		return NULL;
+	str = fu_strsafe_bytes(blob, G_MAXSIZE);
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid ASCII data");
+		return NULL;
+	}
+
+	/* save response */
+	if (event != NULL)
+		fu_device_event_set_str(event, "Data", str);
+
+	/* success */
+	return g_steal_pointer(&str);
+}
+
+/**
  * fu_device_get_smbios_string:
  * @self: a #FuDevice
  * @type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
