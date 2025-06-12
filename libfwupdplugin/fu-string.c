@@ -617,7 +617,7 @@ fu_strsafe(const gchar *str, gsize maxsz)
 
 	/* replace non-printable chars with '.' */
 	for (gsize i = 0; i < maxsz && str[i] != '\0'; i++) {
-		if (!g_ascii_isprint(str[i])) {
+		if (!g_ascii_isgraph(str[i]) && !g_ascii_isspace(str[i])) {
 			g_string_append_c(tmp, '.');
 			continue;
 		}
