@@ -922,6 +922,7 @@ fu_device_set_contents_bytes(FuDevice *self,
  * fu_device_get_contents_bytes:
  * @self: a #FuDevice
  * @filename: full path to a file
+ * @count: maximum number of bytes to read
  * @progress: (nullable): optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
@@ -934,6 +935,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 GBytes *
 fu_device_get_contents_bytes(FuDevice *self,
 			     const gchar *filename,
+			     gsize count,
 			     FuProgress *progress,
 			     GError **error)
 {
@@ -970,7 +972,7 @@ fu_device_get_contents_bytes(FuDevice *self,
 	istr = fu_input_stream_from_path(filename, error);
 	if (istr == NULL)
 		return NULL;
-	blob = fu_input_stream_read_bytes(istr, 0, G_MAXSIZE, progress, error);
+	blob = fu_input_stream_read_bytes(istr, 0, count, progress, error);
 	if (blob == NULL)
 		return NULL;
 
