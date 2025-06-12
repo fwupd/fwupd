@@ -2165,7 +2165,12 @@ fu_device_poll_func(void)
 static void
 fu_device_func(void)
 {
-	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = fu_device_new(ctx);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
 	/* only add one plugin name of the same type */
@@ -2173,6 +2178,15 @@ fu_device_func(void)
 	fu_device_add_possible_plugin(device, "test");
 	possible_plugins = fu_device_get_possible_plugins(device);
 	g_assert_cmpint(possible_plugins->len, ==, 1);
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "sys_vendor", NULL);
+	str = fu_device_get_contents(device, fn, G_MAXSIZE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(str, ==, "FwupdTest\n");
+
+	blob = fu_device_get_contents_bytes(device, fn, 5, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(g_bytes_get_size(blob), ==, 5);
 }
 
 static void
