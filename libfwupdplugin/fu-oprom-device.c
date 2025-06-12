@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-oprom-device.h"
+#include "fu-output-stream.h"
 
 G_DEFINE_TYPE(FuOpromDevice, fu_oprom_device, FU_TYPE_PCI_DEVICE)
 
@@ -30,25 +31,16 @@ static gboolean
 fu_oprom_device_set_enabled(FuOpromDevice *self, gboolean value, GError **error)
 {
 	g_autofree gchar *rom_fn = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileOutputStream) output_stream = NULL;
+	g_autoptr(GOutputStream) output_stream = NULL;
 
 	rom_fn = g_build_filename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)), "rom", NULL);
 	if (!g_str_has_prefix(rom_fn, "/sys"))
 		return TRUE;
 
-	file = g_file_new_for_path(rom_fn);
-	output_stream = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-	if (output_stream == NULL) {
-		fu_error_convert(error);
+	output_stream = fu_output_stream_from_path(rom_fn, error);
+	if (output_stream == NULL)
 		return FALSE;
-	}
-	if (!g_output_stream_write_all(G_OUTPUT_STREAM(output_stream),
-				       value ? "1" : "0",
-				       1,
-				       NULL,
-				       NULL,
-				       error)) {
+	if (!g_output_stream_write_all(output_stream, value ? "1" : "0", 1, NULL, NULL, error)) {
 		fu_error_convert(error);
 		return FALSE;
 	}
