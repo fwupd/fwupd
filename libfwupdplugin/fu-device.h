@@ -1411,6 +1411,7 @@ fu_device_set_contents_bytes(FuDevice *self,
 GBytes *
 fu_device_get_contents_bytes(FuDevice *self,
 			     const gchar *filename,
+			     gsize count,
 			     FuProgress *progress,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
