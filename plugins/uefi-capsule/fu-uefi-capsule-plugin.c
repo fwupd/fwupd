@@ -391,7 +391,6 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
 	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
-	g_autoptr(GFile) ofile = NULL;
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */
@@ -413,9 +412,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	fn = g_build_filename(esp_path, capsule_path, NULL);
 	if (!fu_path_mkdir_parent(fn, error))
 		return FALSE;
-	ofile = g_file_new_for_path(fn);
-	ostream =
-	    G_OUTPUT_STREAM(g_file_replace(ofile, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
+	ostream = fu_output_stream_from_path(fn, error);
 	if (ostream == NULL)
 		return FALSE;
 
@@ -456,8 +453,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	size = g_output_stream_write(ostream, st_uxh->data, st_uxh->len, NULL, error);
 	if (size < 0)
 		return FALSE;
-	size = g_output_stream_write_bytes(ostream, blob, NULL, error);
-	if (size < 0)
+	if (!fu_output_stream_write_bytes(ostream, blob, NULL, error))
 		return FALSE;
 
 	/* write display capsule location as UPDATE_INFO */

@@ -22,6 +22,7 @@
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"
+#include "fu-output-stream.h"
 #include "fu-quirks.h"
 #include "fu-security-attr.h"
 #include "fu-string.h"
@@ -847,7 +848,6 @@ fu_device_set_contents(FuDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		gssize wrote;
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
@@ -855,19 +855,8 @@ fu_device_set_contents(FuDevice *self,
 		if (chk == NULL)
 			return FALSE;
 		blob = fu_chunk_get_bytes(chk);
-
-		wrote = g_output_stream_write_bytes(ostr, blob, NULL, error);
-		if (wrote < 0)
+		if (!fu_output_stream_write_bytes(ostr, blob, NULL, error))
 			return FALSE;
-		if ((gsize)wrote != g_bytes_get_size(blob)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "only wrote 0x%x bytes of 0x%x",
-				    (guint)wrote,
-				    (guint)g_bytes_get_size(blob));
-			return FALSE;
-		}
 
 		/* save */
 		if (event != NULL)

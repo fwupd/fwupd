@@ -25,6 +25,7 @@
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
 #include "fu-ioctl-private.h"
+#include "fu-output-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
@@ -529,7 +530,6 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* emulated */
@@ -548,9 +548,7 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	/* write bus ID to file */
 	if (!fu_udev_device_ensure_bind_id(self, error))
 		return FALSE;
-	file = g_file_new_for_path(fn);
-	stream =
-	    G_OUTPUT_STREAM(g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
+	stream = fu_output_stream_from_path(fn, error);
 	if (stream == NULL)
 		return FALSE;
 	return g_output_stream_write_all(stream,

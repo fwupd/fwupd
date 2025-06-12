@@ -156,6 +156,7 @@ fwupdplugin_src = [
   'fu-pci-device.c',
   'fu-pkcs7.c',
   'fu-oprom-device.c',
+  'fu-output-stream.c', # fuzzing
   'fu-plugin.c',
   'fu-progress.c', # fuzzing
   'fu-quirks.c', # fuzzing
@@ -294,6 +295,7 @@ fwupdplugin_headers = [
   'fu-msgpack-item.h',
   'fu-oprom-device.h',
   'fu-oprom-firmware.h',
+  'fu-output-stream.h',
   'fu-partial-input-stream.h',
   'fu-partial-input-stream-private.h',
   'fu-path.h',

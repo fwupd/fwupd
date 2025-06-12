@@ -36,8 +36,10 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 
 	file = g_file_new_for_path(path);
 	stream = g_file_read(file, NULL, error);
-	if (stream == NULL)
+	if (stream == NULL) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	return G_INPUT_STREAM(g_steal_pointer(&stream));
 }
 
