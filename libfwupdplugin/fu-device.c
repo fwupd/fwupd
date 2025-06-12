@@ -925,7 +925,7 @@ fu_device_set_contents_bytes(FuDevice *self,
  * @progress: (nullable): optional #FuProgress
  * @error: (nullable): optional return location for an error
  *
- * Writes @blob to @filename, emulating if required.
+ * Reads a blob of data from the file, emulating if required.
  *
  * Returns: (transfer full): a #GBytes, or %NULL on error
  *
