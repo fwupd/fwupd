@@ -14,3 +14,7 @@ G_DECLARE_FINAL_TYPE(FuRedfishMultipartDevice,
 		     FU,
 		     REDFISH_MULTIPART_DEVICE,
 		     FuRedfishDevice)
+
+void
+fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const gchar *apply_time)
+    G_GNUC_NON_NULL(1, 2);
