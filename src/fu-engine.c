@@ -3446,9 +3446,9 @@ fu_engine_install_loop(FuEngine *self,
 	}
 
 	/* detach->parse->install or parse->detach->install */
+	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE)) {
 		/* detach to bootloader mode */
-		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
 		if (!fu_engine_detach(self,
 				      device_id,
 				      fu_progress_get_child(progress),
@@ -3495,7 +3495,6 @@ fu_engine_install_loop(FuEngine *self,
 		fu_progress_step_done(progress);
 
 		/* detach to bootloader mode */
-		fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_DETACH);
 		if (!fu_engine_detach(self,
 				      device_id,
 				      fu_progress_get_child(progress),
