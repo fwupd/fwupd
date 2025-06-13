@@ -54,6 +54,8 @@ FuDevice *
 fu_release_get_device(FuRelease *self) G_GNUC_NON_NULL(1);
 GInputStream *
 fu_release_get_stream(FuRelease *self) G_GNUC_NON_NULL(1);
+void
+fu_release_set_stream(FuRelease *self, GInputStream *stream) G_GNUC_NON_NULL(1, 2);
 FuEngineRequest *
 fu_release_get_request(FuRelease *self) G_GNUC_NON_NULL(1);
 GPtrArray *
@@ -64,6 +66,8 @@ const gchar *
 fu_release_get_update_request_id(FuRelease *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_release_get_device_version_old(FuRelease *self) G_GNUC_NON_NULL(1);
+const gchar *
+fu_release_get_firmware_basename(FuRelease *self) G_GNUC_NON_NULL(1);
 
 void
 fu_release_set_request(FuRelease *self, FuEngineRequest *request) G_GNUC_NON_NULL(1);
