@@ -39,8 +39,23 @@ fu_igsc_plugin_constructed(GObject *obj)
 }
 
 static void
+fu_igsc_plugin_device_changed(FuPlugin *plugin, FuDevice *device)
+{
+	// Check for the WEDGED property in device metadata
+	const gchar *wedged = fu_device_get_metadata(device, "WEDGED");
+	if (wedged && g_strcmp0(wedged, "firmware-flash") == 0) {
+		// Prompt user to recover manually
+		g_warning("Detected WEDGED=firmware-flash uevent. Install recovery firmware with:\n"
+			  "fwupdmgr install %s\nAfter installing recovery firmware, you must "
+			  "shutdown and reboot to apply changes.", RECOVERY_DIR);
+	  	// TODO: Explore automated recovery options.
+	}
+}
+
+static void
 fu_igsc_plugin_class_init(FuIgscPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	plugin_class->constructed = fu_igsc_plugin_constructed;
+	plugin_class->device_changed = fu_igsc_plugin_device_changed;
 }
