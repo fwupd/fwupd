@@ -23,6 +23,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 static GString *
 fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 {
+	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
 	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	g_autoptr(JsonGenerator) json_generator = json_generator_new();
@@ -37,8 +38,15 @@ fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 		json_builder_add_string_value(builder, logical_id);
 	}
 	json_builder_end_array(builder);
+
 	json_builder_set_member_name(builder, "@Redfish.OperationApplyTime");
-	json_builder_add_string_value(builder, "Immediate");
+	if (fu_redfish_backend_get_vendor(backend) != NULL &&
+	    g_strcmp0(fu_redfish_backend_get_vendor(backend), "Dell") == 0) {
+		json_builder_add_string_value(builder, "OnReset");
+	} else {
+		json_builder_add_string_value(builder, "Immediate");
+	}
+
 	json_builder_end_object(builder);
 
 	/* export as a string */
