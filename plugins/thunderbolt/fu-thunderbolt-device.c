@@ -37,38 +37,22 @@ fu_thunderbolt_device_set_retries(FuThunderboltDevice *self, guint retries)
 	priv->retries = retries;
 }
 
-GFile *
+gchar *
 fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GError **error)
 {
 	const gchar *nvmem_dir = active ? "nvm_active" : "nvm_non_active";
-	const gchar *name;
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
-	g_autoptr(GDir) d = NULL;
+	g_autoptr(GPtrArray) basenames = NULL;
 
-	if (G_UNLIKELY(devpath == NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Could not determine sysfs path for device");
+	basenames = fu_udev_device_list_sysfs(FU_UDEV_DEVICE(self), error);
+	if (basenames == NULL)
 		return NULL;
+	for (guint i = 0; i < basenames->len; i++) {
+		const gchar *name = g_ptr_array_index(basenames, i);
+		if (g_str_has_prefix(name, nvmem_dir))
+			return g_build_filename(devpath, name, "nvmem", NULL);
 	}
-
-	d = g_dir_open(devpath, 0, error);
-	if (d == NULL)
-		return NULL;
-
-	while ((name = g_dir_read_name(d)) != NULL) {
-		if (g_str_has_prefix(name, nvmem_dir)) {
-			g_autoptr(GFile) parent = g_file_new_for_path(devpath);
-			g_autoptr(GFile) nvm_dir = g_file_get_child(parent, name);
-			return g_file_get_child(nvm_dir, "nvmem");
-		}
-	}
-
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Could not find non-volatile memory location");
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "could not find %s", nvmem_dir);
 	return NULL;
 }
 
@@ -91,9 +75,11 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 				    "missing authorized attribute");
 		return FALSE;
 	}
-
-	if (!g_file_get_contents(safe_path, &attribute, NULL, error))
+	attribute = fu_device_get_contents(FU_DEVICE(self), safe_path, 0x100, NULL, error);
+	if (attribute == NULL) {
+		g_prefix_error(error, "failed to read %s: ", safe_path);
 		return FALSE;
+	}
 	if (!fu_strtoull(attribute, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error)) {
 		g_prefix_error(error, "failed to read authorized: ");
 		return FALSE;
@@ -111,15 +97,17 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 {
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	gboolean exists = FALSE;
 	guint64 version_major = 0;
 	guint64 version_minor = 0;
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *version_raw = NULL;
 	g_autofree gchar *version = NULL;
-	/* read directly from file to prevent udev caching */
 	g_autofree gchar *safe_path = g_build_path("/", devpath, "nvm_version", NULL);
 
-	if (!g_file_test(safe_path, G_FILE_TEST_EXISTS)) {
+	if (!fu_device_query_file_exists(FU_DEVICE(self), safe_path, &exists, error))
+		return FALSE;
+	if (!exists) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -131,13 +119,16 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 		g_autoptr(GError) error_local = NULL;
 		/* glib can't return a properly mapped -ENODATA but the
 		 * kernel only returns -ENODATA or -EAGAIN */
-		if (g_file_get_contents(safe_path, &version_raw, NULL, &error_local))
+		version_raw =
+		    fu_device_get_contents(FU_DEVICE(self), safe_path, 0x100, NULL, &error_local);
+		if (version_raw != NULL)
 			break;
 		g_debug("attempt %u: failed to read NVM version", i);
-		fu_device_sleep(FU_DEVICE(self), TBT_NVM_RETRY_TIMEOUT);
-		/* safe mode probably */
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_debug("timeout maybe means safe mode?");
 			break;
+		}
+		fu_device_sleep(FU_DEVICE(self), TBT_NVM_RETRY_TIMEOUT);
 	}
 
 	if (version_raw == NULL) {
@@ -272,18 +263,12 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
 				 FuProgress *progress,
 				 GError **error)
 {
-	g_autoptr(GFile) nvmem = NULL;
-	g_autoptr(GOutputStream) ostream = NULL;
+	g_autofree gchar *nvmem = NULL;
 
 	nvmem = fu_thunderbolt_device_find_nvmem(self, FALSE, error);
 	if (nvmem == NULL)
 		return FALSE;
-	ostream = (GOutputStream *)g_file_append_to(nvmem, G_FILE_CREATE_NONE, NULL, error);
-	if (ostream == NULL)
-		return FALSE;
-	if (!fu_output_stream_write_bytes(ostream, blob_fw, progress, error))
-		return FALSE;
-	return g_output_stream_close(ostream, NULL, error);
+	return fu_device_set_contents_bytes(FU_DEVICE(self), nvmem, blob_fw, progress, error);
 }
 
 static FuFirmware *
@@ -309,17 +294,20 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 
 	/* get current NVMEM */
 	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)) {
+		g_autofree gchar *nvmem = NULL;
 		g_autoptr(FuFirmware) firmware_old = NULL;
-		g_autoptr(GFile) nvmem = NULL;
+		g_autoptr(GBytes) controller_blob = NULL;
 		g_autoptr(GInputStream) controller_fw = NULL;
 
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 		nvmem = fu_thunderbolt_device_find_nvmem(self, TRUE, error);
 		if (nvmem == NULL)
 			return NULL;
-		controller_fw = G_INPUT_STREAM(g_file_read(nvmem, NULL, error));
-		if (controller_fw == NULL)
+		controller_blob =
+		    fu_device_get_contents_bytes(device, nvmem, G_MAXSIZE, progress, error);
+		if (controller_blob == NULL)
 			return NULL;
+		controller_fw = g_memory_input_stream_new_from_bytes(controller_blob);
 		firmware_old = fu_firmware_new_from_gtypes(controller_fw,
 							   0x0,
 							   flags,
@@ -411,9 +399,9 @@ static void
 fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 17, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 83, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
@@ -426,6 +414,7 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 	priv->retries = 50;
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_THUNDERBOLT);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

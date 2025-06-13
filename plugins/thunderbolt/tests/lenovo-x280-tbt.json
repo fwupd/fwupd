@@ -1,0 +1,18 @@
+{
+  "name": "Lenovo X280 (ThunderBolt)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "fea39e6c1005983b03dfa4ea683f4d749b6696ff2279f6f5f754584ce29c8792-Lenovo-ThinkPad-X280-Thunderbolt-Firmware-N20TF19W-Secured.cab",
+      "emulation-url": "fa12821bbf51500e1e5f9a4eeaedc55ac1cf755ffa0fcc29aa68d1c3179b61fe-emulation.zip",
+      "components": [
+        {
+          "version": "20.00",
+          "guids": [
+            "4808eca4-fd4a-50e6-9e8d-bfd813f063da"
+          ]
+        }
+      ]
+    }
+  ]
+}
