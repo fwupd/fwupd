@@ -16,10 +16,12 @@ fu_thunderbolt_device_find_usb4_port_path(FuUdevDevice *device,
 {
 	const gchar *sysfs_path = fu_udev_device_get_sysfs_path(device);
 	for (guint i = 0; i < 9; i++) {
+		gboolean attribute_exists = FALSE;
 		g_autofree gchar *path = g_strdup_printf("usb4_port%u/%s", i, attribute);
 		g_autofree gchar *fn = g_build_filename(sysfs_path, path, NULL);
-		g_autoptr(GFile) file = g_file_new_for_path(fn);
-		if (g_file_query_exists(file, NULL))
+		if (!fu_device_query_file_exists(FU_DEVICE(device), fn, &attribute_exists, error))
+			return NULL;
+		if (attribute_exists)
 			return g_steal_pointer(&path);
 	}
 	g_set_error(error,

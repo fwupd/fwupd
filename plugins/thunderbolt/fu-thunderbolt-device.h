@@ -22,7 +22,7 @@ struct _FuThunderboltDeviceClass {
 
 gboolean
 fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error);
-GFile *
+gchar *
 fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GError **error);
 gboolean
 fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error);
