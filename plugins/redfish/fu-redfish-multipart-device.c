@@ -14,11 +14,30 @@
 
 struct _FuRedfishMultipartDevice {
 	FuRedfishDevice parent_instance;
+	gchar *apply_time;
 };
 
 G_DEFINE_TYPE(FuRedfishMultipartDevice, fu_redfish_multipart_device, FU_TYPE_REDFISH_DEVICE)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
+
+static void
+fu_redfish_multipart_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuRedfishMultipartDevice *self = FU_REDFISH_MULTIPART_DEVICE(device);
+	fwupd_codec_string_append(str, idt, "ApplyTime", self->apply_time);
+}
+
+void
+fu_redfish_multipart_device_set_apply_time(FuRedfishMultipartDevice *self, const gchar *apply_time)
+{
+	g_return_if_fail(FU_IS_REDFISH_MULTIPART_DEVICE(self));
+	g_return_if_fail(apply_time != NULL);
+	if (g_strcmp0(self->apply_time, apply_time) == 0)
+		return;
+	g_free(self->apply_time);
+	self->apply_time = g_strdup(apply_time);
+}
 
 static GString *
 fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
@@ -37,8 +56,10 @@ fu_redfish_multipart_device_get_parameters(FuRedfishMultipartDevice *self)
 		json_builder_add_string_value(builder, logical_id);
 	}
 	json_builder_end_array(builder);
-	json_builder_set_member_name(builder, "@Redfish.OperationApplyTime");
-	json_builder_add_string_value(builder, "Immediate");
+	if (self->apply_time != NULL) {
+		json_builder_set_member_name(builder, "@Redfish.OperationApplyTime");
+		json_builder_add_string_value(builder, self->apply_time);
+	}
 	json_builder_end_object(builder);
 
 	/* export as a string */
@@ -161,13 +182,26 @@ fu_redfish_multipart_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_redfish_multipart_device_init(FuRedfishMultipartDevice *self)
 {
+	fu_redfish_multipart_device_set_apply_time(self, "Immediate");
 	fu_device_set_summary(FU_DEVICE(self), "Redfish multipart device");
+}
+
+static void
+fu_redfish_multipart_device_finalize(GObject *obj)
+{
+	FuRedfishMultipartDevice *self = FU_REDFISH_MULTIPART_DEVICE(obj);
+	g_free(self->apply_time);
+	G_OBJECT_CLASS(fu_redfish_multipart_device_parent_class)->finalize(obj);
 }
 
 static void
 fu_redfish_multipart_device_class_init(FuRedfishMultipartDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+	object_class->finalize = fu_redfish_multipart_device_finalize;
+	device_class->to_string = fu_redfish_multipart_device_to_string;
 	device_class->write_firmware = fu_redfish_multipart_device_write_firmware;
 	device_class->set_progress = fu_redfish_multipart_device_set_progress;
 }
