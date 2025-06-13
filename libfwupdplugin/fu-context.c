@@ -165,6 +165,42 @@ fu_context_get_efivars(FuContext *self)
 }
 
 /**
+ * fu_context_efivars_check_free_space:
+ * @self: a #FuContext
+ * @count: size in bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks for a given amount of free space in the EFI NVRAM variable store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.12
+ **/
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	guint64 total;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	total = fu_efivars_space_free(priv->efivars, error);
+	if (total == G_MAXUINT64)
+		return FALSE;
+	if (total < count) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BROKEN_SYSTEM,
+			    "Not enough efivarfs space, requested 0x%x and got 0x%x",
+			    (guint)count,
+			    (guint)total);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fu_context_get_smbios:
  * @self: a #FuContext
  *

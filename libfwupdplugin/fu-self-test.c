@@ -808,6 +808,22 @@ fu_smbios3_func(void)
 }
 
 static void
+fu_context_efivars_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_efivars_check_free_space(ctx, 10240, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_context_efivars_check_free_space(ctx, 10241, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM);
+	g_assert_false(ret);
+}
+
+static void
 fu_context_backends_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -4499,6 +4515,11 @@ fu_efivar_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* check free space */
+	total = fu_efivars_space_free(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(total, ==, 10240);
+
 	/* write and read a key */
 	ret = fu_efivars_set_data(efivars,
 				  FU_EFIVARS_GUID_EFI_GLOBAL,
@@ -4521,6 +4542,11 @@ fu_efivar_func(void)
 	g_assert_cmpint(sz, ==, 1);
 	g_assert_cmpint(attr, ==, FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS);
 	g_assert_cmpint(data[0], ==, '1');
+
+	/* check free space again */
+	total = fu_efivars_space_free(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(total, ==, 10203);
 
 	/* check existing keys */
 	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "NotGoingToExist"));
@@ -4568,6 +4594,11 @@ fu_efivar_func(void)
 	g_assert_true(ret);
 	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test1"));
 	g_assert_false(fu_efivars_exists(efivars, FU_EFIVARS_GUID_EFI_GLOBAL, "Test2"));
+
+	/* check free space again */
+	total = fu_efivars_space_free(efivars, &error);
+	g_assert_no_error(error);
+	g_assert_cmpint(total, ==, 10240);
 
 	/* read a key that doesn't exist */
 	ret = fu_efivars_get_data(efivars,
@@ -7034,6 +7065,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func("/fwupd/context{flags}", fu_context_flags_func);
 	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
+	g_test_add_func("/fwupd/context{efivars}", fu_context_efivars_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
 	g_test_add_func("/fwupd/context{hwids-fdt}", fu_context_hwids_fdt_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);

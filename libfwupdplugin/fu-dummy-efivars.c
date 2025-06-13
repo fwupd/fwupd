@@ -24,6 +24,8 @@ struct _FuDummyEfivars {
 
 G_DEFINE_TYPE(FuDummyEfivars, fu_dummy_efivars, FU_TYPE_EFIVARS)
 
+#define FU_DUMMY_EFIVARS_NVRAM_SIZE 10240 /* bytes */
+
 static void
 fu_dummy_efivars_key_free(FuDummyEfivarsKey *key)
 {
@@ -157,6 +159,17 @@ fu_dummy_efivars_space_used(FuEfivars *efivars, GError **error)
 	return total;
 }
 
+static guint64
+fu_dummy_efivars_space_free(FuEfivars *efivars, GError **error)
+{
+	guint64 total;
+
+	total = fu_dummy_efivars_space_used(efivars, error);
+	if (total == G_MAXUINT64)
+		return G_MAXUINT64;
+	return FU_DUMMY_EFIVARS_NVRAM_SIZE - total;
+}
+
 static gboolean
 fu_dummy_efivars_set_data(FuEfivars *efivars,
 			  const gchar *guid,
@@ -202,6 +215,7 @@ fu_dummy_efivars_class_init(FuDummyEfivarsClass *klass)
 	FuEfivarsClass *efivars_class = FU_EFIVARS_CLASS(klass);
 	efivars_class->supported = fu_dummy_efivars_supported;
 	efivars_class->space_used = fu_dummy_efivars_space_used;
+	efivars_class->space_free = fu_dummy_efivars_space_free;
 	efivars_class->exists = fu_dummy_efivars_exists;
 	efivars_class->get_data = fu_dummy_efivars_get_data;
 	efivars_class->set_data = fu_dummy_efivars_set_data;

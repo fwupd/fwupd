@@ -900,8 +900,6 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	guint64 nvram_total;
-	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GError) error_acpi_uefi = NULL;
 
@@ -946,11 +944,6 @@ fu_uefi_capsule_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_efivars_supported(efivars, error))
 		return FALSE;
-	nvram_total = fu_efivars_space_used(efivars, error);
-	if (nvram_total == G_MAXUINT64)
-		return FALSE;
-	nvram_total_str = g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total);
-	fu_plugin_add_report_metadata(plugin, "EfivarsNvramUsed", nvram_total_str);
 
 	/* we use this both for quirking the CoD implementation sanity and the CoD filename */
 	self->acpi_uefi = fu_uefi_capsule_plugin_parse_acpi_uefi(self, &error_acpi_uefi);

@@ -1934,10 +1934,12 @@ fu_engine_ensure_passim_client(FuEngine *self)
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error)
 {
+	FuEfivars *efivars = fu_context_get_efivars(self->ctx);
 	GHashTable *compile_versions = fu_context_get_compile_versions(self->ctx);
 	GHashTable *runtime_versions = fu_context_get_runtime_versions(self->ctx);
 	const gchar *tmp;
 	gchar *btime;
+	guint64 nvram_total;
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
 #endif
@@ -1970,6 +1972,20 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		return NULL;
 	if (!fu_engine_get_report_metadata_selinux(hash, error))
 		return NULL;
+
+	/* useful for almost all plugins */
+	nvram_total = fu_efivars_space_used(efivars, NULL);
+	if (nvram_total != G_MAXUINT64) {
+		g_hash_table_insert(hash,
+				    g_strdup("EfivarsNvramUsed"),
+				    g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total));
+	}
+	nvram_total = fu_efivars_space_free(efivars, NULL);
+	if (nvram_total != G_MAXUINT64) {
+		g_hash_table_insert(hash,
+				    g_strdup("EfivarsNvramFree"),
+				    g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total));
+	}
 
 	/* these affect the report credibility */
 #ifdef SUPPORTED_BUILD
