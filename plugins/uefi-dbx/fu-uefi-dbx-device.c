@@ -238,19 +238,6 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_dbx_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
-{
-	FuContext *ctx = fu_device_get_context(device);
-	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	guint64 nvram_total = fu_efivars_space_used(efivars, NULL);
-	if (nvram_total != G_MAXUINT64) {
-		g_hash_table_insert(metadata,
-				    g_strdup("EfivarsNvramUsed"),
-				    g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total));
-	}
-}
-
-static void
 fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -319,7 +306,6 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
-	device_class->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
 	device_class->cleanup = fu_uefi_dbx_device_cleanup;
 
 	object_class->finalize = fu_uefi_dbx_device_finalize;

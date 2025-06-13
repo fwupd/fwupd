@@ -262,6 +262,9 @@ const gchar *
 fu_context_get_esp_location(FuContext *self);
 FuEfivars *
 fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+    G_GNUC_NON_NULL(1);
 
 /**
  * FuContextEspFileFlags:
