@@ -3167,6 +3167,7 @@ fu_engine_install_loop_restart_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new_from_gtype(fu_test_plugin_get_type(), self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GInputStream) stream_fw = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -3207,14 +3208,15 @@ fu_engine_install_loop_restart_func(gconstpointer user_data)
 	fu_device_set_metadata_integer(device, "nr-attach", 0);
 
 	stream_fw = g_memory_input_stream_new_from_data((const guint8 *)"1.2.3", 5, NULL);
-	ret =
-	    fu_engine_install_blob(engine,
-				   device,
-				   stream_fw,
-				   progress,
-				   FWUPD_INSTALL_FLAG_NO_HISTORY | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				   FWUPD_FEATURE_FLAG_NONE,
-				   &error);
+	fu_release_set_stream(release, stream_fw);
+	ret = fu_engine_install_blob(engine,
+				     device,
+				     release,
+				     progress,
+				     FWUPD_INSTALL_FLAG_NO_HISTORY |
+					 FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				     FWUPD_FEATURE_FLAG_NONE,
+				     &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3685,6 +3687,7 @@ fu_engine_install_request(gconstpointer user_data)
 	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+	g_assert_cmpstr(fu_release_get_firmware_basename(release), ==, "firmware.bin");
 
 	g_signal_connect(FU_ENGINE(engine),
 			 "device-request",

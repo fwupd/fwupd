@@ -195,7 +195,7 @@ fu_engine_install_release(FuEngine *self,
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
-		       GInputStream *stream_fw,
+		       FuRelease *release,
 		       FuProgress *progress,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,

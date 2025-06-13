@@ -2579,7 +2579,6 @@ fu_engine_install_release(FuEngine *self,
 	FuEngineRequest *request = fu_release_get_request(release);
 	FuPlugin *plugin;
 	FwupdFeatureFlags feature_flags = FWUPD_FEATURE_FLAG_NONE;
-	GInputStream *stream_fw;
 	const gchar *tmp;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -2632,16 +2631,6 @@ fu_engine_install_release(FuEngine *self,
 	/* set this for the callback */
 	self->write_history = (flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0;
 
-	/* get per-release firmware blob */
-	stream_fw = fu_release_get_stream(release);
-	if (stream_fw == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Failed to get firmware stream from release");
-		return FALSE;
-	}
-
 	/* get the plugin */
 	plugin =
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
@@ -2661,7 +2650,7 @@ fu_engine_install_release(FuEngine *self,
 	/* install firmware blob */
 	if (!fu_engine_install_blob(self,
 				    device,
-				    stream_fw,
+				    release,
 				    progress,
 				    flags,
 				    feature_flags,
@@ -3394,16 +3383,37 @@ fu_engine_firmware_read(FuEngine *self,
 static gboolean
 fu_engine_install_loop(FuEngine *self,
 		       const gchar *device_id,
-		       GInputStream *stream_fw,
+		       FuRelease *release,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,
 		       gboolean *write_complete,
 		       FuProgress *progress,
 		       GError **error)
 {
+	GInputStream *stream_fw;
+	gsize streamsz = 0;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
+
+	/* test the firmware is not an empty blob */
+	stream_fw = fu_release_get_stream(release);
+	if (stream_fw == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Failed to get firmware stream from release");
+		return FALSE;
+	}
+	if (!fu_input_stream_size(stream_fw, &streamsz, error))
+		return FALSE;
+	if (streamsz == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "Firmware is invalid as has zero size");
+		return FALSE;
+	}
 
 	/* not ideal; but best we can do as we don't know how many writes are required */
 	fu_progress_reset(progress);
@@ -3469,6 +3479,10 @@ fu_engine_install_loop(FuEngine *self,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
+		if (fu_firmware_get_filename(firmware) == NULL) {
+			fu_firmware_set_filename(firmware,
+						 fu_release_get_firmware_basename(release));
+		}
 		fu_progress_step_done(progress);
 
 		/* install */
@@ -3492,6 +3506,10 @@ fu_engine_install_loop(FuEngine *self,
 						      error);
 		if (firmware == NULL)
 			return FALSE;
+		if (fu_firmware_get_filename(firmware) == NULL) {
+			fu_firmware_set_filename(firmware,
+						 fu_release_get_firmware_basename(release));
+		}
 		fu_progress_step_done(progress);
 
 		/* detach to bootloader mode */
@@ -3566,14 +3584,13 @@ fu_engine_install_loop(FuEngine *self,
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
-		       GInputStream *stream_fw,
+		       FuRelease *release,
 		       FuProgress *progress,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,
 		       GError **error)
 {
 	gboolean write_complete = FALSE;
-	gsize streamsz = 0;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
@@ -3586,17 +3603,6 @@ fu_engine_install_blob(FuEngine *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "prepare");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "cleanup");
-
-	/* test the firmware is not an empty blob */
-	if (!fu_input_stream_size(stream_fw, &streamsz, error))
-		return FALSE;
-	if (streamsz == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "Firmware is invalid as has zero size");
-		return FALSE;
-	}
 
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified_usec(device, g_get_real_time());
@@ -3615,7 +3621,7 @@ fu_engine_install_blob(FuEngine *self,
 	     self->emulator_write_cnt++) {
 		if (!fu_engine_install_loop(self,
 					    device_id,
-					    stream_fw,
+					    release,
 					    flags,
 					    feature_flags,
 					    &write_complete,

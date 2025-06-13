@@ -29,6 +29,7 @@ struct _FuRelease {
 	GInputStream *stream;
 	gchar *update_request_id;
 	gchar *device_version_old;
+	gchar *firmware_basename;
 	GPtrArray *soft_reqs; /* nullable, element-type XbNode */
 	GPtrArray *hard_reqs; /* nullable, element-type XbNode */
 	guint64 priority;
@@ -56,6 +57,7 @@ fu_release_to_string(FuRelease *self)
 	if (self->device != NULL)
 		fwupd_codec_string_append(str, idt, "Device", fu_device_get_id(self->device));
 	fwupd_codec_string_append(str, idt, "DeviceVersionOld", self->device_version_old);
+	fwupd_codec_string_append(str, idt, "FirmwareBasename", self->firmware_basename);
 	if (self->remote != NULL)
 		fwupd_codec_string_append(str, idt, "Remote", fwupd_remote_get_id(self->remote));
 	fwupd_codec_string_append_bool(str, idt, "HasConfig", self->config != NULL);
@@ -111,6 +113,21 @@ fu_release_get_device_version_old(FuRelease *self)
 {
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
 	return self->device_version_old;
+}
+
+/**
+ * fu_release_get_firmware_basename:
+ * @self: a #FuRelease
+ *
+ * Gets the name of the update binary, typically `firmware.bin`
+ *
+ * Returns: a string value, or %NULL if never set.
+ **/
+const gchar *
+fu_release_get_firmware_basename(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->firmware_basename;
 }
 
 static void
@@ -173,6 +190,15 @@ fu_release_get_stream(FuRelease *self)
 {
 	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
 	return self->stream;
+}
+
+/* private: for tests */
+void
+fu_release_set_stream(FuRelease *self, GInputStream *stream)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+	g_return_if_fail(G_IS_INPUT_STREAM(stream));
+	g_set_object(&self->stream, stream);
 }
 
 /**
@@ -1134,11 +1160,14 @@ fu_release_load(FuRelease *self,
 	/* get per-release firmware stream */
 	blob_basename = xb_node_get_data(rel, "fwupd::FirmwareBasename");
 	if (cabinet != NULL && blob_basename != NULL) {
-		const gchar *basename = (const gchar *)g_bytes_get_data(blob_basename, NULL);
 		g_autoptr(FuFirmware) img = NULL;
-		img = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), basename, error);
+
+		self->firmware_basename = fu_strsafe_bytes(blob_basename, G_MAXSIZE);
+		img = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet),
+						  self->firmware_basename,
+						  error);
 		if (img == NULL) {
-			g_prefix_error(error, "failed to find %s: ", basename);
+			g_prefix_error(error, "failed to find %s: ", self->firmware_basename);
 			return FALSE;
 		}
 		self->stream = fu_firmware_get_stream(img, error);
@@ -1318,6 +1347,7 @@ fu_release_finalize(GObject *obj)
 
 	g_free(self->update_request_id);
 	g_free(self->device_version_old);
+	g_free(self->firmware_basename);
 	if (self->request != NULL)
 		g_object_unref(self->request);
 	if (self->device != NULL)

@@ -1038,6 +1038,7 @@ static gboolean
 fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GInputStream) stream_fw = NULL;
 
 	/* progress */
@@ -1062,6 +1063,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_maybe_prefix_sandbox_error(values[0], error);
 		return FALSE;
 	}
+	fu_release_set_stream(release, stream_fw);
 	fu_progress_step_done(priv->progress);
 
 	/* load engine */
@@ -1105,7 +1107,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (!fu_engine_install_blob(priv->engine,
 				    device,
-				    stream_fw,
+				    release,
 				    fu_progress_get_child(priv->progress),
 				    priv->flags,
 				    fu_engine_request_get_feature_flags(priv->request),
