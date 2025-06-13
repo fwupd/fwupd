@@ -120,7 +120,6 @@ Summary = Foxconn T99W696.00 5G modem
 
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
-GType = FuMmFastbootDevice
 Summary = Quectel EG25-G/EC25 modem
 Flags = detach-at-fastboot-has-no-response
 Plugin = modem_manager
