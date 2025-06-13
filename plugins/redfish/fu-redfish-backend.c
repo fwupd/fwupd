@@ -118,8 +118,11 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 			   NULL);
 
 	/* Dell specific currently */
-	if (self->system_id != NULL)
+	if (self->system_id != NULL) {
 		fu_device_add_instance_str(dev, "SYSTEMID", self->system_id);
+		/* Ensure the reboot is not done immediately after installation, and only after a wanted reboot */
+		fu_redfish_multipart_device_set_apply_time(FU_REDFISH_MULTIPART_DEVICE(dev), "OnReset");
+	}
 
 	/* some vendors do not specify the Targets array when updating */
 	if (self->wildcard_targets)
