@@ -421,6 +421,17 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, JsonObject *json_object,
 						   FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
 	}
 
+	if (json_object_has_member(software_info, "Id")) {
+		const gchar *status = json_object_get_string_member(software_info, "Id");
+		if (g_ascii_strncasecmp(status, "DCIM:INSTALLED", 12) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware is in repository");
+			return FALSE;
+		}
+	}
+
 	/* it does not seem that Dell allows targeting a device when updating */
 	fu_device_add_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 
@@ -636,7 +647,9 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 		return TRUE;
 
 	/* set flags */
-	if (g_pattern_match_simple("Base.*.ResetRequired", message_id)) {
+	if (g_pattern_match_simple("Base.*.ResetRequired", message_id) ||
+	    g_pattern_match_simple("IDRAC.*.JCP001", message_id) ||
+	    g_pattern_match_simple("IDRAC.*.RED014", message_id)) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		return TRUE;
 	}
@@ -785,7 +798,8 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	}
 	state_tmp = json_object_get_string_member(json_obj, "TaskState");
 	g_debug("TaskState now %s", state_tmp);
-	if (g_strcmp0(state_tmp, "Completed") == 0) {
+	if (g_strcmp0(state_tmp, "Completed") == 0 ||
+	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		ctx->completed = TRUE;
 		return TRUE;
 	}
