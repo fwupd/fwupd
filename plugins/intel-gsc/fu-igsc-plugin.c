@@ -49,7 +49,7 @@ fu_igsc_plugin_device_changed(FuPlugin *plugin, FuDevice *device)
 			  "is included in the cab under /recovery with:\n/usr/bin/fwuptool install "
 			  "<recovery-firmware.bin>\nAfter installing recovery firmware, you must "
 			  "shutdown and reboot (cold boot) to apply changes.");
-		fu_device_add_problem(device, FU_DEVICE_PROBLEM_UPDATE_FAILED)
+		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_WEDGED)
 	  	// TODO: Explore automated recovery options.
 	}
 }

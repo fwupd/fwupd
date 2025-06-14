@@ -1284,6 +1284,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: we have two ways of communicating with the device, so we hide one */
 		return g_strdup(_("Device is lower priority than an equivalent device"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_WEDGED) {
+		/* TRANSLATORS: device is wedged and must be recovered. */
+		return g_strdup(_("Device is wedged and must be recovered."));
+	}
 	return NULL;
 }
 
