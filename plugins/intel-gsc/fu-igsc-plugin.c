@@ -45,9 +45,11 @@ fu_igsc_plugin_device_changed(FuPlugin *plugin, FuDevice *device)
 	const gchar *wedged = fu_device_get_metadata(device, "WEDGED");
 	if (wedged && g_strcmp0(wedged, "firmware-flash") == 0) {
 		// Prompt user to recover manually
-		g_warning("Detected WEDGED=firmware-flash uevent. Install recovery firmware with:\n"
-			  "fwupdmgr install %s\nAfter installing recovery firmware, you must "
-			  "shutdown and reboot to apply changes.", RECOVERY_DIR);
+		g_warning("Detected WEDGED=firmware-flash uevent. Install recovery firmware that "
+			  "is included in the cab under /recovery with:\n/usr/bin/fwuptool install "
+			  "<recovery-firmware.bin>\nAfter installing recovery firmware, you must "
+			  "shutdown and reboot (cold boot) to apply changes.");
+		fu_device_add_problem(device, FU_DEVICE_PROBLEM_UPDATE_FAILED)
 	  	// TODO: Explore automated recovery options.
 	}
 }
