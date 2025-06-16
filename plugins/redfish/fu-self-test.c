@@ -485,6 +485,7 @@ fu_test_redfish_hpe_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 0);
 	blob_fw = g_bytes_new_static("hello", 5);
 	stream_fw = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(stream_fw, "test.fwpkg");
 	ret = fu_plugin_runner_write_firmware(self->hpe_plugin,
 					      dev,
 					      stream_fw,
@@ -524,6 +525,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 1);
 	blob_fw = g_bytes_new_static("hello", 5);
 	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      firmware,
@@ -577,6 +579,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 1);
 	blob_fw1 = g_bytes_new_static("hello", 5);
 	firmware1 = fu_firmware_new_from_bytes(blob_fw1);
+	fu_firmware_set_filename(firmware1, "firmware.bin");
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      firmware1,
