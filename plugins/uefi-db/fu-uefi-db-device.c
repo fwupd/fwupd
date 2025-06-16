@@ -14,6 +14,8 @@ struct _FuUefiDbDevice {
 
 G_DEFINE_TYPE(FuUefiDbDevice, fu_uefi_db_device, FU_TYPE_UEFI_DEVICE)
 
+#define FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE (16 * 1024) /* bytes */
+
 static gboolean
 fu_uefi_db_device_probe(FuDevice *device, GError **error)
 {
@@ -152,6 +154,7 @@ fu_uefi_db_device_init(FuUefiDbDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
+	fu_device_set_required_free(FU_DEVICE(self), FU_UEFI_DB_DEVICE_DEFAULT_REQUIRED_FREE);
 }
 
 static void

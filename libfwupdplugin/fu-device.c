@@ -84,6 +84,7 @@ typedef struct {
 	gboolean device_id_valid;
 	guint64 size_min;
 	guint64 size_max;
+	guint64 required_free; /* bytes */
 	gint open_refcount; /* atomic */
 	GType specialized_gtype;
 	GType proxy_gtype;
@@ -134,6 +135,7 @@ enum {
 	PROP_PRIVATE_FLAGS,
 	PROP_VID,
 	PROP_PID,
+	PROP_REQUIRED_FREE,
 	PROP_LAST
 };
 
@@ -190,6 +192,9 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	case PROP_PID:
 		g_value_set_uint(value, priv->pid);
 		break;
+	case PROP_REQUIRED_FREE:
+		g_value_set_uint64(value, priv->required_free);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -236,6 +241,9 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		break;
 	case PROP_PID:
 		fu_device_set_pid(self, g_value_get_uint(value));
+		break;
+	case PROP_REQUIRED_FREE:
+		fu_device_set_required_free(self, g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -310,6 +318,7 @@ fu_device_register_flags(FuDevice *self)
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP);
 	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART);
+	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
 }
 
 static void
@@ -2652,6 +2661,49 @@ fu_device_get_firmware_size_max(FuDevice *self)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), 0);
 	return priv->size_max;
+}
+
+/**
+ * fu_device_get_required_free:
+ * @self: a #FuDevice
+ *
+ * Returns the required amount of free firmware space.
+ *
+ * Returns: size in bytes
+ *
+ * Since: 2.0.12
+ **/
+guint64
+fu_device_get_required_free(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), 0);
+	return priv->required_free;
+}
+
+/**
+ * fu_device_set_required_free:
+ * @self: a #FuDevice
+ * @required_free: size in bytes
+ *
+ * Sets the required amount of free firmware size.
+ *
+ * NOTE: What we really want to do for EFI devices is check if a *contiguous* block of the right
+ * size can be written, but on most machines this causes an SMI which causes all cores to halt.
+ * On my desktop this causes **ALL** CPU processes to stop for ~1s, which is clearly unacceptable
+ * at every boot. Instead, check for free space at least as big as needed, plus a little extra.
+ *
+ * Since: 2.0.12
+ **/
+void
+fu_device_set_required_free(FuDevice *self, guint64 required_free)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	if (priv->required_free == required_free)
+		return;
+	priv->required_free = required_free;
+	g_object_notify(G_OBJECT(self), "required-free");
 }
 
 /**
@@ -5029,6 +5081,7 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	}
 	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMin", priv->size_min);
 	fwupd_codec_string_append_size(str, idt, "FirmwareSizeMax", priv->size_max);
+	fwupd_codec_string_append_int(str, idt, "RequiredFree", priv->required_free);
 	if (priv->order != G_MAXINT) {
 		g_autofree gchar *order = g_strdup_printf("%i", priv->order);
 		fwupd_codec_string_append(str, idt, "Order", order);
@@ -6655,6 +6708,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
 		if (priv->fwupd_version == NULL && fu_device_get_fwupd_version(donor) != NULL)
 			fu_device_set_fwupd_version(self, fu_device_get_fwupd_version(donor));
+		if (priv_donor->required_free > 0)
+			fu_device_set_required_free(self, priv_donor->required_free);
 		if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
 			fu_device_set_update_request_id(self, priv_donor->update_request_id);
 		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY) &&
@@ -7043,6 +7098,19 @@ fu_device_ensure_from_release(FuDevice *self, XbNode *rel)
 {
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(XB_IS_NODE(rel));
+
+	/* set the required free */
+	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE)) {
+		guint64 size;
+		size = xb_node_query_text_as_uint(rel,
+						  "artifacts/artifact/size[@type='installed']",
+						  NULL);
+		if (size != G_MAXUINT64) {
+			fu_device_set_required_free(self, size);
+			fu_device_remove_private_flag(self,
+						      FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
+		}
+	}
 
 	/* optionally filter by device checksum */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM)) {
@@ -8131,6 +8199,22 @@ fu_device_class_init(FuDeviceClass *klass)
 				  0,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PID, pspec);
+
+	/**
+	 * FuDevice:required-free:
+	 *
+	 * The required amount of free firmware space.
+	 *
+	 * Since: 2.0.12
+	 */
+	pspec = g_param_spec_uint64("required-free",
+				    NULL,
+				    NULL,
+				    0,
+				    G_MAXUINT64,
+				    0,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_REQUIRED_FREE, pspec);
 }
 
 static void
