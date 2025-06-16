@@ -115,6 +115,28 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtsHub *self,
 	return TRUE;
 }
 
+gboolean
+fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtsHub *self, GError **error)
+{
+	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+
+	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
+	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_RESET_TO_FLASH);
+
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      0x0,
+				      cmd_buf->data,
+				      cmd_buf->len,
+				      DELL_KESTREL_RTSHUB_TIMEOUT,
+				      FU_HID_DEVICE_FLAG_NONE,
+				      error)) {
+		g_prefix_error(error, "failed to soft reset: ");
+		return FALSE;
+	}
+	g_debug("soft reset completed for %s", fu_device_get_name(FU_DEVICE(self)));
+	return TRUE;
+}
+
 static gboolean
 fu_dell_kestrel_rtshub_write_flash(FuDellKestrelRtsHub *self,
 				   guint32 addr,

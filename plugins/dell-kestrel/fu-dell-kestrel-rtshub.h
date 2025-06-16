@@ -37,3 +37,5 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRtsHub,
 
 FuDellKestrelRtsHub *
 fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type);
+gboolean
+fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtsHub *self, GError **error);
