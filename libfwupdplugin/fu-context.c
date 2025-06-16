@@ -189,12 +189,14 @@ fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error
 	if (total == G_MAXUINT64)
 		return FALSE;
 	if (total < count) {
+		g_autofree gchar *countstr = g_format_size(count);
+		g_autofree gchar *totalstr = g_format_size(total);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BROKEN_SYSTEM,
-			    "Not enough efivarfs space, requested 0x%x and got 0x%x",
-			    (guint)count,
-			    (guint)total);
+			    "Not enough efivarfs space, requested %s and got %s",
+			    countstr,
+			    totalstr);
 		return FALSE;
 	}
 	return TRUE;

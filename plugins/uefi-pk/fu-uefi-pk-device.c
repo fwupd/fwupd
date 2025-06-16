@@ -16,6 +16,8 @@ struct _FuUefiPkDevice {
 
 G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_UEFI_DEVICE)
 
+#define FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE (8 * 1024) /* bytes */
+
 static void
 fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -99,6 +101,10 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
 
+	/* FuUefiDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_uefi_pk_device_parent_class)->probe(device, error))
+		return FALSE;
+
 	pk = fu_device_read_firmware(device,
 				     progress,
 				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
@@ -165,6 +171,7 @@ fu_uefi_pk_device_init(FuUefiPkDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_set_required_free(FU_DEVICE(self), FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE);
 }
 
 static void

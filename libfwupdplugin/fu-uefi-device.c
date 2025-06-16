@@ -30,6 +30,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE);
 
 #define GET_PRIVATE(o) (fu_uefi_device_get_instance_private(o))
 
+#define FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE "no-efivars-space"
+
 /* private */
 void
 fu_uefi_device_set_guid(FuUefiDevice *self, const gchar *guid)
@@ -369,11 +371,40 @@ fu_uefi_device_finalize(GObject *object)
 }
 
 static void
+fu_uefi_device_required_free_notify_cb(FuUefiDevice *self, GParamSpec *pspec, gpointer user_data)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+
+	if (fu_device_get_required_free(FU_DEVICE(self)) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_context_efivars_check_free_space(
+			ctx,
+			fu_device_get_required_free(FU_DEVICE(self)),
+			&error_local)) {
+			fu_device_inhibit(FU_DEVICE(self),
+					  FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE,
+					  error_local->message);
+		} else {
+			fu_device_uninhibit(FU_DEVICE(self),
+					    FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE);
+		}
+	} else {
+		fu_device_uninhibit(FU_DEVICE(self), FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE);
+	}
+}
+
+static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::required-free",
+			 G_CALLBACK(fu_uefi_device_required_free_notify_cb),
+			 NULL);
 }
 
 static void

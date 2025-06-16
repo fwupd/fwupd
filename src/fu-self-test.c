@@ -2707,6 +2707,12 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
 	    "        <checksum filename=\"firmware.bin\" target=\"content\" "
 	    "type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+	    "        <artifacts>"
+	    "          <artifact type=\"binary\">"
+	    "            <size type=\"installed\">1024</size>"
+	    "            <size type=\"download\">2048</size>"
+	    "          </artifact>"
+	    "        </artifacts>"
 	    "      </release>"
 	    "    </releases>"
 	    "    <custom>"
@@ -2743,6 +2749,7 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
 	fu_device_set_id(device, "test_device");
 	fu_device_build_vendor_id_u16(device, "USB", 0xFFFF);
 	fu_device_add_protocol(device, "com.acme");
@@ -2759,6 +2766,7 @@ fu_engine_md_verfmt_func(gconstpointer user_data)
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN));
 	g_assert_true(fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU));
+	g_assert_cmpint(fu_device_get_required_free(device), ==, 1024);
 
 	/* ensure the device was added */
 	devices = fu_engine_get_devices(engine, &error);
