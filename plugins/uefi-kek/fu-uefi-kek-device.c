@@ -49,11 +49,6 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		fu_device_add_child(device, FU_DEVICE(x509_device));
 	}
 
-	/* set in the subdevice */
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
-
 	/* success */
 	return TRUE;
 }
