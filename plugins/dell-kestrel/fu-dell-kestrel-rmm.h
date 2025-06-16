@@ -20,5 +20,5 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRmm,
 
 FuDellKestrelRmm *
 fu_dell_kestrel_rmm_new(FuUsbDevice *device);
-void
-fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self);
+gboolean
+fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self, GError **error);
