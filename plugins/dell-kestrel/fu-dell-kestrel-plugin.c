@@ -292,7 +292,10 @@ fu_dell_kestrel_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 			fu_device_inhibit(device, "hidden", msg);
 			return;
 		}
+		/* activation should already done when device is added */
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 		fu_plugin_cache_add(plugin, "usb4", device);
 	}
 
@@ -420,22 +423,6 @@ fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device
 	return TRUE;
 }
 
-static gboolean
-fu_dell_kestrel_plugin_prepare(FuPlugin *plugin,
-			       FuDevice *device,
-			       FuProgress *progress,
-			       FwupdInstallFlags flags,
-			       GError **error)
-{
-	/* usb4 device reboot is suppressed, let ec handle it in passive update */
-	if (fu_device_has_guid(device, DELL_KESTREL_T4_DEVID) ||
-	    fu_device_has_guid(device, DELL_KESTREL_T5_DEVID)) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
-	}
-
-	return TRUE;
-}
-
 static void
 fu_dell_kestrel_plugin_init(FuDellKestrelPlugin *self)
 {
@@ -473,5 +460,4 @@ fu_dell_kestrel_plugin_class_init(FuDellKestrelPluginClass *klass)
 	plugin_class->backend_device_removed = fu_dell_kestrel_plugin_backend_device_removed;
 	plugin_class->composite_prepare = fu_dell_kestrel_plugin_composite_prepare;
 	plugin_class->composite_cleanup = fu_dell_kestrel_plugin_composite_cleanup;
-	plugin_class->prepare = fu_dell_kestrel_plugin_prepare;
 }
