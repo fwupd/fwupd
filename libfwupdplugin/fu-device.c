@@ -5499,15 +5499,6 @@ fu_device_read_firmware(FuDevice *self,
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	/* device does not support reading for verification CRCs */
-	if (!fu_device_has_flag(self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "reading firmware is not supported by device");
-		return NULL;
-	}
-
 	/* call vfunc */
 	g_set_object(&priv->progress, progress);
 	if (device_class->read_firmware != NULL)
