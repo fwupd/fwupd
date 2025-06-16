@@ -510,8 +510,10 @@ def fwupdate():
         return _failure("apply invalid")
     if data["Targets"][0] != "/redfish/v1/UpdateService/FirmwareInventory/BMC":
         return _failure("id invalid")
+    if len(request.files) != 1:
+        return _failure("no file supplied")
     fileitem = request.files["UpdateFile"]
-    if not fileitem.filename.endswith(".bin"):
+    if not fileitem.filename.endswith(".exe"):
         return _failure("filename invalid")
     if fileitem.read().decode() != "hello":
         return _failure("data invalid")
