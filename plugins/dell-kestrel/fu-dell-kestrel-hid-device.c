@@ -23,7 +23,6 @@ G_DEFINE_TYPE(FuDellKestrelHidDevice, fu_dell_kestrel_hid_device, FU_TYPE_HID_DE
 #define FU_DELL_KESTREL_HID_DATA_PAGE_SZ     192
 #define FU_DELL_KESTREL_HID_RESPONSE_LENGTH  0x03
 #define FU_DELL_KESTREL_HID_I2C_ADDRESS	     0xec
-#define FU_DELL_KESTREL_HID_MAX_RETRIES	     8
 
 #define FU_DELL_KESTREL_HID_I2C_MAX_READ  192
 #define FU_DELL_KESTREL_HID_I2C_MAX_WRITE 128
@@ -93,7 +92,7 @@ fu_dell_kestrel_hid_device_hid_set_report(FuDellKestrelHidDevice *self,
 {
 	return fu_device_retry(FU_DEVICE(self),
 			       fu_dell_kestrel_hid_device_hid_set_report_cb,
-			       FU_DELL_KESTREL_HID_MAX_RETRIES,
+			       DELL_KESTREL_MAX_RETRIES,
 			       outbuffer,
 			       error);
 }
@@ -118,7 +117,7 @@ fu_dell_kestrel_hid_device_get_report(FuDellKestrelHidDevice *self,
 {
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_dell_kestrel_hid_device_get_report_cb,
-				    FU_DELL_KESTREL_HID_MAX_RETRIES,
+				    DELL_KESTREL_MAX_RETRIES,
 				    2000,
 				    inbuffer,
 				    error);
