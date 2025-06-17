@@ -43,6 +43,7 @@ class SourceFailure:
 
 class Checker:
     MAX_FUNCTION_LINES: int = 400
+    MAX_FUNCTION_SWITCH: int = 2
 
     def __init__(self):
         self.failures: List[SourceFailure] = []
@@ -213,29 +214,11 @@ class Checker:
             "cbor_get_uint32(": "Use cbor_get_int() instead",
             "g_error(": "Use GError instead",
             "g_byte_array_free_to_bytes(": "Use g_bytes_new() instead",
-            "g_usb_device_bulk_transfer(": "Use fu_usb_device_bulk_transfer() instead",
-            "g_usb_device_claim_interface(": "Use fu_usb_device_claim_interface() instead",
-            "g_usb_device_control_transfer(": "Use fu_usb_device_control_transfer() instead",
-            "g_usb_device_get_configuration_index(": "Use fu_usb_device_get_configuration_index() instead",
-            "g_usb_device_get_custom_index(": "Use fu_usb_device_get_custom_index() instead",
-            "g_usb_device_get_device_class(": "Use fu_usb_device_get_class() instead",
-            "g_usb_device_get_interface(": "Use fu_usb_device_get_interface() instead",
-            "g_usb_device_get_interfaces(": "Use fu_usb_device_get_interfaces() instead",
-            "g_usb_device_get_release(": "Use fu_usb_device_get_release() instead",
-            "g_usb_device_get_serial_number_index(": "Use fu_usb_device_get_serial_number_index() instead",
-            "g_usb_device_get_string_descriptor_bytes_full(": "Use fu_usb_device_get_string_descriptor_bytes_full() instead",
-            "g_usb_device_get_string_descriptor desc_index(": "Use fu_usb_device_get_string_descriptor desc_index() instead",
-            "g_usb_device_interrupt_transfer(": "Use fu_usb_device_interrupt_transfer() instead",
-            "g_usb_device_release_interface(": "Use fu_usb_device_release_interface() instead",
-            "g_usb_device_reset error(": "Use fu_usb_device_reset error() instead",
-            "g_usb_device_set_interface_alt(": "Use fu_usb_device_set_interface_alt() instead",
             "g_ascii_strtoull(": "Use fu_strtoull() instead",
             "g_ascii_strtoll(": "Use fu_strtoll() instead",
+            "g_strerror(": "Use fwupd_strerror() instead",
             "g_random_int_range(": "Use a predicatable token instead",
             "g_assert(": "Use g_set_error() or g_return_val_if_fail() instead",
-            "g_udev_device_get_sysfs_attr(": "Use fu_udev_device_read_sysfs() instead",
-            "g_udev_device_get_property(": "Use fu_udev_device_read_property() instead",
-            "g_udev_client_new(": "Use fu_backend_create_device() instead",
             "HIDIOCSFEATURE": "Use fu_hidraw_device_set_feature() instead",
             "HIDIOCGFEATURE": "Use fu_hidraw_device_get_feature() instead",
             "|= 1 <<": "Use FU_BIT_SET() instead",
@@ -285,17 +268,24 @@ class Checker:
 
     def _test_lines_function_length(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:lines"
+        func_n_switch: int = 0
         func_begin: int = 0
         func_name: Optional[str] = None
         for linecnt, line in enumerate(lines):
             if line.find(self._current_nocheck) != -1:
                 func_begin = 0
                 continue
+            if line.find("switch (") != -1:
+                func_n_switch += 1
             if line == "{":
                 func_begin = linecnt
                 continue
             if func_begin > 0 and line == "}":
                 self._current_linecnt = func_begin
+                if func_n_switch > self.MAX_FUNCTION_SWITCH:
+                    self.add_failure(
+                        f"{func_name} has too many switches ({func_n_switch}), limit of {self.MAX_FUNCTION_SWITCH}"
+                    )
                 if linecnt - func_begin > self.MAX_FUNCTION_LINES:
                     if func_name:
                         self.add_failure(
@@ -309,6 +299,7 @@ class Checker:
                     if func_name.endswith("_finalize"):
                         self.add_failure(f"{func_name} is redundant and can be removed")
                 func_begin = 0
+                func_n_switch = 0
                 func_name = None
                 continue
 

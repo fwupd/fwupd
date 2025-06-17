@@ -12,8 +12,6 @@
 
 #define FU_QC_FIREHOSE_RAW_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
 
-#define FU_QC_FIREHOSE_RAW_DEVICE_TIMEOUT_MS 500
-
 struct _FuQcFirehoseRawDevice {
 	FuUdevDevice parent_instance;
 	FuQcFirehoseFunctions supported_functions;
@@ -58,6 +56,12 @@ fu_qc_firehose_raw_device_impl_write_firmware(FuDevice *device,
 					      GError **error)
 {
 	FuQcFirehoseRawDevice *self = FU_QC_FIREHOSE_RAW_DEVICE(device);
+	if (self->supported_functions == FU_QC_FIREHOSE_FUNCTIONS_NONE) {
+		if (!fu_qc_firehose_impl_setup(FU_QC_FIREHOSE_IMPL(self), error)) {
+			g_prefix_error(error, "failed to setup before write: ");
+			return FALSE;
+		}
+	}
 	return fu_qc_firehose_impl_write_firmware(FU_QC_FIREHOSE_IMPL(self),
 						  firmware,
 						  FALSE,
@@ -121,6 +125,17 @@ fu_qc_firehose_raw_device_probe(FuDevice *device, GError **error)
 	return FU_DEVICE_CLASS(fu_qc_firehose_raw_device_parent_class)->probe(device, error);
 }
 
+static gboolean
+fu_qc_firehose_raw_device_setup(FuDevice *device, GError **error)
+{
+	FuQcFirehoseRawDevice *self = FU_QC_FIREHOSE_RAW_DEVICE(device);
+
+	/* allow old emulations to run until we merge the new ModemManager plugin */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
+	return fu_qc_firehose_impl_setup(FU_QC_FIREHOSE_IMPL(self), error);
+}
+
 static void
 fu_qc_firehose_raw_device_set_progress(FuDevice *device, FuProgress *progress)
 {
@@ -145,7 +160,7 @@ fu_qc_firehose_raw_device_impl_read(FuQcFirehoseImpl *impl, guint timeout_ms, GE
 				 buf->len,
 				 &actual_len,
 				 timeout_ms,
-				 FU_IO_CHANNEL_FLAG_NONE,
+				 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 				 error)) {
 		g_prefix_error(error, "failed to do bulk transfer (read): ");
 		return NULL;
@@ -160,13 +175,14 @@ static gboolean
 fu_qc_firehose_raw_device_impl_write(FuQcFirehoseImpl *impl,
 				     const guint8 *buf,
 				     gsize bufsz,
+				     guint timeout_ms,
 				     GError **error)
 {
 	FuQcFirehoseRawDevice *self = FU_QC_FIREHOSE_RAW_DEVICE(impl);
 	return fu_udev_device_write(FU_UDEV_DEVICE(self),
 				    buf,
 				    bufsz,
-				    FU_QC_FIREHOSE_RAW_DEVICE_TIMEOUT_MS,
+				    timeout_ms,
 				    FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
 				    error);
 }
@@ -185,6 +201,7 @@ fu_qc_firehose_raw_device_init(FuQcFirehoseRawDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Firehose");
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.firehose");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version(FU_DEVICE(self), "0.0");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -193,7 +210,6 @@ fu_qc_firehose_raw_device_init(FuQcFirehoseRawDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
-	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
@@ -206,5 +222,6 @@ fu_qc_firehose_raw_device_class_init(FuQcFirehoseRawDeviceClass *klass)
 	device_class->write_firmware = fu_qc_firehose_raw_device_impl_write_firmware;
 	device_class->set_progress = fu_qc_firehose_raw_device_set_progress;
 	device_class->probe = fu_qc_firehose_raw_device_probe;
+	device_class->setup = fu_qc_firehose_raw_device_setup;
 	device_class->attach = fu_qc_firehose_raw_device_attach;
 }

@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuAverHidPlugin, fu_aver_hid_plugin, FU_TYPE_PLUGIN)
 static void
 fu_aver_hid_plugin_init(FuAverHidPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

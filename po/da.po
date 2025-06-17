@@ -902,10 +902,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Henter listen over blokerede firmware"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Henter listen over opdateringer for tilsluttet hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Henter resultaterne fra en enhed"
 
@@ -1208,10 +1204,6 @@ msgstr "Vis kun én PCR-værdi"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Kun versionsopgraderinger er tilladte"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Output i JSON-format"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

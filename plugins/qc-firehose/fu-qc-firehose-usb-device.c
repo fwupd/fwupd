@@ -17,8 +17,6 @@
 
 #define FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
 
-#define FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS 500
-
 struct _FuQcFirehoseUsbDevice {
 	FuUsbDevice parent_instance;
 	guint8 ep_in;
@@ -95,6 +93,7 @@ static gboolean
 fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 				const guint8 *buf,
 				gsize sz,
+				guint timeout_ms,
 				GError **error)
 {
 	gsize actual_len = 0;
@@ -118,7 +117,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 fu_chunk_get_data_out(chk),
 						 fu_chunk_get_data_sz(chk),
 						 &actual_len,
-						 FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						 timeout_ms,
 						 NULL,
 						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write data): ");
@@ -142,7 +141,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 NULL,
 						 0,
 						 NULL,
-						 FU_QC_FIREHOSE_USB_DEVICE_TIMEOUT_MS,
+						 timeout_ms,
 						 NULL,
 						 error)) {
 			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
@@ -246,6 +245,8 @@ fu_qc_firehose_usb_device_impl_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* use firehose XML */
+	if (!fu_qc_firehose_impl_setup(FU_QC_FIREHOSE_IMPL(self), error))
+		return FALSE;
 	if (!fu_qc_firehose_impl_write_firmware(
 		FU_QC_FIREHOSE_IMPL(self),
 		firmware,
@@ -297,20 +298,22 @@ static gboolean
 fu_qc_firehose_usb_device_sahara_impl_write(FuQcFirehoseSaharaImpl *impl,
 					    const guint8 *buf,
 					    gsize sz,
+					    guint timeout_ms,
 					    GError **error)
 {
 	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(impl);
-	return fu_qc_firehose_usb_device_write(self, buf, sz, error);
+	return fu_qc_firehose_usb_device_write(self, buf, sz, timeout_ms, error);
 }
 
 static gboolean
 fu_qc_firehose_usb_device_impl_write(FuQcFirehoseImpl *impl,
 				     const guint8 *buf,
 				     gsize sz,
+				     guint timeout_ms,
 				     GError **error)
 {
 	FuQcFirehoseUsbDevice *self = FU_QC_FIREHOSE_USB_DEVICE(impl);
-	return fu_qc_firehose_usb_device_write(self, buf, sz, error);
+	return fu_qc_firehose_usb_device_write(self, buf, sz, timeout_ms, error);
 }
 
 static void
@@ -333,6 +336,7 @@ static void
 fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.firehose");
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -341,7 +345,6 @@ fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
-	fu_device_retry_add_recovery(FU_DEVICE(self), FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, NULL);
 }
 
 static void

@@ -42,7 +42,7 @@ fu_acpi_phat_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **er
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
-	if (!fu_firmware_parse_bytes(phat, blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(phat, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return FALSE;
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
 	fu_plugin_add_report_metadata(plugin, "PHAT", str);

@@ -1,0 +1,34 @@
+{
+  "name": "Intel GSC",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/intel-gsc-setup.json",
+      "components": [
+        {
+          "protocol": "com.intel.gsc",
+          "version": "21.1137",
+          "guids": [
+            "c3808bdf-c31b-5c03-905f-6f223848cae0"
+          ]
+        },
+        {
+          "name": "OptionROM Code",
+          "protocol": "com.intel.gsc",
+          "version": "23.1051.0.0",
+          "guids": [
+            "055b452f-5860-53fd-bb74-5316f955de6b"
+          ]
+        },
+        {
+          "name": "OptionROM Data",
+          "protocol": "com.intel.gsc",
+          "version": "23.1051.0.0",
+          "guids": [
+            "41a3c2f5-bbe0-56e7-ae2f-7d4aa77e68a6"
+          ]
+        }
+      ]
+    }
+  ]
+}

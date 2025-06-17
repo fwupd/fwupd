@@ -1050,10 +1050,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "අවහිර කළ ස්ථිරාංග ලැයිස්තුව ලබා ගනී"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "සම්බන්ධිත දෘඩාංග සඳහා යාවත්කාලීන ලැයිස්තුව ලබා ගනී"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "උපාංගයක් සඳහා නිකුත් කිරීම් ලබා ගනී"
 
@@ -1418,10 +1414,6 @@ msgstr "තනි PCR අගය පමණක් පෙන්වන්න"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "අනුවාද උත්ශ්‍රේණි කිරීමට පමණක් අවසර ඇත"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON ආකෘතියෙන් ප්‍රතිදානය"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

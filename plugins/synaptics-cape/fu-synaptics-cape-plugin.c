@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuSynapticsCapePlugin, fu_synaptics_cape_plugin, FU_TYPE_PLUGIN)
 static void
 fu_synaptics_cape_plugin_init(FuSynapticsCapePlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

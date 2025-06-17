@@ -28,7 +28,7 @@ fu_elan_kbd_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elan_kbd_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	g_autoptr(FuFirmware) firmware_app = fu_firmware_new();

@@ -88,7 +88,7 @@ fu_ihex_firmware_record_free(FuIhexFirmwareRecord *rcd)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuIhexFirmwareRecord, fu_ihex_firmware_record_free)
 
 static FuIhexFirmwareRecord *
-fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags, GError **error)
+fu_ihex_firmware_record_new(guint ln, const gchar *line, FuFirmwareParseFlags flags, GError **error)
 {
 	g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
 	gsize linesz = strlen(line);
@@ -138,7 +138,7 @@ fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags
 	}
 
 	/* verify checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
 		for (guint i = 1; i < line_end + 2; i += 2) {
 			guint8 data_tmp = 0;
@@ -168,7 +168,7 @@ fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags
 
 typedef struct {
 	FuIhexFirmware *self;
-	FwupdInstallFlags flags;
+	FuFirmwareParseFlags flags;
 } FuIhexFirmwareTokenHelper;
 
 static gboolean
@@ -212,7 +212,7 @@ fu_ihex_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_ihex_firmware_tokenize(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
@@ -223,7 +223,7 @@ fu_ihex_firmware_tokenize(FuFirmware *firmware,
 static gboolean
 fu_ihex_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);

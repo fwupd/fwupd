@@ -36,6 +36,14 @@ typedef enum {
 	 * Since: 2.0.0
 	 */
 	FWUPD_CODEC_FLAG_TRUSTED = 1 << 0,
+	/**
+	 * FWUPD_CODEC_FLAG_COMPRESSED:
+	 *
+	 * Compress values to the smallest possible size.
+	 *
+	 * Since: 2.0.8
+	 */
+	FWUPD_CODEC_FLAG_COMPRESSED = 1 << 1,
 } FwupdCodecFlags;
 
 struct _FwupdCodecInterface {
@@ -113,6 +121,9 @@ fwupd_codec_json_append(JsonBuilder *builder, const gchar *key, const gchar *val
     G_GNUC_NON_NULL(1, 2);
 void
 fwupd_codec_json_append_strv(JsonBuilder *builder, const gchar *key, gchar **value)
+    G_GNUC_NON_NULL(1, 2);
+void
+fwupd_codec_json_append_map(JsonBuilder *builder, const gchar *key, GHashTable *value)
     G_GNUC_NON_NULL(1, 2);
 void
 fwupd_codec_json_append_int(JsonBuilder *builder, const gchar *key, guint64 value)

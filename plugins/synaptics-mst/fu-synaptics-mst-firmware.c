@@ -78,7 +78,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE(firmware);

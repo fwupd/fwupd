@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuGenesysGl32xxFirmware, fu_genesys_gl32xx_firmware, FU_TYPE_FIRMW
 static gboolean
 fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	guint8 ver[4] = {0};
@@ -41,7 +41,7 @@ fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version(firmware, version);
 
 	/* verify checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		gsize streamsz = 0;
 		guint8 chksum_actual = 0;
 		guint8 chksum_expected = 0;

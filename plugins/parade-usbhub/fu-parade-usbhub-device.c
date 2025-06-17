@@ -1138,7 +1138,7 @@ static FuFirmware *
 fu_parade_usbhub_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_parade_usbhub_firmware_new();
@@ -1262,7 +1262,7 @@ fu_parade_usbhub_device_init(FuParadeUsbhubDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_firmware_size(FU_DEVICE(self), FU_PARADE_USBHUB_SPI_ROM_SIZE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.paradetech.usbhub");
-	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_HUB);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);

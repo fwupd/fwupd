@@ -30,9 +30,6 @@ static void
 fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
-	GPtrArray *devices;
-	FuBackend *backend;
-	g_autoptr(FuRedfishDevice) dev = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;
@@ -72,6 +69,9 @@ fu_test_self_init(FuTest *self)
 		g_assert_no_error(error);
 		g_assert_true(ret);
 		fu_redfish_plugin_set_credentials(self->smc_plugin, "smc_username", "password2");
+		ret = fu_redfish_plugin_reload(self->smc_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 		ret = fu_plugin_runner_coldplug(self->smc_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -89,6 +89,9 @@ fu_test_self_init(FuTest *self)
 		fu_redfish_plugin_set_credentials(self->unlicensed_plugin,
 						  "unlicensed_username",
 						  "password2");
+		ret = fu_redfish_plugin_reload(self->unlicensed_plugin, progress, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 		ret = fu_plugin_runner_coldplug(self->unlicensed_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
@@ -108,18 +111,10 @@ fu_test_self_init(FuTest *self)
 		/* We just changed the credentials and need to resetup again to discover the vendor
 		 * Here we need to get a device to query the backend
 		 */
-		ret = fu_plugin_runner_coldplug(self->hpe_plugin, progress, &error);
+		ret = fu_redfish_plugin_reload(self->hpe_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
-		devices = fu_plugin_get_devices(self->hpe_plugin);
-		backend = FU_BACKEND(fu_redfish_device_get_backend(
-		    FU_REDFISH_DEVICE(g_ptr_array_index(devices, 0))));
-
-		fu_plugin_device_remove(self->hpe_plugin, FU_DEVICE(g_ptr_array_index(devices, 0)));
-		fu_plugin_device_remove(self->hpe_plugin, FU_DEVICE(g_ptr_array_index(devices, 1)));
-
-		fu_backend_invalidate(backend);
-		ret = fu_backend_setup(backend, FU_BACKEND_SETUP_FLAG_NONE, progress, &error);
+		ret = fu_plugin_runner_coldplug(self->hpe_plugin, progress, &error);
 		g_assert_no_error(error);
 		g_assert_true(ret);
 	}
@@ -383,7 +378,7 @@ fu_test_redfish_devices_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_version_format(dev), ==, FWUPD_VERSION_FORMAT_PAIR);
 	g_assert_cmpint(fu_device_get_version_build_date(dev), ==, 1552608000);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
-	g_assert_true(fu_device_has_icon(dev, "network-wired"));
+	g_assert_true(fu_device_has_icon(dev, FU_DEVICE_ICON_NETWORK_WIRED));
 	g_assert_true(fu_device_has_protocol(dev, "org.dmtf.redfish"));
 	g_assert_true(fu_device_has_guid(dev, "fee82a67-6ce2-4625-9f44-237ad2402c28"));
 	g_assert_true(fu_device_has_guid(dev, "a6d3294e-37e5-50aa-ae2f-c0c457af16f3"));
@@ -490,15 +485,15 @@ fu_test_redfish_hpe_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 0);
 	blob_fw = g_bytes_new_static("hello", 5);
 	stream_fw = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(stream_fw, "test.fwpkg");
 	ret = fu_plugin_runner_write_firmware(self->hpe_plugin,
 					      dev,
 					      stream_fw,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	fu_progress_step_done(progress);
 }
 
 static void
@@ -530,11 +525,12 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 1);
 	blob_fw = g_bytes_new_static("hello", 5);
 	firmware = fu_firmware_new_from_bytes(blob_fw);
+	fu_firmware_set_filename(firmware, "firmware.exe");
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      firmware,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -546,7 +542,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 					      dev,
 					      firmware,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
 	g_assert_false(ret);
@@ -583,11 +579,12 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 	dev = g_ptr_array_index(devices, 1);
 	blob_fw1 = g_bytes_new_static("hello", 5);
 	firmware1 = fu_firmware_new_from_bytes(blob_fw1);
+	fu_firmware_set_filename(firmware1, "firmware.bin");
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      firmware1,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -600,7 +597,7 @@ fu_test_redfish_smc_update_func(gconstpointer user_data)
 					      dev,
 					      firmware2,
 					      fu_progress_get_child(progress),
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_ALREADY_PENDING);

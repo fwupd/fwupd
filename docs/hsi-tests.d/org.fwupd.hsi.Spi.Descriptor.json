@@ -17,6 +17,7 @@
     "locked": "the SPI BAR is locked and read only from all regions"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "requires": [
     "CPUID\\VID_GenuineIntel"
   ],

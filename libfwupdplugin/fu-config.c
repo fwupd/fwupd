@@ -187,6 +187,7 @@ fu_config_migrate_keyfile(FuConfig *self)
 			  {"fwupd", "VerboseDomains", NULL},
 			  {"fwupd", "OnlyTrusted", NULL},
 			  {"fwupd", "IgnorePower", NULL},
+			  {"fwupd", "RequireImmutableEnumeration", NULL},
 			  {"fwupd", "DisabledPlugins", "test;test_ble;invalid"},
 			  {"fwupd", "DisabledPlugins", "test;test_ble"},
 			  {"redfish", "IpmiDisableCreateUser", NULL},

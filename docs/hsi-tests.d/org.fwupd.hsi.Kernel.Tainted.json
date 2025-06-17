@@ -15,5 +15,6 @@
   "success-results": {
     "not-tainted": "the kernel is trusted"
   },
+  "resolution": "Remove any non-free kernel modules.",
   "fwupd-version": "1.5.0"
 }

@@ -30,7 +30,7 @@ fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 static gboolean
 fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	g_autoptr(GInputStream) stream_nocrc = NULL;
@@ -45,7 +45,7 @@ fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
 				    "dict image is too small");
 		return FALSE;
 	}
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}

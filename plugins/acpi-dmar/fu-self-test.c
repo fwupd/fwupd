@@ -28,7 +28,7 @@ fu_acpi_dmar_opt_in_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(dmar),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -55,7 +55,7 @@ fu_acpi_dmar_opt_out_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(dmar),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

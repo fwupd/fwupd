@@ -39,6 +39,8 @@ fu_engine_config_get_update_motd(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_config_get_enumerate_all_devices(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 gboolean
+fu_engine_config_get_require_immutable_enumeration(FuEngineConfig *self);
+gboolean
 fu_engine_config_get_ignore_power(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_config_get_only_trusted(FuEngineConfig *self) G_GNUC_NON_NULL(1);

@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/335f10696cd57ae74b2115a9e44a39a2c5208e7e090d1f4e72bb91bc65a7480d-jabra-evolve2-75-1.8.13.cab",
+      "url": "335f10696cd57ae74b2115a9e44a39a2c5208e7e090d1f4e72bb91bc65a7480d-jabra-evolve2-75-1.8.13.cab",
       "components": [
         {
           "version": "1.8.13",
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/8fa6ff5d43c0cb5807f136c6edc90c146f3796b9228706ebed6f6348d9c358cd-jabra-evolve2-75-1.7.4.cab",
+      "url": "8fa6ff5d43c0cb5807f136c6edc90c146f3796b9228706ebed6f6348d9c358cd-jabra-evolve2-75-1.7.4.cab",
       "components": [
         {
           "version": "1.7.4",
@@ -31,8 +31,8 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/acef8b8dc286659a6e783e49aaf55872d4ce6f0f0c50330452c5db756cb2d307-jabra-evolve2-75-1.11.7.cab",
-      "emulation-url": "https://fwupd.org/downloads/169609950e6182d1c0add7aae7b2627510b29651287312bcd6e924f76c167cf3-emulation.zip",
+      "url": "acef8b8dc286659a6e783e49aaf55872d4ce6f0f0c50330452c5db756cb2d307-jabra-evolve2-75-1.11.7.cab",
+      "emulation-url": "169609950e6182d1c0add7aae7b2627510b29651287312bcd6e924f76c167cf3-emulation.zip",
       "components": [
         {
           "version": "1.11.7",

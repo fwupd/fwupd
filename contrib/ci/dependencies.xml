@@ -409,6 +409,26 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="libreadline-dev">
+    <distro id="centos">
+      <package variant="x86_64">readline-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">readline-devel</package>
+      <package variant="aarch64">readline-devel</package>
+      <package variant="mingw64">mingw64-readline</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="fontconfig">
     <distro id="centos">
       <package variant="x86_64" />

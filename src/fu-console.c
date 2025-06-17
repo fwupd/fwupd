@@ -11,6 +11,11 @@
 #include <glib/gi18n.h>
 #include <stdio.h>
 
+#ifdef HAVE_READLINE
+#include <readline/history.h>
+#include <readline/readline.h>
+#endif
+
 #include "fu-console.h"
 
 #ifdef _WIN32
@@ -137,6 +142,21 @@ fu_console_print_kv(FuConsole *self, const gchar *title, const gchar *msg)
 	}
 }
 
+#ifndef HAVE_READLINE
+static gchar *
+readline(const gchar *prompt) /* nocheck:name */
+{
+	char buffer[64] = {0};
+
+	if (prompt != NULL)
+		g_print("%s\n", prompt);
+	if (!fgets(buffer, sizeof(buffer), stdin))
+		return NULL;
+	g_strdelimit(buffer, "\n", '\0');
+	return g_strndup(buffer, sizeof(buffer));
+}
+#endif
+
 guint
 fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 {
@@ -144,6 +164,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 	guint answer = 0;
 	va_list args;
 	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
@@ -151,13 +172,7 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 
 	fu_console_print_full(self, FU_CONSOLE_PRINT_FLAG_NONE, "%s [0-%u]: ", tmp, maxnum);
 	do {
-		char buffer[64];
-
-		/* swallow the \n at end of line too */
-		if (!fgets(buffer, sizeof(buffer), stdin))
-			break;
-		if (strlen(buffer) == sizeof(buffer) - 1)
-			continue;
+		g_autofree gchar *buffer = readline(prompt);
 
 		/* get a number */
 		retval = sscanf(buffer, "%u", &answer);
@@ -166,11 +181,10 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 		if (retval == 1 && answer <= maxnum)
 			break;
 
-		fu_console_print_full(self,
-				      FU_CONSOLE_PRINT_FLAG_NONE,
-				      /* TRANSLATORS: the user isn't reading the question */
-				      _("Please enter a number from 0 to %u: "),
-				      maxnum);
+		if (prompt == NULL) {
+			/* TRANSLATORS: the user isn't reading the question */
+			prompt = g_strdup_printf(_("Please enter a number from 0 to %u: "), maxnum);
+		}
 	} while (TRUE);
 	return answer;
 }
@@ -180,6 +194,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 {
 	va_list args;
 	g_autofree gchar *tmp = NULL;
+	g_autofree gchar *prompt = NULL;
 
 	va_start(args, format);
 	tmp = g_strdup_vprintf(format, args);
@@ -190,22 +205,23 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 			      "%s [%s]: ",
 			      tmp,
 			      def ? "Y|n" : "y|N");
+
 	do {
-		char buffer[4];
-		if (!fgets(buffer, sizeof(buffer), stdin))
-			continue;
-		if (strlen(buffer) == sizeof(buffer) - 1)
-			continue;
-		if (g_strcmp0(buffer, "\n") == 0)
+		g_autofree gchar *buffer = readline(prompt);
+
+		if (!strlen(buffer))
 			return def;
 		buffer[0] = g_ascii_toupper(buffer[0]);
-		if (g_strcmp0(buffer, "Y\n") == 0)
+		if (g_strcmp0(buffer, "Y") == 0)
 			return TRUE;
-		if (g_strcmp0(buffer, "N\n") == 0)
+		if (g_strcmp0(buffer, "N") == 0)
 			return FALSE;
 
-		/* TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N' */
-		fu_console_print(self, _("Please enter either %s or %s: "), "Y", "N");
+		if (prompt == NULL) {
+			/* TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+			 * 'N' */
+			prompt = g_strdup_printf(_("Please enter either %s or %s: "), "Y", "N");
+		}
 	} while (TRUE);
 	return FALSE;
 }

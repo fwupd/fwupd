@@ -37,6 +37,10 @@ const gchar *
 fu_device_get_update_request_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id) G_GNUC_NON_NULL(1);
+const gchar *
+fu_device_get_fwupd_version(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_ensure_id(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 void
@@ -89,3 +93,9 @@ FuBackend *
 fu_device_get_backend(FuDevice *self);
 void
 fu_device_set_backend(FuDevice *self, FuBackend *backend);
+
+void
+fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error) G_GNUC_NON_NULL(1, 2);

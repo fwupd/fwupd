@@ -178,3 +178,12 @@ Remember: Plugins should be upstream!
 * `fu_context_get_smbios_string()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
 * `fu_context_get_smbios_integer()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
 * `fu_context_get_smbios_data()`: Add an expected structure length, typically `FU_SMBIOS_STRUCTURE_LENGTH_ANY`.
+
+## 2.0.11
+
+* `fu_device_read_firmware()`: Add `FuFirmwareParseFlags` to `fu_device_read_firmware`.
+
+## 2.0.12
+
+* Plugins that don't allow devices to function 100% through probe should use `FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION`
+* `fu_device_get_contents_bytes()`: Add a maximum read size, typically `G_MAXSIZE`

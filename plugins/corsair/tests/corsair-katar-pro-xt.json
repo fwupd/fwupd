@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/7598356dbb3c40f16bc4cd314497ad0b983303e52311f95afc1d9aa8661a154d-corsair-bora-1.6.26.cab",
+      "url": "7598356dbb3c40f16bc4cd314497ad0b983303e52311f95afc1d9aa8661a154d-corsair-bora-1.6.26.cab",
       "components": [
         {
           "version": "1.6.26",

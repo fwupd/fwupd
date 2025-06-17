@@ -55,17 +55,75 @@ typedef enum {
 	FU_FIRMWARE_EXPORT_FLAG_UNKNOWN = G_MAXUINT64,
 } FuFirmwareExportFlags;
 
+/**
+ * FuFirmwareParseFlags:
+ *
+ * The firmware parse flags.
+ **/
+typedef enum {
+	/**
+	 * FWUPD_INSTALL_FLAG_NONE:
+	 *
+	 * No flags set.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_NONE = 0,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM:
+	 *
+	 * Ignore firmware CRCs and checksums.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM = 1 << 6,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID:
+	 *
+	 * Ignore firmware vendor and project checks.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID = 1 << 7,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_NO_SEARCH:
+	 *
+	 * Do not use heuristics when parsing the image.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_NO_SEARCH = 1 << 8,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM:
+	 *
+	 * Keep a reference to the parsed stream.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM = 1 << 10,
+	/**
+	 * FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB:
+	 *
+	 * Keep a reference to the parsed blob in-memory.
+	 *
+	 * This allows the stream to be closed even when the firmware needs to be re-parsed.
+	 *
+	 * Since: 2.0.9
+	 */
+	FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB = 1 << 11,
+} FuFirmwareParseFlags;
+
 struct _FuFirmwareClass {
 	GObjectClass parent_class;
 	gboolean (*parse)(FuFirmware *self,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gboolean (*build)(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	gchar *(*get_checksum)(FuFirmware *self,
@@ -74,7 +132,7 @@ struct _FuFirmwareClass {
 	gboolean (*validate)(FuFirmware *self, GInputStream *stream, gsize offset, GError **error);
 	gboolean (*check_compatible)(FuFirmware *self,
 				     FuFirmware *other,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error);
 	gchar *(*convert_version)(FuFirmware *self, guint64 version_raw);
 };
@@ -260,7 +318,7 @@ fu_firmware_new_from_bytes(GBytes *fw);
 FuFirmware *
 fu_firmware_new_from_gtypes(GInputStream *stream,
 			    gsize offset,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error,
 			    ...) G_GNUC_NON_NULL(1);
 gchar *
@@ -287,7 +345,8 @@ fu_firmware_get_version_format(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
 fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_firmware_has_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_NON_NULL(1);
+fu_firmware_has_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 const gchar *
 fu_firmware_get_filename(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
@@ -348,7 +407,7 @@ fu_firmware_set_parent(FuFirmware *self, FuFirmware *parent) G_GNUC_NON_NULL(1);
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
 		     GInputStream *stream,
-		     FwupdInstallFlags flags,
+		     FuFirmwareParseFlags flags,
 		     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_firmware_build(FuFirmware *self, XbNode *n, GError **error) G_GNUC_WARN_UNUSED_RESULT
@@ -365,16 +424,16 @@ gboolean
 fu_firmware_parse_stream(FuFirmware *self,
 			 GInputStream *stream,
 			 gsize offset,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_parse_file(FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
+fu_firmware_parse_file(FuFirmware *self, GFile *file, FuFirmwareParseFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_firmware_parse_bytes(FuFirmware *self,
 			GBytes *fw,
 			gsize offset,
-			FwupdInstallFlags flags,
+			FuFirmwareParseFlags flags,
 			GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 GBytes *
 fu_firmware_write(FuFirmware *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
@@ -390,7 +449,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 gboolean
 fu_firmware_check_compatible(FuFirmware *self,
 			     FuFirmware *other,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
 
 void

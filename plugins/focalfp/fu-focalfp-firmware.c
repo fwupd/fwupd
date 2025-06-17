@@ -55,7 +55,7 @@ fu_focalfp_firmware_compute_checksum_cb(const guint8 *buf,
 static gboolean
 fu_focalfp_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuFocalfpFirmware *self = FU_FOCALFP_FIRMWARE(firmware);

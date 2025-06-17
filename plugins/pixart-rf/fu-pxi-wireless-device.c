@@ -54,7 +54,7 @@ static FuFirmware *
 fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
 					FuProgress *progress,
-					FwupdInstallFlags flags,
+					FuFirmwareParseFlags flags,
 					GError **error)
 {
 	FuPxiReceiverDevice *parent;
@@ -641,7 +641,7 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 	fu_byte_array_append_uint8(ota_cmd, 0x1); /* ota mcu reset command */
 	fu_byte_array_append_uint8(
 	    ota_cmd,
-	    FU_PXI_DEVICE_CMD_FW_MCU_RESET);		/* ota mcu reset command op code */
+	    FU_PXI_DEVICE_CMD_FW_MCU_RESET); /* ota mcu reset command op code */
 	fu_byte_array_append_uint8(
 	    ota_cmd,
 	    FU_PXI_OTA_DISCONNECT_REASON_RESET); /* ota mcu reset command reason */

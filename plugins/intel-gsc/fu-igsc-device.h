@@ -13,7 +13,7 @@
 #include "fu-igsc-struct.h"
 
 #define FU_TYPE_IGSC_DEVICE (fu_igsc_device_get_type())
-G_DECLARE_FINAL_TYPE(FuIgscDevice, fu_igsc_device, FU, IGSC_DEVICE, FuMeiDevice)
+G_DECLARE_FINAL_TYPE(FuIgscDevice, fu_igsc_device, FU, IGSC_DEVICE, FuHeciDevice)
 
 gboolean
 fu_igsc_device_get_oprom_code_devid_enforcement(FuIgscDevice *self);

@@ -1,4 +1,6 @@
-# Jabra GNP
+---
+title: Plugin: Jabra GNP
+---
 
 ## Introduction
 

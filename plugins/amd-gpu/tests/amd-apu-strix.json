@@ -1,0 +1,17 @@
+{
+  "name": "AMD Strix",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/amd-apu-strix-setup.json",
+      "components": [
+        {
+          "version": "1",
+          "guids": [
+            "cc72cddc-68ef-5809-afce-bb1e5bcf571f"
+          ]
+        }
+      ]
+    }
+  ]
+}

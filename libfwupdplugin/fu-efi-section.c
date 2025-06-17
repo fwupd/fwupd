@@ -60,14 +60,14 @@ fu_efi_section_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuild
 static gboolean
 fu_efi_section_parse_volume_image(FuEfiSection *self,
 				  GInputStream *stream,
-				  FwupdInstallFlags flags,
+				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_efi_volume_new();
 	if (!fu_firmware_parse_stream(img,
 				      stream,
 				      0x0,
-				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error)) {
 		return FALSE;
 	}
@@ -78,7 +78,7 @@ fu_efi_section_parse_volume_image(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 				   GInputStream *stream,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
@@ -89,7 +89,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 	blob = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
 	if (blob == NULL)
 		return FALSE;
-	blob_uncomp = fu_lzma_decompress_bytes(blob, error);
+	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * 1024 * 1024, error);
 	if (blob_uncomp == NULL) {
 		g_prefix_error(error, "failed to decompress: ");
 		return FALSE;
@@ -105,7 +105,7 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse_user_interface(FuEfiSection *self,
 				    GInputStream *stream,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
@@ -131,7 +131,7 @@ fu_efi_section_parse_user_interface(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse_version(FuEfiSection *self,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	guint16 version_raw = 0;
@@ -160,7 +160,7 @@ fu_efi_section_parse_version(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse_compression_sections(FuEfiSection *self,
 					  GInputStream *stream,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;
@@ -222,7 +222,7 @@ fu_efi_section_freeform_subtype_guid_to_string(const gchar *guid)
 static gboolean
 fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 					   GInputStream *stream,
-					   FwupdInstallFlags flags,
+					   FuFirmwareParseFlags flags,
 					   GError **error)
 {
 	const gchar *guid_ui;
@@ -248,7 +248,7 @@ fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse(FuFirmware *firmware,
 		     GInputStream *stream,
-		     FwupdInstallFlags flags,
+		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);

@@ -18,6 +18,7 @@
     "not-enabled": "debugging is not currently enabled"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html": "Intel Direct Connect Interface",
     "https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270": "Chipsec 4xxlp register definitions",

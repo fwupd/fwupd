@@ -39,7 +39,6 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(self->proxy, "Type");
 	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
-		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
 		return;
 	}
@@ -57,35 +56,12 @@ fu_upower_plugin_rescan_devices(FuPlugin *plugin)
 	state_val = g_dbus_proxy_get_cached_property(self->proxy, "State");
 	if (state_val == NULL || g_variant_get_uint32(state_val) == 0) {
 		g_warning("failed to query power state");
-		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
 		fu_context_set_battery_level(ctx, FWUPD_BATTERY_LEVEL_INVALID);
-		return;
-	}
-
-	/* map from UpDeviceState to FuPowerState */
-	switch (g_variant_get_uint32(state_val)) {
-	case UP_DEVICE_STATE_CHARGING:
-	case UP_DEVICE_STATE_PENDING_CHARGE:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_CHARGING);
-		break;
-	case UP_DEVICE_STATE_DISCHARGING:
-	case UP_DEVICE_STATE_PENDING_DISCHARGE:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_DISCHARGING);
-		break;
-	case UP_DEVICE_STATE_EMPTY:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY_EMPTY);
-		break;
-	case UP_DEVICE_STATE_FULLY_CHARGED:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_AC_FULLY_CHARGED);
-		break;
-	default:
-		fu_context_set_power_state(ctx, FU_POWER_STATE_UNKNOWN);
-		break;
 	}
 }
 
 static void
-fu_upower_plugin_rescan_manager(FuPlugin *plugin)
+fu_upower_plugin_update_lid(FuPlugin *plugin)
 {
 	FuUpowerPlugin *self = FU_UPOWER_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
@@ -109,6 +85,31 @@ fu_upower_plugin_rescan_manager(FuPlugin *plugin)
 		return;
 	}
 	fu_context_set_lid_state(ctx, FU_LID_STATE_OPEN);
+}
+
+static void
+fu_upower_plugin_update_battery(FuPlugin *plugin)
+{
+	FuUpowerPlugin *self = FU_UPOWER_PLUGIN(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	g_autoptr(GVariant) on_battery = NULL;
+
+	on_battery = g_dbus_proxy_get_cached_property(self->proxy_manager, "OnBattery");
+	if (on_battery == NULL) {
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
+		return;
+	}
+	if (g_variant_get_boolean(on_battery))
+		fu_context_set_power_state(ctx, FU_POWER_STATE_BATTERY);
+	else
+		fu_context_set_power_state(ctx, FU_POWER_STATE_AC);
+}
+
+static void
+fu_upower_plugin_rescan_manager(FuPlugin *plugin)
+{
+	fu_upower_plugin_update_lid(plugin);
+	fu_upower_plugin_update_battery(plugin);
 }
 
 static void

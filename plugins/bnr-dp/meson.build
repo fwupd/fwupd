@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginBnrDp"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -50,4 +51,5 @@ if get_option('tests')
       },
     ),
   )
+endif
 endif

@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuJabraFilePlugin, fu_jabra_file_plugin, FU_TYPE_PLUGIN)
 static void
 fu_jabra_file_plugin_init(FuJabraFilePlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

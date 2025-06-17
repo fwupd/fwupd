@@ -62,7 +62,10 @@ fu_bcm57xx_firmware_parse_header(FuBcm57xxFirmware *self, GInputStream *stream, 
 }
 
 static FuFirmware *
-fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self, GInputStream *stream, GError **error)
+fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self,
+			       GInputStream *stream,
+			       FuFirmwareParseFlags flags,
+			       GError **error)
 {
 	guint32 mac_addr0 = 0;
 	g_autoptr(FuFirmware) img = fu_firmware_new();
@@ -91,7 +94,7 @@ fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self, GInputStream *stream, GE
 		return NULL;
 
 	/* success */
-	if (!fu_firmware_parse_stream(img, stream, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_stream(img, stream, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(img, "info");
 	return g_steal_pointer(&img);
@@ -101,7 +104,7 @@ static FuFirmware *
 fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 				 GInputStream *stream,
 				 guint32 *out_stage1_sz,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	gsize streamsz = 0;
@@ -152,7 +155,7 @@ fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
-				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error))
 		return NULL;
 
@@ -170,7 +173,7 @@ static FuFirmware *
 fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 				 GInputStream *stream,
 				 guint32 stage1_sz,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	gsize streamsz = 0;
@@ -207,7 +210,7 @@ fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
-				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error))
 		return NULL;
 
@@ -221,7 +224,7 @@ static gboolean
 fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 			       GInputStream *stream,
 			       guint idx,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	gsize streamsz = 0;
@@ -292,7 +295,7 @@ fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 	if (!fu_firmware_parse_stream(img,
 				      stream_tmp,
 				      0x0,
-				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error))
 		return FALSE;
 
@@ -330,7 +333,7 @@ fu_bcm57xx_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
-			  FwupdInstallFlags flags,
+			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
 	FuBcm57xxFirmware *self = FU_BCM57XX_FIRMWARE(firmware);
@@ -404,7 +407,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 	    fu_partial_input_stream_new(stream, BCM_NVRAM_INFO_BASE, BCM_NVRAM_INFO_SZ, error);
 	if (stream_info == NULL)
 		return FALSE;
-	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, error);
+	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, flags, error);
 	if (img_info == NULL) {
 		g_prefix_error(error, "failed to parse info: ");
 		return FALSE;

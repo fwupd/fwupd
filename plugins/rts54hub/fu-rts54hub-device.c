@@ -16,6 +16,7 @@ struct _FuRts54HubDevice {
 	gboolean dual_bank;
 	gboolean running_on_flash;
 	guint8 vendor_cmd;
+	guint64 block_sz;
 };
 
 G_DEFINE_TYPE(FuRts54HubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
@@ -44,6 +45,32 @@ fu_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_bool(str, idt, "FwAuth", self->fw_auth);
 	fwupd_codec_string_append_bool(str, idt, "DualBank", self->dual_bank);
 	fwupd_codec_string_append_bool(str, idt, "RunningOnFlash", self->running_on_flash);
+}
+
+static gboolean
+fu_rts54hub_device_set_quirk_kv(FuDevice *device,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE(device);
+
+	if (g_strcmp0(key, "Rts54BlockSize") == 0) {
+		return fu_strtoull(value,
+				   &self->block_sz,
+				   0,
+				   FU_RTS54HUB_DEVICE_BLOCK_SIZE,
+				   FU_INTEGER_BASE_AUTO,
+				   error);
+	}
+
+	/* failed */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+
+	return FALSE;
 }
 
 gboolean
@@ -463,7 +490,7 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
-						FU_RTS54HUB_DEVICE_BLOCK_SIZE,
+						self->block_sz,
 						error);
 	if (chunks == NULL)
 		return FALSE;
@@ -512,7 +539,7 @@ static FuFirmware *
 fu_rts54hub_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	guint8 tmp = 0;
@@ -549,6 +576,7 @@ fu_rts54hub_device_init(FuRts54HubDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	self->block_sz = FU_RTS54HUB_DEVICE_BLOCK_SIZE;
 }
 
 static void
@@ -561,4 +589,5 @@ fu_rts54hub_device_class_init(FuRts54HubDeviceClass *klass)
 	device_class->prepare_firmware = fu_rts54hub_device_prepare_firmware;
 	device_class->close = fu_rts54hub_device_close;
 	device_class->set_progress = fu_rts54hub_device_set_progress;
+	device_class->set_quirk_kv = fu_rts54hub_device_set_quirk_kv;
 }

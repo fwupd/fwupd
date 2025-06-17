@@ -281,10 +281,6 @@ fu_dell_kestrel_plugin_config_parentship(FuPlugin *plugin)
 static void
 fu_dell_kestrel_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 {
-	/* usb device of interset */
-	if (!FU_IS_USB_DEVICE(device))
-		return;
-
 	/* leverage intel_usb4 for usb4 devices */
 	if (fu_device_has_guid(device, DELL_KESTREL_T4_DEVID) ||
 	    fu_device_has_guid(device, DELL_KESTREL_T5_DEVID)) {
@@ -301,6 +297,10 @@ fu_dell_kestrel_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
 		fu_plugin_cache_add(plugin, "usb4", device);
 	}
+
+	/* usb device of interset */
+	if (!FU_IS_USB_DEVICE(device))
+		return;
 
 	/* leverage synaptics_vmm9 plugin for the mst device */
 	if (fu_device_get_vid(device) == MST_VMM89_USB_VID &&
@@ -456,6 +456,7 @@ fu_dell_kestrel_plugin_prepare(FuPlugin *plugin,
 static void
 fu_dell_kestrel_plugin_init(FuDellKestrelPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

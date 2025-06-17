@@ -433,6 +433,8 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		return "ready";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_TEST_ONLY)
 		return "test-only";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION)
+		return "mutable-enumeration";
 	return NULL;
 }
 
@@ -489,6 +491,8 @@ fwupd_plugin_flag_from_string(const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_READY;
 	if (g_strcmp0(plugin_flag, "test-only") == 0)
 		return FWUPD_PLUGIN_FLAG_TEST_ONLY;
+	if (g_strcmp0(plugin_flag, "mutable-enumeration") == 0)
+		return FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION;
 	return FWUPD_PLUGIN_FLAG_UNKNOWN;
 }
 
@@ -855,14 +859,10 @@ fwupd_install_flags_from_string(const gchar *str)
 		return FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (g_strcmp0(str, "allow-branch-switch") == 0)
 		return FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (g_strcmp0(str, "ignore-checksum") == 0)
-		return FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
-	if (g_strcmp0(str, "ignore-vid-pid") == 0)
-		return FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
-	if (g_strcmp0(str, "no-search") == 0)
-		return FWUPD_INSTALL_FLAG_NO_SEARCH;
 	if (g_strcmp0(str, "ignore-requirements") == 0)
 		return FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+	if (g_strcmp0(str, "only-emulated") == 0)
+		return FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 
 	return FWUPD_INSTALL_FLAG_UNKNOWN;
 }
@@ -892,13 +892,9 @@ fwupd_install_flags_to_string(FwupdInstallFlags install_flags)
 		return "no-history";
 	if (install_flags == FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH)
 		return "allow-branch-switch";
-	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM)
-		return "ignore-checksum";
-	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
-		return "ignore-vid-pid";
-	if (install_flags == FWUPD_INSTALL_FLAG_NO_SEARCH)
-		return "no-search";
 	if (install_flags == FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS)
 		return "ignore-requirements";
+	if (install_flags == FWUPD_INSTALL_FLAG_ONLY_EMULATED)
+		return "only-emulated";
 	return NULL;
 }

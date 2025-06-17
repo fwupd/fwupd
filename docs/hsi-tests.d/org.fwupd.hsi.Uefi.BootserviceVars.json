@@ -14,6 +14,7 @@
     "locked": "bootservice-only data is not visible"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://uefi.org/specs/UEFI/2.10/07_Services_Boot_Services.html": "UEFI Specification"
   },

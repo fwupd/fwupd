@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Download tarball
         if: matrix.os == 'fedora'
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         id: download
         with:
           name: tarball
@@ -38,7 +38,7 @@ jobs:
               -v $GITHUB_WORKSPACE:/github/workspace \
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.os }}
           path: ${{ github.workspace }}/dist/*
@@ -53,7 +53,7 @@ jobs:
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
               contrib/ci/${{matrix.os}}-test.sh
       - name: Save any coverage data
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
       - name: Save tarball
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tarball
           path: ${{ github.workspace }}/build/meson-dist/*xz
@@ -119,7 +119,6 @@ jobs:
     steps:
     - name: install dependencies
       run: |
-        brew uninstall --ignore-dependencies --force pkg-config@0.29.2
         brew install meson usb.ids gobject-introspection libarchive json-glib protobuf-c vala gi-docgen
         python3 -m pip install --user jinja2 --break-system-packages
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -131,13 +130,13 @@ jobs:
   build-windows:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: fedora:41
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: configure
       run: ./contrib/ci/build_windows.sh
     - name: upload-artifact
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: windows
         path: |
@@ -152,7 +151,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download artifact
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         id: download
         with:
           name: ubuntu-x86_64
@@ -161,15 +160,15 @@ jobs:
         with:
           key: ${{ secrets.FWUPD_GITHUB_IO_SSH_KEY }}
           name: id_rsa # optional
-          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+          known_hosts: unnecessary
           if_key_exists: fail # replace / ignore / fail; optional (defaults to fail)
       - name: Clone docs
         run: |
-          cd dist/share/doc/fwupd
+          cd share/doc/fwupd
           git clone --depth 1 git@github.com:fwupd/fwupd.github.io.git
       - name: Trigger docs deployment
         run: |
-          cd dist/share/doc/fwupd/fwupd.github.io
+          cd share/doc/fwupd/fwupd.github.io
           git config credential.helper 'cache --timeout=120'
           git config user.email "info@fwupd.org"
           git config user.name "Documentation deployment Bot"
@@ -187,7 +186,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download artifact
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         id: download
         with:
           name: windows

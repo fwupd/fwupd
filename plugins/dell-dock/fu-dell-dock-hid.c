@@ -24,7 +24,7 @@
 #define HIDI2C_MAX_REGISTER	   4
 #define HID_MAX_RETRIES		   5
 #define TBT_MAX_RETRIES		   2
-#define HIDI2C_TRANSACTION_TIMEOUT 2000
+#define HIDI2C_TRANSACTION_TIMEOUT 300
 
 #define HUB_CMD_READ_DATA	0xC0
 #define HUB_CMD_WRITE_DATA	0x40
@@ -344,11 +344,11 @@ static const gchar *
 fu_dell_dock_hid_tbt_map_error(guint32 code)
 {
 	if (code == 1)
-		return g_strerror(EINVAL);
+		return fwupd_strerror(EINVAL);
 	if (code == 2)
-		return g_strerror(EPERM);
+		return fwupd_strerror(EPERM);
 
-	return g_strerror(EIO);
+	return fwupd_strerror(EIO);
 }
 
 gboolean

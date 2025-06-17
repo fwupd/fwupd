@@ -54,7 +54,7 @@ fu_qc_s5gen2_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuQcS5gen2Firmware *self = FU_QC_S5GEN2_FIRMWARE(firmware);

@@ -22,7 +22,7 @@
 #define FU_SYNAPTICS_CAPE_DEVICE_HDR_WRITE_DELAY_MS	150  /* ms */
 
 /* defines CAPE command constant values and macro */
-#define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8	 /* number of guint32 */
+#define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8 /* number of guint32 */
 
 #define FU_SYNAPTICS_CAPE_CMD_GET_FLAG 0x100 /* GET flag */
 
@@ -503,7 +503,7 @@ static FuFirmware *
 fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 					  GInputStream *stream,
 					  FuProgress *progress,
-					  FwupdInstallFlags flags,
+					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
 	FuSynapticsCapeDevice *self = FU_SYNAPTICS_CAPE_DEVICE(device);
@@ -535,7 +535,7 @@ fu_synaptics_cape_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* verify if correct device */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		const guint16 vid =
 		    fu_synaptics_cape_firmware_get_vid(FU_SYNAPTICS_CAPE_FIRMWARE(firmware));
 		const guint16 pid =
@@ -752,7 +752,7 @@ fu_synaptics_cape_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "audio-card");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AUDIO_CARD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);

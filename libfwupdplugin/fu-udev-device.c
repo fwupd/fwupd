@@ -25,6 +25,7 @@
 #include "fu-device-private.h"
 #include "fu-i2c-device.h"
 #include "fu-ioctl-private.h"
+#include "fu-output-stream.h"
 #include "fu-path.h"
 #include "fu-string.h"
 #include "fu-udev-device-private.h"
@@ -529,7 +530,6 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GOutputStream) stream = NULL;
 
 	/* emulated */
@@ -548,9 +548,7 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	/* write bus ID to file */
 	if (!fu_udev_device_ensure_bind_id(self, error))
 		return FALSE;
-	file = g_file_new_for_path(fn);
-	stream =
-	    G_OUTPUT_STREAM(g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error));
+	stream = fu_output_stream_from_path(fn, error);
 	if (stream == NULL)
 		return FALSE;
 	return g_output_stream_write_all(stream,
@@ -1143,6 +1141,29 @@ fu_udev_device_close(FuDevice *device, GError **error)
 }
 
 /**
+ * fu_udev_device_reopen:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Closes and opens the device, typically used to close() and open() the device-file which is
+ * required by some ioctls.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.9
+ **/
+gboolean
+fu_udev_device_reopen(FuUdevDevice *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!fu_udev_device_close(FU_DEVICE(self), error))
+		return FALSE;
+	return fu_udev_device_open(FU_DEVICE(self), error);
+}
+
+/**
  * fu_udev_device_ioctl_new:
  * @self: a #FuUdevDevice
  *
@@ -1222,7 +1243,7 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "ioctl error: %s [%i]",
-			    g_strerror(errno),
+			    fwupd_strerror(errno),
 			    errno);
 #else
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unspecified ioctl error");
@@ -1311,7 +1332,7 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 #endif
 			    "failed to read from port 0x%04x: %s",
 			    (guint)port,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -1419,7 +1440,7 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 #endif
 			    "failed to write to port %04x: %s",
 			    (guint)port,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -1652,6 +1673,83 @@ fu_udev_device_write_bytes(FuUdevDevice *self,
 				    timeout_ms,
 				    flags,
 				    error);
+}
+
+/**
+ * fu_udev_device_list_sysfs:
+ * @self: a #FuUdevDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Lists all the sysfs attributes.
+ *
+ * Returns: (transfer container) (element-type utf8): basenames, or %NULL
+ *
+ * Since: 2.0.9
+ **/
+GPtrArray *
+fu_udev_device_list_sysfs(FuUdevDevice *self, GError **error)
+{
+	FuDeviceEvent *event = NULL;
+	const gchar *basename;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GPtrArray) attrs = g_ptr_array_new_with_free_func(g_free);
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("ListAttr");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		const gchar *value;
+		g_auto(GStrv) attrs_strv = NULL;
+
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		value = fu_device_event_get_str(event, "Data", error);
+		if (value == NULL)
+			return NULL;
+		attrs_strv = g_strsplit(value, "\n", -1);
+		for (guint i = 0; attrs_strv[i] != NULL; i++)
+			g_ptr_array_add(attrs, g_strdup(attrs_strv[i]));
+		return g_steal_pointer(&attrs);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	/* list the files and directories */
+	if (fu_udev_device_get_sysfs_path(self) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "sysfs_path undefined");
+		return NULL;
+	}
+	dir = g_dir_open(fu_udev_device_get_sysfs_path(self), 0, error);
+	if (dir == NULL) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	while ((basename = g_dir_read_name(dir)) != NULL)
+		g_ptr_array_add(attrs, g_strdup(basename));
+
+	/* save for emulation */
+	if (event != NULL) {
+		g_autofree gchar *value = fu_strjoin("\n", attrs);
+		fu_device_event_set_str(event, "Data", value);
+	}
+
+	/* success */
+	return g_steal_pointer(&attrs);
 }
 
 /**
@@ -2131,10 +2229,13 @@ fu_udev_device_read_property(FuUdevDevice *self, const gchar *key, GError **erro
 			return NULL;
 		uevent_lines = g_strsplit(str, "\n", -1);
 		for (guint i = 0; uevent_lines[i] != NULL; i++) {
-			g_autofree gchar **kvs = g_strsplit(uevent_lines[i], "=", 2);
-			g_hash_table_insert(priv->properties,
-					    g_steal_pointer(&kvs[0]),
-					    g_steal_pointer(&kvs[1]));
+			/* only split KEY=VALUE */
+			if (g_strstr_len(uevent_lines[i], -1, "=") != NULL) {
+				g_autofree gchar **kvs = g_strsplit(uevent_lines[i], "=", 2);
+				g_hash_table_insert(priv->properties,
+						    g_steal_pointer(&kvs[0]),
+						    g_steal_pointer(&kvs[1]));
+			}
 		}
 		priv->properties_valid = TRUE;
 	}
@@ -2189,7 +2290,10 @@ fu_udev_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags 
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
 			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    builder,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);

@@ -14,12 +14,14 @@
 #include "fu-igsc-struct.h"
 
 struct _FuIgscDevice {
-	FuMeiDevice parent_instance;
+	FuHeciDevice parent_instance;
 	gchar *project;
 	guint32 hw_sku;
 	guint16 subsystem_vendor;
 	guint16 subsystem_model;
 	gboolean oprom_code_devid_enforcement;
+	guint8 svn_executing;
+	guint8 svn_min_allowed;
 };
 
 #define FU_IGSC_DEVICE_FLAG_HAS_AUX   "has-aux"
@@ -29,7 +31,7 @@ struct _FuIgscDevice {
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
 #define FU_IGSC_DEVICE_MEI_READ_TIMEOUT	   480000 /* 480 sec */
 
-G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_MEI_DEVICE)
+G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_HECI_DEVICE)
 
 #define GSC_FWU_STATUS_SUCCESS			      0x0
 #define GSC_FWU_STATUS_SIZE_ERROR		      0x5
@@ -53,6 +55,8 @@ fu_igsc_device_to_string(FuDevice *device, guint idt, GString *str)
 				       idt,
 				       "OpromCodeDevidEnforcement",
 				       self->oprom_code_devid_enforcement);
+	fwupd_codec_string_append_hex(str, idt, "SvnExecuting", self->svn_executing);
+	fwupd_codec_string_append_hex(str, idt, "SvnMinAllowed", self->svn_min_allowed);
 }
 
 gboolean
@@ -357,15 +361,6 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 }
 
 static gboolean
-fu_igsc_device_open(FuDevice *device, GError **error)
-{
-	/* open then create context */
-	if (!FU_DEVICE_CLASS(fu_igsc_device_parent_class)->open(device, error))
-		return FALSE;
-	return fu_mei_device_connect(FU_MEI_DEVICE(device), 0, error);
-}
-
-static gboolean
 fu_igsc_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
@@ -373,13 +368,35 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) fw_code_version = fu_struct_igsc_fw_version_new();
 
+	/* connect to MCA interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_MCHI2, 0, error)) {
+		g_prefix_error(error, "failed to connect: ");
+		return FALSE;
+	}
+	if (!fu_heci_device_arbh_svn_get_info(FU_HECI_DEVICE(self),
+					      FU_MKHI_ARBH_SVN_INFO_ENTRY_USAGE_ID_CSE_RBE,
+					      &self->svn_executing,
+					      &self->svn_min_allowed,
+					      error)) {
+		g_prefix_error(error, "failed to get ARBH SVN: ");
+		return FALSE;
+	}
+	if (!fu_udev_device_reopen(FU_UDEV_DEVICE(self), error))
+		return FALSE;
+
+	/* now connect to fwupdate interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	/* get current version */
 	if (!fu_igsc_device_get_version_raw(self,
 					    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
 					    fw_code_version->data,
 					    fw_code_version->len,
 					    error)) {
-		g_prefix_error(error, "cannot cannot get fw version: ");
+		g_prefix_error(error, "cannot get fw version: ");
 		return FALSE;
 	}
 	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
@@ -391,7 +408,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	/* get hardware SKU if supported */
 	if (g_strcmp0(self->project, "DG02") == 0) {
 		if (!fu_igsc_device_get_config(self, error)) {
-			g_prefix_error(error, "cannot cannot get SKU: ");
+			g_prefix_error(error, "cannot get SKU: ");
 			return FALSE;
 		}
 	}
@@ -464,11 +481,11 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 
 	/* add extra instance IDs */
 	fu_device_add_instance_str(device, "PART", "FWCODE");
-	if (!fu_device_build_instance_id(device, error, "MEI", "VEN", "DEV", "PART", NULL))
+	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
-					   "MEI",
+					   "PCI",
 					   "VEN",
 					   "DEV",
 					   "SUBSYS",
@@ -480,7 +497,7 @@ static FuFirmware *
 fu_igsc_device_prepare_firmware(FuDevice *device,
 				GInputStream *stream,
 				FuProgress *progress,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
@@ -633,7 +650,7 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 static gboolean
 fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
 {
-	return fu_mei_device_connect(FU_MEI_DEVICE(self), 0, error);
+	return fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
 }
 
 gboolean
@@ -754,12 +771,17 @@ fu_igsc_device_write_firmware(FuDevice *device,
 	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_FWIM, error);
 	if (stream_payload == NULL)
 		return FALSE;
-	return fu_igsc_device_write_blob(self,
-					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
-					 fw_info,
-					 stream_payload,
-					 progress,
-					 error);
+	if (!fu_igsc_device_write_blob(self,
+				       FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW,
+				       fw_info,
+				       stream_payload,
+				       progress,
+				       error))
+		return FALSE;
+
+	/* restart */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	return TRUE;
 }
 
 static gboolean
@@ -816,12 +838,10 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_vendor(FU_DEVICE(self), "Intel");
-	fu_device_set_name(FU_DEVICE(self), "Graphics Card");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
-	fu_device_add_icon(FU_DEVICE(self), "gpu");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_GPU);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
@@ -846,7 +866,6 @@ fu_igsc_device_class_init(FuIgscDeviceClass *klass)
 	object_class->finalize = fu_igsc_device_finalize;
 	device_class->set_progress = fu_igsc_device_set_progress;
 	device_class->to_string = fu_igsc_device_to_string;
-	device_class->open = fu_igsc_device_open;
 	device_class->setup = fu_igsc_device_setup;
 	device_class->probe = fu_igsc_device_probe;
 	device_class->prepare = fu_igsc_device_prepare;

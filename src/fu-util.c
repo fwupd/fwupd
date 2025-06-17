@@ -239,7 +239,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 	gboolean all_automatic = FALSE;
 
 	/* we don't want to ask anything */
-	if (priv->no_unreported_check) {
+	if (priv->no_unreported_check || priv->as_json) {
 		g_debug("skipping unreported check");
 		return TRUE;
 	}
@@ -582,6 +582,58 @@ fu_util_get_devices_as_json(FuUtilPrivate *priv, GPtrArray *devs, GError **error
 }
 
 static gboolean
+fu_util_check_reboot_needed(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* handle both forms */
+	if (g_strv_length(values) == 0) {
+		g_autoptr(GPtrArray) devices =
+		    fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		if (devices == NULL)
+			return FALSE;
+		for (guint i = 0; i < devices->len; i++) {
+			FwupdDevice *device = g_ptr_array_index(devices, i);
+
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	} else {
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+				priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+		}
+	}
+
+	if (!(priv->completion_flags &
+	      (FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN | FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    /* TRANSLATORS: no rebooting needed */
+				    _("No reboot is necessary"));
+		return FALSE;
+	}
+
+	if (priv->as_json)
+		return TRUE;
+
+	return fu_util_prompt_complete(priv->console, priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -690,6 +742,9 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 static void
 fu_util_display_current_message(FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
+
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(priv->console, _("Successfully installed firmware"));
 
@@ -923,6 +978,27 @@ fu_util_device_test_remove_emulated_devices(FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_util_maybe_expand_basename(FuUtilPrivate *priv, const gchar *maybe_basename, GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	if (g_str_has_prefix(maybe_basename, "https://"))
+		return g_strdup(maybe_basename);
+	if (g_str_has_prefix(maybe_basename, "/"))
+		return g_strdup(maybe_basename);
+
+	/* find LVFS remote */
+	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
+	if (remote == NULL)
+		return NULL;
+	if (fwupd_remote_get_firmware_base_uri(remote)) {
+		g_debug("no FirmwareBaseURI set in lvfs.conf, using default");
+		return g_strdup_printf("https://fwupd.org/downloads/%s", maybe_basename);
+	}
+	return g_strdup_printf("%s/%s", fwupd_remote_get_firmware_base_uri(remote), maybe_basename);
+}
+
 static gboolean
 fu_util_device_test_step(FuUtilPrivate *priv,
 			 FuUtilDeviceTestHelper *helper,
@@ -930,16 +1006,20 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 			 GError **error)
 {
 	JsonArray *json_array;
-	const gchar *emulation_url = NULL;
 
 	/* send this data to the daemon */
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
+		g_autofree gchar *emulation_url = NULL;
 
 		/* just ignore anything without emulation data */
 		if (json_object_has_member(json_obj, "emulation-url")) {
-			emulation_url = json_object_get_string_member(json_obj, "emulation-url");
+			const gchar *url_tmp =
+			    json_object_get_string_member(json_obj, "emulation-url");
 
+			emulation_url = fu_util_maybe_expand_basename(priv, url_tmp, error);
+			if (emulation_url == NULL)
+				return FALSE;
 			emulation_filename =
 			    fu_util_download_if_required(priv, emulation_url, error);
 			if (emulation_filename == NULL) {
@@ -971,10 +1051,14 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 
 	/* download file if required */
 	if (json_object_has_member(json_obj, "url")) {
-		const gchar *url = json_object_get_string_member(json_obj, "url");
+		const gchar *url_tmp = json_object_get_string_member(json_obj, "url");
 		g_autofree gchar *filename = NULL;
+		g_autofree gchar *url = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		url = fu_util_maybe_expand_basename(priv, url_tmp, error);
+		if (url == NULL)
+			return FALSE;
 		filename = fu_util_download_if_required(priv, url, error);
 		if (filename == NULL) {
 			g_prefix_error(error, "failed to download %s: ", url);
@@ -1427,6 +1511,7 @@ fu_util_device_emulate(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilDeviceTestHelper) helper = fu_util_device_test_helper_new();
 	helper->use_emulation = TRUE;
+	priv->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 	priv->filter_device_include |= FWUPD_DEVICE_FLAG_EMULATED;
 	return fu_util_device_test_full(priv, values, helper, error);
 }
@@ -2017,6 +2102,14 @@ fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error
 		return fu_util_get_device_by_id(priv, values[0], error);
 	}
 
+	if (priv->as_json) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "device ID required");
+		return NULL;
+	}
+
 	/* get all devices from daemon */
 	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devices == NULL)
@@ -2204,10 +2297,11 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		fu_console_print(priv->console,
-				 "%s %s",
-				 _("Updating"),
-				 fwupd_remote_get_id(remote));
+		if (!priv->as_json)
+			fu_console_print(priv->console,
+					 "%s %s",
+					 _("Updating"),
+					 fwupd_remote_get_id(remote));
 		if (!fwupd_client_refresh_remote(priv->client,
 						 remote,
 						 priv->download_flags,
@@ -2240,6 +2334,9 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 			    "--force");
 		return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* get devices from daemon */
 	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
@@ -2302,6 +2399,9 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 					  priv->cancellable,
 					  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- the user can do this by-hand too */
 	fu_console_print_literal(priv->console, _("Successfully refreshed metadata manually"));
@@ -2488,7 +2588,7 @@ fu_util_perhaps_refresh_remotes(FuUtilPrivate *priv, GError **error)
 	const guint64 age_limit_days = 30;
 
 	/* we don't want to ask anything */
-	if (priv->no_metadata_check) {
+	if (priv->no_metadata_check || priv->as_json) {
 		g_debug("skipping metadata check");
 		return TRUE;
 	}
@@ -2587,18 +2687,20 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
-	} else if (g_strv_length(values) == 1) {
-		FwupdDevice *device = fu_util_get_device_by_id(priv, values[0], error);
-		if (device == NULL)
-			return FALSE;
-		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-		g_ptr_array_add(devices, device);
 	} else {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
+		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			FwupdDevice *device = fu_util_get_device_by_id(priv, values[idx], error);
+			if (device == NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "'%s' is not a valid GUID nor DEVICE-ID",
+					    values[idx]);
+				return FALSE;
+			}
+			g_ptr_array_add(devices, device);
+		}
 	}
 	g_ptr_array_sort(devices, fu_util_sort_devices_by_flags_cb);
 
@@ -2953,7 +3055,7 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 			    fwupd_device_get_update_error(dev));
 		return FALSE;
 	}
-	if (!priv->no_safety_check && !priv->assume_yes) {
+	if (!priv->as_json && !priv->no_safety_check && !priv->assume_yes) {
 		const gchar *title = fwupd_client_get_host_product(priv->client);
 		if (!fu_util_prompt_warning(priv->console, dev, rel, title, error))
 			return FALSE;
@@ -3112,7 +3214,8 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 				error_install->message);
 			continue;
 		}
-		fu_util_display_current_message(priv);
+		if (ret)
+			fu_util_display_current_message(priv);
 
 		/* send report if we're supposed to */
 		if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3133,7 +3236,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* show warnings */
-	if (devices_latest->len > 0) {
+	if (devices_latest->len > 0 && !priv->as_json) {
 		fu_console_print_literal(priv->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available */
@@ -3143,7 +3246,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_unsupported->len > 0) {
+	if (devices_unsupported->len > 0 && !priv->as_json) {
 		fu_console_print_literal(priv->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
@@ -3153,7 +3256,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
-	if (devices_pending->len > 0) {
+	if (devices_pending->len > 0 && !priv->as_json) {
 		fu_console_print_literal(
 		    priv->console,
 		    /* TRANSLATORS: message letting the user there is an update
@@ -3185,7 +3288,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* we don't want to ask anything */
-	if (priv->no_reboot_check) {
+	if (priv->no_reboot_check || priv->as_json) {
 		g_debug("skipping reboot check");
 		return TRUE;
 	}
@@ -3217,6 +3320,9 @@ fu_util_remote_modify(FuUtilPrivate *priv, gchar **values, GError **error)
 					error))
 		return FALSE;
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: success message for a per-remote setting change */
 	fu_console_print_literal(priv->console, _("Successfully modified remote"));
 	return TRUE;
@@ -3245,6 +3351,9 @@ fu_util_remote_enable(FuUtilPrivate *priv, gchar **values, GError **error)
 					priv->cancellable,
 					error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* ask for permission to refresh */
 	if (priv->no_remote_check || fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -3302,6 +3411,9 @@ fu_util_remote_disable(FuUtilPrivate *priv, gchar **values, GError **error)
 					error))
 		return FALSE;
 
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(priv->console, _("Successfully disabled remote"));
 	return TRUE;
@@ -3352,7 +3464,8 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3402,7 +3515,8 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3469,10 +3583,9 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* allow all actions */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
-	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3611,7 +3724,8 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	ret = fu_util_update_device_with_release(priv, dev, rel, error);
-	fu_util_display_current_message(priv);
+	if (ret)
+		fu_util_display_current_message(priv);
 
 	/* send report if we're supposed to */
 	if (!fu_util_maybe_send_reports(priv, rel, &error_report)) {
@@ -3703,6 +3817,9 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 					   error))
 			return FALSE;
 	}
+
+	if (priv->as_json)
+		return TRUE;
 
 	/* TRANSLATORS: success message -- where activation is making the new
 	 * firmware take effect, usually after updating offline */
@@ -4755,6 +4872,10 @@ fu_util_security_fix(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	if (!fwupd_client_fix_host_security_attr(priv->client, values[0], priv->cancellable, error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fixed successfully"));
 	return TRUE;
@@ -4789,27 +4910,37 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (data == NULL)
 		return FALSE;
 
-	/* show the user the entire data blob */
-	fu_console_print_kv(priv->console, _("Target"), report_uri);
-	fu_console_print_kv(priv->console, _("Payload"), data);
-	fu_console_print(priv->console,
-			 /* TRANSLATORS: explain why we want to upload */
-			 _("Uploading a device list allows the %s team to know what hardware "
-			   "exists, and allows us to put pressure on vendors that do not upload "
-			   "firmware updates for their hardware."),
-			 fwupd_remote_get_title(remote));
-	if (!fu_console_input_bool(priv->console,
-				   TRUE,
-				   "%s (%s)",
-				   /* TRANSLATORS: ask the user to upload */
-				   _("Upload data now?"),
-				   /* TRANSLATORS: metadata is downloaded */
-				   _("Requires internet connection"))) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "Declined upload");
-		return FALSE;
+	if (priv->as_json) {
+		if (!priv->assume_yes) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_ARGS,
+					    "pass --yes to enable uploads");
+			return FALSE;
+		}
+	} else {
+		/* show the user the entire data blob */
+		fu_console_print_kv(priv->console, _("Target"), report_uri);
+		fu_console_print_kv(priv->console, _("Payload"), data);
+		fu_console_print(priv->console,
+				 /* TRANSLATORS: explain why we want to upload */
+				 _("Uploading a device list allows the %s team to know what hardware "
+				   "exists, and allows us to put pressure on vendors that do not upload "
+				   "firmware updates for their hardware."),
+				 fwupd_remote_get_title(remote));
+		if (!fu_console_input_bool(priv->console,
+					   TRUE,
+					   "%s (%s)",
+					   /* TRANSLATORS: ask the user to upload */
+					   _("Upload data now?"),
+					   /* TRANSLATORS: metadata is downloaded */
+					   _("Requires internet connection"))) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOTHING_TO_DO,
+					    "Declined upload");
+			return FALSE;
+		}
 	}
 
 	/* send to the LVFS */
@@ -4824,9 +4955,12 @@ fu_util_report_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* success */
-	fu_console_print_literal(priv->console,
-				 /* TRANSLATORS: success, so say thank you to the user */
-				 _("Device list uploaded successfully, thanks!"));
+	if (!priv->as_json) {
+		fu_console_print_literal(priv->console,
+					 /* TRANSLATORS: success, so say thank you to the user */
+					 _("Device list uploaded successfully, thanks!"));
+	}
+
 	return TRUE;
 }
 
@@ -4856,6 +4990,10 @@ fu_util_security_undo(FuUtilPrivate *priv, gchar **values, GError **error)
 						  priv->cancellable,
 						  error))
 		return FALSE;
+
+	if (priv->as_json)
+		return TRUE;
+
 	/* TRANSLATORS: we've fixed a security problem on the machine */
 	fu_console_print_literal(priv->console, _("Fix reverted successfully"));
 	return TRUE;
@@ -4984,6 +5122,7 @@ main(int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean only_emulated = FALSE;
 	gboolean only_p2p = FALSE;
 	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
@@ -5051,6 +5190,14 @@ main(int argc, char *argv[])
 	     &allow_branch_switch,
 	     /* TRANSLATORS: command line option */
 	     N_("Allow switching firmware branch"),
+	     NULL},
+	    {"only-emulated",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &only_emulated,
+	     /* TRANSLATORS: command line option */
+	     N_("Only install onto emulated devices"),
 	     NULL},
 	    {"force",
 	     '\0',
@@ -5188,7 +5335,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->as_json,
 	     /* TRANSLATORS: command line option */
-	     N_("Output in JSON format"),
+	     N_("Output in JSON format (disables all interactive prompts)"),
 	     NULL},
 	    {"no-security-fix",
 	     '\0',
@@ -5235,6 +5382,12 @@ main(int argc, char *argv[])
 	fu_console_set_main_context(priv->console, priv->main_ctx);
 
 	/* add commands */
+	fu_util_cmd_array_add(cmd_array,
+			      "check-reboot-needed",
+			      _("[DEVICE-ID|GUID]"),
+			      /* TRANSLATORS: command description */
+			      _("Check if any devices are pending a reboot to complete update"),
+			      fu_util_check_reboot_needed);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-devices,get-topology",
 			      NULL,
@@ -5285,7 +5438,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Gets the list of updates for connected hardware"),
+			      _("Gets the list of updates for all specified devices, or all "
+				"devices if unspecified"),
 			      fu_util_get_updates);
 	fu_util_cmd_array_add(cmd_array,
 			      "update,upgrade",
@@ -5697,6 +5851,8 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (only_emulated)
+		priv->flags |= FWUPD_INSTALL_FLAG_ONLY_EMULATED;
 	if (force) {
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;

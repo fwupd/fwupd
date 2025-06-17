@@ -1338,10 +1338,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Lekéri a tiltott belső vezérlőprogramok listáját"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Lekéri a frissítések listáját a csatlakoztatott hardverhez"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 
@@ -1909,10 +1905,6 @@ msgstr "Csak egyenrangú hálózatkezelés használata a fájlok letöltésekor"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Csak verziófrissítések engedélyezettek"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Kiment JSON-formátumban"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

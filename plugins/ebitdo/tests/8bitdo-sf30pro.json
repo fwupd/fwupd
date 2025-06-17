@@ -3,7 +3,7 @@
   "interactive": true,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/3d3a65ee2e8581647fb09d752fa7e21ee1566481-8Bitdo-SF30_Pro-SN30_Pro-1.26.cab",
+      "url": "3d3a65ee2e8581647fb09d752fa7e21ee1566481-8Bitdo-SF30_Pro-SN30_Pro-1.26.cab",
       "components": [
         {
           "version": "1.26",

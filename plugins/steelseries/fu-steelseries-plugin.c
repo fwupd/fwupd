@@ -26,6 +26,7 @@ G_DEFINE_TYPE(FuSteelseriesPlugin, fu_steelseries_plugin, FU_TYPE_PLUGIN)
 static void
 fu_steelseries_plugin_init(FuSteelseriesPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

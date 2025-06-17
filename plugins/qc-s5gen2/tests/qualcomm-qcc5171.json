@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/084ebf794bfcb56b7c749238b4c6ed211342738cece664d02b0cbe285eb646f8-Qualcomm_qcc517X_1.1.2.cab",
+      "url": "084ebf794bfcb56b7c749238b4c6ed211342738cece664d02b0cbe285eb646f8-Qualcomm_qcc517X_1.1.2.cab",
       "components": [
         {
           "version": "1.1.2",

@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuRpPicoPlugin, fu_rp_pico_plugin, FU_TYPE_PLUGIN)
 static void
 fu_rp_pico_plugin_init(FuRpPicoPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

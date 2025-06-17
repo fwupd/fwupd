@@ -132,7 +132,10 @@ fu_context_get_fdt(FuContext *self, GError **error)
 		g_autoptr(GFile) file = fu_context_get_fdt_file(error);
 		if (file == NULL)
 			return NULL;
-		if (!fu_firmware_parse_file(fdt_tmp, file, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+		if (!fu_firmware_parse_file(fdt_tmp,
+					    file,
+					    FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+					    error)) {
 			g_prefix_error(error, "failed to parse FDT: ");
 			return NULL;
 		}
@@ -159,6 +162,44 @@ fu_context_get_efivars(FuContext *self)
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_CONTEXT(self), NULL);
 	return priv->efivars;
+}
+
+/**
+ * fu_context_efivars_check_free_space:
+ * @self: a #FuContext
+ * @count: size in bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks for a given amount of free space in the EFI NVRAM variable store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.12
+ **/
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	guint64 total;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	total = fu_efivars_space_free(priv->efivars, error);
+	if (total == G_MAXUINT64)
+		return FALSE;
+	if (total < count) {
+		g_autofree gchar *countstr = g_format_size(count);
+		g_autofree gchar *totalstr = g_format_size(total);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BROKEN_SYSTEM,
+			    "Not enough efivarfs space, requested %s and got %s",
+			    countstr,
+			    totalstr);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /**
@@ -1233,16 +1274,6 @@ fu_context_set_power_state(FuContext *self, FuPowerState power_state)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_CONTEXT(self));
-
-	/* quirk for behavior on Framework systems where the EC reports as discharging
-	 * while on AC but at 100% */
-	if (power_state == FU_POWER_STATE_BATTERY_DISCHARGING && priv->battery_level == 100 &&
-	    fu_context_has_hwid_flag(self, "discharging-when-fully-changed")) {
-		power_state = FU_POWER_STATE_AC_FULLY_CHARGED;
-		g_debug("quirking power state to %s", fu_power_state_to_string(power_state));
-	}
-
-	/* is the same */
 	if (priv->power_state == power_state)
 		return;
 	priv->power_state = power_state;
@@ -1620,6 +1651,22 @@ fu_context_get_esp_volumes(FuContext *self, GError **error)
 }
 
 static gboolean
+fu_context_is_esp(FuVolume *esp)
+{
+	g_autofree gchar *mount_point = fu_volume_get_mount_point(esp);
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *fn2 = NULL;
+
+	if (mount_point == NULL)
+		return FALSE;
+
+	fn = g_build_filename(mount_point, "EFI", NULL);
+	fn2 = g_build_filename(mount_point, "efi", NULL);
+
+	return g_file_test(fn, G_FILE_TEST_IS_DIR) || g_file_test(fn2, G_FILE_TEST_IS_DIR);
+}
+
+static gboolean
 fu_context_is_esp_linux(FuVolume *esp, GError **error)
 {
 	const gchar *prefixes[] = {"grub", "shim", "systemd-boot", "zfsbootmenu", NULL};
@@ -1739,6 +1786,11 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 				}
 			}
 
+			if (!fu_context_is_esp(esp)) {
+				g_debug("not an ESP: %s", fu_volume_get_id(esp));
+				continue;
+			}
+
 			/* big partitions are better than small partitions */
 			score += fu_volume_get_size(esp) / (1024 * 1024);
 
@@ -1853,7 +1905,7 @@ fu_context_esp_load_pe_file(const gchar *filename, GError **error)
 	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
 	g_autoptr(GFile) file = g_file_new_for_path(filename);
 	fu_firmware_set_filename(firmware, filename);
-	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error)) {
+	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return NULL;
 	}

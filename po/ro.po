@@ -582,6 +582,11 @@ msgstr "Autentificarea este necesară pentru a actualiza sumele de control stoca
 msgid "Automatic Reporting"
 msgstr "Raportare automată"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Dezinhibare automată în %ums..."
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Încărcați automat de fiecare dată?"
@@ -1100,6 +1105,10 @@ msgstr "Descarcă datele SMBIOS dintr-un fișier"
 msgid "Duration"
 msgstr "Durata"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "FIȘIER-DE-EMULARE [FIȘIER-ARHIVĂ]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Fiecare sistem trebuie să dispună de teste pentru a asigura securitatea firmware-ului."
@@ -1524,10 +1533,6 @@ msgstr "Obține lista de firmware aprobat"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Obține lista firmware-ului blocat"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obține lista de actualizări pentru hardware-ul conectat"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2159,6 +2164,10 @@ msgid "Old version"
 msgstr "Versiunea veche"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Se instalează numai pe dispozitive emulate"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Afișează doar o singură valoare PCR"
 
@@ -2172,8 +2181,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Sunt permise numai actualizările de versiune"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Ieșire în format JSON"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Ieșire în format JSON (dezactivează toate solicitările interactive)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2244,7 +2253,8 @@ msgstr "Vă rugăm să vă asigurați că aveți cheia de recuperare a volumului
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduceți un număr de la 0 la %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Introduceți %s sau %s: "
@@ -2483,6 +2493,10 @@ msgstr "Nucleul în funcțiune este prea vechi"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufixul de timp de execuție"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
@@ -2996,6 +3010,18 @@ msgstr "PCR0 TPM este diferit de reconstrucție."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "Cheia platformei UEFI este utilizată pentru a determina dacă software-ul dispozitivului provine dintr-o sursă de încredere."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Stocul de certificate UEFI este acum actualizat"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "Baza de date UEFI (UEFI db) conține lista certificatelor valide care pot fi utilizate pentru a autoriza ce binare EFI pot rula."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "Sistemul UEFI poate configura atribute de memorie la pornire care împiedică executarea unor atacuri de exploatare a breșelor de securitate comune."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Demonul a încărcat cod de la terțe părți și nu mai este întreținut de dezvoltatorii inițiali!"
@@ -3139,6 +3165,10 @@ msgstr "Este posibil ca partiția ESP UEFI să nu fie configurată corect"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Partiția ESP UEFI nu este detectată sau configurată"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Protecție a memoriei UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Cheia platformei UEFI"
@@ -3163,6 +3193,10 @@ msgstr "Variabile ale serviciului de pornire UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Actualizările capsulei UEFI nu sunt disponibile sau activate în configurarea firmware-ului"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "Baza de date UEFI (UEFI db)"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Instrument dbx UEFI"
@@ -3170,6 +3204,26 @@ msgstr "Instrument dbx UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Firmware-ul UEFI nu poate fi actualizat în modul BIOS vechi"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Protecție a memoriei UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Protecția memoriei UEFI este activată și blocată"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Protecția memoriei UEFI este activată, dar nu este blocată"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Protecția memoriei UEFI este acum blocată"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Protecția memoriei UEFI este acum deblocată"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3483,6 +3537,14 @@ msgstr "[FIȘIER SEMNĂTURĂ_FIȘIER ID-DEPOZIT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[ NUME_FIȘIER1 ] [ NUME_FIȘIER2 ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[VERSIUNEA-FWUPD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[MOTIV] [TIMP_AȘTEPTARE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

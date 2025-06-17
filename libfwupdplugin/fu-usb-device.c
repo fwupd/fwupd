@@ -50,7 +50,6 @@ typedef struct {
 	gint configuration;
 	GPtrArray *device_interfaces; /* (nullable) (element-type FuUsbDeviceInterface) */
 	guint claim_retry_count;
-	GPtrArray *descriptor_streams; /* (nullable) (element-type GInputStream) */
 } FuUsbDevicePrivate;
 
 typedef struct {
@@ -272,8 +271,6 @@ fu_usb_device_finalize(GObject *object)
 		libusb_unref_device(priv->usb_device);
 	if (priv->device_interfaces != NULL)
 		g_ptr_array_unref(priv->device_interfaces);
-	if (priv->descriptor_streams != NULL)
-		g_ptr_array_unref(priv->descriptor_streams);
 	g_ptr_array_unref(priv->interfaces);
 	g_ptr_array_unref(priv->bos_descriptors);
 	g_ptr_array_unref(priv->hid_descriptors);
@@ -874,7 +871,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 		return FALSE;
 	ds20 = fu_firmware_new_from_gtypes(stream,
 					   0x0,
-					   FWUPD_INSTALL_FLAG_NONE,
+					   FU_FIRMWARE_PARSE_FLAG_NONE,
 					   error,
 					   FU_TYPE_USB_DEVICE_FW_DS20,
 					   FU_TYPE_USB_DEVICE_MS_DS20,
@@ -974,7 +971,7 @@ fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GErr
 	if (!fu_firmware_parse_stream(firmware,
 				      stream,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NONE,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
 				      &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
@@ -994,18 +991,6 @@ fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GErr
 
 	/* success */
 	return TRUE;
-}
-
-/* these are closed on FuDevice->probe_complete() */
-static void
-fu_usb_device_add_descriptor_stream(FuUsbDevice *self, GInputStream *stream)
-{
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->descriptor_streams == NULL) {
-		priv->descriptor_streams =
-		    g_ptr_array_new_with_free_func((GDestroyNotify)fu_input_stream_locker_unref);
-	}
-	g_ptr_array_add(priv->descriptor_streams, g_object_ref(stream));
 }
 
 static gboolean
@@ -1071,7 +1056,6 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 				return FALSE;
 			}
 		} else {
-			fu_usb_device_add_descriptor_stream(self, stream); /* ->probe_complete */
 			if (!fu_usb_device_parse_bos_descriptor(self, stream, error))
 				return FALSE;
 		}
@@ -1311,18 +1295,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static void
-fu_usb_device_probe_complete(FuDevice *device)
-{
-	FuUsbDevice *self = FU_USB_DEVICE(device);
-	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* FuUdevDevice->probe_complete */
-	FU_DEVICE_CLASS(fu_usb_device_parent_class)->probe_complete(device);
-	if (priv->descriptor_streams != NULL)
-		g_ptr_array_set_size(priv->descriptor_streams, 0);
 }
 
 /**
@@ -1856,7 +1828,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(cfg_descriptor),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			g_ptr_array_add(priv->cfg_descriptors, g_steal_pointer(&cfg_descriptor));
@@ -1865,17 +1837,37 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(iface),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
+
+			/* the next descriptor is the custom one, so just add as a child */
+			if (fu_usb_interface_get_class(iface) ==
+			    FU_USB_CLASS_APPLICATION_SPECIFIC) {
+				g_autoptr(FuUsbDescriptor) img =
+				    g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
+				if (!fu_firmware_parse_stream(
+					FU_FIRMWARE(img),
+					stream,
+					offset + fu_usb_base_hdr_get_length(st_base),
+					FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+					error))
+					return FALSE;
+				if (!fu_firmware_add_image_full(FU_FIRMWARE(iface),
+								FU_FIRMWARE(img),
+								error))
+					return FALSE;
+				offset += fu_firmware_get_size(FU_FIRMWARE(img));
+			}
+
 			g_set_object(&iface_last, iface);
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_ENDPOINT) {
 			g_autoptr(FuUsbEndpoint) ep = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(ep),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			if (iface_last == NULL) {
@@ -1889,7 +1881,7 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			if (!fu_firmware_parse_stream(FU_FIRMWARE(hid_descriptor),
 						      stream,
 						      offset,
-						      FWUPD_INSTALL_FLAG_NONE,
+						      FU_FIRMWARE_PARSE_FLAG_NONE,
 						      error))
 				return FALSE;
 			if (iface_last == NULL) {
@@ -1942,8 +1934,8 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 		}
 		libusb_free_config_descriptor(config);
 	} else {
-		g_autoptr(FuInputStreamLocker) stream = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GInputStream) stream = NULL;
 
 		stream = fu_usb_device_load_descriptor_stream(self, "descriptors", &error_local);
 		if (stream == NULL) {
@@ -2991,7 +2983,10 @@ fu_usb_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags f
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
 			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    builder,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
@@ -3087,7 +3082,6 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->ready = fu_usb_device_ready;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
-	device_class->probe_complete = fu_usb_device_probe_complete;
 	device_class->invalidate = fu_usb_device_invalidate;
 	device_class->to_string = fu_usb_device_to_string;
 	device_class->incorporate = fu_usb_device_incorporate;

@@ -216,7 +216,7 @@ fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -241,7 +241,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	priv->footer_len = fu_struct_dfu_ftr_get_len(st);
 
 	/* verify the checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 crc_new = fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf, bufsz - 4);
 		if (fu_struct_dfu_ftr_get_crc(st) != crc_new) {
 			g_set_error(error,
@@ -272,7 +272,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE(firmware);

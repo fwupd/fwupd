@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuHpiCfuPlugin, fu_hpi_cfu_plugin, FU_TYPE_PLUGIN)
 static void
 fu_hpi_cfu_plugin_init(FuHpiCfuPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

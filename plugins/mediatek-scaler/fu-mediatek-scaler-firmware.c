@@ -25,7 +25,7 @@ G_DEFINE_TYPE(FuMediatekScalerFirmware, fu_mediatek_scaler_firmware, FU_TYPE_FIR
 static gboolean
 fu_mediatek_scaler_firmware_parse(FuFirmware *firmware,
 				  GInputStream *stream,
-				  FwupdInstallFlags flags,
+				  FuFirmwareParseFlags flags,
 				  GError **error)
 {
 	guint32 ver_tmp = 0x0;

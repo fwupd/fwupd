@@ -16,6 +16,7 @@
   "success-results": {
     "locked": "SMM is locked down"
   },
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.amd.com/en/resources/product-security/bulletin/amd-sb-7014.html": "AMD Sinkclose"
   },

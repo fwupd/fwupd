@@ -93,6 +93,7 @@ fu_wac_plugin_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **err
 static void
 fu_wac_plugin_init(FuWacPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

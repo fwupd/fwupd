@@ -45,7 +45,7 @@ fu_elantp_haptic_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elantp_haptic_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuElantpHapticFirmware *self = FU_ELANTP_HAPTIC_FIRMWARE(firmware);

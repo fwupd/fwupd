@@ -591,6 +591,11 @@ msgstr "Щоб отримати доступ до оновлення збере�
 msgid "Automatic Reporting"
 msgstr "Автоматичне звітування"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Автоматичне скасування успадкування за %uмс…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Автоматично вивантажувати кожного разу?"
@@ -1109,6 +1114,10 @@ msgstr "Записати дані SMBIOS з файла"
 msgid "Duration"
 msgstr "Тривалість"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "ФАЙЛ-ЕМУЛЯЦІЇ [ФАЙЛ-АРХІВУ]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "У кожній системі мають бути перевірки, які забезпечують захист мікропрограми."
@@ -1535,10 +1544,6 @@ msgstr "Отримує список схвалених мікропрограм"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Отримує список заблокованих мікропрограм"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Отримує список оновлень для з’єднаного обладнання"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2171,6 +2176,10 @@ msgid "Old version"
 msgstr "Стара версія"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Встановити лише на емульовані пристрої"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
 
@@ -2184,8 +2193,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Дозволено лише оновлення версії"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Виведені дані у форматі JSON"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Вивести дані у форматі JSON (вимикає усі інтерактивні запити)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2256,7 +2265,8 @@ msgstr "Будь ласка, переконайтеся, що у вас є кл�
 msgid "Please enter a number from 0 to %u: "
 msgstr "Будь ласка, введіть число від 0 до %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Будь ласка, введіть %s або %s: "
@@ -2495,6 +2505,10 @@ msgstr "Поточне ядро є надто застарілим"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Динамічний суфікс"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
@@ -3010,6 +3024,18 @@ msgstr "PCR0 TPM відрізняється від реконструкції."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "Ключ платформи UEFI використовують для визначення, чи походить програмне забезпечення пристрою із надійного джерела."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Сховище сертифікатів UEFI містить актуальні дані"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "У базі даних UEFI зберігається список коректних сертифікатів, якими можна скористатися для уповноваження запуску виконуваних файлів EFI."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "Система UEFI може встановлювати атрибути пам'яті під час завантаження, які запобігають запуску типових експлойтів."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Ця фонова служба завантажила сторонній код — її підтримка більше не здійснюється розробниками основної гілки програми!"
@@ -3153,6 +3179,10 @@ msgstr "Можливо, неправильно налаштовано розді
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Розділ ESP UEFI не виявлено або не налаштовано"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Захист пам'яті UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Ключ платформи UEFI"
@@ -3177,6 +3207,10 @@ msgstr "Змінні служби завантаження UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Капсульні оновлення UEFI є недоступними або їх не увімкнено у налаштуваннях мікропрограми"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "База даних UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Засіб роботи з dbx UEFI"
@@ -3184,6 +3218,26 @@ msgstr "Засіб роботи з dbx UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "У режимі сумісності із застарілим BIOS не можна оновити мікропрограму UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Захист пам'яті UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Захист пам'яті UEFI увімкнено і заблоковано"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Захист пам'яті UEFI увімкнено, але не заблоковано"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Захист пам'яті UEFI тепер заблоковано"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Захист пам'яті UEFI тепер розблоковано"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3498,6 +3552,14 @@ msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[ВЕРСІЯ-FWUPD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[ПРИЧИНА] [ЧАС ОЧІКУВАННЯ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

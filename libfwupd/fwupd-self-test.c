@@ -128,7 +128,7 @@ fwupd_enums_func(void)
 			break;
 		g_assert_cmpint(fwupd_remote_flag_from_string(tmp), ==, i);
 	}
-	for (guint64 i = 1; i <= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS; i *= 2) {
+	for (guint64 i = 1; i <= FWUPD_INSTALL_FLAG_ONLY_EMULATED; i *= 2) {
 		const gchar *tmp = fwupd_install_flags_to_string(i);
 		if (tmp == NULL)
 			continue;
@@ -389,6 +389,36 @@ fwupd_plugin_func(void)
 				    &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+}
+
+static void
+fwupd_remote_func(void)
+{
+	g_autofree gchar *uri1 = NULL;
+	g_autofree gchar *uri2 = NULL;
+	g_autofree gchar *uri3 = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	uri1 = fwupd_remote_build_firmware_uri(remote,
+					       "https://example.org/downloads/foo.cab",
+					       &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(uri1, ==, "https://example.org/downloads/foo.cab");
+
+	fwupd_remote_set_firmware_base_uri(remote, "https://example.org/mirror");
+	uri2 = fwupd_remote_build_firmware_uri(remote,
+					       "https://example.org/downloads/foo.cab",
+					       &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(uri2, ==, "https://example.org/mirror/foo.cab");
+
+	fwupd_remote_set_username(remote, "admin");
+	uri3 = fwupd_remote_build_firmware_uri(remote,
+					       "https://example.org/downloads/foo.cab",
+					       &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(uri3, ==, "https://admin@example.org/mirror/foo.cab/auth");
 }
 
 static void
@@ -1449,6 +1479,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/release", fwupd_release_func);
 	g_test_add_func("/fwupd/report", fwupd_report_func);
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
+	g_test_add_func("/fwupd/remote", fwupd_remote_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
 	g_test_add_func("/fwupd/device{filter}", fwupd_device_filter_func);

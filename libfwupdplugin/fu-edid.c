@@ -217,7 +217,10 @@ fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GErro
 }
 
 static gboolean
-fu_edid_parse(FuFirmware *firmware, GInputStream *stream, FwupdInstallFlags flags, GError **error)
+fu_edid_parse(FuFirmware *firmware,
+	      GInputStream *stream,
+	      FuFirmwareParseFlags flags,
+	      GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
 	const guint8 *manu_id;

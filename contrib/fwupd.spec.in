@@ -68,6 +68,7 @@ BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: libcbor-devel
 BuildRequires: libblkid-devel
+BuildRequires: readline-devel
 %if 0%{?have_passim}
 BuildRequires: passim-devel
 %endif
@@ -88,6 +89,8 @@ BuildRequires: git-core
 BuildRequires: flashrom-devel >= 1.2-2
 %endif
 BuildRequires: libdrm-devel
+# For fu-polkit-test
+BuildRequires: polkit
 
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
@@ -319,6 +322,7 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %if 0%{?have_msr}
 /usr/lib/modules-load.d/fwupd-msr.conf
 %endif
+/usr/lib/modules-load.d/fwupd-i2c.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool

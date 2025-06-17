@@ -114,7 +114,7 @@ fu_usb_config_descriptor_get_configuration_value(FuUsbConfigDescriptor *self)
 static gboolean
 fu_usb_config_descriptor_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	FuUsbConfigDescriptor *self = FU_USB_CONFIG_DESCRIPTOR(firmware);

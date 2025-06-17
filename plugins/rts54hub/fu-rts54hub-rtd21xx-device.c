@@ -207,7 +207,7 @@ fu_rts54hub_rtd21xx_device_read_status(FuRts54hubRtd21xxDevice *self,
 static void
 fu_rts54hub_rtd21xx_device_init(FuRts54hubRtd21xxDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54.i2c");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);

@@ -39,6 +39,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	gpointer key;
 	gpointer value;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuArchive) archive = fu_archive_new(NULL, FU_ARCHIVE_FLAG_NONE, NULL);
 
 	g_return_val_if_fail(FU_IS_ENGINE_EMULATOR(self), FALSE);
@@ -63,10 +64,9 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	buf = fu_archive_write(archive, FU_ARCHIVE_FORMAT_ZIP, FU_ARCHIVE_COMPRESSION_GZIP, error);
 	if (buf == NULL)
 		return FALSE;
-	if (!g_output_stream_write_all(stream, buf->data, buf->len, NULL, NULL, error)) {
-		fu_error_convert(error);
+	blob = g_byte_array_free_to_bytes(g_steal_pointer(&buf)); /* nocheck:blocked */
+	if (!fu_output_stream_write_bytes(stream, blob, NULL, error))
 		return FALSE;
-	}
 	if (!g_output_stream_flush(stream, NULL, error)) {
 		fu_error_convert(error);
 		return FALSE;
@@ -123,6 +123,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 {
 	/* not always correct, but we want to remain compatible with all the old emulation files */
 	json_builder_begin_object(json_builder);
+	fwupd_codec_json_append(json_builder, "FwupdVersion", PACKAGE_VERSION);
 	json_builder_set_member_name(json_builder, "UsbDevices");
 	json_builder_begin_array(json_builder);
 	for (guint i = 0; i < devices->len; i++) {
@@ -132,7 +133,7 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATION_TAG))
 			continue;
 		json_builder_begin_object(json_builder);
-		fwupd_codec_to_json(FWUPD_CODEC(device), json_builder, FWUPD_CODEC_FLAG_NONE);
+		fu_device_add_json(device, json_builder, FWUPD_CODEC_FLAG_NONE);
 		json_builder_end_object(json_builder);
 	}
 	json_builder_end_array(json_builder);

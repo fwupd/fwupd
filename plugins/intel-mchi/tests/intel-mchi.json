@@ -1,0 +1,16 @@
+{
+  "name": "Intel MCHI",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/intel-mchi-setup.json",
+      "components": [
+        {
+          "guids": [
+            "f18c7464-aa01-5b3d-bd4f-6623597d0f70"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -45,7 +45,7 @@ fu_uefi_dbx_get_authenticode_hash(const gchar *fn, GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_pefile_firmware_new();
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
-	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
 	return fu_firmware_get_checksum(firmware, G_CHECKSUM_SHA256, error);
 }
@@ -54,7 +54,7 @@ static gboolean
 fu_uefi_dbx_signature_list_validate_filename(FuContext *ctx,
 					     FuEfiSignatureList *siglist,
 					     const gchar *fn,
-					     FwupdInstallFlags flags,
+					     FuFirmwareParseFlags flags,
 					     GError **error)
 {
 	g_autofree gchar *checksum = NULL;
@@ -88,7 +88,7 @@ fu_uefi_dbx_signature_list_validate_filename(FuContext *ctx,
 gboolean
 fu_uefi_dbx_signature_list_validate(FuContext *ctx,
 				    FuEfiSignatureList *siglist,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	g_autoptr(GPtrArray) files = NULL;

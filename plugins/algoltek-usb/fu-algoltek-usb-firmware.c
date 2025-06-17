@@ -30,7 +30,7 @@ fu_algoltek_usb_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	g_autofree gchar *version = NULL;

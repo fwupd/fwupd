@@ -160,7 +160,8 @@ fu_context_add_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
 void
 fu_context_remove_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_context_has_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
+fu_context_has_flag(FuContext *context, FuContextFlags flag) G_GNUC_WARN_UNUSED_RESULT
+    G_GNUC_NON_NULL(1);
 
 const gchar *
 fu_context_get_smbios_string(FuContext *self,
@@ -261,6 +262,9 @@ const gchar *
 fu_context_get_esp_location(FuContext *self);
 FuEfivars *
 fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+    G_GNUC_NON_NULL(1);
 
 /**
  * FuContextEspFileFlags:

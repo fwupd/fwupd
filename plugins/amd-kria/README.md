@@ -1,4 +1,8 @@
-# AMD Kria
+---
+title: Plugin: AMD Kria
+---
+
+## Introduction
 
 The AMD Kria plugin is used to represent the system firmware stored on QSPI
 for the AMD Kria system on module device specifically when not booted using

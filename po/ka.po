@@ -255,6 +255,10 @@ msgstr "AMD-ის მიკროკოდში ჩაწერისგან
 msgid "Action Required:"
 msgstr "საჭირო ქმედება:"
 
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "მოწყობილობების გააქტიურება"
+
 msgid "Activate the new firmware on the device"
 msgstr "მოწყობილობაზე ახალი მიკროკოდის აქტივაცია"
 
@@ -280,6 +284,10 @@ msgstr "ერთი ტიპის მოწყობილობების 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "ალტერნატიული ბრენჩი"
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "ყველა კითხვისთვის დადებითი პასუხის გაცემა"
 
 #. TRANSLATORS: command line option
 msgid "Apply update files"
@@ -339,6 +347,10 @@ msgstr "აირჩიეთ მოწყობილობა"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose firmware"
 msgstr "აირჩიეთ მიკროკოდი"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose release"
+msgstr "აირჩიეთ რელიზი"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose volume"
@@ -404,6 +416,10 @@ msgstr "მოწყობილობის ID"
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "მოწყობილობა დაემატა:"
+
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "მოწყობილობა უკვე არსებობს"
 
 #. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
 msgid "Device battery power is too low"
@@ -481,6 +497,10 @@ msgstr "გნებავთ ეს დაშორებული ახლა
 msgid "Done!"
 msgstr "მზადაა!"
 
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "ფაილის გადმოწერა"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "გადმოწერა…"
@@ -500,6 +520,10 @@ msgstr "ემულირებული ჰოსტი"
 msgid "Enable"
 msgstr "ჩართვა"
 
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "ჩავრთო ეს დაშორებული?"
+
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Enabled"
@@ -516,6 +540,10 @@ msgstr "დაშიფრული RAM"
 #. TRANSLATORS: the vendor is no longer supporting the device
 msgid "End of life"
 msgstr "ძალიან ძველი"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "ჩამონათვალი"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
@@ -560,6 +588,10 @@ msgstr "FILENAME [FIRMWARE-TYPE]"
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "შეცდომა"
+
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
+msgid "Failed to connect to daemon"
+msgstr "დემონთან მიერთება ჩავარდა"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -645,6 +677,10 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|DEVICE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "HWIDS-FILE"
 msgstr "HWIDS-FILE"
 
@@ -659,6 +695,10 @@ msgstr "მაღალი"
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ჰოსტის უსაფრთხოების ID:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INHIBIT-ID"
+msgstr "INHIBIT-ID"
 
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -919,6 +959,10 @@ msgstr "ქმედება მითითებული არაა!"
 msgid "No firmware IDs found"
 msgstr "მიკროკოდის ID-ები ვერ ვიპოვე"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "რელიზების გარეშე"
+
 #. TRANSLATORS: this is an error string
 msgid "No updatable devices"
 msgstr "განახლებადი მოწყობილობები ვერ ვიპოვე"
@@ -1027,6 +1071,14 @@ msgstr "მხოლოდ კითხვისთვის"
 msgid "Reading…"
 msgstr "წაკითხვა…"
 
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr "მზადაა"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "განახლების შუალედი"
+
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
 msgstr "რელიზის ბრენჩი"
@@ -1059,6 +1111,10 @@ msgstr "გადავტვირთო ახლა?"
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "მოწყობილობის გადატვირთვა…"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "სექცია"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1226,6 +1282,10 @@ msgstr[1] "ჭდეები"
 msgid "Tagged for emulation"
 msgstr "მონიშნული ემულაციისთვის"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "გაფუჭებულია"
+
 #. show the user the entire data blob
 msgid "Target"
 msgstr "სამიზნე წერტილი"
@@ -1371,8 +1431,20 @@ msgid "Your hardware may be damaged using this firmware, and installing this rel
 msgstr "ამ მიკროკოდით თქვენი აპარატურა შეიძლება დაზიანდეს. ამავე დროს ამ რელიზის დაყენებამ შეიძლება %s-ზე გარანტია მოგიხსნათ."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[CHECKSUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
 msgstr "[DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILENAME1] [FILENAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[REASON] [TIMEOUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

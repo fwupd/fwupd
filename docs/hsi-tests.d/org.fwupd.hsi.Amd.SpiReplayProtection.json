@@ -1,8 +1,8 @@
 {
   "id": "org.fwupd.hsi.Amd.SpiReplayProtection",
-  "name": "AMD SPI Write protections",
+  "name": "AMD SPI Replay protections",
   "description": [
-    "SOCs may enforce control of the SPI bus to prevent writes other than by verified entities."
+    "SOCs may include support for replay-protected monotonic counters to prevent replay attacks."
   ],
   "failure-impact": [
     "SOCs without this feature may be attacked by an attacker modifying the SPI."
@@ -13,7 +13,8 @@
   "success-results": {
     "enabled": "SPI protections enabled"
   },
-  "hsi-level": 2,
+  "hsi-level": 3,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "requires": [
     "CPUID\\VID_AuthenticAMD"
   ],

@@ -3,8 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/8e2a52b74fcdbcf2f82bf2e0f6b750d6f098be887bb1e4c6acba3b63454a4f73-Lenovo-WD-PCSN720-NVMe-10190101.cab",
-      "emulation-url": "https://fwupd.org/downloads/a97b2f699d80f30ac24c3dfda4ed51a7935bdf0289b899d5be1a3dffdd2c8843-Lenovo-WD-PCSN720-NVMe-10190101.zip",
+      "url": "8e2a52b74fcdbcf2f82bf2e0f6b750d6f098be887bb1e4c6acba3b63454a4f73-Lenovo-WD-PCSN720-NVMe-10190101.cab",
+      "emulation-url": "a97b2f699d80f30ac24c3dfda4ed51a7935bdf0289b899d5be1a3dffdd2c8843-Lenovo-WD-PCSN720-NVMe-10190101.zip",
       "components": [
         {
           "version": "10190101",

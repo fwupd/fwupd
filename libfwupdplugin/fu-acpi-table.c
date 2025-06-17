@@ -117,7 +117,7 @@ fu_acpi_table_get_oem_revision(FuAcpiTable *self)
 static gboolean
 fu_acpi_table_parse(FuFirmware *firmware,
 		    GInputStream *stream,
-		    FwupdInstallFlags flags,
+		    FuFirmwareParseFlags flags,
 		    GError **error)
 {
 	FuAcpiTable *self = FU_ACPI_TABLE(firmware);
@@ -154,7 +154,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, length);
 
 	/* checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum_actual = 0;
 		if (!fu_input_stream_compute_sum8(stream, &checksum_actual, error))
 			return FALSE;
@@ -163,7 +163,7 @@ fu_acpi_table_parse(FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "CRC failed, expected %02x, got %02x",
+				    "CRC failed, expected 0x%02x, got 0x%02x",
 				    (guint)checksum - checksum_actual,
 				    checksum);
 			return FALSE;

@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/904ff137256218bc617661bb4fc2bfddad19522c7e54773d1fd0290b54adfcee-nordic-nrf52840dk-mcuboot-0.0.0_2.cab",
+      "url": "904ff137256218bc617661bb4fc2bfddad19522c7e54773d1fd0290b54adfcee-nordic-nrf52840dk-mcuboot-0.0.0_2.cab",
       "components": [
         {
           "version": "0.0.0.2",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/2eb21f9439f0c4928c14548ff5c5c73ad6590d23fa704c58c4afa88168bcea90-nordic-nrf52840dk-mcuboot-0.0.0_3.cab",
+      "url": "2eb21f9439f0c4928c14548ff5c5c73ad6590d23fa704c58c4afa88168bcea90-nordic-nrf52840dk-mcuboot-0.0.0_3.cab",
       "components": [
         {
           "version": "0.0.0.3",

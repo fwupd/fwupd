@@ -190,7 +190,7 @@ fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
 static gboolean
 fu_usb_endpoint_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuUsbEndpoint *self = FU_USB_ENDPOINT(firmware);

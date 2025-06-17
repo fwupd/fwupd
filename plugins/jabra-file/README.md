@@ -1,4 +1,6 @@
-# Jabra FILE
+---
+title: Plugin: Jabra File
+---
 
 ## Introduction
 

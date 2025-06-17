@@ -307,7 +307,7 @@ fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError *
 	fw = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return NULL;
 
 	/* remove images that will contain user-data */
@@ -324,7 +324,7 @@ static FuFirmware *
 fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 				   GInputStream *stream,
 				   FuProgress *progress,
-				   FwupdInstallFlags flags,
+				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
 	guint dict_cnt = 0;
@@ -345,7 +345,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* for full NVRAM image, verify if correct device */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) == 0) {
 		guint16 vid = fu_bcm57xx_firmware_get_vendor(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		guint16 did = fu_bcm57xx_firmware_get_model(FU_BCM57XX_FIRMWARE(firmware_tmp));
 		if (vid != 0x0 && did != 0x0 &&
@@ -368,7 +368,11 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	fw_old = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw_old == NULL)
 		return NULL;
-	if (!fu_firmware_parse_bytes(firmware, fw_old, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error)) {
+	if (!fu_firmware_parse_bytes(firmware,
+				     fw_old,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+				     error)) {
 		g_prefix_error(error, "failed to parse existing firmware: ");
 		return NULL;
 	}
@@ -567,7 +571,7 @@ fu_bcm57xx_device_open(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "failed to open socket: %s",
 #ifdef HAVE_ERRNO_H
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 			    "unspecified error");
 #endif
@@ -642,7 +646,7 @@ fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
-	fu_device_add_icon(FU_DEVICE(self), "network-wired");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 
 	/* other values are set from a quirk */
 	fu_device_set_firmware_size(FU_DEVICE(self), BCM_FIRMWARE_SIZE);

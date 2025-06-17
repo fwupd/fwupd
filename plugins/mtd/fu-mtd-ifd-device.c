@@ -31,9 +31,10 @@ fu_mtd_ifd_device_add_security_attr_desc(FuMtdIfdDevice *self, FuSecurityAttrs *
 	/* check each */
 	for (guint i = 0; i < G_N_ELEMENTS(regions); i++) {
 		FuIfdAccess ifd_access = fu_ifd_image_get_access(self->img, regions[i]);
+		g_autofree gchar *ifd_accessstr = fu_ifd_access_to_string(ifd_access);
 		fwupd_security_attr_add_metadata(attr,
 						 fu_ifd_region_to_string(regions[i]),
-						 fu_ifd_access_to_string(ifd_access));
+						 ifd_accessstr);
 		ifd_access_global |= ifd_access;
 	}
 	if (ifd_access_global & FU_IFD_ACCESS_WRITE) {
@@ -57,6 +58,32 @@ fu_mtd_ifd_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 		fu_mtd_ifd_device_add_security_attr_desc(self, attrs);
 }
 
+static const gchar *
+fu_mtd_ifd_device_region_to_name(FuIfdRegion region)
+{
+	if (region == FU_IFD_REGION_DESC)
+		return "IFD descriptor region";
+	if (region == FU_IFD_REGION_BIOS)
+		return "BIOS";
+	if (region == FU_IFD_REGION_ME)
+		return "Intel Management Engine";
+	if (region == FU_IFD_REGION_GBE)
+		return "Gigabit Ethernet";
+	if (region == FU_IFD_REGION_PLATFORM)
+		return "Platform firmware";
+	if (region == FU_IFD_REGION_DEVEXP)
+		return "Device Firmware";
+	if (region == FU_IFD_REGION_BIOS2)
+		return "BIOS Backup";
+	if (region == FU_IFD_REGION_EC)
+		return "Embedded Controller";
+	if (region == FU_IFD_REGION_IE)
+		return "Innovation Engine";
+	if (region == FU_IFD_REGION_10GBE)
+		return "10 Gigabit Ethernet";
+	return NULL;
+}
+
 static gboolean
 fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 {
@@ -64,7 +91,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 
 	if (self->img != NULL) {
 		FuIfdRegion region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
-		fu_device_set_name(device, fu_ifd_region_to_name(region));
+		fu_device_set_name(device, fu_mtd_ifd_device_region_to_name(region));
 		fu_device_set_logical_id(device, fu_ifd_region_to_string(region));
 		fu_device_add_instance_str(device, "REGION", fu_ifd_region_to_string(region));
 	}
@@ -78,7 +105,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 static void
 fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
 }
 
 static void

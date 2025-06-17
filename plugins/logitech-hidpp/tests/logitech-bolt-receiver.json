@@ -15,7 +15,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/c35ade1237da4e1ff90d031cc2b2218c32ee53c01b92b014aae2d2226aed2e35-Logitech-MPR05-MPR05.00_B0009.cab",
+      "url": "c35ade1237da4e1ff90d031cc2b2218c32ee53c01b92b014aae2d2226aed2e35-Logitech-MPR05-MPR05.00_B0009.cab",
       "components": [
         {
           "version": "MPR05.00_B0009",
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/f1e3ba268ae4e1d3c029392d4f203a976970b162521296a2e9a9a31f314c0c46-Logitech-MPR05-MPR05.01_B0010.cab",
+      "url": "f1e3ba268ae4e1d3c029392d4f203a976970b162521296a2e9a9a31f314c0c46-Logitech-MPR05-MPR05.01_B0010.cab",
       "components": [
         {
           "version": "MPR05.01_B0010",

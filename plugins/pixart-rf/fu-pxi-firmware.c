@@ -96,7 +96,7 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_pxi_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);

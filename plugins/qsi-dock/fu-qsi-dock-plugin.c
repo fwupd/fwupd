@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuQsiDockPlugin, fu_qsi_dock_plugin, FU_TYPE_PLUGIN)
 static void
 fu_qsi_dock_plugin_init(FuQsiDockPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

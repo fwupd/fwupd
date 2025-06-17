@@ -1026,6 +1026,15 @@ typedef enum {
 	 */
 	FWUPD_PLUGIN_FLAG_TEST_ONLY = 1ull << 18,
 	/**
+	 * FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION:
+	 *
+	 * Some devices supported by the plugin may cause a device to momentarily
+	 * stop working while probing.
+	 *
+	 * Since: 2.0.12
+	 */
+	FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION = 1ull << 19,
+	/**
 	 * FWUPD_PLUGIN_FLAG_UNKNOWN:
 	 *
 	 * The plugin flag is unknown.
@@ -1093,7 +1102,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:
 	 *
-	 * Ignore firmware CRCs and checksums.
+	 * This is now unused; see #FuFirmwareParseFlags.
 	 *
 	 * Since: 1.5.0
 	 */
@@ -1101,7 +1110,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_IGNORE_VID_PID:
 	 *
-	 * Ignore firmware vendor and project checks.
+	 * This is now unused; see #FuFirmwareParseFlags.
 	 *
 	 * Since: 1.5.0
 	 */
@@ -1109,7 +1118,7 @@ typedef enum {
 	/**
 	 * FWUPD_INSTALL_FLAG_NO_SEARCH:
 	 *
-	 * Do not use heuristics when parsing the image.
+	 * This is now only for internal use.
 	 *
 	 * Since: 1.5.0
 	 */
@@ -1122,6 +1131,14 @@ typedef enum {
 	 * Since: 1.9.21
 	 */
 	FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS = 1 << 9,
+	/**
+	 * FWUPD_INSTALL_FLAG_ONLY_EMULATED:
+	 *
+	 * Only install to emulated devices.
+	 *
+	 * Since: 2.0.10
+	 */
+	FWUPD_INSTALL_FLAG_ONLY_EMULATED = 1 << 10,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
 } FwupdInstallFlags;

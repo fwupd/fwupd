@@ -1464,10 +1464,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Mendapatkan daftar firmware yang diblokir"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Dapatkan daftar pemutakhiran bagi perangkat keras yang tersambung"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Mendapatkan rilis-rilis bagi sebuah peranti"
 
@@ -2075,10 +2071,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Hanya peningkatan versi yang diizinkan"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Keluaran dalam format JSON"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Timpa path ESP default"
 
@@ -2147,7 +2139,8 @@ msgstr "Pastikan Anda memiliki kunci pemulihan volume sebelum melanjutkan."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Silakan masukkan angka dari 0 hingga %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Silakan masukkan %s atau %s: "

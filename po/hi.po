@@ -1395,10 +1395,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "अवरुद्ध फर्मवेयर की सूची प्राप्त करता है"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "जुड़े हार्डवेयर के लिए अद्यतनों की सूची प्राप्त करता है"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "उपकरण के लिए रिलीज़ प्राप्त करता है"
 
@@ -1987,10 +1983,6 @@ msgstr "फाइल डाउनलोड करते समय केवल �
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "केवल संस्करण उन्नयन की अनुमति है"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON प्रारूप में आउटपुट"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

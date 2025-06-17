@@ -3,11 +3,23 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/76ea95f3d3fa893a70de6716a9b34115365f4cb3ac57f290190ce9de20935f9d-firmware.cab",
-      "emulation-url": "https://fwupd.org/downloads/05162d6d3cf6c595da613fcd5c57415022c08e57a76454b7c19de533492bc3f2-legion-hid2.zip",
+      "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
+      "emulation-url": "23bd1f020956963a10badd4c705877844ae1ecec533d8558706bbf7720f9d634-no_legos_0038_hidraw.zip",
       "components": [
         {
-          "version": "0.0.2.4",
+          "version": "0.0.3.8",
+          "guids": [
+            "65619675-fec6-5035-801d-7f5e59fd9749"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "3275a3f8b393025003943b40bba39145c2c93a3208039055a02ee49ca1a02eb4-0_0_3_8.cab",
+      "emulation-url": "ac963a09da109f6896e5e7f8c5dd3366fc2f6dbdd7689758509fd30cf14e1942-legos_0038_hidraw.zip",
+      "components": [
+        {
+          "version": "0.0.3.8",
           "guids": [
             "65619675-fec6-5035-801d-7f5e59fd9749"
           ]

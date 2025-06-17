@@ -19,7 +19,7 @@ G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMW
 static gboolean
 fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuGenesysScalerFirmware *self = FU_GENESYS_SCALER_FIRMWARE(firmware);

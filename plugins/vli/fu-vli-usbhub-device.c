@@ -861,7 +861,7 @@ static FuFirmware *
 fu_vli_usbhub_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(device);
@@ -1408,7 +1408,7 @@ fu_vli_usbhub_device_init(FuVliUsbhubDevice *self)
 {
 	self->st_hd1 = fu_struct_vli_usbhub_hdr_new();
 	self->st_hd2 = fu_struct_vli_usbhub_hdr_new();
-	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_HUB);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.usbhub");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);

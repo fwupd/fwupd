@@ -72,7 +72,7 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 static gboolean
 fu_efi_file_parse(FuFirmware *firmware,
 		  GInputStream *stream,
-		  FwupdInstallFlags flags,
+		  FuFirmwareParseFlags flags,
 		  GError **error)
 {
 	FuEfiFile *self = FU_EFI_FILE(firmware);
@@ -120,7 +120,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	}
 
 	/* verify header checksum */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 hdr_checksum_verify;
 		g_autoptr(GBytes) hdr_blob = NULL;
 
@@ -148,7 +148,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 
 	/* verify data checksum */
 	if ((priv->attrib & FU_EFI_FILE_ATTRIB_CHECKSUM) > 0 &&
-	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	    (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 data_checksum_verify = 0;
 		if (!fu_input_stream_compute_sum8(partial_stream, &data_checksum_verify, error))
 			return FALSE;

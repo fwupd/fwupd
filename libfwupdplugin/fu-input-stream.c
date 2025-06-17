@@ -36,8 +36,10 @@ fu_input_stream_from_path(const gchar *path, GError **error)
 
 	file = g_file_new_for_path(path);
 	stream = g_file_read(file, NULL, error);
-	if (stream == NULL)
+	if (stream == NULL) {
+		fwupd_error_convert(error);
 		return NULL;
+	}
 	return G_INPUT_STREAM(g_steal_pointer(&stream));
 }
 
@@ -776,21 +778,4 @@ fu_input_stream_find(GInputStream *stream,
 		    "failed to find buffer of size 0x%x",
 		    (guint)bufsz);
 	return FALSE;
-}
-
-/**
- * fu_input_stream_locker_unref:
- * @stream: a #GInputStream
- *
- * Closes an input stream and then unrefs it.
- *
- * Since: 2.0.7
- **/
-void
-fu_input_stream_locker_unref(FuInputStreamLocker *stream)
-{
-	g_autoptr(GError) error_local = NULL;
-	if (!g_input_stream_close(stream, NULL, &error_local))
-		g_warning("failed to close input stream: %s", error_local->message);
-	g_object_unref(stream);
 }

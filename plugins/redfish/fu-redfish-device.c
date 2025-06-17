@@ -40,23 +40,23 @@ static void
 fu_redfish_device_set_device_class(FuRedfishDevice *self, const gchar *tmp)
 {
 	if (g_strcmp0(tmp, "NetworkController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "network-wired");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRED);
 		return;
 	}
 	if (g_strcmp0(tmp, "MassStorageController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "drive-multidisk");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_MULTIDISK);
 		return;
 	}
 	if (g_strcmp0(tmp, "DisplayController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "video-display");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 		return;
 	}
 	if (g_strcmp0(tmp, "DockingStation") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "dock");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK);
 		return;
 	}
 	if (g_strcmp0(tmp, "WirelessController") == 0) {
-		fu_device_add_icon(FU_DEVICE(self), "network-wireless");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_NETWORK_WIRELESS);
 		return;
 	}
 	g_debug("no icon mapping for %s", tmp);
@@ -330,10 +330,10 @@ fu_redfish_device_set_name(FuRedfishDevice *self, const gchar *name)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	} else if (g_str_has_prefix(name, "DISK-")) {
 		name += 5;
-		fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	} else if (g_str_has_prefix(name, "POWER-")) {
 		name += 6;
-		fu_device_add_icon(FU_DEVICE(self), "ac-adapter");
+		fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AC_ADAPTER);
 		fu_device_set_summary(FU_DEVICE(self), "Redfish power supply unit");
 	} else {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
@@ -419,6 +419,17 @@ fu_redfish_device_probe_oem_dell(FuRedfishDevice *self, JsonObject *json_object,
 		if (g_strcmp0(status, "AvailableForInstallation") == 0)
 			fu_device_add_private_flag(FU_DEVICE(self),
 						   FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
+	}
+
+	if (json_object_has_member(software_info, "Id")) {
+		const gchar *status = json_object_get_string_member(software_info, "Id");
+		if (g_ascii_strncasecmp(status, "DCIM:INSTALLED", 12) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware is in repository");
+			return FALSE;
+		}
 	}
 
 	/* it does not seem that Dell allows targeting a device when updating */
@@ -572,10 +583,16 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		if (json_object_get_boolean_member(member, "Updateable"))
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP))
-		fu_device_inhibit(dev, "is-backup", "Is a backup partition");
-	else
-		fu_device_uninhibit(dev, "is-backup");
+
+	/* not useful to export */
+	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "%s is a backup partition",
+			    fu_device_get_backend_id(dev));
+		return FALSE;
+	}
 
 	/* use related items to set extra instance IDs */
 	if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
@@ -630,7 +647,9 @@ fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 		return TRUE;
 
 	/* set flags */
-	if (g_pattern_match_simple("Base.*.ResetRequired", message_id)) {
+	if (g_pattern_match_simple("Base.*.ResetRequired", message_id) ||
+	    g_pattern_match_simple("IDRAC.*.JCP001", message_id) ||
+	    g_pattern_match_simple("IDRAC.*.RED014", message_id)) {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		return TRUE;
 	}
@@ -779,7 +798,8 @@ fu_redfish_device_poll_task_once(FuRedfishDevice *self, FuRedfishDevicePollCtx *
 	}
 	state_tmp = json_object_get_string_member(json_obj, "TaskState");
 	g_debug("TaskState now %s", state_tmp);
-	if (g_strcmp0(state_tmp, "Completed") == 0) {
+	if (g_strcmp0(state_tmp, "Completed") == 0 ||
+	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
 		ctx->completed = TRUE;
 		return TRUE;
 	}

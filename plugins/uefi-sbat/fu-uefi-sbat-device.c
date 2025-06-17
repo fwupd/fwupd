@@ -57,7 +57,7 @@ static FuFirmware *
 fu_uefi_sbat_device_prepare_firmware(FuDevice *device,
 				     GInputStream *stream,
 				     FuProgress *progress,
-				     FwupdInstallFlags flags,
+				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
@@ -202,6 +202,7 @@ fu_uefi_sbat_device_init(FuUefiSbatDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Generation number based revocation mechanism");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.uefi.sbat");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -230,7 +231,7 @@ fu_uefi_sbat_device_new(FuContext *ctx, GBytes *blob, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* copy the version across */
-	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(firmware, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;
 	self = g_object_new(FU_TYPE_UEFI_SBAT_DEVICE, "context", ctx, NULL);
 	fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware));

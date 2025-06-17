@@ -591,6 +591,11 @@ msgstr "Preverjanje pristnosti je potrebno za posodobitev shranjenih kontrolnih 
 msgid "Automatic Reporting"
 msgstr "Samodejno poročanje"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Samodejno sproščanje sistema čez %u ms ..."
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Želite vsakič samodejno naložiti?"
@@ -1109,6 +1114,10 @@ msgstr "Odloži podatke SMBIOS-a iz datoteke"
 msgid "Duration"
 msgstr "Trajanje"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "DATOTEKA-EMULACIJE [ARHIVSKA-DATOTEKA]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Vsak sistem mora imeti preizkuse za zagotovitev varnosti vdelane programske opreme."
@@ -1535,10 +1544,6 @@ msgstr "Pridobi seznam odobrene vdelane programske opreme"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Pridobi seznam blokirane vdelane programske opreme"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Pridobi seznam posodobitev za priključeno strojno opremo"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2184,10 +2189,6 @@ msgid "Only version upgrades are allowed"
 msgstr "Dovoljene so samo nadgradnje različic"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Izhod v formatu JSON"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Preglasi kot privzeto pot ESP"
 
@@ -2256,7 +2257,8 @@ msgstr "Pred nadaljevanjem se prepričajte, da imate ključ za obnovitev nosilca
 msgid "Please enter a number from 0 to %u: "
 msgstr "Vnesite številko od 0 do %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Vnesite %s ali %s:"
@@ -2495,6 +2497,10 @@ msgstr "Izvajalno jedro je prestaro"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Pripona izvajalne datoteke"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
@@ -3010,6 +3016,18 @@ msgstr "TPM PCR0 se razlikuje od rekonstrukcije."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "Ključ platforme UEFI se uporablja za ugotavljanje, ali programska oprema naprave prihaja iz zaupanja vrednega vira."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Shramba potrdil UEFI je zdaj posodobljena"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "Zbirka podatkov UEFI vsebuje seznam veljavnih potrdil, ki jih lahko uporabite za overjanje, katere izvršne datoteke EFI je dovoljeno izvajati."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "Sistem UEFI lahko nastavi atribute pomnilnika ob zagonu, ki preprečujejo pogosta vsiljena izvajanja pred izvršitvijo."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Prikriti proces je naložil kodo tretje strani in razvijalci novih različic je ne podpirajo več!"
@@ -3153,6 +3171,10 @@ msgstr "Razdelek UEFI ESP morda ni pravilno nastavljen"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Razdelek UEFI ESP ni zaznan ali konfiguriran"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Zaščita pomnilnika UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Ključ platforme UEFI"
@@ -3177,6 +3199,10 @@ msgstr "Spremenljivke zagonske storitve UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Posodobitve kapsul UEFI niso na voljo ali omogočene pri nastavitvi vdelane programske opreme"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "Db UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Pripomoček UEFI dbx"
@@ -3184,6 +3210,26 @@ msgstr "Pripomoček UEFI dbx"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Vdelane programske opreme UEFI ni mogoče posodobiti v zastarelem načinu BIOS-a"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Zaščita pomnilnika UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Zaščita pomnilnika UEFI je omogočena in zaklenjena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Zaščita pomnilnika UEFI je omogočena, vendar ni zaklenjena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Zaščita pomnilnika UEFI je zdaj zaklenjena"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Zaščita pomnilnika UEFI je zdaj odklenjena"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3498,6 +3544,14 @@ msgstr "[DATOTEKA PODP_DATOTEKE ID-ODDALJENEGA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[IMEDATOTEKE1] [IMEDATOTEKE2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-RAZLIČICA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[REASON] [TIMEOUT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -11,6 +11,7 @@ enum FuLogitechHidppFeature {
     DfuControlSigned      = 0x00C2,
     DfuControlBolt        = 0x00C3,
     Dfu                   = 0x00D0,
+    Rdfu                  = 0x00D1,
     BatteryLevelStatus    = 0x1000,
     UnifiedBattery        = 0x1004,
     KbdReprogrammableKeys = 0x1B00,

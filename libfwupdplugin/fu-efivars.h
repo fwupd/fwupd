@@ -17,6 +17,7 @@ struct _FuEfivarsClass {
 	GObjectClass parent_class;
 	gboolean (*supported)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	guint64 (*space_used)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+	guint64 (*space_free)(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 	gboolean (*exists)(FuEfivars *self, const gchar *guid, const gchar *name)
 	    G_GNUC_NON_NULL(1, 2);
 	GFileMonitor *(*get_monitor)(FuEfivars *self,
@@ -52,7 +53,6 @@ struct _FuEfivarsClass {
 #define FU_EFIVARS_GUID_FWUPDATE	   "0abba7dc-e516-4167-bbf5-4d9d1c739416"
 #define FU_EFIVARS_GUID_UX_CAPSULE	   "3b8c8162-188c-46a4-aec9-be43f1d65697"
 #define FU_EFIVARS_GUID_SECURITY_DATABASE  "d719b2cb-3d3a-4596-a3bc-dad00e67656f"
-#define FU_EFIVARS_GUID_UX_CAPSULE	   "3b8c8162-188c-46a4-aec9-be43f1d65697"
 #define FU_EFIVARS_GUID_EFI_CAPSULE_REPORT "39b68c46-f7fb-441b-b6ec-16b0f69821f3"
 #define FU_EFIVARS_GUID_SHIM		   "605dab50-e046-4300-abb6-3dd810dd8b23"
 
@@ -70,6 +70,8 @@ gboolean
 fu_efivars_supported(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 guint64
 fu_efivars_space_used(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
+guint64
+fu_efivars_space_free(FuEfivars *self, GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_efivars_exists(FuEfivars *self, const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1, 2);
 GFileMonitor *

@@ -26,18 +26,11 @@ typedef struct {
 	gchar *name;
 } FuUefiDevicePrivate;
 
-static void
-fu_uefi_device_codec_iface_init(FwupdCodecInterface *iface);
-
-G_DEFINE_TYPE_EXTENDED(FuUefiDevice,
-		       fu_uefi_device,
-		       FU_TYPE_DEVICE,
-		       0,
-		       G_ADD_PRIVATE(FuUefiDevice)
-			   G_IMPLEMENT_INTERFACE(FWUPD_TYPE_CODEC,
-						 fu_uefi_device_codec_iface_init));
+G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE);
 
 #define GET_PRIVATE(o) (fu_uefi_device_get_instance_private(o))
+
+#define FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE "no-efivars-space"
 
 /* private */
 void
@@ -285,10 +278,9 @@ fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_uefi_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_uefi_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUefiDevice *self = FU_UEFI_DEVICE(codec);
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(device);
 
@@ -326,11 +318,9 @@ fu_uefi_device_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags
 }
 
 static gboolean
-fu_uefi_device_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_uefi_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
 {
-	FuDevice *device = FU_DEVICE(codec);
-	FuUefiDevice *self = FU_UEFI_DEVICE(codec);
-	JsonObject *json_object = json_node_get_object(json_node);
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
 
 	tmp = json_object_get_string_member_with_default(json_object, "Guid", NULL);
@@ -381,11 +371,40 @@ fu_uefi_device_finalize(GObject *object)
 }
 
 static void
+fu_uefi_device_required_free_notify_cb(FuUefiDevice *self, GParamSpec *pspec, gpointer user_data)
+{
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+
+	if (fu_device_get_required_free(FU_DEVICE(self)) > 0) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_context_efivars_check_free_space(
+			ctx,
+			fu_device_get_required_free(FU_DEVICE(self)),
+			&error_local)) {
+			fu_device_inhibit(FU_DEVICE(self),
+					  FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE,
+					  error_local->message);
+		} else {
+			fu_device_uninhibit(FU_DEVICE(self),
+					    FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE);
+		}
+	} else {
+		fu_device_uninhibit(FU_DEVICE(self), FU_UEFI_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE);
+	}
+}
+
+static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::required-free",
+			 G_CALLBACK(fu_uefi_device_required_free_notify_cb),
+			 NULL);
 }
 
 static void
@@ -398,13 +417,8 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	device_class->probe = fu_uefi_device_probe;
 	device_class->dump_firmware = fu_uefi_device_dump_firmware;
 	device_class->incorporate = fu_uefi_device_incorporate;
-}
-
-static void
-fu_uefi_device_codec_iface_init(FwupdCodecInterface *iface)
-{
-	iface->add_json = fu_uefi_device_add_json;
-	iface->from_json = fu_uefi_device_from_json;
+	device_class->from_json = fu_uefi_device_from_json;
+	device_class->add_json = fu_uefi_device_add_json;
 }
 
 FuUefiDevice *

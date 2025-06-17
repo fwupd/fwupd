@@ -118,8 +118,11 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 			   NULL);
 
 	/* Dell specific currently */
-	if (self->system_id != NULL)
+	if (self->system_id != NULL) {
 		fu_device_add_instance_str(dev, "SYSTEMID", self->system_id);
+		/* Ensure the reboot is not done immediately after installation, and only after a wanted reboot */
+		fu_redfish_multipart_device_set_apply_time(FU_REDFISH_MULTIPART_DEVICE(dev), "OnReset");
+	}
 
 	/* some vendors do not specify the Targets array when updating */
 	if (self->wildcard_targets)
@@ -344,7 +347,8 @@ fu_redfish_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **e
 	    json_object_has_member(json_obj, "MultipartHttpPushUri")) {
 		const gchar *tmp = json_object_get_string_member(json_obj, "MultipartHttpPushUri");
 		if (tmp != NULL) {
-			if (fu_redfish_backend_has_smc_update_path(json_obj)) {
+			if (g_strcmp0(self->vendor, "SMCI") == 0 &&
+			    fu_redfish_backend_has_smc_update_path(json_obj)) {
 				self->device_gtype = FU_TYPE_REDFISH_SMC_DEVICE;
 			} else {
 				self->device_gtype = FU_TYPE_REDFISH_MULTIPART_DEVICE;

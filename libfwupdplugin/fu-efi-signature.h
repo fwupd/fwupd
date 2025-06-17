@@ -12,7 +12,11 @@
 #include "fu-firmware.h"
 
 #define FU_TYPE_EFI_SIGNATURE (fu_efi_signature_get_type())
-G_DECLARE_FINAL_TYPE(FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
+G_DECLARE_DERIVABLE_TYPE(FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
+
+struct _FuEfiSignatureClass {
+	FuFirmwareClass parent_class;
+};
 
 #define FU_EFI_SIGNATURE_GUID_ZERO	  "00000000-0000-0000-0000-000000000000"
 #define FU_EFI_SIGNATURE_GUID_MICROSOFT	  "77fa9abd-0359-4d32-bd60-28f4e78f784b"

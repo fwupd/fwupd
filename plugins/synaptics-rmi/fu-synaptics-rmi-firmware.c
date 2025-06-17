@@ -47,6 +47,7 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 				    GInputStream *stream,
 				    gsize offset,
 				    gsize bufsz,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) img = fu_firmware_new();
@@ -54,7 +55,7 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	partial_stream = fu_partial_input_stream_new(stream, offset, bufsz, error);
 	if (partial_stream == NULL)
 		return FALSE;
-	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img, id);
 	return fu_firmware_add_image_full(firmware, img, error);
@@ -67,9 +68,10 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 					gsize offset,
 					gsize bufsz,
 					gsize sig_sz,
+					FuFirmwareParseFlags flags,
 					GError **error)
 {
-	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, stream, offset, bufsz, error))
+	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, stream, offset, bufsz, flags, error))
 		return FALSE;
 	if (sig_sz != 0) {
 		g_autoptr(GInputStream) partial_stream = NULL;
@@ -79,11 +81,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 		partial_stream = fu_partial_input_stream_new(stream, offset + bufsz, sig_sz, error);
 		if (partial_stream == NULL)
 			return FALSE;
-		if (!fu_firmware_parse_stream(img,
-					      partial_stream,
-					      0x0,
-					      FWUPD_INSTALL_FLAG_NONE,
-					      error))
+		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
 		sig_id = g_strdup_printf("%s-signature", id);
 		fu_firmware_set_id(img, sig_id);
@@ -112,7 +110,10 @@ fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, GError **error)
+fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
+				    GInputStream *stream,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint16 container_id;
@@ -242,6 +243,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -252,6 +254,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -263,6 +266,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -273,6 +277,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -283,6 +288,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -293,6 +299,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 								     content_addr,
 								     length,
 								     signature_size,
+								     flags,
 								     error))
 				return FALSE;
 			break;
@@ -348,7 +355,10 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware, GInputStream *stream, 
 }
 
 static gboolean
-fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, GError **error)
+fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
+				    GInputStream *stream,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint32 cfg_sz;
@@ -369,6 +379,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 								 stream,
 								 RMI_IMG_FW_OFFSET + sig_offset,
 								 self->sig_size,
+								 flags,
 								 error))
 				return FALSE;
 		}
@@ -377,6 +388,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 							 stream,
 							 RMI_IMG_FW_OFFSET,
 							 img_sz,
+							 flags,
 							 error))
 			return FALSE;
 	}
@@ -389,6 +401,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 							 stream,
 							 RMI_IMG_FW_OFFSET + img_sz,
 							 cfg_sz,
+							 flags,
 							 error))
 			return FALSE;
 	}
@@ -398,7 +411,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware, GInputStream *stream, 
 static gboolean
 fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
@@ -434,7 +447,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	self->checksum = fu_struct_rmi_img_get_checksum(st_img);
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum_calculated =
 		    fu_synaptics_rmi_generate_checksum(buf + 4, bufsz - 4);
 		if (self->checksum != checksum_calculated) {
@@ -469,13 +482,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	case 6:
 		if ((self->io & 0x10) >> 1)
 			self->sig_size = fu_struct_rmi_img_get_signature_size(st_img);
-		if (!fu_synaptics_rmi_firmware_parse_v0x(firmware, stream, error))
+		if (!fu_synaptics_rmi_firmware_parse_v0x(firmware, stream, flags, error))
 			return FALSE;
 		self->kind = RMI_FIRMWARE_KIND_0X;
 		break;
 	case 16:
 	case 17:
-		if (!fu_synaptics_rmi_firmware_parse_v10(firmware, stream, error))
+		if (!fu_synaptics_rmi_firmware_parse_v10(firmware, stream, flags, error))
 			return FALSE;
 		self->kind = RMI_FIRMWARE_KIND_10;
 		break;

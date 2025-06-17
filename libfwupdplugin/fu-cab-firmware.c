@@ -108,7 +108,7 @@ fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename)
 
 typedef struct {
 	GInputStream *stream;
-	FwupdInstallFlags install_flags;
+	FuFirmwareParseFlags parse_flags;
 	gsize rsvd_folder;
 	gsize rsvd_block;
 	gsize size_total;
@@ -244,7 +244,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		g_prefix_error(error, "failed to cut cabinet checksum: ");
 		return FALSE;
 	}
-	if ((helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((helper->parse_flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint32 checksum = fu_struct_cab_data_get_checksum(st);
 		if (checksum != 0) {
 			guint32 checksum_actual = 0;
@@ -491,7 +491,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 		g_prefix_error(error, "failed to cut cabinet image: ");
 		return FALSE;
 	}
-	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->install_flags, error))
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->parse_flags, error))
 		return FALSE;
 	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 		return FALSE;
@@ -520,7 +520,7 @@ fu_cab_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 }
 
 static FuCabFirmwareParseHelper *
-fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, GError **error)
+fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flags, GError **error)
 {
 	int zret;
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
@@ -539,7 +539,7 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 	}
 
 	helper->stream = g_object_ref(stream);
-	helper->install_flags = flags;
+	helper->parse_flags = flags;
 	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	helper->decompress_bufsz = FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ;
 	return g_steal_pointer(&helper);
@@ -548,7 +548,7 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FwupdInstallFlags flags, 
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);

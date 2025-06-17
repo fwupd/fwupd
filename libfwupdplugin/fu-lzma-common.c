@@ -13,21 +13,21 @@
 /**
  * fu_lzma_decompress_bytes:
  * @blob: data
+ * @memlimit: decompression memory limit, in bytes
  * @error: (nullable): optional return location for an error
  *
  * Decompresses a LZMA stream.
  *
- * Returns: decompressed data
+ * Returns: (transfer full): decompressed data
  *
- * Since: 1.9.8
+ * Since: 2.0.7
  **/
 GBytes *
-fu_lzma_decompress_bytes(GBytes *blob, GError **error)
+fu_lzma_decompress_bytes(GBytes *blob, guint64 memlimit, GError **error)
 {
 	const gsize tmpbufsz = 0x20000;
 	lzma_ret rc;
 	lzma_stream strm = LZMA_STREAM_INIT;
-	uint64_t memlimit = G_MAXUINT32;
 	g_autofree guint8 *tmpbuf = g_malloc0(tmpbufsz);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -73,7 +73,7 @@ fu_lzma_decompress_bytes(GBytes *blob, GError **error)
  *
  * Compresses into a LZMA stream.
  *
- * Returns: compressed data
+ * Returns: (transfer full): compressed data
  *
  * Since: 1.9.8
  **/

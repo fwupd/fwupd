@@ -1,6 +1,5 @@
 /*
  * Copyright 2018 Richard Hughes <richard@hughsie.com>
- * Copyright 2019 Aleksander Morgado <aleksander@aleksander.es>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -11,27 +10,39 @@
 
 #include <libmm-glib.h>
 
-#define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE "detach-at-fastboot-has-no-response"
-#define FU_MM_DEVICE_FLAG_UNINHIBIT_MM_AFTER_FASTBOOT_REBOOT                                       \
-	"uninhibit-modemmanager-after-fastboot-reboot"
-#define FU_MM_DEVICE_FLAG_USE_BRANCH  "use-branch"
-#define FU_MM_DEVICE_FLAG_DISABLE_ZLP "disable-zlp"
-
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type())
-G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuUdevDevice)
 
-FuMmDevice *
-fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem);
+#define FU_MM_DEVICE_FLAG_USE_BRANCH "use-branch"
+
+/* less ifdefs */
+#if !MM_CHECK_VERSION(1, 24, 0)
+#define MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA	      (1 << 5)
+#define MM_MODEM_FIRMWARE_UPDATE_METHOD_CINTERION_FDL (1 << 6)
+#endif
+
+struct _FuMmDeviceClass {
+	FuUdevDeviceClass parent_class;
+};
+
 void
-fu_mm_device_set_udev_device(FuMmDevice *self, FuUdevDevice *udev_device);
+fu_mm_device_set_inhibited(FuMmDevice *self, gboolean inhibited) G_GNUC_NON_NULL(1);
+gboolean
+fu_mm_device_get_inhibited(FuMmDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
-fu_mm_device_get_inhibition_uid(FuMmDevice *device);
-MMModemFirmwareUpdateMethod
-fu_mm_device_get_update_methods(FuMmDevice *device);
+fu_mm_device_get_inhibition_uid(FuMmDevice *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError **error)
+    G_GNUC_NON_NULL(1);
 
-FuMmDevice *
-fu_mm_device_shadow_new(FuMmDevice *device);
-FuMmDevice *
-fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_device);
+gboolean
+fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, GError **error)
+    G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
+    G_GNUC_NON_NULL(1);
 void
-fu_mm_device_udev_add_port(FuMmDevice *self, const gchar *subsystem, const gchar *path);
+fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id) G_GNUC_NON_NULL(1, 2);

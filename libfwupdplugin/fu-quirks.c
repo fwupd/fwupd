@@ -333,6 +333,7 @@ fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *p
 						 NULL,
 						 error)) {
 			g_prefix_error(error, "failed to load %s: ", filename);
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 
@@ -432,10 +433,14 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		g_prefix_error(error, "failed to prepare query: ");
 		return FALSE;
 	}
-	if (!xb_silo_query_build_index(self->silo, "quirk/device", "id", error))
+	if (!xb_silo_query_build_index(self->silo, "quirk/device", "id", error)) {
+		fwupd_error_convert(error);
 		return FALSE;
-	if (!xb_silo_query_build_index(self->silo, "quirk/device/value", "key", error))
+	}
+	if (!xb_silo_query_build_index(self->silo, "quirk/device/value", "key", error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;

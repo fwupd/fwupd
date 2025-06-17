@@ -9,4 +9,8 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_LEGION_HID2_DEVICE (fu_legion_hid2_device_get_type())
-G_DECLARE_FINAL_TYPE(FuLegionHid2Device, fu_legion_hid2_device, FU, LEGION_HID2_DEVICE, FuHidDevice)
+G_DECLARE_FINAL_TYPE(FuLegionHid2Device,
+		     fu_legion_hid2_device,
+		     FU,
+		     LEGION_HID2_DEVICE,
+		     FuHidrawDevice)

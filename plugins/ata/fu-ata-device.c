@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include <stddef.h>
 #include <scsi/sg.h>
+#include <stddef.h>
 
 #include "fu-ata-device.h"
 
@@ -911,7 +911,7 @@ fu_ata_device_init(FuAtaDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_set_summary(FU_DEVICE(self), "ATA drive");
-	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	fu_device_add_protocol(FU_DEVICE(self), "org.t13.ata");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);

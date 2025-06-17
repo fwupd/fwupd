@@ -29,7 +29,7 @@ G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
-		       FwupdInstallFlags flags,
+		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	gsize offset = 0;

@@ -41,12 +41,9 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	g_autoptr(GBytes) blob = NULL;
 
 	/* only match on US English */
-	language = xb_node_query_text(n, "language", NULL);
+	language = xb_node_query_text(n, "language", error);
 	if (language == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "language missing");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (g_strcmp0(language, "English") != 0) {
@@ -59,9 +56,9 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 	}
 
 	/* get the CRC */
-	crc_str = xb_node_query_text(n, "crc", NULL);
+	crc_str = xb_node_query_text(n, "crc", error);
 	if (crc_str == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "crc missing");
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (!fu_strtoull(crc_str, &crc_expected, 0x0, 0xFFFFFFFF, FU_INTEGER_BASE_AUTO, error)) {

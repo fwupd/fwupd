@@ -436,6 +436,10 @@ msgstr "Neuinstallation vorhandener Firmware-Versionen erlauben"
 msgid "Allow switching firmware branch"
 msgstr "Wechsel des Firmware-Zweigs erlauben"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Bereits vorhanden, und kein --force angegeben"
+
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "Alternativer Zweig"
@@ -574,6 +578,11 @@ msgstr "Zur Aktualisierung der gespeicherten Prüfsummen für das Gerät ist ein
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Automatische Berichterstattung"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Wird in %u ms automatisch entriegelt..."
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -744,6 +753,10 @@ msgstr "Kontrollfluss-Durchsetzungstechnologie"
 msgid "Convert a firmware file"
 msgstr "Eine Firmware-Datei konvertieren"
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "EFI-Boot-Eintrag erstellen"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Erstellt"
@@ -775,6 +788,10 @@ msgstr "Defektlokalisierungsoptionen"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Entpacken …"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "EFI-Boot-Eintrag löschen"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1029,6 +1046,11 @@ msgstr "Nicht in die Verlaufsdatenbank schreiben"
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Verstehen Sie die Folgen einer Änderung des Firmware-Zweigs?"
 
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Möchten Sie es jetzt konvertieren?"
+
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Möchten Sie diese Funktion für zukünftige Aktualisierungen deaktivieren?"
@@ -1079,6 +1101,10 @@ msgstr "SMBIOS-Daten aus einer Datei ausgeben"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Dauer"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULATIONSDATEI [ARCHIVDATEI]"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
@@ -1504,10 +1530,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Holt die Liste der blockierten Firmware"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Ermittelt die Liste der Aktualisierungen für angeschlossene Hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Ermittelt die Versionen für ein Gerät"
 
@@ -1543,6 +1565,22 @@ msgstr "Die Attribute der Sicherheitskennung des Hosts wurden erfolgreich hochge
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Host-Sicherheitskennung:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEXSCHLÜSSEL [WERT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEXNAME [EINHÄNGEPUNKT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
@@ -1766,6 +1804,14 @@ msgstr "Ungültige Argumente"
 msgid "Invalid arguments, expected GUID"
 msgstr "Ungültige Argumente, erwartete GUID"
 
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Ungültige Argumente, erwartete INDEXSCHLÜSSEL [WERT]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Ungültige Argumente, erwartete INDEXNAME ZIEL [EINHÄNGEPUNKT]"
+
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
@@ -1774,6 +1820,10 @@ msgstr "Ungültige Argumente. Es wurde eine AppStream-Kennung erwartet."
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
 msgstr "Ungültige Argumente, erwartete wenigstens ARCHIV FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Ungültige Argumente, erwartete Basis-16-Ganzzahl"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2078,6 +2128,11 @@ msgstr "Keine Aktualisierungen verfügbar"
 msgid "No updates available for remaining devices"
 msgstr "Für die verbleibenden Geräte sind keine Aktualisierungen verfügbar"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Kein Volume passt zu %s"
+
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Nicht genehmigt"
@@ -2114,10 +2169,6 @@ msgstr "Beim Herunterladen von Dateien nur Peer-to-Peer-Netzwerke verwenden"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Nur Versionsaktualisierungen sind erlaubt"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Ausgabe im JSON-Format"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2188,7 +2239,8 @@ msgstr "Bitte stellen Sie sicher, dass Sie den Wiederherstellungsschlüssel für
 msgid "Please enter a number from 0 to %u: "
 msgstr "Bitte geben Sie eine Zahl von 0 bis %u ein: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Bitte geben Sie entweder %s oder %s ein: "
@@ -2428,6 +2480,10 @@ msgstr "Laufender Kernel ist zu alt"
 msgid "Runtime Suffix"
 msgstr "Laufzeit-Suffix"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "Software-Stückliste"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "ABSCHNITT"
@@ -2540,6 +2596,18 @@ msgstr "Eine BIOS-Einstellung festlegen"
 
 msgid "Set one or more BIOS settings"
 msgstr "Eine oder mehrere BIOS-Einstellungen festlegen"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "EFI-Boot-hive-Eintrag festlegen oder entfernen"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Nächsten EFI-Boot festlegen"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "EFI-Boot-Reihenfolge festlegen"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2890,6 +2958,14 @@ msgstr "Geprüft von %s"
 msgid "Tested by trusted vendor"
 msgstr "Getestet von einem vertrauenswürdigen Anbieter"
 
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "Der EFI-Boot-Eintrag ist nicht im hive-Format, und shim ist möglicherweise nicht neu genug, um ihn zu lesen."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "Der EFI-Boot-Eintrag war nicht im hive-Format, Rückgriff auf Reservesystem"
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
 msgstr "Das Schlüsselmanifest der Intel Verwaltungs-Engine muss gültig sein, damit die Geräte-Firmware von der CPU als vertrauenswürdig eingestuft werden kann."
@@ -2917,6 +2993,18 @@ msgstr "Das TPM PCR0 unterscheidet sich von der Rekonstruktion."
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "Der UEFI-Plattformschlüssel wird verwendet, um festzustellen, ob die Gerätesoftware aus einer vertrauenswürdigen Quelle stammt."
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Der UEFI-Zertifikatspeicher ist jetzt auf dem neuesten Stand"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "Die UEFI-DB enthält die Liste der gültigen Zertifikate, die zur Autorisierung der EFI-Binärdateien verwendet werden können."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "Das UEFI-System kann beim Booten Speicherattribute einrichten, die die Ausführung gängiger Exploits verhindern."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -3061,6 +3149,10 @@ msgstr "Die UEFI-ESP-Partition ist möglicherweise nicht korrekt eingerichtet"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP-Partition nicht erkannt oder konfiguriert"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI-Speicherschutz"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "UEFI-Plattformschlüssel"
@@ -3085,6 +3177,10 @@ msgstr "UEFI-Bootdienst-Variablen"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Aktualisierung der UEFI-Kapsel nicht verfügbar oder in der Firmware-Einrichtung aktiviert"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI-DB"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-Dienstprogramm"
@@ -3092,6 +3188,26 @@ msgstr "UEFI dbx-Dienstprogramm"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "UEFI-Firmware kann im veralteten BIOS-Modus nicht aktualisiert werden"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI-Speicherschutz"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI-Speicherschutz aktiviert und gesperrt"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI-Speicherschutz aktiviert, aber nicht gesperrt"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI-Speicherschutz ist jetzt gesperrt"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI-Speicherschutz ist jetzt entsperrt"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3404,6 +3520,14 @@ msgstr "[DATEI DATEI_SIG GEGENSTELLENKENNUNG]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[DATEINAME1] [DATEINAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[GRUND] [ZEITÜBERSCHREITUNG]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -73,7 +73,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 static gboolean
 fu_acpi_uefi_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   FwupdInstallFlags flags,
+		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuAcpiUefi *self = FU_ACPI_UEFI(firmware);
@@ -81,7 +81,7 @@ fu_acpi_uefi_parse(FuFirmware *firmware,
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_uefi_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, FWUPD_INSTALL_FLAG_NONE, error))
+		 ->parse(FU_FIRMWARE(self), stream, flags, error))
 		return FALSE;
 
 	/* check signature and read flags */

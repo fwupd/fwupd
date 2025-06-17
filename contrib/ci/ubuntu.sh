@@ -40,7 +40,8 @@ sudo -u nobody meson ${BUILD}               \
                     -Dlibxmlb:gtkdoc=false  \
                     --prefix=${root}/target
 #build with clang
-sudo -u nobody ninja -C ${BUILD} test -v
+sudo -u nobody ninja -C ${BUILD} -v
+sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
 
 # check for unused symbols
 ./contrib/ci/check-unused.py

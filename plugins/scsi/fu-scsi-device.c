@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include <stddef.h>
 #include <scsi/sg.h>
+#include <stddef.h>
 
 #include "fu-scsi-device.h"
 #include "fu-scsi-struct.h"
@@ -180,7 +180,7 @@ static FuFirmware *
 fu_scsi_device_prepare_firmware(FuDevice *device,
 				GInputStream *stream,
 				FuProgress *progress,
-				FwupdInstallFlags flags,
+				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -447,7 +447,7 @@ fu_scsi_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_scsi_device_init(FuScsiDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "SCSI device");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);

@@ -31,7 +31,7 @@ fu_acpi_ivrs_dma_remap_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(ivrs),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -72,7 +72,7 @@ fu_acpi_ivrs_no_dma_remap_func(void)
 	ret = fu_firmware_parse_stream(FU_FIRMWARE(ivrs),
 				       stream,
 				       0x0,
-				       FWUPD_INSTALL_FLAG_NONE,
+				       FU_FIRMWARE_PARSE_FLAG_NONE,
 				       &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

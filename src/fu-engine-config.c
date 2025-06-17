@@ -359,6 +359,12 @@ fu_engine_config_get_enumerate_all_devices(FuEngineConfig *self)
 	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "EnumerateAllDevices");
 }
 
+gboolean
+fu_engine_config_get_require_immutable_enumeration(FuEngineConfig *self)
+{
+	return fu_config_get_value_bool(FU_CONFIG(self), "fwupd", "RequireImmutableEnumeration");
+}
+
 const gchar *
 fu_engine_config_get_host_bkc(FuEngineConfig *self)
 {
@@ -419,6 +425,7 @@ fu_engine_config_init(FuEngineConfig *self)
 	fu_engine_config_set_default(self, "P2pPolicy", FU_DEFAULT_P2P_POLICY);
 	fu_engine_config_set_default(self, "ReleaseDedupe", "true");
 	fu_engine_config_set_default(self, "ReleasePriority", "local");
+	fu_engine_config_set_default(self, "RequireImmutableEnumeration", "false");
 	fu_engine_config_set_default(self, "ShowDevicePrivate", "true");
 	fu_engine_config_set_default(self, "TestDevices", "false");
 	fu_engine_config_set_default(self, "TrustedReports", "VendorId=$OEM");

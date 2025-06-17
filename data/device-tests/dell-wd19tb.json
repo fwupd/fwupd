@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/c05bacfd8f73f30812559f14245b92a069c680caf300e961c78e00c985efe3e0-WD19FirmwareUpdateLinux_01.00.14.cab",
+      "url": "c05bacfd8f73f30812559f14245b92a069c680caf300e961c78e00c985efe3e0-WD19FirmwareUpdateLinux_01.00.14.cab",
       "components": [
         {
           "name": "ec",

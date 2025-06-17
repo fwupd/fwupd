@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '2.0.7',
+  version: '2.0.12',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.3.0',
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -168,7 +168,6 @@ add_project_arguments('-D_DEFAULT_SOURCE', language: 'c')
 # needed for symlink() and BYTE_ORDER
 add_project_arguments('-D_BSD_SOURCE', language: 'c')
 add_project_arguments('-D__BSD_VISIBLE', language: 'c')
-add_project_arguments('-D_XOPEN_SOURCE=700', language: 'c')
 
 # needed for memfd_create()
 add_project_arguments('-D_GNU_SOURCE', language: 'c')
@@ -243,7 +242,7 @@ endif
 conf.set_quoted('FU_LVFS_METADATA_FORMAT', lvfs_metadata_format)
 
 # FreeBSD is missing some libusb symbols
-libusb = dependency('libusb-1.0', version : '>= 0.1.12')
+libusb = dependency('libusb-1.0', version : '>= 0.1.27')
 conf.set_quoted('LIBUSB_VERSION', libusb.version())
 if cc.has_header_symbol('libusb.h', 'libusb_set_option', dependencies: libusb)
   conf.set('HAVE_LIBUSB_SET_OPTION', '1')
@@ -255,6 +254,10 @@ if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
 
+readline = dependency('readline', required: get_option('readline'))
+if readline.found() and get_option('readline').allowed()
+  conf.set('HAVE_READLINE', '1')
+endif
 sqlite = dependency('sqlite3')
 if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
@@ -412,6 +415,9 @@ endif
 if cc.has_header('sys/mman.h')
   conf.set('HAVE_MMAN_H', '1')
 endif
+if cc.has_header('sys/vfs.h')
+  conf.set('HAVE_SYS_VFS_H', '1')
+endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif
@@ -442,6 +448,9 @@ if cc.has_function('sigaction')
 endif
 if cc.has_function('memfd_create')
   conf.set('HAVE_MEMFD_CREATE', '1')
+endif
+if cc.has_function('strerrordesc_np')
+  conf.set('HAVE_STRERRORDESC_NP', '1')
 endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
@@ -633,7 +642,8 @@ if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')
 endif
 
-allow_uefi_capsule = host_machine.system() in ['linux', 'freebsd']
+allow_uefi_capsule = host_machine.system() in ['linux', 'freebsd'] and \
+                     host_machine.cpu_family() in ['x86', 'x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
 subdir('generate-build')
 subdir('libfwupd')

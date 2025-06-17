@@ -16,6 +16,7 @@
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
+#include "fu-efi-x509-signature-private.h"
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 
@@ -27,18 +28,74 @@
  * See also: [class@FuFirmware]
  */
 
-struct _FuEfiSignatureList {
-	FuFirmware parent_instance;
-};
-
 G_DEFINE_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU_TYPE_FIRMWARE)
 
 const guint8 FU_EFI_SIGLIST_HEADER_MAGIC[] = {0x26, 0x16, 0xC4, 0xC1, 0x4C};
+
+/**
+ * fu_efi_signature_list_get_newest:
+ * @self: a #FuEfiSignatureList
+ *
+ * Gets the deduplicated list of the newest EFI_SIGNATURE_LIST entries.
+ *
+ * Returns: (transfer container) (element-type FuEfiSignature): signatures
+ *
+ * Since: 2.0.8
+ **/
+GPtrArray *
+fu_efi_signature_list_get_newest(FuEfiSignatureList *self)
+{
+	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GList) sigs_values = NULL;
+	g_autoptr(GPtrArray) sigs_newest = NULL;
+	g_autoptr(GPtrArray) sigs = NULL;
+
+	g_return_val_if_fail(FU_IS_EFI_SIGNATURE_LIST(self), NULL);
+
+	/* dedupe the certificates either by the hash or by the subject vendor+name */
+	hash =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+	sigs = fu_firmware_get_images(FU_FIRMWARE(self));
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
+		FuEfiSignature *sig_tmp;
+		g_autofree gchar *key = NULL;
+
+		if (fu_efi_signature_get_kind(sig) == FU_EFI_SIGNATURE_KIND_X509) {
+			key = fu_efi_x509_signature_build_dedupe_key(FU_EFI_X509_SIGNATURE(sig));
+		} else {
+			key = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+		}
+		sig_tmp = g_hash_table_lookup(hash, key);
+		if (sig_tmp == NULL) {
+			g_debug("adding %s", key);
+			g_hash_table_insert(hash, g_steal_pointer(&key), g_object_ref(sig));
+		} else if (fu_firmware_get_version_raw(FU_FIRMWARE(sig)) >
+			   fu_firmware_get_version_raw(FU_FIRMWARE(sig_tmp))) {
+			g_debug("replacing %s", key);
+			g_hash_table_insert(hash, g_steal_pointer(&key), g_object_ref(sig));
+		} else {
+			g_debug("ignoring %s", key);
+		}
+	}
+
+	/* add the newest of each certificate */
+	sigs_newest = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	sigs_values = g_hash_table_get_values(hash);
+	for (GList *l = sigs_values; l != NULL; l = l->next) {
+		FuEfiSignature *sig = FU_EFI_SIGNATURE(l->data);
+		g_ptr_array_add(sigs_newest, g_object_ref(sig));
+	}
+
+	/* success */
+	return g_steal_pointer(&sigs_newest);
+}
 
 static gboolean
 fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 				 GInputStream *stream,
 				 gsize *offset,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuEfiSignatureKind sig_kind = FU_EFI_SIGNATURE_KIND_UNKNOWN;
@@ -91,13 +148,15 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	/* header is typically unused */
 	offset_tmp = *offset + 0x1c + header_size;
 	for (guint i = 0; i < (list_size - 0x1c) / size; i++) {
-		g_autoptr(FuEfiSignature) sig = fu_efi_signature_new(sig_kind);
+		g_autoptr(FuEfiSignature) sig = NULL;
+
+		if (sig_kind == FU_EFI_SIGNATURE_KIND_X509) {
+			sig = FU_EFI_SIGNATURE(fu_efi_x509_signature_new());
+		} else {
+			sig = fu_efi_signature_new(sig_kind);
+		}
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
-		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig),
-					      stream,
-					      offset_tmp,
-					      FWUPD_INSTALL_FLAG_NONE,
-					      error))
+		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_tmp, flags, error))
 			return FALSE;
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
@@ -143,7 +202,7 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);
@@ -154,7 +213,7 @@ fu_efi_signature_list_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	while (offset < streamsz) {
-		if (!fu_efi_signature_list_parse_list(self, stream, &offset, error))
+		if (!fu_efi_signature_list_parse_list(self, stream, &offset, flags, error))
 			return FALSE;
 	}
 

@@ -29,7 +29,7 @@ fu_acpi_phat_parse_func(void)
 	ret = fu_firmware_parse_bytes(phat,
 				      blob,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_FORCE | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      FWUPD_INSTALL_FLAG_FORCE | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

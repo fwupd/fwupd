@@ -39,7 +39,7 @@ fu_pxi_firmware_xml_func(void)
 	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
 
 	/* ensure we can parse */
-	ret = fu_firmware_parse_bytes(firmware3, fw, 0x0, FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_firmware_parse_bytes(firmware3, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

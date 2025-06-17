@@ -293,6 +293,32 @@ fu_efivars_space_used(FuEfivars *self, GError **error)
 }
 
 /**
+ * fu_efivars_space_free:
+ * @self: a #FuEfivars
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the free size available for new EFI variables, as reported from QueryVariableInfo.
+ *
+ * Returns: free space in bytes, or %G_MAXUINT64 on error
+ *
+ * Since: 2.0.12
+ **/
+guint64
+fu_efivars_space_free(FuEfivars *self, GError **error)
+{
+	FuEfivarsClass *efivars_class = FU_EFIVARS_GET_CLASS(self);
+
+	g_return_val_if_fail(FU_IS_EFIVARS(self), G_MAXUINT64);
+	g_return_val_if_fail(error == NULL || *error == NULL, G_MAXUINT64);
+
+	if (efivars_class->space_free == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		return G_MAXUINT64;
+	}
+	return efivars_class->space_free(self, error);
+}
+
+/**
  * fu_efivars_set_data:
  * @self: a #FuEfivars
  * @guid: Globally unique identifier
@@ -825,7 +851,7 @@ fu_efivars_get_boot_entry(FuEfivars *self, guint16 idx, GError **error)
 	if (!fu_firmware_parse_bytes(FU_FIRMWARE(loadopt),
 				     blob,
 				     0x0,
-				     FWUPD_INSTALL_FLAG_NONE,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error))
 		return NULL;
 	fu_firmware_set_idx(FU_FIRMWARE(loadopt), idx);

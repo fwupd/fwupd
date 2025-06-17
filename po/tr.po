@@ -723,10 +723,6 @@ msgid "Gets details about a firmware file"
 msgstr "Donanım yazılımı dosyasıyla ilgili ayrıntıları al"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Bağlı donanım için güncelleme listesini al"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Bir aygıt için sürümleri alır"
 
@@ -1075,10 +1071,6 @@ msgstr "Yalnızca tek PCR değerini göster"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Sadece sürüm yükseltmelerine izin veriliyor"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "JSON formatında dışarı aktar"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

@@ -681,7 +681,7 @@ fu_elan_kbd_device_init(FuElanKbdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_icon(FU_DEVICE(self), "input-keyboard");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_KEYBOARD);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x02);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x03);

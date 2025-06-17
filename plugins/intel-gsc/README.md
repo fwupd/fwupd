@@ -21,14 +21,14 @@ This plugin supports the following protocol ID:
 
 These devices use the standard PCI DeviceInstanceId values, e.g.
 
-* `MEI\VID_8086&DEV_4905`
+* `PCI\VID_8086&DEV_4905`
 
 They also define custom per-part PCI IDs such as:
 
-* `MEI\VID_8086&DEV_4905&PART_FWCODE`
-* `MEI\VID_8086&DEV_4905&PART_FWDATA`
-* `MEI\VID_8086&DEV_4905&PART_OPROMCODE`
-* `MEI\VID_8086&DEV_4905&PART_OPROMDATA`
+* `PCI\VID_8086&DEV_4905&PART_FWCODE`
+* `PCI\VID_8086&DEV_4905&PART_FWDATA`
+* `PCI\VID_8086&DEV_4905&PART_OPROMCODE`
+* `PCI\VID_8086&DEV_4905&PART_OPROMDATA`
 
 ## Quirk Use
 

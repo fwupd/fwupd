@@ -22,6 +22,7 @@
     "enabled": "detected correctly"
   },
   "hsi-level": 3,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit": "IOMMU Wikipedia Page",
     "https://www.amd.com/en/support/tech-docs/amd-io-virtualization-technology-iommu-specification": "AMD I/O Virtualization Technology (IOMMU) Specification"

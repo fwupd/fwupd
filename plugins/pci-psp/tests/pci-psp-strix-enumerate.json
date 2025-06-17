@@ -1,0 +1,17 @@
+{
+  "name": "pci psp strix (enumerate only)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/pci-psp-strix.json",
+      "components": [
+        {
+          "version": "00.3e.04.74",
+          "guids": [
+            "92c96a95-c187-5183-ae27-eab2f47e0f63"
+          ]
+        }
+      ]
+    }
+  ]
+}

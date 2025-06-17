@@ -1,141 +1,184 @@
 
 # DW5821e
 [USB\VID_413C&PID_81D7]
+GType = FuMmFastbootDevice
 Summary = Dell DW5821e LTE modem
 CounterpartGuid = USB\VID_413C&PID_81D6
 
 # DW5821e/eSIM
 [USB\VID_413C&PID_81E0]
+GType = FuMmFastbootDevice
 Summary = Dell DW5821e/eSIM LTE modem
 CounterpartGuid = USB\VID_413C&PID_81E1
 
 # T77W968
 [USB\VID_0489&PID_E0B4]
+GType = FuMmFastbootDevice
 Summary = Foxconn T77w968 LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B7
 
 # T77W968/eSIM
 [USB\VID_0489&PID_E0B5]
+GType = FuMmFastbootDevice
 Summary = Foxconn T77w968/eSIM LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B8
 
 # T99W265 with MBIM only
 [USB\VID_0489&PID_E0DA]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W265 LTE modem with MBIM only
-CounterpartGuid = USB\VID_0489&PID_E0DA
 
 # T99W265 with MBIM and Serial port
 [USB\VID_0489&PID_E0DB]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W265 LTE modem with MBIM and Serial
-CounterpartGuid = USB\VID_0489&PID_E0DB
 
 # T99W175 based on QC LE1.2
 [PCI\VID_105B&PID_E0AB]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
-CounterpartGuid = PCI\VID_105B&PID_E0AB
 
 # T99W175(DW5930e with eSIM)
 [PCI\VID_105B&PID_E0B0]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem with eSIM for DW5930e
-CounterpartGuid = PCI\VID_105B&PID_E0B0
 
 # T99W175(DW5930e without eSIM)
 [PCI\VID_105B&PID_E0B1]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem without eSIM for DW5930e
-CounterpartGuid = PCI\VID_105B&PID_E0B1
 
 # T99W175 based on QC LE1.4
 [PCI\VID_105B&PID_E0BF]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
-CounterpartGuid = PCI\VID_105B&PID_E0BF
 
 # T99W175 variant
 [PCI\VID_105B&PID_E0C3]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W175 5G modem
-CounterpartGuid = PCI\VID_105B&PID_E0C3
 
 # T99W368 Foxconn variant based on SDX65
 [PCI\VID_105B&PID_E0D8]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W368 5G modem
-CounterpartGuid = PCI\VID_105B&PID_E0D8
 
 # T99W373 Foxconn variant based on SDX62
 [PCI\VID_105B&PID_E0D9]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem
-CounterpartGuid = PCI\VID_105B&PID_E0D9
 
 # T99W373(DW5932e with eSIM) based on SDX62
 [PCI\VID_105B&PID_E0F5]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem with eSIM for DW5932e
-CounterpartGuid = PCI\VID_105B&PID_E0F5
 
 # T99W373 (DW5932e without eSIM) based on SDX62
 [PCI\VID_105B&PID_E0F9]
+GType = FuMmMbimDevice
 Summary = Foxconn T99W373 5G modem without eSIM for DW5932e
-CounterpartGuid = PCI\VID_105B&PID_E0F9
+
+# T99W640 Foxconn variant based on SDX72
+[PCI\VID_105B&PID_E118]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem
+
+# T99W640(DW5934e with eSIM) based on SDX72
+[PCI\VID_105B&PID_E11D]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem with eSIM for DW5934e
+
+# T99W640 (DW5934e without eSIM) based on SDX72
+[PCI\VID_105B&PID_E11E]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W640 5G modem without eSIM for DW5934e
+
+# T99W696.01 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE142]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.01 5G modem for Lenovo
+
+# T99W696.02 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE143]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.02 5G modem for Lenovo
+
+# T99W696.03 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE144]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.03 5G modem for Lenovo
+
+# T99W696.04 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE145]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.04 5G modem for Lenovo
+
+# T99W696.00 based on SDX61
+[PCI\VID_17CB&PID_0308&SUBSYS_105BE146]
+GType = FuMmMbimDevice
+Summary = Foxconn T99W696.00 5G modem
 
 # Quectel EG25-G/EC25
 [USB\VID_2C7C&PID_0125]
 Summary = Quectel EG25-G/EC25 modem
-CounterpartGuid = USB\VID_18D1&PID_D00D
 Flags = detach-at-fastboot-has-no-response
 Plugin = modem_manager
 [USB\VID_2C7C&PID_0125&REV_0318&NAME_EG25GGB]
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
-# Qualcomm Sahara device
-[USB\VID_05C6&PID_9008]
-Summary = Qualcomm based modems in EDL (sahara)
-Plugin = modem_manager
-
 # Quectel EM120 firehose prog file
 [PCI\VID_1EAC&PID_1001]
-Summary = Quectel EM120 firehose prog file
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_1002]
-Summary = Quectel EM160 firehose prog file
+GType = FuMmMhiQcdmDevice
+CounterpartGuid = PCI\VEN_1EAC&DEV_1002
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel EM160 firehose prog file
 [PCI\VID_1EAC&PID_100D]
-Summary = Quectel EM160 firehose prog file
+GType = FuMmMhiQcdmDevice
+CounterpartGuid = PCI\VEN_1EAC&DEV_100D
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1004]
-Summary = Quectel RM520 firehose prog file
+GType = FuMmMhiQcdmDevice
+CounterpartGuid = PCI\VEN_1EAC&DEV_1004
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Quectel RM520 firehose prog file
 [PCI\VID_1EAC&PID_1007]
-Summary = Quectel RM520 firehose prog file
+GType = FuMmMhiQcdmDevice
+CounterpartGuid = PCI\VEN_1EAC&DEV_1007
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom FM101
 [USB\VID_2CB7&PID_01A2]
+GType = FuMmFastbootDevice
 Summary = Fibocom FM101-GL Module
-Flags = uninhibit-modemmanager-after-fastboot-reboot,detach-at-fastboot-has-no-response
-CounterpartGuid = USB\VID_2CB7&PID_D00D
+Flags = detach-at-fastboot-has-no-response
 
 # Cinterion PLS8
-[USB\VID_1e2d&PID_0061]
+[USB\VID_1E2D&PID_0061]
+GType = FuMmFdlDevice
 Summary = Cinterion PLS8 AT^SFDL update
 Plugin = modem_manager
 
 # Netprisma LCUR57 firehose prog file
 [PCI\VID_203E&PID_1000]
-Summary = Netprisma LCUR57 firehose prog file
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx24.mbn
 
 # Netprisma FCUN69 firehose prog file
 [PCI\VID_203E&PID_1001]
-Summary = Netprisma FCUN69 firehose prog file
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_firehose_sdx6x.elf
 
 # Fibocom NL668-EAU
 [USB\VID_1508&PID_1001]
-Summary = Fibocom NL668-EAU LTE Module
+GType = FuMmMhiQcdmDevice
 ModemManagerFirehoseProgFile = prog_nand_firehose_9x07.mbn
 Flags = disable-zlp

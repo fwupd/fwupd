@@ -109,16 +109,11 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 	if (bios_tables == NULL)
 		return FALSE;
 
-	/* ROM size if not already been quirked */
+	/* Get SMBIOS data */
 	bios_blob = g_ptr_array_index(bios_tables, 0);
 	buf = g_bytes_get_data(bios_blob, &bufsz);
-	if (fu_device_get_firmware_size_max(device) == 0) {
-		guint8 bios_sz = 0x0;
-		if (fu_memread_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL)) {
-			guint64 firmware_size = (bios_sz + 1) * 64 * 1024;
-			fu_device_set_firmware_size_max(device, firmware_size);
-		}
-	}
+	if (bufsz == 0)
+		return FALSE;
 
 	/* BIOS characteristics */
 	if (fu_memread_uint32_safe(buf, bufsz, 0xa, &bios_char, G_LITTLE_ENDIAN, NULL)) {
@@ -127,6 +122,38 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 					  "bios-characteristics",
 					  "Not supported from SMBIOS");
 		}
+	}
+
+	/* ROM size if not already been quirked */
+	if (fu_device_get_firmware_size_max(device) == 0) {
+		guint8 bios_sz = 0x0;
+		guint64 firmware_size = 0x0;
+		if (!fu_memread_uint8_safe(buf, bufsz, 0x9, &bios_sz, NULL))
+			return FALSE;
+
+		/* need to read extended ROM size */
+		if (bios_sz == 0xff) {
+			guint16 bios_sz_ext = 0x0;
+
+			/* Bits 15-14 scale, 13-0 size
+			 *  00 scale -> MiB
+			 *  01 scale -> GiB
+			 *  others reserved
+			 */
+			if (!fu_memread_uint16_safe(buf,
+						    bufsz,
+						    0x18,
+						    &bios_sz_ext,
+						    G_LITTLE_ENDIAN,
+						    error))
+				return FALSE;
+			firmware_size = (bios_sz_ext & 0x3ff) * (1024 * 1024);
+			if (bios_sz_ext & 0xc000)
+				firmware_size *= 1024;
+		} else {
+			firmware_size = (bios_sz + 1) * 64 * 1024;
+		}
+		fu_device_set_firmware_size_max(device, firmware_size);
 	}
 	return TRUE;
 }
@@ -195,7 +222,7 @@ fu_flashrom_plugin_add_device(FuPlugin *plugin,
 	fu_flashrom_plugin_device_set_hwids(plugin, device);
 	fu_flashrom_plugin_device_set_version(plugin, device);
 	if (!fu_flashrom_plugin_device_set_bios_info(plugin, device, &error_local))
-		g_warning("failed to set bios info: %s", error_local->message);
+		g_debug("failed to set bios info: %s", error_local->message);
 	if (!fu_device_setup(device, error))
 		return NULL;
 

@@ -180,9 +180,18 @@ fu_uefi_cod_device_get_indexed_filename(FuUefiCapsuleDevice *self, GError **erro
 static gchar *
 fu_uefi_cod_device_get_filename(FuUefiCapsuleDevice *self, GError **error)
 {
-	g_autofree gchar *esp_path =
-	    fu_volume_get_mount_point(fu_uefi_capsule_device_get_esp(self));
+	FuVolume *esp = fu_uefi_capsule_device_get_esp(self);
+	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *basename = NULL;
+
+	if (esp == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no ESP set on device");
+		return NULL;
+	}
+	esp_path = fu_volume_get_mount_point(esp);
 
 	/* InsydeH2O */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
@@ -305,6 +314,7 @@ fu_uefi_cod_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
 static void
 fu_uefi_cod_device_init(FuUefiCodDevice *self)
 {
+	fu_device_add_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
 	fu_device_set_summary(FU_DEVICE(self),
 			      "UEFI System Resource Table device (Updated via capsule-on-disk)");
 }

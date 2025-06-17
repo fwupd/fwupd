@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU_TYPE_ACPI_TABLE)
 static gboolean
 fu_acpi_ivrs_parse(FuFirmware *firmware,
 		   GInputStream *stream,
-		   FwupdInstallFlags flags,
+		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
 	FuAcpiIvrs *self = FU_ACPI_IVRS(firmware);
@@ -30,7 +30,7 @@ fu_acpi_ivrs_parse(FuFirmware *firmware,
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_ivrs_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, FWUPD_INSTALL_FLAG_NONE, error))
+		 ->parse(FU_FIRMWARE(self), stream, flags, error))
 		return FALSE;
 
 	/* check signature and read flags */

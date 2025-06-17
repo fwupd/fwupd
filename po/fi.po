@@ -327,6 +327,13 @@ msgid_plural "%u seconds"
 msgstr[0] "%u sekunti"
 msgstr[1] "%u sekuntia"
 
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u testit ohitettiin"
+msgstr[1] "%u testit ohitettiin"
+
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
 #. * lowest limit the firmware update is allowed for the update to happen
 #, c-format
@@ -343,15 +350,15 @@ msgstr "TPM PCR on nyt virheellisellä arvolla"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "AMD Firmware Replay Protection"
-msgstr "AMD:n laiteohjelmiston toistosuojaus"
+msgstr "AMD Firmware Replay Protection"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
-msgstr "AMD:n laiteohjelmiston kirjoitussuojaus"
+msgstr "AMD Firmware Write Protection"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
-msgstr "AMD-suorittimen versiopalautuksen suojaus"
+msgstr "AMD Secure Processor Rollback Protection"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
@@ -426,6 +433,10 @@ msgstr "Salli laiteohjelmiston nykyisten versioiden asentaminen uudelleen"
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Salli laiteohjelmiston haaran vaihtaminen"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "On jo olemassa, eikä --force ominaisuutta määritettynä"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -566,17 +577,22 @@ msgstr "Tallennettujen tarkistussummien päivitys vaatii tunnistautumisen"
 msgid "Automatic Reporting"
 msgstr "Automaattinen raportointi"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Automaattinen esto poistetaan %u ms…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Lähetetäänkö automaattisesti joka kerta?"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS Firmware Updates"
-msgstr "BIOS-laiteohjelmistopäivitykset"
+msgstr "BIOS Firmware Updates"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "BIOS Rollback Protection"
-msgstr "BIOS-versiopalautuksen suojaus"
+msgstr "BIOS Rollback Protection"
 
 #. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
 msgid "BIOS firmware updates"
@@ -600,7 +616,7 @@ msgstr "Akku"
 
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
-msgstr "Sido uusi ydinohjain"
+msgstr "Sido uusi kernel-ohjain"
 
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
@@ -711,6 +727,10 @@ msgstr "Komentoa ei löytynyt"
 msgid "Community supported"
 msgstr "Yhteisön tukema"
 
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Vertailee kahta versiota rinnakkain"
+
 #. TRANSLATORS: title prefix for the BIOS settings dialog
 msgid "Configuration Change Suggested"
 msgstr "Ehdotetaan kokoonpanomuutosta"
@@ -730,6 +750,10 @@ msgstr "Ohjaus-virtausvahvistustekniikka"
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Muunna laiteohjelmistotiedosto"
+
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Luo EFI boot merkintä"
 
 #. TRANSLATORS: when the update was built
 msgid "Created"
@@ -762,6 +786,10 @@ msgstr "Vianjäljitysvalinnat"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Puretaan…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Poista EFI boot merkintä"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1016,6 +1044,11 @@ msgstr "Älä kirjoita historiatietokantaan"
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Ymmärrätkö laiteohjelmiston haaran vaihtamisen seuraukset?"
 
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Haluatko muuntaa sen heti?"
+
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Haluatko poistaa tämän ominaisuuden käytöstä tulevia päivityksiä varten?"
@@ -1066,6 +1099,10 @@ msgstr "Pura SMBIOS-tiedot tiedostosta"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Kesto"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULATION-FILE [ARCHIVE-FILE]"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
@@ -1302,7 +1339,7 @@ msgstr "Suodata käyttäen julkaisulippuja. ~ poissulkee, esimerkiksi ”trusted
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
-msgstr "Laiteohjelmiston vahvistaminen"
+msgstr "Laiteohjelmiston vahvistus"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
@@ -1426,7 +1463,7 @@ msgstr "Levyn salaus voi mitätöityä päivityksen aikana"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused Platform"
-msgstr "Alustassa on sulake"
+msgstr "Fused Platform"
 
 #. TRANSLATORS: Title: if the part has been fused
 msgid "Fused platform"
@@ -1463,6 +1500,10 @@ msgid "Get all enabled plugins registered with the system"
 msgstr "Hae kaikki järjestelmään rekisteröidyt laajennukset"
 
 #. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Hae kaikki tunnetut versioformaatit"
+
+#. TRANSLATORS: command description
 msgid "Get device report metadata"
 msgstr "Hae laitteistoraportin metatiedot"
 
@@ -1485,10 +1526,6 @@ msgstr "Hae hyväksytyn laiteohjelmiston luettelo"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Hakee estettyjen laiteohjelmistojen luettelon"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Hae luettelo liitettyjen laitteiden päivityksistä"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -1521,11 +1558,27 @@ msgstr "Host Security ID (HSI) ei ole tuettu"
 
 #. TRANSLATORS: success, so say thank you to the user
 msgid "Host Security ID attributes uploaded successfully, thanks!"
-msgstr "Koneen tietoturvatunnisteen (HSI) attribuuttien lähetys onnistui. Kiitos!"
+msgstr "Koneen turvatunnisteen (HSI) attribuuttien lähetys onnistui. Kiitos!"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "Koneen tietoturvatunniste (Host Security ID):"
+msgstr "Koneen turvatunniste Host Security ID:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEX KEY [VALUE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEX NAME TARGET [MOUNTPOINT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
@@ -1707,7 +1760,7 @@ msgstr "Intel BootGuardilla vahvistettu käynnistys"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS Mitigation"
-msgstr "Intel GDS lieventäminen"
+msgstr "Intel GDS Mitigation"
 
 #. TRANSLATORS: Title: GDS is where the CPU leaks information
 msgid "Intel GDS mitigation"
@@ -1747,16 +1800,28 @@ msgstr "Virheelliset argumentit"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
-msgstr "Virheelliset argumentit, odotettu GUID"
+msgstr "Virheelliset argumentit, GUID"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Virheelliset argumentit, INDEX KEY [VALUE]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Virheelliset argumentit, INDEX NAME TARGET [MOUNTPOINT]"
 
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
-msgstr "Virheelliset argumentit, odotettiin AppStream-tunnusta"
+msgstr "Virheelliset argumentit, AppStream ID"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
-msgstr "Virheelliset argumentit, odotettiin ainakin ARCHIVE FIRMWARE METAINFO"
+msgstr "Virheelliset argumentit, ainakin ARCHIVE FIRMWARE METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Virheelliset argumentit base-16 integer"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -1778,19 +1843,19 @@ msgstr[1] "Viat"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
-msgstr "Ydin ei ole enää saastunut"
+msgstr "Kernel ei ole enää saastunut"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is tainted"
-msgstr "Ydin on saastunut"
+msgstr "Kernel on saastunut"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
-msgstr "Ytimen lukitus on poistettu käytöstä"
+msgstr "Kernelin lukitus on poistettu"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown enabled"
-msgstr "Ytimen lukitus on käytössä"
+msgstr "Kernel on lukittu"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "LOCATION"
@@ -1810,25 +1875,25 @@ msgstr "Lisenssi"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux Kernel Lockdown"
-msgstr "Linux-ytimen lukitus"
+msgstr "Linux kernel lukitus"
 
 #. TRANSLATORS: longer description
 msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
-msgstr "Linux-ytimen lukitustila estää pääkäyttäjiä (root) lukemasta ja muokkaamasta järjestelmäohjelmistojen kriittisiä osia."
+msgstr "Linux Kernel lukitustila estää pääkäyttäjiä (root) lukemasta ja muokkaamasta järjestelmäohjelmistojen kriittisiä osia."
 
 msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
-msgstr "Linux-ytimen sivutus (swap) tallentaa tietoja käytön aikana väliaikaisesti levylle. Jos näitä tietoja ei suojata, levyn käsiinsä saava taho pystyy lukemaan ne."
+msgstr "Linux Kernel Swap tallentaa tietoja käytön aikana väliaikaisesti levylle. Jos näitä tietoja ei suojata, levyn käsiinsä saava taho pystyy lukemaan ne."
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux Kernel Verification"
-msgstr "Linux-ytimen varmennus"
+msgstr "Linux kernel vahvistus"
 
 msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
-msgstr "Linux-ytimen varmennus varmentaa, että kriittistä järjestelmäohjelmistoa ei ole peukaloitu. Sellaisten laiteajurien käyttö, joita ei toimiteta järjestelmän mukana, saattaa estää tämän turvallisuusominaisuuden oikeanlaisen toiminnan."
+msgstr "Linux Kernel varmennus varmentaa, että kriittistä järjestelmäohjelmistoa ei ole peukaloitu. Sellaisten laiteajurien käyttö, joita ei toimiteta järjestelmän mukana, saattaa estää tämän turvallisuusominaisuuden oikeanlaisen toiminnan."
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux Swap"
-msgstr "Linuxin sivutus (Swap)"
+msgstr "Linux Swap"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux-laitetoimittajien laiteohjelmistopalvelu (vakaat laiteohjelmistot)"
@@ -1838,15 +1903,15 @@ msgstr "Linux-laitetoimittajien laiteohjelmistopalvelu (testattavat laiteohjelmi
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr "Linux-ydin"
+msgstr "Linux kernel"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
-msgstr "Linux-ytimen lukitus"
+msgstr "Linux kernel lukitus"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
-msgstr "Linuxin sivutus (swap)"
+msgstr "Linux swap"
 
 #. TRANSLATORS: command description
 msgid "List EFI boot files"
@@ -2061,6 +2126,11 @@ msgstr "Päivityksiä ei ole saatavilla"
 msgid "No updates available for remaining devices"
 msgstr "Muille laitteille ei ole saatavilla päivityksiä"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Ei vastaavaa asemaa %s"
+
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "Hylätty"
@@ -2097,10 +2167,6 @@ msgstr "Käytä vain vertaisverkkoa tiedostojen lataamiseen"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Vain versioiden päivitykset ovat sallittuja"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Tuloste JSON-muodossa"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2171,7 +2237,8 @@ msgstr "Varmista, että sinulla on aseman palautusavain ennen kuin jatkat."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Anna numero 0 –%u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Valitse %s tai %s: "
@@ -2229,7 +2296,7 @@ msgstr "Jatketaanko lähettämistä?"
 
 #. TRANSLATORS: Title: if fwupd supports HSI on this chip
 msgid "Processor Security Checks"
-msgstr "Suorittimen turvallisuustarkastukset"
+msgstr "Processor Security Checks"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "Processor rollback protection"
@@ -2405,11 +2472,19 @@ msgstr "Suorita ilman valitsinta ”%s” nähdäksesi"
 
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
-msgstr "Ajossa oleva ydin on liian vanha"
+msgstr "Ajossa oleva kernel on liian vanha"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Ajonaikainen pääte"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "SECTION"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SETTING VALUE"
@@ -2477,11 +2552,11 @@ msgstr "Ajoitetaan…"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
-msgstr "Turvakäynnistys (secure boot) pois käytöstä"
+msgstr "Secure Boot poistettu"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
-msgstr "Turvakäynnistys (secure boot) käytössä"
+msgstr "Secure Boot käytössä"
 
 msgid "Security hardening for HSI"
 msgstr "HSI turvallisuuden käsittely"
@@ -2519,6 +2594,18 @@ msgstr "Aseta BIOS-asetus"
 
 msgid "Set one or more BIOS settings"
 msgstr "Aseta yksi tai useampi BIOS-asetus"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Aseta tai poista EFI boot hive merkintä"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "Aseta EFI boot seuraavaksi"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Aseta EFI boot käynnistysjärjestys"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2869,6 +2956,14 @@ msgstr "Valmistajan %s testaama"
 msgid "Tested by trusted vendor"
 msgstr "Luotettavan valmistajan testaama"
 
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "EFI boot merkintä ei ollut hive-formaatissa, eikä shim-tiedosto välttämättä ole riittävän uusi sen lukemiseen."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "EFI boot ei ollut hive-formaatissa ja palautui takaisin"
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
 msgstr "Intel Management Engine -avainmanifestin täytyy olla kelvollinen, jotta suoritin voi luottaa laiteohjelmistoon."
@@ -2896,6 +2991,18 @@ msgstr "TPM PCR0 eroaa uudelleenrakennetusta."
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "UEFI:n alusta-avaimen perusteella tiedetään, tuleeko laiteohjelmisto luotettavasta lähteestä."
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "UEFI-varmenteet on nyt päivitetty"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "UEFI-tietokanta sisältää luettelon voimassa olevista varmenteista, joilla valtuutetaan EFI-binäärien suoritusoikeudet."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "UEFI voi määrittää käynnistyksen yhteydessä muistin ominaisuuksia, jotka estää hyökkäysten suorittamisen."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -2991,7 +3098,7 @@ msgstr "Tämän työkalun avulla järjestelmänvalvoja voi käyttää fwupd-laaj
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
-msgstr "Tämä työkalu voi lisätä ytimen argumentin '%s', mutta se on aktiivinen vasta tietokoneen uudelleenkäynnistyksen jälkeen."
+msgstr "Tämä työkalu voi lisätä kernel argumentin \"%s\", mutta se on aktiivinen vasta tietokoneen uudelleenkäynnistyksen jälkeen."
 
 #. TRANSLATORS: the %1 is a BIOS setting name.
 #. * %2 and %3 are the values, e.g. "True" or "Windows10"
@@ -3002,7 +3109,7 @@ msgstr "Tämä työkalu voi vaihtaa BIOS-asetuksen ”%s” automaattisesti arvo
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
 msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
-msgstr "Tämä työkalu voi muuttaa ytimen argumentin  '%s':sta '%s':ksi, mutta se on aktiivinen vasta tietokoneen uudelleenkäynnistyksen jälkeen."
+msgstr "Tämä työkalu voi muuttaa kernel argumentin  \"%s\":sta \"%s\":ksi, mutta se on aktiivinen vasta tietokoneen uudelleenkäynnistyksen jälkeen."
 
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
@@ -3030,7 +3137,7 @@ msgstr "Tyyppi"
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI Bootservice Variables"
-msgstr "UEFI-käynnistyspalvelun muuttujat"
+msgstr "UEFI Boot käynnistyspalvelun muuttujat"
 
 #. TRANSLATORS: partition refers to something on disk, again, hey Arch users
 msgid "UEFI ESP partition may not be set up correctly"
@@ -3040,29 +3147,37 @@ msgstr "UEFIn ESP-osion asetuksia ei ole ehkä tehty oikein"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFIn ESP-osiota ei havaittu tai määritetty"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI Memory Protection"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
-msgstr "UEFI:n alusta-avain"
+msgstr "UEFI Platform Key"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI Secure Boot"
-msgstr "UEFI-turvakäynnistys (secure boot)"
+msgstr "UEFI Secure Boot"
 
 #. TRANSLATORS: longer description
 msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
-msgstr "UEFI-turvakäynnistys (secure boot) estää haittaohjelmien lataamisen laitteen käynnistyessä."
+msgstr "UEFI Secure Boot estää haittaohjelmien lataamisen laitteen käynnistyessä."
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr "UEFI-käynnistyspalvelun muuttujia ei pitäisi pystyä lukemaan ajon aikana."
+msgstr "EFI boot palvelun muuttujia ei pitäisi pystyä lukemaan ajon aikana."
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
-msgstr "UEFI-käynnistyspalvelun muuttujat"
+msgstr "UEFI Boot käynnistyspalvelun muuttujat"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "UEFI-kapselipäivitykset eivät ole saatavilla tai niitä ei ole otettu käyttöön laiteohjelmiston asetuksissa"
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI db"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -3072,13 +3187,33 @@ msgstr "UEFI-dbx-apuohjelma"
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "UEFI-laiteohjelmiston päivitys ei onnistu vanhassa BIOS-tilassa"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI-muistin suojaus"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI-muistisuojaus on käytössä ja lukittu"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI-muistisuojaus on käytössä, mutta ei lukittu"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI-muistisuojaus on nyt lukittu"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI-muistisuojaus on nyt poistettu"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "UEFI:n alusta-avain"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
-msgstr "UEFI-turvakäynnistys (secure boot)"
+msgstr "UEFI secure boot"
 
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
@@ -3267,6 +3402,10 @@ msgstr "Käyttäjälle on ilmoitettu"
 msgid "Username"
 msgstr "Käyttäjätunnus"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSION1 VERSION2 [FORMAT]"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Kunnossa"
@@ -3346,7 +3485,7 @@ msgstr "Laitteistosi saattaa vaurioitua tämän laiteohjelmiston käytöllä. As
 #. * of firmware that works together
 #, c-format
 msgid "Your system is set up to the BKC of %s."
-msgstr "Järjestelmäsi on asetettu BKC:hen (paras tunnettu konfiguraatio) %s."
+msgstr "Järjestelmä on asetettu BKC-tilaan \"paras tunnettu konfiguraatio\" %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[APPSTREAM_ID]"
@@ -3381,8 +3520,24 @@ msgid "[FILENAME1] [FILENAME2]"
 msgstr "[TIEDOSTONIMI1] [TIEDOSTONIMI2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[REASON] [TIMEOUT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr "[SECTION] KEY VALUE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SETTING1] [SETTING2] [--no-authenticate]"
 msgstr "[ASETUS1] [ASETUS2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[SETTING1] [SETTING2]..."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

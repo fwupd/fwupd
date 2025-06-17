@@ -102,7 +102,11 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError *
 
 		/* create child */
 		stream = g_memory_input_stream_new_from_data(g_steal_pointer(&buf), bufsz, g_free);
-		if (!fu_firmware_set_stream(img, stream, error))
+		if (!fu_firmware_parse_stream(img,
+					      stream,
+					      0x0,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
@@ -155,7 +159,7 @@ fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
 static gboolean
 fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(firmware);
@@ -186,7 +190,11 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to cut BOS descriptor: ");
 			return FALSE;
 		}
-		if (!fu_firmware_set_stream(img, img_stream, error))
+		if (!fu_firmware_parse_stream(img,
+					      img_stream,
+					      0x0,
+					      FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
+					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
 		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))

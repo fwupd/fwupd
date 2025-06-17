@@ -1,4 +1,5 @@
 if allow_uefi_capsule
+subdir('tests')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -68,6 +69,7 @@ if get_option('efi_binary')
   efi_binary = dependency('fwupd-efi', version: '>= 1.6', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
 endif
 
+ux_capsule_tar = []
 if get_option('plugin_uefi_capsule_splash')
   # add the archive of pregenerated images
   splash_deps = run_command([
@@ -78,7 +80,7 @@ if get_option('plugin_uefi_capsule_splash')
   if splash_deps.returncode() != 0
     error(splash_deps.stderr().strip())
   endif
-  custom_target('ux-capsule-tar',
+  ux_capsule_tar = custom_target('ux-capsule-tar',
     input: [
       join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
       files('make-images.py'),
@@ -105,6 +107,9 @@ if get_option('tests')
   e = executable(
     'uefi-self-test',
     rustgen.process('fu-uefi.rs'),
+    uefi_insyde_blob,
+    fwupdx64_efi_signed,
+    ux_capsule_tar,
     sources: [
       'fu-self-test.c',
     ],
@@ -146,4 +151,3 @@ summary({
   'capsule splash': get_option('plugin_uefi_capsule_splash'),
 }, section:'uefi capsule options')
 endif
-

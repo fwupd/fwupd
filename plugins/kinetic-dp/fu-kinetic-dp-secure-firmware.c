@@ -187,7 +187,7 @@ fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
 static gboolean
 fu_kinetic_dp_secure_firmware_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuKineticDpSecureFirmware *self = FU_KINETIC_DP_SECURE_FIRMWARE(firmware);

@@ -83,7 +83,7 @@ static FuFirmware *
 fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);

@@ -16,6 +16,7 @@
     "found": "TPM device found in v2 mode"
   },
   "hsi-level": 1,
+  "resolution": "Enable this setting in the UEFI setup screen, if supported.",
   "references": {
     "https://en.wikipedia.org/wiki/Trusted_Platform_Module": "TPM Wikipedia Page"
   },

@@ -8,11 +8,10 @@
 
 #include "config.h"
 
+#include "fu-qc-firehose-impl-common.h"
 #include "fu-qc-firehose-impl.h"
 
-G_DEFINE_INTERFACE(FuQcFirehoseImpl, fu_qc_firehose_impl, FU_TYPE_DEVICE)
-
-#define FU_QC_FIREHOSE_IMPL_TIMEOUT_MS 500
+G_DEFINE_INTERFACE(FuQcFirehoseImpl, fu_qc_firehose_impl, G_TYPE_OBJECT)
 
 static void
 fu_qc_firehose_impl_default_init(FuQcFirehoseImplInterface *iface)
@@ -38,7 +37,11 @@ fu_qc_firehose_impl_read(FuQcFirehoseImpl *self, guint timeout_ms, GError **erro
 }
 
 static gboolean
-fu_qc_firehose_impl_write(FuQcFirehoseImpl *self, const guint8 *buf, gsize bufsz, GError **error)
+fu_qc_firehose_impl_write(FuQcFirehoseImpl *self,
+			  const guint8 *buf,
+			  gsize bufsz,
+			  guint timeout_ms,
+			  GError **error)
 {
 	FuQcFirehoseImplInterface *iface;
 
@@ -52,7 +55,7 @@ fu_qc_firehose_impl_write(FuQcFirehoseImpl *self, const guint8 *buf, gsize bufsz
 				    "iface->write not implemented");
 		return FALSE;
 	}
-	return (*iface->write)(self, buf, bufsz, error);
+	return (*iface->write)(self, buf, bufsz, timeout_ms, error);
 }
 
 static gboolean
@@ -81,11 +84,21 @@ fu_qc_firehose_impl_add_function(FuQcFirehoseImpl *self, FuQcFirehoseFunctions f
 	return (*iface->add_function)(self, func);
 }
 
-static void
-fu_qc_firehose_impl_parse_log_text(FuQcFirehoseImpl *self, const gchar *text)
+typedef gboolean (*FuQcFirehoseImplReadFunc)(FuQcFirehoseImpl *self,
+					     XbNode *xn,
+					     gboolean *done,
+					     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+
+static gboolean
+fu_qc_firehose_impl_read_xml_init_log(FuQcFirehoseImpl *self,
+				      XbNode *xn,
+				      gboolean *done,
+				      GError **error)
 {
+	const gchar *text = xb_node_get_attr(xn, "value");
 	if (text == NULL)
-		return;
+		return TRUE;
+
 	if (g_str_has_prefix(text, "Supported Functions: ")) {
 		g_auto(GStrv) split = g_strsplit(text + 21, " ", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
@@ -94,6 +107,75 @@ fu_qc_firehose_impl_parse_log_text(FuQcFirehoseImpl *self, const gchar *text)
 			    fu_qc_firehose_functions_from_string(split[i]));
 		}
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_qc_firehose_impl_read_xml_init_cb(FuQcFirehoseImpl *self,
+				     XbNode *xn,
+				     gboolean *done,
+				     GError **error)
+{
+	g_autoptr(GPtrArray) xn_logs = NULL;
+
+	/* logs to the console */
+	xn_logs = xb_node_query(xn, "log", 0, NULL);
+	if (xn_logs != NULL) {
+		for (guint i = 0; i < xn_logs->len; i++) {
+			XbNode *xn_log = g_ptr_array_index(xn_logs, i);
+			if (!fu_qc_firehose_impl_read_xml_init_log(self, xn_log, done, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_qc_firehose_impl_read_xml_nop_log(FuQcFirehoseImpl *self,
+				     XbNode *xn,
+				     gboolean *done,
+				     GError **error)
+{
+	const gchar *text = xb_node_get_attr(xn, "value");
+	if (text == NULL)
+		return TRUE;
+	if (g_str_has_prefix(text, "INFO: ")) {
+		if (g_str_has_prefix(text + 6, "End of supported functions")) {
+			*done = TRUE;
+			return TRUE;
+		}
+		fu_qc_firehose_impl_add_function(self,
+						 fu_qc_firehose_functions_from_string(text + 6));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_qc_firehose_impl_read_xml_nop_cb(FuQcFirehoseImpl *self,
+				    XbNode *xn,
+				    gboolean *done,
+				    GError **error)
+{
+	g_autoptr(GPtrArray) xn_logs = NULL;
+
+	/* logs to the console */
+	xn_logs = xb_node_query(xn, "log", 0, NULL);
+	if (xn_logs != NULL) {
+		for (guint i = 0; i < xn_logs->len; i++) {
+			XbNode *xn_log = g_ptr_array_index(xn_logs, i);
+			if (!fu_qc_firehose_impl_read_xml_nop_log(self, xn_log, done, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 typedef struct {
@@ -101,12 +183,16 @@ typedef struct {
 	gboolean no_zlp;
 	gboolean rawmode;
 	guint64 max_payload_size;
+	FuQcFirehoseImplReadFunc read_func;
 } FuQcFirehoseImplHelper;
 
 static gboolean
-fu_qc_firehose_impl_read_xml_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_qc_firehose_impl_read_xml_cb(FuQcFirehoseImpl *self,
+				gboolean *done,
+				guint timeout_ms,
+				gpointer user_data,
+				GError **error)
 {
-	FuQcFirehoseImpl *self = FU_QC_FIREHOSE_IMPL(device);
 	FuQcFirehoseImplHelper *helper = (FuQcFirehoseImplHelper *)user_data;
 	const gchar *tmp;
 	g_autofree gchar *xml = NULL;
@@ -116,39 +202,45 @@ fu_qc_firehose_impl_read_xml_cb(FuDevice *device, gpointer user_data, GError **e
 	g_autoptr(XbNode) xn_response = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
-	buf = fu_qc_firehose_impl_read(self, FU_QC_FIREHOSE_IMPL_TIMEOUT_MS, error);
+	buf = fu_qc_firehose_impl_read(self, timeout_ms, error);
 	if (buf == NULL)
 		return FALSE;
 	xml = g_strndup((const gchar *)buf->data, buf->len);
-	if (xml == NULL) {
+	if (xml == NULL || xml[0] == '\0') {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no string data");
 		return FALSE;
 	}
 	g_debug("XML response: %s", xml);
 	silo = xb_silo_new_from_xml(xml, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* parse response */
 	xn_data = xb_silo_query_first(silo, "data", error);
-	if (xn_data == NULL)
+	if (xn_data == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
-	/* logs to the console */
+	/* special case handling */
+	if (helper->read_func != NULL)
+		return helper->read_func(self, xn_data, done, error);
+
+	/* logs to the console, no other processing */
 	xn_logs = xb_node_query(xn_data, "log", 0, NULL);
 	if (xn_logs != NULL) {
 		for (guint i = 0; i < xn_logs->len; i++) {
 			XbNode *xn_log = g_ptr_array_index(xn_logs, i);
-			fu_qc_firehose_impl_parse_log_text(self, xb_node_get_attr(xn_log, "value"));
+			g_debug("%s", xb_node_get_attr(xn_log, "value"));
 		}
 	}
 
 	/* from configure */
 	xn_response = xb_node_query_first(xn_data, "response", NULL);
-	if (xn_response == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "no response");
-		return FALSE;
-	}
+	if (xn_response == NULL)
+		return TRUE;
 
 	/* switch to binary mode? */
 	tmp = xb_node_get_attr(xn_response, "rawmode");
@@ -200,6 +292,7 @@ fu_qc_firehose_impl_read_xml_cb(FuDevice *device, gpointer user_data, GError **e
 	}
 
 	/* success */
+	*done = TRUE;
 	return TRUE;
 }
 
@@ -209,24 +302,37 @@ fu_qc_firehose_impl_read_xml(FuQcFirehoseImpl *self,
 			     FuQcFirehoseImplHelper *helper,
 			     GError **error)
 {
-	return fu_device_retry(FU_DEVICE(self),
-			       fu_qc_firehose_impl_read_xml_cb,
-			       timeout_ms / FU_QC_FIREHOSE_IMPL_TIMEOUT_MS,
-			       helper,
-			       error);
+	/* retry a few times */
+	return fu_qc_firehose_impl_retry(self,
+					 timeout_ms,
+					 fu_qc_firehose_impl_read_xml_cb,
+					 helper,
+					 error);
 }
 
 static gboolean
-fu_qc_firehose_impl_write_xml_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_qc_firehose_impl_write_xml_xb(FuQcFirehoseImpl *self,
+				 gboolean *done,
+				 guint timeout_ms,
+				 gpointer user_data,
+				 GError **error)
 {
-	FuQcFirehoseImpl *self = FU_QC_FIREHOSE_IMPL(device);
-	const gchar *xml = (const gchar *)user_data;
-	return fu_qc_firehose_impl_write(self, (const guint8 *)xml, strlen(xml), error);
+	GString *xml = (GString *)user_data;
+
+	/* write XML string to the device */
+	if (!fu_qc_firehose_impl_write(self, (const guint8 *)xml->str, xml->len, timeout_ms, error))
+		return FALSE;
+
+	/* success */
+	*done = TRUE;
+	return TRUE;
 }
 
 static gboolean
 fu_qc_firehose_impl_write_xml(FuQcFirehoseImpl *self, XbBuilderNode *bn, GError **error)
 {
+	g_autoptr(GString) xml_fixed = NULL;
+
 	g_autofree gchar *xml = NULL;
 	xml = xb_builder_node_export(
 	    bn,
@@ -235,22 +341,25 @@ fu_qc_firehose_impl_write_xml(FuQcFirehoseImpl *self, XbBuilderNode *bn, GError 
 	    error);
 	if (xml == NULL)
 		return FALSE;
-#if !LIBXMLB_CHECK_VERSION(0, 3, 22)
-	{
-		/* firehose is *very* picky about XML and will not accept empty elements */
-		GString *xml_fixed = g_string_new(xml);
+	xml_fixed = g_string_new(xml);
+	/* firehose is *very* picky about XML and will not accept empty elements */
+	if (fu_version_compare(xb_version_string(), "0.3.22", FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
 		g_string_replace(xml_fixed, ">\n  </configure>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </program>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </erase>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </patch>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </setbootablestoragedrive>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </power>", " />", 0);
-		g_free(xml);
-		xml = g_string_free(xml_fixed, FALSE);
+		g_string_replace(xml_fixed, ">\n  </nop>", " />", 0);
 	}
-#endif
-	g_debug("XML request: %s", xml);
-	return fu_device_retry(FU_DEVICE(self), fu_qc_firehose_impl_write_xml_cb, 5, xml, error);
+	g_debug("XML request: %s", xml_fixed->str);
+
+	/* retry a few times */
+	return fu_qc_firehose_impl_retry(self,
+					 2500,
+					 fu_qc_firehose_impl_write_xml_xb,
+					 xml_fixed,
+					 error);
 }
 
 static gboolean
@@ -382,6 +491,7 @@ fu_qc_firehose_impl_write_blocks(FuQcFirehoseImpl *self,
 		if (!fu_qc_firehose_impl_write(self,
 					       fu_chunk_get_data(chk),
 					       fu_chunk_get_data_sz(chk),
+					       500,
 					       error))
 			return FALSE;
 
@@ -462,10 +572,7 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	}
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
-	if (!fu_qc_firehose_impl_read_xml(self,
-					  5 * FU_QC_FIREHOSE_IMPL_TIMEOUT_MS,
-					  helper,
-					  error)) {
+	if (!fu_qc_firehose_impl_read_xml(self, 2500, helper, error)) {
 		g_prefix_error(error, "failed to setup: ");
 		return FALSE;
 	}
@@ -563,7 +670,7 @@ fu_qc_firehose_impl_set_bootable(FuQcFirehoseImpl *self,
 	xb_builder_node_insert_text(bn, "setbootablestoragedrive", NULL, "value", partstr, NULL);
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
-	if (!fu_qc_firehose_impl_read_xml(self, FU_QC_FIREHOSE_IMPL_TIMEOUT_MS, helper, error)) {
+	if (!fu_qc_firehose_impl_read_xml(self, 500, helper, error)) {
 		g_prefix_error(error, "failed to mark partition %u as bootable: ", part);
 		return FALSE;
 	}
@@ -690,6 +797,48 @@ fu_qc_firehose_impl_find_bootable(FuQcFirehoseImpl *self, GPtrArray *xns)
 	return G_MAXUINT64;
 }
 
+static gboolean
+fu_qc_firehose_impl_send_nop(FuQcFirehoseImpl *self, FuQcFirehoseImplHelper *helper, GError **error)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
+
+	/* <data><nop /></data> */
+	xb_builder_node_insert_text(bn, "nop", NULL, NULL);
+	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
+		return FALSE;
+	return fu_qc_firehose_impl_read_xml(self, 500, helper, error);
+}
+
+gboolean
+fu_qc_firehose_impl_setup(FuQcFirehoseImpl *self, GError **error)
+{
+	FuQcFirehoseImplHelper helper = {
+	    .read_func = fu_qc_firehose_impl_read_xml_init_cb,
+	};
+	g_autoptr(GError) error_local = NULL;
+
+	/* clear buffer, looking for pending messages */
+	if (!fu_qc_firehose_impl_read_xml(self, 2000, &helper, &error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
+	}
+
+	/* no supported functions, poke the device */
+	if (!fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_CONFIGURE)) {
+		helper.read_func = fu_qc_firehose_impl_read_xml_nop_cb;
+		if (!fu_qc_firehose_impl_send_nop(self, &helper, error)) {
+			g_prefix_error(error, "failed to send NOP: ");
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 				   FuFirmware *firmware,
@@ -699,7 +848,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 {
 	const gchar *fnglob = "firehose-rawprogram.xml|rawprogram_*.xml";
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) xns_erase = NULL;
 	g_autoptr(GPtrArray) xns_program = NULL;
 	g_autoptr(GPtrArray) xns_patch = NULL;
@@ -729,25 +877,15 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	}
 	if (!xb_builder_source_load_bytes(source, blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
 		g_prefix_error(error, "failed to load %s: ", fnglob);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL) {
 		g_prefix_error(error, "failed to compile %s: ", fnglob);
+		fwupd_error_convert(error);
 		return FALSE;
-	}
-
-	/* clear buffer */
-	if (!fu_qc_firehose_impl_read_xml(self,
-					  5 * FU_QC_FIREHOSE_IMPL_TIMEOUT_MS,
-					  &helper,
-					  &error_local)) {
-		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			return FALSE;
-		}
-		g_debug("ignoring: %s", error_local->message);
 	}
 
 	/* hardcode storage */

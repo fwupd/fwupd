@@ -28,7 +28,7 @@ typedef struct {
 
 typedef struct {
 	FuFirmware *firmware;
-	FwupdInstallFlags flags;
+	FuFirmwareParseFlags flags;
 	GPtrArray *header_infos;
 	GString *image_buffer;
 	guint8 images_cnt;
@@ -236,7 +236,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 		if (!fu_firmware_parse_bytes(firmware_srec,
 					     blob,
 					     0x0,
-					     helper->flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     helper->flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
 		fw_srec = fu_firmware_get_bytes(firmware_srec, error);
@@ -266,7 +266,7 @@ fu_wac_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 static gboolean
 fu_wac_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	g_autoptr(GPtrArray) header_infos = g_ptr_array_new_with_free_func(g_free);

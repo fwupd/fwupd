@@ -18,7 +18,7 @@ G_DEFINE_TYPE(FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE)
 static gboolean
 fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 			      GInputStream *stream,
-			      FwupdInstallFlags flags,
+			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
 	gsize streamsz = 0;
@@ -26,7 +26,7 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 	g_autoptr(GInputStream) stream_nocrc = NULL;
 
 	/* verify CRC */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_bcm57xx_verify_crc(stream, error))
 			return FALSE;
 	}

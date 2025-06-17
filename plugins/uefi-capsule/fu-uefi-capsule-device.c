@@ -273,7 +273,11 @@ fu_uefi_capsule_device_load_update_info(FuUefiCapsuleDevice *self, GError **erro
 	fw = fu_efivars_get_data_bytes(efivars, FU_EFIVARS_GUID_FWUPDATE, varname, NULL, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_firmware_parse_bytes(FU_FIRMWARE(info), fw, 0x0, FWUPD_INSTALL_FLAG_NONE, error))
+	if (!fu_firmware_parse_bytes(FU_FIRMWARE(info),
+				     fw,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     error))
 		return NULL;
 	return g_steal_pointer(&info);
 }
@@ -421,12 +425,6 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	g_autoptr(GBytes) dp_blob = NULL;
 	g_autoptr(GByteArray) st_inf = fu_struct_efi_update_info_new();
 
-	/* set the body as the device path */
-	if (g_getenv("FWUPD_UEFI_TEST") != NULL) {
-		g_debug("not building device path, in tests....");
-		return TRUE;
-	}
-
 	/* convert to EFI device path */
 	dp_buf = fu_uefi_capsule_device_build_dp_buf(priv->esp, capsule_path, error);
 	if (dp_buf == NULL)
@@ -565,7 +563,7 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 
 	/* add icons */
 	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
-		fu_device_add_icon(device, "computer");
+		fu_device_add_icon(device, FU_DEVICE_ICON_COMPUTER);
 		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
 	}
 
@@ -673,7 +671,7 @@ static FuFirmware *
 fu_uefi_capsule_device_prepare_firmware(FuDevice *device,
 					GInputStream *stream,
 					FuProgress *progress,
-					FwupdInstallFlags flags,
+					FuFirmwareParseFlags flags,
 					GError **error)
 {
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);

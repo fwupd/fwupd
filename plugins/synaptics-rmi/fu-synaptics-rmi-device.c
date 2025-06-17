@@ -546,7 +546,7 @@ static FuFirmware *
 fu_synaptics_rmi_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);

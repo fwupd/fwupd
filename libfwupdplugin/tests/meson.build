@@ -38,6 +38,7 @@ install_data([
     'efi-section.builder.xml',
     'efi-signature.builder.xml',
     'efi-signature-list.builder.xml',
+    'efi-variable-authentication2.builder.xml',
     'efi-volume.builder.xml',
     'elf.builder.xml',
     'fdt.builder.xml',
@@ -75,6 +76,7 @@ install_data([
     'pci.ids',
     'pnp.ids',
     'usb.ids',
+    'uevent',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests')
 )

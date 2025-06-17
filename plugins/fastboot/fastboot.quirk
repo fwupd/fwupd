@@ -4,9 +4,6 @@ Plugin = fastboot
 FastbootBlockSize = 16384
 FastbootOperationDelay = 250
 Summary = Quectel EG25-G modem (fastboot)
-CounterpartGuid = USB\VID_2C7C&PID_0125
-Flags = detach-at-fastboot-has-no-response
-ModemManagerBranchAtCommand = AT+GETFWBRANCH
 
 # Fibocom FM101
 [USB\VID_2CB7&PID_D00D]
@@ -39,7 +36,3 @@ CounterpartGuid = USB\VID_0489&PID_E0B4
 Plugin = fastboot
 Summary = Foxconn T77w968/eSIM LTE modem (fastboot)
 CounterpartGuid = USB\VID_0489&PID_E0B5
-
-# Google Pixel 3a
-[USB\VID_18D1&PID_4EE0]
-Plugin = fastboot

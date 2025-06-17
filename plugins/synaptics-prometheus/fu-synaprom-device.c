@@ -232,7 +232,7 @@ FuFirmware *
 fu_synaprom_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	guint32 product_id;
@@ -251,7 +251,7 @@ fu_synaprom_device_prepare_firmware(FuDevice *device,
 	product_id = fu_synaprom_firmware_get_product_id(FU_SYNAPROM_FIRMWARE(firmware));
 	if (product_id != FU_SYNAPROM_PRODUCT_PROMETHEUS &&
 	    product_id != FU_SYNAPROM_PRODUCT_TRITON) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
+		if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
 			g_warning("MFW metadata not compatible, "
 				  "got 0x%02x expected 0x%02x or 0x%02x",
 				  product_id,
@@ -494,7 +494,7 @@ fu_synaprom_device_init(FuSynapromDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Prometheus");
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
-	fu_device_add_icon(FU_DEVICE(self), "auth-fingerprint");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AUTH_FINGERPRINT);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);
 }
 

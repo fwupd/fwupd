@@ -111,7 +111,7 @@ fu_elantp_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_elantp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE(firmware);

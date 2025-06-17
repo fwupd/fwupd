@@ -788,10 +788,6 @@ msgid "Gets details about a firmware file"
 msgstr "Verkrijgt details over een firmware-bestand"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Verkrijgt een lijst van updates voor verbonden hardware"
-
-#. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Verkrijgt de resultaten van de laatste update"
 
@@ -1087,10 +1083,6 @@ msgstr "OK!"
 #. TRANSLATORS: the firmware old version
 msgid "Old version"
 msgstr "Oude versie"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Uitvoer in JSON-formaat"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"

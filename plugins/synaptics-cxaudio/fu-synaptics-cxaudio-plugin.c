@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuSynapticsCxaudioPlugin, fu_synaptics_cxaudio_plugin, FU_TYPE_PLU
 static void
 fu_synaptics_cxaudio_plugin_init(FuSynapticsCxaudioPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

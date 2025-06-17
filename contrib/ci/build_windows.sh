@@ -23,6 +23,9 @@ build=$root/build-win32
 rm -rf $DESTDIR $build
 mkdir -p $build $DESTDIR && cd $build
 
+# Hack for Fedora bug
+sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+
 # run before using meson
 export WINEPREFIX=$build/.wine
 
@@ -98,6 +101,8 @@ find $MINGW32BINDIR \
 	-o -name libssh2-1.dll \
 	-o -name libssl-3-x64.dll \
 	-o -name libssp-0.dll \
+	-o -name libtermcap-0.dll \
+	-o -name libreadline8.dll \
 	-o -name libtasn1-6.dll \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
@@ -160,11 +165,12 @@ wixl -v \
 	-D DESTDIR="$DESTDIR" \
 	-o "${MSI_FILENAME}"
 
+#generate news release
+echo "Generating news for version $VERSION"
+contrib/ci/generate_news.py $VERSION | tee -a $DESTDIR/news.txt
+
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
 ls -R ${WINEPREFIX}/drive_c/Program\ Files/fwupd/
 wine ${WINEPREFIX}/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
 wine msiexec /x "${MSI_FILENAME}"
-
-#generate news release
-contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt

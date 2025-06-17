@@ -579,6 +579,11 @@ msgstr "Autentisering krävs för att uppdatera lagrade kontrollsummor för enhe
 msgid "Automatic Reporting"
 msgstr "Automatisk rapportering"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Släpper automatiskt hindrande om %ums…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Skicka automatiskt varje gång?"
@@ -1097,6 +1102,10 @@ msgstr "Dumpa SMBIOS-data från en fil"
 msgid "Duration"
 msgstr "Tid"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULERINGSFIL [ARKIVFIL]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Varje system bör ha test för att säkerställa den fasta programvarans säkerhet."
@@ -1519,10 +1528,6 @@ msgstr "Hämtar listan över godkänd fast programvara"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Hämtar listan över blockerad fast programvara"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Hämtar listan över uppdateringar för ansluten hårdvara"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2153,6 +2158,10 @@ msgid "Old version"
 msgstr "Gammal version"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Installera endast till emulerade enheter"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
 
@@ -2166,8 +2175,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Endast versionsuppgraderingar är tillåtna"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Utmatning i JSON-format"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Utdata i JSON-format (inaktiverar alla interaktiva frågor)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2238,7 +2247,8 @@ msgstr "Se till att du har volymåterställningsnyckeln innan du fortsätter."
 msgid "Please enter a number from 0 to %u: "
 msgstr "Ange en siffra mellan 0 och %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Ange antingen %s eller %s:"
@@ -2477,6 +2487,10 @@ msgstr "Kärnan som körs är för gammal"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Exekveringssuffix"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
@@ -2988,6 +3002,18 @@ msgstr "TPM PCR0 skiljer sig från rekonstruktion."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "UEFI-plattformsnyckeln används för att avgöra om enhetsprogramvara kommer från en betrodd källa."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "UEFI-certifikatlagringen är nu uppdaterad"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "UEFI-databasen innehåller listan med giltiga certifikat som kan användas för att auktorisera vilka EFI-binärer som tillåts köra."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "UEFI-systemet kan konfigurera minnesattribut vid uppstart som förhindrar vanliga attackmetoder från att köras."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Demonen har läst in tredjepartskod och stöds inte längre av uppströmsutvecklarna!"
@@ -3131,6 +3157,10 @@ msgstr "UEFI ESP-partition kanske inte konfigurerats korrekt"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI-minnesskydd"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "UEFI-plattformsnyckel"
@@ -3155,6 +3185,10 @@ msgstr "UEFI-uppstartstjänstvariabler"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "UEFI-kapseluppdateringar är inte tillgängliga eller aktiverade i konfiguration för fast programvara"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI-db"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-verktyg"
@@ -3162,6 +3196,26 @@ msgstr "UEFI dbx-verktyg"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Fast UEFI-programvara kan inte uppdateras i äldre BIOS-läge"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI-minnesskydd"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI-minnesskydd aktiverat och låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI-minnesskydd aktiverat men inte låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI-minnesskydd är nu låst"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI-minnesskydd är nu olåst"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3474,6 +3528,14 @@ msgstr "[FIL FILSIG FJÄRR-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[FILNAMN1] [FILNAMN2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[ORSAK][TIDSGRÄNS-UPPNÅDD]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

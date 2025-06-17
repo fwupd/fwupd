@@ -51,6 +51,11 @@ fu_linux_display_plugin_plugin_backend_device_added(FuPlugin *plugin,
 						    GError **error)
 {
 	FuLinuxDisplayPlugin *self = FU_LINUX_DISPLAY_PLUGIN(plugin);
+
+	/* not us */
+	if (!FU_IS_DRM_DEVICE(device))
+		return TRUE;
+
 	if (fu_drm_device_get_edid(FU_DRM_DEVICE(device)) != NULL) {
 		if (!fu_device_setup(device, error))
 			return FALSE;

@@ -1071,7 +1071,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	ret = fu_firmware_parse_bytes(firmware_bad,
 				      bad_data,
 				      0x0,
-				      FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      &error);
 	g_assert_false(ret);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_READ);
@@ -1139,7 +1139,7 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 					      tree->fu_device,
 					      tt->fw_stream,
 					      progress,
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1193,7 +1193,7 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 					      tree->fu_device,
 					      tt->fw_stream,
 					      progress,
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1231,7 +1231,7 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 					      tree->fu_device,
 					      tt->fw_stream,
 					      progress,
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1284,7 +1284,7 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 					      tree->fu_device,
 					      tt->fw_stream,
 					      progress,
-					      FWUPD_INSTALL_FLAG_NO_SEARCH,
+					      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

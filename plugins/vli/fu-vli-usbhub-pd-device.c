@@ -156,7 +156,7 @@ static FuFirmware *
 fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 					 GInputStream *stream,
 					 FuProgress *progress,
-					 FwupdInstallFlags flags,
+					 FuFirmwareParseFlags flags,
 					 GError **error)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
@@ -300,9 +300,10 @@ fu_vli_usbhub_pd_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_vli_usbhub_pd_device_init(FuVliUsbhubPdDevice *self)
 {
-	fu_device_add_icon(FU_DEVICE(self), "usb-hub");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_USB_HUB);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.usbhub");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration(FU_DEVICE(self), 15); /* seconds */

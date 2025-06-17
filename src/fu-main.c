@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 		g_timeout_add_seconds(5, fu_main_timed_exit_cb, daemon);
 
 	/* wait */
-	g_message("Daemon ready for requests (locale %s)", g_getenv("LANG"));
+	g_message("fwupd %s ready for requests (locale %s)", VERSION, g_getenv("LANG"));
 	if (!fu_daemon_start(daemon, &error)) {
 		g_printerr("Failed to start daemon: %s\n", error->message);
 		return EXIT_FAILURE;

@@ -36,5 +36,5 @@ gboolean
 fu_efi_parse_sections(FuFirmware *firmware,
 		      GInputStream *stream,
 		      gsize offset,
-		      FwupdInstallFlags flags,
+		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_NON_NULL(1, 2);

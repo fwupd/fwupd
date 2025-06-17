@@ -21,6 +21,7 @@ G_DEFINE_TYPE(FuQcS5gen2Plugin, fu_qc_s5gen2_plugin, FU_TYPE_PLUGIN)
 static void
 fu_qc_s5gen2_plugin_init(FuQcS5gen2Plugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void

@@ -13,6 +13,7 @@
 #include "fu-logitech-hidpp-plugin.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
+#include "fu-logitech-rdfu-firmware.h"
 
 struct _FuLogitechHidppPlugin {
 	FuPlugin parent_instance;
@@ -23,6 +24,7 @@ G_DEFINE_TYPE(FuLogitechHidppPlugin, fu_logitech_hidpp_plugin, FU_TYPE_PLUGIN)
 static void
 fu_logitech_hidpp_plugin_init(FuLogitechHidppPlugin *self)
 {
+	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
 
 static void
@@ -38,6 +40,7 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_UNIFYING);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_BOLT);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_LOGITECH_RDFU_FIRMWARE);
 }
 
 static void

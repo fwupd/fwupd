@@ -1,0 +1,224 @@
+{
+  "FwupdVersion": "2.0.9",
+  "UsbDevices": [
+    {
+      "Created": "2025-04-28T15:30:52.356627Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:01.0/0000:03:00.0/xe.mei-gscfi.768/mei/mei0",
+      "DeviceFile": "/dev/mei0",
+      "Subsystem": "mei",
+      "Vendor": 32902,
+      "Model": 57867,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "mei"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=235\nMINOR=0\nDEVNAME=mei0"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "mei0"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=pci",
+          "GType": "FuPciDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:01.0/0000:03:00.0",
+          "PhysicalId": "PCI_SLOT_NAME=0000:03:00.0"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "xe"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=xe\nPCI_CLASS=30000\nPCI_ID=8086:E20B\nPCI_SUBSYS_ID=8086:1100\nPCI_SLOT_NAME=0000:03:00.0\nMODALIAS=pci:v00008086d0000E20Bsv00008086sd00001100bc03sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xe20b"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=xe\nPCI_CLASS=30000\nPCI_ID=8086:E20B\nPCI_SUBSYS_ID=8086:1100\nPCI_SLOT_NAME=0000:03:00.0\nMODALIAS=pci:v00008086d0000E20Bsv00008086sd00001100bc03sc00i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0xe20b"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x030000"
+        },
+        {
+          "Id": "ReadAttr:Attr=vbios_version"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x00"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0x8086"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x1100"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:03:00.0"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=(null)",
+          "GType": "FuUdevDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:01.0/0000:03:00.0/xe.mei-gscfi.768"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "auxiliary"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "mei_gsc"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=mei_gsc\nMODALIAS=auxiliary:xe.mei-gscfi"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ListAttr",
+          "Data": "uevent\nxe.mei-gscfi.768-fe2af7a6-ef22-4b45-872f-176b0bbc8b43\nxe.mei-gscfi.768-0f73db04-97ab-4125-b893-e904ad0d5464\npower\nxe.mei-gscfi.768-afd7c08e-ae0d-4dcf-9d88-b0e6941558d6\nmei\nxe.mei-gscfi.768-e2c2afa2-3817-4d19-9d95-06b16b588a5d\ndriver\nxe.mei-gscfi.768-87d90ca5-3495-4559-8105-3fbfa37b8b79\nsubsystem\nxe.mei-gscfi.768-46e0c1fb-a546-414f-9170-b7f46d57b4ad"
+        },
+        {
+          "Id": "ReadAttr:Attr=fw_status",
+          "Data": "MDAwMDAzNTUKODAyMTA0MDgKMDAwMDAwMDAKMDAwMDAwMDAKODAwMjAwMDEKMDAwMDAwMDAK"
+        },
+        {
+          "Id": "Ioctl:Request=0xc0104801,Data=pvcq/iLvRUuHLxdrC7yLQw==,Length=0x10",
+          "DataOut": "ABAAAALvRUuHLxdrC7yLQw=="
+        },
+        {
+          "Id": "Write:Data=ChwAAA==,Length=0x4"
+        },
+        {
+          "Id": "Read:Length=0x1000",
+          "Data": "CpwAAAQAAAAUCAAAAwACAG1Q/wFoUP8B"
+        },
+        {
+          "Id": "Ioctl:Request=0xc0104801,Data=pQzZh5U0WUWBBT+/o3uLeQ==,Length=0x10",
+          "DataOut": "DBAAAAE0WUWBBT+/o3uLeQ=="
+        },
+        {
+          "Id": "Write:Data=BgAAAAEAAAA=,Length=0x8"
+        },
+        {
+          "Id": "Read:Length=0x1c",
+          "Data": "BgEAAAAAAAAAAAAAAQAAAAgAAABCTUdfFQBxBA=="
+        },
+        {
+          "Id": "Write:Data=CgAAAAAAAAAAAAAA,Length=0xc"
+        },
+        {
+          "Id": "Read:Length=0x18",
+          "Data": "CgEAAAAAAAAAAAAAhoAAEQAAAAAAAAAA"
+        },
+        {
+          "Id": "Write:Data=BgAAAAMAAAA=,Length=0x8"
+        },
+        {
+          "Id": "Read:Length=0x1c",
+          "Data": "BgEAAAAAAAAAAAAAAwAAAAgAAAAXABsEAAAAAA=="
+        },
+        {
+          "Id": "Write:Data=BgAAAAIAAAA=,Length=0x8"
+        },
+        {
+          "Id": "Read:Length=0x1c",
+          "Data": "BgEAAAAAAAAAAAAAAgAAAAgAAAAXABsEAAAAAA=="
+        }
+      ]
+    }
+  ]
+}

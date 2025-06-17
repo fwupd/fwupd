@@ -18,6 +18,7 @@
     "locked": "device is locked"
   },
   "hsi-level": 2,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html": "Intel Direct Connect Interface"
   },

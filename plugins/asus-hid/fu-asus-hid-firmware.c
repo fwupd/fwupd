@@ -33,7 +33,7 @@ fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_asus_hid_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);

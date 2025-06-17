@@ -1,0 +1,112 @@
+{
+  "FwupdVersion": "2.0.9",
+  "UsbDevices": [
+    {
+      "Created": "2025-05-19T11:44:58.764803Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:08.1/0000:c1:00.2",
+      "Subsystem": "pci",
+      "Driver": "ccp",
+      "BindId": "0000:c1:00.2",
+      "Vendor": 4130,
+      "Model": 6112,
+      "Events": [
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "pci"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "ccp"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=ccp\nPCI_CLASS=108000\nPCI_ID=1022:17E0\nPCI_SUBSYS_ID=F111:000B\nPCI_SLOT_NAME=0000:c1:00.2\nMODALIAS=pci:v00001022d000017E0sv0000F111sd0000000Bbc10sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x1022"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x17e0"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x108000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "DRIVER=ccp\nPCI_CLASS=108000\nPCI_ID=1022:17E0\nPCI_SUBSYS_ID=F111:000B\nPCI_SLOT_NAME=0000:c1:00.2\nMODALIAS=pci:v00001022d000017E0sv0000F111sd0000000Bbc10sc80i00"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor",
+          "Data": "0x1022"
+        },
+        {
+          "Id": "ReadAttr:Attr=device",
+          "Data": "0x17e0"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x108000"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=i2c",
+          "Error": 8,
+          "ErrorMsg": "no parent with subsystem i2c"
+        },
+        {
+          "Id": "ReadAttr:Attr=class",
+          "Data": "0x108000"
+        },
+        {
+          "Id": "ReadAttr:Attr=revision",
+          "Data": "0x00"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_vendor",
+          "Data": "0xf111"
+        },
+        {
+          "Id": "ReadAttr:Attr=subsystem_device",
+          "Data": "0x000b"
+        },
+        {
+          "Id": "ReadProp:Key=PCI_SLOT_NAME",
+          "Data": "0000:c1:00.2"
+        },
+        {
+          "Id": "ReadAttr:Attr=bootloader_version",
+          "Data": "74.04.3e.00"
+        },
+        {
+          "Id": "ReadAttr:Attr=tee_version",
+          "Data": "00.3e.04.74"
+        },
+        {
+          "Id": "GetSmbiosString:Type=0x28,Length=0x0e,Offset=0x04",
+          "Data": "AGESA!V9 StrixKrackanPI-FP8 1.1.0.0a"
+        }
+      ]
+    }
+  ]
+}

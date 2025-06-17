@@ -15,6 +15,7 @@
 #include "fu-coswid-firmware.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
+#include "fu-linear-firmware.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pefile-firmware.h"
@@ -102,7 +103,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 				 gsize hdr_offset,
 				 gsize strtab_offset,
 				 GPtrArray *regions,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	g_autofree gchar *sect_id = NULL;
@@ -153,7 +154,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 
 	/* create new firmware */
 	if (g_strcmp0(sect_id, ".sbom") == 0) {
-		img = fu_coswid_firmware_new();
+		img = fu_linear_firmware_new(FU_TYPE_COSWID_FIRMWARE);
 	} else if (g_strcmp0(sect_id, ".sbat") == 0 || g_strcmp0(sect_id, ".sbata") == 0 ||
 		   g_strcmp0(sect_id, ".sbatl") == 0) {
 		img = fu_csv_firmware_new();
@@ -173,16 +174,22 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	fu_firmware_set_idx(img, idx);
 
 	/* add data */
-	if (fu_struct_pe_coff_section_get_size_of_raw_data(st) > 0) {
+	if (fu_struct_pe_coff_section_get_virtual_size(st) > 0) {
 		guint32 sect_offset = fu_struct_pe_coff_section_get_pointer_to_raw_data(st);
+		guint32 sect_size = fu_struct_pe_coff_section_get_virtual_size(st);
 		g_autoptr(GInputStream) img_stream = NULL;
 
+		/* use the raw data size if the section is compressed */
+		if (fu_struct_pe_coff_section_get_virtual_size(st) >
+		    fu_struct_pe_coff_section_get_size_of_raw_data(st)) {
+			g_debug("virtual size 0x%x bigger than raw data, truncating to 0x%x",
+				sect_size,
+				fu_struct_pe_coff_section_get_size_of_raw_data(st));
+			sect_size = fu_struct_pe_coff_section_get_size_of_raw_data(st);
+		}
+
 		fu_firmware_set_offset(img, sect_offset);
-		img_stream =
-		    fu_partial_input_stream_new(stream,
-						sect_offset,
-						fu_struct_pe_coff_section_get_size_of_raw_data(st),
-						error);
+		img_stream = fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
 		if (img_stream == NULL) {
 			g_prefix_error(error, "failed to cut raw PE data: ");
 			return FALSE;
@@ -206,7 +213,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 static gboolean
 fu_pefile_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuPefileFirmware *self = FU_PEFILE_FIRMWARE(firmware);

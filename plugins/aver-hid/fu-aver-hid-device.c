@@ -131,7 +131,7 @@ static FuFirmware *
 fu_aver_hid_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_aver_hid_firmware_new();

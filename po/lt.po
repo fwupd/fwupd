@@ -875,10 +875,6 @@ msgid "Gets the configured remotes"
 msgstr "Gauna sukonfigūruotas nuotolines saugyklas"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Gauna naujinimų sąrašą prijungtai aparatinei įrangai"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Gauna laidas įrenginiui"
 
@@ -1134,10 +1130,6 @@ msgid "Only show single PCR value"
 msgstr "Rodyti tik vieną PCR reikšmę"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Išvestis JSON formatu"
-
-#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Nustelbti numatytąjį ESS (angl. ESP) kelią"
 
@@ -1177,7 +1169,8 @@ msgstr "Platformos derinimas"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Įveskite skaičių nuo 0 iki %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Įveskite %s arba %s: "

@@ -138,7 +138,7 @@ fu_vbe_simple_device_open(FuDevice *device, GError **error)
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "cannot open %s [%s]",
 			    self->devname,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -216,7 +216,7 @@ static FuFirmware *
 fu_vbe_simple_device_prepare_firmware(FuDevice *device,
 				      GInputStream *stream,
 				      FuProgress *progress,
-				      FwupdInstallFlags flags,
+				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuVbeSimpleDevice *self = FU_VBE_SIMPLE_DEVICE(device);
@@ -316,7 +316,7 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 			    "cannot seek file '%s' to 0x%x [%s]",
 			    self->devname,
 			    (guint)seek_to,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -337,7 +337,7 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 			    FWUPD_ERROR_WRITE,
 			    "cannot write file '%s' [%s]",
 			    self->devname,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -403,7 +403,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 			    "cannot seek file %s to 0x%x [%s]",
 			    self->devname,
 			    (guint)self->area_start,
-			    g_strerror(errno));
+			    fwupd_strerror(errno));
 #else
 		g_set_error(error,
 			    FWUPD_ERROR,

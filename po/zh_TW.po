@@ -889,10 +889,6 @@ msgid "Gets the list of approved firmware"
 msgstr "取得已批准韌體的清單"
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "取得連接硬體的更新清單"
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "取得裝置的發行版本"
 
@@ -1241,10 +1237,6 @@ msgstr "舊版本"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "僅允許版本升級"
-
-#. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "以 JSON 格式輸出"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

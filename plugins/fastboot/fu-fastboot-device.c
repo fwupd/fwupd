@@ -540,17 +540,23 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 	data = fu_firmware_get_image_by_id_bytes(firmware, "flashfile.xml", error);
 	if (data == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* get all the operation parts */
 	parts = xb_silo_query(silo, "parts/part", 0, error);
-	if (parts == NULL)
+	if (parts == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {
@@ -584,17 +590,23 @@ fu_fastboot_device_write_qfil(FuDevice *device,
 	data = fu_firmware_get_image_by_id_bytes(firmware, "partition_nand.xml", error);
 	if (data == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* get all the operation parts */
 	parts = xb_silo_query(silo, "nandboot/partitions/partition", 0, error);
-	if (parts == NULL)
+	if (parts == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {

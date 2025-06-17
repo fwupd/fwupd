@@ -6,17 +6,17 @@
 
 #include "config.h"
 
-#include <gnutls/abstract.h>
-#include <gnutls/crypto.h>
-
 #include "fu-uefi-pk-device.h"
 
 struct _FuUefiPkDevice {
 	FuUefiDevice parent_instance;
 	gboolean has_pk_test_key;
+	gchar *key_id;
 };
 
 G_DEFINE_TYPE(FuUefiPkDevice, fu_uefi_pk_device, FU_TYPE_UEFI_DEVICE)
+
+#define FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE (8 * 1024) /* bytes */
 
 static void
 fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -27,48 +27,20 @@ fu_uefi_pk_device_to_string(FuDevice *device, guint idt, GString *str)
 
 #define FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY "a773113bafaf5129aa83fd0912e95da4fa555f91"
 
-static void
-fu_uefi_pk_device_gnutls_datum_deinit(gnutls_datum_t *d)
-{
-	gnutls_free(d->data);
-	gnutls_free(d);
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_datum_t, fu_uefi_pk_device_gnutls_datum_deinit)
-G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
-#pragma clang diagnostic pop
-
 static gboolean
-fu_uefi_pk_device_parse_buf(FuUefiPkDevice *self, const gchar *buf, gsize bufsz, GError **error)
+fu_uefi_pk_device_check(FuUefiPkDevice *self, const gchar *str, GError **error)
 {
 	const gchar *needles[] = {
 	    "DO NOT TRUST",
 	    "DO NOT SHIP",
-	    NULL,
 	};
-	g_auto(GStrv) infos = NULL;
 
 	/* look for things that should not exist */
-	for (guint i = 0; needles[i] != NULL; i++) {
-		if (g_strstr_len(buf, bufsz, needles[i]) != NULL) {
-			g_info("got %s, marking unsafe", buf);
+	for (guint i = 0; i < G_N_ELEMENTS(needles); i++) {
+		if (g_strstr_len(str, -1, needles[i]) != NULL) {
+			g_info("got %s, marking unsafe", str);
 			self->has_pk_test_key = TRUE;
 			break;
-		}
-	}
-
-	/* extract the info from C=JP,ST=KN,L=YK,O=Lenovo Ltd.,CN=Lenovo Ltd. PK CA 2012 */
-	infos = fu_strsplit(buf, bufsz, ",", -1);
-	for (guint i = 0; infos[i] != NULL; i++) {
-		if (fu_device_get_vendor(FU_DEVICE(self)) == NULL &&
-		    g_str_has_prefix(infos[i], "O=")) {
-			fu_device_set_vendor(FU_DEVICE(self), infos[i] + 2);
-		}
-		if (fu_device_get_summary(FU_DEVICE(self)) == NULL &&
-		    g_str_has_prefix(infos[i], "CN=")) {
-			fu_device_set_summary(FU_DEVICE(self), infos[i] + 3);
 		}
 	}
 
@@ -76,92 +48,47 @@ fu_uefi_pk_device_parse_buf(FuUefiPkDevice *self, const gchar *buf, gsize bufsz,
 	return TRUE;
 }
 
-static gboolean
-fu_uefi_pk_device_parse_signature(FuUefiPkDevice *self, FuEfiSignature *sig, GError **error)
+const gchar *
+fu_uefi_pk_device_get_key_id(FuUefiPkDevice *self)
 {
-	gchar buf[1024] = {'\0'};
-	guchar key_id[20] = {'\0'};
-	gsize key_idsz = sizeof(key_id);
-	gnutls_datum_t d = {0};
-	gnutls_x509_dn_t dn = {0x0};
-	gsize bufsz = sizeof(buf);
-	int rc;
-	g_autofree gchar *key_idstr = NULL;
-	g_auto(gnutls_x509_crt_t) crt = NULL;
-	g_autoptr(gnutls_datum_t) subject = NULL;
-	g_autoptr(GBytes) blob = NULL;
+	g_return_val_if_fail(FU_IS_UEFI_PK_DEVICE(self), NULL);
+	return self->key_id;
+}
 
-	/* create certificate */
-	rc = gnutls_x509_crt_init(&crt);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "crt_init: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
-		return FALSE;
+static void
+fu_uefi_pk_device_set_key_id(FuUefiPkDevice *self, const gchar *key_id)
+{
+	g_free(self->key_id);
+	self->key_id = g_strdup(key_id);
+}
+
+static gboolean
+fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *sig, GError **error)
+{
+	const gchar *subject_name = fu_efi_x509_signature_get_subject_name(sig);
+	const gchar *subject_vendor = fu_efi_x509_signature_get_subject_vendor(sig);
+
+	/* look in issuer and subject */
+	if (fu_efi_x509_signature_get_issuer(sig) != NULL) {
+		if (!fu_uefi_pk_device_check(self, fu_efi_x509_signature_get_issuer(sig), error))
+			return FALSE;
 	}
-
-	/* parse certificate */
-	blob = fu_firmware_get_bytes(FU_FIRMWARE(sig), error);
-	if (blob == NULL)
-		return FALSE;
-	d.size = g_bytes_get_size(blob);
-	d.data = (unsigned char *)g_bytes_get_data(blob, NULL);
-	rc = gnutls_x509_crt_import(crt, &d, GNUTLS_X509_FMT_DER);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "crt_import: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
-		return FALSE;
-	}
-
-	/* look in issuer */
-	if (gnutls_x509_crt_get_issuer_dn(crt, buf, &bufsz) == GNUTLS_E_SUCCESS) {
-		g_debug("PK issuer: %s", buf);
-		if (!fu_uefi_pk_device_parse_buf(self, buf, bufsz, error))
+	if (fu_efi_x509_signature_get_subject(sig) != NULL) {
+		if (!fu_uefi_pk_device_check(self, fu_efi_x509_signature_get_subject(sig), error))
 			return FALSE;
 	}
 
-	/* look in subject */
-	subject = (gnutls_datum_t *)gnutls_malloc(sizeof(gnutls_datum_t));
-	if (gnutls_x509_crt_get_subject(crt, &dn) == GNUTLS_E_SUCCESS) {
-		gnutls_x509_dn_get_str(dn, subject);
-		g_debug("PK subject: %s", subject->data);
-		if (!fu_uefi_pk_device_parse_buf(self,
-						 (const gchar *)subject->data,
-						 subject->size,
-						 error))
-			return FALSE;
-	}
-
-	/* key ID */
-	rc = gnutls_x509_crt_get_key_id(crt, 0, key_id, &key_idsz);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to get key ID: %s [%i]",
-			    gnutls_strerror(rc),
-			    rc);
-		return FALSE;
-	}
-	key_idstr = g_compute_checksum_for_data(G_CHECKSUM_SHA1, key_id, key_idsz);
-	if (key_idstr == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to calculate key ID for 0x%x bytes",
-			    (guint)key_idsz);
-		return FALSE;
-	}
-	fu_device_add_instance_strup(FU_DEVICE(self), "CRT", key_idstr);
+	/* the O= key may not exist */
+	fu_device_add_instance_strsafe(FU_DEVICE(self), "VENDOR", subject_vendor);
+	fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", subject_name);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "UEFI", "VENDOR", "NAME", NULL);
+	fu_device_set_name(FU_DEVICE(self), subject_name != NULL ? subject_name : "Unknown");
+	fu_device_set_vendor(FU_DEVICE(self), subject_vendor != NULL ? subject_vendor : "Unknown");
+	fu_device_set_version_raw(FU_DEVICE(self), fu_firmware_get_version_raw(FU_FIRMWARE(sig)));
+	fu_uefi_pk_device_set_key_id(self, fu_firmware_get_id(FU_FIRMWARE(sig)));
 
 	/* success, certificate was parsed correctly */
+	fu_device_add_instance_strup(FU_DEVICE(self), "CRT", self->key_id);
 	return fu_device_build_instance_id(FU_DEVICE(self), error, "UEFI", "CRT", NULL);
 }
 
@@ -174,7 +101,14 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
 
-	pk = fu_device_read_firmware(device, progress, error);
+	/* FuUefiDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_uefi_pk_device_parent_class)->probe(device, error))
+		return FALSE;
+
+	pk = fu_device_read_firmware(device,
+				     progress,
+				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				     error);
 	if (pk == NULL) {
 		g_prefix_error(error, "failed to parse PK: ");
 		return FALSE;
@@ -189,7 +123,9 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 	sigs = fu_firmware_get_images(pk);
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, i);
-		if (!fu_uefi_pk_device_parse_signature(self, sig, error))
+		if (fu_efi_signature_get_kind(sig) != FU_EFI_SIGNATURE_KIND_X509)
+			continue;
+		if (!fu_uefi_pk_device_parse_certificate(self, FU_EFI_X509_SIGNATURE(sig), error))
 			return FALSE;
 	}
 
@@ -220,20 +156,40 @@ fu_uefi_pk_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
+static gchar *
+fu_uefi_pk_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_uefi_pk_device_init(FuUefiPkDevice *self)
 {
 	fu_device_set_physical_id(FU_DEVICE(self), "pk");
-	fu_device_set_name(FU_DEVICE(self), "UEFI Platform Key");
-	fu_device_add_parent_guid(FU_DEVICE(self), "main-system-firmware");
+	fu_device_set_summary(FU_DEVICE(self), "UEFI Platform Key");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_set_required_free(FU_DEVICE(self), FU_UEFI_PK_DEVICE_DEFAULT_REQUIRED_FREE);
+}
+
+static void
+fu_uefi_pk_device_finalize(GObject *object)
+{
+	FuUefiPkDevice *self = FU_UEFI_PK_DEVICE(object);
+	g_free(self->key_id);
+	G_OBJECT_CLASS(fu_uefi_pk_device_parent_class)->finalize(object);
 }
 
 static void
 fu_uefi_pk_device_class_init(FuUefiPkDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_uefi_pk_device_finalize;
 	device_class->to_string = fu_uefi_pk_device_to_string;
 	device_class->add_security_attrs = fu_uefi_pk_device_add_security_attrs;
 	device_class->probe = fu_uefi_pk_device_probe;
+	device_class->convert_version = fu_uefi_pk_device_convert_version;
 }

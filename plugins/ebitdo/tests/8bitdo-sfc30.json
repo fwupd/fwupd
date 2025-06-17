@@ -3,7 +3,7 @@
   "interactive": true,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab",
+      "url": "fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab",
       "components": [
         {
           "version": "4.01",

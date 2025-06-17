@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/a7540311d6b8da599cc24cd6225c34d4c27a4afb9bbbe73397fa23ccf71723f8-corsair-vise-1.15.30.cab",
+      "url": "a7540311d6b8da599cc24cd6225c34d4c27a4afb9bbbe73397fa23ccf71723f8-corsair-vise-1.15.30.cab",
       "components": [
         {
           "version": "1.15.30",

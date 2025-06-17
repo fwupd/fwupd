@@ -15,9 +15,9 @@ Check IFD parsing (if the files are available):
 
 Write release entries:
 
- * ../../contrib/generate-release.py
- * copy into ../../data/org.freedesktop.fwupd.metainfo.xml
- * appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
+    ../../contrib/generate-release.py
+    # copy into ../../data/org.freedesktop.fwupd.metainfo.xml
+    appstream-util appdata-to-news ../../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
 Update translations:
 
@@ -32,7 +32,7 @@ git add ../../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="2.0.7"
+export release_ver="2.0.12"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"

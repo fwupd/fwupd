@@ -4,10 +4,14 @@ Plugin = uefi_dbx
 # x64
 [UEFI\CSUM_5391C3A2FB112102A6AA1EDC25AE77E19F5D6F09CD09EEB2509922BFCD5992EA]
 Version = 20100307
+[UEFI\CSUM_10D45FCBA396AEF3153EE8F6ECAE58AFE8476A280A2026FC71F6217DCF49BA2F]
+Version = 20100507
 [UEFI\CSUM_90FBE70E69D633408D3E170C6832DBB2D209E0272527DFB63D49D29572A6F44C]
 Version = 20140413
 [UEFI\CSUM_45C7C8AE750ACFBB48FC37527D6412DD644DAED8913CCD8A24C94D856967DF8E]
 Version = 20160809
+[UEFI\CSUM_939AEEF4F5FA51E23340C3F2E49048CE8872526AFDF752C3A7F3A3F2BC9F6049]
+Version = 20180401
 [UEFI\CSUM_540801DD345DC1C33EF431B35BF4C0E68BD319B577B9ABE1A9CFF1CBC39F548F]
 Version = 20200701
 [UEFI\CSUM_AF79B14064601BC0987D4747AF1E914A228C05D622CEDA03B7A4F67014FEE767]
@@ -22,6 +26,8 @@ Version = 20230501
 Version = 20240301
 [UEFI\CSUM_CDB7C90D3AB8833D5324F5D8516D41FA990B9CA721FE643FFFAEF9057D9F9E48]
 Version = 20241101
+[UEFI\CSUM_6B4328EBCBE46ED9118FF2D4472DE329D70BA83016DF7A6F50F8AF923883BC54]
+Version = 20250507
 
 # aa64
 [UEFI\CSUM_8C8183AD9B96FE1F3C74DEDB8087469227B642AFE2E80F8FD22E0137C11C7D90]
@@ -64,6 +70,12 @@ VendorId = UEFI:Microsoft
 # Microsoft Corporation KEK 4K CA 2023
 [UEFI\CRT_2128ED80A17DA1DE2A9C8CC7AADE9D44A80182B15B57A08681DC7E2EFBEC848D]
 VendorId = UEFI:Microsoft
+
+# Manufacturer=AiStone
+# BaseboardManufacturer=AiStone
+# BaseboardProduct=X5KK4NAG
+[916406dd-3efc-5181-956b-8b26e31dce6e]
+Flags = no-dbx-updates
 
 # Manufacturer=Apple Inc.
 [80f95c96-a739-5ef5-8482-3d65cb39ff55]
@@ -183,6 +195,36 @@ Flags = no-dbx-updates
 [3f4f41b0-f419-5715-879e-73500cdb3c5d]
 Flags = no-dbx-updates
 
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=872C
+[883be004-ac69-56bb-9c80-38fc031f3880]
+Flags = no-dbx-updates
+
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=878C
+[4fc65dfe-4dd8-5d24-86f9-3d05e926f379]
+Flags = no-dbx-updates
+
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=88F9
+[b6eb0c7f-0bfc-5a3f-b2d7-cd2a38aa6d17]
+Flags = no-dbx-updates
+
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=8C6A
+[baddb32a-7407-56a8-b1ff-cadefcf2fce7]
+Flags = no-dbx-updates
+
+# Manufacturer=HP
+# BaseboardManufacturer=HP
+# BaseboardProduct=8B6E
+[7121aa03-6ee3-5987-b04a-84aa6866a580]
+Flags = no-dbx-updates
+
 # Manufacturer=LENOVO
 # Family=ideacentre 300-20ISH
 [fbc17b82-0f29-561d-be80-578285ec4477]
@@ -191,4 +233,15 @@ Flags = no-dbx-updates
 # Manufacturer=SAMSUNG ELECTRONICS CO., LTD.
 # Family=Galaxy Book2 360
 [c4cd9095-8757-593c-8cbd-c7c281c699a7]
+Flags = no-dbx-updates
+
+# Manufacturer=CHUWI Innovation And Technology(ShenZhen)co.,Ltd
+# ProductName=MiniBook X
+[52e98239-4cfc-5a22-bf17-98539e439dd9]
+Flags = no-dbx-updates
+
+# Manufacturer=HUAWEI
+# BaseboardManufacturer=HUAWEI
+# BaseboardProduct=BOHK-WAX9X-PCB
+[a98d46c9-ed25-54da-8510-ef9035cecdd1]
 Flags = no-dbx-updates

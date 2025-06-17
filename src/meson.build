@@ -28,6 +28,7 @@ client_dep = [
   libjsonglib,
   libxmlb,
   sqlite,
+  readline,
   fwupdplugin_rs_dep,
 ]
 if libsystemd.found()

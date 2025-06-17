@@ -17,6 +17,7 @@
     "valid": "device uses a BootGuard Platform Key that is not known to be compromised"
   },
   "hsi-level": 1,
+  "resolution": "Contact your OEM, who may be able to issue a firmware update.",
   "references": {
     "https://github.com/phretor/intel-leak-checker/": "Intel leak checker",
     "https://www.tomshardware.com/news/intel-confirms-6gb-alder-lake-bios-source-code-leak-new-details-emerge": "Tom's Hardware Article"

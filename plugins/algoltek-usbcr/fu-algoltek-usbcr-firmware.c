@@ -30,7 +30,7 @@ fu_algoltek_usbcr_firmware_export(FuFirmware *firmware,
 static gboolean
 fu_algoltek_usbcr_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
-				 FwupdInstallFlags flags,
+				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuAlgoltekUsbcrFirmware *self = FU_ALGOLTEK_USBCR_FIRMWARE(firmware);

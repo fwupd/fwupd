@@ -270,7 +270,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 static gboolean
 fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	FuBnrDpFirmware *self = FU_BNR_DP_FIRMWARE(firmware);
@@ -300,12 +300,16 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	if (!xb_builder_source_load_bytes(builder_source,
 					  header,
 					  XB_BUILDER_SOURCE_FLAG_NONE,
-					  error))
+					  error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, builder_source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!fu_bnr_dp_firmware_header_parse(self, silo, error))
 		return FALSE;
 	if (!fu_bnr_dp_firmware_payload_parse(self, stream, separator_idx + 1, error))
@@ -486,7 +490,7 @@ fu_bnr_dp_firmware_check(FuBnrDpFirmware *self,
 			 const FuStructBnrDpFactoryData *st_factory_data,
 			 const FuStructBnrDpPayloadHeader *st_active_header,
 			 const FuStructBnrDpPayloadHeader *st_fw_header,
-			 FwupdInstallFlags flags,
+			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
 	guint64 active_version = 0;

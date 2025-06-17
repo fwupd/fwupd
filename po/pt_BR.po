@@ -6,7 +6,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2015
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
-# F Bausch, 2024
+# F Bausch, 2024-2025
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
 msgid ""
@@ -587,6 +587,11 @@ msgstr "Autenticação é necessária para atualizar as somas de verificação a
 msgid "Automatic Reporting"
 msgstr "Relatórios automáticos"
 
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Desinibindo automaticamente em %ums…"
+
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Enviar automaticamente toda vez?"
@@ -1105,6 +1110,10 @@ msgstr "Despeja dados SMBIOS a partir de um arquivo"
 msgid "Duration"
 msgstr "Duração"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "ARQUIVO-DE-EMULAÇÃO [ARQUIVO-DE-ARQUIVAMENTO]"
+
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
 msgstr "Cada sistema deve ter testes para garantir a segurança do firmware."
@@ -1529,10 +1538,6 @@ msgstr "Obtém a lista de firmware aprovado"
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
 msgstr "Obtém a lista de firmwares bloqueados"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obtém a lista de atualizações para os hardwares conectados"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
@@ -2164,6 +2169,10 @@ msgid "Old version"
 msgstr "Versão antiga"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Só instala em dispositivos emulados"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra apenas valor único de PCR"
 
@@ -2177,8 +2186,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Apenas atualizações de versão são permitidas"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Saída em formato JSON"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Saída no formato JSON (desabilita todos os prompts interativos)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2249,7 +2258,8 @@ msgstr "Certifique-se de ter a chave de recuperação de volume antes de continu
 msgid "Please enter a number from 0 to %u: "
 msgstr "Por favor, insira um número de 0 a %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Por favor, insira %s ou %s: "
@@ -2488,6 +2498,10 @@ msgstr "O kernel em uso é muito antigo"
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Sufixo de tempo de execução"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
@@ -3001,6 +3015,18 @@ msgstr "O TPM PCR0 diverge da reconstrução."
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "A chave de plataforma UEFI é usada para determinar se o software do dispositivo vem de uma fonte confiável."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "O armazenamento de certificados UEFI agora está atualizado"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "O banco de dados UEFI contém a lista de certificados válidos que podem ser usados para autorizar quais binários EFI podem ser executados."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "O sistema UEFI pode configurar atributos de memória na inicialização que impedem a execução de exploits comuns."
+
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "O daemon carregou código de terceiros e não é mais suportado pelos desenvolvedores upstream!"
@@ -3144,6 +3170,10 @@ msgstr "Partição ESP de UEFI pode não estar configurada corretamente"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Partição ESP de UEFI não detectada ou configurada"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Proteção de memória UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Chave de plataforma UEFI"
@@ -3168,6 +3198,10 @@ msgstr "Variáveis de bootservice UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Atualizações de cápsula UEFI não disponíveis ou habilitadas na configuração do firmware"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "db de UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilitário de dbx UEFI"
@@ -3175,6 +3209,26 @@ msgstr "Utilitário de dbx UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "Firmware UEFI não pode ser atualizado no modo BIOS legado"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Proteção de memória UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Proteção de memória UEFI habilitada e bloqueada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Proteção de memória UEFI habilitada, mas não bloqueada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "Proteção de memória UEFI está agora bloqueada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "Proteção de memória UEFI está agora desbloqueada"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3488,6 +3542,14 @@ msgstr "[ARQUIVO ARQUIVO-ASSINATURA ID-REMOTO]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NOME-DE-ARQUIVO1] [NOME-DE-ARQUIVO2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[VERSÃO-FWUPD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[MOTIVO] [TEMPO-LIMITE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

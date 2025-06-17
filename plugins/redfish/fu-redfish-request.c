@@ -135,7 +135,8 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 		else if (g_strcmp0(id, "SMC.1.0.OemLicenseNotPassed") == 0)
 			error_code = FWUPD_ERROR_NOT_SUPPORTED;
 		else if (g_strcmp0(id, "SMC.1.0.OemFirmwareAlreadyInUpdateMode") == 0 ||
-			 g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0)
+			 g_strcmp0(id, "SMC.1.0.OemBiosUpdateIsInProgress") == 0 ||
+			 g_pattern_match_simple("IDRAC.*.RED014", id))
 			error_code = FWUPD_ERROR_ALREADY_PENDING;
 		g_set_error_literal(error, FWUPD_ERROR, error_code, msg);
 		return FALSE;
@@ -201,7 +202,7 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 	}
 
 	/* load JSON */
-	if (flags & FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON) {
+	if (flags & FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON && self->buf->len > 0) {
 		if (!fu_redfish_request_load_json(self, self->buf, error)) {
 			g_prefix_error(error, "failed to parse %s: ", uri_str);
 			return FALSE;

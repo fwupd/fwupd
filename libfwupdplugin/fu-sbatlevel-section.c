@@ -25,7 +25,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 			       gsize offset,
 			       const gchar *entry_name,
 			       guint64 entry_idx,
-			       FwupdInstallFlags flags,
+			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	gsize streamsz = 0;
@@ -73,7 +73,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 static gboolean
 fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   GInputStream *stream,
-			   FwupdInstallFlags flags,
+			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	g_autoptr(GByteArray) st = NULL;

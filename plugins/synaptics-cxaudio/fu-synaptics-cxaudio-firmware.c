@@ -154,7 +154,7 @@ fu_synaptics_cxaudio_firmware_avoid_badblocks(GPtrArray *badblocks, GPtrArray *r
 static gboolean
 fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);

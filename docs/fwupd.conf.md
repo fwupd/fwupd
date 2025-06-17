@@ -139,6 +139,12 @@ The `[fwupd]` section can contain the following parameters:
   Set the preferred location used for the EFI system partition (ESP) path.
   This is typically used if UDisks was not able to automatically identify the location for any reason.
 
+**RequireImmutableEnumeration={{RequireImmutableEnumeration}}**
+
+  Don't allow fwupd plugins to directly interact with devices during probe or setup stages.
+  The kernel should provide all device information in sysfs files or udev properties.
+  This will block some plugins from working.
+
 **Manufacturer=**
 
 **ProductName=**

@@ -28,7 +28,7 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <name>{firmware_name}</name>
   <summary>{firmware_summary}</summary>
   <description>
-    {firmware_description}
+    <p>{firmware_description}</p>
   </description>
   <provides>
     <firmware type="flashed">{device_guid}</firmware>
@@ -36,12 +36,11 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <url type="homepage">{firmware_homepage}</url>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>proprietary</project_license>
-  <updatecontact>{contact_info}</updatecontact>
   <developer_name>{developer_name}</developer_name>
   <releases>
-    <release version="{release_version}" timestamp="{timestamp}">
+    <release version="{release_version}" date="{date}">
       <description>
-        {release_description}
+        <p>{release_description}</p>
       </description>
     </release>
   </releases>
@@ -57,7 +56,7 @@ def make_firmware_metainfo(firmware_info, dst):
     local_info = vars(firmware_info)
     local_info["firmware_id"] = local_info["device_guid"][0:8]
     firmware_metainfo = firmware_metainfo_template.format(
-        **local_info, timestamp=time.time()
+        **local_info, date=time.strftime("%Y-%m-%d")
     )
 
     with open(os.path.join(dst, "firmware.metainfo.xml"), "w") as f:
@@ -138,9 +137,6 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument("--firmware-homepage", help="Website for the firmware provider")
-    parser.add_argument(
-        "--contact-info", help="Email address of the firmware developer"
-    )
     parser.add_argument(
         "--developer-name", help="Name of the firmware developer", required=True
     )

@@ -877,7 +877,7 @@ static FuFirmware *
 fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
 				       FuProgress *progress,
-				       FwupdInstallFlags flags,
+				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);

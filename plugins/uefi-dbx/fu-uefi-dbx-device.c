@@ -17,6 +17,8 @@ struct _FuUefiDbxDevice {
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_UEFI_DEVICE)
 
+#define FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE (30 * 1024) /* bytes */
+
 void
 fu_uefi_dbx_device_set_snapd_notifier(FuUefiDbxDevice *self, FuUefiDbxSnapdNotifier *obs)
 {
@@ -121,7 +123,7 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 						   error);
 	if (dbx_blob == NULL)
 		return FALSE;
-	if (!fu_firmware_parse_bytes(dbx, dbx_blob, 0x0, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+	if (!fu_firmware_parse_bytes(dbx, dbx_blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NO_SEARCH, error))
 		return FALSE;
 
 	/* add the last checksum to the device */
@@ -158,7 +160,7 @@ static FuFirmware *
 fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
@@ -201,7 +203,10 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
-	kek = fu_device_read_firmware(device, progress, error);
+	kek = fu_device_read_firmware(device,
+				      progress,
+				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
+				      error);
 	if (kek == NULL) {
 		g_prefix_error(error, "failed to parse KEK: ");
 		return FALSE;
@@ -232,19 +237,6 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 
 	return fu_uefi_dbx_device_ensure_checksum(self, error);
-}
-
-static void
-fu_uefi_dbx_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
-{
-	FuContext *ctx = fu_device_get_context(device);
-	FuEfivars *efivars = fu_context_get_efivars(ctx);
-	guint64 nvram_total = fu_efivars_space_used(efivars, NULL);
-	if (nvram_total != G_MAXUINT64) {
-		g_hash_table_insert(metadata,
-				    g_strdup("EfivarsNvramUsed"),
-				    g_strdup_printf("%" G_GUINT64_FORMAT, nvram_total));
-	}
 }
 
 static void
@@ -280,7 +272,8 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_install_duration(FU_DEVICE(self), 1);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EFI_SIGNATURE_LIST);
-	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_APPLICATION_CERTIFICATE);
+	fu_device_set_required_free(FU_DEVICE(self), FU_UEFI_DBX_DEVICE_DEFAULT_REQUIRED_FREE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -289,6 +282,7 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::version",
 			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
@@ -316,7 +310,6 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->write_firmware = fu_uefi_dbx_device_write_firmware;
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
-	device_class->report_metadata_pre = fu_uefi_dbx_device_report_metadata_pre;
 	device_class->cleanup = fu_uefi_dbx_device_cleanup;
 
 	object_class->finalize = fu_uefi_dbx_device_finalize;

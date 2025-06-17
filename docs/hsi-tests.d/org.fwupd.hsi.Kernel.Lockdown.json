@@ -15,5 +15,6 @@
   "success-results": {
     "enabled": "lockdown is set to either `integrity` or `confidentiality`."
   },
+  "resolution": "Ensure Secure Boot is enabled in the UEFI firmware setup.",
   "fwupd-version": "1.5.0"
 }

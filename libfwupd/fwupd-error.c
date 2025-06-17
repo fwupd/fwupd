@@ -217,6 +217,13 @@ fwupd_error_convert(GError **perror)
 	    {G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_KEY_NOT_FOUND, FWUPD_ERROR_INVALID_DATA},
 	    {G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_GROUP_NOT_FOUND, FWUPD_ERROR_INVALID_DATA},
 	    {G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_BAD_UTF8, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_EMPTY, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_MISSING_ATTRIBUTE, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_PARSE, FWUPD_ERROR_INVALID_DATA},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ATTRIBUTE, FWUPD_ERROR_NOT_SUPPORTED},
+	    {G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ELEMENT, FWUPD_ERROR_NOT_SUPPORTED},
 	};
 
 	/* sanity check */
@@ -242,4 +249,23 @@ fwupd_error_convert(GError **perror)
 #endif
 	error->domain = FWUPD_ERROR;
 	error->code = FWUPD_ERROR_INTERNAL;
+}
+
+/**
+ * fwupd_strerror:
+ *
+ * Returns an untranslated string corresponding to the given error code, e.g. “no such process”.
+ *
+ * Returns: string describing the error code
+ *
+ * Since: 2.0.11
+ **/
+const gchar *
+fwupd_strerror(gint errnum) /* nocheck:name */
+{
+#ifdef HAVE_STRERRORDESC_NP
+	return strerrordesc_np(errnum);
+#else
+	return g_strerror(errnum); /* nocheck:blocked */
+#endif
 }

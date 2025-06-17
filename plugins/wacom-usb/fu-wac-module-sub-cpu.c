@@ -81,7 +81,7 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 {
 	GPtrArray *chunks = g_ptr_array_new_with_free_func(g_free);
 	guint record_num = 0;
-	g_autoptr(GPtrArray) records = fu_srec_firmware_get_records(srec_firmware);
+	GPtrArray *records = fu_srec_firmware_get_records(srec_firmware);
 
 	*data_len = 0;
 	while (record_num < records->len) {
@@ -209,14 +209,14 @@ static FuFirmware *
 fu_wac_module_sub_cpu_prepare_firmware(FuDevice *self,
 				       GInputStream *stream,
 				       FuProgress *progress,
-				       FwupdInstallFlags flags,
+				       FuFirmwareParseFlags flags,
 				       GError **error)
 {
 	FuFirmware *firmware_srec = fu_srec_firmware_new();
 	if (!fu_firmware_parse_stream(firmware_srec,
 				      stream,
 				      0,
-				      flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+				      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 				      error)) {
 		g_prefix_error(error, "wacom sub_cpu failed to parse firmware: ");
 		return NULL;

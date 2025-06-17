@@ -34,8 +34,10 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 	g_autoptr(XbNode) build_vector = NULL;
 
 	build_vector = xb_silo_query_first(silo, "buildVector", error);
-	if (build_vector == NULL)
+	if (build_vector == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	version = xb_node_get_attr(build_vector, "version");
 	if (version == NULL) {
@@ -47,11 +49,15 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 	}
 	fu_firmware_set_version(FU_FIRMWARE(self), version);
 	dfu_pid = xb_silo_query_first(silo, "buildVector/targetUsbPids", error);
-	if (dfu_pid == NULL)
+	if (dfu_pid == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	dfu_pid_str = xb_node_query_text(dfu_pid, "usbPid", error);
-	if (dfu_pid_str == NULL)
+	if (dfu_pid_str == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!fu_strtoull(dfu_pid_str, &val, 0x0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "cannot parse usbPid of %s: ", dfu_pid_str);
 		return FALSE;
@@ -65,7 +71,7 @@ fu_jabra_file_firmware_parse_info(FuJabraFileFirmware *self, XbSilo *silo, GErro
 static gboolean
 fu_jabra_file_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
-			     FwupdInstallFlags flags,
+			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
 	FuJabraFileFirmware *self = FU_JABRA_FILE_FIRMWARE(firmware);
@@ -92,12 +98,16 @@ fu_jabra_file_firmware_parse(FuFirmware *firmware,
 	img_blob = fu_firmware_get_bytes(img_xml, error);
 	if (img_blob == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, img_blob, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, img_blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!fu_jabra_file_firmware_parse_info(self, silo, error))
 		return FALSE;
 

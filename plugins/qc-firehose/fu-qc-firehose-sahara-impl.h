@@ -23,6 +23,7 @@ struct _FuQcFirehoseSaharaImplInterface {
 	gboolean (*write)(FuQcFirehoseSaharaImpl *self,
 			  const guint8 *buf,
 			  gsize bufsz,
+			  guint timeout_ms,
 			  GError **error) G_GNUC_NON_NULL(1);
 };
 

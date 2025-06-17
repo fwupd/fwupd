@@ -69,6 +69,12 @@ def index():
     if request.authorization["username"] == HARDCODED_DELL_USERNAME:
         res["Vendor"] = "Dell"
 
+    if request.authorization["username"] in (
+        HARDCODED_SMC_USERNAME,
+        HARDCODED_UNL_USERNAME,
+    ):
+        res["Vendor"] = "SMCI"
+
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
 
@@ -452,9 +458,7 @@ def fwupdate_smc():
             json.dumps(res),
             status=202,
             mimetype="application/json",
-            headers={
-                "Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"
-            },
+            headers={"Location": "/redfish/v1/TaskService/Tasks/546"},
         )
     elif filecontents == "stuck":
         res = {
@@ -506,8 +510,10 @@ def fwupdate():
         return _failure("apply invalid")
     if data["Targets"][0] != "/redfish/v1/UpdateService/FirmwareInventory/BMC":
         return _failure("id invalid")
+    if len(request.files) != 1:
+        return _failure("no file supplied")
     fileitem = request.files["UpdateFile"]
-    if not fileitem.filename.endswith(".bin"):
+    if not fileitem.filename.endswith(".exe"):
         return _failure("filename invalid")
     if fileitem.read().decode() != "hello":
         return _failure("data invalid")
@@ -522,7 +528,7 @@ def fwupdate():
         json.dumps(res),
         status=202,
         mimetype="application/json",
-        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/545"},
+        headers={"Location": "/redfish/v1/TaskService/Tasks/545"},
     )
 
 
@@ -551,7 +557,7 @@ def startupdate():
         json.dumps(res),
         status=202,
         mimetype="application/json",
-        headers={"Location": "http://localhost:4661/redfish/v1/TaskService/Tasks/546"},
+        headers={"Location": "/redfish/v1/TaskService/Tasks/546"},
     )
 
 

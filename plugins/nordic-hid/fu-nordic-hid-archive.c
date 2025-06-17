@@ -215,7 +215,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id(JsonObject *obj,
 static gboolean
 fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	JsonNode *json_root_node;
@@ -340,7 +340,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		if (!fu_firmware_parse_bytes(image,
 					     blob,
 					     0x0,
-					     flags | FWUPD_INSTALL_FLAG_NO_SEARCH,
+					     flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
 

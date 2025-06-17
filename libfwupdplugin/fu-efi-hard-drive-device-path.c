@@ -93,7 +93,7 @@ fu_efi_hard_drive_device_path_add_json(FwupdCodec *codec,
 static gboolean
 fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 				    GInputStream *stream,
-				    FwupdInstallFlags flags,
+				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	FuEfiHardDriveDevicePath *self = FU_EFI_HARD_DRIVE_DEVICE_PATH(firmware);

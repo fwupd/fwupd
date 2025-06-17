@@ -37,7 +37,6 @@ fu_amd_gpu_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AMD_GPU_PSP_FIRMWARE);
 	/* Navi 2x and older have the ATOM firmware at start of image */
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_AMD_GPU_ATOM_FIRMWARE);
-	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_BETTER_THAN, "optionrom");
 }
 
 static void

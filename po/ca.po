@@ -431,6 +431,10 @@ msgstr "Permetre tornar a instal·lar les versions existents del microprogramari
 msgid "Allow switching firmware branch"
 msgstr "Permet canviar de branca de microprogramari"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Ja existeix, i no --force specified"
+
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
 msgstr "Branca alternativa"
@@ -569,6 +573,11 @@ msgstr "Es requereix autenticació per a actualitzar les sumes de verificació e
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Informa automàticament"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Desinhibició automàtica a %u ms…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -739,6 +748,10 @@ msgstr "Tecnologia de compliment del flux de control"
 msgid "Convert a firmware file"
 msgstr "Converteix un fitxer de microprogramari."
 
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "Crea una entrada d'arrencada EFI"
+
 #. TRANSLATORS: when the update was built
 msgid "Created"
 msgstr "Creat"
@@ -770,6 +783,10 @@ msgstr "Opcions per a la depuració"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "S'està descomprimint..."
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "Suprimeix una entrada d'arrencada EFI"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -1024,6 +1041,11 @@ msgstr "No escriure a la base de dades de l'historial"
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Enteneu les conseqüències de canviar la branca del microprogramari?"
 
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Voleu convertir-la ara?"
+
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Voleu inhabilitar aquesta característica per a futures actualitzacions?"
@@ -1074,6 +1096,10 @@ msgstr "Aboca les dades al SMBIOS des d'un fitxer."
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Durada"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "FITXER-DEMULACIÓ [ARXIU-FITXER]"
 
 #. TRANSLATORS: longer description
 msgid "Each system should have tests to ensure firmware security."
@@ -1499,10 +1525,6 @@ msgid "Gets the list of blocked firmware"
 msgstr "Obté la llista del microprogramari bloquejat."
 
 #. TRANSLATORS: command description
-msgid "Gets the list of updates for connected hardware"
-msgstr "Obté la llista d'actualitzacions per al maquinari connectat."
-
-#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Obté els alliberaments per a un dispositiu."
 
@@ -1538,6 +1560,22 @@ msgstr "Els atributs de l'ID de seguretat de l'amfitrió s'han pujat correctamen
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguretat de l'amfitrió:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "ÍNDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "ÍNDEX CLAU [VALOR]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "ÍNDEX NOM OBJECTIU [PUNT_DE_MUNTATGE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "ÍNDEX1,ÍNDEX2"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INHIBIT-ID"
@@ -1759,7 +1797,15 @@ msgstr "Arguments no vàlids"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected GUID"
-msgstr "Arguments no vàlids, GUID esperat"
+msgstr "Arguments no vàlids, s'esperava un GUID"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "Arguments no vàlids, s'esperava un ÍNDEX CLAU [VALOR]"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "Arguments no vàlids, s'esperava un ÍNDEX NOM OBJECTIU [PUNT_DE_MUNTATGE]"
 
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
@@ -1768,7 +1814,11 @@ msgstr "Arguments no vàlids, s'esperava un ID d'AppStream"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
-msgstr "Arguments no vàlids, com a mínim s'esperaven ARXIU MICROPROGRAMARI METAINFO"
+msgstr "Arguments no vàlids, com a mínim s'esperaven un ARXIU MICROPROGRAMARI METAINFO"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Arguments no vàlids, s'esperava un sencer de base-16"
 
 #. TRANSLATORS: version is older
 msgid "Is downgrade"
@@ -2073,6 +2123,11 @@ msgstr "No hi ha cap actualització disponible"
 msgid "No updates available for remaining devices"
 msgstr "No hi ha cap actualització disponible per als dispositius restants"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "No hi ha cap volum coincident %s"
+
 #. TRANSLATORS: version cannot be installed due to policy
 msgid "Not approved"
 msgstr "No aprovada"
@@ -2098,6 +2153,10 @@ msgid "Old version"
 msgstr "Versió antiga"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Instal·la només en els dispositius emulats"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
 
@@ -2111,8 +2170,8 @@ msgid "Only version upgrades are allowed"
 msgstr "Només es permeten actualitzacions de la versió"
 
 #. TRANSLATORS: command line option
-msgid "Output in JSON format"
-msgstr "Sortida en el format JSON"
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Sortida en el format JSON (desactiva totes les indicacions interactives)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -2183,7 +2242,8 @@ msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del 
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
 msgstr "Introduïu %s o %s:"
@@ -2423,6 +2483,10 @@ msgstr "El nucli executat és massa antic"
 msgid "Runtime Suffix"
 msgstr "Sufix d'execució"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SECTION"
 msgstr "SECCIÓ"
@@ -2535,6 +2599,18 @@ msgstr "Estableix una configuració del BIOS"
 
 msgid "Set one or more BIOS settings"
 msgstr "Estableix una o més opcions de configuració del BIOS"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "Estableix o suprimeix una entrada de rusc d'arrencada EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "A continuació, establiu l'arrencada EFI"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "Estableix l'ordre d'arrencada EFI"
 
 #. TRANSLATORS: command line option
 msgid "Set the download retries for transient errors"
@@ -2885,6 +2961,14 @@ msgstr "Provada per %s"
 msgid "Tested by trusted vendor"
 msgstr "Provat per un venedor de confiança"
 
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "L'entrada d'arrencada EFI no està en el format rusc i és possible que la correcció no sigui prou nova per a llegir-la."
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "L'entrada d'arrencada EFI no estava en format rusc, es retrocedeix"
+
 #. TRANSLATORS: longer description
 msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
 msgstr "El manifest de la clau del motor de gestió d'Intel ha de ser vàlid perquè la CPU pugui confiar en el microprogramari del dispositiu."
@@ -2912,6 +2996,18 @@ msgstr "El PCR0 del TPM difereix de la reconstrucció."
 #. TRANSLATORS: longer description
 msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
 msgstr "La clau de la plataforma UEFI s'empra per a determinar si el programari del dispositiu prové d'una font de confiança."
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "El magatzem de certificats UEFI ja està actualitzat"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "La base de dades UEFI conté la llista dels certificats vàlids que es poden usar per a autoritzar quins binaris EFI es poden executar."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "El sistema UEFI pot configurar atributs de memòria a l'arrencada que impedeixen que s’executin els explotadors habituals."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -3056,6 +3152,10 @@ msgstr "És possible que la partició ESP de la UEFI no estigui configurada corr
 msgid "UEFI ESP partition not detected or configured"
 msgstr "No s'ha detectat o configurat la partició ESP de la UEFI"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Protecció de la memòria UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI Platform Key"
 msgstr "Clau de la plataforma UEFI"
@@ -3080,6 +3180,10 @@ msgstr "Variables del servei d'arrencada UEFI"
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitades a la configuració del microprogramari"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "Bd UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilitat dbx UEFI"
@@ -3087,6 +3191,26 @@ msgstr "Utilitat dbx UEFI"
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
 msgstr "El microprogramari UEFI no es pot actualitzar en el mode BIOS heretat"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Protecció de la memòria UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "La protecció de la memòria UEFI està activada i bloquejada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "La protecció de la memòria UEFI està activada però no bloquejada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "La protecció de la memòria UEFI ara està bloquejada"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "La protecció de la memòria UEFI ara està desbloquejada"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -3399,6 +3523,14 @@ msgstr "[FITXER SIGNATURA_FITXER ID_REMOT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILENAME1] [FILENAME2]"
 msgstr "[NOM_FITXER_1] [NOM_FITXER_2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[VERSIÓ-FWUPD]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[RAÓ] [TEMPS_D'ESPERA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SECTION] KEY VALUE"

@@ -64,8 +64,10 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 	g_autoptr(XbNode) build_vector = NULL;
 
 	build_vector = xb_silo_query_first(silo, "buildVector", error);
-	if (build_vector == NULL)
+	if (build_vector == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 
 	/* only first? */
 	version = xb_node_get_attr(build_vector, "version");
@@ -80,11 +82,15 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 	if (!fu_jabra_gnp_firmware_parse_version(self, error))
 		return FALSE;
 	dfu_pid = xb_silo_query_first(silo, "buildVector/targetUsbPids", error);
-	if (dfu_pid == NULL)
+	if (dfu_pid == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	dfu_pid_str = xb_node_query_text(dfu_pid, "usbPid", error);
-	if (dfu_pid_str == NULL)
+	if (dfu_pid_str == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!fu_strtoull(dfu_pid_str, &val, 0x0, 0xFFFF, FU_INTEGER_BASE_AUTO, error)) {
 		g_prefix_error(error, "cannot parse usbPid of %s: ", dfu_pid_str);
 		return FALSE;
@@ -98,7 +104,7 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 static gboolean
 fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
-			    FwupdInstallFlags flags,
+			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuJabraGnpFirmware *self = FU_JABRA_GNP_FIRMWARE(firmware);
@@ -127,17 +133,23 @@ fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 	img_blob = fu_firmware_get_bytes(img_xml, error);
 	if (img_blob == NULL)
 		return FALSE;
-	if (!xb_builder_source_load_bytes(source, img_blob, XB_BUILDER_SOURCE_FLAG_NONE, error))
+	if (!xb_builder_source_load_bytes(source, img_blob, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	xb_builder_import_source(builder, source);
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
+	if (silo == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	if (!fu_jabra_gnp_firmware_parse_info(self, silo, error))
 		return FALSE;
 	files = xb_silo_query(silo, "buildVector/files/file", 0, error);
-	if (files == NULL)
+	if (files == NULL) {
+		fwupd_error_convert(error);
 		return FALSE;
+	}
 	for (guint i = 0; i < files->len; i++) {
 		XbNode *n = g_ptr_array_index(files, i);
 		g_autoptr(FuJabraGnpImage) img = fu_jabra_gnp_image_new();

@@ -45,6 +45,7 @@ content_files = [
   "building.md",
   "tutorial.md",
   "hsi.md",
+  "uefi-db.md",
   "device-emulation.md",
   "ds20.md",
   "hwids.md",
