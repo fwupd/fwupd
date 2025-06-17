@@ -1156,6 +1156,28 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
+  <dependency id="libmnl-dev">
+    <distro id="arch">
+      <package variant="x86_64">libmnl</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">libmnl-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package variant="x86_64">libmnl-devel</package>
+      <package variant="aarch64">libmnl-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+      <package variant="aarch64" />
+    </distro>
+  </dependency>
   <dependency id="libqmi-glib-dev">
     <distro id="fedora">
       <package variant="x86_64">libqmi-devel</package>
