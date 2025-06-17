@@ -174,6 +174,13 @@ if build_daemon
       install_dir: systemd_modules_load_dir,
     )
 
+    # for selftests (netdevsim module needed for devlink plugin tests)
+    if get_option('tests')
+      install_data(['fwupd-netdevsim.conf'],
+        install_dir: systemd_modules_load_dir,
+      )
+    endif
+
     # for activation
     configure_file(
       input: 'fwupd.shutdown.in',
