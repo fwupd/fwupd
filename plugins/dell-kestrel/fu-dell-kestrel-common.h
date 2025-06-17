@@ -29,3 +29,6 @@
 /* device IDs: tbt */
 #define DELL_KESTREL_T5_DEVID "TBT-00d4b0a2"
 #define DELL_KESTREL_T4_DEVID "TBT-00d4b0a1"
+
+/* max retries */
+#define DELL_KESTREL_MAX_RETRIES 5
