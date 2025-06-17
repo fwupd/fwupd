@@ -161,7 +161,7 @@ fu_dell_kestrel_ec_read(FuDellKestrelEc *self,
 	if (!fu_dell_kestrel_hid_device_i2c_read(FU_DELL_KESTREL_HID_DEVICE(self),
 						 cmd,
 						 res,
-						 800,
+						 100,
 						 error)) {
 		g_prefix_error(error, "read over HID-I2C failed: ");
 		return FALSE;
@@ -700,8 +700,8 @@ fu_dell_kestrel_ec_reload(FuDevice *device, GError **error)
 	/* if query looks bad, wait a few seconds and retry */
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_dell_kestrel_ec_query_cb,
-				  10,
-				  2000,
+				  DELL_KESTREL_MAX_RETRIES,
+				  500,
 				  NULL,
 				  error)) {
 		g_prefix_error(error, "failed to query dock ec: ");
@@ -725,7 +725,12 @@ fu_dell_kestrel_ec_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* if query looks bad, wait a few seconds and retry */
-	if (!fu_device_retry_full(device, fu_dell_kestrel_ec_query_cb, 10, 2000, NULL, error)) {
+	if (!fu_device_retry_full(device,
+				  fu_dell_kestrel_ec_query_cb,
+				  DELL_KESTREL_MAX_RETRIES,
+				  500,
+				  NULL,
+				  error)) {
 		g_prefix_error(error, "failed to query dock ec: ");
 		return FALSE;
 	}
