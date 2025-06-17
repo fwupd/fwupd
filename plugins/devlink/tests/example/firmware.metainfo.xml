@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware">
+  <id>com.example.NetdevsimFirmware</id>
+  <name>Netdevsim Test Firmware</name>
+  <summary>Test firmware for netdevsim device</summary>
+  <description>
+    <p>Test firmware package for netdevsim device</p>
+  </description>
+  <provides>
+    <firmware type="flashed">cf3aca64-f7e1-5bba-ba8a-89c8daa80cfb</firmware>
+  </provides>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0+</project_license>
+  <developer_name>Test Developer</developer_name>
+  <releases>
+    <release urgency="high" version="10.20.40" date="2025-07-01">
+      <description>
+        <p>Test firmware release for netdevsim device</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <firmware compare="ge" version="0.0.1"/>
+  </requires>
+  <custom>
+    <value key="LVFS::UpdateProtocol">org.kernel.devlink</value>
+    <value key="LVFS::DeviceFlags">omit-component-name</value>
+  </custom>
+</component>
