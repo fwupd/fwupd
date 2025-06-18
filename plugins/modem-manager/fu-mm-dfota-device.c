@@ -374,15 +374,11 @@ fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		if (bytes == NULL)
 			return FALSE;
 		result = fu_strsafe_bytes(bytes, G_MAXSIZE);
-		if (result == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "no data read from device");
-			return FALSE;
-		}
 
 		/* ignore empty responses */
+		if (result == NULL)
+			continue;
+
 		g_strstrip(result);
 		if (strlen(result) == 0)
 			continue;
