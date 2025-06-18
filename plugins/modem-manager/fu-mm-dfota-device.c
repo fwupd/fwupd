@@ -367,7 +367,7 @@ fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		g_autofree gchar *result = NULL;
 
 		bytes = fu_udev_device_read_bytes(FU_UDEV_DEVICE(self),
-						  -1,
+						  4096,
 						  FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS * 1000,
 						  FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 						  error);
