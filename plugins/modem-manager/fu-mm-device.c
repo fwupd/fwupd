@@ -167,9 +167,9 @@ fu_mm_device_add_instance_id(FuMmDevice *self, const gchar *device_id)
 		    g_strcmp0(kv[0], "REV") == 0 || g_strcmp0(kv[0], "NAME") == 0 ||
 		    g_strcmp0(kv[0], "CARRIER") == 0) {
 			fu_device_add_instance_str(FU_DEVICE(self), kv[0], kv[1]);
-		} else if (g_strcmp0(kv[0], "SSVID") == 0) {
+		} else if (g_strcmp0(kv[0], "SSVID") == 0 && subsys_vid == NULL) {
 			subsys_vid = g_strdup(kv[1]);
-		} else if (g_strcmp0(kv[0], "SSPID") == 0) {
+		} else if (g_strcmp0(kv[0], "SSPID") == 0 && subsys_pid == NULL) {
 			subsys_pid = g_strdup(kv[1]);
 		} else {
 			g_debug("ignoring instance attribute '%s'", instancestrs[i]);
