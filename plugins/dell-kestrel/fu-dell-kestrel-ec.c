@@ -467,11 +467,12 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
 	if (!fu_dell_kestrel_ec_write(self, st_req, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, G_USB_DEVICE_ERROR, G_USB_DEVICE_ERROR_NO_DEVICE)) {
 			g_debug("ignoring: %s", error_local->message);
-		else {
+		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
-			g_prefix_error(error, "failed to %s", msg);
+			g_prefix_error(error, "failed to %s: ", msg);
 			return FALSE;
 		}
 	}
