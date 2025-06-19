@@ -691,6 +691,10 @@ msgid "Changed"
 msgstr "Modificat"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Verifică dacă există dispozitive care așteaptă o repornire pentru a finaliza actualizarea"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Verifică dacă suma de control criptografică corespunde firmware-ului"
 
@@ -1535,6 +1539,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Obține lista firmware-ului blocat"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Obține lista de actualizări pentru toate dispozitivele specificate sau pentru toate dispozitivele dacă nu este specificat niciunul"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Obține versiunile pentru un dispozitiv"
 
@@ -2110,6 +2118,10 @@ msgstr "Nu s-a găsit firmware"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nu a fost detectat niciun hardware cu capacitate de actualizare a firmware-ului"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Nu este necesară repornirea"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
