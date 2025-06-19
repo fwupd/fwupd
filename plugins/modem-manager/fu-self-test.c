@@ -18,6 +18,11 @@ fu_mm_device_func(void)
 	g_autoptr(FuMmDevice) mm_device = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	fu_device_set_physical_id(FU_DEVICE(mm_device), "/tmp");
 	ret = fu_mm_device_set_autosuspend_delay(mm_device, 1500, &error);
 	g_assert_no_error(error);
