@@ -169,11 +169,6 @@ option('systemd_root_prefix',
   value: '',
   description: 'Directory to base systemd’s installation directories on',
 )
-option('systemd_unit_user',
-  type: 'string',
-  value: 'fwupd-refresh',
-  description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
-)
 option('tests',
   type: 'boolean',
   value: true,

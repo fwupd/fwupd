@@ -7,24 +7,11 @@ else
   motd_fullpath = join_paths (localstatedir, motd_dir, motd_file)
 endif
 
-con2 = configuration_data()
-con2.set('bindir', bindir)
-con2.set('libdir', libdir)
-con2.set('motd_fullpath', motd_fullpath)
-con2.set('systemd_unit_user', get_option('systemd_unit_user'))
-
 if libsystemd.found()
-  if get_option('systemd_unit_user') == ''
-      con2.set('user', 'DynamicUser=yes')
-      warning('Using systemd DynamicUser for fwupd-refresh.service. See https://github.com/systemd/systemd/issues/22737 for possible implications')
-  else
-      dynamic_options = [
-                         'ProtectSystem=strict',
-                         'ProtectHome=read-only',
-                         'User=' + get_option('systemd_unit_user')
-                        ]
-      con2.set('user','\n'.join(dynamic_options))
-  endif
+  con2 = configuration_data()
+  con2.set('bindir', bindir)
+  con2.set('libdir', libdir)
+  con2.set('motd_fullpath', motd_fullpath)
 
   configure_file(
     input: 'fwupd-refresh.service.in',
@@ -70,17 +57,4 @@ if libsystemd.found()
     )
     man_md += ['"fwupd-refresh.service.md"']
   endif
-endif
-
-if libsystemd.found() and get_option('systemd_unit_user') != ''
-  con3 = configuration_data()
-  con3.set('localstatedir', localstatedir)
-  con3.set('systemd_unit_user', get_option('systemd_unit_user'))
-  configure_file(
-    input: 'fwupd.sysusers',
-    output: 'fwupd.conf',
-    configuration: con3,
-    install: true,
-    install_dir: systemd_sysusers_dir,
-  )
 endif
