@@ -115,7 +115,7 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtsHub *self,
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtsHub *self, GError **error)
 {
 	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
@@ -178,6 +178,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -238,6 +239,18 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 	if (!fu_dell_kestrel_rtshub_verify_update_fw(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* non-uod: reset the device immediately */
+	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		/* rts5g2 only */
+		if (fu_usb_device_get_pid(FU_USB_DEVICE(device)) == DELL_KESTREL_USB_RTS5_G2_PID) {
+			if (!fu_dell_kestrel_rtshub_reset_device(self, error)) {
+				g_prefix_error(error, "failed to reset rts5g2 device: ");
+				return FALSE;
+			}
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		}
+	}
 
 	/* success! */
 	return TRUE;

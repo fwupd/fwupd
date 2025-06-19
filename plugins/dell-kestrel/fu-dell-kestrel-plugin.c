@@ -339,26 +339,6 @@ fu_dell_kestrel_plugin_get_ec_from_devices(GPtrArray *devices)
 	return NULL;
 }
 
-static FuDevice *
-fu_dell_kestrel_plugin_get_rtshub_from_devices(GPtrArray *devices, guint16 pid)
-{
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index(devices, i);
-		guint16 dev_pid;
-
-		if (!FU_IS_USB_DEVICE(dev))
-			continue;
-
-		dev_pid = fu_usb_device_get_pid(FU_USB_DEVICE(dev));
-		if (dev_pid != pid)
-			continue;
-
-		if (!FU_IS_DELL_KESTREL_RTSHUB(dev))
-			return dev;
-	}
-	return NULL;
-}
-
 static gboolean
 fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
@@ -374,27 +354,6 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 	locker = fu_device_locker_new(ec_dev, error);
 	if (locker == NULL)
 		return FALSE;
-
-	/* Immediate update flow (non-uod): reset the devices */
-	if (!fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
-		FuDevice *rtshub_dev = NULL;
-
-		rtshub_dev =
-		    fu_dell_kestrel_plugin_get_rtshub_from_devices(devices,
-								   DELL_KESTREL_USB_RTS5_G2_PID);
-		if (rtshub_dev != NULL) {
-			g_autoptr(FuDeviceLocker) locker_rtshub = NULL;
-			locker_rtshub = fu_device_locker_new(rtshub_dev, error);
-			if (locker_rtshub == NULL)
-				return FALSE;
-
-			if (!fu_dell_kestrel_rtshub_reset_device(FU_DELL_KESTREL_RTSHUB(rtshub_dev),
-								 error)) {
-				g_prefix_error(error, "failed to reset rts5g2 device: ");
-				return FALSE;
-			}
-		}
-	}
 
 	/* release the dock */
 	if (!fu_dell_kestrel_ec_own_dock(FU_DELL_KESTREL_EC(ec_dev), FALSE, error))
