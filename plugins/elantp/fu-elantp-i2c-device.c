@@ -431,7 +431,6 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, NULL);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -532,10 +531,6 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* wait for a reset */
-	fu_device_sleep_full(device,
-			     ELANTP_DELAY_COMPLETE,
-			     fu_progress_get_child(progress)); /* ms */
-	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -784,6 +779,9 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
+	fu_device_set_phase_delay(FU_DEVICE(self),
+				  FU_DEVICE_PHASE_DELAY_POST_WRITE,
+				  ELANTP_DELAY_COMPLETE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_ELANTP_I2C_DEVICE_ABSOLUTE);

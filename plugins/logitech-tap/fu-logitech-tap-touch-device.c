@@ -557,7 +557,6 @@ fu_logitech_tap_touch_device_attach(FuDevice *device, FuProgress *progress, GErr
 		return FALSE;
 
 	/* mode switch delay for application/bootloader */
-	fu_device_sleep(FU_DEVICE(self), 100);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
@@ -847,6 +846,7 @@ fu_logitech_tap_touch_device_init(FuLogitechTapTouchDevice *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), FU_LOGITECH_TAP_TOUCH_MIN_FW_FILE_SIZE);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_LOGITECH_TAP_TOUCH_MAX_FW_FILE_SIZE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LOGITECH_TAP_TOUCH_FIRMWARE);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_ATTACH, 100);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_NONBLOCK);

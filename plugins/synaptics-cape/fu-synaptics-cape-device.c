@@ -382,8 +382,6 @@ fu_synaptics_cape_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
 {
-	g_autoptr(GTimer) timer = g_timer_new();
-
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -397,10 +395,6 @@ fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
 		g_prefix_error(error, "reset command is not supported: ");
 		return FALSE;
 	}
-
-	fu_device_sleep(FU_DEVICE(self), FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS);
-
-	g_debug("reset took %.2lfms", g_timer_elapsed(timer, NULL) * 1000);
 
 	/* success */
 	return TRUE;
@@ -760,6 +754,9 @@ fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.cape");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100); /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_phase_delay(FU_DEVICE(self),
+				  FU_DEVICE_PHASE_DELAY_POST_WRITE,
+				  FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT);
 }

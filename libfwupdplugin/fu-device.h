@@ -1277,6 +1277,12 @@ void
 fu_device_set_pid(FuDevice *self, guint16 pid);
 
 void
+fu_device_set_phase_delay(FuDevice *self, FuDevicePhaseDelay phase_sleep, guint delay_ms)
+    G_GNUC_NON_NULL(1);
+guint
+fu_device_get_phase_delay(FuDevice *self, FuDevicePhaseDelay phase_sleep) G_GNUC_NON_NULL(1);
+
+void
 fu_device_set_update_state(FuDevice *self, FwupdUpdateState update_state) G_GNUC_NON_NULL(1);
 void
 fu_device_set_context(FuDevice *self, FuContext *ctx) G_GNUC_NON_NULL(1);
