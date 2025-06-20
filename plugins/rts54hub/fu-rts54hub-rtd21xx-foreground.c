@@ -150,10 +150,6 @@ fu_rts54hub_rtd21xx_foreground_attach(FuDevice *device, FuProgress *progress, GE
 		return FALSE;
 	}
 
-	/* the device needs some time to restart with the new firmware before
-	 * it can be queried again */
-	fu_device_sleep_full(device, 60000, progress); /* ms */
-
 	/* success */
 	return TRUE;
 }
@@ -398,6 +394,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 static void
 fu_rts54hub_rtd21xx_foreground_init(FuRts54hubRtd21xxForeground *self)
 {
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_ATTACH, 60000);
 }
 
 static void
