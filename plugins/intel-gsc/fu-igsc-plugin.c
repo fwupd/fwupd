@@ -14,6 +14,9 @@
 #include "fu-igsc-oprom-firmware.h"
 #include "fu-igsc-plugin.h"
 
+// TODO: Identify the correct location we should store this.
+#define RECOVERY_CAB = "/var/lib/fwupd/metadata/recovery/"
+
 struct _FuIgscPlugin {
 	FuPlugin parent_instance;
 };
@@ -41,18 +44,30 @@ fu_igsc_plugin_constructed(GObject *obj)
 static void
 fu_igsc_plugin_device_changed(FuPlugin *plugin, FuDevice *device)
 {
-	// Check for the WEDGED property in device metadata
-	const gchar *wedged = fu_device_get_metadata(device, "WEDGED");
+	const gchar *wedged = NULL;
+	if (FU_IS_UDEV_DEVICE(device))
+    		wedged = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "WEDGED");
 	if (wedged && g_strcmp0(wedged, "firmware-flash") == 0) {
-		// Prompt user to recover manually
-		g_warning("Detected WEDGED=firmware-flash uevent. Install recovery firmware that "
-			  "is included in the cab under /recovery with:\n/usr/bin/fwuptool install "
-			  "<recovery-firmware.bin>\nAfter installing recovery firmware, you must "
-			  "shutdown and reboot (cold boot) to apply changes.");
-		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_WEDGED);
-	  	// TODO: Explore automated recovery options.
+	    	fu_device_set_version(device, "0.0");
+	    	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_RECOVERY_REQUIRED);
+	    	// Optionally, copy .cab to /var/lib/fwupd/metadata/recovery/ here
+	    	g_warning("Detected WEDGED=firmware-flash uevent. Device is now in recovery mode
+	    	      	  "(version 0.0). You can recover by running:\n fwupdmgr update\n"
+		      	  "If you have a recovery .cab, it is available in %s", RECOVERY_CAB);
 	}
 }
+//	// Check for the WEDGED property in device metadata
+//	const gchar *wedged = fu_device_get_metadata(device, "WEDGED");
+//	if (wedged && g_strcmp0(wedged, "firmware-flash") == 0) {
+//		// Prompt user to recover manually
+//		g_warning("Detected WEDGED=firmware-flash uevent. Install recovery firmware that "
+//			  "is included in the cab under /recovery with:\n/usr/bin/fwuptool install "
+//			  "<recovery-firmware.bin>\nAfter installing recovery firmware, you must "
+//			  "shutdown and reboot (cold boot) to apply changes.");
+//		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_RECOVERY_REQUIRED);
+//	  	// TODO: Explore automated recovery options.
+//	}
+//}
 
 static void
 fu_igsc_plugin_class_init(FuIgscPluginClass *klass)

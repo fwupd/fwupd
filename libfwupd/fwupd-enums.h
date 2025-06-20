@@ -720,13 +720,13 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY = 1ull << 12,
 	/**
-	 * FWUPD_DEVICE_PROBLEM_WEDGED:
+	 * FWUPD_DEVICE_PROBLEM_RECOVERY_REQUIRED:
 	 *
 	 * The device is wedged and must be recovered.
 	 *
 	 * Since: TBD
 	 */
-	FWUPD_DEVICE_PROBLEM_WEDGED = 1ull << 13,
+	FWUPD_DEVICE_PROBLEM_RECOVERY_REQUIRED = 1ull << 13,
 	/**
 	 * FWUPD_DEVICE_PROBLEM_UNKNOWN:
 	 *
