@@ -400,9 +400,13 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
-	version = g_strdup_printf("%u.%u",
-				  fu_struct_igsc_fw_version_get_hotfix(fw_code_version),
-				  fu_struct_igsc_fw_version_get_build(fw_code_version));
+	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
+		version = g_strdup("0.0");
+	} else {
+		version = g_strdup_printf("%u.%u",
+					  fu_struct_igsc_fw_version_get_hotfix(fw_code_version),
+					  fu_struct_igsc_fw_version_get_build(fw_code_version));
+	}
 	fu_device_set_version(device, version);
 
 	/* get hardware SKU if supported */
@@ -474,13 +478,35 @@ static gboolean
 fu_igsc_device_probe(FuDevice *device, GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
+	g_autofree gchar *prop_wedged = NULL;
 
 	/* check firmware status */
 	if (!fu_igsc_device_get_fw_status(self, 1, NULL, error))
 		return FALSE;
 
+	/* device is wedged and needs recovery */
+	prop_wedged = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "WEDGED", NULL);
+	if (g_strcmp0(prop_wedged, "unknown") == 0) {
+		g_autofree gchar *attr_survivability_mode = NULL;
+		attr_survivability_mode =
+		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
+					      "attr_survivability_mode",
+					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+					      error);
+		if (attr_survivability_mode == NULL) {
+			g_prefix_error(error, "cannot get survivability_mode for WEDGED=unknown: ");
+			return FALSE;
+		}
+		g_debug("survivability_mode: %s", attr_survivability_mode);
+		fu_device_add_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED);
+	}
+
 	/* add extra instance IDs */
-	fu_device_add_instance_str(device, "PART", "FWCODE");
+	fu_device_add_instance_str(device,
+				   "PART",
+				   fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
+				       ? "FWCODE_RECOVERY"
+				       : "FWCODE");
 	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
@@ -847,6 +873,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
 }
 
 static void
