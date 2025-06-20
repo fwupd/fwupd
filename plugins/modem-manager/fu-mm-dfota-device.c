@@ -462,8 +462,8 @@ fu_mm_dfota_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 85, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
