@@ -1,0 +1,18 @@
+{
+  "name": "Foxconn T99W373 (MBIM)",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/foxconn-t99w373-mbim-setup.json",
+      "components": [
+        {
+          "version": "FDE.F0.3.0.1.1.CC.001.003",
+          "protocol": "com.qualcomm.mbim_qdu",
+          "guids": [
+            "5d0a12ac-c7d9-5bd8-9c0a-9a2b63817dbb"
+          ]
+        }
+      ]
+    }
+  ]
+}
