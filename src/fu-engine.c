@@ -3009,6 +3009,7 @@ fu_engine_detach(FuEngine *self,
 		 GError **error)
 {
 	FuPlugin *plugin;
+	guint delay_ms;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
@@ -3023,6 +3024,14 @@ fu_engine_detach(FuEngine *self,
 	device_progress = fu_device_progress_new(device, progress);
 	g_return_val_if_fail(device_progress != NULL, FALSE);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 90, "detach");
+	delay_ms = fu_device_get_phase_delay(device, FU_DEVICE_PHASE_DELAY_POST_DETACH);
+	if (delay_ms > 0)
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "delay-post");
+
 	/* pause the polling */
 	poll_locker = fu_device_poll_locker_new(device, error);
 	if (poll_locker == NULL)
@@ -3034,8 +3043,15 @@ fu_engine_detach(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_detach(plugin, device, progress, error))
+	if (!fu_plugin_runner_detach(plugin, device, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* sleep to idle */
+	if (delay_ms > 0) {
+		fu_device_sleep_full(device, delay_ms, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+	}
 
 	/* support older clients without the ability to do immediate requests */
 	if ((feature_flags & FWUPD_FEATURE_FLAG_REQUESTS) == 0 &&
@@ -3081,6 +3097,7 @@ static gboolean
 fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
+	guint delay_ms;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
@@ -3095,6 +3112,14 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	device_progress = fu_device_progress_new(device, progress);
 	g_return_val_if_fail(device_progress != NULL, FALSE);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 90, "detach");
+	delay_ms = fu_device_get_phase_delay(device, FU_DEVICE_PHASE_DELAY_POST_ATTACH);
+	if (delay_ms > 0)
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "delay-post");
+
 	str = fu_device_to_string(device);
 	g_info("attach -> %s", str);
 	plugin =
@@ -3106,9 +3131,15 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	poll_locker = fu_device_poll_locker_new(device, error);
 	if (poll_locker == NULL)
 		return FALSE;
-
-	if (!fu_plugin_runner_attach(plugin, device, progress, error))
+	if (!fu_plugin_runner_attach(plugin, device, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* sleep to idle */
+	if (delay_ms > 0) {
+		fu_device_sleep_full(device, delay_ms, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
+	}
 
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
@@ -3237,6 +3268,7 @@ fu_engine_write_firmware(FuEngine *self,
 			 GError **error)
 {
 	FuPlugin *plugin;
+	guint delay_ms;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDeviceLocker) poll_locker = NULL;
@@ -3257,6 +3289,14 @@ fu_engine_write_firmware(FuEngine *self,
 	if (poll_locker == NULL)
 		return FALSE;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, "write");
+	delay_ms = fu_device_get_phase_delay(device, FU_DEVICE_PHASE_DELAY_POST_WRITE);
+	if (delay_ms > 0)
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "delay-post");
+
 	str = fu_device_to_string(device);
 	g_info("update -> %s", str);
 	plugin =
@@ -3266,7 +3306,7 @@ fu_engine_write_firmware(FuEngine *self,
 	if (!fu_plugin_runner_write_firmware(plugin,
 					     device,
 					     firmware,
-					     progress,
+					     fu_progress_get_child(progress),
 					     flags,
 					     &error_write)) {
 		g_autofree gchar *str_write = NULL;
@@ -3306,6 +3346,13 @@ fu_engine_write_firmware(FuEngine *self,
 		/* return error to client */
 		g_propagate_error(error, g_steal_pointer(&error_write));
 		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/* sleep to idle */
+	if (delay_ms > 0) {
+		fu_device_sleep_full(device, delay_ms, fu_progress_get_child(progress));
+		fu_progress_step_done(progress);
 	}
 
 	/* save to emulated phase */
