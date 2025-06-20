@@ -7,7 +7,8 @@
 
 #include "config.h"
 
-#include "fu-mm-mbim-common.h"
+#include <libmbim-glib.h>
+
 #include "fu-mm-mbim-device.h"
 
 struct _FuMmMbimDevice {
@@ -21,6 +22,295 @@ G_DEFINE_TYPE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_MBIM_DEVICE_TIMEOUT_MS 1500
 
+typedef struct {
+	gboolean ret;
+	GMainLoop *loop;
+	GCancellable *cancellable;
+	guint timeout_id;
+	MbimDevice *mbim_device;
+	MbimMessage *mbim_message;
+	GError *error;
+} FuMmMbimDeviceHelper;
+
+static gboolean
+fu_mm_mbim_device_helper_timeout_cb(gpointer user_data)
+{
+	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
+	g_cancellable_cancel(helper->cancellable);
+	helper->timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static FuMmMbimDeviceHelper *
+fu_mm_mbim_device_helper_helper_new(guint timeout_ms)
+{
+	FuMmMbimDeviceHelper *helper = g_new0(FuMmMbimDeviceHelper, 1);
+	helper->cancellable = g_cancellable_new();
+	helper->loop = g_main_loop_new(NULL, FALSE);
+	helper->timeout_id = g_timeout_add(timeout_ms, fu_mm_mbim_device_helper_timeout_cb, helper);
+	return helper;
+}
+
+static void
+fu_mm_mbim_device_helper_free(FuMmMbimDeviceHelper *helper)
+{
+	if (helper->timeout_id != 0)
+		g_source_remove(helper->timeout_id);
+	if (helper->mbim_device != NULL)
+		g_object_unref(helper->mbim_device);
+	if (helper->mbim_message != NULL)
+		mbim_message_unref(helper->mbim_message);
+	g_object_unref(helper->cancellable);
+	g_main_loop_unref(helper->loop);
+	g_free(helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMmMbimDeviceHelper, fu_mm_mbim_device_helper_free)
+
+static void
+fu_mm_mbim_device_new_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
+	helper->mbim_device = mbim_device_new_finish(res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+static MbimDevice *
+fu_mm_mbim_device_new_sync(FuMmMbimDevice *self, GFile *file, guint timeout_ms, GError **error)
+{
+	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(G_IS_FILE(file), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		g_autofree gchar *path = g_file_get_path(file);
+		event_id = g_strdup_printf("MbimDeviceNew:Path=%s", path);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		return g_object_new(MBIM_TYPE_DEVICE, "device-file", file, NULL);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	mbim_device_new(file, helper->cancellable, fu_mm_mbim_device_new_cb, helper);
+	g_main_loop_run(helper->loop);
+	return g_steal_pointer(&helper->mbim_device);
+}
+
+static void
+fu_mm_mbim_device_open_sync_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
+	helper->ret = mbim_device_open_full_finish(helper->mbim_device, res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+static gboolean
+fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
+{
+	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("MbimDeviceOpen");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		return event != NULL;
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	mbim_device_open_full(self->mbim_device,
+			      MBIM_DEVICE_OPEN_FLAGS_PROXY,
+			      10,
+			      helper->cancellable,
+			      fu_mm_mbim_device_open_sync_cb,
+			      helper);
+	g_main_loop_run(helper->loop);
+
+	/* save response */
+	if (!helper->ret) {
+		fu_device_event_set_error(event, helper->error);
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_mm_mbim_device_close_sync_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
+	helper->ret = mbim_device_close_finish(helper->mbim_device, res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+static gboolean
+fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
+{
+	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("MbimDeviceClose");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		g_clear_object(&self->mbim_device);
+		return event != NULL;
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	mbim_device_close(self->mbim_device,
+			  5,
+			  helper->cancellable,
+			  fu_mm_mbim_device_close_sync_cb,
+			  helper);
+	g_main_loop_run(helper->loop);
+
+	/* save response */
+	if (!helper->ret) {
+		fu_device_event_set_error(event, helper->error);
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return FALSE;
+	}
+
+	/* success */
+	g_clear_object(&self->mbim_device);
+	return TRUE;
+}
+
+static void
+fu_mm_mbim_device_command_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
+	g_autoptr(MbimMessage) response = NULL;
+
+	response = mbim_device_command_finish(helper->mbim_device, res, &helper->error);
+	if (response != NULL) {
+		if (mbim_message_response_get_result(response,
+						     MBIM_MESSAGE_TYPE_COMMAND_DONE,
+						     &helper->error)) {
+			helper->mbim_message = g_steal_pointer(&response);
+		}
+	}
+	g_main_loop_quit(helper->loop);
+}
+
+static MbimMessage *
+fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
+			       MbimMessage *mbim_message,
+			       guint timeout_ms,
+			       GError **error)
+{
+	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	FuDeviceEvent *event = NULL;
+	g_autofree gchar *event_id = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		const guint8 *buf;
+		guint32 bufsz = 0;
+		g_autofree gchar *data_base64 = NULL;
+
+		buf = mbim_message_get_raw(mbim_message, &bufsz, error);
+		if (buf == NULL) {
+			fwupd_error_convert(error);
+			return NULL;
+		}
+		data_base64 = g_base64_encode(buf, bufsz);
+		event_id = g_strdup_printf("MbimDeviceCommand:Data=%s,Length=0x%x",
+					   data_base64,
+					   (guint)bufsz);
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) blob = NULL;
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		blob = fu_device_event_get_bytes(event, "Data", error);
+		if (blob == NULL)
+			return NULL;
+		return mbim_message_new(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
+
+	mbim_device_command(self->mbim_device,
+			    mbim_message,
+			    2 * timeout_ms * 1000,
+			    helper->cancellable,
+			    fu_mm_mbim_device_command_cb,
+			    helper);
+	g_main_loop_run(helper->loop);
+
+	/* save response */
+	if (helper->mbim_message == NULL) {
+		fu_device_event_set_error(event, helper->error);
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+
+	/* save response */
+	if (event != NULL) {
+		const guint8 *buf;
+		guint32 bufsz = 0;
+
+		buf = mbim_message_get_raw(helper->mbim_message, &bufsz, error);
+		if (buf == NULL) {
+			fwupd_error_convert(error);
+			return NULL;
+		}
+		fu_device_event_set_data(event, "Data", buf, bufsz);
+	}
+
+	/* success */
+	return g_steal_pointer(&helper->mbim_message);
+}
+
 static gboolean
 fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
 {
@@ -29,7 +319,7 @@ fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
 	g_autoptr(MbimMessage) response = NULL;
 
 	request = mbim_message_device_caps_query_new(NULL);
-	response = _mbim_device_command_sync(self->mbim_device, request, 10 * 1000, error);
+	response = fu_mm_mbim_device_command_sync(self, request, 10 * 1000, error);
 	if (response == NULL)
 		return FALSE;
 	if (!mbim_message_device_caps_response_parse(response,
@@ -65,7 +355,7 @@ fu_mm_mbim_device_detach_to_edl(FuMmMbimDevice *self, GError **error)
 	g_autoptr(MbimMessage) response = NULL;
 
 	request = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
-	response = _mbim_device_command_sync(self->mbim_device, request, 5 * 1000, &error_local);
+	response = fu_mm_mbim_device_command_sync(self, request, 5 * 1000, &error_local);
 	if (response == NULL) {
 		/* MBIM port goes away */
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
@@ -126,7 +416,7 @@ fu_mm_mbim_device_write_chunk(FuMmMbimDevice *self, FuChunk *chk, GError **error
 	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
 						      fu_chunk_get_data(chk),
 						      NULL);
-	response = _mbim_device_command_sync(self->mbim_device, request, 20 * 1000, error);
+	response = fu_mm_mbim_device_command_sync(self, request, 20 * 1000, error);
 	if (response == NULL)
 		return FALSE;
 	if (!mbim_message_qdu_file_write_response_parse(response, error)) {
@@ -188,8 +478,7 @@ fu_mm_mbim_device_write(FuMmMbimDevice *self,
 	action_start_req = mbim_message_qdu_update_session_set_new(MBIM_QDU_SESSION_ACTION_START,
 								   MBIM_QDU_SESSION_TYPE_LE,
 								   NULL);
-	action_start_res =
-	    _mbim_device_command_sync(self->mbim_device, action_start_req, 10 * 1000, error);
+	action_start_res = fu_mm_mbim_device_command_sync(self, action_start_req, 10 * 1000, error);
 	if (action_start_res == NULL)
 		return FALSE;
 	if (!mbim_message_qdu_update_session_response_parse(action_start_res,
@@ -211,8 +500,7 @@ fu_mm_mbim_device_write(FuMmMbimDevice *self,
 	file_open_req = mbim_message_qdu_file_open_set_new(MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE,
 							   g_bytes_get_size(blob),
 							   NULL);
-	file_open_res =
-	    _mbim_device_command_sync(self->mbim_device, file_open_req, 10 * 1000, error);
+	file_open_res = fu_mm_mbim_device_command_sync(self, file_open_req, 10 * 1000, error);
 	if (file_open_res == NULL)
 		return FALSE;
 
@@ -321,7 +609,7 @@ static gboolean
 fu_mm_mbim_device_open_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-	return _mbim_device_open_sync(self->mbim_device, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
+	return fu_mm_mbim_device_open_sync(self, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 }
 
 static gboolean
@@ -332,9 +620,8 @@ fu_mm_mbim_device_open(FuDevice *device, GError **error)
 	    g_file_new_for_path(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
 
 	/* create and open */
-	g_clear_object(&self->mbim_device);
 	self->mbim_device =
-	    _mbim_device_new_sync(mbim_device_file, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
+	    fu_mm_mbim_device_new_sync(self, mbim_device_file, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 	if (self->mbim_device == NULL)
 		return FALSE;
 	return fu_device_retry(device,
@@ -348,7 +635,6 @@ static gboolean
 fu_mm_mbim_device_close(FuDevice *device, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-	g_autoptr(MbimDevice) mbim_device = NULL;
 
 	/* sanity check */
 	if (self->mbim_device == NULL) {
@@ -358,8 +644,7 @@ fu_mm_mbim_device_close(FuDevice *device, GError **error)
 				    "no mbim_device");
 		return FALSE;
 	}
-	mbim_device = g_steal_pointer(&self->mbim_device);
-	return _mbim_device_close_sync(mbim_device, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
+	return fu_mm_mbim_device_close_sync(self, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 }
 
 static gboolean
@@ -410,6 +695,7 @@ fu_mm_mbim_device_init(FuMmMbimDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG);
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.mbim_qdu");
 }
 
