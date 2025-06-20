@@ -1,0 +1,33 @@
+{
+  "FwupdVersion": "2.0.13",
+  "UsbDevices": [
+    {
+      "Created": "2025-06-20T10:35:23.098731Z",
+      "GType": "FuMmMbimDevice",
+      "BackendId": "/org/freedesktop/ModemManager1/Modem/0",
+      "DeviceFile": "/dev/wwan0mbim0",
+      "Events": [
+        {
+          "Id": "MbimDeviceNew:Path=/dev/wwan0mbim0"
+        },
+        {
+          "Id": "MbimDeviceOpen"
+        }
+      ],
+      "Version": "FDE.F0.3.0.1.1.CC.001.003",
+      "PhysicalId": "/sys/devices/pci0000:00/0000:00:1c.0/0000:55:00.0",
+      "DeviceIds": [
+        "PCI\\VID_105B&PID_E0D9",
+        "PCI\\VID_105B&PID_E0D9&REV_0000",
+        "PCI\\VID_105B&PID_E0D9&CARRIER_CMCC",
+        "PCI\\VID_105B&PID_E0D9&REV_0000&CARRIER_CMCC",
+        "PCI\\VEN_105B"
+      ],
+      "Ports": {
+        "net": "/dev/wwan0",
+        "qcdm": "/dev/wwan0qcdm0",
+        "mbim": "/dev/wwan0mbim0"
+      }
+    }
+  ]
+}

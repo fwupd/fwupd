@@ -25,7 +25,6 @@ shared_module('fu_plugin_modem_manager',
     'fu-mm-fastboot-device.c',
     'fu-mm-fdl-device.c',
     'fu-mm-firehose-device.c',
-    'fu-mm-mbim-common.c',
     'fu-mm-mbim-device.c',
     'fu-mm-mhi-qcdm-device.c',
     'fu-mm-plugin.c',
@@ -47,9 +46,11 @@ shared_module('fu_plugin_modem_manager',
 )
 
 device_tests += files(
+  'tests/foxconn-t99w373-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
 )
 enumeration_data += files(
+  'tests/foxconn-t99w373-mbim-setup.json',
   'tests/qc-eg25ggc-fastboot-setup.json',
 )
 
