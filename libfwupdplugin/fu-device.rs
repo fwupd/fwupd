@@ -9,3 +9,12 @@ enum FuDeviceInstanceFlag {
     Generic = 1 << 2, // added by a baseclass
     Counterpart = 1 << 3,
 }
+
+#[derive(ToString)]
+enum FuDevicePhaseDelay {
+    PostPrepare,
+    PostDetach,
+    PostWrite,
+    PostAttach,
+    PostCleanup,
+}

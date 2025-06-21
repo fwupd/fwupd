@@ -65,6 +65,7 @@ typedef struct {
 	gint64 modified_usec;
 	guint16 vid;
 	guint16 pid;
+	guint phase_delays[FU_DEVICE_PHASE_DELAY_LAST];
 	GHashTable *inhibits;		/* (nullable) */
 	GHashTable *metadata;		/* (nullable) */
 	GPtrArray *parent_guids;	/* (nullable) (element-type utf-8) */
@@ -5005,6 +5006,47 @@ fu_device_set_pid(FuDevice *self, guint16 pid)
 }
 
 /**
+ * fu_device_get_phase_delay:
+ * @self: a #FuDevice
+ * @phase_sleep: a #FuDevicePhaseDelay, e.g. #FU_DEVICE_PHASE_DELAY_POST_WRITE
+ *
+ * Gets the delay to use at a specific phase of the transaction.
+ *
+ * Returns: a delay in ms
+ *
+ * Since: 2.0.13
+ **/
+guint
+fu_device_get_phase_delay(FuDevice *self, FuDevicePhaseDelay phase_sleep)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
+	g_return_val_if_fail(phase_sleep < FU_DEVICE_PHASE_DELAY_LAST, G_MAXUINT);
+	return priv->phase_delays[phase_sleep];
+}
+
+/**
+ * fu_device_set_phase_delay:
+ * @self: a #FuDevice
+ * @phase_sleep: a #FuDevicePhaseDelay, e.g. #FU_DEVICE_PHASE_DELAY_POST_WRITE
+ * @delay_ms: a delay in ms
+ *
+ * Sets the delay to use at a specific phase of the transaction.
+ *
+ * Since: 2.0.13
+ **/
+void
+fu_device_set_phase_delay(FuDevice *self, FuDevicePhaseDelay phase_sleep, guint delay_ms)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(phase_sleep < FU_DEVICE_PHASE_DELAY_LAST);
+	if (priv->phase_delays[phase_sleep] == delay_ms)
+		return;
+	priv->phase_delays[phase_sleep] = delay_ms;
+}
+
+/**
  * fu_device_set_modified_usec:
  * @self: a #FuDevice
  * @modified_usec: value in microseconds
@@ -5061,6 +5103,13 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	fwupd_codec_string_append(str, idt, "BackendId", priv->backend_id);
 	fwupd_codec_string_append_hex(str, idt, "Vid", priv->vid);
 	fwupd_codec_string_append_hex(str, idt, "Pid", priv->pid);
+	for (guint i = 0; i < FU_DEVICE_PHASE_DELAY_LAST; i++) {
+		if (priv->phase_delays[i] != 0) {
+			g_autofree gchar *title =
+			    g_strdup_printf("PhaseDelay[%s]", fu_device_phase_delay_to_string(i));
+			fwupd_codec_string_append_hex(str, idt, title, priv->phase_delays[i]);
+		}
+	}
 	fwupd_codec_string_append(str, idt, "UpdateRequestId", priv->update_request_id);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	fwupd_codec_string_append(str, idt, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);

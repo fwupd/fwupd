@@ -427,7 +427,6 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to start update: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
 
 	/* success */
 	return TRUE;
@@ -471,6 +470,9 @@ static void
 fu_mm_dfota_device_init(FuMmDfotaDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.quectel.dfota");
+	fu_device_set_phase_delay(FU_DEVICE(self),
+				  FU_DEVICE_PHASE_DELAY_POST_WRITE,
+				  FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
 }
 
 static void
