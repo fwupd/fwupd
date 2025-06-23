@@ -11,37 +11,36 @@
 #include "fu-engine-requirements.h"
 
 static gboolean
-fu_engine_requirements_require_vercmp(XbNode *req,
-				      const gchar *version,
-				      FwupdVersionFormat fmt,
-				      GError **error)
+fu_engine_requirements_require_vercmp_part(const gchar *compare,
+					   const gchar *version_req,
+					   const gchar *version,
+					   FwupdVersionFormat fmt,
+					   GError **error)
 {
 	gboolean ret = FALSE;
 	gint rc = 0;
-	const gchar *tmp = xb_node_get_attr(req, "compare");
-	const gchar *version_req = xb_node_get_attr(req, "version");
 
-	if (g_strcmp0(tmp, "eq") == 0) {
+	if (g_strcmp0(compare, "eq") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc == 0;
-	} else if (g_strcmp0(tmp, "ne") == 0) {
+	} else if (g_strcmp0(compare, "ne") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc != 0;
-	} else if (g_strcmp0(tmp, "lt") == 0) {
+	} else if (g_strcmp0(compare, "lt") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc < 0;
-	} else if (g_strcmp0(tmp, "gt") == 0) {
+	} else if (g_strcmp0(compare, "gt") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc > 0;
-	} else if (g_strcmp0(tmp, "le") == 0) {
+	} else if (g_strcmp0(compare, "le") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc <= 0;
-	} else if (g_strcmp0(tmp, "ge") == 0) {
+	} else if (g_strcmp0(compare, "ge") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc >= 0;
-	} else if (g_strcmp0(tmp, "glob") == 0) {
+	} else if (g_strcmp0(compare, "glob") == 0) {
 		ret = g_pattern_match_simple(version_req, version);
-	} else if (g_strcmp0(tmp, "regex") == 0) {
+	} else if (g_strcmp0(compare, "regex") == 0) {
 		ret = g_regex_match_simple(version_req, version, 0, 0);
 	} else {
 		g_set_error(error,
@@ -60,16 +59,95 @@ fu_engine_requirements_require_vercmp(XbNode *req,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed predicate [%s %s %s]",
 			    version_req,
-			    tmp,
+			    compare,
 			    version);
 	}
 	return ret;
+}
+
+typedef struct {
+	FuRelease *release;
+	FwupdInstallFlags install_flags;
+	gchar *fwupd_version;
+	gboolean has_hardware_req;
+	gboolean has_not_hardware_req;
+	gboolean has_id_requirement_glob;
+	gboolean has_client_id_requirement_glob;
+} FuEngineRequirementsHelper;
+
+static void
+fu_engine_requirements_helper_free(FuEngineRequirementsHelper *helper)
+{
+	g_object_unref(helper->release);
+	g_free(helper->fwupd_version);
+	g_free(helper);
+}
+
+static gboolean
+fu_engine_requirements_check_fwupd_version(FuEngineRequirementsHelper *helper,
+					   const gchar *fwupd_version_req,
+					   GError **error)
+{
+	if (fu_version_compare(helper->fwupd_version,
+			       fwupd_version_req,
+			       FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "needs %s >= %s",
+			    FWUPD_DBUS_SERVICE,
+			    fwupd_version_req);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuEngineRequirementsHelper, fu_engine_requirements_helper_free)
+
+static gboolean
+fu_engine_requirements_require_vercmp(XbNode *req,
+				      const gchar *version,
+				      FwupdVersionFormat fmt,
+				      FuEngineRequirementsHelper *helper,
+				      GError **error)
+{
+	const gchar *compare = xb_node_get_attr(req, "compare");
+	const gchar *version_req = xb_node_get_attr(req, "version");
+	g_auto(GStrv) split = NULL;
+
+	/* parse globbed version, e.g. `1.9.*=1.9.7|1.8.*=1.8.23|2.0.15`, or just `2.0.5` */
+	split = g_strsplit(version_req, "|", 0);
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_auto(GStrv) kv = g_strsplit(split[i], "=", 2);
+		if (g_strv_length(kv) > 1) {
+			helper->has_id_requirement_glob = TRUE;
+			if (!g_pattern_match_simple(kv[0], version)) {
+				g_debug("skipping vercmp %s as version %s", kv[0], version);
+				continue;
+			}
+			g_debug("checking vercmp %s as version %s", kv[1], version);
+			return fu_engine_requirements_require_vercmp_part(compare,
+									  kv[1],
+									  version,
+									  fmt,
+									  error);
+		}
+		return fu_engine_requirements_require_vercmp_part(compare,
+								  kv[0],
+								  version,
+								  fmt,
+								  error);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
 fu_engine_requirements_check_not_child(FuEngine *self,
 				       XbNode *req,
 				       FuDevice *device,
+				       FuEngineRequirementsHelper *helper,
 				       GError **error)
 {
 	GPtrArray *children = fu_device_get_children(device);
@@ -100,6 +178,7 @@ fu_engine_requirements_check_not_child(FuEngine *self,
 		if (fu_engine_requirements_require_vercmp(req,
 							  version,
 							  fu_device_get_version_format(child),
+							  helper,
 							  NULL)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -174,17 +253,20 @@ _fu_device_has_guids_any(FuDevice *self, gchar **guids)
 static gboolean
 fu_engine_requirements_check_firmware(FuEngine *self,
 				      XbNode *req,
-				      FuDevice *device,
-				      const gchar *fwupd_version,
-				      FwupdInstallFlags flags,
+				      FuEngineRequirementsHelper *helper,
 				      GError **error)
 {
+	FuDevice *device = fu_release_get_device(helper->release);
 	const gchar *version;
 	const gchar *depth_str;
 	gint64 depth = G_MAXINT64;
 	g_autoptr(FuDevice) device_actual = g_object_ref(device);
 	g_autoptr(GError) error_local = NULL;
 	g_auto(GStrv) guids = NULL;
+
+	/* self tests */
+	if (device == NULL)
+		return TRUE;
 
 	/* look at the parent device */
 	depth_str = xb_node_get_attr(req, "depth");
@@ -210,30 +292,8 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 	/* check fwupd version requirement */
 	if (depth < 0) {
-		if (fu_version_compare(fwupd_version, "1.9.7", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requirement 'child firmware' also needs %s >= 1.9.7",
-				    FWUPD_DBUS_SERVICE);
-			return FALSE;
-		}
-	} else if (depth == 0) {
-		if (fu_version_compare(fwupd_version, "1.6.1", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requirement 'sibling firmware' also needs %s >= 1.6.1",
-				    FWUPD_DBUS_SERVICE);
-			return FALSE;
-		}
-	} else if (depth == 1) {
-		if (fu_version_compare(fwupd_version, "1.3.4", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requirement 'parent firmware' also needs %s >= 1.3.4",
-				    FWUPD_DBUS_SERVICE);
+		if (!fu_engine_requirements_check_fwupd_version(helper, "1.9.7", error)) {
+			g_prefix_error(error, "requirement child firmware: ");
 			return FALSE;
 		}
 	}
@@ -245,6 +305,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 			req,
 			version,
 			fu_device_get_version_format(device_actual),
+			helper,
 			&error_local)) {
 			if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 				g_set_error(
@@ -273,6 +334,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 			req,
 			version,
 			fu_device_get_version_format(device_actual),
+			helper,
 			&error_local)) {
 			if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 				g_set_error(
@@ -297,14 +359,18 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 	/* vendor ID */
 	if (g_strcmp0(xb_node_get_text(req), "vendor-id") == 0) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
+		if (helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
 			return TRUE;
 		return fu_engine_requirements_check_vendor_id(self, req, device_actual, error);
 	}
 
 	/* child version */
 	if (g_strcmp0(xb_node_get_text(req), "not-child") == 0)
-		return fu_engine_requirements_check_not_child(self, req, device_actual, error);
+		return fu_engine_requirements_check_not_child(self,
+							      req,
+							      device_actual,
+							      helper,
+							      error);
 
 	/* another device, specified by GUID|GUID|GUID */
 	guids = g_strsplit(xb_node_get_text(req), "|", -1);
@@ -411,34 +477,13 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		}
 	}
 
-	/* check fwupd version requirement */
-	if (depth == G_MAXINT64 && fu_device_get_version(device_actual) != NULL) {
-		if (fu_version_compare(fwupd_version, "1.1.0", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requirement 'firmware with version' also needs %s >= 1.1.0",
-				    FWUPD_DBUS_SERVICE);
-			return FALSE;
-		}
-	}
-	if (depth == G_MAXINT64 && fu_device_get_version(device_actual) == NULL) {
-		if (fu_version_compare(fwupd_version, "1.2.11", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "requirement 'firmware no version' also needs %s >= 1.2.11",
-				    FWUPD_DBUS_SERVICE);
-			return FALSE;
-		}
-	}
-
 	/* get the version of the other device */
 	version = fu_device_get_version(device_actual);
 	if (version != NULL && xb_node_get_attr(req, "compare") != NULL &&
 	    !fu_engine_requirements_require_vercmp(req,
 						   version,
 						   fu_device_get_version_format(device_actual),
+						   helper,
 						   &error_local)) {
 		if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			g_set_error(error,
@@ -464,7 +509,10 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 }
 
 static gboolean
-fu_engine_requirements_check_id(FuEngine *self, XbNode *req, GError **error)
+fu_engine_requirements_check_id(FuEngine *self,
+				XbNode *req,
+				FuEngineRequirementsHelper *helper,
+				GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
 	g_autoptr(GError) error_local = NULL;
@@ -490,6 +538,7 @@ fu_engine_requirements_check_id(FuEngine *self, XbNode *req, GError **error)
 	if (!fu_engine_requirements_require_vercmp(req,
 						   version,
 						   FWUPD_VERSION_FORMAT_UNKNOWN,
+						   helper,
 						   &error_local)) {
 		if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			g_set_error(error,
@@ -521,12 +570,16 @@ fu_engine_requirements_check_id(FuEngine *self, XbNode *req, GError **error)
 static gboolean
 fu_engine_requirements_check_hardware(FuEngine *self,
 				      XbNode *req,
-				      const gchar *fwupd_version,
+				      FuEngineRequirementsHelper *helper,
 				      GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
-	const gchar *fwupd_required = "1.0.1";
+	FuDevice *device = fu_release_get_device(helper->release);
 	g_auto(GStrv) hwid_split = NULL;
+
+	/* skip for tests */
+	if (device == NULL || fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+		return TRUE;
 
 	/* sanity check */
 	if (xb_node_get_text(req) == NULL) {
@@ -534,19 +587,6 @@ fu_engine_requirements_check_hardware(FuEngine *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no requirement value supplied");
-		return FALSE;
-	}
-
-	/* check fwupd version requirement */
-	if (g_strstr_len(xb_node_get_text(req), -1, "|") != NULL)
-		fwupd_required = "1.0.8";
-	if (fu_version_compare(fwupd_version, fwupd_required, FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "requirement 'hardware' also needs %s >= %s",
-			    FWUPD_DBUS_SERVICE,
-			    fwupd_required);
 		return FALSE;
 	}
 
@@ -571,19 +611,15 @@ fu_engine_requirements_check_hardware(FuEngine *self,
 static gboolean
 fu_engine_requirements_check_not_hardware(FuEngine *self,
 					  XbNode *req,
-					  const gchar *fwupd_version,
+					  FuEngineRequirementsHelper *helper,
 					  GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
 	g_auto(GStrv) hwid_split = NULL;
 
 	/* check fwupd version requirement */
-	if (fu_version_compare(fwupd_version, "1.9.10", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "requirement 'not_hardware' also needs %s >= 1.9.10",
-			    FWUPD_DBUS_SERVICE);
+	if (!fu_engine_requirements_check_fwupd_version(helper, "1.9.10", error)) {
+		g_prefix_error(error, "requirement not_hardware: ");
 		return FALSE;
 	}
 
@@ -615,12 +651,12 @@ fu_engine_requirements_check_not_hardware(FuEngine *self,
 
 static gboolean
 fu_engine_requirements_check_client(FuEngine *self,
-				    FuEngineRequest *request,
 				    XbNode *req,
-				    const gchar *fwupd_version,
+				    FuEngineRequirementsHelper *helper,
 				    GError **error)
 {
-	FwupdFeatureFlags flags;
+	FuEngineRequest *request = fu_release_get_request(helper->release);
+	FwupdFeatureFlags feature_flags;
 	g_auto(GStrv) feature_split = NULL;
 
 	/* sanity check */
@@ -632,41 +668,43 @@ fu_engine_requirements_check_client(FuEngine *self,
 		return FALSE;
 	}
 
-	/* check fwupd version requirement */
-	if (fu_version_compare(fwupd_version, "1.4.5", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "requirement 'client' also needs %s >= 1.4.5",
-			    FWUPD_DBUS_SERVICE);
-		return FALSE;
-	}
-
 	/* split and treat as AND */
 	feature_split = g_strsplit(xb_node_get_text(req), "|", -1);
-	flags = fu_engine_request_get_feature_flags(request);
+	feature_flags = fu_engine_request_get_feature_flags(request);
 	for (guint i = 0; feature_split[i] != NULL; i++) {
-		FwupdFeatureFlags flag = fwupd_feature_flag_from_string(feature_split[i]);
+		FuEngineCapabilityFlag capability_flag;
+		FwupdFeatureFlags feature_flag;
+
+		/* client feature */
+		feature_flag = fwupd_feature_flag_from_string(feature_split[i]);
+		if (feature_flag != FWUPD_FEATURE_FLAG_UNKNOWN) {
+			if ((feature_flags & feature_flag) == 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "client feature requirement %s not supported",
+					    feature_split[i]);
+				return FALSE;
+			}
+			continue;
+		}
+
+		/* assumed by the daemon version, see https://github.com/fwupd/fwupd/pull/8949 */
+		capability_flag = fu_engine_capability_flag_from_string(feature_split[i]);
+		if (capability_flag != FU_ENGINE_CAPABILITY_FLAG_UNKNOWN) {
+			if (capability_flag == FU_ENGINE_CAPABILITY_FLAG_ID_REQUIREMENT_GLOB) {
+				helper->has_client_id_requirement_glob = TRUE;
+				continue;
+			}
+		}
 
 		/* not recognized */
-		if (flag == FWUPD_FEATURE_FLAG_UNKNOWN) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "client requirement %s unknown",
-				    feature_split[i]);
-			return FALSE;
-		}
-
-		/* not supported */
-		if ((flags & flag) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "client requirement %s not supported",
-				    feature_split[i]);
-			return FALSE;
-		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "client requirement %s unknown",
+			    feature_split[i]);
+		return FALSE;
 	}
 
 	/* success */
@@ -675,54 +713,37 @@ fu_engine_requirements_check_client(FuEngine *self,
 
 static gboolean
 fu_engine_requirements_check_hard(FuEngine *self,
-				  FuRelease *release,
 				  XbNode *req,
-				  const gchar *fwupd_version,
-				  FwupdInstallFlags flags,
+				  FuEngineRequirementsHelper *helper,
 				  GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
-	FuDevice *device = fu_release_get_device(release);
-	FuEngineRequest *request = fu_release_get_request(release);
 
 	/* ensure component requirement */
 	if (g_strcmp0(xb_node_get_element(req), "id") == 0)
-		return fu_engine_requirements_check_id(self, req, error);
+		return fu_engine_requirements_check_id(self, req, helper, error);
 
 	/* ensure firmware requirement */
-	if (g_strcmp0(xb_node_get_element(req), "firmware") == 0) {
-		if (device == NULL)
-			return TRUE;
-		return fu_engine_requirements_check_firmware(self,
-							     req,
-							     device,
-							     fwupd_version,
-							     flags,
-							     error);
-	}
+	if (g_strcmp0(xb_node_get_element(req), "firmware") == 0)
+		return fu_engine_requirements_check_firmware(self, req, helper, error);
 
 	/* ensure hardware requirement */
 	if (g_strcmp0(xb_node_get_element(req), "hardware") == 0) {
-		if (device == NULL || fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
-			return TRUE;
+		helper->has_hardware_req = TRUE;
 		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 			return TRUE;
-		return fu_engine_requirements_check_hardware(self, req, fwupd_version, error);
+		return fu_engine_requirements_check_hardware(self, req, helper, error);
 	}
 	if (g_strcmp0(xb_node_get_element(req), "not_hardware") == 0) {
+		helper->has_not_hardware_req = TRUE;
 		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_LOADED_HWINFO))
 			return TRUE;
-		return fu_engine_requirements_check_not_hardware(self, req, fwupd_version, error);
+		return fu_engine_requirements_check_not_hardware(self, req, helper, error);
 	}
 
 	/* ensure client requirement */
-	if (g_strcmp0(xb_node_get_element(req), "client") == 0) {
-		return fu_engine_requirements_check_client(self,
-							   request,
-							   req,
-							   fwupd_version,
-							   error);
-	}
+	if (g_strcmp0(xb_node_get_element(req), "client") == 0)
+		return fu_engine_requirements_check_client(self, req, helper, error);
 
 	/* not supported */
 	g_set_error(error,
@@ -735,20 +756,13 @@ fu_engine_requirements_check_hard(FuEngine *self,
 
 static gboolean
 fu_engine_requirements_check_soft(FuEngine *self,
-				  FuRelease *release,
 				  XbNode *req,
-				  const gchar *fwupd_version,
-				  FwupdInstallFlags flags,
+				  FuEngineRequirementsHelper *helper,
 				  GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	if (!fu_engine_requirements_check_hard(self,
-					       release,
-					       req,
-					       fwupd_version,
-					       flags,
-					       &error_local)) {
-		if (flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) {
+	if (!fu_engine_requirements_check_hard(self, req, helper, &error_local)) {
+		if (helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) {
 			g_info("ignoring soft-requirement: %s", error_local->message);
 			return TRUE;
 		}
@@ -772,12 +786,12 @@ fu_engine_requirements_is_specific_req(XbNode *req)
 static gchar *
 fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *release, GError **error)
 {
-	const gchar *newest_version = "1.0.0";
 	GPtrArray *reqs = fu_release_get_hard_reqs(release);
+	g_autoptr(GString) newest_version = g_string_new("1.0.0");
 
 	/* trivial case */
 	if (reqs == NULL)
-		return g_strdup(newest_version);
+		return g_string_free(g_steal_pointer(&newest_version), FALSE);
 
 	/* find the newest fwupd requirement */
 	for (guint i = 0; i < reqs->len; i++) {
@@ -785,6 +799,8 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 		if (g_strcmp0(xb_node_get_text(req), FWUPD_DBUS_SERVICE) == 0 &&
 		    g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			const gchar *version = xb_node_get_attr(req, "version");
+			g_auto(GStrv) split = NULL;
+
 			if (version == NULL) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -793,16 +809,24 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 					    xb_node_get_text(req));
 				return NULL;
 			}
-			/* is this unique, or newer than what we have */
-			if (newest_version == NULL ||
-			    fu_version_compare(version,
-					       newest_version,
-					       FWUPD_VERSION_FORMAT_UNKNOWN) > 0) {
-				newest_version = version;
+
+			/* only care about the fallback version if using globs */
+			split = g_strsplit(version, "|", -1);
+			for (guint j = 0; split[j] != NULL; j++) {
+				if (g_strstr_len(split[j], -1, "=") != NULL)
+					continue;
+				/* is this newer than what we have */
+				if (fu_version_compare(split[j],
+						       newest_version->str,
+						       FWUPD_VERSION_FORMAT_UNKNOWN) > 0) {
+					g_string_assign(newest_version, split[j]);
+				}
 			}
 		}
 	}
-	return g_strdup(newest_version);
+
+	/* success */
+	return g_string_free(g_steal_pointer(&newest_version), FALSE);
 }
 
 gboolean
@@ -813,14 +837,17 @@ fu_engine_requirements_check(FuEngine *self,
 {
 	FuDevice *device = fu_release_get_device(release);
 	GPtrArray *reqs;
-	gboolean has_hardware_req = FALSE;
-	gboolean has_not_hardware_req = FALSE;
 	gboolean has_specific_requirement = FALSE;
-	g_autofree gchar *fwupd_version = NULL;
+	g_autoptr(FuEngineRequirementsHelper) helper = g_new0(FuEngineRequirementsHelper, 1);
+
+	/* create a small helper with common data */
+	helper->release = g_object_ref(release);
+	helper->install_flags = flags;
 
 	/* get the newest fwupd version requirement */
-	fwupd_version = fu_engine_requirements_get_newest_fwupd_version(self, release, error);
-	if (fwupd_version == NULL)
+	helper->fwupd_version =
+	    fu_engine_requirements_get_newest_fwupd_version(self, release, error);
+	if (helper->fwupd_version == NULL)
 		return FALSE;
 
 	/* sanity check */
@@ -853,29 +880,30 @@ fu_engine_requirements_check(FuEngine *self,
 	if (reqs != NULL) {
 		for (guint i = 0; i < reqs->len; i++) {
 			XbNode *req = g_ptr_array_index(reqs, i);
-			if (!fu_engine_requirements_check_hard(self,
-							       release,
-							       req,
-							       fwupd_version,
-							       flags,
-							       error))
+			if (!fu_engine_requirements_check_hard(self, req, helper, error))
 				return FALSE;
 			if (fu_engine_requirements_is_specific_req(req))
 				has_specific_requirement = TRUE;
-			if (g_strcmp0(xb_node_get_element(req), "hardware") == 0)
-				has_hardware_req = TRUE;
-			else if (g_strcmp0(xb_node_get_element(req), "not_hardware") == 0)
-				has_not_hardware_req = TRUE;
 		}
 	}
 
 	/* it does not make sense to allowlist and denylist at the same time */
-	if (has_hardware_req && has_not_hardware_req) {
+	if (helper->has_hardware_req && helper->has_not_hardware_req) {
 		g_set_error_literal(
 		    error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "using hardware and not_hardware at the same time is not supported");
+		return FALSE;
+	}
+
+	/* if we're using ID requirements with globs we have to have a client requirement */
+	if (helper->has_id_requirement_glob && !helper->has_client_id_requirement_glob) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "using <id> version requirements with globs also needs "
+				    "<client>id-requirement-glob</client>");
 		return FALSE;
 	}
 
@@ -909,12 +937,7 @@ fu_engine_requirements_check(FuEngine *self,
 	if (reqs != NULL) {
 		for (guint i = 0; i < reqs->len; i++) {
 			XbNode *req = g_ptr_array_index(reqs, i);
-			if (!fu_engine_requirements_check_soft(self,
-							       release,
-							       req,
-							       fwupd_version,
-							       flags,
-							       error))
+			if (!fu_engine_requirements_check_soft(self, req, helper, error))
 				return FALSE;
 		}
 	}
