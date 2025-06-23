@@ -168,3 +168,7 @@ void
 fu_context_set_esp_location(FuContext *self, const gchar *location);
 const gchar *
 fu_context_get_esp_location(FuContext *self);
+
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+    G_GNUC_NON_NULL(1);

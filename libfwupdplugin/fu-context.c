@@ -12,6 +12,7 @@
 #include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
+#include "fu-efivar.h"
 #include "fu-fdt-firmware.h"
 #include "fu-hwids-private.h"
 #include "fu-path.h"
@@ -133,6 +134,43 @@ fu_context_get_fdt(FuContext *self, GError **error)
 
 	/* success */
 	return g_object_ref(priv->fdt);
+}
+
+/**
+ * fu_context_efivars_check_free_space:
+ * @self: a #FuContext
+ * @count: size in bytes
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks for a given amount of free space in the EFI NVRAM variable store.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.9.31, backported from 2.0.12
+ **/
+gboolean
+fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
+{
+	guint64 total;
+
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	total = fu_efivar_space_free(error);
+	if (total == G_MAXUINT64)
+		return FALSE;
+	if (total < count) {
+		g_autofree gchar *countstr = g_format_size(count);
+		g_autofree gchar *totalstr = g_format_size(total);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BROKEN_SYSTEM,
+			    "Not enough efivarfs space, requested %s and got %s",
+			    countstr,
+			    totalstr);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /**

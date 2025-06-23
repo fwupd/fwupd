@@ -15,6 +15,10 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+
 #include "fwupd-error.h"
 
 #include "fu-common.h"
@@ -336,7 +340,6 @@ fu_efivar_space_used_impl(GError **error)
 	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
 	g_autoptr(GFileInfo) info_fs = NULL;
 	g_autoptr(GError) error_local = NULL;
-g_debug("%s", path);
 
 	/* this is only supported in new kernels */
 	info_fs = g_file_query_info(file_fs,
@@ -375,6 +378,52 @@ g_debug("%s", path);
 		if (sz == 0)
 			sz = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
 		total += sz;
+	}
+
+	/* success */
+	return total;
+}
+
+guint64
+fu_efivar_space_free_impl(GError **error)
+{
+	guint64 total = 0;
+	g_autofree gchar *path = fu_efivar_get_path();
+	g_autoptr(GFile) file_fs = g_file_new_for_path(path);
+	g_autoptr(GFileInfo) info_fs = NULL;
+
+	/* try GIO first */
+	info_fs = g_file_query_info(file_fs,
+				    G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+				    G_FILE_QUERY_INFO_NONE,
+				    NULL,
+				    error);
+	if (info_fs == NULL)
+		return G_MAXUINT64;
+	total = g_file_info_get_attribute_uint64(info_fs, G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
+
+#ifdef HAVE_SYS_VFS_H
+	/* fall back to standard C library */
+	if (total == 0) {
+		struct statfs sfs = {0};
+		int rc = statfs(path, &sfs);
+		if (rc != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to get filesystem statistics: %s",
+				    strerror(errno));
+			return G_MAXUINT64;
+		}
+		total = sfs.f_bsize * sfs.f_bfree;
+	}
+#endif
+	if (total == 0 || total == G_MAXUINT64) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "getting efivars free space is not supported");
+		return G_MAXUINT64;
 	}
 
 	/* success */

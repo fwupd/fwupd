@@ -29,6 +29,8 @@ gboolean
 fu_efivar_supported(GError **error);
 guint64
 fu_efivar_space_used(GError **error);
+guint64
+fu_efivar_space_free(GError **error);
 gboolean
 fu_efivar_exists(const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1);
 GFileMonitor *

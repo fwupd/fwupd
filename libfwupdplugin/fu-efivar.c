@@ -201,6 +201,24 @@ fu_efivar_space_used(GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, G_MAXUINT64);
 	return fu_efivar_space_used_impl(error);
 }
+
+/**
+ * fu_efivar_space_free:
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the free size available for new EFI variables, as reported from QueryVariableInfo.
+ *
+ * Returns: free space in bytes, or %G_MAXUINT64 on error
+ *
+ * Since: 1.9.31, backported from 2.0.12
+ **/
+guint64
+fu_efivar_space_free(GError **error)
+{
+	g_return_val_if_fail(error == NULL || *error == NULL, G_MAXUINT64);
+	return fu_efivar_space_free_impl(error);
+}
+
 /**
  * fu_efivar_set_data:
  * @guid: Globally unique identifier
