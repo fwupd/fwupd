@@ -462,6 +462,92 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_vercmp_glob_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <client>id-requirement-glob</client>"
+			   "    <id compare=\"ge\" "
+			   "version=\"1.8.*=1.8.5|1.9.*=1.9.7|2.0.13\">org.freedesktop.fwupd</id>\n"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* hardcode to specific branch */
+	fu_context_add_runtime_version(self->ctx, "org.freedesktop.fwupd", "1.9.8");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* reset back to reality */
+	fu_context_add_runtime_version(self->ctx, "org.freedesktop.fwupd", VERSION);
+}
+
+static void
+fu_engine_requirements_vercmp_glob_fallback_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <id compare=\"ge\" "
+			   "version=\"1.8.*=1.8.5|1.9.*=1.9.7|2.0.13\">org.freedesktop.fwupd</id>\n"
+			   "    <client>id-requirement-glob</client>"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_engine_requirements_not_hardware_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -7777,9 +7863,15 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{requirements-other-device}",
 			     self,
 			     fu_engine_requirements_other_device_func);
-	g_test_add_data_func("/fwupd/engine{fu_engine_requirements_sibling_device_func}",
+	g_test_add_data_func("/fwupd/engine{requirements-sibling-device}",
 			     self,
 			     fu_engine_requirements_sibling_device_func);
+	g_test_add_data_func("/fwupd/engine{requirements-vercmp-glob}",
+			     self,
+			     fu_engine_requirements_vercmp_glob_func);
+	g_test_add_data_func("/fwupd/engine{requirements-vercmp-glob-fallback}",
+			     self,
+			     fu_engine_requirements_vercmp_glob_fallback_func);
 	g_test_add_data_func("/fwupd/engine{plugin-gtypes}", self, fu_engine_plugin_gtypes_func);
 	g_test_add_data_func("/fwupd/plugin/mutable",
 			     self,
