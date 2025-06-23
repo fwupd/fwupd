@@ -73,6 +73,15 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 #define FU_CONTEXT_FLAG_LOADED_HWINFO (1u << 2)
 
 /**
+ * FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE:
+ *
+ * Ignore the efivars free space requirement for db, dbx, KEK and PK updates.
+ *
+ * Since: 1.9.31, backported from 2.0.12
+ **/
+#define FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE (1u << 6)
+
+/**
  * FuContextFlags:
  *
  * The context flags.
