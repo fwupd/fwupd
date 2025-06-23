@@ -57,7 +57,7 @@ The NDK version of `libbinder_ndk.so` doesn't contain service management symbols
 adb pull /system/lib64/libbinder_ndk.so ./contrib/android/lib_ndk/
 ```
 
-Headers for the `libbinder_ndk.so` platform components can be found here:
+Headers for the `libbinder_ndk.so` platform components are included using as a subproject using `subprojects/android_frameworks.wrap` and can be browsed here:
 <https://cs.android.com/android/platform/superproject/main/+/main:frameworks/native/libs/binder/ndk/include_platform/>
 
 ### 2. Configure
@@ -84,7 +84,22 @@ meson install --destdir=$(pwd)/_android_dist -C _android_build
 
 This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` to avoid issues I've had with `adb push` not updating the build.
 
-### 5. Run
+#### Setup config
+
+Currently we don't have a way to compile `libjcat` backends using NDK. Therefore we must configure fwupd to not validate firmware signatures:
+
+```toml
+[fwupd]
+OnlyTrusted=false
+```
+
+One option for this is adding the line to `src/tests/fwupd.conf` and pushing it to the device with:
+
+```bash
+adb push src/tests/fwupd.conf /data/fwupd/etc/fwupd/fwupd.conf`
+```
+
+### 5. Run the daemon
 
 Start fwupd:
 
@@ -106,6 +121,39 @@ Test `get-devices` binder call:
 
 This script originally set environment variables to identify paths but since we're using the correct prefix that is unnecessary.
 Currently the script just sets the correct `LD_LIBRARY_PATH` and `PATH` environment.
+
+### 6. Using the client
+
+The binder version of `fwupdmgr` is `fwupdmgr-binder`.
+
+You can get a list of which options have been ported to it using with the `--help` option.
+
+```bash
+./_android_build/adb_fwupd_env.sh fwupdmgr-binder --help
+```
+
+#### List devices
+
+```bash
+./_android_build/adb_fwupd_env.sh fwupdmgr-binder get-devices
+```
+
+#### Install a firmware
+
+First make sure you have the firmware available in the android devices filesystem:
+
+```bash
+curl https://fwupd.org/downloads/84a413e7e7c6890b205bbab67f757eb31ac7416ce5dae9973d8d4124483c40be-hughski-colorhug2-2.0.7.cab -LO
+adb push 84a413e7e7c6890b205bbab67f757eb31ac7416ce5dae9973d8d4124483c40be-hughski-colorhug2-2.0.7.cab /sdcard/Download/
+```
+
+Then it can be installed with:
+
+```bash
+./_android_build/adb_fwupd_env.sh fwupdmgr-binder local-install /sdcard/Download/84a413e7e7c6890b205bbab67f757eb31ac7416ce5dae9973d8d4124483c40be-hughski-colorhug2-2.0.7.cab '*' --allow-reinstall
+```
+
+Unfortunately `fwupdmgr-binder` blocks when running the `install` binder transaction and therefore doesn't receive events from the daemon such as completion percentage and requests for user interaction.
 
 ## Debugging
 
