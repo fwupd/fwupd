@@ -11,37 +11,36 @@
 #include "fu-engine-requirements.h"
 
 static gboolean
-fu_engine_requirements_require_vercmp(XbNode *req,
-				      const gchar *version,
-				      FwupdVersionFormat fmt,
-				      GError **error)
+fu_engine_requirements_require_vercmp_part(const gchar *compare,
+					   const gchar *version_req,
+					   const gchar *version,
+					   FwupdVersionFormat fmt,
+					   GError **error)
 {
 	gboolean ret = FALSE;
 	gint rc = 0;
-	const gchar *tmp = xb_node_get_attr(req, "compare");
-	const gchar *version_req = xb_node_get_attr(req, "version");
 
-	if (g_strcmp0(tmp, "eq") == 0) {
+	if (g_strcmp0(compare, "eq") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc == 0;
-	} else if (g_strcmp0(tmp, "ne") == 0) {
+	} else if (g_strcmp0(compare, "ne") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc != 0;
-	} else if (g_strcmp0(tmp, "lt") == 0) {
+	} else if (g_strcmp0(compare, "lt") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc < 0;
-	} else if (g_strcmp0(tmp, "gt") == 0) {
+	} else if (g_strcmp0(compare, "gt") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc > 0;
-	} else if (g_strcmp0(tmp, "le") == 0) {
+	} else if (g_strcmp0(compare, "le") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc <= 0;
-	} else if (g_strcmp0(tmp, "ge") == 0) {
+	} else if (g_strcmp0(compare, "ge") == 0) {
 		rc = fu_version_compare(version, version_req, fmt);
 		ret = rc >= 0;
-	} else if (g_strcmp0(tmp, "glob") == 0) {
+	} else if (g_strcmp0(compare, "glob") == 0) {
 		ret = g_pattern_match_simple(version_req, version);
-	} else if (g_strcmp0(tmp, "regex") == 0) {
+	} else if (g_strcmp0(compare, "regex") == 0) {
 		ret = g_regex_match_simple(version_req, version, 0, 0);
 	} else {
 		g_set_error(error,
@@ -60,16 +59,67 @@ fu_engine_requirements_require_vercmp(XbNode *req,
 			    FWUPD_ERROR_INTERNAL,
 			    "failed predicate [%s %s %s]",
 			    version_req,
-			    tmp,
+			    compare,
 			    version);
 	}
 	return ret;
 }
 
 static gboolean
+fu_engine_requirements_require_vercmp(XbNode *req,
+				      const gchar *version,
+				      FwupdVersionFormat fmt,
+				      const gchar *fwupd_version,
+				      GError **error)
+{
+	const gchar *compare = xb_node_get_attr(req, "compare");
+	const gchar *version_req = xb_node_get_attr(req, "version");
+	g_auto(GStrv) split = NULL;
+
+	/* parse possible-globbed version, e.g. `1.9.*=1.9.7|1.8.*=1.8.23|2.0.15` */
+	split = g_strsplit(version_req, "|", 0);
+	if (g_strv_length(split) > 1) {
+		if (fu_version_compare(fwupd_version, "2.0.13", FWUPD_VERSION_FORMAT_UNKNOWN) < 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "id 'vercmp glob' also needs %s >= 2.0.13",
+				    FWUPD_DBUS_SERVICE);
+			return FALSE;
+		}
+	}
+
+	/* of the form `glob=version`, or just `version` */
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_auto(GStrv) kv = g_strsplit(split[i], "=", 2);
+		if (g_strv_length(kv) > 1) {
+			if (!g_pattern_match_simple(kv[0], version)) {
+				g_debug("skipping vercmp %s as version %s", kv[0], version);
+				continue;
+			}
+			g_debug("checking vercmp %s as version %s", kv[1], version);
+			return fu_engine_requirements_require_vercmp_part(compare,
+									  kv[1],
+									  version,
+									  fmt,
+									  error);
+		}
+		return fu_engine_requirements_require_vercmp_part(compare,
+								  kv[0],
+								  version,
+								  fmt,
+								  error);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_requirements_check_not_child(FuEngine *self,
 				       XbNode *req,
 				       FuDevice *device,
+				       const gchar *fwupd_version,
 				       GError **error)
 {
 	GPtrArray *children = fu_device_get_children(device);
@@ -100,6 +150,7 @@ fu_engine_requirements_check_not_child(FuEngine *self,
 		if (fu_engine_requirements_require_vercmp(req,
 							  version,
 							  fu_device_get_version_format(child),
+							  fwupd_version,
 							  NULL)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -245,6 +296,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 			req,
 			version,
 			fu_device_get_version_format(device_actual),
+			fwupd_version,
 			&error_local)) {
 			if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 				g_set_error(
@@ -273,6 +325,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 			req,
 			version,
 			fu_device_get_version_format(device_actual),
+			fwupd_version,
 			&error_local)) {
 			if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 				g_set_error(
@@ -304,7 +357,11 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 
 	/* child version */
 	if (g_strcmp0(xb_node_get_text(req), "not-child") == 0)
-		return fu_engine_requirements_check_not_child(self, req, device_actual, error);
+		return fu_engine_requirements_check_not_child(self,
+							      req,
+							      device_actual,
+							      fwupd_version,
+							      error);
 
 	/* another device, specified by GUID|GUID|GUID */
 	guids = g_strsplit(xb_node_get_text(req), "|", -1);
@@ -439,6 +496,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 	    !fu_engine_requirements_require_vercmp(req,
 						   version,
 						   fu_device_get_version_format(device_actual),
+						   fwupd_version,
 						   &error_local)) {
 		if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			g_set_error(error,
@@ -464,7 +522,10 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 }
 
 static gboolean
-fu_engine_requirements_check_id(FuEngine *self, XbNode *req, GError **error)
+fu_engine_requirements_check_id(FuEngine *self,
+				XbNode *req,
+				const gchar *fwupd_version,
+				GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self);
 	g_autoptr(GError) error_local = NULL;
@@ -490,6 +551,7 @@ fu_engine_requirements_check_id(FuEngine *self, XbNode *req, GError **error)
 	if (!fu_engine_requirements_require_vercmp(req,
 						   version,
 						   FWUPD_VERSION_FORMAT_UNKNOWN,
+						   fwupd_version,
 						   &error_local)) {
 		if (g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			g_set_error(error,
@@ -687,7 +749,7 @@ fu_engine_requirements_check_hard(FuEngine *self,
 
 	/* ensure component requirement */
 	if (g_strcmp0(xb_node_get_element(req), "id") == 0)
-		return fu_engine_requirements_check_id(self, req, error);
+		return fu_engine_requirements_check_id(self, req, fwupd_version, error);
 
 	/* ensure firmware requirement */
 	if (g_strcmp0(xb_node_get_element(req), "firmware") == 0) {
@@ -772,12 +834,12 @@ fu_engine_requirements_is_specific_req(XbNode *req)
 static gchar *
 fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *release, GError **error)
 {
-	const gchar *newest_version = "1.0.0";
 	GPtrArray *reqs = fu_release_get_hard_reqs(release);
+	g_autoptr(GString) newest_version = g_string_new("1.0.0");
 
 	/* trivial case */
 	if (reqs == NULL)
-		return g_strdup(newest_version);
+		return g_string_free(g_steal_pointer(&newest_version), FALSE);
 
 	/* find the newest fwupd requirement */
 	for (guint i = 0; i < reqs->len; i++) {
@@ -785,6 +847,8 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 		if (g_strcmp0(xb_node_get_text(req), FWUPD_DBUS_SERVICE) == 0 &&
 		    g_strcmp0(xb_node_get_attr(req, "compare"), "ge") == 0) {
 			const gchar *version = xb_node_get_attr(req, "version");
+			g_auto(GStrv) split = NULL;
+
 			if (version == NULL) {
 				g_set_error(error,
 					    FWUPD_ERROR,
@@ -793,16 +857,24 @@ fu_engine_requirements_get_newest_fwupd_version(FuEngine *self, FuRelease *relea
 					    xb_node_get_text(req));
 				return NULL;
 			}
-			/* is this unique, or newer than what we have */
-			if (newest_version == NULL ||
-			    fu_version_compare(version,
-					       newest_version,
-					       FWUPD_VERSION_FORMAT_UNKNOWN) > 0) {
-				newest_version = version;
+
+			/* only care about the fallback version if using globs */
+			split = g_strsplit(version, "|", -1);
+			for (guint j = 0; split[j] != NULL; j++) {
+				if (g_strstr_len(split[j], -1, "=") != NULL)
+					continue;
+				/* is this newer than what we have */
+				if (fu_version_compare(split[j],
+						       newest_version->str,
+						       FWUPD_VERSION_FORMAT_UNKNOWN) > 0) {
+					g_string_assign(newest_version, split[j]);
+				}
 			}
 		}
 	}
-	return g_strdup(newest_version);
+
+	/* success */
+	return g_string_free(g_steal_pointer(&newest_version), FALSE);
 }
 
 gboolean
