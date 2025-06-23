@@ -154,6 +154,8 @@ Remember: Plugins should be upstream!
 * `fu_udev_device_get_subsystem_model`: Use `fu_pci_device_get_subsystem_pid()` instead
 * `fu_udev_device_get_revision`: Use `fu_pci_device_get_revision()` instead
 * `fu_udev_device_set_revision`: Use `fu_pci_device_set_revision()` instead
+* `fu_firmware_parse_full()`: Use `fu_firmware_parse_bytes()` instead
+* `fu_firmware_parse()`: Use `fu_firmware_parse_bytes()` by adding an offset of 0x0
 
 ## 2.0.2
 
