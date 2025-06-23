@@ -15,6 +15,10 @@ struct _FuUefiDbxDevice {
 
 G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
 
+#define FU_UEFI_DBX_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE "no-efivars-space"
+
+#define FU_UEFI_DBX_DEVICE_MIN_EFIVARS_SPACE (30 * 1024)
+
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
@@ -147,11 +151,25 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
 	g_autoptr(FuFirmware) kek = fu_efi_signature_list_new();
 	g_autoptr(GBytes) kek_blob = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
 	g_autoptr(GError) error_fde = NULL;
+	g_autoptr(GError) error_free = NULL;
+
+	/* check free space */
+	if (!fu_context_efivars_check_free_space(ctx,
+						 FU_UEFI_DBX_DEVICE_MIN_EFIVARS_SPACE,
+						 &error_free)) {
+		fu_device_inhibit(FU_DEVICE(self),
+				  FU_UEFI_DBX_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE,
+				  error_free->message);
+	} else {
+		fu_device_uninhibit(FU_DEVICE(self),
+				    FU_UEFI_DBX_DEVICE_INHIBIT_ID_NO_EFIVARS_SPACE);
+	}
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
 	kek_blob = fu_efivar_get_data_bytes(FU_EFIVAR_GUID_EFI_GLOBAL, "KEK", NULL, error);

@@ -257,6 +257,16 @@ fu_efivar_space_used_impl(GError **error)
 	return G_MAXUINT64;
 }
 
+guint64
+fu_efivar_space_free_impl(GError **error)
+{
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "getting EFI free space is not supported on Windows");
+	return G_MAXUINT64;
+}
+
 gboolean
 fu_efivar_set_data_impl(const gchar *guid,
 			const gchar *name,

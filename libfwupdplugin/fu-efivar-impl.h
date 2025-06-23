@@ -13,6 +13,8 @@ gboolean
 fu_efivar_supported_impl(GError **error);
 guint64
 fu_efivar_space_used_impl(GError **error);
+guint64
+fu_efivar_space_free_impl(GError **error);
 gboolean
 fu_efivar_exists_impl(const gchar *guid, const gchar *name) G_GNUC_NON_NULL(1);
 GFileMonitor *
