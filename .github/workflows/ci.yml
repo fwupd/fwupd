@@ -3,6 +3,9 @@ on:
   push:
     branches: [ 1_9_X ]
 
+permissions:
+  contents: read
+
 jobs:
   snap:
     uses: ./.github/workflows/snap.yml
@@ -12,6 +15,9 @@ jobs:
 
   matrix:
     uses: ./.github/workflows/matrix.yml
+    with:
+      publish: false
+    secrets: inherit
 
   fuzzing:
     permissions:
@@ -23,18 +29,18 @@ jobs:
     steps:
     - name: Build Fuzzers
       id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
       with:
         oss-fuzz-project-name: 'fwupd'
         dry-run: false
     - name: Run Fuzzers
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@32f1d4deadc82279ec9001a837f2424e185c69a2 # master
       with:
         oss-fuzz-project-name: 'fwupd'
         fuzz-seconds: 150
         dry-run: false
     - name: Upload Crash
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: failure() && steps.build.outcome == 'success'
       with:
         name: artifacts
