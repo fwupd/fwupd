@@ -322,6 +322,14 @@ fu_device_list_filter_by_id(FuDeviceList *self, const gchar *device_id, GError *
 
 	/* support abbreviated hashes */
 	device_id_len = strlen(device_id);
+	if (device_id_len < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "invalid device ID: %s",
+			    device_id);
+		return NULL;
+	}
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index(self->devices, i);
