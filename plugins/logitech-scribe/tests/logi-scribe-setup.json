@@ -1,0 +1,94 @@
+{
+  "FwupdVersion": "2.0.13",
+  "UsbDevices": [
+    {
+      "Created": "2025-06-24T16:38:54.738341Z",
+      "GType": "FuUdevDevice",
+      "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2:1.0/video4linux/video0",
+      "DeviceFile": "/dev/video0",
+      "Subsystem": "video4linux",
+      "Vendor": 1133,
+      "Model": 2274,
+      "Events": [
+        {
+          "Id": "ReadAttr:Attr=name",
+          "Data": "Logitech Scribe"
+        },
+        {
+          "Id": "ReadAttr:Attr=index",
+          "Data": "0"
+        },
+        {
+          "Id": "GetBackendParent:Subsystem=usb:usb_device",
+          "GType": "FuUsbDevice",
+          "BackendId": "/sys/devices/pci0000:00/0000:00:14.0/usb1/1-2",
+          "PhysicalId": "1-2"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=subsystem",
+          "Data": "usb"
+        },
+        {
+          "Id": "GetSymlinkTarget:Attr=driver",
+          "Data": "usb"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=10\nDEVNAME=bus/usb/001/011\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/8e2/100\nTYPE=239/2/1\nBUSNUM=001\nDEVNUM=011"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNAME",
+          "Data": "bus/usb/001/011"
+        },
+        {
+          "Id": "ReadAttr:Attr=vendor"
+        },
+        {
+          "Id": "ReadAttr:Attr=device"
+        },
+        {
+          "Id": "ReadAttr:Attr=class"
+        },
+        {
+          "Id": "ReadProp:Key=DEVTYPE",
+          "Data": "usb_device"
+        },
+        {
+          "Id": "ReadProp:Key=BUSNUM",
+          "Data": "001"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=189\nMINOR=10\nDEVNAME=bus/usb/001/011\nDEVTYPE=usb_device\nDRIVER=usb\nPRODUCT=46d/8e2/100\nTYPE=239/2/1\nBUSNUM=001\nDEVNUM=011"
+        },
+        {
+          "Id": "ReadProp:Key=DEVNUM",
+          "Data": "011"
+        },
+        {
+          "Id": "LoadDescriptor:basename=descriptors",
+          "Data": "EgEAAu8CAUBtBOIIAAEBAgMBCQIJAgUBBID6CAsAAg4DAAAJBAAAAQ4BAAANJAEAAbkAAGzcAgEBEiQCAQECAAAAAAAAAAADAAAACyQFAgEAQAIAAAAJJAMDAQEAAgAdJAYF8l29qJgaTkeN0NkmctGU+g8BAgT/gwdAABokBgjkjmdpD0HbQKhQdCDX2CQOAgECASEAGiQGDUxlbVo1fk5NgQ0GnRXg95sBAQIBAQAbJAYOSvd8qXzEq0amrSVmuu+ApgkBAgL/AQAaJAYP2LxJQ2UptUWK0kYeYA4vKggBAgH/AAcFgQMQAAgFJQMQAAkEAQAADgIAAA8kAQKzAIIAAwAAAAEAABskBAECWVVZMgAAEACAAACqADibcRABAAAAAB4kBQEAgAJoAQDASwMAgJcGAAgHACosCgABKiwKAB4kBQIAAAXQAgAAyggAAMoIACAcACosCgABKiwKAAskBgICAQEAAAAAHiQHAQAABdACAAAvDQAAXhoAIBwAKiwKAAEqLAoAHiQHAgCABzgEAMCpHQCAUzsASD8AKiwKAAEqLAoABiQNAQEECQQBAQEOAgAABwWCBQAEAQkEAQIBDgIAAAcFggUAFAEJBAIAAv9lAQYHBQECAAIABwWDAgACAAkEAwAC/2YBBwcFAgIAAgAHBYQCAAIACQQEAAIDAAAICSEBAQABIngABwWFA0AABAcFAwNAAAQ="
+        },
+        {
+          "Id": "LoadDescriptor:basename=bos_descriptors"
+        },
+        {
+          "Id": "Ioctl:Request=0x80685600,Data=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=,Length=0x68",
+          "DataOut": "dXZjdmlkZW8AAAAAAAAAAExvZ2l0ZWNoIFNjcmliZQAAAAAAAAAAAAAAAAAAAAAAdXNiLTAwMDA6MDA6MTQuMC0yAAAAAAAAAAAAAAAAAAAMCAYAAQCghAEAIAQAAAAAAAAAAAAAAAA="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0107521,Unit=0x08,Selector=0x01,Query=0x85,Data=AAA=,Length=0x2",
+          "DataOut": "BAA="
+        },
+        {
+          "Id": "Ioctl:Request=0xc0107521,Unit=0x08,Selector=0x01,Query=0x81,Data=AAAAAA==,Length=0x4",
+          "DataOut": "AQECAA=="
+        }
+      ]
+    }
+  ]
+}
