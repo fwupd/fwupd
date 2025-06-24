@@ -380,9 +380,8 @@ if enable_binder
     name: 'binder link test',
     dependencies: binder_ndk,
     include_directories: binder_ndk_platform_incdir,
-    required: true)
-
-  if conf.get('HAS_BINDER_NDK') != 1
+    required: false)
+  if not links_service
     error('libbinder_ndk.so is incompatible')
   endif
 endif
