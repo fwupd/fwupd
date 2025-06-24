@@ -1943,6 +1943,7 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	fu_device_add_protocol(device1, "com.acme");
 	fu_device_set_plugin(device1, "test");
 	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_id(device1, "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 	fu_engine_add_device(engine, device1);
 	fu_device_set_id(device2, "device21");
 	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
@@ -1950,6 +1951,7 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	fu_device_set_plugin(device2, "test");
 	fu_device_set_equivalent_id(device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
 	fu_device_add_instance_id(device2, "87654321-1234-1234-1234-123456789012");
+	fu_device_set_id(device2, "99244162a6daa0b033d649c8d464529cec41d3de");
 	fu_engine_add_device(engine, device2);
 
 	/* match nothing */
@@ -1958,21 +1960,21 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	g_assert_false(ret);
 
 	/* match both */
-	ret = fu_engine_unlock(engine, "9", &error_both);
+	ret = fu_engine_unlock(engine, "9924", &error_both);
 	g_assert_error(error_both, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 
 	/* match one exactly */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
-	ret = fu_engine_unlock(engine, "934b4162a6daa0b033d649c8d464529cec41d3de", &error);
+	ret = fu_engine_unlock(engine, "99244162a6daa0b033d649c8d464529cec41d3de", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* match one partially */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
-	ret = fu_engine_unlock(engine, "934b", &error);
+	ret = fu_engine_unlock(engine, "99249", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
