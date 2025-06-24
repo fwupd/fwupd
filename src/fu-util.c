@@ -1198,6 +1198,24 @@ fu_util_device_test_filename(FuUtil *self,
 			return TRUE;
 		}
 	}
+	if (json_object_has_member(json_obj, "platform-architectures")) {
+		JsonArray *json_array =
+		    json_object_get_array_member(json_obj, "platform-architectures");
+		gboolean matched = FALSE;
+		const gchar *arch =
+		    g_hash_table_lookup(helper->report_metadata, "PlatformArchitecture");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			const gchar *arch_tmp = json_array_get_string_element(json_array, i);
+			if (g_strcmp0(arch, arch_tmp) == 0) {
+				matched = TRUE;
+				break;
+			}
+		}
+		if (!matched) {
+			helper->nr_skipped++;
+			return TRUE;
+		}
+	}
 
 	/* process each step */
 	if (json_object_has_member(json_obj, "repeat")) {
