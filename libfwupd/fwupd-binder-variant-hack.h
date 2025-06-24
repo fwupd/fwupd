@@ -6,7 +6,7 @@
 
 #include <glib.h>
 
-// TODO: This is a hack to work around android bundles not supporting signed numbers
+// TODO: This is a hack to work around android bundles not supporting unsigned numbers
 static guint64
 fwupd_codec_variant_get_uint32(GVariant *value)
 {
