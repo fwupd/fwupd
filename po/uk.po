@@ -700,6 +700,10 @@ msgid "Changed"
 msgstr "Змінено"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Перевірити, чи повністю оновлено усі пристрої, які очікують у черзі на перезавантаження"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Перевірити відповідність криптографічних хешів мікропрограми"
 
@@ -1546,6 +1550,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Отримує список заблокованих мікропрограм"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Отримує список оновлення для усіх вказаних пристроїв або усіх пристроїв, якщо пристрої не вказано"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Отримує випуски для пристрою"
 
@@ -2122,6 +2130,10 @@ msgstr "Не знайдено мікропрограми"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Не виявлено обладнання із передбаченою можливістю оновлення мікропрограми"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Перезавантаження не потрібне"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"

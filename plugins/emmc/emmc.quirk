@@ -1,4 +1,4 @@
-#Western Digital
+# Western Digital
 [EMMC\NAME_DI4064]
 EmmcBlockSize = 0x1000
 [EMMC\NAME_DI4128]

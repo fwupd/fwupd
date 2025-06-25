@@ -4,6 +4,7 @@
 #
 # Translators:
 # Igor <f2404@yandex.ru>, 2017
+# Sergej A. <Ser82-png@yandex.ru>, 2025
 # Serge Vylekzhanin <vylekzhanin@mail.ru>, 2015-2019
 # Sergej A. <Ser82-png@yandex.ru>, 2022-2023
 # Sergej A. <Ser82-png@yandex.ru>, 2022
@@ -196,6 +197,10 @@ msgstr "%u%% (пороговое значение - %u%%)"
 msgid "A TPM PCR is now an invalid value"
 msgstr "PCR TPM теперь имеет недействительное значение"
 
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "Защита от записи прошивки AMD"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Необходимое действие:"
@@ -243,6 +248,10 @@ msgstr "Разрешить переустановку существующих �
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
 msgstr "Разрешить переключение веток прошивки"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Уже существует, и не указано --force"
 
 #. TRANSLATORS: is not the main firmware stream
 msgid "Alternate branch"
@@ -298,6 +307,10 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "Для понижения версии прошивки на этой машине требуется аутентификация"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "Для устранения проблемы безопасности хоста требуется аутентификация"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify BIOS settings"
 msgstr "Для изменения настроек BIOS требуется аутентификация"
 
@@ -308,6 +321,10 @@ msgstr "Для модификации настроенного репозито�
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
 msgstr "Для изменения настроек фоновой службы требуется аутентификация"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "Для чтения настроек BIOS требуется аутентификация"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -394,6 +411,10 @@ msgstr "Изменено"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Контрольная сумма"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose device"
+msgstr "Выберать устройство"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -769,6 +790,9 @@ msgctxt "command-argument"
 msgid "GUID"
 msgstr "GUID"
 
+msgid "Get BIOS settings"
+msgstr "Получить настройки BIOS"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Получить все флаги устройств, поддерживаемые fwupd"
@@ -813,6 +837,10 @@ msgstr "Бездействие…"
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "Игнорировать строгие проверки SSL при загрузке файлов"
+
+#. TRANSLATORS: show the user a generic image that can be themed
+msgid "Image"
+msgstr "Изображение"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -952,6 +980,10 @@ msgstr "Максимальное значение"
 #. TRANSLATORS: the release urgency
 msgid "Medium"
 msgstr "Средний"
+
+#. TRANSLATORS: ask the user to do a simple task which should be translated
+msgid "Message"
+msgstr "Сообщение"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -1107,6 +1139,12 @@ msgstr "Прежде чем продолжить, убедитесь, что у 
 msgid "Please enter a number from 0 to %u: "
 msgstr "Пожалуйста, введите число от 0 до %u:"
 
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "Пожалуйста, введите либо %s, либо %s: "
+
 #. TRANSLATORS: Possible values for a bios setting
 msgid "Possible Values"
 msgstr "Возможные значения"
@@ -1196,6 +1234,18 @@ msgstr "Перезапуск устройства…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Показать идентификаторы всех устройств на машине"
 
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "Запустите `%s` для получения дополнительной информации."
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "Запустите `%s` для завершения этого действия."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Запустить процедуру очистки составного плагина, используя двоичную установку"
@@ -1203,6 +1253,10 @@ msgstr "Запустить процедуру очистки составног�
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Запустить процедуру подготовки составного плагина, используя двоичную установку"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "SMAP"
+msgstr "SMAP"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1257,6 +1311,9 @@ msgstr "Выбранный том"
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "Серийный номер"
+
+msgid "Set one or more BIOS settings"
+msgstr "Установить одну или несколько настроек BIOS"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
@@ -1627,6 +1684,10 @@ msgstr "Версия"
 #. TRANSLATORS: the fwupd version the release was tested on
 msgid "Version[fwupd]"
 msgstr "Версия[fwupd]"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "ПРЕДУПРЕЖДЕНИЕ"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

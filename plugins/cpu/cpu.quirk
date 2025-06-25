@@ -70,7 +70,7 @@ CpuMitigationsRequired = gds
 [CPUID\PRO_0&FAM_06&MOD_A7]
 CpuMitigationsRequired = gds
 
-#Affected by Sinkclose
+# Affected by Sinkclose
 [CPUID\PRO_0&FAM_17&MOD_01&STP_2]
 CpuMitigationsRequired = sinkclose
 CpuSinkcloseMicrocodeVersion = 0x0800126f

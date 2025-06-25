@@ -20,18 +20,29 @@ fu_dell_kestrel_rmm_convert_version(FuDevice *device, guint64 version_raw)
 	return fu_version_from_uint32_hex(version_raw, fu_device_get_version_format(device));
 }
 
-void
-fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self)
+gboolean
+fu_dell_kestrel_rmm_fix_version(FuDellKestrelRmm *self, GError **error)
 {
-	FuDevice *parent = NULL;
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 
-	/* use version given by parent */
-	parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent != NULL) {
+	/* RMM version is given by the parent EC device */
+	if (parent != NULL && FU_IS_DELL_KESTREL_EC(parent)) {
 		guint32 rmm_version;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		locker = fu_device_locker_new(parent, error);
+		if (locker == NULL)
+			return FALSE;
+
+		/* RMM might be added after EC, reload for the latest dock info */
+		if (!fu_device_reload(parent, error))
+			return FALSE;
+
 		rmm_version = fu_dell_kestrel_ec_get_rmm_version(FU_DELL_KESTREL_EC(parent));
 		fu_device_set_version_raw(FU_DEVICE(self), rmm_version);
 	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -43,7 +54,11 @@ fu_dell_kestrel_rmm_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rmm_parent_class)->setup(device, error))
 		return FALSE;
 
-	fu_dell_kestrel_rmm_fix_version(self);
+	if (!fu_dell_kestrel_rmm_fix_version(self, error)) {
+		g_prefix_error(error, "failed to fix RMM version: ");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -82,6 +97,7 @@ fu_dell_kestrel_rmm_init(FuDellKestrelRmm *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 

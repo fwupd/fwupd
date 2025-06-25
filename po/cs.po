@@ -703,6 +703,10 @@ msgid "Changed"
 msgstr "Změněno"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Zkontrolovat zda dokončení aktualizace nějakých zařízení nečeká na restart"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Zkontrolovat zda se kryptografický otisk shoduje s firmware"
 
@@ -1549,6 +1553,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Získat seznam blokovaných firmwarů"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Získá seznam aktualizací pro určená zařízení (nebo pro všechna, pokud specifikována nejsou)"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Vypsat vydání pro zařízení"
 
@@ -2126,6 +2134,10 @@ msgstr "Nenalezen žádný firmware"
 msgid "No hardware detected with firmware update capability"
 msgstr "Nezjištěn žádný hardware vybavený pro aktualizaci firmware v něm."
 
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Není třeba restart"
+
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
 msgstr "Nejsou k dispozici žádná vydání"
@@ -2179,6 +2191,10 @@ msgid "Old version"
 msgstr "Stará verze"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Instalovat pouze na emulovaná zařízení"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Zobrazit pouze jedinou PCR hodnotu"
 
@@ -2190,6 +2206,10 @@ msgstr "Stahovat soubory pouze ze sítě klient-klient (p2p)"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Zařízení umožňuje pouze aktualizace na novější verze"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Výstup v JSON formátu (vypne veškeré interaktivní výzvy)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

@@ -103,6 +103,11 @@ The `[fwupd]` section can contain the following parameters:
   child, parent or sibling.
   This is not recommended for production systems, although it may be useful for firmware development.
 
+**IgnoreEfivarsFreeSpace={{IgnoreEfivarsFreeSpace}}**
+
+  Ignore the efivars free space requirement for db, dbx, KEK and PK updates.
+  This may be required on Linux kernels older than 6.4, or where the hardware does not support UEFI `RT->QueryVariableInfo`.
+
 **OnlyTrusted={{OnlyTrusted}}**
 
   Only support installing firmware signed with a trusted key.

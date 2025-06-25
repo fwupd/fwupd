@@ -100,7 +100,7 @@ DellDockVersionLowest = 01.01.00.01
 DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
 
-#Atomic Embedded Controller
+# Atomic Embedded Controller
 # Name is intentionally not set (it's queried by dock)
 [USB\VID_413C&PID_B06E&hub&atomic_embedded]
 Name = Dell dock
@@ -166,7 +166,7 @@ DellDockBlobMinorOffset = 0x18401
 DellDockBlobBuildOffset = 0x18402
 Icon = video-display
 
-#Atomic MST Hub
+# Atomic MST Hub
 [MST-cayenne-vmm6210-257]
 Name = VMM6210 in Dell dock
 Summary = Multi Stream Transport controller
