@@ -3014,8 +3014,10 @@ fu_engine_prepare(FuEngine *self,
 	}
 	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 
-	if (!fu_engine_device_check_power(self, device, flags, error))
+	if (!fu_engine_device_check_power(self, device, flags, error)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		return FALSE;
+	}
 
 	str = fu_device_to_string(device);
 	g_info("prepare -> %s", str);
