@@ -564,6 +564,10 @@ conf.set_quoted('MOTD_DIR', motd_dir)
 
 conf.set_quoted('FU_DEFAULT_P2P_POLICY', get_option('p2p_policy'))
 
+if get_option('plugin_uefi_capsule_splash')
+  conf.set('FWUPD_UEFI_CAPSULE_SPLASH_ENABLED', '1')
+endif
+
 configure_file(
   output: 'config.h',
   configuration: conf
