@@ -327,6 +327,7 @@ fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 	fu_uefi_capsule_plugin_add_security_attrs_bootservices(plugin, attrs);
 }
 
+#ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 static GBytes *
 fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
 {
@@ -544,6 +545,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	/* perform the upload */
 	return fu_uefi_capsule_plugin_write_splash_data(self, device, image_bmp, error);
 }
+#endif // FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 
 static gboolean
 fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
@@ -583,8 +585,10 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 
 	/* perform the update */
 	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
+#ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 	if (!fu_uefi_capsule_plugin_update_splash(plugin, device, &error_splash))
 		g_info("failed to upload UEFI UX capsule text: %s", error_splash->message);
+#endif
 
 	return fu_device_write_firmware(device, firmware, progress, flags, error);
 }
