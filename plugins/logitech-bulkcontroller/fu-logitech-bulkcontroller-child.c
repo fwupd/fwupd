@@ -25,7 +25,6 @@ fu_logitech_bulkcontroller_child_write_firmware(FuDevice *device,
 	/*
 	 * set the flag, to let parent know that firmware update is for child, no need to wait for
 	 * replug event, after child firmware is updated
-	 *
 	 */
 	fu_device_add_private_flag(proxy,
 				   FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE);
