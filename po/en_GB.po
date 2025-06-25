@@ -684,6 +684,10 @@ msgid "Changed"
 msgstr "Changed"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Check if any devices are pending a reboot to complete update"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Checks cryptographic hash matches firmware"
 
@@ -1526,6 +1530,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Gets the list of blocked firmware"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Gets the list of updates for all specified devices, or all devices if unspecified"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Gets the releases for a device"
 
@@ -2101,6 +2109,10 @@ msgstr "No firmware found"
 msgid "No hardware detected with firmware update capability"
 msgstr "No hardware detected with firmware update capability"
 
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "No reboot is necessary"
+
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
 msgstr "No releases available"
@@ -2154,6 +2166,10 @@ msgid "Old version"
 msgstr "Old version"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Only install onto emulated devices"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Only show single PCR value"
 
@@ -2165,6 +2181,10 @@ msgstr "Only use peer-to-peer networking when downloading files"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Only version upgrades are allowed"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Output in JSON format (disables all interactive prompts)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

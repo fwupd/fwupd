@@ -8384,6 +8384,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 
+	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
+	if (fu_engine_config_get_ignore_efivars_free_space(self->config))
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
+
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx,

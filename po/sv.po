@@ -688,6 +688,10 @@ msgid "Changed"
 msgstr "Ändrad"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Kontrollera om några enheter väntar på en omstart för att slutföra uppdatering"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Kontrollerar att kryptografisk hash matchar fast programvara"
 
@@ -1530,6 +1534,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Hämtar listan över blockerad fast programvara"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Hämtar listan med uppdateringar för alla angivna enheter, eller alla enheter om ingen angivits"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Erhåll utgåvan för en enhet"
 
@@ -2104,6 +2112,10 @@ msgstr "Ingen fast programvara hittades"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ingen uppdateringsbar hårdvara upptäcktes"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Ingen omstart krävs"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"

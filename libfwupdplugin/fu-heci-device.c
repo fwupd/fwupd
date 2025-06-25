@@ -30,6 +30,7 @@ fu_heci_device_result_to_error(FuMkhiStatus result, GError **error)
 		return TRUE;
 
 	switch (result) {
+	case FU_MKHI_STATUS_UNKNOWN_PERHAPS_NOT_SUPPORTED:
 	case FU_MKHI_STATUS_NOT_SUPPORTED:
 	case FU_MKHI_STATUS_NOT_AVAILABLE:
 	case FU_MKHI_STATUS_NOT_SET:

@@ -38,6 +38,49 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.12" date="2025-06-19">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a config option for enforcing immutable device enumeration</li>
+          <li>Add device emulation support for Thunderbolt host controllers</li>
+          <li>Do the efivarfs free space checks for dbx, db, KEK and PK devices</li>
+          <li>Ensure the i2c_dev kernel driver is always loaded if a module</li>
+          <li>Parse the SBOM data from fwupdx64.efi if provided</li>
+          <li>Support loading multiple coSWID blobs from PE files</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Added HP Elitedesk G6 mini to not get dbx-updates</li>
+          <li>Add two more uefi dbx checksum->version entries</li>
+          <li>Be more useful when building modem device Instance IDs</li>
+          <li>Convert asus-hid and legion-hid2 to hidraw to avoid possible input blips</li>
+          <li>Do not create radio for Logitech RDFU-capable devices</li>
+          <li>Fix a modem-manager regression where a PCI device had no vendor ID</li>
+          <li>Fix a regression when updating DFOTA modem devices</li>
+          <li>Fix self tests when building with -Defi_os_dir</li>
+          <li>Fix self tests when the builder does not support DistroVersion</li>
+          <li>Fix updating Thunderbolt host controllers with some version formats</li>
+          <li>Handle HECI unsupported status (0x0b) for Dell hardware</li>
+          <li>Make tar a dependency of the uefi-capsule tests</li>
+          <li>Mark the KEK and db updates as affecting FDE like BitLocker</li>
+          <li>Properly detect the Redfish reboot request for Dell servers</li>
+          <li>Send the proper artifact firmware filename to the Redfish BMC</li>
+          <li>Set the correct RMM device version for some Dell dock devices</li>
+          <li>Use inhibits so that the rts54hub device is marked as non-updatable</li>
+          <li>Use the virtual size to avoid padding when cutting PE sections</li>
+          <li>Wait for the Logitech Scribe device to replug after updating</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP Portable USB-C Hub</li>
+          <li>More Foxconn 5G modem products</li>
+          <li>More Intel Arc Battlemage products</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.11" date="2025-06-04">
       <description>
         <p>

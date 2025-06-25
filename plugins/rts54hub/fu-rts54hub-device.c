@@ -32,6 +32,8 @@ G_DEFINE_TYPE(FuRts54HubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
 #define FU_RTS54HUB_I2C_WRITE_REQUEST  0xC6
 #define FU_RTS54HUB_I2C_READ_REQUEST   0xD6
 
+#define FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED "not-supported"
+
 typedef enum {
 	FU_RTS54HUB_VENDOR_CMD_NONE = 0x00,
 	FU_RTS54HUB_VENDOR_CMD_STATUS = 1 << 0,
@@ -407,13 +409,19 @@ fu_rts54hub_device_setup(FuDevice *device, GError **error)
 
 	/* all three conditions must be set */
 	if (!self->running_on_flash) {
-		fu_device_set_update_error(device, "device is abnormally running from ROM");
+		fu_device_inhibit(device,
+				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
+				  "Device is abnormally running from ROM");
 	} else if (!self->fw_auth) {
-		fu_device_set_update_error(device, "device does not support authentication");
+		fu_device_inhibit(device,
+				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
+				  "Device does not support authentication");
 	} else if (!self->dual_bank) {
-		fu_device_set_update_error(device, "device does not support dual-bank updating");
+		fu_device_inhibit(device,
+				  FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED,
+				  "Device does not support dual-bank updating");
 	} else {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_uninhibit(device, FU_RTS54HUB_DEVICE_INHIBIT_ID_NOT_SUPPORTED);
 	}
 
 	/* success */
@@ -574,6 +582,7 @@ static void
 fu_rts54hub_device_init(FuRts54HubDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	self->block_sz = FU_RTS54HUB_DEVICE_BLOCK_SIZE;

@@ -696,6 +696,10 @@ msgid "Changed"
 msgstr "Zmieniono"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Sprawdza, czy jakieś urządzenia oczekują na ponowne uruchomienie, aby dokończyć aktualizację"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Sprawdza, czy kryptograficzna suma kontrolna pasuje do oprogramowania sprzętowego"
 
@@ -1504,6 +1508,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Uzyskuje listę zablokowanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Uzyskuje listę aktualizacji dla wszystkich podanych urządzeń, lub wszystkich urządzeń, jeśli nie podano żadnych"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Uzyskuje wydania dla urządzenia"
 
@@ -2051,6 +2059,10 @@ msgstr "Nie odnaleziono oprogramowania sprzętowego"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Ponowne uruchomienie nie jest konieczne"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
