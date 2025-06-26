@@ -1068,7 +1068,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
-	gboolean has_fde = FALSE;
 	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
 	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1077,8 +1076,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 8, "check-bitlocker");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 64, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 72, "coldplug");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
@@ -1093,11 +1091,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 			    FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
-	fu_progress_step_done(progress);
-
-	/*  warn the user that BitLocker might ask for recovery key after fw update */
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER))
-		has_fde = TRUE;
 	fu_progress_step_done(progress);
 
 	/* add each device */
@@ -1130,8 +1123,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 		/* system firmware "BIOS" can change the PCRx registers */
 		if (fu_uefi_capsule_device_get_kind(dev) ==
-			FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE &&
-		    has_fde)
+		    FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE)
 			fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 
 		/* load all configuration variables */
