@@ -446,6 +446,19 @@ fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *devic
 }
 
 static void
+fu_engine_ensure_device_maybe_remove_affects_fde(FuEngine *self, FuDevice *device)
+{
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+		return;
+	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD)) {
+		g_debug("removing affects-fde from %s as no FDE detected",
+			fu_device_get_id(device));
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	}
+}
+
+static void
 fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT) &&
@@ -509,6 +522,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_ensure_device_lid_inhibit(self, device);
 	fu_engine_ensure_device_display_required_inhibit(self, device);
 	fu_engine_ensure_device_system_inhibit(self, device);
+	fu_engine_ensure_device_maybe_remove_affects_fde(self, device);
 	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
