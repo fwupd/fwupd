@@ -375,7 +375,7 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	guid_new = fwupd_guid_to_string((fwupd_guid_t *)buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
 	/* ESRT header matches payload */
-	if (g_strcmp0(fu_uefi_capsule_device_get_guid(self), guid_new) == 0) {
+	if (g_strcmp0(priv->fw_class, guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
 	}
@@ -391,11 +391,11 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
-	if (fu_uefi_capsule_device_get_guid(self) == NULL) {
+	if (priv->fw_class == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
 		return NULL;
 	}
-	if (!fwupd_guid_from_string(fu_uefi_capsule_device_get_guid(self),
+	if (!fwupd_guid_from_string(priv->fw_class,
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error)) {

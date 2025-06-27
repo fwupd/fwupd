@@ -154,7 +154,8 @@ fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **err
 
 	/* save response */
 	if (!helper->ret) {
-		fu_device_event_set_error(event, helper->error);
+		if (event != NULL)
+			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
 		return FALSE;
 	}
@@ -207,7 +208,8 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 
 	/* save response */
 	if (!helper->ret) {
-		fu_device_event_set_error(event, helper->error);
+		if (event != NULL)
+			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
 		return FALSE;
 	}
@@ -289,7 +291,8 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 	/* save response */
 	if (helper->mbim_message == NULL) {
-		fu_device_event_set_error(event, helper->error);
+		if (event != NULL)
+			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
 		return NULL;
 	}
