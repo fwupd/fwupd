@@ -42,6 +42,8 @@
 #include "fu-unix-seekable-input-stream.h"
 #endif
 
+#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
+
 typedef struct {
 	FuPlugin *plugin;
 	FuContext *ctx;
