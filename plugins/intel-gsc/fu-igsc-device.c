@@ -26,6 +26,7 @@ struct _FuIgscDevice {
 
 #define FU_IGSC_DEVICE_FLAG_HAS_AUX   "has-aux"
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
+#define FU_IGSC_DEVICE_FLAG_IS_WEDGED "is-wedged"
 
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
@@ -423,11 +424,13 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* some devices have children */
-	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_AUX)) {
+	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_AUX) &&
+	    !fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		g_autoptr(FuIgscAuxDevice) device_child = fu_igsc_aux_device_new(ctx);
 		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(device_child));
 	}
-	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_OPROM)) {
+	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_OPROM) &&
+	    !fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		g_autoptr(FuIgscOpromDevice) device_code = NULL;
 		g_autoptr(FuIgscOpromDevice) device_data = NULL;
 		device_code =
@@ -474,13 +477,22 @@ static gboolean
 fu_igsc_device_probe(FuDevice *device, GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
+	g_autofree gchar *prop_wedged = NULL;
 
 	/* check firmware status */
 	if (!fu_igsc_device_get_fw_status(self, 1, NULL, error))
 		return FALSE;
 
+	/* device is wedged and needs recovery */
+	prop_wedged = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "WEDGED", NULL);
+	if (g_strcmp0(prop_wedged, "firmware-flash") == 0) {
+		fu_device_add_instance_str(device, "PART", "RECOVERY");
+		fu_device_add_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED);
+	} else {
+		fu_device_add_instance_str(device, "PART", "FWCODE");
+	}
+
 	/* add extra instance IDs */
-	fu_device_add_instance_str(device, "PART", "FWCODE");
 	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
@@ -839,6 +851,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_GPU);
@@ -846,6 +859,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
 }
 
 static void
