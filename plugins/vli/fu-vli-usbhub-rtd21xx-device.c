@@ -316,7 +316,6 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "enable-isp");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
 
 	/* open device */
 	locker = fu_device_locker_new(parent, error);
@@ -482,12 +481,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* the device needs some time to restart with the new firmware before
-	 * it can be queried again */
-	fu_device_sleep_full(device, 20000, progress); /* ms */
-
 	/* success */
-	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -544,6 +538,7 @@ fu_vli_usbhub_rtd21xx_device_init(FuVliUsbhubRtd21xxDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration(FU_DEVICE(self), 100); /* seconds */
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_WRITE, 20000);
 	fu_device_retry_set_delay(FU_DEVICE(self), 30); /* ms */
 }
 

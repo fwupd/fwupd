@@ -427,7 +427,6 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to start update: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
 
 	/* success */
 	return TRUE;
@@ -462,8 +461,8 @@ fu_mm_dfota_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 85, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
@@ -471,6 +470,9 @@ static void
 fu_mm_dfota_device_init(FuMmDfotaDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.quectel.dfota");
+	fu_device_set_phase_delay(FU_DEVICE(self),
+				  FU_DEVICE_PHASE_DELAY_POST_WRITE,
+				  FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
 }
 
 static void
