@@ -25,6 +25,7 @@
  */
 
 typedef struct {
+	goffset dpcd_offset;
 	guint32 dpcd_ieee_oui;
 	guint8 dpcd_hw_rev;
 	gchar *dpcd_dev_id;
@@ -43,6 +44,7 @@ fu_dpaux_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append_hex(str, idt, "DpcdOffset", priv->dpcd_offset);
 	fwupd_codec_string_append_hex(str, idt, "DpcdIeeeOui", priv->dpcd_ieee_oui);
 	fwupd_codec_string_append_hex(str, idt, "DpcdHwRev", priv->dpcd_hw_rev);
 	fwupd_codec_string_append(str, idt, "DpcdDevId", priv->dpcd_dev_id);
@@ -53,6 +55,7 @@ fu_dpaux_device_invalidate(FuDevice *device)
 {
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	priv->dpcd_offset = FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE;
 	priv->dpcd_ieee_oui = 0;
 	priv->dpcd_hw_rev = 0;
 	g_clear_pointer(&priv->dpcd_dev_id, g_free);
@@ -115,7 +118,7 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	}
 
 	if (!fu_dpaux_device_read(self,
-				  FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE,
+				  priv->dpcd_offset,
 				  buf,
 				  sizeof(buf),
 				  FU_DPAUX_DEVICE_READ_TIMEOUT,
@@ -170,6 +173,47 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_dpaux_device_get_offset:
+ * @self: a #FuDpauxDevice
+ *
+ * Gets the DPCD offset.
+ *
+ * Returns: integer
+ *
+ * Since: 2.0.11
+ **/
+goffset
+fu_dpaux_device_get_dpcd_offset(FuDpauxDevice *self)
+{
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DPAUX_DEVICE(self), G_MAXOFFSET);
+	return priv->dpcd_offset;
+}
+
+/**
+ * fu_dpaux_device_set_dpcd_offset:
+ * @self: a #FuDpauxDevice
+ * @dpcd_offset: integer
+ *
+ * Sets the DPCD offset. Must be either %FU_DPAUX_DEVICE_DPCD_OFFSET_SOURCE_DEVICE,
+ * %FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE, or %FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE.
+ *
+ * Since: 2.0.11
+ **/
+void
+fu_dpaux_device_set_dpcd_offset(FuDpauxDevice *self, goffset dpcd_offset)
+{
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DPAUX_DEVICE(self));
+	g_return_if_fail(dpcd_offset == FU_DPAUX_DEVICE_DPCD_OFFSET_SOURCE_DEVICE ||
+			 dpcd_offset == FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE ||
+			 dpcd_offset == FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE);
+	if (priv->dpcd_offset == dpcd_offset)
+		return;
+	priv->dpcd_offset = dpcd_offset;
 }
 
 /**
@@ -377,10 +421,44 @@ fu_dpaux_device_incorporate(FuDevice *device, FuDevice *donor)
 	g_return_if_fail(FU_IS_DPAUX_DEVICE(donor));
 
 	/* copy private instance data */
+	priv->dpcd_offset = priv_donor->dpcd_offset;
 	priv->dpcd_ieee_oui = priv_donor->dpcd_ieee_oui;
 	priv->dpcd_hw_rev = priv_donor->dpcd_hw_rev;
 	fu_dpaux_device_set_dpcd_dev_id(self,
 					fu_dpaux_device_get_dpcd_dev_id(FU_DPAUX_DEVICE(donor)));
+}
+
+static void
+fu_dpaux_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* FuUdevDevice->add_json */
+	FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->add_json(device, builder, flags);
+
+	/* optional properties */
+	if (priv->dpcd_offset != 0)
+		fwupd_codec_json_append_int(builder, "DpcdOffset", priv->dpcd_offset);
+}
+
+static gboolean
+fu_dpaux_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+{
+	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
+	gint64 tmp64;
+
+	/* FuUdevDevice->from_json */
+	if (!FU_DEVICE_CLASS(fu_dpaux_device_parent_class)->from_json(device, json_object, error))
+		return FALSE;
+
+	/* optional properties */
+	tmp64 = json_object_get_int_member_with_default(json_object, "DpcdOffset", 0);
+	if (tmp64 != 0)
+		fu_dpaux_device_set_dpcd_offset(self, tmp64);
+
+	/* success */
+	return TRUE;
 }
 
 static gchar *
@@ -421,6 +499,10 @@ fu_dpaux_device_set_property(GObject *object, guint prop_id, const GValue *value
 static void
 fu_dpaux_device_init(FuDpauxDevice *self)
 {
+	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
+
+	priv->dpcd_offset = FU_DPAUX_DEVICE_DPCD_OFFSET_BRANCH_DEVICE;
+
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP);
@@ -454,6 +536,8 @@ fu_dpaux_device_class_init(FuDpauxDeviceClass *klass)
 	device_class->to_string = fu_dpaux_device_to_string;
 	device_class->incorporate = fu_dpaux_device_incorporate;
 	device_class->convert_version = fu_dpaux_device_convert_version;
+	device_class->from_json = fu_dpaux_device_from_json;
+	device_class->add_json = fu_dpaux_device_add_json;
 
 	/**
 	 * FuDpauxDevice:dpcd-ieee-oui:
