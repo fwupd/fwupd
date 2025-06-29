@@ -10,8 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-security-attr-private.h"
-
 #include "fu-console.h"
 
 /* custom return codes */

@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-ifwi-cpd-firmware.h"
 #include "fu-oprom-firmware.h"

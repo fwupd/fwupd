@@ -10,8 +10,6 @@
 
 #include "fu-dump.h"
 #include "fu-hid-device.h"
-#include "fu-string.h"
-#include "fu-usb-device-private.h"
 #include "fu-usb-endpoint.h"
 
 #define FU_HID_REPORT_GET 0x01

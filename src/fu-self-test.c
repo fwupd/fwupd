@@ -10,11 +10,9 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "fwupd-remote-private.h"
-#include "fwupd-security-attr-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-bios-settings-private.h"
@@ -37,8 +35,7 @@
 #include "fu-release-common.h"
 #include "fu-remote-list.h"
 #include "fu-remote.h"
-#include "fu-security-attr-common.h"
-#include "fu-smbios-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-usb-backend.h"
 
 #ifdef HAVE_GIO_UNIX

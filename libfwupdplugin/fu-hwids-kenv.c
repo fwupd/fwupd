@@ -8,9 +8,7 @@
 
 #include "config.h"
 
-#include "fu-context-private.h"
 #include "fu-hwids-private.h"
-#include "fu-kenv.h"
 
 gboolean
 fu_hwids_kenv_setup(FuContext *ctx, FuHwids *self, GError **error)

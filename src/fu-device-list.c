@@ -12,7 +12,6 @@
 
 #include "fu-device-list.h"
 #include "fu-device-private.h"
-#include "fu-engine.h"
 
 /**
  * FuDeviceList:

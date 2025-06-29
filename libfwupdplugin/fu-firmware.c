@@ -16,7 +16,6 @@
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
-#include "fu-string.h"
 
 /**
  * FuFirmware:
