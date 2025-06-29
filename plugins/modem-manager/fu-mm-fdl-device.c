@@ -40,7 +40,6 @@ fu_mm_fdl_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	}
 
 	/* wait 15 s before reopening port */
-	fu_device_sleep(device, 15000);
 	return TRUE;
 }
 
@@ -355,6 +354,7 @@ fu_mm_fdl_device_init(FuMmFdlDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_DETACH, 15000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.cinterion.fdl");
 }
 

@@ -148,7 +148,6 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GE
 		g_prefix_error(error, "failed to attach: ");
 		return FALSE;
 	}
-	fu_device_sleep_full(device, 1000, progress); /* ms */
 
 	/* success */
 	return TRUE;
@@ -357,6 +356,7 @@ static void
 fu_rts54hub_rtd21xx_background_init(FuRts54hubRtd21xxBackground *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_ATTACH, 1000);
 }
 
 static void
