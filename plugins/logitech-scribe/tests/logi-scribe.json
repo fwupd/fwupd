@@ -1,0 +1,17 @@
+{
+  "name": "Logi Scribe",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/logi-scribe-setup.json",
+      "components": [
+        {
+          "version": "1.1.2",
+          "guids": [
+            "e06054e4-2d72-516c-938f-f0cb57e20c7d"
+          ]
+        }
+      ]
+    }
+  ]
+}
