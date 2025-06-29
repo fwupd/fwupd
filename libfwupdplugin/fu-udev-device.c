@@ -23,7 +23,6 @@
 
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
-#include "fu-i2c-device.h"
 #include "fu-ioctl-private.h"
 #include "fu-output-stream.h"
 #include "fu-path.h"

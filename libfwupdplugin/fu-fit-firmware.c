@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fu-bytes.h"
-#include "fu-common.h"
 #include "fu-crc.h"
 #include "fu-dump.h"
 #include "fu-fdt-image.h"

@@ -13,7 +13,6 @@
 #include <glib/gstdio.h>
 #include <unistd.h>
 
-#include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-config-private.h"
 #include "fu-path.h"

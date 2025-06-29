@@ -11,7 +11,6 @@
 #include "fwupd-build.h"
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
-#include "fwupd-plugin.h"
 #include "fwupd-remote.h"
 #include "fwupd-request.h"
 

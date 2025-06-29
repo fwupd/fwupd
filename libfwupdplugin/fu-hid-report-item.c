@@ -9,11 +9,9 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-hid-report-item.h"
 #include "fu-input-stream.h"
-#include "fu-mem-private.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
 

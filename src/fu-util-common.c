@@ -10,12 +10,10 @@
 
 #include <curl/curl.h>
 #include <glib/gi18n.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <xmlb.h>
 
 #include "fu-console.h"
-#include "fu-device-private.h"
 #include "fu-util-common.h"
 
 static gchar *

@@ -9,10 +9,8 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
-#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-sbatlevel-section-struct.h"
 #include "fu-sbatlevel-section.h"

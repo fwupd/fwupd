@@ -11,7 +11,6 @@
 #include "fwupd-codec.h"
 
 #include "fu-composite-input-stream.h"
-#include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"
 
 /**

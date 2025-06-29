@@ -9,15 +9,11 @@
 #include "config.h"
 
 #include <gio/gio.h>
-#include <string.h>
 
 #include "fwupd-common.h"
 #include "fwupd-error.h"
 
-#include "fu-common.h"
 #include "fu-hwids-private.h"
-#include "fu-path.h"
-#include "fu-string.h"
 
 /**
  * FuHwids:

@@ -17,8 +17,6 @@
 #include <sys/ioctl.h>
 #endif
 
-#include "fu-bytes.h"
-#include "fu-dump.h"
 #include "fu-mei-device.h"
 #include "fu-string.h"
 
