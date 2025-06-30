@@ -16,13 +16,8 @@
 #include <glib/gstdio.h>
 #include <jcat.h>
 
-#include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
-#include "fwupd-remote-private.h"
-#include "fwupd-request-private.h"
-#include "fwupd-security-attr-private.h"
 
-#include "fu-bios-settings-private.h"
 #include "fu-client-list.h"
 #include "fu-dbus-daemon.h"
 #include "fu-device-private.h"

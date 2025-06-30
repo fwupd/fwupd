@@ -10,8 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fu-security-attrs-private.h"
-
 gchar *
 fu_security_attr_get_name(FwupdSecurityAttr *attr) G_GNUC_NON_NULL(1);
 const gchar *

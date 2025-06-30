@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-#include "fwupd-enums.h"
-
 G_BEGIN_DECLS
 
 #define FWUPD_TYPE_REMOTE (fwupd_remote_get_type())

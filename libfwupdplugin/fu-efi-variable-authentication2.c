@@ -14,7 +14,6 @@
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pkcs7.h"
-#include "fu-x509-certificate.h"
 
 /**
  * FuEfiVariableAuthentication2:

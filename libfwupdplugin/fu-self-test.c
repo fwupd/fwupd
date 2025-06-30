@@ -16,10 +16,8 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cab-firmware-private.h"
-#include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-event-private.h"

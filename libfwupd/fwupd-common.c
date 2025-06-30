@@ -7,9 +7,7 @@
 #include "config.h"
 
 #include "fwupd-common-private.h"
-#include "fwupd-device.h"
 #include "fwupd-error.h"
-#include "fwupd-release.h"
 
 #ifdef HAVE_GIO_UNIX
 #include <errno.h>

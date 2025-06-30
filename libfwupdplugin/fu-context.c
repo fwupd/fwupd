@@ -21,7 +21,6 @@
 #include "fu-hwids-private.h"
 #include "fu-path.h"
 #include "fu-pefile-firmware.h"
-#include "fu-smbios-private.h"
 #include "fu-volume-private.h"
 
 /**

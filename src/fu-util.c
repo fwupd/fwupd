@@ -21,12 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-common-private.h"
-#include "fwupd-device-private.h"
-#include "fwupd-remote-private.h"
-
 #include "fu-console.h"
-#include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-util-bios-setting.h"
 #include "fu-util-common.h"

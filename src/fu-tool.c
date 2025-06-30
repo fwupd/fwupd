@@ -21,9 +21,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-client-private.h"
-#include "fwupd-common-private.h"
-#include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-remote-private.h"
 
@@ -38,7 +35,6 @@
 #include "fu-engine.h"
 #include "fu-history.h"
 #include "fu-plugin-private.h"
-#include "fu-security-attr-common.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-util-bios-setting.h"

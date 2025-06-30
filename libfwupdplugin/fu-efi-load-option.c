@@ -11,11 +11,8 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-efi-device-path-list.h"
-#include "fu-efi-file-path-device-path.h"
-#include "fu-efi-hard-drive-device-path.h"
 #include "fu-efi-load-option.h"
 #include "fu-input-stream.h"
-#include "fu-mem.h"
 #include "fu-string.h"
 
 struct _FuEfiLoadOption {

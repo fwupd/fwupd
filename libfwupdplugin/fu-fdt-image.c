@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
-#include "fu-common.h"
 #include "fu-fdt-image.h"
 #include "fu-mem.h"
 #include "fu-string.h"

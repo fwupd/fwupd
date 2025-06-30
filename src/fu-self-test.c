@@ -10,11 +10,9 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "fwupd-remote-private.h"
-#include "fwupd-security-attr-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-bios-settings-private.h"
@@ -37,8 +35,7 @@
 #include "fu-release-common.h"
 #include "fu-remote-list.h"
 #include "fu-remote.h"
-#include "fu-security-attr-common.h"
-#include "fu-smbios-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-usb-backend.h"
 
 #ifdef HAVE_GIO_UNIX
@@ -1274,7 +1271,7 @@ fu_engine_test_plugin_mutable_enumeration(gconstpointer user_data)
 	/* ensure empty tree */
 	fu_self_test_mkroot();
 
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
 
 	ret = fu_path_mkdir_parent(fake_localconf_fn, &error);
@@ -7079,7 +7076,7 @@ fu_config_migrate_1_9_func(void)
 	/* ensure empty tree */
 	fu_self_test_mkroot();
 
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
 
 	ret = fu_path_mkdir_parent(fake_sysconf_fn, &error);
@@ -7159,7 +7156,7 @@ fu_config_migrate_1_7_func(void)
 
 	/* working directory */
 	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 
 	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
 	g_assert_nonnull(fn_mut);

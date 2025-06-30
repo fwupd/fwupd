@@ -14,7 +14,6 @@
 #include <sys/utsname.h>
 #endif
 
-#include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-kernel.h"
 #include "fu-path.h"

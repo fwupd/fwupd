@@ -8,9 +8,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
-#include "fu-bytes.h"
 #include "fu-chunk-private.h"
 #include "fu-common.h"
 #include "fu-mem.h"

@@ -9,7 +9,6 @@
 #include <gio/gio.h>
 
 #include "fwupd-common.h"
-#include "fwupd-enums.h"
 #include "fwupd-error.h"
 
 /**

@@ -13,7 +13,6 @@
 #endif
 
 #include "fu-string.h"
-#include "fu-usb-device.h"
 #include "fu-v4l-device.h"
 
 /**

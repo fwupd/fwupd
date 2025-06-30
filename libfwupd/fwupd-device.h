@@ -8,7 +8,6 @@
 
 #include <glib-object.h>
 
-#include "fwupd-enums.h"
 #include "fwupd-release.h"
 #include "fwupd-request.h"
 

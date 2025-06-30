@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-filesystem.h"

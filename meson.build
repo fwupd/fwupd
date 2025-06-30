@@ -640,7 +640,7 @@ umockdev_integration_tests = get_option('umockdev_tests')                     \
                               .disable_auto_if(not introspection.allowed())   \
                               .disable_auto_if(not run_sanitize_unsafe_tests) \
                               .disable_auto_if(dbusmock.returncode() != 0)
-umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
+dependency('umockdev-1.0', required: get_option('umockdev_tests'))
 
 if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')

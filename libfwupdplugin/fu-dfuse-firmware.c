@@ -8,12 +8,7 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-byte-array.h"
-#include "fu-bytes.h"
-#include "fu-chunk-private.h"
-#include "fu-common.h"
 #include "fu-dfu-firmware-private.h"
 #include "fu-dfu-firmware-struct.h"
 #include "fu-dfuse-firmware.h"
