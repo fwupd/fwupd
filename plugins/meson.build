@@ -60,7 +60,6 @@ plugins = {
   'goodix-moc': false,
   'goodix-tp': false,
   'gpio': false,
-  'hailuck': false,
   'hpi-cfu': false,
   'huddly-usb': false,
   'hughski-colorhug': false,
