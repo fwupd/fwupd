@@ -11,3 +11,9 @@ Flags = probe-vcp
 
 [PCI\VID_1028&PID_0CEB]
 Flags = probe-vcp
+
+[PCI\VID_1028&PID_0D2C]
+Flags = probe-vcp
+
+[PCI\VID_1028&PID_0D2B]
+Flags = probe-vcp
