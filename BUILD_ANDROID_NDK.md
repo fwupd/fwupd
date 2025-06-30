@@ -86,18 +86,7 @@ This script is basically just `tar -cOC ${1} . | adb shell tar x -C ${2} -f -` t
 
 #### Setup config
 
-Currently we don't have a way to compile `libjcat` backends using NDK. Therefore we must configure fwupd to not validate firmware signatures:
-
-```toml
-[fwupd]
-OnlyTrusted=false
-```
-
-One option for this is adding the line to `src/tests/fwupd.conf` and pushing it to the device with:
-
-```bash
-adb push src/tests/fwupd.conf /data/fwupd/etc/fwupd/fwupd.conf`
-```
+There is new an OpenSSL backend for pkcs7/cms signatures in `libjcat`. So we don't need to disable signature verification and can leave `OnlyTrusted` set to its default value.
 
 ### 5. Run the daemon
 
