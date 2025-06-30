@@ -534,7 +534,6 @@ fu_focalfp_hid_device_reload(FuDevice *device, GError **error)
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
 	guint8 idbuf[2] = {0x0};
 
-	fu_device_sleep(device, 500);
 	if (!fu_focalfp_hid_device_read_reg(self, 0x9F, &idbuf[0], error))
 		return FALSE;
 	if (!fu_focalfp_hid_device_read_reg(self, 0xA3, &idbuf[1], error))
@@ -610,7 +609,6 @@ fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **er
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(device, 200);
 	return TRUE;
 }
 
@@ -630,7 +628,6 @@ fu_focalfp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **er
 		return FALSE;
 
 	/* success */
-	fu_device_sleep(device, 500);
 	return TRUE;
 }
 
@@ -661,6 +658,9 @@ fu_focalfp_hid_device_init(FuFocalfpHidDevice *self)
 	fu_device_set_firmware_size(FU_DEVICE(self), 0x1E000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_FOCALFP_FIRMWARE);
 	fu_device_set_summary(FU_DEVICE(self), "Forcepad");
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_DETACH, 200);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_WRITE, 500);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_ATTACH, 500);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.focalfp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);

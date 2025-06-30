@@ -108,6 +108,7 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Multi-stream transport device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_phase_delay(FU_DEVICE(self), FU_DEVICE_PHASE_DELAY_POST_WRITE, 2000);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
 	fu_device_register_private_flag(FU_DEVICE(self),
@@ -1431,12 +1432,6 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10, NULL);
-
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
@@ -1501,11 +1496,8 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 			    "Unsupported chip family");
 		return FALSE;
 	}
-	fu_progress_step_done(progress);
 
 	/* wait for flash clear to settle */
-	fu_device_sleep_full(device, 2000, fu_progress_get_child(progress)); /* ms */
-	fu_progress_step_done(progress);
 	return TRUE;
 }
 
