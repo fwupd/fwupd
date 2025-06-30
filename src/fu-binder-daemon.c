@@ -742,6 +742,7 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 				GError **error)
 {
 #ifdef HAVE_GIO_UNIX
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
 	const GVariantType *param_type = G_VARIANT_TYPE("(sha{sv})");
 	g_autoptr(GVariant) parameters = NULL;
 	g_autoptr(AStatus) status = NULL;
@@ -804,9 +805,6 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 		g_variant_unref(prop_value);
 	}
 
-	/* create helper object */
-	// TODO: Create helper object
-
 	// TODO: Helper
 	helper->stream = fu_unix_seekable_input_stream_new(fd_handle, TRUE);
 	if (helper->stream == NULL) {
@@ -817,8 +815,8 @@ fu_binder_daemon_method_install(FuBinderDaemon *self,
 	}
 
 	/* relax these */
-	// if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
-	//	helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+	if (fu_engine_config_get_ignore_requirements(fu_engine_get_config(engine)))
+		helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 
 	// TODO: fu_client_list_register notify::flags (watch for death of client)
 	if (!fu_dbus_daemon_install_with_helper(helper, error)) {
