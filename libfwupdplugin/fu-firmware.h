@@ -17,65 +17,8 @@ G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
 #ifdef __GI_SCANNER__
 #define FuFirmwareExportFlags guint64
+#define FuFirmwareParseFlags  guint64
 #endif
-
-/**
- * FuFirmwareParseFlags:
- *
- * The firmware parse flags.
- **/
-typedef enum {
-	/**
-	 * FWUPD_INSTALL_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_NONE = 0,
-	/**
-	 * FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM:
-	 *
-	 * Ignore firmware CRCs and checksums.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM = 1 << 6,
-	/**
-	 * FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID:
-	 *
-	 * Ignore firmware vendor and project checks.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID = 1 << 7,
-	/**
-	 * FU_FIRMWARE_PARSE_FLAG_NO_SEARCH:
-	 *
-	 * Do not use heuristics when parsing the image.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_NO_SEARCH = 1 << 8,
-	/**
-	 * FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM:
-	 *
-	 * Keep a reference to the parsed stream.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM = 1 << 10,
-	/**
-	 * FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB:
-	 *
-	 * Keep a reference to the parsed blob in-memory.
-	 *
-	 * This allows the stream to be closed even when the firmware needs to be re-parsed.
-	 *
-	 * Since: 2.0.9
-	 */
-	FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB = 1 << 11,
-} FuFirmwareParseFlags;
 
 struct _FuFirmwareClass {
 	GObjectClass parent_class;
