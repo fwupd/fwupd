@@ -45,115 +45,6 @@ struct _FuFirmwareClass {
 };
 
 /**
- * FuFirmwareFlags:
- *
- * The firmware flags.
- **/
-typedef enum {
-	/**
-	 * FU_FIRMWARE_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.5.0
-	 **/
-	FU_FIRMWARE_FLAG_NONE = 0u,
-	/**
-	 * FU_FIRMWARE_FLAG_DEDUPE_ID:
-	 *
-	 * Dedupe images by ID.
-	 *
-	 * Since: 1.5.0
-	 **/
-	FU_FIRMWARE_FLAG_DEDUPE_ID = 1u << 0,
-	/**
-	 * FU_FIRMWARE_FLAG_DEDUPE_IDX:
-	 *
-	 * Dedupe images by IDX.
-	 *
-	 * Since: 1.5.0
-	 **/
-	FU_FIRMWARE_FLAG_DEDUPE_IDX = 1u << 1,
-	/**
-	 * FU_FIRMWARE_FLAG_HAS_CHECKSUM:
-	 *
-	 * Has a CRC or checksum to test internal consistency.
-	 *
-	 * Since: 1.5.6
-	 **/
-	FU_FIRMWARE_FLAG_HAS_CHECKSUM = 1u << 2,
-	/**
-	 * FU_FIRMWARE_FLAG_HAS_VID_PID:
-	 *
-	 * Has a vendor or product ID in the firmware.
-	 *
-	 * Since: 1.5.6
-	 **/
-	FU_FIRMWARE_FLAG_HAS_VID_PID = 1u << 3,
-	/**
-	 * FU_FIRMWARE_FLAG_DONE_PARSE:
-	 *
-	 * The firmware object has been used by fu_firmware_parse_bytes().
-	 *
-	 * Since: 1.7.3
-	 **/
-	FU_FIRMWARE_FLAG_DONE_PARSE = 1u << 4,
-	/**
-	 * FU_FIRMWARE_FLAG_HAS_STORED_SIZE:
-	 *
-	 * Encodes the image size in the firmware.
-	 *
-	 * Since: 1.8.2
-	 **/
-	FU_FIRMWARE_FLAG_HAS_STORED_SIZE = 1u << 5,
-	/**
-	 * FU_FIRMWARE_FLAG_ALWAYS_SEARCH:
-	 *
-	 * Always searches for magic regardless of the install flags.
-	 * This is useful for firmware that always has an *unparsed* variable-length
-	 * header.
-	 *
-	 * Since: 1.8.6
-	 **/
-	FU_FIRMWARE_FLAG_ALWAYS_SEARCH = 1u << 6,
-	/**
-	 * FU_FIRMWARE_FLAG_NO_AUTO_DETECTION:
-	 *
-	 * Do not use this firmware type when auto-detecting firmware.
-	 * This should be used when there is no valid signature or CRC to check validity when
-	 *parsing.
-	 *
-	 * Since: 1.9.3
-	 **/
-	FU_FIRMWARE_FLAG_NO_AUTO_DETECTION = 1u << 7,
-	/**
-	 * FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE:
-	 *
-	 * The firmware subclass implements a compatibility check.
-	 *
-	 * Since: 1.9.20
-	 **/
-	FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE = 1u << 8,
-	/**
-	 * FU_FIRMWARE_FLAG_IS_LAST_IMAGE:
-	 *
-	 * The firmware is the last image in the composite set. This can be used when parsing
-	 * a ``FuLinearFirmware` when additional padding is present.
-	 *
-	 * Since: 2.0.13
-	 **/
-	FU_FIRMWARE_FLAG_IS_LAST_IMAGE = 1u << 9,
-	/**
-	 * FU_FIRMWARE_FLAG_UNKNOWN:
-	 *
-	 * Unknown flag value.
-	 *
-	 * Since: 2.0.0
-	 */
-	FU_FIRMWARE_FLAG_UNKNOWN = G_MAXUINT64,
-} FuFirmwareFlags;
-
-/**
  * FU_FIRMWARE_ID_PAYLOAD:
  *
  * The usual firmware ID string for the payload.
@@ -179,11 +70,6 @@ typedef enum {
 #define FU_FIRMWARE_ID_HEADER "header"
 
 #define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (32 * 1024 * 1024)
-
-const gchar *
-fu_firmware_flag_to_string(FuFirmwareFlags flag);
-FuFirmwareFlags
-fu_firmware_flag_from_string(const gchar *flag);
 
 FuFirmware *
 fu_firmware_new(void);
