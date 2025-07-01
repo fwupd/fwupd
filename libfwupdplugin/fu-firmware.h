@@ -10,49 +10,14 @@
 #include <xmlb.h>
 
 #include "fu-chunk.h"
+#include "fu-firmware-struct.h"
 
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
-/**
- * FuFirmwareExportFlags:
- *
- * The firmware export flags.
- **/
-typedef enum {
-	/**
-	 * FU_FIRMWARE_EXPORT_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.6.0
-	 **/
-	FU_FIRMWARE_EXPORT_FLAG_NONE = 0u,
-	/**
-	 * FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG:
-	 *
-	 * Include debug information when exporting.
-	 *
-	 * Since: 1.6.0
-	 **/
-	FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG = 1u << 0,
-	/**
-	 * FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA:
-	 *
-	 * Write the data as UTF-8 strings.
-	 *
-	 * Since: 1.6.0
-	 **/
-	FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA = 1u << 1,
-	/**
-	 * FU_FIRMWARE_EXPORT_FLAG_UNKNOWN:
-	 *
-	 * Unknown flag value.
-	 *
-	 * Since: 2.0.0
-	 */
-	FU_FIRMWARE_EXPORT_FLAG_UNKNOWN = G_MAXUINT64,
-} FuFirmwareExportFlags;
+#ifdef __GI_SCANNER__
+#define FuFirmwareExportFlags guint64
+#endif
 
 /**
  * FuFirmwareParseFlags:
