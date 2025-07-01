@@ -1730,16 +1730,10 @@ fu_util_report_history_for_remote(FuUtil *self,
 }
 
 static gboolean
-fu_util_report_history_force(FuUtil *self, GError **error)
+fu_util_report_history_force(FuUtil *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(FwupdRemote) remote_upload = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
-
-	/* get all devices */
-	devices = fwupd_client_get_history(self->client, self->cancellable, error);
-	if (devices == NULL)
-		return FALSE;
 
 	/* just assume every report goes to this remote */
 	remote_upload =
@@ -1977,7 +1971,7 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 	/* nothing to report, but try harder with --force */
 	if (cnt == 0) {
 		if (!only_automatic_reports && self->flags & FWUPD_INSTALL_FLAG_FORCE)
-			return fu_util_report_history_force(self, error);
+			return fu_util_report_history_force(self, devices, error);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
