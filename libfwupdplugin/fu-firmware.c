@@ -2030,6 +2030,8 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 		for (guint i = 0; i < priv->images->len; i++) {
 			FuFirmware *img = g_ptr_array_index(priv->images, i);
 			for (guint j = 0; split[j] != NULL; j++) {
+				if (fu_firmware_get_id(img) == NULL)
+					continue;
 				if (g_pattern_match_simple(split[j], fu_firmware_get_id(img)))
 					return g_object_ref(img);
 			}
