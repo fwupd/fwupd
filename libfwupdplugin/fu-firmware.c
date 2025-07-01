@@ -89,6 +89,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "no-auto-detection";
 	if (flag == FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)
 		return "has-check-compatible";
+	if (flag == FU_FIRMWARE_FLAG_IS_LAST_IMAGE)
+		return "is-last-image";
 	return NULL;
 }
 
@@ -123,6 +125,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_NO_AUTO_DETECTION;
 	if (g_strcmp0(flag, "has-check-compatible") == 0)
 		return FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE;
+	if (g_strcmp0(flag, "is-last-image") == 0)
+		return FU_FIRMWARE_FLAG_IS_LAST_IMAGE;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 

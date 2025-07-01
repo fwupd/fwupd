@@ -227,6 +227,15 @@ typedef enum {
 	 **/
 	FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE = 1u << 8,
 	/**
+	 * FU_FIRMWARE_FLAG_IS_LAST_IMAGE:
+	 *
+	 * The firmware is the last image in the composite set. This can be used when parsing
+	 * a ``FuLinearFirmware` when additional padding is present.
+	 *
+	 * Since: 2.0.13
+	 **/
+	FU_FIRMWARE_FLAG_IS_LAST_IMAGE = 1u << 9,
+	/**
 	 * FU_FIRMWARE_FLAG_UNKNOWN:
 	 *
 	 * Unknown flag value.

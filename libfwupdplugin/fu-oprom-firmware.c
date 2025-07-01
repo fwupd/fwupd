@@ -37,7 +37,6 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_oprom_firmware_get_instance_private(o))
 
 #define FU_OPROM_FIRMWARE_ALIGN_LEN		   512u
-#define FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT (1u << 7)
 
 /**
  * fu_oprom_firmware_get_machine_type:
@@ -159,6 +158,10 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_size(firmware, image_length * FU_OPROM_FIRMWARE_ALIGN_LEN);
 	fu_firmware_set_idx(firmware, fu_struct_oprom_pci_get_code_type(st_pci));
 
+	/* is last image */
+	if (fu_struct_oprom_pci_get_indicator(st_pci) & FU_OPROM_INDICATOR_FLAG_LAST)
+		fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_IS_LAST_IMAGE);
+
 	/* get CPD offset */
 	expansion_header_offset = fu_struct_oprom_get_expansion_header_offset(st_hdr);
 	if (expansion_header_offset != 0x0) {
@@ -219,7 +222,8 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_oprom_pci_set_device_id(st_pci, priv->device_id);
 	fu_struct_oprom_pci_set_image_length(st_pci, image_size / FU_OPROM_FIRMWARE_ALIGN_LEN);
 	fu_struct_oprom_pci_set_code_type(st_pci, fu_firmware_get_idx(firmware));
-	fu_struct_oprom_pci_set_indicator(st_pci, FU_OPROM_FIRMWARE_LAST_IMAGE_INDICATOR_BIT);
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))
+		fu_struct_oprom_pci_set_indicator(st_pci, FU_OPROM_INDICATOR_FLAG_LAST);
 	g_byte_array_append(buf, st_pci->data, st_pci->len);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_512, 0xFF);
 
