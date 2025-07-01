@@ -56,80 +56,6 @@ enum { PROP_0, PROP_PARENT, PROP_LAST };
 
 #define FU_FIRMWARE_IMAGE_DEPTH_MAX 50
 
-/**
- * fu_firmware_flag_to_string:
- * @flag: a #FuFirmwareFlags, e.g. %FU_FIRMWARE_FLAG_DEDUPE_ID
- *
- * Converts a #FuFirmwareFlags to a string.
- *
- * Returns: identifier string
- *
- * Since: 1.5.0
- **/
-const gchar *
-fu_firmware_flag_to_string(FuFirmwareFlags flag)
-{
-	if (flag == FU_FIRMWARE_FLAG_NONE)
-		return "none";
-	if (flag == FU_FIRMWARE_FLAG_DEDUPE_ID)
-		return "dedupe-id";
-	if (flag == FU_FIRMWARE_FLAG_DEDUPE_IDX)
-		return "dedupe-idx";
-	if (flag == FU_FIRMWARE_FLAG_HAS_CHECKSUM)
-		return "has-checksum";
-	if (flag == FU_FIRMWARE_FLAG_HAS_VID_PID)
-		return "has-vid-pid";
-	if (flag == FU_FIRMWARE_FLAG_DONE_PARSE)
-		return "done-parse";
-	if (flag == FU_FIRMWARE_FLAG_HAS_STORED_SIZE)
-		return "has-stored-size";
-	if (flag == FU_FIRMWARE_FLAG_ALWAYS_SEARCH)
-		return "always-search";
-	if (flag == FU_FIRMWARE_FLAG_NO_AUTO_DETECTION)
-		return "no-auto-detection";
-	if (flag == FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE)
-		return "has-check-compatible";
-	if (flag == FU_FIRMWARE_FLAG_IS_LAST_IMAGE)
-		return "is-last-image";
-	return NULL;
-}
-
-/**
- * fu_firmware_flag_from_string:
- * @flag: a string, e.g. `dedupe-id`
- *
- * Converts a string to a #FuFirmwareFlags.
- *
- * Returns: enumerated value
- *
- * Since: 1.5.0
- **/
-FuFirmwareFlags
-fu_firmware_flag_from_string(const gchar *flag)
-{
-	if (g_strcmp0(flag, "dedupe-id") == 0)
-		return FU_FIRMWARE_FLAG_DEDUPE_ID;
-	if (g_strcmp0(flag, "dedupe-idx") == 0)
-		return FU_FIRMWARE_FLAG_DEDUPE_IDX;
-	if (g_strcmp0(flag, "has-checksum") == 0)
-		return FU_FIRMWARE_FLAG_HAS_CHECKSUM;
-	if (g_strcmp0(flag, "has-vid-pid") == 0)
-		return FU_FIRMWARE_FLAG_HAS_VID_PID;
-	if (g_strcmp0(flag, "done-parse") == 0)
-		return FU_FIRMWARE_FLAG_DONE_PARSE;
-	if (g_strcmp0(flag, "has-stored-size") == 0)
-		return FU_FIRMWARE_FLAG_HAS_STORED_SIZE;
-	if (g_strcmp0(flag, "always-search") == 0)
-		return FU_FIRMWARE_FLAG_ALWAYS_SEARCH;
-	if (g_strcmp0(flag, "no-auto-detection") == 0)
-		return FU_FIRMWARE_FLAG_NO_AUTO_DETECTION;
-	if (g_strcmp0(flag, "has-check-compatible") == 0)
-		return FU_FIRMWARE_FLAG_HAS_CHECK_COMPATIBLE;
-	if (g_strcmp0(flag, "is-last-image") == 0)
-		return FU_FIRMWARE_FLAG_IS_LAST_IMAGE;
-	return FU_FIRMWARE_FLAG_NONE;
-}
-
 typedef struct {
 	gsize offset;
 	GBytes *blob;
@@ -2300,19 +2226,8 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 
 	/* subclassed type */
 	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
-		g_autoptr(GString) tmp = g_string_new("");
-		for (guint i = 0; i < 64; i++) {
-			guint64 flag = (guint64)1 << i;
-			if (flag == FU_FIRMWARE_FLAG_DONE_PARSE)
-				continue;
-			if ((priv->flags & flag) == 0)
-				continue;
-			g_string_append_printf(tmp, "%s|", fu_firmware_flag_to_string(flag));
-		}
-		if (tmp->len > 0) {
-			g_string_truncate(tmp, tmp->len - 1);
-			fu_xmlb_builder_insert_kv(bn, "flags", tmp->str);
-		}
+		g_autofree gchar *str = fu_firmware_flags_to_string(priv->flags);
+		fu_xmlb_builder_insert_kv(bn, "flags", str);
 	}
 	fu_xmlb_builder_insert_kv(bn, "id", priv->id);
 	fu_xmlb_builder_insert_kx(bn, "idx", priv->idx);

@@ -16,6 +16,21 @@ enum FuFirmwareParseFlags {
     CacheBlob = 1 << 11,
 }
 
+#[derive(ToBitString)]
+enum FuFirmwareFlags {
+    None = 0,
+    DedupeId = 1 << 0,
+    DedupeIdx = 1 << 1,
+    HasChecksum = 1 << 2, // or CRC
+    HasVidPid = 1 << 3,
+    DoneParse = 1 << 4,
+    HasStoredSize = 1 << 5,
+    AlwaysSearch = 1 << 6, // useful has an *unparsed* variable-length header
+    NoAutoDetection = 1 << 7, // has no known header
+    HasCheckCompatible = 1 << 8,
+    IsLastImage = 1 << 9, // use for FuLinearFirmware when padding is present
+}
+
 enum FuFirmwareAlignment {
     1,
     2,
