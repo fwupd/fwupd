@@ -8,8 +8,8 @@
 #include "config.h"
 
 #include "fu-igsc-aux-firmware.h"
+#include "fu-igsc-common.h"
 #include "fu-igsc-heci.h"
-#include "fu-igsc-struct.h"
 
 struct _FuIgscAuxFirmware {
 	FuIfwiFptFirmware parent_instance;
@@ -29,8 +29,8 @@ fu_igsc_aux_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 	fu_xmlb_builder_insert_kx(bn, "oem_version", self->oem_version);
 	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
 	fu_xmlb_builder_insert_kx(bn, "major_vcn", self->major_vcn);
-	fu_xmlb_builder_insert_kx(bn, "device_infos", self->device_infos->len);
 	fu_xmlb_builder_insert_kb(bn, "has_manifest_ext", self->has_manifest_ext);
+	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
 }
 
 gboolean
@@ -117,7 +117,7 @@ fu_igsc_aux_firmware_parse_extension(FuIgscAuxFirmware *self, FuFirmware *fw, GE
 	if (stream == NULL)
 		return FALSE;
 
-	if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_IDS) {
+	if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_TYPE) {
 		for (gsize offset = 0; offset < fu_firmware_get_size(fw);
 		     offset += FU_IGSC_FWDATA_DEVICE_INFO4_SIZE) {
 			g_autoptr(FuIgscFwdataDeviceInfo4) st = NULL;

@@ -9,6 +9,7 @@ plugin_quirks += files('igsc.quirk')
 plugin_builtins += static_library('fu_plugin_igsc',
   rustgen.process('fu-igsc.rs'),
   sources: [
+    'fu-igsc-common.c',
     'fu-igsc-plugin.c',
     'fu-igsc-device.c',
     'fu-igsc-code-firmware.c',
