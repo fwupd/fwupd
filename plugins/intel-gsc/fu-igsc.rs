@@ -130,11 +130,12 @@ struct FuStructIgscFwdataUpdateExt {
     flags: u16le,
 }
 
+#[derive(ToString)]
 enum FuIgscFwuExtType {
-    DeviceIds           = 0x25,
-    FwdataUpdate        = 0x1D,
-    DeviceType          = 0x07,
-    SignedPackageInfo   = 0x0F,
-    IfwiPartMan         = 0x16,
-    DeviceIdArray       = 0x37,
+    DeviceType          = 7,
+    ModuleAttr          = 10,
+    SignedPackageInfo   = 15,
+    FwdataUpdate        = 29,
+    IfwiPartMan         = 22,
+    DeviceIdArray       = 37,
 }

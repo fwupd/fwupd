@@ -7,8 +7,8 @@
 
 #include "config.h"
 
+#include "fu-igsc-common.h"
 #include "fu-igsc-oprom-firmware.h"
-#include "fu-igsc-struct.h"
 
 struct _FuIgscOpromFirmware {
 	FuOpromFirmware parent_instance;
@@ -23,7 +23,7 @@ fu_igsc_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 {
 	FuIgscOpromFirmware *self = FU_IGSC_OPROM_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
-	fu_xmlb_builder_insert_kx(bn, "device_infos", self->device_infos->len);
+	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
 }
 
 guint16
@@ -77,51 +77,6 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 }
 
 static gboolean
-fu_igsc_oprom_firmware_parse_extension(FuIgscOpromFirmware *self, FuFirmware *fw, GError **error)
-{
-	gsize streamsz = 0;
-	g_autoptr(GInputStream) stream = NULL;
-
-	/* get data */
-	stream = fu_firmware_get_stream(fw, error);
-	if (stream == NULL)
-		return FALSE;
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_TYPE) {
-		for (gsize offset = 0; offset < streamsz;
-		     offset += FU_IGSC_FWDATA_DEVICE_INFO2_SIZE) {
-			g_autoptr(FuIgscFwdataDeviceInfo2) st = NULL;
-			g_autoptr(FuIgscFwdataDeviceInfo4) st4 = fu_igsc_fwdata_device_info4_new();
-			st = fu_igsc_fwdata_device_info2_parse_stream(stream, offset, error);
-			if (st == NULL)
-				return FALSE;
-			fu_igsc_fwdata_device_info4_set_vendor_id(st4, 0x0);
-			fu_igsc_fwdata_device_info4_set_device_id(st4, 0x0);
-			fu_igsc_fwdata_device_info4_set_subsys_vendor_id(
-			    st4,
-			    fu_igsc_fwdata_device_info2_get_subsys_vendor_id(st));
-			fu_igsc_fwdata_device_info4_set_subsys_device_id(
-			    st4,
-			    fu_igsc_fwdata_device_info2_get_subsys_device_id(st));
-			g_ptr_array_add(self->device_infos, g_steal_pointer(&st4));
-		}
-	} else if (fu_firmware_get_idx(fw) == FU_IGSC_FWU_EXT_TYPE_DEVICE_ID_ARRAY) {
-		for (gsize offset = 0; offset < streamsz;
-		     offset += FU_IGSC_FWDATA_DEVICE_INFO4_SIZE) {
-			g_autoptr(FuIgscFwdataDeviceInfo4) st = NULL;
-			st = fu_igsc_fwdata_device_info4_parse_stream(stream, offset, error);
-			if (st == NULL)
-				return FALSE;
-			g_ptr_array_add(self->device_infos, g_steal_pointer(&st));
-		}
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
 			     FuFirmwareParseFlags flags,
@@ -129,7 +84,8 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 {
 	FuIgscOpromFirmware *self = FU_IGSC_OPROM_FIRMWARE(firmware);
 	g_autoptr(FuFirmware) fw_cpd = NULL;
-	g_autoptr(GPtrArray) cpd_imgs = NULL;
+	g_autoptr(FuFirmware) man_img = NULL;
+	g_autoptr(GPtrArray) man_ext_imgs = NULL;
 
 	/* FuOpromFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_oprom_firmware_parent_class)
@@ -181,10 +137,13 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* parse all the manifest extensions */
-	cpd_imgs = fu_firmware_get_images(fw_cpd);
-	for (guint i = 0; i < cpd_imgs->len; i++) {
-		FuFirmware *img = g_ptr_array_index(cpd_imgs, i);
-		if (!fu_igsc_oprom_firmware_parse_extension(self, img, error))
+	man_img = fu_firmware_get_image_by_id(fw_cpd, "OROM.man", error);
+	if (man_img == NULL)
+		return FALSE;
+	man_ext_imgs = fu_firmware_get_images(man_img);
+	for (guint i = 0; i < man_ext_imgs->len; i++) {
+		FuFirmware *img_man_ext = g_ptr_array_index(man_ext_imgs, i);
+		if (!fu_igsc_fwdata_device_info_parse(self->device_infos, img_man_ext, error))
 			return FALSE;
 	}
 
