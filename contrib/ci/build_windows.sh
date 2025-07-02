@@ -24,7 +24,9 @@ rm -rf $DESTDIR $build
 mkdir -p $build $DESTDIR && cd $build
 
 # Hack for Fedora bug
-sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+if [ "$(id -u)" -eq 0 ]; then
+    sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+fi
 
 # run before using meson
 export WINEPREFIX=$build/.wine
