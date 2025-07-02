@@ -10,7 +10,6 @@
 #include <xmlb.h>
 
 #include "fu-chunk.h"
-#include "fu-firmware.h"
 
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
