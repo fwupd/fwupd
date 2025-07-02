@@ -35,6 +35,7 @@
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallValidate"/>
     </InstallExecuteSequence>
+    <Environment Id="PATH" Name="PATH" Value="[BINDIR]" Permanent="yes" Part="last" Action="set" System="yes" />
     <Icon Id="fwupd.ico" SourceFile="data/fwupd.ico"/>
   </Product>
 </Wix>
