@@ -39,10 +39,6 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 {
 	g_autoptr(GByteArray) st_inf = NULL;
 
-	/* the command is only supported on DG2 */
-	if (g_strcmp0(fu_firmware_get_id(FU_FIRMWARE(self)), "DG02") != 0)
-		return TRUE;
-
 	/* get hw_sku */
 	st_inf = fu_struct_igsc_fwu_gws_image_info_parse_stream(stream, 0x0, error);
 	if (st_inf == NULL)
