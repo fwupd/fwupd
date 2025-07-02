@@ -37,7 +37,7 @@ fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self)
 static gboolean
 fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream, GError **error)
 {
-	g_autoptr(GByteArray) st_inf = NULL;
+	g_autoptr(FuStructIgscFwuGwsImageInfo) st_inf = NULL;
 
 	/* get hw_sku */
 	st_inf = fu_struct_igsc_fwu_gws_image_info_parse_stream(stream, 0x0, error);
@@ -57,7 +57,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autofree gchar *project = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(GByteArray) st_md1 = NULL;
+	g_autoptr(FuStructIgscFwuImageMetadataV1) st_md1 = NULL;
 	g_autoptr(GInputStream) stream_imgi = NULL;
 	g_autoptr(GInputStream) stream_info = NULL;
 
