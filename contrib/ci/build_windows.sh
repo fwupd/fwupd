@@ -167,10 +167,6 @@ wixl -v \
 	-D DESTDIR="$DESTDIR" \
 	-o "${MSI_FILENAME}"
 
-#generate news release
-echo "Generating news for version $VERSION"
-contrib/ci/generate_news.py $VERSION | tee -a $DESTDIR/news.txt
-
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
 ls -R ${WINEPREFIX}/drive_c/Program\ Files/fwupd/
