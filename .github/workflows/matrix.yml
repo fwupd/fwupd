@@ -141,7 +141,6 @@ jobs:
         name: windows
         path: |
           ${{ github.workspace }}/dist/setup/*.msi
-          ${{ github.workspace }}/dist/news.txt
 
   publish-docs:
     name: Publish docs
@@ -190,12 +189,6 @@ jobs:
         id: download
         with:
           name: windows
-      - name: Populate release body
-        id: read_release
-        shell: bash
-        run: |
-          r=$(cat dist/news.txt)
-          echo "RELEASE_BODY=$r" >> $GITHUB_OUTPUT
       - name: Upload Binaries to Release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -203,5 +196,3 @@ jobs:
           tag: ${{ github.ref }}
           file_glob: true
           file: dist/setup/*.msi
-          body: |
-            ${{ steps.read_release.outputs.RELEASE_BODY }}  # <--- Use environment variables that was created earlier
