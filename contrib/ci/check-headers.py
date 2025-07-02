@@ -25,7 +25,7 @@ def __get_includes(fn: str) -> List[str]:
             for char in ["\t"]:
                 line = line.replace(char, " ")
             includes.append(line.split(" ")[-1])
-    return includes
+    return sorted(includes)
 
 
 def test_files() -> int:
@@ -107,6 +107,11 @@ def test_files() -> int:
         # check for headers including themselves
         if fn.endswith(".h") and os.path.basename(fn) in includes:
             print(f"{fn} includes itself")
+            rc = 1
+
+        # check for duplicate includes
+        if sorted(set(includes)) != includes:
+            print(f"{fn} contains duplicate includes")
             rc = 1
 
         # check for one header implying the other
