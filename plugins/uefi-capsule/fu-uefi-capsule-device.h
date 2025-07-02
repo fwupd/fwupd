@@ -9,7 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-uefi-capsule-device.h"
 #include "fu-uefi-update-info.h"
 
 #define FU_TYPE_UEFI_CAPSULE_DEVICE (fu_uefi_capsule_device_get_type())

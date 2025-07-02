@@ -104,6 +104,11 @@ def test_files() -> int:
             print(f"{fn} does not include config.h")
             rc = 1
 
+        # check for headers including themselves
+        if fn.endswith(".h") and os.path.basename(fn) in includes:
+            print(f"{fn} includes itself")
+            rc = 1
+
         # check for one header implying the other
         implied_headers = {
             "fu-common.h": ["xmlb.h"],

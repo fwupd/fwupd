@@ -14,7 +14,6 @@
 #include "fu-context.h"
 #include "fu-device-locker.h"
 #include "fu-device.h"
-#include "fu-plugin.h"
 #include "fu-quirks.h"
 #include "fu-security-attrs.h"
 #include "fu-version-common.h"
