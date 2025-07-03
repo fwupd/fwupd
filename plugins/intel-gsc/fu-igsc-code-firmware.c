@@ -13,6 +13,7 @@
 struct _FuIgscCodeFirmware {
 	FuIfwiFptFirmware parent_instance;
 	guint32 hw_sku;
+	guint32 arb_svn;
 };
 
 G_DEFINE_TYPE(FuIgscCodeFirmware, fu_igsc_code_firmware, FU_TYPE_IFWI_FPT_FIRMWARE)
@@ -25,6 +26,7 @@ fu_igsc_code_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 {
 	FuIgscCodeFirmware *self = FU_IGSC_CODE_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kx(bn, "hw_sku", self->hw_sku);
+	fu_xmlb_builder_insert_kx(bn, "arb_svn", self->arb_svn);
 }
 
 guint32
@@ -32,6 +34,13 @@ fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self)
 {
 	g_return_val_if_fail(FU_IS_IFWI_FPT_FIRMWARE(self), G_MAXUINT32);
 	return self->hw_sku;
+}
+
+guint32
+fu_igsc_code_firmware_get_arb_svn(FuIgscCodeFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_IFWI_FPT_FIRMWARE(self), G_MAXUINT32);
+	return self->arb_svn;
 }
 
 static gboolean
@@ -57,6 +66,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autofree gchar *project = NULL;
 	g_autofree gchar *version = NULL;
+	g_autoptr(FuStructIgscFwuFwImageData) st_imgdata = NULL;
 	g_autoptr(FuStructIgscFwuImageMetadataV1) st_md1 = NULL;
 	g_autoptr(GInputStream) stream_imgi = NULL;
 	g_autoptr(GInputStream) stream_info = NULL;
@@ -105,6 +115,10 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 				  fu_struct_igsc_fwu_image_metadata_v1_get_version_hotfix(st_md1),
 				  fu_struct_igsc_fwu_image_metadata_v1_get_version_build(st_md1));
 	fu_firmware_set_version(FU_FIRMWARE(self), version);
+
+	/* get the SVN */
+	st_imgdata = fu_struct_igsc_fwu_image_metadata_v1_get_image_data(st_md1);
+	self->arb_svn = fu_struct_igsc_fwu_fw_image_data_get_arb_svn(st_imgdata);
 
 	/* get instance ID for image */
 	stream_imgi = fu_firmware_get_image_by_idx_stream(FU_FIRMWARE(self),

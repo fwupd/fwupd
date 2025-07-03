@@ -20,3 +20,5 @@ FuFirmware *
 fu_igsc_code_firmware_new(void);
 guint32
 fu_igsc_code_firmware_get_hw_sku(FuIgscCodeFirmware *self);
+guint32
+fu_igsc_code_firmware_get_arb_svn(FuIgscCodeFirmware *self);
