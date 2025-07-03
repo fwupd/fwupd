@@ -11,7 +11,8 @@ This plugin is used to update the Intel graphics system controller via the Intel
 ### FWCODE
 
 * This is a superset of `FuIfwiFptFirmware`
-* The `INFO` partition is a `FuStructIgscFwuImageMetadataV1`, which gives the `id` and `version`
+* The `INFO` partition is a `FuStructIgscFwuImageMetadataV1`, which gives the `id` and `version`,
+  and the `FuStructIgscFwuFwImageData` is also part of that. This then gives the `arb_svn`.
 * The `IMGI` partition is a `FuStructIgscFwuGwsImageInfo`, which gives us `hw_sku`
 
 ```xml
@@ -19,6 +20,7 @@ This plugin is used to update the Intel graphics system controller via the Intel
   <id>BMG_</id>
   <version>0021.1111</version>
   <hw_sku>0x2</hw_sku>
+  <arb_svn>0x2</arb_svn>
   <firmware>
     <id>INFO</id>
   </firmware>

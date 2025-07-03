@@ -80,7 +80,7 @@ struct FuStructIgscFwuImageMetadataV1 {
     project: [char; 4],
     version_hotfix: u16le,         // version of the overall IFWI image, i.e. the combination of IPs
     version_build: u16le,
-    // struct FuStructIgscFwuFwImageData
+    image_data: FuStructIgscFwuFwImageData,
     // struct FuStructIgscFwuIupData
 }
 
