@@ -533,6 +533,8 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 				GError **error)
 {
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
+	guint fw_arb_svn;
+	guint fw_hw_sku;
 	g_autoptr(FuFirmware) firmware = fu_igsc_code_firmware_new();
 
 	/* check project code */
@@ -547,13 +549,37 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 			    self->project);
 		return NULL;
 	}
-	if (self->hw_sku != fu_igsc_code_firmware_get_hw_sku(FU_IGSC_CODE_FIRMWARE(firmware))) {
+
+	/* check SKU */
+	fw_hw_sku = fu_igsc_code_firmware_get_hw_sku(FU_IGSC_CODE_FIRMWARE(firmware));
+	if (self->hw_sku != fw_hw_sku) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "firmware is for a different SKU, got 0x%x, expected 0x%x",
-			    fu_igsc_code_firmware_get_hw_sku(FU_IGSC_CODE_FIRMWARE(firmware)),
+			    fw_hw_sku,
 			    self->hw_sku);
+		return NULL;
+	}
+
+	/* check SVN */
+	fw_arb_svn = fu_igsc_code_firmware_get_arb_svn(FU_IGSC_CODE_FIRMWARE(firmware));
+	if (fw_arb_svn < self->svn_min_allowed) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "firmware incompatible, ARB SVN was 0x%x, minimum required is 0x%x",
+			    fw_arb_svn,
+			    self->svn_min_allowed);
+		return NULL;
+	}
+	if (fw_arb_svn < self->svn_executing && (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "firmware incompatible, ARB SVN was 0x%x, hardware ARB SVN is 0x%x",
+			    fw_arb_svn,
+			    self->svn_executing);
 		return NULL;
 	}
 
