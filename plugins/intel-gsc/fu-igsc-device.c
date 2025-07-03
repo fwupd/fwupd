@@ -299,14 +299,6 @@ fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 	return TRUE;
 }
 
-#define GSC_IFWI_TAG_SOC2_SKU_BIT 0x1
-#define GSC_IFWI_TAG_SOC3_SKU_BIT 0x2
-#define GSC_IFWI_TAG_SOC1_SKU_BIT 0x4
-
-#define GSC_DG2_SKUID_SOC1 0
-#define GSC_DG2_SKUID_SOC2 1
-#define GSC_DG2_SKUID_SOC3 2
-
 static gboolean
 fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 {
@@ -338,23 +330,7 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 			    (guint)GSC_FWU_GET_CONFIG_FORMAT_VERSION);
 		return FALSE;
 	}
-
-	/* convert to firmware bit mask for easier comparison */
-	if (res.hw_sku == GSC_DG2_SKUID_SOC1) {
-		self->hw_sku = GSC_IFWI_TAG_SOC1_SKU_BIT;
-	} else if (res.hw_sku == GSC_DG2_SKUID_SOC3) {
-		self->hw_sku = GSC_IFWI_TAG_SOC3_SKU_BIT;
-	} else if (res.hw_sku == GSC_DG2_SKUID_SOC2) {
-		self->hw_sku = GSC_IFWI_TAG_SOC2_SKU_BIT;
-	} else {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid hw sku 0x%x, expected 0..2",
-			    res.hw_sku);
-		return FALSE;
-	}
-
+	self->hw_sku = res.hw_sku;
 	self->oprom_code_devid_enforcement = res.oprom_code_devid_enforcement;
 
 	/* success */
