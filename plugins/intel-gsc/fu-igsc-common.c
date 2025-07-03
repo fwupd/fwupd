@@ -110,3 +110,48 @@ fu_igsc_fwdata_device_info_parse(GPtrArray *device_infos, FuFirmware *fw, GError
 	/* unknown is success */
 	return TRUE;
 }
+
+gboolean
+fu_igsc_heci_check_status(FuIgscFwuHeciStatus status, GError **error)
+{
+	if (status == FU_IGSC_FWU_HECI_STATUS_SUCCESS)
+		return TRUE;
+	if (status == FU_IGSC_FWU_HECI_STATUS_SIZE_ERROR) {
+		g_set_error_literal(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "num of bytes to read/write/erase is bigger than partition size");
+		return FALSE;
+	}
+	if (status == FU_IGSC_FWU_HECI_STATUS_UPDATE_OPROM_INVALID_STRUCTURE) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "wrong oprom signature");
+		return FALSE;
+	}
+	if (status == FU_IGSC_FWU_HECI_STATUS_UPDATE_OPROM_SECTION_NOT_EXIST) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "update oprom section does not exists on flash");
+		return FALSE;
+	}
+	if (status == FU_IGSC_FWU_HECI_STATUS_INVALID_COMMAND) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "invalid HECI message sent");
+		return FALSE;
+	}
+	if (status == FU_IGSC_FWU_HECI_STATUS_INVALID_PARAMS) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid command parameters");
+		return FALSE;
+	}
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "general firmware error");
+	return FALSE;
+}

@@ -9,7 +9,6 @@
 
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-common.h"
-#include "fu-igsc-heci.h"
 
 struct _FuIgscAuxFirmware {
 	FuIfwiFptFirmware parent_instance;

@@ -9,7 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-igsc-heci.h"
 #include "fu-igsc-struct.h"
 
 #define FU_TYPE_IGSC_DEVICE (fu_igsc_device_get_type())

@@ -92,9 +92,9 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	guint8 buf[8] = {0x0};
+	guint8 buf[FU_STRUCT_IGSC_OPROM_VERSION_SIZE] = {0x0};
 	g_autofree gchar *version = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructIgscOpromVersion) st = NULL;
 
 	/* get version */
 	if (!fu_igsc_device_get_version_raw(igsc_parent,
