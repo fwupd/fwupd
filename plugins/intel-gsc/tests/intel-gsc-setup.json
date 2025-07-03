@@ -176,6 +176,13 @@
           "Data": "MDAwMDAzNTUKODAyMTA0MDgKMDAwMDAwMDAKMDAwMDAwMDAKODAwMjAwMDEKMDAwMDAwMDAK"
         },
         {
+          "Id": "ReadProp:Key=WEDGED"
+        },
+        {
+          "Id": "ReadAttr:Attr=uevent",
+          "Data": "MAJOR=235\nMINOR=0\nDEVNAME=mei0"
+        },
+        {
           "Id": "Ioctl:Request=0xc0104801,Data=pvcq/iLvRUuHLxdrC7yLQw==,Length=0x10",
           "DataOut": "ABAAAALvRUuHLxdrC7yLQw=="
         },
