@@ -27,3 +27,9 @@ Summary = Belkin Reference Board
 [USB\VID_18D1&PID_5022]
 Plugin = cros_ec
 Summary = Prism Board
+
+# Hammer
+[USB\VID_18D1&PID_5061]
+Plugin = cros_ec
+Summary = Hammer Base Detachable
+Flags = has-touchpad
