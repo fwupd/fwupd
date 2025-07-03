@@ -99,6 +99,7 @@ find $MINGW32BINDIR \
 	-o -name "libnettle-*.dll" \
 	-o -name libp11-kit-0.dll \
 	-o -name libpcre2-8-0.dll \
+	-o -name libpsl-5.dll \
 	-o -name libsqlite3-0.dll \
 	-o -name libssh2-1.dll \
 	-o -name libssl-3-x64.dll \
@@ -106,11 +107,13 @@ find $MINGW32BINDIR \
 	-o -name libtermcap-0.dll \
 	-o -name libreadline8.dll \
 	-o -name libtasn1-6.dll \
+	-o -name libunistring-2.dll \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
 	-o -name libxmlb-2.dll \
 	-o -name libzstd.dll \
+	-o -name wldap32.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
 	-p $MINGW32BINDIR/ \
