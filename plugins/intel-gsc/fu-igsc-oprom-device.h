@@ -9,7 +9,7 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-igsc-heci.h"
+#include "fu-igsc-struct.h"
 
 #define FU_TYPE_IGSC_OPROM_DEVICE (fu_igsc_oprom_device_get_type())
 G_DECLARE_FINAL_TYPE(FuIgscOpromDevice, fu_igsc_oprom_device, FU, IGSC_OPROM_DEVICE, FuDevice)
