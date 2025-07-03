@@ -560,21 +560,22 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	/* copy this for being able to send in next commit transaction */
 	self->raw_versions->pkg_version = self->data->dock_firmware_pkg_ver;
 
+	/* make sure this hardware spin matches our expectations */
+	fu_dell_dock_ec_set_board(device);
+	if (self->data->board_id < self->board_min)
+		fu_device_inhibit(device, "not-supported", "Utility does not support this board");
+
 	/* read if passive update pending */
 	if (!fu_dell_dock_ec_get_status(device, &status, error))
 		return FALSE;
 
-	/* make sure this hardware spin matches our expectations */
-	if (self->data->board_id >= self->board_min) {
-		if (status != FW_UPDATE_IN_PROGRESS) {
-			fu_dell_dock_ec_set_board(device);
-			fu_device_uninhibit(device, "update-pending");
-		} else {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
-		}
+	/* read device status regarding firmware update progress */
+	if (status == FW_UPDATE_IN_PROGRESS) {
+		fu_device_inhibit(device, "update-pending", "Device has staged firmware");
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	} else {
-		fu_device_inhibit(device, "not-supported", "Utility does not support this board");
+		fu_device_uninhibit(device, "update-pending");
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	}
 
 	return TRUE;
@@ -674,7 +675,7 @@ fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 }
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
+fu_dell_dock_ec_register_passive_flow(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	guint32 cmd = EC_CMD_PASSIVE | /* cmd */

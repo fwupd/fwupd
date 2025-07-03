@@ -33,7 +33,7 @@ gboolean
 fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, GError **error);
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error);
+fu_dell_dock_ec_register_passive_flow(FuDevice *device, GError **error);
 
 const gchar *
 fu_dell_dock_ec_get_mst_version(FuDevice *device);
