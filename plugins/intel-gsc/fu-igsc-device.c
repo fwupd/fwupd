@@ -26,6 +26,7 @@ struct _FuIgscDevice {
 
 #define FU_IGSC_DEVICE_FLAG_HAS_AUX   "has-aux"
 #define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
+#define FU_IGSC_DEVICE_FLAG_HAS_SKU   "has-sku"
 
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
@@ -410,11 +411,15 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 
 	/* get hardware SKU if supported */
-	if (g_strcmp0(self->project, "DG02") == 0) {
+	if (g_strcmp0(self->project, "DG02") == 0)
+		fu_device_add_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_SKU);
+	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_SKU)) {
 		if (!fu_igsc_device_get_config(self, error)) {
 			g_prefix_error(error, "cannot get SKU: ");
 			return FALSE;
 		}
+	} else {
+		g_debug("not getting config for %s", self->project);
 	}
 
 	/* allow vendors to differentiate their products */
@@ -875,6 +880,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_SKU);
 }
 
 static void
