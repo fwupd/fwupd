@@ -227,11 +227,7 @@ class StructObj:
             self.add_private_export("Validate")
         elif derive == "ValidateInternal":
             for item in self.items:
-                if (
-                    item.constant
-                    and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.n_elements)
-                ):
+                if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
