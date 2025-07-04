@@ -1,4 +1,4 @@
-if allow_uefi_capsule
+if allow_uefi
 subdir('tests')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
