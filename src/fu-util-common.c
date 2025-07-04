@@ -137,19 +137,20 @@ fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
 }
 
 static gboolean
-fu_util_is_interesting_child(FwupdDevice *dev)
+fu_util_is_interesting_child(GPtrArray *devs, FwupdDevice *dev)
 {
-	GPtrArray *children = fwupd_device_get_children(dev);
-	for (guint i = 0; i < children->len; i++) {
-		FwupdDevice *child = g_ptr_array_index(children, i);
-		if (fu_util_is_interesting_device(child))
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *child = g_ptr_array_index(devs, i);
+		if (fwupd_device_get_parent(child) != dev)
+			continue;
+		if (fu_util_is_interesting_device(devs, child))
 			return TRUE;
 	}
 	return FALSE;
 }
 
 gboolean
-fu_util_is_interesting_device(FwupdDevice *dev)
+fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev)
 {
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 		return TRUE;
@@ -160,7 +161,7 @@ fu_util_is_interesting_device(FwupdDevice *dev)
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags(dev) == 0)
 		return TRUE;
-	if (fu_util_is_interesting_child(dev))
+	if (fu_util_is_interesting_child(devs, dev))
 		return TRUE;
 	return FALSE;
 }

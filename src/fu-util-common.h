@@ -46,7 +46,7 @@ fu_util_free_node(FuUtilNode *n) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilNode, fu_util_free_node)
 
 gboolean
-fu_util_is_interesting_device(FwupdDevice *dev) G_GNUC_NON_NULL(1);
+fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_util_get_user_cache_path(const gchar *fn) G_GNUC_NON_NULL(1);
 

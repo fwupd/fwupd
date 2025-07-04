@@ -866,7 +866,7 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FuDev
 					      self->filter_device_include,
 					      self->filter_device_exclude))
 			continue;
-		if (!self->show_all && !fu_util_is_interesting_device(FWUPD_DEVICE(dev_tmp)))
+		if (!self->show_all && !fu_util_is_interesting_device(devs, FWUPD_DEVICE(dev_tmp)))
 			continue;
 		if (fu_device_get_parent(dev_tmp) == dev) {
 			FuUtilNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
@@ -1678,7 +1678,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		}
 		if (g_strv_length(values) > 0 && dev_skip_byid)
 			continue;
-		if (!fu_util_is_interesting_device(dev))
+		if (!fu_util_is_interesting_device(devices, dev))
 			continue;
 
 		/* only show stuff that has metadata available */
