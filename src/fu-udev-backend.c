@@ -357,14 +357,17 @@ fu_udev_backend_coldplug_subsystem(FuUdevBackend *self, const gchar *fn)
 	}
 }
 
+/* if enabled, systemd takes the kernel event, runs the udev rules (which might rename devices)
+ * and then re-broadcasts on the udev netlink socket */
 static gboolean
 fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **error)
 {
-	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	FuUdevAction action = FU_UDEV_ACTION_UNKNOWN;
+	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
+#ifdef HAVE_SYSTEMD
+	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	const guint8 *buf;
 	gsize bufsz = 0;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autoptr(FuStructUdevMonitorNetlinkHeader) st_hdr = NULL;
 	g_autoptr(FuUdevDevice) device_donor = NULL;
 	g_autoptr(GBytes) blob_payload = NULL;
@@ -487,6 +490,33 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		/* success */
 		fu_udev_backend_device_add_from_device(self, device_actual);
 	}
+#else
+	g_auto(GStrv) split = fu_strsplit_bytes(blob, "@", 2);
+
+	action = fu_udev_action_from_string(split[0]);
+	if (action == FU_UDEV_ACTION_ADD) {
+		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
+		g_autoptr(FuUdevDevice) device =
+		    fu_udev_backend_create_device(self, sysfspath, error);
+		if (device == NULL)
+			return FALSE;
+		fu_udev_backend_device_add_from_device(self, device);
+	} else if (action == FU_UDEV_ACTION_REMOVE) {
+		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
+		fu_udev_backend_device_remove(self, sysfspath);
+	} else if (action == FU_UDEV_ACTION_CHANGE) {
+		g_autofree gchar *sysfspath = g_build_filename(sysfsdir, split[1], NULL);
+		FuDevice *device_tmp = fu_backend_lookup_by_id(FU_BACKEND(self), sysfspath);
+		if (device_tmp == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "no device to change");
+			return FALSE;
+		}
+		fu_backend_device_changed(FU_BACKEND(self), device_tmp);
+	}
+#endif
 
 	/* success */
 	return TRUE;
@@ -522,7 +552,11 @@ fu_udev_backend_netlink_setup(FuUdevBackend *self, GError **error)
 	struct sockaddr_nl nls = {
 	    .nl_family = AF_NETLINK,
 	    .nl_pid = getpid(),
+#ifdef HAVE_SYSTEMD
 	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_UDEV,
+#else
+	    .nl_groups = FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL,
+#endif
 	};
 	g_autoptr(GSource) source = NULL;
 
