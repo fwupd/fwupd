@@ -1,17 +1,3 @@
-plugin_readme_targets = []
-plugin_readme_outputs = []
-foreach plugin, enabled: plugins
-  plugin_readme_output = '@0@-README.md'.format(plugin)
-  plugin_readme_targets += custom_target('doc-plugin-@0@'.format(plugin),
-    input: join_paths(meson.project_source_root(), 'plugins', plugin, 'README.md'),
-    output: plugin_readme_output,
-    command: ['ln', '-sf', '@INPUT0@', '@OUTPUT@'],
-    build_by_default: true,
-  )
-  plugin_readme_outputs += '"@0@"'.format(plugin_readme_output)
-endforeach
-
-
 if build_standalone
   if get_option('man')
     custom_target('fwupd.conf.5',
@@ -25,10 +11,10 @@ if build_standalone
         '--replace', 'plugin_msr', '@0@'.format(has_cpuid),
         '--replace', 'plugin_redfish', '@0@'.format(host_machine.system() == 'linux'),
         '--replace', 'P2pPolicy', '@0@'.format(get_option('p2p_policy')),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'msr', 'fu-msr-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'redfish', 'fu-redfish-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
       ],
       install: true,
@@ -59,10 +45,10 @@ if build_standalone
         '--replace', 'plugin_uefi_capsule', '@0@'.format(allow_uefi),
         '--replace', 'plugin_msr', '@0@'.format(has_cpuid),
         '--replace', 'plugin_redfish', '@0@'.format(host_machine.system() == 'linux'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'msr', 'fu-msr-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'redfish', 'fu-redfish-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
-        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'msr', 'fu-msr-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'redfish', 'fu-redfish-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'linux', 'thunderbolt', 'fu-thunderbolt-plugin.c'),
+        '--defines', join_paths(meson.project_source_root(), 'plugins', 'uefi', 'uefi-capsule', 'fu-uefi-capsule-plugin.c'),
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
         '--md',
       ],
@@ -169,9 +155,12 @@ if build_docs
       '--content-dir=@0@'.format(meson.current_build_dir()),
       '--content-dir=@0@'.format(meson.current_source_dir()),
       '--content-dir=@0@'.format(meson.current_build_dir() / '../src'),
-      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-dbx'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi/uefi-dbx'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/os-indep'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/linux'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi'),
       '--content-dir=@0@'.format(meson.current_build_dir() / '../data/motd'),
-      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi-capsule'),
+      '--content-dir=@0@'.format(meson.current_build_dir() / '../plugins/uefi/uefi-capsule'),
       '@INPUT1@',
     ],
     depends: [

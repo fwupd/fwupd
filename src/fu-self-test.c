@@ -14,7 +14,7 @@
 
 #include "fwupd-remote-private.h"
 
-#include "../plugins/test/fu-test-plugin.h"
+#include "../plugins/os-indep/test/fu-test-plugin.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cabinet.h"
 #include "fu-client-list.h"

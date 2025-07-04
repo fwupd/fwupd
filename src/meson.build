@@ -169,7 +169,7 @@ plugins_hdr = custom_target('fwupd-generate-plugins-header',
   command : [
     generate_plugins_header,
     '@OUTPUT@',
-    '.',
+    join_paths(meson.project_source_root(), 'plugins'),
     ','.join(plugin_names),
   ],
 )
