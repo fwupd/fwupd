@@ -55,14 +55,14 @@ repos:
                   BootOrder-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c|
                   fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416)|
-              plugins/ch341a/ch341a-vmod\.png|
-              plugins/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
+              plugins/os-indep/ch341a/ch341a-vmod\.png|
+              plugins/linux/lenovo-thinklmi/tests/efi/efivars/(fwupd-ddc0ee61-e7f0-4e7d-acc5-c070a398838e-0-0abba7dc-e516-4167-bbf5-4d9d1c739416|
                   OsIndicationsSupported-8be4df61-93ca-11d2-aa0d-00e098032b8c)|
-              plugins/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
-              plugins/pci-bcr/config|
-              plugins/redfish/tests/efi/efivars/(RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70|
+              plugins/linux/logitech-hidpp/data/dump\.(csv\.gz|tdc)|
+              plugins/os-indep/pci-bcr/config|
+              plugins/linux/redfish/tests/efi/efivars/(RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70|
                   RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70)|
-              plugins/uefi-capsule/tests/test\.bmp|
+              plugins/uefi/uefi-capsule/tests/test\.bmp|
               src/tests/auth/firmware\.xml\.gz|
               src/tests/history_v[12]\.db|
               src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors

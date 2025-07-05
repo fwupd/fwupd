@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 import sys
+import os
 
 if len(sys.argv) < 3:
     print("not enough arguments")
@@ -26,11 +27,15 @@ with open(sys.argv[1], "w") as f:
 
     # includes
     for dirname, name in plugin_names:
-        f.write(
-            '#include "{srcdir}/plugins/{dirname}/fu-{name}-plugin.h"\n'.format(
-                srcdir=sys.argv[2], dirname=dirname, name=name.replace("_", "-")
-            )
-        )
+        base = None
+        for root, dirs, _ in os.walk(sys.argv[2]):
+            for dirpath in dirs:
+                if dirpath == dirname:
+                    base = os.path.join(root, dirpath)
+                    break
+            if base:
+                break
+        f.write(f'#include "{base}/fu-{name.replace("_", "-")}-plugin.h"\n')
 
     # GTypes
     gtypes = [f"fu_{name}_plugin_get_type" for _, name in plugin_names]

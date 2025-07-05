@@ -1,6 +1,3 @@
-{%- if Parent == 'Udev' -%}
-if host_machine.system() == 'linux'
-{%- endif %}
 cargs = ['-DG_LOG_DOMAIN="FuPlugin{{VendorExample}}"']
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -23,6 +20,3 @@ device_tests += files(
   'tests/vendor-example.json',
   'tests/vendor-example-setup.json',
 )
-{%- if Parent == 'Udev' %}
-endif
-{%- endif %}
