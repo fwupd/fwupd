@@ -1485,7 +1485,7 @@ fu_util_device_test_full(FuUtil *self,
 			    g_strv_length(values));
 		return FALSE;
 	}
-	if (helper->nr_success == 0) {
+	if (helper->nr_success == 0 && helper->nr_skipped == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
