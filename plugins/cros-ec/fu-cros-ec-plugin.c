@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-cros-ec-firmware.h"
+#include "fu-cros-ec-hammer-touchpad.h"
 #include "fu-cros-ec-plugin.h"
 #include "fu-cros-ec-usb-device.h"
 
