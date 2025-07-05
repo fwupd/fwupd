@@ -10,6 +10,7 @@
 
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"
+#include "fu-cros-ec-hammer-touchpad.h"
 #include "fu-cros-ec-struct.h"
 #include "fu-cros-ec-usb-device.h"
 
@@ -25,6 +26,8 @@
 
 #define FU_CROS_EC_REQUEST_UPDATE_DONE	    0xB007AB1E
 #define FU_CROS_EC_REQUEST_UPDATE_EXTRA_CMD 0xB007AB1F
+
+#define FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD "has-touchpad"
 
 struct _FuCrosEcUsbDevice {
 	FuUsbDevice parent_instance;
@@ -340,6 +343,7 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuCrosEcVersion) active_version = NULL;
 	g_autoptr(FuCrosEcVersion) version = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuCrosEcHammerTouchpad) touchpad = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_cros_ec_usb_device_parent_class)->setup(device, error))
@@ -451,6 +455,13 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 					 "BOARDNAME",
 					 NULL))
 		return FALSE;
+
+	if (fu_device_has_private_flag(device, FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD)) {
+		touchpad = fu_cros_ec_hammer_touchpad_new(FU_DEVICE(device));
+		if (!fu_device_setup(FU_DEVICE(touchpad), &error_local))
+			return FALSE;
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(touchpad));
+	}
 
 	/* success */
 	return TRUE;
@@ -1006,6 +1017,8 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD);
 }
 
 static void
