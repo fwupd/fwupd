@@ -1,4 +1,10 @@
-if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if not hsi
+  subdir_done()
+endif
+if host_cpu not in ['x86', 'x86_64']
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciPsp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -20,4 +26,3 @@ device_tests += files(
 enumeration_data += files(
   'tests/pci-psp-strix.json',
 )
-endif

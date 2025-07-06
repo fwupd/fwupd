@@ -1,6 +1,10 @@
-gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: false)
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+if not cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: false)
+  subdir_done()
+endif
 
-if gpio_header and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -18,4 +22,3 @@ plugin_builtins += static_library('fu_plugin_gpio',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
-endif

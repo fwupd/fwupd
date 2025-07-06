@@ -1,4 +1,10 @@
-if host_machine.system() == 'linux' and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+if host_cpu not in ['x86', 'x86_64']
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 plugin_quirks += files('thunderbolt.quirk')
@@ -24,4 +30,3 @@ device_tests += files(
   'tests/caldigit-ts4-tbt.json',
   'tests/lenovo-x280-tbt.json',
 )
-endif

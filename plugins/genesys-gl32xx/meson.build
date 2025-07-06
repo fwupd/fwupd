@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginGenesysGl32xx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -14,4 +17,3 @@ plugin_builtins += static_library('fu_plugin_genesys_gl32xx',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

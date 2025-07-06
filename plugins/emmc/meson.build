@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -16,4 +19,3 @@ plugin_builtins += static_library('fu_plugin_emmc',
 
 enumeration_data += files('tests/sandisk-da4064-setup.json')
 device_tests += files('tests/sandisk-da4064.json')
-endif

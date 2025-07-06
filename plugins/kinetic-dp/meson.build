@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginKineticDp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -20,4 +23,3 @@ plugin_builtin_kinetic_dp = static_library('fu_plugin_kinetic_dp',
   dependencies: plugin_deps,
 )
 plugin_builtins += plugin_builtin_kinetic_dp
-endif

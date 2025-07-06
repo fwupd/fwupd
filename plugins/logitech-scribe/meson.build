@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechScribe"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -22,5 +25,3 @@ enumeration_data += files(
 device_tests += files(
   'tests/logi-scribe.json',
 )
-
-endif

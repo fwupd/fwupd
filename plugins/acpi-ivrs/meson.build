@@ -1,4 +1,10 @@
-if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if not hsi
+  subdir_done()
+endif
+if host_cpu not in ['x86', 'x86_64']
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiIvrs"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -37,5 +43,4 @@ if get_option('tests')
     ],
   )
   test('acpi-ivrs-self-test', e, env: env)  # added to installed-tests
-endif
 endif
