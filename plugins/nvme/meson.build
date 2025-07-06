@@ -1,6 +1,13 @@
 nvme_header = cc.has_header('linux/nvme_ioctl.h', required: false)
 
-if nvme_header and host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
+if not nvme_header
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -49,5 +56,4 @@ if get_option('tests')
     ],
   )
   test('nvme-self-test', e, env: env)  # added to installed-tests
-endif
 endif

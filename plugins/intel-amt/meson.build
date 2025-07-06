@@ -1,4 +1,6 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelAmt"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -19,4 +21,3 @@ plugin_builtins += static_library('fu_plugin_intel_amt',
 
 enumeration_data += files('tests/intel-amt-setup.json')
 device_tests += files('tests/intel-amt.json')
-endif

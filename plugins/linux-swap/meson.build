@@ -1,4 +1,6 @@
-if host_machine.system() == 'linux' and hsi
+if host_machine.system() != 'linux' or not hsi
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -37,5 +39,4 @@ if get_option('tests')
     ],
   )
   test('linux-swap-self-test', e, env: env)  # added to installed-tests
-endif
 endif

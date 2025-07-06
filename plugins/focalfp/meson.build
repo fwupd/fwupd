@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalfp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -16,4 +19,3 @@ plugin_builtins += static_library('fu_plugin_focalfp',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
-endif

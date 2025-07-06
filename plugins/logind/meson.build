@@ -1,4 +1,6 @@
-if libsystemd.found()
+if not libsystemd.found()
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -11,4 +13,3 @@ plugin_builtins += static_library('fu_plugin_logind',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

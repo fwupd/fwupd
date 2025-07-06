@@ -1,4 +1,6 @@
-if allow_flashrom
+if not allow_flashrom
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -24,4 +26,3 @@ shared_module('fu_plugin_flashrom',
     libflashrom,
   ],
 )
-endif
