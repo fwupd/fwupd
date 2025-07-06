@@ -1,3 +1,7 @@
+if not allow_uefi
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
