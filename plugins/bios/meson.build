@@ -1,4 +1,6 @@
-if allow_uefi and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if not (allow_uefi and (host_cpu == 'x86' or host_cpu == 'x86_64'))
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginBios"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -11,4 +13,3 @@ plugin_builtins += static_library('fu_plugin_bios',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

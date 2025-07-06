@@ -1,4 +1,6 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginAta"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -45,5 +47,4 @@ if get_option('tests')
     ],
   )
   test('ata-self-test', e, env: env)  # added to installed-tests
-endif
 endif

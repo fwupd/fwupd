@@ -1,4 +1,7 @@
-if hsi
+if not hsi
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciBcr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -12,4 +15,3 @@ plugin_builtins += static_library('fu_plugin_pci_bcr',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

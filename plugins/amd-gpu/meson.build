@@ -1,4 +1,7 @@
-if host_machine.system() == 'linux' and libdrm_amdgpu.found()
+if host_machine.system() != 'linux' or not libdrm_amdgpu.found()
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdGpu"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -27,4 +30,3 @@ device_tests += files('tests/amd-apu-rembrandt.json',
                       'tests/amd-dgpu.json',
                       'tests/amd-dgpu-navi3x.json',
 )
-endif

@@ -1,4 +1,6 @@
-if host_machine.system() == 'linux'
+if host_machine.system() != 'linux'
+  subdir_done()
+endif
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
@@ -21,4 +23,3 @@ plugin_builtins += static_library('fu_plugin_wacom_raw',
 device_tests += files(
   'tests/wacom-g14t.json',
 )
-endif
