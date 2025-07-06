@@ -1,4 +1,10 @@
-if hsi and has_cpuid
+if not hsi
+  subdir_done()
+endif
+if not has_cpuid
+  subdir_done()
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -17,4 +23,3 @@ plugin_builtins += static_library('fu_plugin_msr',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

@@ -1,4 +1,9 @@
-if protobufc.found() and protoc.found()
+if not protobufc.found()
+  subdir_done()
+endif
+if not protoc.found()
+  subdir_done()
+endif
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechBulkController"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -27,5 +32,3 @@ enumeration_data += files(
 device_tests += files(
   'tests/logi-rally-bar.json',
 )
-
-endif
