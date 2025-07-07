@@ -68,6 +68,20 @@ struct FuStructCrosEcFirstResponsePdu {
     flash_protection: u32be,    // status
     offset: u32be,              // offset of the other region
     version: [char; 32],        // version string of the other region
-    _min_rollback: u32be,        // minimum rollback version that RO will accept
-    _key_version: u32be,         // RO public key version
+    _min_rollback: u32be,       // minimum rollback version that RO will accept
+    _key_version: u32be,        // RO public key version
+}
+
+#[derive(New, Getters)]
+#[repr(C, packed)]
+struct FuStructCrosEcTouchpadGetInfoResponsePdu {
+    status: u8le,                   // Indicate if we get info from touchpad
+    reserved: u8le,                 //Reserved for padding
+    vendor: u16le,                  // Vendor USB id
+    fw_address: u32le,              // Virtual address to touchpad firmware
+    fw_size: u32le,                 // Size of the touchpad firmware
+    allowed_fw_hash: [char; 32],    // Checksum of the entire touchpad firmware accepted by the EC image
+    id: u16le,
+    fw_version: u16le,
+    fw_checksum: u16le,
 }
