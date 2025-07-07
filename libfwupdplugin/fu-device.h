@@ -90,7 +90,6 @@ struct _FuDeviceClass {
 	void (*set_progress)(FuDevice *self, FuProgress *progress);
 	void (*invalidate)(FuDevice *self);
 	gchar *(*convert_version)(FuDevice *self, guint64 version_raw);
-	void (*register_flags)(FuDevice *self);
 	void (*add_json)(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags);
 	gboolean (*from_json)(FuDevice *self,
 			      JsonObject *json_object,

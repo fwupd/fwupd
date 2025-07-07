@@ -92,8 +92,8 @@ typedef struct {
 	GPtrArray *instance_ids;     /* (nullable) (element-type FuDeviceInstanceIdItem) */
 	GPtrArray *retry_recs;	     /* (nullable) (element-type FuDeviceRetryRecovery) */
 	guint retry_delay;
-	GPtrArray *private_flags_registered; /* (nullable) (element-type GRefString) */
-	GPtrArray *private_flags;	     /* (nullable) (no-ref) (element-type GRefString) */
+	GArray *private_flags_registered; /* (nullable) (element-type GQuark) */
+	GArray *private_flags;		  /* (nullable) (element-type GQuark) */
 	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 	gulong notify_flags_proxy_id;
@@ -250,109 +250,132 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 	}
 }
 
-/* private */
-void
-fu_device_register_private_flag_safe(FuDevice *self, const gchar *flag)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(flag != NULL);
-	g_ptr_array_add(priv->private_flags_registered, g_ref_string_new_intern(flag));
-}
-
 static void
 fu_device_register_flags(FuDevice *self)
 {
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_HOST_CPU);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_REGISTERED);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART);
-	fu_device_register_private_flag_safe(self, FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *flags[] = {
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT,
+	    FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED,
+	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS,
+	    FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER,
+	    FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN,
+	    FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID,
+	    FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION,
+	    FU_DEVICE_PRIVATE_FLAG_IS_OPEN,
+	    FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER,
+	    FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET,
+	    FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY,
+	    FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK,
+	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR,
+	    FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED,
+	    FU_DEVICE_PRIVATE_FLAG_NO_PROBE,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED,
+	    FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING,
+	    FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL,
+	    FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER,
+	    FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION,
+	    FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM,
+	    FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV,
+	    FU_DEVICE_PRIVATE_FLAG_UNCONNECTED,
+	    FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED,
+	    FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING,
+	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS,
+	    FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD,
+	    FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER,
+	    FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY,
+	    FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST,
+	    FU_DEVICE_PRIVATE_FLAG_REGISTERED,
+	    FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS,
+	    FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION,
+	    FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART,
+	    FU_DEVICE_PRIVATE_FLAG_IS_FAKE,
+	    FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE,
+	    FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE,
+	    FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP,
+	    FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART,
+	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
+	};
+	GQuark flag_quarks[G_N_ELEMENTS(flags)] = {0};
+	for (guint i = 0; i < G_N_ELEMENTS(flags); i++)
+		flag_quarks[i] = g_quark_from_static_string(flags[i]);
+	g_array_append_vals(priv->private_flags_registered, flag_quarks, G_N_ELEMENTS(flags));
 }
 
-static void
-fu_device_ensure_private_flags(FuDevice *self)
+static gboolean
+fu_device_private_flags_has_quark(FuDevice *self, GQuark flag_quark)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
-
-	if (priv->private_flags_registered != NULL)
-		return;
-
-	priv->private_flags_registered =
-	    g_ptr_array_new_with_free_func((GDestroyNotify)g_ref_string_release);
-	priv->private_flags = g_ptr_array_new();
-
-	/* subclassed */
-	if (device_class->register_flags != NULL)
-		device_class->register_flags(self);
+	for (guint i = 0; i < priv->private_flags->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags, GQuark, i);
+		if (flag_quark == flag_tmp)
+			return TRUE;
+	}
+	return FALSE;
 }
 
-static GRefString *
-fu_device_find_private_flag_registered(FuDevice *self, const gchar *flag)
+static gboolean
+fu_device_private_flags_has_registered_quark(FuDevice *self, GQuark flag_quark)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GRefString) flag_ref = g_ref_string_new_intern(flag);
-
-	/* make sure base private flags are registered */
-	fu_device_ensure_private_flags(self);
-
 	for (guint i = 0; i < priv->private_flags_registered->len; i++) {
-		GRefString *flag_tmp = g_ptr_array_index(priv->private_flags_registered, i);
-		if (flag_ref == flag_tmp)
+		GQuark flag_tmp = g_array_index(priv->private_flags_registered, GQuark, i);
+		if (flag_quark == flag_tmp)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_device_private_flags_add_quark(FuDevice *self, GQuark flag_quark)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (fu_device_private_flags_has_quark(self, flag_quark) != 0)
+		return FALSE;
+	g_array_append_val(priv->private_flags, flag_quark);
+	return TRUE;
+}
+
+static gboolean
+fu_device_private_flags_remove_quark(FuDevice *self, GQuark flag_quark)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	for (guint i = 0; i < priv->private_flags->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags, GQuark, i);
+		if (flag_quark == flag_tmp) {
+			g_array_remove_index(priv->private_flags, i);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+static GQuark
+fu_device_private_flags_registered_lookup(FuDevice *self, const gchar *flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	GQuark flag_quark = g_quark_from_string(flag);
+	for (guint i = 0; i < priv->private_flags_registered->len; i++) {
+		GQuark flag_tmp = g_array_index(priv->private_flags_registered, GQuark, i);
+		if (flag_quark == flag_tmp)
 			return flag_tmp;
 	}
-	return NULL;
+	return 0;
 }
 
 /**
@@ -368,10 +391,14 @@ void
 fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	GRefString *flag_registered;
+	GQuark flag_quark;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
+
+	/* ensure */
+	if (priv->private_flags_registered->len == 0)
+		fu_device_register_flags(self);
 
 	/* do not let devices be updated until re-connected */
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
@@ -398,8 +425,8 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 	}
 
 	/* check exists */
-	flag_registered = fu_device_find_private_flag_registered(self, flag);
-	if (flag_registered == NULL) {
+	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
+	if (flag_quark == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -407,14 +434,8 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return;
 	}
-
-	/* already set */
-	if (g_ptr_array_find(priv->private_flags, flag_registered, NULL))
-		return;
-
-	/* add */
-	g_ptr_array_add(priv->private_flags, (gpointer)flag_registered); /* no ref */
-	g_object_notify(G_OBJECT(self), "private-flags");
+	if (fu_device_private_flags_add_quark(self, flag_quark))
+		g_object_notify(G_OBJECT(self), "private-flags");
 }
 
 /**
@@ -430,16 +451,20 @@ void
 fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	GRefString *flag_registered;
+	GQuark flag_quark;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
 
+	/* ensure */
+	if (priv->private_flags_registered->len == 0)
+		fu_device_register_flags(self);
+
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
 		fu_device_uninhibit(self, "unconnected");
 
-	flag_registered = fu_device_find_private_flag_registered(self, flag);
-	if (flag_registered == NULL) {
+	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
+	if (flag_quark == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -447,8 +472,8 @@ fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return;
 	}
-	g_ptr_array_remove(priv->private_flags, (gpointer)flag_registered);
-	g_object_notify(G_OBJECT(self), "private-flags");
+	if (fu_device_private_flags_remove_quark(self, flag_quark))
+		g_object_notify(G_OBJECT(self), "private-flags");
 }
 
 /**
@@ -464,13 +489,17 @@ gboolean
 fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	GRefString *flag_registered;
+	GQuark flag_quark;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 
-	flag_registered = fu_device_find_private_flag_registered(self, flag);
-	if (flag_registered == NULL) {
+	/* ensure */
+	if (priv->private_flags_registered->len == 0)
+		fu_device_register_flags(self);
+
+	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
+	if (flag_quark == 0) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -478,7 +507,7 @@ fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return FALSE;
 	}
-	return g_ptr_array_find(priv->private_flags, flag_registered, NULL);
+	return fu_device_private_flags_has_quark(self, flag_quark);
 }
 
 /**
@@ -4535,7 +4564,8 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 void
 fu_device_register_private_flag(FuDevice *self, const gchar *flag)
 {
-	GRefString *flag_registered;
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	GQuark flag_quark;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
@@ -4549,23 +4579,27 @@ fu_device_register_private_flag(FuDevice *self, const gchar *flag)
 		return;
 	}
 #endif
+	/* ensure */
+	if (priv->private_flags_registered->len == 0)
+		fu_device_register_flags(self);
 
 	/* sanity check */
-	flag_registered = fu_device_find_private_flag_registered(self, flag);
-	if (flag_registered != NULL) {
+	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
+	if (flag_quark != 0) {
 		g_critical("already registered private %s flag %s", G_OBJECT_TYPE_NAME(self), flag);
 		return;
 	}
 
 	/* add new */
-	fu_device_register_private_flag_safe(self, flag);
+	flag_quark = g_quark_from_static_string(flag);
+	g_array_append_val(priv->private_flags_registered, flag_quark);
 }
 
 static void
 fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
-	GRefString *private_flag;
+	GQuark flag_quark;
 
 	g_return_if_fail(hint != NULL);
 
@@ -4576,9 +4610,9 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 			fu_device_remove_flag(self, flag);
 			return;
 		}
-		private_flag = fu_device_find_private_flag_registered(self, hint + 1);
-		if (private_flag != NULL) {
-			fu_device_remove_private_flag(self, private_flag);
+		flag_quark = fu_device_private_flags_registered_lookup(self, hint + 1);
+		if (flag_quark != 0) {
+			fu_device_private_flags_remove_quark(self, flag_quark);
 			return;
 		}
 		return;
@@ -4590,9 +4624,9 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 		fu_device_add_flag(self, flag);
 		return;
 	}
-	private_flag = fu_device_find_private_flag_registered(self, hint);
-	if (private_flag != NULL) {
-		fu_device_add_private_flag(self, private_flag);
+	flag_quark = fu_device_private_flags_registered_lookup(self, hint);
+	if (flag_quark != 0) {
+		fu_device_private_flags_add_quark(self, flag_quark);
 		return;
 	}
 }
@@ -5111,8 +5145,8 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 	if (priv->private_flags != NULL && priv->private_flags->len != 0) {
 		g_autoptr(GPtrArray) tmpv = g_ptr_array_new();
 		for (guint64 i = 0; i < priv->private_flags->len; i++) {
-			GRefString *private_flag = g_ptr_array_index(priv->private_flags, i);
-			g_ptr_array_add(tmpv, (gpointer)private_flag);
+			GQuark flag_quark = g_array_index(priv->private_flags, GQuark, i);
+			g_ptr_array_add(tmpv, (gpointer)g_quark_to_string(flag_quark));
 		}
 		if (tmpv->len > 0) {
 			g_autofree gchar *tmps = fu_strjoin(",", tmpv);
@@ -6683,12 +6717,11 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		/* copy from donor FuDevice if has not already been set */
 		if (priv_donor->private_flags != NULL) {
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
-				GRefString *flag_tmp =
-				    g_ptr_array_index(priv_donor->private_flags, i);
-				if (g_ptr_array_find(priv->private_flags_registered,
-						     flag_tmp,
-						     NULL)) {
-					fu_device_add_private_flag(self, flag_tmp);
+				GQuark flag_quark =
+				    g_array_index(priv_donor->private_flags, GQuark, i);
+				if (fu_device_private_flags_has_registered_quark(self,
+										 flag_quark)) {
+					fu_device_private_flags_add_quark(self, flag_quark);
 				}
 			}
 		}
@@ -7945,7 +7978,6 @@ fu_device_class_init(FuDeviceClass *klass)
 	object_class->set_property = fu_device_set_property;
 
 	device_class->to_string = fu_device_to_string_impl;
-	device_class->register_flags = fu_device_register_flags;
 
 	/**
 	 * FuDevice::child-added:
@@ -8216,6 +8248,8 @@ fu_device_init(FuDevice *self)
 	priv->order = G_MAXINT;
 	priv->possible_plugins = g_ptr_array_new_with_free_func(g_free);
 	priv->acquiesce_delay = 50; /* ms */
+	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
+	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
 	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),
 							 "notify::flags",
 							 G_CALLBACK(fu_device_flags_notify_cb),
@@ -8262,10 +8296,8 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->instance_ids);
 	if (priv->parent_guids != NULL)
 		g_ptr_array_unref(priv->parent_guids);
-	if (priv->private_flags != NULL)
-		g_ptr_array_unref(priv->private_flags);
-	if (priv->private_flags_registered != NULL)
-		g_ptr_array_unref(priv->private_flags_registered);
+	g_array_unref(priv->private_flags);
+	g_array_unref(priv->private_flags_registered);
 	g_ptr_array_unref(priv->possible_plugins);
 	g_free(priv->equivalent_id);
 	g_free(priv->physical_id);
