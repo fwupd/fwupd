@@ -7,7 +7,7 @@ enum FuWacomRawOperationMode {
     Bootloader = 0x02,
 }
 
-enum FuWacomDeviceCmdFlags {
+enum FuWacomRawDeviceCmdFlags {
     None = 0,
     PollOnWaiting = 1 << 0,
     NoErrorCheck = 1 << 1,

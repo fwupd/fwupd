@@ -6,9 +6,9 @@
 
 #include "config.h"
 
-#include "fu-wacom-aes-device.h"
-#include "fu-wacom-common.h"
-#include "fu-wacom-emr-device.h"
+#include "fu-wacom-raw-aes-device.h"
+#include "fu-wacom-raw-common.h"
+#include "fu-wacom-raw-emr-device.h"
 #include "fu-wacom-raw-plugin.h"
 
 struct _FuWacomRawPlugin {
@@ -53,8 +53,8 @@ fu_wacom_raw_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "WacomI2cFlashBlockSize");
 	fu_context_add_quirk_key(ctx, "WacomI2cFlashBaseAddr");
 	fu_context_add_quirk_key(ctx, "WacomI2cFlashSize");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_AES_DEVICE);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_EMR_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_RAW_AES_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_WACOM_RAW_EMR_DEVICE);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 }
 

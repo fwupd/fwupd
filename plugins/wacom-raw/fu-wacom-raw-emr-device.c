@@ -8,22 +8,22 @@
 
 #include <string.h>
 
-#include "fu-wacom-common.h"
-#include "fu-wacom-emr-device.h"
+#include "fu-wacom-raw-common.h"
+#include "fu-wacom-raw-emr-device.h"
 
-struct _FuWacomEmrDevice {
-	FuWacomDevice parent_instance;
+struct _FuWacomRawEmrDevice {
+	FuWacomRawDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuWacomEmrDevice, fu_wacom_emr_device, FU_TYPE_WACOM_DEVICE)
+G_DEFINE_TYPE(FuWacomRawEmrDevice, fu_wacom_raw_emr_device, FU_TYPE_WACOM_RAW_DEVICE)
 
 static gboolean
-fu_wacom_emr_device_setup(FuDevice *device, GError **error)
+fu_wacom_raw_emr_device_setup(FuDevice *device, GError **error)
 {
-	FuWacomEmrDevice *self = FU_WACOM_EMR_DEVICE(device);
+	FuWacomRawEmrDevice *self = FU_WACOM_RAW_EMR_DEVICE(device);
 
 	/* check MPU type */
-	if (!fu_wacom_device_check_mpu(FU_WACOM_DEVICE(self), error))
+	if (!fu_wacom_raw_device_check_mpu(FU_WACOM_RAW_DEVICE(self), error))
 		return FALSE;
 
 	/* get firmware version */
@@ -32,7 +32,10 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 	} else {
 		guint16 fw_ver;
 		guint8 data[19] = {0x03, 0x0}; /* 0x03 is an unknown ReportID */
-		if (!fu_wacom_device_get_feature(FU_WACOM_DEVICE(self), data, sizeof(data), error))
+		if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
+						     data,
+						     sizeof(data),
+						     error))
 			return FALSE;
 		if (!fu_memread_uint16_safe(data,
 					    sizeof(data),
@@ -50,31 +53,32 @@ fu_wacom_emr_device_setup(FuDevice *device, GError **error)
 }
 
 static guint8
-fu_wacom_emr_device_calc_checksum(guint8 init1, const guint8 *buf, gsize bufsz)
+fu_wacom_raw_emr_device_calc_checksum(guint8 init1, const guint8 *buf, gsize bufsz)
 {
 	return init1 + ~(fu_sum8(buf, bufsz)) + 1;
 }
 
 static gboolean
-fu_wacom_emr_device_w9013_erase_data(FuWacomEmrDevice *self, GError **error)
+fu_wacom_raw_emr_device_w9013_erase_data(FuWacomRawEmrDevice *self, GError **error)
 {
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 	guint8 *buf = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_ADDR;
 
 	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ERASE_DATAMEM);
-	fu_struct_wacom_raw_request_set_echo(st_req,
-					     fu_wacom_device_get_echo_next(FU_WACOM_DEVICE(self)));
+	fu_struct_wacom_raw_request_set_echo(
+	    st_req,
+	    fu_wacom_raw_device_get_echo_next(FU_WACOM_RAW_DEVICE(self)));
 	buf[0] = 0x00; /* erased block */
-	buf[1] = fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
-						   (const guint8 *)&st_req,
-						   4);
-	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 st_req,
-				 NULL,
-				 1, /* ms */
-				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
-				 error)) {
+	buf[1] = fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
+						       (const guint8 *)&st_req,
+						       4);
+	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
+				     st_req,
+				     NULL,
+				     1, /* ms */
+				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
+				     error)) {
 		g_prefix_error(error, "failed to erase datamem: ");
 		return FALSE;
 	}
@@ -83,10 +87,10 @@ fu_wacom_emr_device_w9013_erase_data(FuWacomEmrDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
-				     guint8 idx,
-				     guint8 block_nr,
-				     GError **error)
+fu_wacom_raw_emr_device_w9013_erase_code(FuWacomRawEmrDevice *self,
+					 guint8 idx,
+					 guint8 block_nr,
+					 GError **error)
 {
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 	guint8 *buf = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_ADDR;
@@ -95,15 +99,15 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ERASE_FLASH);
 	fu_struct_wacom_raw_request_set_echo(st_req, idx);
 	buf[0] = block_nr;
-	buf[1] = fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
-						   (const guint8 *)&st_req,
-						   4);
-	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 st_req,
-				 NULL,
-				 1, /* ms */
-				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
-				 error)) {
+	buf[1] = fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x07 + 0x00,
+						       (const guint8 *)&st_req,
+						       4);
+	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
+				     st_req,
+				     NULL,
+				     1, /* ms */
+				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
+				     error)) {
 		g_prefix_error(error, "failed to erase codemem: ");
 		return FALSE;
 	}
@@ -112,19 +116,19 @@ fu_wacom_emr_device_w9013_erase_code(FuWacomEmrDevice *self,
 }
 
 static gboolean
-fu_wacom_emr_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
+fu_wacom_raw_emr_device_w9021_erase_all(FuWacomRawEmrDevice *self, GError **error)
 {
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 
 	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ALL_ERASE);
 	fu_struct_wacom_raw_request_set_echo(st_req, 0x01);
-	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 st_req,
-				 NULL,
-				 2000, /* this takes a long time */
-				 FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING,
-				 error)) {
+	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
+				     st_req,
+				     NULL,
+				     2000, /* this takes a long time */
+				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
+				     error)) {
 		g_prefix_error(error, "failed to send eraseall command: ");
 		return FALSE;
 	}
@@ -133,9 +137,9 @@ fu_wacom_emr_device_w9021_erase_all(FuWacomEmrDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_emr_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_wacom_raw_emr_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuWacomDevice *self = FU_WACOM_DEVICE(device);
+	FuWacomRawDevice *self = FU_WACOM_RAW_DEVICE(device);
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -145,9 +149,10 @@ fu_wacom_emr_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 
 	fu_struct_wacom_raw_request_set_report_id(st_req, FU_WACOM_RAW_BL_REPORT_ID_SET);
 	fu_struct_wacom_raw_request_set_cmd(st_req, FU_WACOM_RAW_BL_CMD_ATTACH);
-	fu_struct_wacom_raw_request_set_echo(st_req,
-					     fu_wacom_device_get_echo_next(FU_WACOM_DEVICE(self)));
-	if (!fu_wacom_device_set_feature(self, st_req->data, st_req->len, error)) {
+	fu_struct_wacom_raw_request_set_echo(
+	    st_req,
+	    fu_wacom_raw_device_get_echo_next(FU_WACOM_RAW_DEVICE(self)));
+	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
 		g_prefix_error(error, "failed to switch to runtime mode: ");
 		return FALSE;
 	}
@@ -164,14 +169,14 @@ fu_wacom_emr_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 }
 
 static gboolean
-fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
-				guint32 idx,
-				guint32 address,
-				const guint8 *data,
-				gsize datasz,
-				GError **error)
+fu_wacom_raw_emr_device_write_block(FuWacomRawEmrDevice *self,
+				    guint32 idx,
+				    guint32 address,
+				    const guint8 *data,
+				    gsize datasz,
+				    GError **error)
 {
-	gsize blocksz = fu_wacom_device_get_block_sz(FU_WACOM_DEVICE(self));
+	gsize blocksz = fu_wacom_raw_device_get_block_sz(FU_WACOM_RAW_DEVICE(self));
 	g_autoptr(FuStructWacomRawRequest) st_req = fu_struct_wacom_raw_request_new();
 	guint8 *data_unused = st_req->data + FU_STRUCT_WACOM_RAW_REQUEST_OFFSET_DATA_UNUSED;
 
@@ -205,14 +210,14 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 
 	/* cmd and data checksums */
 	data_unused[0] =
-	    fu_wacom_emr_device_calc_checksum(0x05 + 0x00 + 0x4c + 0x00, st_req->data, 8);
-	data_unused[1] = fu_wacom_emr_device_calc_checksum(0x00, data, datasz);
-	if (!fu_wacom_device_cmd(FU_WACOM_DEVICE(self),
-				 st_req,
-				 NULL,
-				 1,
-				 FU_WACOM_DEVICE_CMD_FLAG_NONE,
-				 error)) {
+	    fu_wacom_raw_emr_device_calc_checksum(0x05 + 0x00 + 0x4c + 0x00, st_req->data, 8);
+	data_unused[1] = fu_wacom_raw_emr_device_calc_checksum(0x00, data, datasz);
+	if (!fu_wacom_raw_device_cmd(FU_WACOM_RAW_DEVICE(self),
+				     st_req,
+				     NULL,
+				     1,
+				     FU_WACOM_RAW_DEVICE_CMD_FLAG_NONE,
+				     error)) {
 		g_prefix_error(error, "failed to write at 0x%x: ", address);
 		return FALSE;
 	}
@@ -220,12 +225,12 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 }
 
 static gboolean
-fu_wacom_emr_device_write_firmware(FuDevice *device,
-				   FuChunkArray *chunks,
-				   FuProgress *progress,
-				   GError **error)
+fu_wacom_raw_emr_device_write_firmware(FuDevice *device,
+				       FuChunkArray *chunks,
+				       FuProgress *progress,
+				       GError **error)
 {
-	FuWacomEmrDevice *self = FU_WACOM_EMR_DEVICE(device);
+	FuWacomRawEmrDevice *self = FU_WACOM_RAW_EMR_DEVICE(device);
 	guint8 idx = 0;
 
 	/* progress */
@@ -236,17 +241,17 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 
 	/* erase W9013 */
 	if (fu_device_has_instance_id(device, "WacomEMR_W9013", FU_DEVICE_INSTANCE_FLAG_QUIRKS)) {
-		if (!fu_wacom_emr_device_w9013_erase_data(self, error))
+		if (!fu_wacom_raw_emr_device_w9013_erase_data(self, error))
 			return FALSE;
 		for (guint i = 127; i >= 8; i--) {
-			if (!fu_wacom_emr_device_w9013_erase_code(self, idx++, i, error))
+			if (!fu_wacom_raw_emr_device_w9013_erase_code(self, idx++, i, error))
 				return FALSE;
 		}
 	}
 
 	/* erase W9021 */
 	if (fu_device_has_instance_id(device, "WacomEMR_W9021", FU_DEVICE_INSTANCE_FLAG_QUIRKS)) {
-		if (!fu_wacom_emr_device_w9021_erase_all(self, error))
+		if (!fu_wacom_raw_emr_device_w9021_erase_all(self, error))
 			return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -259,15 +264,15 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (fu_wacom_common_block_is_empty(fu_chunk_get_data(chk),
-						   fu_chunk_get_data_sz(chk)))
+		if (fu_wacom_raw_common_block_is_empty(fu_chunk_get_data(chk),
+						       fu_chunk_get_data_sz(chk)))
 			continue;
-		if (!fu_wacom_emr_device_write_block(self,
-						     fu_chunk_get_idx(chk),
-						     fu_chunk_get_address(chk),
-						     fu_chunk_get_data(chk),
-						     fu_chunk_get_data_sz(chk),
-						     error))
+		if (!fu_wacom_raw_emr_device_write_block(self,
+							 fu_chunk_get_idx(chk),
+							 fu_chunk_get_address(chk),
+							 fu_chunk_get_data(chk),
+							 fu_chunk_get_data_sz(chk),
+							 error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + 1,
@@ -279,25 +284,25 @@ fu_wacom_emr_device_write_firmware(FuDevice *device,
 }
 
 static gchar *
-fu_wacom_emr_device_convert_version(FuDevice *device, guint64 version_raw)
+fu_wacom_raw_emr_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static void
-fu_wacom_emr_device_init(FuWacomEmrDevice *self)
+fu_wacom_raw_emr_device_init(FuWacomRawEmrDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Wacom EMR Device");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
-fu_wacom_emr_device_class_init(FuWacomEmrDeviceClass *klass)
+fu_wacom_raw_emr_device_class_init(FuWacomRawEmrDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	FuWacomDeviceClass *wac_device_class = FU_WACOM_DEVICE_CLASS(klass);
-	device_class->setup = fu_wacom_emr_device_setup;
-	device_class->attach = fu_wacom_emr_device_attach;
-	device_class->convert_version = fu_wacom_emr_device_convert_version;
-	wac_device_class->write_firmware = fu_wacom_emr_device_write_firmware;
+	FuWacomRawDeviceClass *wac_device_class = FU_WACOM_RAW_DEVICE_CLASS(klass);
+	device_class->setup = fu_wacom_raw_emr_device_setup;
+	device_class->attach = fu_wacom_raw_emr_device_attach;
+	device_class->convert_version = fu_wacom_raw_emr_device_convert_version;
+	wac_device_class->write_firmware = fu_wacom_raw_emr_device_write_firmware;
 }
