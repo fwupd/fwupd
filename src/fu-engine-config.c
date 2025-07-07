@@ -177,10 +177,16 @@ fu_engine_config_reload(FuEngineConfig *self)
 	if (host_bkc != NULL && host_bkc[0] != '\0')
 		self->host_bkc = g_steal_pointer(&host_bkc);
 
-	/* fetch hardcoded ESP mountpoint */
+	/* fetch hardcoded ESP mountpoint, removing trailing slash as required */
 	esp_location = fu_config_get_value(FU_CONFIG(self), "fwupd", "EspLocation");
-	if (esp_location != NULL && esp_location[0] != '\0')
-		self->esp_location = g_steal_pointer(&esp_location);
+	if (esp_location != NULL && esp_location[0] != '\0') {
+		g_autoptr(GString) esp_location_tmp = g_string_new(esp_location);
+		if (g_str_has_suffix(esp_location_tmp->str, "/")) {
+			g_warning("removing trailing slash from EspLocation");
+			g_string_truncate(esp_location_tmp, esp_location_tmp->len - 1);
+		}
+		self->esp_location = g_string_free(g_steal_pointer(&esp_location_tmp), FALSE);
+	}
 
 	/* get trusted uids */
 	g_array_set_size(self->trusted_uids, 0);
