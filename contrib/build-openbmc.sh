@@ -13,7 +13,7 @@ meson setup build-openbmc \
     -Dman=false \
     -Dmetainfo=false \
     -Dtests=true \
-    -Dsystemd_root_prefix=/tmp \
+    -Dsystemd=disabled \
     -Dlibxmlb:gtkdoc=false \
     $@
 
