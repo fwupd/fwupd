@@ -10,7 +10,7 @@ enum FuIntelThunderboltNvmSection {
 }
 
 #[repr(u8)]
-enum FuIntelThunderboltNvmSectionFlag {
+enum FuIntelThunderboltNvmSectionFlags {
     Dram = 1 << 6,
 }
 

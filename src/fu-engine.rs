@@ -29,7 +29,7 @@ enum FuEngineEmulatorPhase {
 }
 
 #[derive(ToBitString)]
-enum FuEngineRequestFlag {
+enum FuEngineRequestFlags {
     None = 0,
     NoRequirements = 1 << 0,
     AnyRelease = 1 << 1,
@@ -58,13 +58,13 @@ enum FuIdleInhibit {
     Signals = 1 << 1,
 }
 
-enum FuClientFlag {
+enum FuClientFlags {
     None = 0,
     Active = 1 << 0,
 }
 
 #[derive(FromString)]
-enum FuEngineCapabilityFlag {
+enum FuEngineCapabilityFlags {
     Unknown = 0,
     IdRequirementGlob = 1 << 0,
 }

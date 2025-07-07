@@ -1117,11 +1117,12 @@ fu_device_has_guid(FuDevice *self, const gchar *guid) G_GNUC_NON_NULL(1);
 void
 fu_device_add_instance_id(FuDevice *self, const gchar *instance_id) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
+fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlags flags)
     G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_instance_id_full(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
-    G_GNUC_NON_NULL(1, 2);
+fu_device_add_instance_id_full(FuDevice *self,
+			       const gchar *instance_id,
+			       FuDeviceInstanceFlags flags) G_GNUC_NON_NULL(1, 2);
 FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1468,7 +1469,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
     G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 3);
 gboolean
 fu_device_build_instance_id_full(FuDevice *self,
-				 FuDeviceInstanceFlag flags,
+				 FuDeviceInstanceFlags flags,
 				 GError **error,
 				 const gchar *subsystem,
 				 ...) G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 4);

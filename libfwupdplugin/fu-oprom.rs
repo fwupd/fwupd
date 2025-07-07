@@ -32,7 +32,7 @@ struct FuStructOprom {
 }
 
 #[repr(u8)]
-enum FuOpromIndicatorFlag {
+enum FuOpromIndicatorFlags {
     None,
     Last = 0x80,
 }
@@ -50,7 +50,7 @@ struct FuStructOpromPci {
     image_length: u16le,		// of 512 bytes
     image_revision: u16le,
     code_type: u8,
-    indicator: FuOpromIndicatorFlag,
+    indicator: FuOpromIndicatorFlags,
     max_runtime_image_length: u16le,
     conf_util_code_header_pointer: u16le,
     dmtf_clp_entry_point_pointer: u16le,

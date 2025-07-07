@@ -31,7 +31,7 @@ enum FuParadeUsbhubDeviceAddr {
     SpiMasterAcquire2 = 0xE2B3, // for PS188
 }
 
-enum FuParadeUsbhubDeviceStatusFlag {
+enum FuParadeUsbhubDeviceStatusFlags {
     Write       = 0b00000001,
     TriggerSpi  = 0b00000010,
     TriggerDbi  = 0b00000100,

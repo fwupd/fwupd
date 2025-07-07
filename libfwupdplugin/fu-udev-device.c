@@ -45,7 +45,7 @@ typedef struct {
 	gchar *devtype;
 	guint64 number;
 	FuIOChannel *io_channel;
-	FuIoChannelOpenFlag open_flags;
+	FuIoChannelOpenFlags open_flags;
 	GHashTable *properties;
 	gboolean properties_valid;
 } FuUdevDevicePrivate;
@@ -92,7 +92,7 @@ fu_udev_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *open_flags = fu_io_channel_open_flag_to_string(priv->open_flags);
+	g_autofree gchar *open_flags = fu_io_channel_open_flags_to_string(priv->open_flags);
 
 	fwupd_codec_string_append_hex(str, idt, "Number", priv->number);
 	fwupd_codec_string_append(str, idt, "Subsystem", priv->subsystem);
@@ -617,7 +617,7 @@ fu_udev_device_bind_driver(FuDevice *device,
 					 error);
 }
 
-static FuIoChannelOpenFlag
+static FuIoChannelOpenFlags
 fu_udev_device_get_open_flags(FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
@@ -1043,7 +1043,7 @@ fu_udev_device_set_io_channel(FuUdevDevice *self, FuIOChannel *io_channel)
  * Since: 2.0.0
  **/
 void
-fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag)
+fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
@@ -1063,7 +1063,7 @@ fu_udev_device_remove_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag)
  * Since: 2.0.0
  **/
 void
-fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlag flag)
+fu_udev_device_add_open_flag(FuUdevDevice *self, FuIoChannelOpenFlags flag)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_UDEV_DEVICE(self));

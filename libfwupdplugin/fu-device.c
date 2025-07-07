@@ -116,7 +116,7 @@ typedef struct {
 typedef struct {
 	gchar *instance_id;
 	gchar *guid;
-	FuDeviceInstanceFlag flags;
+	FuDeviceInstanceFlags flags;
 } FuDeviceInstanceIdItem;
 
 enum {
@@ -2774,7 +2774,7 @@ fu_device_get_instance_id(FuDevice *self, const gchar *instance_id)
  * Since: 2.0.4
  **/
 gboolean
-fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
+fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
@@ -2806,7 +2806,9 @@ fu_device_has_instance_id(FuDevice *self, const gchar *instance_id, FuDeviceInst
  * Since: 1.2.9
  **/
 void
-fu_device_add_instance_id_full(FuDevice *self, const gchar *instance_id, FuDeviceInstanceFlag flags)
+fu_device_add_instance_id_full(FuDevice *self,
+			       const gchar *instance_id,
+			       FuDeviceInstanceFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceInstanceIdItem *item;
@@ -5026,9 +5028,9 @@ fu_device_set_modified_usec(FuDevice *self, gint64 modified_usec)
 }
 
 static gchar *
-fu_device_instance_flag_to_string_trunc(FuDeviceInstanceFlag flags)
+fu_device_instance_flag_to_string_trunc(FuDeviceInstanceFlags flags)
 {
-	g_autofree gchar *tmp = fu_device_instance_flag_to_string(flags);
+	g_autofree gchar *tmp = fu_device_instance_flags_to_string(flags);
 	g_auto(GStrv) split = g_strsplit(tmp, ",", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (strlen(split[i]) > 2)
@@ -7564,7 +7566,7 @@ fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsyst
  **/
 gboolean
 fu_device_build_instance_id_full(FuDevice *self,
-				 FuDeviceInstanceFlag flags,
+				 FuDeviceInstanceFlags flags,
 				 GError **error,
 				 const gchar *subsystem,
 				 ...)
