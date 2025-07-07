@@ -95,7 +95,6 @@ typedef struct {
 	GArray *private_flags_registered; /* (nullable) (element-type GQuark) */
 	GArray *private_flags;		  /* (nullable) (element-type GQuark) */
 	gchar *custom_flags;
-	gulong notify_flags_handler_id;
 	gulong notify_flags_proxy_id;
 	GHashTable *instance_hash; /* (nullable) */
 	FuProgress *progress;	   /* provided for FuDevice notify callbacks */
@@ -3529,10 +3528,6 @@ fu_device_ensure_inhibits(FuDevice *self)
 	FwupdDeviceProblem problems = FWUPD_DEVICE_PROBLEM_NONE;
 	guint nr_inhibits = g_hash_table_size(priv->inhibits);
 
-	/* disable */
-	if (priv->notify_flags_handler_id != 0)
-		g_signal_handler_block(self, priv->notify_flags_handler_id);
-
 	/* was okay -> not okay */
 	if (nr_inhibits > 0) {
 		g_autofree gchar *reasons_str = NULL;
@@ -3543,7 +3538,8 @@ fu_device_ensure_inhibits(FuDevice *self)
 		 * inhibits and *not* be automatically updatable */
 		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+			fwupd_device_add_flag(FWUPD_DEVICE(self),
+					      FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
 		}
 
 		/* update the update error */
@@ -3557,17 +3553,13 @@ fu_device_ensure_inhibits(FuDevice *self)
 	} else {
 		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
-			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fwupd_device_add_flag(FWUPD_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 		}
 		fu_device_set_update_error(self, NULL);
 	}
 
 	/* sync with baseclass */
 	fwupd_device_set_problems(FWUPD_DEVICE(self), problems);
-
-	/* enable */
-	if (priv->notify_flags_handler_id != 0)
-		g_signal_handler_unblock(self, priv->notify_flags_handler_id);
 }
 
 static gchar *
@@ -4502,6 +4494,23 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	/* none is not used as an "exported" flag */
 	if (flag == FWUPD_DEVICE_FLAG_NONE)
 		return;
+
+	/* emulated device reinstalling do not need a replug or shutdown */
+	if (flag == FWUPD_DEVICE_FLAG_EMULATED) {
+		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+			g_debug("removing needs-reboot for emulated device");
+			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		}
+		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
+			g_debug("removing needs-shutdown for emulated device");
+			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
+		}
+	}
+
+	/* we only inhibit when the flags contains UPDATABLE, and that might be discovered by
+	 * probing the hardware *after* the battery level has been set */
+	if (flag == FWUPD_DEVICE_FLAG_UPDATABLE && priv->inhibits != NULL)
+		fu_device_ensure_inhibits(self);
 
 	/* an emulated device cannot be used to record emulation events,
 	 * and an emulated device cannot be tagged for emulation */
@@ -7283,29 +7292,6 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 }
 
 static void
-fu_device_flags_notify_cb(FuDevice *self, GParamSpec *pspec, gpointer user_data)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* emulated device reinstalling do not need a replug or shutdown */
-	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED) &&
-	    fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
-		g_debug("removing needs-reboot for emulated device");
-		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	}
-	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_EMULATED) &&
-	    fu_device_has_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
-		g_debug("removing needs-shutdown for emulated device");
-		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
-	}
-
-	/* we only inhibit when the flags contains UPDATABLE, and that might be discovered by
-	 * probing the hardware *after* the battery level has been set */
-	if (priv->inhibits != NULL)
-		fu_device_ensure_inhibits(self);
-}
-
-static void
 fu_device_ensure_instance_hash(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
@@ -8250,10 +8236,6 @@ fu_device_init(FuDevice *self)
 	priv->acquiesce_delay = 50; /* ms */
 	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
 	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
-	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),
-							 "notify::flags",
-							 G_CALLBACK(fu_device_flags_notify_cb),
-							 NULL);
 }
 
 static void
