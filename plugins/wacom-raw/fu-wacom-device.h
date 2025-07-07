@@ -9,6 +9,7 @@
 #include <fwupdplugin.h>
 
 #include "fu-wacom-common.h"
+#include "fu-wacom-raw-struct.h"
 
 #define FU_TYPE_WACOM_DEVICE (fu_wacom_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuHidrawDevice)
@@ -20,12 +21,6 @@ struct _FuWacomDeviceClass {
 				   FuProgress *progress,
 				   GError **error);
 };
-
-typedef enum {
-	FU_WACOM_DEVICE_CMD_FLAG_NONE = 0,
-	FU_WACOM_DEVICE_CMD_FLAG_POLL_ON_WAITING = 1 << 0,
-	FU_WACOM_DEVICE_CMD_FLAG_NO_ERROR_CHECK = 1 << 1,
-} FuWacomDeviceCmdFlags;
 
 #define FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG "requires-wait-for-replug"
 
