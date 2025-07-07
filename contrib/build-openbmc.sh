@@ -9,6 +9,7 @@ meson setup build-openbmc \
     -Dbash_completion=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
+    -Dplugin_uefi_capsule_splash=false \
     -Dhsi=disabled \
     -Dman=false \
     -Dmetainfo=false \
