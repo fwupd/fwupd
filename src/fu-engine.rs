@@ -35,6 +35,20 @@ enum FuEngineRequestFlag {
     AnyRelease = 1 << 1,
 }
 
+enum FuEngineLoadFlags {
+    None = 0,
+    Readonly = 1 << 0,
+    Coldplug = 1 << 1,
+    Remotes = 1 << 2,
+    Hwinfo = 1 << 3,
+    NoCache = 1 << 4,
+    NoIdleSources = 1 << 5,
+    BuiltinPlugins = 1 << 6,
+    EnsureClientCert = 1 << 7,
+    ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom
+    DeviceHotplug = 1 << 9,
+}
+
 #[derive(ToBitString)]
 enum FuIdleInhibit {
     None = 0,
