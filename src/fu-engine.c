@@ -111,7 +111,6 @@ struct _FuEngine {
 	FuEngineConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
-	gboolean only_trusted;
 	gboolean write_history;
 	gboolean host_emulation;
 	guint percentage;
