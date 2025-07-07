@@ -1152,7 +1152,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 		if (!fu_dfu_target_upload(target,
 					  firmware,
 					  fu_progress_get_child(progress),
-					  DFU_TARGET_TRANSFER_FLAG_NONE,
+					  FU_DFU_TARGET_TRANSFER_FLAG_NONE,
 					  error))
 			return NULL;
 		fu_progress_step_done(progress);
@@ -1217,12 +1217,12 @@ fu_dfu_device_download(FuDfuDevice *self,
 		firmware_vid = fu_dfu_firmware_get_vid(FU_DFU_FIRMWARE(firmware));
 		firmware_pid = fu_dfu_firmware_get_pid(FU_DFU_FIRMWARE(firmware));
 	} else {
-		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
+		flags |= FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
+		flags |= FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}
 
 	/* do we allow wildcard VID:PID matches */
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
+	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
 		if (firmware_vid == 0xffff) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -1231,7 +1231,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 			return FALSE;
 		}
 	}
-	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
+	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
 		if (firmware_pid == 0xffff) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -1292,7 +1292,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
-		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
+		FuDfuTargetTransferFlags flags_local = FU_DFU_TARGET_TRANSFER_FLAG_NONE;
 		guint8 alt;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 
@@ -1306,11 +1306,11 @@ fu_dfu_device_download(FuDfuDevice *self,
 			fu_device_get_logical_id(FU_DEVICE(target_tmp)));
 
 		/* download onto target */
-		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
-			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+		if (flags & FU_DFU_TARGET_TRANSFER_FLAG_VERIFY)
+			flags_local = FU_DFU_TARGET_TRANSFER_FLAG_VERIFY;
 		if (!FU_IS_DFU_FIRMWARE(firmware) ||
 		    fu_dfu_firmware_get_version(FU_DFU_FIRMWARE(firmware)) == 0x0)
-			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
+			flags_local |= FU_DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
 		ret = fu_dfu_target_download(target_tmp,
 					     image,
 					     fu_progress_get_child(progress),
@@ -1376,7 +1376,7 @@ fu_dfu_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 	g_debug("uploading from device->host");
 	if (!fu_dfu_device_refresh_and_clear(self, error))
 		return NULL;
-	firmware = fu_dfu_device_upload(self, progress, DFU_TARGET_TRANSFER_FLAG_NONE, error);
+	firmware = fu_dfu_device_upload(self, progress, FU_DFU_TARGET_TRANSFER_FLAG_NONE, error);
 	if (firmware == NULL)
 		return NULL;
 
@@ -1410,14 +1410,14 @@ fu_dfu_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
-	FuDfuTargetTransferFlags transfer_flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	FuDfuTargetTransferFlags transfer_flags = FU_DFU_TARGET_TRANSFER_FLAG_VERIFY;
 
 	/* open it */
 	if (!fu_dfu_device_refresh_and_clear(self, error))
 		return FALSE;
 	if (flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_VID_PID) {
-		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
-		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
+		transfer_flags |= FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
+		transfer_flags |= FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}
 
 	/* hit hardware */

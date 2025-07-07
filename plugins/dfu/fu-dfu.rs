@@ -9,6 +9,13 @@ enum FuDfuDeviceAttr {
     CanAccelerate = 1 << 7,
 }
 
+enum FuDfuTargetTransferFlags {
+    None = 0,
+    Verify = 1 << 0,
+    WildcardVid = 1 << 4,
+    WildcardPid = 1 << 5,
+    AddrHeuristic = 1 << 7, // automatically detect
+}
 
 enum FuDfuRequest {
     Detach,
