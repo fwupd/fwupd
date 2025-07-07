@@ -458,9 +458,9 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD)) {
 		touchpad = fu_cros_ec_hammer_touchpad_new(FU_DEVICE(device));
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(touchpad));
 		if (!fu_device_setup(FU_DEVICE(touchpad), &error_local))
 			return FALSE;
-		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(touchpad));
 	}
 
 	/* success */
@@ -660,7 +660,7 @@ fu_cros_ec_usb_device_send_done(FuCrosEcUsbDevice *self)
 	}
 }
 
-static gboolean
+gboolean
 fu_cros_ec_usb_device_send_subcommand(FuCrosEcUsbDevice *self,
 				      guint16 subcommand,
 				      guint8 *cmd_body,
