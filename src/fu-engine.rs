@@ -48,6 +48,7 @@ enum FuEngineLoadFlags {
     ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom
     DeviceHotplug = 1 << 9,
     ColdplugForce = 1 << 10,    // even without a matched plugin
+    Ready = 1 << 11,
 }
 
 #[derive(ToBitString)]
