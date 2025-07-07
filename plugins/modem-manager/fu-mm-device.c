@@ -353,12 +353,13 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", used_ports[i].name);
 		if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
 			continue;
+#if !MM_CHECK_VERSION(1, 26, 0)
 		if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
 		    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
 			fu_mm_device_add_port(self, MM_MODEM_PORT_TYPE_QCDM, device_file);
-		} else {
+		} else
+#endif // !MM_CHECK_VERSION(1, 26, 0)
 			fu_mm_device_add_port(self, used_ports[i].type, device_file);
-		}
 	}
 	mm_modem_port_info_array_free(used_ports, n_used_ports);
 
