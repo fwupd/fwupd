@@ -121,7 +121,6 @@ struct _FuEngine {
 	XbQuery *query_container_checksum1;
 	XbQuery *query_container_checksum2;
 	XbQuery *query_tag_by_guid_version;
-	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
@@ -8981,8 +8980,6 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->query_container_checksum2);
 	if (self->query_tag_by_guid_version != NULL)
 		g_object_unref(self->query_tag_by_guid_version);
-	if (self->coldplug_id != 0)
-		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)
 		g_hash_table_unref(self->approved_firmware);
 	if (self->blocked_firmware != NULL)
