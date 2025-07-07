@@ -136,12 +136,25 @@ fu_cros_ec_hammer_touchpad_init(FuCrosEcHammerTouchpad *self)
 }
 
 static void
+fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	// TODO: Retake a look on what is important
+	fwupd_codec_string_append_int(str, idt, "Vendor", self->vendor);
+	fwupd_codec_string_append_hex(str, idt, "FwAddress", self->fw_address);
+	fwupd_codec_string_append_int(str, idt, "FwSize", self->fw_size);
+	fwupd_codec_string_append(str, idt, "AllowedFwHash", self->allowed_fw_hash);
+	fwupd_codec_string_append_int(str, idt, "RawVersion", self->fw_version);
+}
+
+static void
 fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_cros_ec_hammer_touchpad_finalize;
 	device_class->setup = fu_cros_ec_hammer_touchpad_setup;
+	device_class->to_string = fu_cros_ec_hammer_touchpad_to_string;
 }
 
 FuCrosEcHammerTouchpad *
