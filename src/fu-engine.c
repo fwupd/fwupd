@@ -267,6 +267,11 @@ fu_engine_ensure_device_problem_priority_full(FuEngine *self,
 					      FuDevice *device,
 					      FuDevice *device_tmp)
 {
+	/* not important */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) ||
+	    !fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return;
+
 	/* not a match */
 	if (g_strcmp0(fu_device_get_id(device_tmp), fu_device_get_equivalent_id(device)) != 0 &&
 	    g_strcmp0(fu_device_get_equivalent_id(device_tmp), fu_device_get_id(device)) != 0)
