@@ -165,7 +165,7 @@ class ReturnValidator:
                     continue
                 if line in ["GQuark", "GType"]:
                     self._rvif = ["0"]
-                    self._nret = ["NULL", "0", "TRUE", "FALSE"]
+                    self._nret = ["NULL", "TRUE", "FALSE"]
                     continue
                 if line in ["guint64"]:
                     self._rvif = ["0", "G_MAXUINT64"]
