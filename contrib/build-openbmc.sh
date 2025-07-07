@@ -5,6 +5,8 @@ rm -rf build-openbmc
 meson setup build-openbmc \
     -Dauto_features=disabled \
     -Ddocs=disabled \
+    -Dbuildtype=minsize \
+    -Dstrip=true \
     -Dpolkit=disabled \
     -Dbash_completion=false \
     -Dfish_completion=false \
