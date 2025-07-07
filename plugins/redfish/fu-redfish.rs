@@ -1,6 +1,13 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+enum FuRedfishRequestPerformFlags {
+    None = 0,
+    LoadJson = 1 << 0,
+    UseCache = 1 << 1,
+    UseEtag = 1 << 2,
+}
+
 #[derive(New, ParseStream)]
 #[repr(C, packed)]
 struct FuStructRedfishProtocolOverIp {
