@@ -133,6 +133,7 @@ struct _FuEngine {
 	guint update_motd_id;
 	FuEngineEmulatorPhase emulator_phase;
 	guint emulator_write_cnt;
+	FuEngineLoadFlags load_flags;
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
@@ -7627,6 +7628,23 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 {
 	g_autoptr(GPtrArray) possible_plugins = fu_device_get_possible_plugins(device);
 
+	/* useful for fwupdtool get-devices --show-all --force */
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_COLDPLUG_FORCE) > 0 &&
+	    possible_plugins->len == 0) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		locker = fu_device_locker_new(device, &error_local);
+		if (locker == NULL) {
+			g_debug("ignoring: %s", error_local->message);
+			return;
+		}
+		if (fu_device_get_instance_ids(device)->len > 0) {
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+			fu_engine_add_device(self, device);
+		}
+		return;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, possible_plugins->len);
@@ -8496,6 +8514,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* set up backends */
+	self->load_flags = flags;
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
 		FuBackendSetupFlags backend_flags = FU_BACKEND_SETUP_FLAG_NONE;
 		if (flags & FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG)

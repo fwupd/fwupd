@@ -918,15 +918,17 @@ fu_util_get_devices_as_json(FuUtil *self, GPtrArray *devs, GError **error)
 static gboolean
 fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 {
+	FuEngineLoadFlags load_flags =
+	    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = NULL;
 
+	/* show all devices, even those without assigned plugins */
+	if (self->flags & FWUPD_INSTALL_FLAG_FORCE)
+		load_flags |= FU_ENGINE_LOAD_FLAG_COLDPLUG_FORCE;
+
 	/* load engine */
-	if (!fu_util_start_engine(self,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
-				      FU_ENGINE_LOAD_FLAG_HWINFO,
-				  self->progress,
-				  error))
+	if (!fu_util_start_engine(self, load_flags, self->progress, error))
 		return FALSE;
 
 	/* get devices and build tree */
