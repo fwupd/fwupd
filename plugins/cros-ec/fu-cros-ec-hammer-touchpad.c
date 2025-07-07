@@ -38,9 +38,11 @@ fu_cros_ec_hammer_touchpad_set_version(FuCrosEcHammerTouchpad *self, GError **er
 		base_fw_ver = g_strdup_printf("%d.%d",
 					      self->fw_version & 0x00ff,
 					      (self->fw_version & 0xff00) >> 8); // TODO: Fix
+		fu_device_set_name(FU_DEVICE(self), "ST Touchpad");
 		break;
 	case ELAN_VENDOR_ID:
 		base_fw_ver = g_strdup_printf("%d.0", self->fw_version);
+		fu_device_set_name(FU_DEVICE(self), "ELAN Touchpad");
 		break;
 	default:
 		return FALSE;
@@ -166,7 +168,6 @@ fu_cros_ec_hammer_touchpad_new(FuDevice *parent)
 
 	self = g_object_new(FU_TYPE_CROS_EC_HAMMER_TOUCHPAD, "context", ctx, NULL);
 	fu_device_incorporate(FU_DEVICE(self), parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
-	fu_device_set_name(FU_DEVICE(self), "Hammer Touchpad");
 	fu_device_set_logical_id(FU_DEVICE(self), "cros-ec-hammer-touchpad");
 	instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&TOUCHPAD",
 				      fu_device_get_vid(FU_DEVICE(parent)),
