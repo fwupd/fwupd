@@ -6,14 +6,12 @@
 
 #include "config.h"
 
-#include <fwupd.h>
-
-#include "fu-wacom-common.h"
+#include "fu-wacom-raw-common.h"
 
 gboolean
-fu_wacom_common_check_reply(const FuStructWacomRawRequest *st_req,
-			    const FuStructWacomRawResponse *st_rsp,
-			    GError **error)
+fu_wacom_raw_common_check_reply(const FuStructWacomRawRequest *st_req,
+				const FuStructWacomRawResponse *st_rsp,
+				GError **error)
 {
 	if (fu_struct_wacom_raw_response_get_report_id(st_rsp) != FU_WACOM_RAW_BL_REPORT_ID_GET) {
 		g_set_error(error,
@@ -48,7 +46,7 @@ fu_wacom_common_check_reply(const FuStructWacomRawRequest *st_req,
 }
 
 gboolean
-fu_wacom_common_rc_set_error(const FuStructWacomRawResponse *st_rsp, GError **error)
+fu_wacom_raw_common_rc_set_error(const FuStructWacomRawResponse *st_rsp, GError **error)
 {
 	FuWacomRawRc rc = fu_struct_wacom_raw_response_get_resp(st_rsp);
 	if (rc == FU_WACOM_RAW_RC_OK)
@@ -91,7 +89,7 @@ fu_wacom_common_rc_set_error(const FuStructWacomRawResponse *st_rsp, GError **er
 }
 
 gboolean
-fu_wacom_common_block_is_empty(const guint8 *data, guint16 datasz)
+fu_wacom_raw_common_block_is_empty(const guint8 *data, guint16 datasz)
 {
 	for (guint16 i = 0; i < datasz; i++) {
 		if (data[i] != 0xff)
