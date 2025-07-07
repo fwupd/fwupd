@@ -25,11 +25,11 @@ fu_progress_get_name(FuProgress *self) G_GNUC_NON_NULL(1);
 void
 fu_progress_set_name(FuProgress *self, const gchar *name) G_GNUC_NON_NULL(1, 2);
 void
-fu_progress_add_flag(FuProgress *self, FuProgressFlag flag) G_GNUC_NON_NULL(1);
+fu_progress_add_flag(FuProgress *self, FuProgressFlags flag) G_GNUC_NON_NULL(1);
 void
-fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag) G_GNUC_NON_NULL(1);
+fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_progress_has_flag(FuProgress *self, FuProgressFlag flag) G_GNUC_WARN_UNUSED_RESULT
+fu_progress_has_flag(FuProgress *self, FuProgressFlags flag) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 FwupdStatus
 fu_progress_get_status(FuProgress *self) G_GNUC_NON_NULL(1);

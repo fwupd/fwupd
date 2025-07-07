@@ -15,7 +15,7 @@ struct _FuClient {
 	gchar *sender;
 	GHashTable *hints; /* str:str */
 	FwupdFeatureFlags feature_flags;
-	FuClientFlag flags;
+	FuClientFlags flags;
 };
 
 G_DEFINE_TYPE(FuClient, fu_client, G_TYPE_OBJECT)
@@ -61,7 +61,7 @@ fu_client_insert_hint(FuClient *self, const gchar *key, const gchar *value)
 }
 
 static void
-fu_client_add_flag(FuClient *self, FuClientFlag flag)
+fu_client_add_flag(FuClient *self, FuClientFlags flag)
 {
 	g_return_if_fail(FU_IS_CLIENT(self));
 	g_return_if_fail(flag != FU_CLIENT_FLAG_NONE);
@@ -72,7 +72,7 @@ fu_client_add_flag(FuClient *self, FuClientFlag flag)
 }
 
 void
-fu_client_remove_flag(FuClient *self, FuClientFlag flag)
+fu_client_remove_flag(FuClient *self, FuClientFlags flag)
 {
 	g_return_if_fail(FU_IS_CLIENT(self));
 	g_return_if_fail(flag != FU_CLIENT_FLAG_NONE);
@@ -83,7 +83,7 @@ fu_client_remove_flag(FuClient *self, FuClientFlag flag)
 }
 
 gboolean
-fu_client_has_flag(FuClient *self, FuClientFlag flag)
+fu_client_has_flag(FuClient *self, FuClientFlags flag)
 {
 	g_return_val_if_fail(FU_IS_CLIENT(self), FALSE);
 	g_return_val_if_fail(flag != FU_CLIENT_FLAG_NONE, FALSE);
@@ -116,7 +116,7 @@ fu_client_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 		self->sender = g_value_dup_string(value);
 		break;
 	case PROP_FLAGS:
-		fu_client_add_flag(self, (FuClientFlag)g_value_get_uint64(value));
+		fu_client_add_flag(self, (FuClientFlags)g_value_get_uint64(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);

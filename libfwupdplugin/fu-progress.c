@@ -61,7 +61,7 @@ struct _FuProgress {
 	GObject parent_instance;
 	gchar *id;
 	gchar *name;
-	FuProgressFlag flags;
+	FuProgressFlags flags;
 	guint percentage;
 	FwupdStatus status;
 	GPtrArray *children; /* of FuProgress */
@@ -208,7 +208,7 @@ fu_progress_get_status(FuProgress *self)
  * Since: 1.7.0
  **/
 void
-fu_progress_add_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags |= flag;
@@ -224,7 +224,7 @@ fu_progress_add_flag(FuProgress *self, FuProgressFlag flag)
  * Since: 1.7.0
  **/
 void
-fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags &= ~flag;
@@ -240,7 +240,7 @@ fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag)
  * Since: 1.7.0
  **/
 gboolean
-fu_progress_has_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_has_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_val_if_fail(FU_IS_PROGRESS(self), FALSE);
 	return (self->flags & flag) > 0;

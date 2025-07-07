@@ -612,7 +612,7 @@ fu_io_channel_unix_new(gint fd)
 /**
  * fu_io_channel_new_file:
  * @filename: device file
- * @open_flags: some #FuIoChannelOpenFlag typically %FU_IO_CHANNEL_OPEN_FLAG_READ
+ * @open_flags: some #FuIoChannelOpenFlags typically %FU_IO_CHANNEL_OPEN_FLAG_READ
  * @error: (nullable): optional return location for an error
  *
  * Creates a new object to write and/or read from.
@@ -622,7 +622,7 @@ fu_io_channel_unix_new(gint fd)
  * Since: 2.0.0
  **/
 FuIOChannel *
-fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlag open_flags, GError **error)
+fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, GError **error)
 {
 	gint fd;
 	int flags = 0;

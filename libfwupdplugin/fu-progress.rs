@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuProgressFlag {
+enum FuProgressFlags {
     None            = 0,        // Since: 1.7.0
     Guessed         = 1 << 0,   // Since: 1.7.0
     NoProfile       = 1 << 1,   // Since: 1.7.0

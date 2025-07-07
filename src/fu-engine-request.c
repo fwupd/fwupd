@@ -14,7 +14,7 @@
 
 struct _FuEngineRequest {
 	GObject parent_instance;
-	FuEngineRequestFlag flags;
+	FuEngineRequestFlags flags;
 	FwupdFeatureFlags feature_flags;
 	FwupdCodecFlags converter_flags;
 	gchar *sender;
@@ -34,7 +34,7 @@ fu_engine_request_add_string(FwupdCodec *codec, guint idt, GString *str)
 {
 	FuEngineRequest *self = FU_ENGINE_REQUEST(codec);
 	if (self->flags != FU_ENGINE_REQUEST_FLAG_NONE) {
-		g_autofree gchar *flags = fu_engine_request_flag_to_string(self->flags);
+		g_autofree gchar *flags = fu_engine_request_flags_to_string(self->flags);
 		fwupd_codec_string_append(str, idt, "Flags", flags);
 	}
 	fwupd_codec_string_append_hex(str, idt, "FeatureFlags", self->feature_flags);
@@ -70,14 +70,14 @@ fu_engine_request_get_locale(FuEngineRequest *self)
 }
 
 void
-fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlag flag)
+fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
 	self->flags |= flag;
 }
 
 gboolean
-fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlag flag)
+fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FU_ENGINE_REQUEST_FLAG_NONE);
 	return (self->flags & flag) > 0;
