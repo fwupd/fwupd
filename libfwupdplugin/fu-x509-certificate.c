@@ -73,6 +73,7 @@ fu_x509_certificate_get_issuer(FuX509Certificate *self)
 	return self->issuer;
 }
 
+#ifdef HAVE_GNUTLS
 static void
 fu_x509_certificate_set_issuer(FuX509Certificate *self, const gchar *issuer)
 {
@@ -93,6 +94,16 @@ fu_x509_certificate_set_subject(FuX509Certificate *self, const gchar *subject)
 	self->subject = g_strdup(subject);
 }
 
+static void
+fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
+{
+	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
+	if (self->activation_time != NULL)
+		g_date_time_unref(self->activation_time);
+	self->activation_time = g_date_time_new_from_unix_utc(activation_time);
+}
+#endif
+
 /**
  * fu_x509_certificate_get_subject:
  * @self: A #FuX509Certificate
@@ -108,15 +119,6 @@ fu_x509_certificate_get_subject(FuX509Certificate *self)
 {
 	g_return_val_if_fail(FU_IS_X509_CERTIFICATE(self), NULL);
 	return self->subject;
-}
-
-static void
-fu_x509_certificate_set_activation_time(FuX509Certificate *self, gint64 activation_time)
-{
-	g_return_if_fail(FU_IS_X509_CERTIFICATE(self));
-	if (self->activation_time != NULL)
-		g_date_time_unref(self->activation_time);
-	self->activation_time = g_date_time_new_from_unix_utc(activation_time);
 }
 
 /**
