@@ -123,7 +123,6 @@ struct _FuEngine {
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
-	gboolean loaded;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
@@ -157,7 +156,7 @@ G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 gboolean
 fu_engine_get_loaded(FuEngine *self)
 {
-	return self->loaded;
+	return (self->load_flags & FU_ENGINE_LOAD_FLAG_READY) > 0;
 }
 
 static gboolean
@@ -194,7 +193,7 @@ fu_engine_emit_changed(FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* do nothing */
-	if (!self->loaded)
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
 		return;
 
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
@@ -213,7 +212,7 @@ static void
 fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
 	/* do nothing */
-	if (!self->loaded)
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
 		return;
 
 	/* invalidate host security attributes */
@@ -8260,7 +8259,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
-	if (self->loaded)
+	if (self->load_flags & FU_ENGINE_LOAD_FLAG_READY)
 		return TRUE;
 
 	/* progress */
@@ -8627,7 +8626,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_info("failed to update list of devices: %s", error_json_devices->message);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
-	self->loaded = TRUE;
+	self->load_flags |= FU_ENGINE_LOAD_FLAG_READY;
 
 	/* let clients know engine finished starting up */
 	fu_engine_emit_changed(self);
