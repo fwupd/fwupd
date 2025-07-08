@@ -1721,15 +1721,18 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 	}
 
 	/* dedupe */
-	for (guint i = 0; i < priv->images->len; i++) {
-		FuFirmware *img_tmp = g_ptr_array_index(priv->images, i);
-		if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID) {
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID) {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img_tmp = g_ptr_array_index(priv->images, i);
 			if (g_strcmp0(fu_firmware_get_id(img_tmp), fu_firmware_get_id(img)) == 0) {
 				g_ptr_array_remove_index(priv->images, i);
 				break;
 			}
 		}
-		if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX) {
+	}
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX) {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img_tmp = g_ptr_array_index(priv->images, i);
 			if (fu_firmware_get_idx(img_tmp) == fu_firmware_get_idx(img)) {
 				g_ptr_array_remove_index(priv->images, i);
 				break;
