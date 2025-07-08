@@ -92,7 +92,7 @@ fu_vli_pd_device_spi_read_status(FuVliDevice *self, guint8 *status, GError **err
 					      FU_USB_DIRECTION_DEVICE_TO_HOST,
 					      FU_USB_REQUEST_TYPE_VENDOR,
 					      FU_USB_RECIPIENT_DEVICE,
-					      0xc5,
+					      0xc2,
 					      spi_cmd,
 					      0x0000,
 					      status,
@@ -731,6 +731,7 @@ fu_vli_pd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 						    NULL,
 						    &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_debug("ignoring %s", error_local->message);
 			} else {
