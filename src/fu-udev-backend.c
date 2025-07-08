@@ -24,14 +24,52 @@ struct _FuUdevBackend {
 	FuBackend parent_instance;
 	gint netlink_fd;
 	GHashTable *map_paths;	  /* of str:None */
+	GHashTable *coldplug_cache; /* of str:FuUdevBackendColdplugCacheItem */
 	GPtrArray *dpaux_devices; /* of FuDpauxDevice */
 	guint dpaux_devices_rescan_id;
 	gboolean done_coldplug;
 };
 
+typedef struct {
+	FuUdevDevice *udev_device;
+	GError *error;
+} FuUdevBackendColdplugCacheItem;
+
 G_DEFINE_TYPE(FuUdevBackend, fu_udev_backend, FU_TYPE_BACKEND)
 
 #define FU_UDEV_BACKEND_DPAUX_RESCAN_DELAY 5 /* s */
+
+static void
+fu_udev_backend_coldplug_cache_item_free(FuUdevBackendColdplugCacheItem *item)
+{
+	if (item->udev_device != NULL)
+		g_object_unref(item->udev_device);
+	if (item->error)
+		g_error_free(item->error);
+	g_free(item);
+}
+
+static void
+fu_udev_backend_coldplug_cache_add_device(FuUdevBackend *self,
+					  const gchar *fn,
+					  FuUdevDevice *udev_device)
+{
+	if (!self->done_coldplug) {
+		FuUdevBackendColdplugCacheItem *item = g_new0(FuUdevBackendColdplugCacheItem, 1);
+		item->udev_device = g_object_ref(udev_device);
+		g_hash_table_insert(self->coldplug_cache, g_strdup(fn), item);
+	}
+}
+
+static void
+fu_udev_backend_coldplug_cache_add_error(FuUdevBackend *self, const gchar *fn, GError *error)
+{
+	if (!self->done_coldplug) {
+		FuUdevBackendColdplugCacheItem *item = g_new0(FuUdevBackendColdplugCacheItem, 1);
+		item->error = g_error_copy(error);
+		g_hash_table_insert(self->coldplug_cache, g_strdup(fn), item);
+	}
+}
 
 static void
 fu_udev_backend_to_string(FuBackend *backend, guint idt, GString *str)
@@ -227,16 +265,43 @@ static FuUdevDevice *
 fu_udev_backend_create_device(FuUdevBackend *self, const gchar *fn, GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(FuUdevDevice) device_donor = fu_udev_device_new(ctx, fn);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuUdevDevice) device_donor = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* query the cache to avoid scanning parent devices multiple times */
+	if (!self->done_coldplug) {
+		FuUdevBackendColdplugCacheItem *item =
+		    g_hash_table_lookup(self->coldplug_cache, fn);
+		if (item != NULL) {
+			if (item->udev_device == NULL) {
+				if (error != NULL)
+					*error = g_error_copy(item->error);
+				return NULL;
+			}
+			return g_object_ref(item->udev_device);
+		}
+	}
 
 	/* use a donor device to probe for the subsystem and devtype */
-	if (!fu_device_probe(FU_DEVICE(device_donor), error)) {
-		g_prefix_error(error, "failed to probe donor: ");
+	device_donor = fu_udev_device_new(ctx, fn);
+	if (!fu_device_probe(FU_DEVICE(device_donor), &error_local)) {
+		fu_udev_backend_coldplug_cache_add_error(self, fn, error_local);
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to probe donor: ");
 		return NULL;
 	}
-	return FU_UDEV_DEVICE(fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
-								      FU_DEVICE(device_donor),
-								      error));
+	device = fu_udev_backend_create_device_for_donor(FU_BACKEND(self),
+							 FU_DEVICE(device_donor),
+							 &error_local);
+	if (device == NULL) {
+		fu_udev_backend_coldplug_cache_add_error(self, fn, error_local);
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return NULL;
+	}
+	fu_udev_backend_coldplug_cache_add_device(self, fn, FU_UDEV_DEVICE(device));
+	return FU_UDEV_DEVICE(g_steal_pointer(&device));
 }
 
 static void
@@ -634,6 +699,7 @@ fu_udev_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **erro
 	}
 
 	/* success */
+	g_hash_table_remove_all(self->coldplug_cache);
 	self->done_coldplug = TRUE;
 	return TRUE;
 }
@@ -770,6 +836,7 @@ fu_udev_backend_finalize(GObject *object)
 	if (self->netlink_fd > 0)
 		g_close(self->netlink_fd, NULL);
 	g_hash_table_unref(self->map_paths);
+	g_hash_table_unref(self->coldplug_cache);
 	g_ptr_array_unref(self->dpaux_devices);
 	G_OBJECT_CLASS(fu_udev_backend_parent_class)->finalize(object);
 }
@@ -778,6 +845,11 @@ static void
 fu_udev_backend_init(FuUdevBackend *self)
 {
 	self->map_paths = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+	self->coldplug_cache =
+	    g_hash_table_new_full(g_str_hash,
+				  g_str_equal,
+				  g_free,
+				  (GDestroyNotify)fu_udev_backend_coldplug_cache_item_free);
 	self->dpaux_devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
