@@ -471,14 +471,6 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 						 NULL);
 	}
 
-	/* determine if we're wired internally */
-	if (g_strcmp0(priv->subsystem, "i2c") != 0) {
-		g_autoptr(FuDevice) parent_i2c =
-		    fu_device_get_backend_parent_with_subsystem(device, "i2c", NULL);
-		if (parent_i2c != NULL)
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	}
-
 	/* success */
 	return TRUE;
 }
