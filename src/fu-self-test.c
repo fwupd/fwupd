@@ -4474,7 +4474,8 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
-	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device3 = NULL;
+	g_autoptr(FuDevice) device4 = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(GError) error = NULL;
 
@@ -4486,16 +4487,16 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	fu_device_set_priority(device2, 999);
 	fu_device_list_add(device_list, device2);
 
-	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	device3 = fu_device_list_get_by_id(device_list, "8e9c", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(device);
-	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_assert_nonnull(device3);
+	g_assert_cmpstr(fu_device_get_id(device3), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 
 	/* two devices with the 'same' priority */
 	fu_device_set_priority(device2, 0);
-	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	device4 = fu_device_list_get_by_id(device_list, "8e9c", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_null(device);
+	g_assert_null(device4);
 }
 
 static void
