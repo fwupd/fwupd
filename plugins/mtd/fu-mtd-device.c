@@ -315,6 +315,17 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 			return FALSE;
 		erase.start = fu_chunk_get_address(chk);
 		erase.length = fu_chunk_get_data_sz(chk);
+
+		/* the last chunk may be smaller than the erasesize. if it is, extend the last erase
+		 * up to the erasesize */
+		if (erase.length < self->erasesize) {
+			g_debug("extending last erase from %" G_GUINT32_FORMAT
+				" bytes to %" G_GUINT64_FORMAT " bytes",
+				erase.length,
+				self->erasesize);
+			erase.length = self->erasesize;
+		}
+
 		if (!fu_ioctl_execute(ioctl,
 				      MEMERASE,
 				      (guint8 *)&erase,
