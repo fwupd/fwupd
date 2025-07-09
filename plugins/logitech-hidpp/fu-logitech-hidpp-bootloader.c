@@ -26,6 +26,8 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppBootloader,
 			   fu_logitech_hidpp_bootloader,
 			   FU_TYPE_HID_DEVICE)
 
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED, "is-signed")
+
 #define GET_PRIVATE(o) (fu_logitech_hidpp_bootloader_get_instance_private(o))
 
 static void
@@ -415,8 +417,6 @@ fu_logitech_hidpp_bootloader_init(FuLogitechHidppBootloader *self)
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver (bootloader)");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 

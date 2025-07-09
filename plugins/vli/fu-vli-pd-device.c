@@ -16,8 +16,8 @@ struct _FuVliPdDevice {
 	FuVliDevice parent_instance;
 };
 
-#define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186 "has-i2c-ps186"
-#define FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM	    "skips-rom"
+FU_DEFINE_QUARK(FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186, "has-i2c-ps186")
+FU_DEFINE_QUARK(FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM, "skips-rom")
 
 G_DEFINE_TYPE(FuVliPdDevice, fu_vli_pd_device, FU_TYPE_VLI_DEVICE)
 
@@ -904,8 +904,6 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect(FU_VLI_DEVICE(self), FALSE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_VLI_PD_DEVICE_FLAG_SKIPS_ROM);
 
 	/* connect up attach or detach vfuncs when kind is known */
 	g_signal_connect(FU_VLI_DEVICE(self),

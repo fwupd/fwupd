@@ -15,7 +15,7 @@
 #define FU_TYPE_IGSC_DEVICE (fu_igsc_device_get_type())
 G_DECLARE_FINAL_TYPE(FuIgscDevice, fu_igsc_device, FU, IGSC_DEVICE, FuHeciDevice)
 
-#define FU_IGSC_DEVICE_FLAG_IS_WEDGED "is-wedged"
+extern GQuark FU_IGSC_DEVICE_FLAG_IS_WEDGED;
 
 gboolean
 fu_igsc_device_get_oprom_code_devid_enforcement(FuIgscDevice *self);

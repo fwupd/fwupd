@@ -12,8 +12,8 @@
 #include "fu-flashrom-cmos.h"
 #include "fu-flashrom-device.h"
 
-#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS     "reset-cmos"
-#define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK "fn-m-me-unlock"
+FU_DEFINE_QUARK(FU_FLASHROM_DEVICE_FLAG_RESET_CMOS, "reset-cmos")
+FU_DEFINE_QUARK(FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK, "fn-m-me-unlock")
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
@@ -308,8 +308,6 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_RESET_CMOS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK);
 }
 
 static void

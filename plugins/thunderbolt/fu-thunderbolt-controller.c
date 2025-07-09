@@ -23,6 +23,8 @@ struct _FuThunderboltController {
 
 G_DEFINE_TYPE(FuThunderboltController, fu_thunderbolt_controller, FU_TYPE_THUNDERBOLT_DEVICE)
 
+FU_DEFINE_QUARK(FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION, "force-enumeration")
+
 /* byte offsets in firmware image */
 #define FU_TBT_OFFSET_NATIVE 0x7B
 #define FU_TBT_CHUNK_SZ	     0x40
@@ -370,8 +372,6 @@ static void
 fu_thunderbolt_controller_init(FuThunderboltController *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION);
 }
 
 static void

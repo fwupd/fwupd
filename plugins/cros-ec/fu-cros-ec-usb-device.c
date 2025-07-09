@@ -47,10 +47,10 @@ typedef struct {
 	FuProgress *progress;
 } FuCrosEcUsbBlockHelper;
 
-#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN	   "ro-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN	   "rw-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO "rebooting-to-ro"
-#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL	   "special"
+FU_DEFINE_QUARK(FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN, "ro-written")
+FU_DEFINE_QUARK(FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN, "rw-written")
+FU_DEFINE_QUARK(FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO, "rebooting-to-ro")
+FU_DEFINE_QUARK(FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL, "special")
 
 static gboolean
 fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
@@ -1001,11 +1001,6 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_CROS_EC_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 }
 
 static void

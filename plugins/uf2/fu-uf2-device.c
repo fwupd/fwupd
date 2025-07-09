@@ -17,7 +17,7 @@ struct _FuUf2Device {
 
 G_DEFINE_TYPE(FuUf2Device, fu_uf2_device, FU_TYPE_BLOCK_PARTITION)
 
-#define FU_UF2_DEVICE_FLAG_HAS_RUNTIME "has-runtime"
+FU_DEFINE_QUARK(FU_UF2_DEVICE_FLAG_HAS_RUNTIME, "has-runtime")
 
 static FuFirmware *
 fu_uf2_device_prepare_firmware(FuDevice *device,
@@ -422,7 +422,6 @@ fu_uf2_device_init(FuUf2Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_UF2_DEVICE_FLAG_HAS_RUNTIME);
 	g_signal_connect(FU_DEVICE(self),
 			 "notify::vid",
 			 G_CALLBACK(fu_uf2_device_vid_notify_cb),
