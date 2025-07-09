@@ -9,6 +9,28 @@ struct FuStructVliPdHdr {
     pid: u16le,
 }
 
+enum FuVliPdRegisterAddress {
+    GpioControlA = 0x0003,
+    ProjLegacy   = 0x0018,
+    ProjIdHigh   = 0x009C,
+    ProjIdLow    = 0x009D,
+}
+
+enum FuVliPdDeviceSpiCmd {
+    ReadStatus  = 0xC2,
+    ReadData    = 0xC4,
+    ChipErase   = 0xD1,
+    SectorErase = 0xD2,
+    WriteEnable = 0xD4,
+    WriteStatus = 0xD8,
+    WriteData   = 0xDC,
+}
+
+enum FuVliPdDeviceCmd {
+    AccessRegister = 0xE0,
+    GetFwVersion   = 0xE2,
+}
+
 #[derive(New, Parse, ParseStream, ToString)]
 #[repr(C, packed)]
 struct FuStructVliUsbhubHdr {
