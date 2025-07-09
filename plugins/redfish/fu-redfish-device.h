@@ -17,11 +17,11 @@ struct _FuRedfishDeviceClass {
 	FuDeviceClass parent_class;
 };
 
-#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP		"is-backup"
-#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD		"unsigned-build"
-#define FU_REDFISH_DEVICE_FLAG_MANAGER_RESET		"manager-reset"
-#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS		"wildcard-targets"
-#define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST "no-manager-reset-request"
+extern GQuark FU_REDFISH_DEVICE_FLAG_IS_BACKUP;
+extern GQuark FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD;
+extern GQuark FU_REDFISH_DEVICE_FLAG_MANAGER_RESET;
+extern GQuark FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS;
+extern GQuark FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST;
 
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);

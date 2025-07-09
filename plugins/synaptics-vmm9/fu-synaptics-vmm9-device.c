@@ -10,7 +10,7 @@
 #include "fu-synaptics-vmm9-firmware.h"
 #include "fu-synaptics-vmm9-struct.h"
 
-#define FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED "manual-restart-required"
+FU_DEFINE_QUARK(FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED, "manual-restart-required")
 
 struct _FuSynapticsVmm9Device {
 	FuHidDevice parent_instance;
@@ -678,8 +678,6 @@ fu_synaptics_vmm9_device_init(FuSynapticsVmm9Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_SYNAPTICS_VMM9_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
 }
 
 static void

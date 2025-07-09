@@ -88,7 +88,7 @@ class Checker:
             return
 
         # doh
-        if func_name in ["main", "fu_plugin_init_vfuncs"]:
+        if func_name in ["main", "fu_plugin_init_vfuncs", "FU_DEFINE_QUARK"]:
             return
 
         # this is stuff that should move to GLib

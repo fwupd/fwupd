@@ -25,6 +25,12 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuRedfishDevice, fu_redfish_device, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_redfish_device_get_instance_private(o))
 
+FU_DEFINE_QUARK(FU_REDFISH_DEVICE_FLAG_IS_BACKUP, "is-backup")
+FU_DEFINE_QUARK(FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD, "unsigned-build")
+FU_DEFINE_QUARK(FU_REDFISH_DEVICE_FLAG_MANAGER_RESET, "manager-reset")
+FU_DEFINE_QUARK(FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS, "wildcard-targets")
+FU_DEFINE_QUARK(FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST, "no-manager-reset-request")
+
 static void
 fu_redfish_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -977,12 +983,6 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_IS_BACKUP);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_REDFISH_DEVICE_FLAG_MANAGER_RESET);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST);
 }
 
 static void

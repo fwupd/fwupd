@@ -17,7 +17,7 @@ struct _FuAlgoltekUsbDevice {
 
 G_DEFINE_TYPE(FuAlgoltekUsbDevice, fu_algoltek_usb_device, FU_TYPE_USB_DEVICE)
 
-#define FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR "ers-skip-first-sector"
+FU_DEFINE_QUARK(FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR, "ers-skip-first-sector")
 
 static gboolean
 fu_algoltek_usb_device_ctrl_transfer(FuAlgoltekUsbDevice *self,
@@ -591,8 +591,6 @@ fu_algoltek_usb_device_init(FuAlgoltekUsbDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.algoltek.usb");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_ALGOLTEK_USB_DEVICE_FLAG_ERS_SKIP_FIRST_SECTOR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

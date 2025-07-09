@@ -14,7 +14,7 @@ struct _FuIntelMkhiDevice {
 
 G_DEFINE_TYPE(FuIntelMkhiDevice, fu_intel_mkhi_device, FU_TYPE_HECI_DEVICE)
 
-#define FU_INTEL_MKHI_DEVICE_FLAG_LEAKED_KM "leaked-km"
+FU_DEFINE_QUARK(FU_INTEL_MKHI_DEVICE_FLAG_LEAKED_KM, "leaked-km")
 
 static gboolean
 fu_intel_mkhi_device_add_checksum_for_filename(FuIntelMkhiDevice *self,
@@ -92,7 +92,6 @@ fu_intel_mkhi_device_init(FuIntelMkhiDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_MKHI_DEVICE_FLAG_LEAKED_KM);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",
 			 G_CALLBACK(fu_intel_mkhi_device_version_notify_cb),

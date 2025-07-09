@@ -14,6 +14,8 @@ struct _FuLogitechBulkcontrollerChild {
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerChild, fu_logitech_bulkcontroller_child, FU_TYPE_DEVICE)
 
+FU_DEFINE_QUARK(FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE, "pheripheral-update")
+
 static gboolean
 fu_logitech_bulkcontroller_child_write_firmware(FuDevice *device,
 						FuFirmware *firmware,

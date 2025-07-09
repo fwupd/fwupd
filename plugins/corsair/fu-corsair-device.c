@@ -22,9 +22,9 @@
 #define CORSAIR_SUBDEVICE_RECONNECT_PERIOD  1000
 #define CORSAIR_SUBDEVICE_FIRST_POLL_DELAY  2000 /* ms */
 
-#define FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH		"legacy-attach"
-#define FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE		"is-subdevice"
-#define FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER "no-version-in-bl"
+FU_DEFINE_QUARK(FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH, "legacy-attach")
+FU_DEFINE_QUARK(FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE, "is-subdevice")
+FU_DEFINE_QUARK(FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER, "no-version-in-bl")
 
 struct _FuCorsairDevice {
 	FuUsbDevice parent_instance;
@@ -552,11 +552,6 @@ fu_corsair_device_init(FuCorsairDevice *device)
 
 	self->device_kind = FU_CORSAIR_DEVICE_KIND_MOUSE;
 	self->vendor_interface = CORSAIR_DEFAULT_VENDOR_INTERFACE_ID;
-
-	fu_device_register_private_flag(FU_DEVICE(device), FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE);
-	fu_device_register_private_flag(FU_DEVICE(device), FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH);
-	fu_device_register_private_flag(FU_DEVICE(device),
-					FU_CORSAIR_DEVICE_FLAG_NO_VERSION_IN_BOOTLOADER);
 
 	fu_device_set_remove_delay(FU_DEVICE(device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_TRIPLET);
