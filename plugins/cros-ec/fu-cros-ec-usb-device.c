@@ -434,7 +434,6 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 					  FU_STRUCT_CROS_EC_FIRST_RESPONSE_PDU_SIZE_VERSION);
 		version->dirty = active_version->dirty;
 	}
-
 	if (self->in_bootloader) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_set_version(FU_DEVICE(device), version->triplet);
