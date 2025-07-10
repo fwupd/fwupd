@@ -17,6 +17,8 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuWacomRawDevice, fu_wacom_raw_device, FU_TYPE_HIDRAW_DEVICE)
 
+FU_DEFINE_QUARK(FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG, "requires-wait-for-replug")
+
 #define GET_PRIVATE(o) (fu_wacom_raw_device_get_instance_private(o))
 
 static void
@@ -390,8 +392,6 @@ fu_wacom_raw_device_init(FuWacomRawDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG);
 }
 
 static void

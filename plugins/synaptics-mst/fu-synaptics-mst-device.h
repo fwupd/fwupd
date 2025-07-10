@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuSynapticsMstDevice,
 		     FuDpauxDevice)
 
 /* FIXME remove when emulation works */
-#define FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED "is-somewhat-emulated"
+extern GQuark FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED;

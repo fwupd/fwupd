@@ -15,7 +15,8 @@ struct _FuMmFastbootDevice {
 
 G_DEFINE_TYPE(FuMmFastbootDevice, fu_mm_fastboot_device, FU_TYPE_MM_DEVICE)
 
-#define FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE "detach-at-fastboot-has-no-response"
+FU_DEFINE_QUARK(FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE,
+		"detach-at-fastboot-has-no-response")
 
 static void
 fu_mm_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -114,8 +115,6 @@ fu_mm_fastboot_device_init(FuMmFastbootDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), 20000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_MM_FASTBOOT_DEVICE_FLAG_DETACH_AT_NO_RESPONSE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "USB\\VID_18D1&PID_D00D",
 				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);

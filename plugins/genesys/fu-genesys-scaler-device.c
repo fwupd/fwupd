@@ -27,8 +27,8 @@
 
 #define GENESYS_SCALER_USB_TIMEOUT 5000 /* 5s */
 
-#define FU_SCALER_FLAG_PAUSE_R2_CPU "pause-r2-cpu"
-#define FU_SCALER_FLAG_USE_I2C_CH0  "use-i2c-ch0"
+FU_DEFINE_QUARK(FU_SCALER_FLAG_PAUSE_R2_CPU, "pause-r2-cpu")
+FU_DEFINE_QUARK(FU_SCALER_FLAG_USE_I2C_CH0, "use-i2c-ch0")
 
 typedef struct {
 	guint8 req_read;
@@ -1900,8 +1900,6 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_PAUSE_R2_CPU);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_SCALER_FLAG_USE_I2C_CH0);
 	fu_device_set_install_duration(FU_DEVICE(self), 730); /* 12min 10s */
 
 	self->sector_size = 0x1000;						/* 4KB */

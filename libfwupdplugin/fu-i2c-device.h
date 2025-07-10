@@ -22,7 +22,7 @@ struct _FuI2cDeviceClass {
  *
  * Since: 2.0.0
  */
-#define FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS "no-hwid-guids"
+extern GQuark FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS;
 
 gboolean
 fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GError **error)

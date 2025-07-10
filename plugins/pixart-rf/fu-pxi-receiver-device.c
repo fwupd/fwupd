@@ -870,7 +870,6 @@ fu_pxi_receiver_device_init(FuPxiReceiverDevice *self)
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "USB", 0x093A);
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);

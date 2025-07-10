@@ -20,11 +20,11 @@ struct _FuLogitechHidppDeviceClass {
 	/* TODO: overridable methods */
 };
 
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID	  "force-receiver-id"
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE		  "ble"
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH	  "rebind-attach"
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED "no-request-required"
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO		  "add-radio"
+extern GQuark FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID;
+extern GQuark FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE;
+extern GQuark FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH;
+extern GQuark FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED;
+extern GQuark FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO;
 
 void
 fu_logitech_hidpp_device_set_device_idx(FuLogitechHidppDevice *self, guint8 device_idx);

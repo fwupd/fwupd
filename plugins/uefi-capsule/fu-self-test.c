@@ -90,7 +90,7 @@ fu_uefi_update_esp_no_backup_func(void)
 	fu_volume_set_filesystem_free(volume_esp, 6 * 1024 * 1024);
 
 	device = g_object_new(FU_TYPE_UEFI_CAPSULE_DEVICE, "context", ctx, NULL);
-	fu_device_add_private_flag(device, "no-esp-backup");
+	fu_device_add_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
 	fu_uefi_capsule_device_set_esp(FU_UEFI_CAPSULE_DEVICE(device), volume_esp);
 	firmware = fu_device_prepare_firmware(device,
 					      stream,

@@ -31,7 +31,7 @@
 
 #define TAG_SEND_COMMAND 0xFA
 
-#define FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER "usb-bulk-transfer"
+FU_DEFINE_QUARK(FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER, "usb-bulk-transfer")
 
 struct _FuElanfpDevice {
 	FuUsbDevice parent_instance;
@@ -443,7 +443,6 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_ELAN_FP_DEVICE_FLAG_USB_BULK_TRANSFER);
 }
 
 static void

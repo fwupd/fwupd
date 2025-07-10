@@ -47,6 +47,12 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppDevice, fu_logitech_hidpp_device, FU_T
 
 #define GET_PRIVATE(o) (fu_logitech_hidpp_device_get_instance_private(o))
 
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID, "force-receiver-id")
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE, "ble")
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH, "rebind-attach")
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED, "no-request-required")
+FU_DEFINE_QUARK(FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO, "add-radio")
+
 typedef enum {
 	FU_HIDPP_DEVICE_KIND_KEYBOARD,
 	FU_HIDPP_DEVICE_KIND_REMOTE_CONTROL,
@@ -1992,14 +1998,6 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 	g_signal_connect(FU_DEVICE(self),

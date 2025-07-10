@@ -30,7 +30,7 @@ G_DEFINE_TYPE(FuCfuDevice, fu_cfu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_CFU_DEVICE_TIMEOUT 5000 /* ms */
 
-#define FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO "send-offer-info"
+FU_DEFINE_QUARK(FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO, "send-offer-info")
 
 static void
 fu_cfu_device_map_to_string(GString *str, guint idt, FuCfuDeviceMap *map, const gchar *title)
@@ -565,7 +565,6 @@ fu_cfu_device_init(FuCfuDevice *self)
 	self->content_set_report.op = 0x61;
 	self->content_get_report.op = 0x66;
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO);
 }
 
 static void

@@ -12,7 +12,7 @@
 #include "fu-{{vendor_dash_example}}-struct.h"
 
 /* this can be set using Flags=example in the quirk file  */
-#define FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE "example"
+FU_DEFINE_QUARK(FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE, "example")
 
 struct _Fu{{VendorExample}}Device {
 	Fu{{Parent}}Device parent_instance;
@@ -316,8 +316,6 @@ fu_{{vendor_example}}_device_init(Fu{{VendorExample}}Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_icon(FU_DEVICE(self), "icon-name");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_{{VENDOR_EXAMPLE}}_DEVICE_FLAG_EXAMPLE);
 {%- if Parent == 'Usb' %}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x01);
 {%- endif %}

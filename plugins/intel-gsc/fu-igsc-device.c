@@ -24,9 +24,10 @@ struct _FuIgscDevice {
 	guint8 svn_min_allowed;
 };
 
-#define FU_IGSC_DEVICE_FLAG_HAS_AUX   "has-aux"
-#define FU_IGSC_DEVICE_FLAG_HAS_OPROM "has-oprom"
-#define FU_IGSC_DEVICE_FLAG_HAS_SKU   "has-sku"
+FU_DEFINE_QUARK(FU_IGSC_DEVICE_FLAG_HAS_AUX, "has-aux")
+FU_DEFINE_QUARK(FU_IGSC_DEVICE_FLAG_HAS_OPROM, "has-oprom")
+FU_DEFINE_QUARK(FU_IGSC_DEVICE_FLAG_HAS_SKU, "has-sku")
+FU_DEFINE_QUARK(FU_IGSC_DEVICE_FLAG_IS_WEDGED, "is-wedged")
 
 #define FU_IGSC_DEVICE_POWER_WRITE_TIMEOUT 1500	  /* ms */
 #define FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT   60000  /* 60 sec */
@@ -799,10 +800,6 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_GPU);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_AUX);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_OPROM);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_IS_WEDGED);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_IGSC_DEVICE_FLAG_HAS_SKU);
 }
 
 static void
