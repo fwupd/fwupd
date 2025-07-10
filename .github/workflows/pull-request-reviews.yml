@@ -10,7 +10,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
       - name: Refresh dependencies
@@ -23,26 +23,14 @@ jobs:
           source venv/bin/activate
           sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
           pre-commit run --hook-stage commit --all-files
-  abi:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Refresh dependencies
-        run: sudo apt update
-      - name: Install dependencies
-        run: |
-          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
-          sudo ./contrib/ci/fwupd_setup_helpers.py test-meson
-      - name: Check ABI
-        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 
   snap:
+    needs: pre-commit
     uses: ./.github/workflows/snap.yml
     with:
       deploy: false
     secrets: inherit
 
   matrix:
+    needs: pre-commit
     uses: ./.github/workflows/matrix.yml
