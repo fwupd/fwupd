@@ -31,20 +31,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUefiCapsuleDevice, fu_uefi_capsule_device, FU_TYPE_DEVICE)
 
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE, "no-ux-capsule")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE, "use-shim-unique")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC, "use-legacy-bootmgr-desc")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK, "supports-boot-order-lock")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB, "use-shim-for-sb")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE, "no-rt-set-variable")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP, "no-capsule-header-fixup")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING, "enable-debugging")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME, "cod-indexed-filename")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER, "modify-bootorder")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY, "cod-dell-recovery")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP, "no-esp-backup")
-FU_DEFINE_QUARK(FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI, "use-fwupd-efi")
-
 #define GET_PRIVATE(o) (fu_uefi_capsule_device_get_instance_private(o))
 
 #define FU_EFI_FMP_CAPSULE_GUID "6dcbd5ed-e82d-4c44-bda1-7194199ad92a"
@@ -779,6 +765,29 @@ fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_UNIQUE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_USE_SHIM_FOR_SB);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_RT_SET_VARIABLE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_INDEXED_FILENAME);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_MODIFY_BOOTORDER);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_CAPSULE_DEVICE_FLAG_COD_DELL_RECOVERY);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_ESP_BACKUP);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI);
 }
 
 static void

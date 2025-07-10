@@ -19,7 +19,7 @@ struct _FuLogitechHidppBootloaderClass {
 	FuHidDeviceClass parent_class;
 };
 
-extern GQuark FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED;
+#define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED "is-signed"
 
 /* packet to and from device */
 typedef struct __attribute__((packed)) { /* nocheck:blocked */

@@ -47,8 +47,6 @@ struct _FuPxiBleDevice {
 
 G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_HIDRAW_DEVICE)
 
-FU_DEFINE_QUARK(FU_PXI_DEVICE_FLAG_IS_HPAC, "is-hpac")
-
 #ifdef HAVE_HIDRAW_H
 static gboolean
 fu_pxi_ble_device_get_raw_info(FuPxiBleDevice *self, struct hidraw_devinfo *info, GError **error)
@@ -955,6 +953,7 @@ fu_pxi_ble_device_init(FuPxiBleDevice *self)
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 	self->feature_report_id = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	self->input_report_id = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
+	fu_device_register_private_flag(FU_DEVICE(self), FU_PXI_DEVICE_FLAG_IS_HPAC);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 

@@ -375,28 +375,13 @@ fu_device_new(FuContext *ctx);
 #define fu_device_set_percentage(d, v)	    fwupd_device_set_percentage(FWUPD_DEVICE(d), v)
 
 /**
- * FU_DEFINE_QUARK:
- *
- * Defines and initializes a quark automatically during construction.
- *
- * Since: 2.0.13
- */
-#define FU_DEFINE_QUARK(FN, fv)                                                                    \
-	static void FN##_con(void) __attribute__((constructor));                                   \
-	GQuark FN = 0;                                                                             \
-	void FN##_con(void)                                                                        \
-	{                                                                                          \
-		FN = g_quark_from_static_string(fv);                                               \
-	}
-
-/**
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS:
  *
  * Do not add instance IDs from the device baseclass.
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS;
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS "no-auto-instance-ids"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER:
  *
@@ -404,7 +389,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER;
+#define FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER "ensure-semver"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED:
  *
@@ -412,7 +397,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED;
+#define FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED "only-supported"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME:
  *
@@ -420,7 +405,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME "md-set-name"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY:
  *
@@ -428,7 +413,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY "md-set-name-category"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT:
  *
@@ -436,7 +421,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME_CATEGORY;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT "md-set-verfmt"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON:
  *
@@ -444,7 +429,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON "md-set-icon"
 /**
  * FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN:
  *
@@ -452,7 +437,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON;
  *
  * Since: 1.5.5
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN;
+#define FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN "retry-open"
 /**
  * FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID:
  *
@@ -460,7 +445,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_RETRY_OPEN;
  *
  * Since: 1.5.8
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID;
+#define FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID "replug-match-guid"
 /**
  * FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION:
  *
@@ -468,7 +453,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID;
  *
  * Since: 1.5.9
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION;
+#define FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION "inherit-activation"
 /**
  * FU_DEVICE_PRIVATE_FLAG_IS_OPEN:
  *
@@ -476,7 +461,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION;
  *
  * Since: 1.6.1
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_IS_OPEN;
+#define FU_DEVICE_PRIVATE_FLAG_IS_OPEN "is-open"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER:
  *
@@ -484,7 +469,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_IS_OPEN;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER;
+#define FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER "no-serial-number"
 /**
  * FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN:
  *
@@ -492,7 +477,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN;
+#define FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN "auto-parent-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET:
  *
@@ -500,7 +485,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET;
+#define FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET "attach-extra-reset"
 /**
  * FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN:
  *
@@ -508,7 +493,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN;
+#define FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN "inhibit-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN:
  *
@@ -516,7 +501,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN;
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN "no-auto-remove-children"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN:
  *
@@ -524,7 +509,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE_CHILDREN;
  *
  * Since: 1.6.2
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN;
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN "use-parent-for-open"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY:
  *
@@ -532,7 +517,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN;
  *
  * Since: 1.6.3
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY;
+#define FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY "use-parent-for-battery"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK:
  *
@@ -540,7 +525,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY;
  *
  * Since: 1.6.4
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK;
+#define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK "use-proxy-fallback"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE:
  *
@@ -548,7 +533,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK;
  *
  * Since 1.7.3
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE;
+#define FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE "no-auto-remove"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR:
  *
@@ -556,7 +541,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE;
  *
  * Since: 1.7.4
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR "md-set-vendor"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED:
  *
@@ -564,7 +549,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR;
  *
  * Since: 1.7.4
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED;
+#define FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED "no-lid-closed"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_PROBE:
  *
@@ -572,7 +557,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED;
  *
  * Since: 1.7.6
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_PROBE;
+#define FU_DEVICE_PRIVATE_FLAG_NO_PROBE "no-probe"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED:
  *
@@ -580,7 +565,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_PROBE;
  *
  * Since: 1.7.6
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED "md-set-signed"
 /**
  * FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING:
  *
@@ -588,7 +573,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED;
  *
  * Since: 1.8.1
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING;
+#define FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING "auto-pause-polling"
 /**
  * FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL:
  *
@@ -597,7 +582,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING;
  *
  * Since: 2.0.3
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL;
+#define FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL "delayed-removal"
 /**
  * FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER:
  *
@@ -606,7 +591,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL;
  *
  * Since: 1.8.11
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER;
+#define FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER "ignore-system-power"
 /**
  * FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE:
  *
@@ -619,7 +604,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_IGNORE_SYSTEM_POWER;
  *
  * Since: 1.8.13
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE;
+#define FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE "save-into-backup-remote"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS:
  *
@@ -630,7 +615,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE;
  *
  * Since: 1.9.1
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS "md-set-flags"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION:
  *
@@ -638,7 +623,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS;
  *
  * Since: 1.9.1
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION "md-set-version"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM:
  *
@@ -648,7 +633,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_VERSION;
  *
  * Since: 1.9.1
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM;
+#define FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM "md-only-checksum"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV:
  *
@@ -656,7 +641,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_ONLY_CHECKSUM;
  *
  * Since: 1.9.3
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV;
+#define FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV "add-instance-id-rev"
 /**
  * FU_DEVICE_PRIVATE_FLAG_UNCONNECTED:
  *
@@ -664,7 +649,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV;
  *
  * Since: 1.9.4
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_UNCONNECTED;
+#define FU_DEVICE_PRIVATE_FLAG_UNCONNECTED "unconnected"
 /**
  * FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED:
  *
@@ -672,7 +657,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_UNCONNECTED;
  *
  * Since: 1.9.6
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED;
+#define FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED "display-required"
 /**
  * FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING:
  *
@@ -680,7 +665,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED;
  *
  * Since: 1.9.7
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING;
+#define FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING "update-pending"
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS:
  *
@@ -688,7 +673,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING;
  *
  * Since: 1.9.8
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS;
+#define FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS "no-generic-guids"
 /**
  * FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES:
  *
@@ -697,7 +682,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS;
  *
  * Since: 1.9.8
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES;
+#define FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES "enforce-requires"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE:
  *
@@ -705,7 +690,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES;
  *
  * Since: 1.9.10
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE;
+#define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE "host-firmware"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD:
  *
@@ -713,7 +698,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE;
  *
  * Since: 1.9.10
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD;
+#define FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD "host-firmware-child"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_CPU:
  *
@@ -721,7 +706,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD;
  *
  * Since: 1.9.10
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_CPU;
+#define FU_DEVICE_PRIVATE_FLAG_HOST_CPU "host-cpu"
 /**
  * FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD:
  *
@@ -729,7 +714,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_CPU;
  *
  * Since: 1.9.10
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD;
+#define FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD "host-cpu-child"
 /**
  * FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER:
  *
@@ -737,7 +722,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD;
  *
  * Since: 1.9.13
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER;
+#define FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER "explicit-order"
 /**
  * FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY:
  *
@@ -745,7 +730,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER;
  *
  * Since: 1.9.15
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY;
+#define FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY "refcounted-proxy"
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN:
  *
@@ -753,7 +738,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY;
  *
  * Since: 1.9.16
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN;
+#define FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN "use-proxy-for-open"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST:
@@ -764,7 +749,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST;
+#define FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST "install-parent-first"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_REGISTERED:
@@ -773,7 +758,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_REGISTERED;
+#define FU_DEVICE_PRIVATE_FLAG_REGISTERED "registered"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS:
@@ -783,7 +768,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_REGISTERED;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS;
+#define FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS "add-counterpart-guids"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION:
@@ -793,7 +778,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION;
+#define FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION "use-runtime-version"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART:
@@ -802,7 +787,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART;
+#define FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART "skips-restart"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_IS_FAKE:
@@ -811,7 +796,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART;
  *
  * Since: 2.0.0
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_IS_FAKE;
+#define FU_DEVICE_PRIVATE_FLAG_IS_FAKE "is-fake"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE:
@@ -822,7 +807,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_IS_FAKE;
  *
  * Since: 2.0.4
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE;
+#define FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE "counterpart-visible"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE:
@@ -832,7 +817,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE;
  *
  * Since: 2.0.7
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE;
+#define FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE "detach-prepare-firmware"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP:
@@ -842,7 +827,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE;
  *
  * Since: 2.0.7
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP;
+#define FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP "emulated-require-setup"
 
 /**
  * FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART:
@@ -852,7 +837,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP;
  *
  * Since: 2.0.7
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART;
+#define FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART "install-loop-restart"
 /**
  * FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE:
  *
@@ -860,7 +845,7 @@ extern GQuark FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART;
  *
  * Since: 2.0.12
  */
-extern GQuark FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE;
+#define FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE "md-set-required-free"
 
 /* standard icons */
 
@@ -1410,11 +1395,13 @@ fu_device_report_metadata_post(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_security_attrs(FuDevice *self, FuSecurityAttrs *attrs) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_add_private_flag(FuDevice *self, GQuark flag) G_GNUC_NON_NULL(1);
+fu_device_register_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 void
-fu_device_remove_private_flag(FuDevice *self, GQuark flag) G_GNUC_NON_NULL(1);
+fu_device_add_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
+void
+fu_device_remove_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_device_has_private_flag(FuDevice *self, GQuark flag) G_GNUC_NON_NULL(1);
+fu_device_has_private_flag(FuDevice *self, const gchar *flag) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progress, GError **error)
     G_GNUC_NON_NULL(1, 2);

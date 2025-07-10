@@ -28,9 +28,9 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define W25Q16DV_PAGE_SIZE 256
 
-FU_DEFINE_QUARK(FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP, "verfmt-hp")
-FU_DEFINE_QUARK(FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE, "set-chip-type")
-FU_DEFINE_QUARK(FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG, "waiting-for-unplug")
+#define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   "verfmt-hp"
+#define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   "set-chip-type"
+#define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG "waiting-for-unplug"
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -808,6 +808,10 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
 			 NULL);
 
+	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);

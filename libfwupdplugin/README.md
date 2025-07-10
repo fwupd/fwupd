@@ -189,8 +189,3 @@ Remember: Plugins should be upstream!
 
 * Plugins that don't allow devices to function 100% through probe should use `FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION`
 * `fu_device_get_contents_bytes()`: Add a maximum read size, typically `G_MAXSIZE`
-
-## 2.0.13
-
-* Plugins that don't allow devices to function 100% through probe should use `FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION`
-* `fu_device_register_private_flag()`: Use `FU_DEFINE_QUARK()` instead

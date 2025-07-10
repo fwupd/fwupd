@@ -9,7 +9,7 @@
 
 #include <fwupdplugin.h>
 
-extern GQuark FU_PXI_DEVICE_FLAG_IS_HPAC;
+#define FU_PXI_DEVICE_FLAG_IS_HPAC "is-hpac"
 
 #define PXI_HID_WIRELESS_DEV_OTA_REPORT_ID 0x03
 

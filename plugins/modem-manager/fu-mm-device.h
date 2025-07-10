@@ -13,7 +13,7 @@
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuUdevDevice)
 
-extern GQuark FU_MM_DEVICE_FLAG_USE_BRANCH;
+#define FU_MM_DEVICE_FLAG_USE_BRANCH "use-branch"
 
 /* less ifdefs */
 #if !MM_CHECK_VERSION(1, 24, 0)

@@ -36,8 +36,6 @@
 
 G_DEFINE_TYPE(FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
 
-FU_DEFINE_QUARK(FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS, "no-hwid-guids")
-
 static gboolean
 fu_i2c_device_probe(FuDevice *device, GError **error)
 {
@@ -220,6 +218,7 @@ fu_i2c_device_init(FuI2cDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 }
 
 static void

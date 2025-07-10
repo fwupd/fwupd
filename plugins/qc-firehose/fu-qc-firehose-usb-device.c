@@ -13,7 +13,7 @@
 #include "fu-qc-firehose-struct.h"
 #include "fu-qc-firehose-usb-device.h"
 
-FU_DEFINE_QUARK(FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP, "no-zlp")
+#define FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP "no-zlp"
 
 #define FU_QC_FIREHOSE_USB_DEVICE_RAW_BUFFER_SIZE (4 * 1024)
 
@@ -343,6 +343,7 @@ fu_qc_firehose_usb_device_init(FuQcFirehoseUsbDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), 60000);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 

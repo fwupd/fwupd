@@ -25,8 +25,8 @@ struct _FuNvmeDevice {
 #define FU_NVME_COMMIT_ACTION_CA2 0b010 /* activate on next reset */
 #define FU_NVME_COMMIT_ACTION_CA3 0b011 /* replace, and activate immediately */
 
-FU_DEFINE_QUARK(FU_NVME_DEVICE_FLAG_FORCE_ALIGN, "force-align")
-FU_DEFINE_QUARK(FU_NVME_DEVICE_FLAG_COMMIT_CA3, "commit-ca3")
+#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN "force-align"
+#define FU_NVME_DEVICE_FLAG_COMMIT_CA3	"commit-ca3"
 
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
@@ -498,6 +498,8 @@ fu_nvme_device_init(FuNvmeDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_HARDDISK);
 	fu_device_add_protocol(FU_DEVICE(self), "org.nvmexpress");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_FORCE_ALIGN);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_NVME_DEVICE_FLAG_COMMIT_CA3);
 }
 
 static void

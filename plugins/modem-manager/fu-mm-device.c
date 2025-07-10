@@ -29,8 +29,6 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMmDevice, fu_mm_device, FU_TYPE_UDEV_DEVICE);
 
-FU_DEFINE_QUARK(FU_MM_DEVICE_FLAG_USE_BRANCH, "use-branch")
-
 #define GET_PRIVATE(o) (fu_mm_device_get_instance_private(o))
 
 #define FU_MM_DEVICE_AT_RETRIES 3
@@ -826,6 +824,7 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MODEM);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
 	fu_device_add_possible_plugin(FU_DEVICE(self), "modem_manager");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

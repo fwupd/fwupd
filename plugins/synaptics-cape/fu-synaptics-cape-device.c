@@ -36,7 +36,7 @@ struct _FuSynapticsCapeDevice {
 	FuSynapticsCapeFirmwarePartition active_partition;
 };
 
-FU_DEFINE_QUARK(FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT, "use-in-report-interrupt")
+#define FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT "use-in-report-interrupt"
 
 G_DEFINE_TYPE(FuSynapticsCapeDevice, fu_synaptics_cape_device, FU_TYPE_HID_DEVICE)
 
@@ -760,6 +760,8 @@ fu_synaptics_cape_device_init(FuSynapticsCapeDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.cape");
 	fu_device_retry_set_delay(FU_DEVICE(self), 100); /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_CAPE_DEVICE_FLAG_USE_IN_REPORT_INTERRUPT);
 }
 
 static void

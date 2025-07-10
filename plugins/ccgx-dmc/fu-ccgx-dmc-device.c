@@ -35,7 +35,7 @@ struct _FuCcgxDmcDevice {
 	guint8 custom_meta_flag;
 };
 
-FU_DEFINE_QUARK(FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG, "has-manual-replug")
+#define FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG "has-manual-replug"
 
 G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 
@@ -830,6 +830,7 @@ fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
 }
 
 static void

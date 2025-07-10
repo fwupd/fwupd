@@ -18,9 +18,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (fu_steelseries_device_get_instance_private(o))
 
-FU_DEFINE_QUARK(FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER, "is-receiver")
-FU_DEFINE_QUARK(FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER, "detach-bootloader")
-
 /* @iface_idx_offset can be negative to specify from the end */
 void
 fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset)
@@ -174,6 +171,7 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 static void
 fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
+	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
 }
 
 static void

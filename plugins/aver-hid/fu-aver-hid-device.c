@@ -22,7 +22,7 @@ G_DEFINE_TYPE(FuAverHidDevice, fu_aver_hid_device, FU_TYPE_HID_DEVICE)
 #define FU_AVER_HID_DEVICE_ISP_RETRY_COUNT	    300
 #define FU_AVER_HID_DEVICE_ISP_UNTAR_WAIT_COUNT	    600
 
-FU_DEFINE_QUARK(FU_AVER_HID_FLAG_DUAL_ISP, "dual-isp")
+#define FU_AVER_HID_FLAG_DUAL_ISP "dual-isp"
 
 static gboolean
 fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *res, GError **error)
@@ -509,6 +509,7 @@ fu_aver_hid_device_init(FuAverHidDevice *self)
 	fu_usb_device_set_claim_retry_count(FU_USB_DEVICE(self), 5);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP);
 }
 
 static void

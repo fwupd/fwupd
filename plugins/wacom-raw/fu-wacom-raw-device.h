@@ -26,7 +26,7 @@ struct _FuWacomRawDeviceClass {
 				   GError **error);
 };
 
-extern GQuark FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG;
+#define FU_WACOM_RAW_DEVICE_FLAG_REQUIRES_WAIT_FOR_REPLUG "requires-wait-for-replug"
 
 guint8
 fu_wacom_raw_device_get_echo_next(FuWacomRawDevice *self);

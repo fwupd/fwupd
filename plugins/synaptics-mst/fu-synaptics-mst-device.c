@@ -60,9 +60,8 @@
 #define REG_CHIP_ID	     0x507
 #define REG_FIRMWARE_VERSION 0x50A
 
-FU_DEFINE_QUARK(FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID, "ignore-board-id")
-FU_DEFINE_QUARK(FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED, "manual-restart-required")
-FU_DEFINE_QUARK(FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED, "is-somewhat-emulated")
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID	     "ignore-board-id"
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED "manual-restart-required"
 
 struct _FuSynapticsMstDevice {
 	FuDpauxDevice parent_instance;
@@ -109,6 +108,12 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Multi-stream transport device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_MANUAL_RESTART_REQUIRED);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_SYNAPTICS_MST_DEVICE_FLAG_IS_SOMEWHAT_EMULATED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 

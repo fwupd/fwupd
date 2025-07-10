@@ -38,10 +38,10 @@
 
 #define FPC_FF2_BLK_SEC_LINK_LEN 100
 
-FU_DEFINE_QUARK(FU_FPC_DEVICE_FLAG_MOH_DEVICE, "moh-device")
-FU_DEFINE_QUARK(FU_FPC_DEVICE_FLAG_LEGACY_DFU, "legacy-dfu")
-FU_DEFINE_QUARK(FU_FPC_DEVICE_FLAG_RTS_DEVICE, "rts")
-FU_DEFINE_QUARK(FU_FPC_DEVICE_FLAG_LENFY_DEVICE, "lenfy")
+#define FU_FPC_DEVICE_FLAG_MOH_DEVICE	"moh-device"
+#define FU_FPC_DEVICE_FLAG_LEGACY_DFU	"legacy-dfu"
+#define FU_FPC_DEVICE_FLAG_RTS_DEVICE	"rts"
+#define FU_FPC_DEVICE_FLAG_LENFY_DEVICE "lenfy"
 
 struct _FuFpcDevice {
 	FuUsbDevice parent_instance;
@@ -690,6 +690,10 @@ fu_fpc_device_init(FuFpcDevice *self)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x10000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x64000);
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FPC_USB_INTERFACE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_MOH_DEVICE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_RTS_DEVICE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LEGACY_DFU);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_FPC_DEVICE_FLAG_LENFY_DEVICE);
 }
 
 static void

@@ -9,7 +9,7 @@
 
 #include <fwupdplugin.h>
 
-extern GQuark FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION;
+#define FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION "force-enumeration"
 
 #define FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT 1500 /* ms */
 
