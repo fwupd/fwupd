@@ -735,6 +735,59 @@ fu_dbus_daemon_install_with_helper(FuMainAuthHelper *helper, GError **error)
 #endif /* HAVE_GIO_UNIX */
 
 static binder_status_t
+fu_binder_daemon_method_update_metadata(FuBinderDaemon *self,
+					FuEngineRequest *request,
+					const AParcel *in,
+					AParcel *out,
+					GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	const GVariantType *param_type = G_VARIANT_TYPE("(shh)");
+	g_autoptr(GVariant) parameters = NULL;
+	const char *remote_id = NULL;
+	gint32 fd_data = 0;
+	gint32 fd_sig = 0;
+
+	g_auto(GVariantBuilder) builder;
+	g_variant_builder_init(&builder, param_type);
+
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	parameters = g_variant_builder_end(&builder);
+
+	if (parameters == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "could not decode parameters");
+		return STATUS_BAD_VALUE;
+	}
+
+	g_debug("updateMetadata params %s", g_variant_print(parameters, TRUE));
+
+	g_variant_get(parameters, "(&shh)", &remote_id, &fd_data, &fd_sig);
+
+	/* store new metadata (will close the fds when done) */
+	if (!fu_engine_update_metadata(engine, remote_id, fd_data, fd_sig, error)) {
+		g_prefix_error(error, "Failed to update metadata for %s: ", remote_id);
+		fu_binder_daemon_method_invocation_return_error(out, *error);
+		return STATUS_OK;
+	}
+
+	return fu_binder_daemon_method_invocation_return_variant(out, NULL, error);
+#else
+	fu_binder_daemon_method_invocation_return_error_literal(out,
+								FWUPD_ERROR_INTERNAL,
+								"unsupported feature");
+	return STATUS_OK;
+#endif
+}
+
+static binder_status_t
 fu_binder_daemon_method_install(FuBinderDaemon *self,
 				FuEngineRequest *request,
 				const AParcel *in,
@@ -1246,6 +1299,7 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 	    fu_binder_daemon_method_get_upgrades,	/* getUpgrades */
 	    fu_binder_daemon_method_get_properties,	/* getProperties */
 	    fu_binder_daemon_method_get_remotes,	/* getRemotes */
+	    fu_binder_daemon_method_update_metadata,	/* updateMetadata */
 	};
 
 	g_debug("binder transaction is %u", code);

@@ -533,6 +533,34 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(AStatus) status = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(GUnixInputStream) istr_sig = NULL;
+
+	const gchar *remote_id = values[2];
+	const gchar *metadata_fn = values[0];
+	const gchar *signature_fn = values[1];
+
+	istr = fwupd_unix_input_stream_from_fn(metadata_fn, error);
+	if (istr == NULL)
+		return FALSE;
+	istr_sig = fwupd_unix_input_stream_from_fn(signature_fn, error);
+	if (istr_sig == NULL)
+		return FALSE;
+
+	val = g_variant_new("(&shh)",
+			    remote_id,
+			    g_unix_input_stream_get_fd(istr),
+			    g_unix_input_stream_get_fd(istr_sig));
+
+	return fu_util_transact(priv, FWUPD_BINDER_CALL_UPDATE_METADATA, val, 0, &out, error);
+}
+
+static gboolean
 fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -824,6 +852,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Gets the configured remotes"),
 			      fu_util_get_remotes);
+	fu_util_cmd_array_add(cmd_array,
+			      "refresh",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FILE FILE_SIG REMOTE-ID]"),
+			      /* TRANSLATORS: command description */
+			      _("Refresh metadata from remote server"),
+			      fu_util_refresh);
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
