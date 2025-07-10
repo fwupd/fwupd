@@ -487,7 +487,7 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 
 	/* device is wedged and needs recovery */
 	prop_wedged = fu_udev_device_read_property(FU_UDEV_DEVICE(device), "WEDGED", NULL);
-	if (g_strcmp0(prop_wedged, "unknown") == 0) {
+	if (g_strcmp0(prop_wedged, "vendor-specific") == 0) {
 		g_autofree gchar *attr_survivability_mode = NULL;
 		attr_survivability_mode =
 		    fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
@@ -495,7 +495,8 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      error);
 		if (attr_survivability_mode == NULL) {
-			g_prefix_error(error, "cannot get survivability_mode for WEDGED=unknown: ");
+			g_prefix_error(error, "cannot get survivability_mode for "
+				       "WEDGED=vendor-specific: ");
 			return FALSE;
 		}
 		g_debug("survivability_mode: %s", attr_survivability_mode);
