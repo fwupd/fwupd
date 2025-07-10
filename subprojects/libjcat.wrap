@@ -1,4 +1,4 @@
 [wrap-git]
 directory = libjcat
 url = https://github.com/hughsie/libjcat.git
-revision = ckinloch/wip-pkcs7-openssl
+revision = main
