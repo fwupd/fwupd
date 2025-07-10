@@ -2516,14 +2516,13 @@ fu_device_inhibit_updateable_func(void)
 	g_assert_cmpstr(fu_device_get_update_error(device), ==, NULL);
 }
 
-FU_DEFINE_QUARK(FU_SELF_TEST_DEVICE_PRIVATE_FLAG_FOO, "foo")
-FU_DEFINE_QUARK(FU_SELF_TEST_DEVICE_PRIVATE_FLAG_BAR, "bar")
-
 static void
 fu_device_custom_flags_func(void)
 {
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	GQuark FU_SELF_TEST_DEVICE_PRIVATE_FLAG_FOO = g_quark_from_static_string("foo");
+	GQuark FU_SELF_TEST_DEVICE_PRIVATE_FLAG_BAR = g_quark_from_static_string("bar");
 
 	fu_device_set_custom_flags(device, "foo");
 	g_assert_true(fu_device_has_private_flag(device, FU_SELF_TEST_DEVICE_PRIVATE_FLAG_FOO));
@@ -2734,6 +2733,8 @@ fu_device_incorporate_func(void)
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
 	g_autoptr(FuDevice) donor = fu_device_new(ctx);
 	g_autoptr(GError) error = NULL;
+	// GQuark FU_SELF_TEST_DEVICE_PRIVATE_FLAG_BAR = g_quark_from_static_string("self-test")
+	FU_DEFINE_QUARK2(FU_SELF_TEST_DEVICE_PRIVATE_FLAG_SELF_TEST, "self-test")
 
 	/* load quirks */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);

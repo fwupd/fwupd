@@ -389,6 +389,8 @@ fu_device_new(FuContext *ctx);
 		FN = g_quark_from_static_string(fv);                                               \
 	}
 
+#define FU_DEFINE_QUARK2(FN, fv) FN = g_quark_from_static_string(fv);
+
 /**
  * FU_DEVICE_PRIVATE_FLAG_NO_AUTO_INSTANCE_IDS:
  *

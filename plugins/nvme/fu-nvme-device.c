@@ -25,8 +25,12 @@ struct _FuNvmeDevice {
 #define FU_NVME_COMMIT_ACTION_CA2 0b010 /* activate on next reset */
 #define FU_NVME_COMMIT_ACTION_CA3 0b011 /* replace, and activate immediately */
 
-FU_DEFINE_QUARK(FU_NVME_DEVICE_FLAG_FORCE_ALIGN, "force-align")
-FU_DEFINE_QUARK(FU_NVME_DEVICE_FLAG_COMMIT_CA3, "commit-ca3")
+enum {
+	FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
+	FU_NVME_DEVICE_FLAG_COMMIT_CA3,
+	FU_NVME_DEVICE_FLAG_LAST,
+};
+static GQuark _flags[FU_NVME_DEVICE_FLAG_LAST] = {0};
 
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
@@ -406,7 +410,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */
-	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_FORCE_ALIGN)) {
+	if (fu_device_has_private_flag(device, _flags[FU_NVME_DEVICE_FLAG_FORCE_ALIGN])) {
 		fw2 = fu_bytes_align(fw, block_size, 0xff);
 	} else {
 		fw2 = g_bytes_ref(fw);
@@ -439,7 +443,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* commit */
-	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3))
+	if (fu_device_has_private_flag(device, _flags[FU_NVME_DEVICE_FLAG_COMMIT_CA3]))
 		commit_action = FU_NVME_COMMIT_ACTION_CA3;
 	if (!fu_nvme_device_fw_commit(self,
 				      0x00, /* let controller choose */
@@ -504,6 +508,8 @@ static void
 fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	_flags[FU_NVME_DEVICE_FLAG_FORCE_ALIGN] = g_quark_from_static_string("force-align");
+	_flags[FU_NVME_DEVICE_FLAG_COMMIT_CA3] = g_quark_from_static_string("commit-ca3");
 	device_class->to_string = fu_nvme_device_to_string;
 	device_class->set_quirk_kv = fu_nvme_device_set_quirk_kv;
 	device_class->setup = fu_nvme_device_setup;
