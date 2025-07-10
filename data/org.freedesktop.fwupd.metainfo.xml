@@ -38,6 +38,40 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.31" date="2025-07-10">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a config option to ignore the efivars free space</li>
+          <li>Add support for new Dell dock ownership command</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add two more dbx checksums for offline detection</li>
+          <li>Check for 30kB of free NVRAM space before offering the dbx update</li>
+          <li>Do not allow dbx updates on more several more models</li>
+          <li>Do not copy the vendor name for Intel reference ME firmware</li>
+          <li>Never include systemd.machine_id in the uploaded report if set</li>
+          <li>Never write a UX capsule when using Capsule-On-Disk</li>
+          <li>Only check for fwupdx64.efi when NOT using CoD</li>
+          <li>Probe Synaptics VMM9 devices in a more relaxed way</li>
+          <li>Reduce lzma compression level from 9 to default 6</li>
+          <li>Refactor firmware child deduping to speed up startup</li>
+          <li>Reset RTS5G2 correctly on the Dell dock</li>
+          <li>Support loading multiple coSWID blobs from PE files</li>
+          <li>Wait for the logitech-scribe device to replug after updating</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>A new Elan fingerprint reader</li>
+          <li>Poly Studio V72 and V12</li>
+          <li>Several new MediaTek scaler models</li>
+          <li>Thunderbolt 5 Smart Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.30" date="2025-05-07">
       <description>
         <p>This release fixes the following bugs:</p>
