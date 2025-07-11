@@ -12,5 +12,5 @@
 G_DECLARE_FINAL_TYPE(FuJabraGnpChildDevice, fu_jabra_gnp_child_device, FU, JABRA_GNP_CHILD_DEVICE, FuDevice)
 
 void
-fu_jabra_gnp_child_device_set_dfu_pid(FuJabraGnpChildDevice *self, guint16 dfu_pid)
+fu_jabra_gnp_child_device_set_dfu_pid_and_seq(FuJabraGnpChildDevice *self, guint16 dfu_pid)
     G_GNUC_NON_NULL(1);
