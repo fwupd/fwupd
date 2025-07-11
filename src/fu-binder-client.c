@@ -46,6 +46,7 @@ struct FuUtilPrivate {
 	GMainLoop *loop;
 	GOptionContext *context;
 	AIBinder *fwupd_binder;
+	AIBinder *listener_binder;
 	gint binder_fd;
 	FwupdInstallFlags flags;
 	FwupdClientDownloadFlags download_flags;
@@ -166,6 +167,64 @@ fu_util_binder_parcel_read_header(AParcel *parcel, GError **error)
 #endif
 			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, message);
 		}
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_setup_event_listener(FuUtilPrivate *priv,
+			     const AIBinder_Class *listener_binder_class,
+			     GError **error)
+{
+	AParcel *in = NULL;
+	g_autoptr(AParcel) out = NULL;
+	g_autoptr(AParcel) pending_in = NULL;
+	g_autoptr(AStatus) status = NULL;
+	binder_status_t nstatus = STATUS_OK;
+
+	priv->listener_binder = AIBinder_new(listener_binder_class, priv);
+
+	nstatus = AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed prepare property change transaction for listener %s",
+			    AStatus_getDescription(status));
+		return FALSE;
+	}
+
+	AParcel_writeStrongBinder(pending_in, priv->listener_binder);
+
+	in = g_steal_pointer(&pending_in);
+	nstatus = AIBinder_transact(priv->fwupd_binder,
+				    FWUPD_BINDER_CALL_ADD_EVENT_LISTENER,
+				    &in,
+				    &out,
+				    0);
+
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "addEventListener returned %s",
+			    AStatus_getDescription(status));
+		return FALSE;
+	}
+
+	if (out == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Binder transaction succeeded but didn't return a value");
+		return FALSE;
+	}
+
+	if (!fu_util_binder_parcel_read_header(out, error)) {
 		return FALSE;
 	}
 
@@ -696,6 +755,26 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static void *
+fwupd_listener_on_create(void *arg)
+{
+	return arg;
+}
+static void
+fwupd_listener_on_destroy(void *arg)
+{
+	// TODO: Clean up ???
+}
+static binder_status_t
+fwupd_listener_on_transact(AIBinder *binder,
+			   transaction_code_t code,
+			   const AParcel *in,
+			   AParcel *out)
+{
+	g_debug("listener transaction code %d", code);
+	return STATUS_OK;
+}
+
+static void *
 fwupd_service_on_create(void *arg)
 {
 	return arg;
@@ -738,6 +817,11 @@ main(int argc, char *argv[])
 									 fwupd_service_on_create,
 									 fwupd_service_on_destroy,
 									 fwupd_service_on_transact);
+	const AIBinder_Class *listener_binder_class =
+	    AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
+				  fwupd_listener_on_create,
+				  fwupd_listener_on_destroy,
+				  fwupd_listener_on_transact);
 
 	const GOptionEntry options[] = {{"verbose",
 					 'v',
@@ -916,6 +1000,12 @@ main(int argc, char *argv[])
 	}
 
 	AIBinder_associateClass(priv->fwupd_binder, fwupd_binder_class);
+
+	if (!fu_util_setup_event_listener(priv, listener_binder_class, &error)) {
+		g_prefix_error(&error, _("Failed to attach listener to daemon"));
+		fu_util_print_error(priv, error);
+		return EXIT_FAILURE;
+	}
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
