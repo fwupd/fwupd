@@ -64,6 +64,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_UDEV_DEVICE);
 
 enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
+enum {
+	QUARK_ADD_INSTANCE_ID_REV,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
@@ -1219,7 +1226,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 					 "VID",
 					 "PID",
 					 NULL);
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_ADD_INSTANCE_ID_REV])) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -3088,6 +3095,10 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->convert_version = fu_usb_device_convert_version;
 	device_class->from_json = fu_usb_device_from_json;
 	device_class->add_json = fu_usb_device_add_json;
+
+	/* used as device flags */
+	quarks[QUARK_ADD_INSTANCE_ID_REV] =
+	    g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 
 	/**
 	 * FuUsbDevice:libusb-device:

@@ -141,6 +141,18 @@ enum { SIGNAL_CHILD_ADDED, SIGNAL_CHILD_REMOVED, SIGNAL_REQUEST, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
+/* ordered for query speed; most frequent first */
+enum {
+	QUARK_NO_PROBE,
+	QUARK_REFCOUNTED_PROXY,
+	QUARK_NO_GENERIC_GUIDS,
+	QUARK_NO_SERIAL_NUMBER,
+	QUARK_IS_FAKE,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 G_DEFINE_TYPE_WITH_PRIVATE(FuDevice, fu_device, FWUPD_TYPE_DEVICE);
 
 #define GET_PRIVATE(o) (fu_device_get_instance_private(o))
@@ -250,7 +262,7 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 }
 
 static void
-fu_device_register_flags(FuDevice *self)
+fu_device_register_private_flags(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	const gchar *flags[] = {
@@ -265,7 +277,6 @@ fu_device_register_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID,
 	    FU_DEVICE_PRIVATE_FLAG_INHERIT_ACTIVATION,
 	    FU_DEVICE_PRIVATE_FLAG_IS_OPEN,
-	    FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER,
 	    FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN,
 	    FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET,
 	    FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN,
@@ -277,7 +288,6 @@ fu_device_register_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR,
 	    FU_DEVICE_PRIVATE_FLAG_NO_LID_CLOSED,
-	    FU_DEVICE_PRIVATE_FLAG_NO_PROBE,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED,
 	    FU_DEVICE_PRIVATE_FLAG_AUTO_PAUSE_POLLING,
 	    FU_DEVICE_PRIVATE_FLAG_DELAYED_REMOVAL,
@@ -290,34 +300,35 @@ fu_device_register_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_UNCONNECTED,
 	    FU_DEVICE_PRIVATE_FLAG_DISPLAY_REQUIRED,
 	    FU_DEVICE_PRIVATE_FLAG_UPDATE_PENDING,
-	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS,
 	    FU_DEVICE_PRIVATE_FLAG_ENFORCE_REQUIRES,
 	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE,
 	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD,
 	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU,
 	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD,
 	    FU_DEVICE_PRIVATE_FLAG_EXPLICIT_ORDER,
-	    FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY,
 	    FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST,
 	    FU_DEVICE_PRIVATE_FLAG_REGISTERED,
 	    FU_DEVICE_PRIVATE_FLAG_ADD_COUNTERPART_GUIDS,
 	    FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION,
 	    FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART,
-	    FU_DEVICE_PRIVATE_FLAG_IS_FAKE,
 	    FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE,
 	    FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE,
 	    FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP,
 	    FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
 	};
-	GQuark flag_quarks[G_N_ELEMENTS(flags)] = {0};
+	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
+	if (G_LIKELY(priv->private_flags_registered->len > 0))
+		return;
 	for (guint i = 0; i < G_N_ELEMENTS(flags); i++)
-		flag_quarks[i] = g_quark_from_static_string(flags[i]);
-	g_array_append_vals(priv->private_flags_registered, flag_quarks, G_N_ELEMENTS(flags));
+		quarks_tmp[i] = g_quark_from_static_string(flags[i]);
+	g_array_append_vals(priv->private_flags_registered, quarks, G_N_ELEMENTS(quarks));
+	g_array_append_vals(priv->private_flags_registered, quarks_tmp, G_N_ELEMENTS(quarks_tmp));
 }
 
-static gboolean
-fu_device_private_flags_has_quark(FuDevice *self, GQuark flag_quark)
+/* private */
+gboolean
+fu_device_has_private_flag_quark(FuDevice *self, GQuark flag_quark)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	for (guint i = 0; i < priv->private_flags->len; i++) {
@@ -341,17 +352,17 @@ fu_device_private_flags_has_registered_quark(FuDevice *self, GQuark flag_quark)
 }
 
 static gboolean
-fu_device_private_flags_add_quark(FuDevice *self, GQuark flag_quark)
+fu_device_add_private_flag_quark(FuDevice *self, GQuark flag_quark)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	if (fu_device_private_flags_has_quark(self, flag_quark) != 0)
+	if (fu_device_has_private_flag_quark(self, flag_quark))
 		return FALSE;
 	g_array_append_val(priv->private_flags, flag_quark);
 	return TRUE;
 }
 
 static gboolean
-fu_device_private_flags_remove_quark(FuDevice *self, GQuark flag_quark)
+fu_device_remove_private_flag_quark(FuDevice *self, GQuark flag_quark)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	for (guint i = 0; i < priv->private_flags->len; i++) {
@@ -365,7 +376,7 @@ fu_device_private_flags_remove_quark(FuDevice *self, GQuark flag_quark)
 }
 
 static GQuark
-fu_device_private_flags_registered_lookup(FuDevice *self, const gchar *flag)
+fu_device_find_private_flag_quark(FuDevice *self, const gchar *flag)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	GQuark flag_quark = g_quark_from_string(flag);
@@ -396,8 +407,7 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 	g_return_if_fail(flag != NULL);
 
 	/* ensure */
-	if (priv->private_flags_registered->len == 0)
-		fu_device_register_flags(self);
+	fu_device_register_private_flags(self);
 
 	/* do not let devices be updated until re-connected */
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
@@ -424,8 +434,8 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 	}
 
 	/* check exists */
-	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
-	if (flag_quark == 0) {
+	flag_quark = fu_device_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -433,7 +443,7 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return;
 	}
-	if (fu_device_private_flags_add_quark(self, flag_quark))
+	if (fu_device_add_private_flag_quark(self, flag_quark))
 		g_object_notify(G_OBJECT(self), "private-flags");
 }
 
@@ -449,21 +459,19 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 void
 fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
 	GQuark flag_quark;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(flag != NULL);
 
 	/* ensure */
-	if (priv->private_flags_registered->len == 0)
-		fu_device_register_flags(self);
+	fu_device_register_private_flags(self);
 
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
 		fu_device_uninhibit(self, "unconnected");
 
-	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
-	if (flag_quark == 0) {
+	flag_quark = fu_device_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -471,7 +479,7 @@ fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return;
 	}
-	if (fu_device_private_flags_remove_quark(self, flag_quark))
+	if (fu_device_remove_private_flag_quark(self, flag_quark))
 		g_object_notify(G_OBJECT(self), "private-flags");
 }
 
@@ -487,18 +495,16 @@ fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 gboolean
 fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 {
-	FuDevicePrivate *priv = GET_PRIVATE(self);
 	GQuark flag_quark;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 
 	/* ensure */
-	if (priv->private_flags_registered->len == 0)
-		fu_device_register_flags(self);
+	fu_device_register_private_flags(self);
 
-	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
-	if (flag_quark == 0) {
+	flag_quark = fu_device_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark == 0)) {
 #ifndef SUPPORTED_BUILD
 		g_critical("%s flag %s is unknown -- use fu_device_register_private_flag()",
 			   G_OBJECT_TYPE_NAME(self),
@@ -506,7 +512,7 @@ fu_device_has_private_flag(FuDevice *self, const gchar *flag)
 #endif
 		return FALSE;
 	}
-	return fu_device_private_flags_has_quark(self, flag_quark);
+	return fu_device_has_private_flag_quark(self, flag_quark);
 }
 
 /**
@@ -1637,7 +1643,7 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	}
 
 	/* sometimes strong, sometimes weak */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY])) {
 		g_set_object(&priv->proxy, proxy);
 		fu_device_set_target(self, proxy);
 	} else {
@@ -4589,12 +4595,11 @@ fu_device_register_private_flag(FuDevice *self, const gchar *flag)
 	}
 #endif
 	/* ensure */
-	if (priv->private_flags_registered->len == 0)
-		fu_device_register_flags(self);
+	fu_device_register_private_flags(self);
 
 	/* sanity check */
-	flag_quark = fu_device_private_flags_registered_lookup(self, flag);
-	if (flag_quark != 0) {
+	flag_quark = fu_device_find_private_flag_quark(self, flag);
+	if (G_UNLIKELY(flag_quark != 0)) {
 		g_critical("already registered private %s flag %s", G_OBJECT_TYPE_NAME(self), flag);
 		return;
 	}
@@ -4619,9 +4624,9 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 			fu_device_remove_flag(self, flag);
 			return;
 		}
-		flag_quark = fu_device_private_flags_registered_lookup(self, hint + 1);
+		flag_quark = fu_device_find_private_flag_quark(self, hint + 1);
 		if (flag_quark != 0) {
-			fu_device_private_flags_remove_quark(self, flag_quark);
+			fu_device_remove_private_flag_quark(self, flag_quark);
 			return;
 		}
 		return;
@@ -4633,9 +4638,9 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 		fu_device_add_flag(self, flag);
 		return;
 	}
-	flag_quark = fu_device_private_flags_registered_lookup(self, hint);
+	flag_quark = fu_device_find_private_flag_quark(self, hint);
 	if (flag_quark != 0) {
-		fu_device_private_flags_add_quark(self, flag_quark);
+		fu_device_add_private_flag_quark(self, flag_quark);
 		return;
 	}
 }
@@ -5889,7 +5894,7 @@ fu_device_open(FuDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* skip */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_IS_FAKE])) {
 		fu_device_add_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
 		if (!fu_device_probe(self, error))
 			return FALSE;
@@ -5983,7 +5988,7 @@ fu_device_close(FuDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* skip */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_IS_FAKE])) {
 		fu_device_remove_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_OPEN);
 		return TRUE;
 	}
@@ -6048,7 +6053,7 @@ fu_device_probe(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* device self-assigned */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_NO_PROBE])) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
 		return FALSE;
 	}
@@ -6060,7 +6065,7 @@ fu_device_probe(FuDevice *self, GError **error)
 	}
 
 	/* vfunc skipped device */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_NO_PROBE])) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
 		return FALSE;
 	}
@@ -6169,6 +6174,7 @@ void
 fu_device_convert_instance_ids(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
+	gboolean no_generic_guids;
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
@@ -6177,14 +6183,13 @@ fu_device_convert_instance_ids(FuDevice *self)
 		return;
 
 	/* convert the FuDevice IDs to FwupdDevice IDs */
+	no_generic_guids = fu_device_has_private_flag_quark(self, quarks[QUARK_NO_GENERIC_GUIDS]);
 	if (priv->instance_ids != NULL) {
 		for (guint i = 0; i < priv->instance_ids->len; i++) {
 			FuDeviceInstanceIdItem *item = g_ptr_array_index(priv->instance_ids, i);
 			if ((item->flags & FU_DEVICE_INSTANCE_FLAG_VISIBLE) == 0)
 				continue;
-			if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
-			    fu_device_has_private_flag(self,
-						       FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS))
+			if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 && no_generic_guids)
 				continue;
 			if (item->instance_id != NULL)
 				fwupd_device_add_instance_id(FWUPD_DEVICE(self), item->instance_id);
@@ -6221,7 +6226,7 @@ fu_device_setup(FuDevice *self, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* skip */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_IS_FAKE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_IS_FAKE])) {
 		fu_device_convert_instance_ids(self);
 		return TRUE;
 	}
@@ -6241,7 +6246,7 @@ fu_device_setup(FuDevice *self, GError **error)
 	}
 
 	/* vfunc skipped device */
-	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_PROBE)) {
+	if (fu_device_has_private_flag_quark(self, quarks[QUARK_NO_PROBE])) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
 		return FALSE;
 	}
@@ -6549,13 +6554,14 @@ static void
 fu_device_incorporate_instance_ids(FuDevice *self, FuDevice *donor)
 {
 	FuDevicePrivate *priv_donor = GET_PRIVATE(donor);
+	gboolean no_generic_guids;
 
 	if (priv_donor->instance_ids == NULL)
 		return;
+	no_generic_guids = fu_device_has_private_flag_quark(self, quarks[QUARK_NO_GENERIC_GUIDS]);
 	for (guint i = 0; i < priv_donor->instance_ids->len; i++) {
 		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv_donor->instance_ids, i);
-		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 &&
-		    fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS)) {
+		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 && no_generic_guids) {
 			continue;
 		}
 		if (item->instance_id != NULL)
@@ -6596,7 +6602,7 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 		if (fu_device_get_id(self) != NULL)
 			priv->device_id_valid = TRUE;
 		/* remove the baseclass-added serial number and GUIDs if set */
-		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER))
+		if (fu_device_has_private_flag_quark(self, quarks[QUARK_NO_SERIAL_NUMBER]))
 			fwupd_device_set_serial(FWUPD_DEVICE(self), NULL);
 	}
 	if (flag & FU_DEVICE_INCORPORATE_FLAG_VENDOR) {
@@ -6725,12 +6731,13 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 
 		/* copy from donor FuDevice if has not already been set */
 		if (priv_donor->private_flags != NULL) {
+			fu_device_register_private_flags(self);
 			for (guint i = 0; i < priv_donor->private_flags->len; i++) {
 				GQuark flag_quark =
 				    g_array_index(priv_donor->private_flags, GQuark, i);
 				if (fu_device_private_flags_has_registered_quark(self,
 										 flag_quark)) {
-					fu_device_private_flags_add_quark(self, flag_quark);
+					fu_device_add_private_flag_quark(self, flag_quark);
 				}
 			}
 		}
@@ -6746,8 +6753,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_set_required_free(self, priv_donor->required_free);
 		if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
 			fu_device_set_update_request_id(self, priv_donor->update_request_id);
-		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY) &&
-		    fu_device_has_private_flag(donor, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
+		if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY]) &&
+		    fu_device_has_private_flag_quark(donor, quarks[QUARK_REFCOUNTED_PROXY])) {
 			if (priv->proxy == NULL && priv_donor->proxy != NULL)
 				fu_device_set_proxy(self, priv_donor->proxy);
 		}
@@ -7957,6 +7964,13 @@ fu_device_class_init(FuDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GParamSpec *pspec;
+	const gchar *quark_flags[] = {
+	    FU_DEVICE_PRIVATE_FLAG_NO_PROBE,
+	    FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY,
+	    FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS,
+	    FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER,
+	    FU_DEVICE_PRIVATE_FLAG_IS_FAKE,
+	};
 
 	object_class->dispose = fu_device_dispose;
 	object_class->finalize = fu_device_finalize;
@@ -7964,6 +7978,10 @@ fu_device_class_init(FuDeviceClass *klass)
 	object_class->set_property = fu_device_set_property;
 
 	device_class->to_string = fu_device_to_string_impl;
+
+	/* used as device flags, order is important! */
+	for (guint i = 0; i < G_N_ELEMENTS(quark_flags); i++)
+		quarks[i] = g_quark_from_static_string(quark_flags[i]);
 
 	/**
 	 * FuDevice::child-added:
@@ -8249,7 +8267,7 @@ fu_device_finalize(GObject *object)
 	if (priv->proxy != NULL) {
 		if (priv->notify_flags_proxy_id != 0)
 			g_signal_handler_disconnect(priv->proxy, priv->notify_flags_proxy_id);
-		if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY)) {
+		if (fu_device_has_private_flag_quark(self, quarks[QUARK_REFCOUNTED_PROXY])) {
 			g_object_unref(priv->proxy);
 		} else {
 			g_object_remove_weak_pointer(G_OBJECT(priv->proxy),

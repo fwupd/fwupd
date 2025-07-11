@@ -39,6 +39,13 @@ enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
+enum {
+	QUARK_UNCONNECTED,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 typedef struct {
 	FuDevice *device;
 	FuDevice *device_old;
@@ -222,7 +229,7 @@ fu_device_list_get_active(FuDeviceList *self)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (fu_device_has_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+		if (fu_device_has_private_flag_quark(item->device, quarks[QUARK_UNCONNECTED]))
 			continue;
 		if (fu_device_has_inhibit(item->device, "hidden"))
 			continue;
@@ -1127,6 +1134,9 @@ fu_device_list_class_init(FuDeviceListClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->dispose = fu_device_list_dispose;
 	object_class->finalize = fu_device_list_finalize;
+
+	/* used as device flags */
+	quarks[QUARK_UNCONNECTED] = g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/**
 	 * FuDeviceList::added:

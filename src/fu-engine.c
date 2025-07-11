@@ -150,6 +150,17 @@ enum {
 
 static guint signals[SIGNAL_LAST] = {0};
 
+enum {
+	QUARK_AUTO_PARENT_CHILDREN,
+	QUARK_HOST_FIRMWARE,
+	QUARK_HOST_FIRMWARE_CHILD,
+	QUARK_HOST_CPU,
+	QUARK_HOST_CPU_CHILD,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 
 gboolean
@@ -1729,7 +1740,7 @@ fu_engine_get_cpu_device(FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU))
+		if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]))
 			return g_object_ref(device);
 	}
 	return NULL;
@@ -5064,7 +5075,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE))
+		if (fu_device_has_private_flag_quark(dev, quarks[QUARK_HOST_FIRMWARE]))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
 #endif
@@ -6102,26 +6113,26 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 static void
 fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
@@ -6150,9 +6161,8 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_private_flag(
-				device_tmp,
-				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
+			if (!fu_device_has_private_flag_quark(device_tmp,
+							      quarks[QUARK_AUTO_PARENT_CHILDREN]))
 				continue;
 			if (fu_device_get_physical_id(device_tmp) == NULL)
 				continue;
@@ -6167,9 +6177,8 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_private_flag(
-				device_tmp,
-				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
+			if (!fu_device_has_private_flag_quark(device_tmp,
+							      quarks[QUARK_AUTO_PARENT_CHILDREN]))
 				continue;
 			if (fu_device_get_backend_id(device_tmp) == NULL)
 				continue;
@@ -8699,11 +8708,23 @@ fu_engine_class_init(FuEngineClass *klass)
 {
 	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	const gchar *quark_flags[] = {
+	    FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD,
+	};
+
 	object_class->dispose = fu_engine_dispose;
 	object_class->finalize = fu_engine_finalize;
 	object_class->get_property = fu_engine_get_property;
 	object_class->set_property = fu_engine_set_property;
 	object_class->constructed = fu_engine_constructed;
+
+	/* used as device flags, order is important! */
+	for (guint i = 0; i < G_N_ELEMENTS(quark_flags); i++)
+		quarks[i] = g_quark_from_static_string(quark_flags[i]);
 
 	pspec = g_param_spec_object("context",
 				    NULL,
