@@ -391,6 +391,9 @@ fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			return FALSE;
 	}
 
+	fu_device_set_remove_delay(device, FU_MM_DEVICE_REMOVE_DELAY_REPROBE);
+	fu_device_add_private_flag(device, FU_MM_DEVICE_FLAG_REPLUG_REPROBE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -430,6 +433,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
 
 	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -471,6 +475,7 @@ static void
 fu_mm_dfota_device_init(FuMmDfotaDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.quectel.dfota");
+	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 }
 
 static void
