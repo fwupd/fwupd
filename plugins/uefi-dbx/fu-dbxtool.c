@@ -80,6 +80,8 @@ fu_dbxtool_guid_to_string(const gchar *guid)
 		return "zero";
 	if (g_strcmp0(guid, FU_EFI_SIGNATURE_GUID_MICROSOFT) == 0)
 		return "microsoft";
+	if (g_strcmp0(guid, FU_EFI_SIGNATURE_GUID_FRAMEWORK) == 0)
+		return "framework";
 	if (g_strcmp0(guid, FU_EFI_SIGNATURE_GUID_OVMF) == 0 ||
 	    g_strcmp0(guid, FU_EFI_SIGNATURE_GUID_OVMF_LEGACY) == 0)
 		return "ovmf";
