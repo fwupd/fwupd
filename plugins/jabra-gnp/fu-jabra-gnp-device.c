@@ -398,9 +398,13 @@ fu_jabra_gnp_device_read_version(FuJabraGnpDevice *self, GError **error)
 	if (version == NULL)
 		return FALSE;
 
-	/* some devices append an extra '.' to the version, which can confuse fwupd's formats, so
-	 * remove it */
-	if (g_str_has_suffix(version, "."))
+	/* some devices append a few extra non number characters to the version, which can confuse
+	 * fwupd's formats, so remove it */
+	while (!(g_str_has_suffix(version, "0") || g_str_has_suffix(version, "1") ||
+		 g_str_has_suffix(version, "2") || g_str_has_suffix(version, "3") ||
+		 g_str_has_suffix(version, "4") || g_str_has_suffix(version, "5") ||
+		 g_str_has_suffix(version, "6") || g_str_has_suffix(version, "7") ||
+		 g_str_has_suffix(version, "8") || g_str_has_suffix(version, "9")))
 		version[strlen(version) - 1] = '\0';
 
 	fu_device_set_version(FU_DEVICE(self), version);
@@ -642,7 +646,7 @@ fu_jabra_gnp_device_write_extended_crc(FuJabraGnpDevice *self,
 		    self->address,
 		    0x00,
 		    self->sequence_number,
-		    0x90,
+		    0x92,
 		    0x0F,
 		    0x19,
 		},
@@ -779,11 +783,14 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 					    "internal error, buf did not match");
 				return FALSE;
 			}
-			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) != chunk_number) {
+			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) == chunk_number ||
+			    fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
+				(chunk_number % 0xFFFF) - 1) {
+				failed_chunk = FALSE;
+			} else {
 				chunk_number--;
 				failed_chunk = TRUE;
-			} else
-				failed_chunk = FALSE;
+			}
 		}
 		if (!failed_chunk)
 			fu_progress_step_done(progress);
@@ -959,7 +966,7 @@ fu_jabra_gnp_device_add_child(FuDevice *device, guint16 dfu_pid, GError **error)
 	}
 
 	child = g_object_new(FU_TYPE_JABRA_GNP_CHILD_DEVICE, "parent", FU_DEVICE(self), NULL);
-	fu_jabra_gnp_child_device_set_dfu_pid(child, dfu_pid);
+	fu_jabra_gnp_child_device_set_dfu_pid_and_seq(child, dfu_pid);
 	fu_device_incorporate(FU_DEVICE(child),
 			      FU_DEVICE(self),
 			      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);

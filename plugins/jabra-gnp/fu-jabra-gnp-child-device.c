@@ -33,10 +33,11 @@ fu_jabra_gnp_child_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 void
-fu_jabra_gnp_child_device_set_dfu_pid(FuJabraGnpChildDevice *self, guint16 dfu_pid)
+fu_jabra_gnp_child_device_set_dfu_pid_and_seq(FuJabraGnpChildDevice *self, guint16 dfu_pid)
 {
 	g_return_if_fail(FU_IS_JABRA_GNP_CHILD_DEVICE(self));
 	self->dfu_pid = dfu_pid;
+	self->sequence_number = 0x00;
 }
 
 static gboolean
@@ -91,8 +92,8 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 		g_prefix_error(error, "failed to read from device: ");
 		return FALSE;
 	}
-	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[5] == match_buf[5] &&
-	    rx_data->rxbuf[6] == match_buf[6]) {
+	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[3] == match_buf[3] &&
+	    rx_data->rxbuf[5] == match_buf[5] && rx_data->rxbuf[6] == match_buf[6]) {
 		/* battery report, ignpre and rx again */
 		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(parent),
 						      0x81,
@@ -326,9 +327,13 @@ fu_jabra_gnp_child_device_read_version(FuJabraGnpChildDevice *self, GError **err
 	if (version == NULL)
 		return FALSE;
 
-	/* some devices append an extra '.' to the version, which can confuse fwupd's formats, so
-	 * remove it */
-	if (g_str_has_suffix(version, "."))
+	/* some devices append a few extra non number characters to the version, which can confuse
+	 * fwupd's formats, so remove it */
+	while (!(g_str_has_suffix(version, "0") || g_str_has_suffix(version, "1") ||
+		 g_str_has_suffix(version, "2") || g_str_has_suffix(version, "3") ||
+		 g_str_has_suffix(version, "4") || g_str_has_suffix(version, "5") ||
+		 g_str_has_suffix(version, "6") || g_str_has_suffix(version, "7") ||
+		 g_str_has_suffix(version, "8") || g_str_has_suffix(version, "9")))
 		version[strlen(version) - 1] = '\0';
 
 	fu_device_set_version(FU_DEVICE(self), version);
@@ -581,7 +586,7 @@ fu_jabra_gnp_child_device_write_extended_crc(FuJabraGnpChildDevice *self,
 		    self->address,
 		    0x00,
 		    self->sequence_number,
-		    0x90,
+		    0x92,
 		    0x0F,
 		    0x19,
 		},
@@ -719,11 +724,14 @@ fu_jabra_gnp_child_device_write_chunks(FuJabraGnpChildDevice *self,
 					    "internal error, buf did not match");
 				return FALSE;
 			}
-			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) != chunk_number) {
+			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) == chunk_number ||
+			    fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
+				(chunk_number % 0xFFFF) - 1) {
+				failed_chunk = FALSE;
+			} else {
 				chunk_number--;
 				failed_chunk = TRUE;
-			} else
-				failed_chunk = FALSE;
+			}
 		}
 		if (!failed_chunk)
 			fu_progress_step_done(progress);
