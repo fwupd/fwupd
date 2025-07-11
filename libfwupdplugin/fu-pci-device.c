@@ -31,6 +31,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuPciDevice, fu_pci_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_pci_device_get_instance_private(o))
 
+enum {
+	QUARK_ADD_INSTANCE_ID_REV,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 static void
 fu_pci_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -266,10 +273,9 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 			fu_device_set_version(device, version);
 		}
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV) &&
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_ADD_INSTANCE_ID_REV]) &&
 	    priv->revision != 0xFF) {
-		if (fu_device_has_private_flag(device,
-					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+		if (fu_device_has_private_flag_quark(device, quarks[QUARK_ADD_INSTANCE_ID_REV])) {
 			fu_device_build_instance_id_full(device,
 							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -325,8 +331,7 @@ fu_pci_device_probe(FuDevice *device, GError **error)
 						 "DEV",
 						 "SUBSYS",
 						 NULL);
-		if (fu_device_has_private_flag(device,
-					       FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+		if (fu_device_has_private_flag_quark(device, quarks[QUARK_ADD_INSTANCE_ID_REV])) {
 			fu_device_build_instance_id_full(device,
 							 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 							     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -587,6 +592,8 @@ static void
 fu_pci_device_class_init(FuPciDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	quarks[QUARK_ADD_INSTANCE_ID_REV] =
+	    g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 	device_class->to_string = fu_pci_device_to_string;
 	device_class->probe = fu_pci_device_probe;
 	device_class->probe_complete = fu_pci_device_probe_complete;

@@ -13,6 +13,8 @@
 
 #define fu_device_set_plugin(d, v) fwupd_device_set_plugin(FWUPD_DEVICE(d), v)
 
+gboolean
+fu_device_has_private_flag_quark(FuDevice *self, GQuark flag_quark) G_GNUC_NON_NULL(1);
 void
 fu_device_remove_children(FuDevice *self) G_GNUC_NON_NULL(1);
 GPtrArray *
