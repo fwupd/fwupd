@@ -66,6 +66,6 @@ if __name__ == "__main__":
         buf = buf.ljust(args.bufsz, b"\0")
 
     # success
-    print("DS20 descriptor control transfer data:")
+    print(f"DS20 descriptor control transfer data ({len(buf)} Bytes):")
     print(", ".join([f"0x{val:02x}" for val in list(buf)]))
     print(base64.b64encode(buf).decode())
