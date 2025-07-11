@@ -435,6 +435,12 @@ fu_binder_daemon_emit_property_changed(FuBinderDaemon *self,
 		    g_ptr_array_index(self->event_listener_binders, i);
 
 		nstatus = AIBinder_prepareTransaction(event_listener_binder, &in);
+		if (nstatus != STATUS_OK) {
+			AStatus *status = AStatus_fromStatus(nstatus);
+			g_warning("Failed prepare property change transaction for listener %s",
+				  AStatus_getDescription(status));
+			return;
+		}
 		if (val)
 			gp_parcel_write_variant(in, val, &error);
 		nstatus = AIBinder_transact(event_listener_binder,
@@ -963,7 +969,8 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 	nstatus = AParcel_readStrongBinder(in, &event_listener_remote_object);
 	if (nstatus != STATUS_OK) {
 		AStatus *status = AStatus_fromStatus(nstatus);
-		g_warning("failed to read strong binder %s", AStatus_getDescription(status));
+		g_warning("Failed to read strong binder %s", AStatus_getDescription(status));
+		return STATUS_BAD_VALUE;
 	}
 	g_info("strong binder  %p\n", event_listener_remote_object);
 
@@ -1034,6 +1041,12 @@ fu_binder_daemon_send_codec_event(FuBinderDaemon *self, FwupdCodec *codec, guint
 
 		event_listener_binder = g_ptr_array_index(self->event_listener_binders, i);
 		nstatus = AIBinder_prepareTransaction(event_listener_binder, &in);
+		if (nstatus != STATUS_OK) {
+			AStatus *status = AStatus_fromStatus(nstatus);
+			g_warning("Failed to prepare codec transaction for listener %s",
+				  AStatus_getDescription(status));
+			return;
+		}
 		if (val)
 			gp_parcel_write_variant(in, val, &error);
 		nstatus = AIBinder_transact(event_listener_binder,

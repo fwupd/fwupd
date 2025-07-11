@@ -185,7 +185,16 @@ fu_util_transact(FuUtilPrivate *priv,
 	g_autoptr(AStatus) status = NULL;
 	binder_status_t nstatus = STATUS_OK;
 
-	AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+	nstatus = AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+	if (nstatus != STATUS_OK) {
+		status = AStatus_fromStatus(nstatus);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed prepare property change transaction for listener %s",
+			    AStatus_getDescription(status));
+		return FALSE;
+	}
 
 	if (parameters)
 		if (gp_parcel_write_variant(pending_in, parameters, error) != STATUS_OK)
