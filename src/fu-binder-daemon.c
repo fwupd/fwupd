@@ -23,6 +23,7 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 
+#include "fu-binder-common.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
@@ -38,10 +39,6 @@
 /* this can be tested using:
  * ./build/release/binder-client -v -d /dev/hwbinder -n devices@1.0/org.freedesktop.fwupd
  */
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
 
 struct _FuBinderDaemon {
 	FuDaemon parent_instance;
@@ -1140,37 +1137,6 @@ fu_binder_daemon_start(FuDaemon *daemon, GError **error)
 	return TRUE;
 }
 
-typedef struct _FuBinderFdSource {
-	GSource source;
-	gpointer fd_tag;
-} FuBinderFdSource;
-
-static gboolean
-binder_fd_source_check(GSource *source)
-{
-	FuBinderFdSource *binder_fd_source = (FuBinderFdSource *)source;
-	return g_source_query_unix_fd(source, binder_fd_source->fd_tag) & G_IO_IN;
-}
-
-static gboolean
-binder_fd_source_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
-{
-	binder_status_t nstatus = ABinderProcess_handlePolledCommands();
-
-	if (nstatus != STATUS_OK) {
-		AStatus *status = AStatus_fromStatus(nstatus);
-		g_warning("failed to handle polled commands %s", AStatus_getDescription(status));
-	}
-
-	return G_SOURCE_CONTINUE;
-}
-
-static GSourceFuncs binder_fd_source_funcs = {
-    NULL,
-    binder_fd_source_check,
-    binder_fd_source_dispatch,
-};
-
 static gboolean
 fu_binder_daemon_setup(FuDaemon *daemon,
 		       const gchar *socket_address,
@@ -1181,7 +1147,6 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	FuEngine *engine = fu_daemon_get_engine(daemon);
 	binder_status_t nstatus = STATUS_OK;
 	g_autoptr(GSource) source = NULL;
-	FuBinderFdSource *binder_fd_source;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1252,11 +1217,7 @@ fu_binder_daemon_setup(FuDaemon *daemon,
 	}
 
 	ABinderProcess_setupPolling(&self->binder_fd);
-
-	source = g_source_new(&binder_fd_source_funcs, sizeof(FuBinderFdSource));
-	binder_fd_source = (FuBinderFdSource *)source;
-	binder_fd_source->fd_tag =
-	    g_source_add_unix_fd(source, self->binder_fd, G_IO_IN | G_IO_ERR);
+	source = fu_binder_fd_source_new(self->binder_fd);
 	g_source_attach(source, NULL);
 
 	fu_progress_step_done(progress);

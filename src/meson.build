@@ -345,6 +345,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
       daemon_loader_src,
       'fu-daemon.c',
       'fu-binder-daemon.c',
+      'fu-binder-common.c',
       'gparcelable.c',
     ],
     include_directories: [
@@ -371,6 +372,7 @@ if host_machine.system() == 'android' and binder_ndk.found()
     'fwupdmgr-binder',
     sources: [
       'fu-binder-client.c',
+      'fu-binder-common.c',
       'fu-debug.c',
       'gparcelable.c',
     ],

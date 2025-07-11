@@ -23,6 +23,7 @@
 #include "fwupd-error.h"
 
 #include "fu-binder-aidl.h"
+#include "fu-binder-common.h"
 #include "fu-debug.h"
 #include "fu-util-common.h"
 #include "gparcelable.h"
@@ -30,10 +31,6 @@
 /* custom return codes */
 #define EXIT_NOTHING_TO_DO 2
 #define EXIT_NOT_FOUND	   3
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(AStatus, AStatus_delete)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(AParcel, AParcel_delete)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(APersistableBundle, APersistableBundle_delete)
 
 typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
@@ -710,25 +707,6 @@ fwupd_service_on_transact(AIBinder *binder,
 	return STATUS_OK;
 }
 
-static gboolean
-poll_binder_process(void *user_data)
-{
-	// Daemon *daemon = user_data;
-	FuUtilPrivate *priv = user_data;
-	binder_status_t nstatus = STATUS_OK;
-	if (priv->binder_fd < 0)
-		return G_SOURCE_CONTINUE;
-
-	nstatus = ABinderProcess_handlePolledCommands();
-
-	if (nstatus != STATUS_OK) {
-		AStatus *status = AStatus_fromStatus(nstatus);
-		g_warning("failed to handle polled commands %s", AStatus_getDescription(status));
-	}
-
-	return G_SOURCE_CONTINUE;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -736,6 +714,7 @@ main(int argc, char *argv[])
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
+	g_autoptr(GSource) source = NULL;
 	g_autoptr(GError) error = NULL;
 	gboolean force = FALSE;
 	gboolean allow_branch_switch = FALSE;
@@ -911,7 +890,8 @@ main(int argc, char *argv[])
 	// priv->client = fwupd_client_new();
 	// fwupd_client_set_main_context(priv->client, priv->main_ctx);
 	ABinderProcess_setupPolling(&priv->binder_fd);
-	g_idle_add(poll_binder_process, priv);
+	source = fu_binder_fd_source_new(priv->binder_fd);
+	g_source_attach(source, NULL);
 
 	priv->fwupd_binder = AServiceManager_checkService(BINDER_SERVICE_NAME);
 
