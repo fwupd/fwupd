@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "fu-cros-ec-common.h"
+#include "fu-cros-ec-hammer-touchpad-firmware.h"
 #include "fu-cros-ec-hammer-touchpad.h"
 #include "fu-cros-ec-struct.h"
 #include "fu-cros-ec-usb-device.h"
@@ -21,7 +22,7 @@ struct _FuCrosEcHammerTouchpad {
 	guint16 vendor;
 	guint32 fw_address;
 	guint32 fw_size;
-	guint8 *allowed_fw_hash;
+	const guint8 *allowed_fw_hash;
 	guint16 id;
 	guint16 fw_version;
 	guint16 fw_checksum;
@@ -139,6 +140,26 @@ fu_cros_ec_hammer_touchpad_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static FuFirmware *
+fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
+					    GInputStream *stream,
+					    FuProgress *progress,
+					    FuFirmwareParseFlags flags,
+					    GError **error)
+{
+	FuCrosEcHammerTouchpad *self = FU_CROS_EC_USB_DEVICE(device);
+	g_autoptr(FuFirmware) firmware = fu_cros_ec_hammer_touchpad_firmware_new();
+
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	if (!fu_cros_ec_hammer_touchpad_firmware_validate_checksum(
+		FU_CROS_EC_HAMMER_TOUCHPAD_FIRMWARE(firmware),
+		error))
+		return NULL;
+
+	return g_steal_pointer(&firmware);
+}
+
 static void
 fu_cros_ec_hammer_touchpad_finalize(GObject *object)
 {
@@ -178,6 +199,7 @@ fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 	object_class->finalize = fu_cros_ec_hammer_touchpad_finalize;
 	device_class->setup = fu_cros_ec_hammer_touchpad_setup;
 	device_class->to_string = fu_cros_ec_hammer_touchpad_to_string;
+	device_class->prepare_firmware = fu_cros_ec_hammer_touchpad_prepare_firmware;
 }
 
 FuCrosEcHammerTouchpad *

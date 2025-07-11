@@ -10,6 +10,7 @@ plugin_builtins += static_library('fu_plugin_cros_ec',
     'fu-cros-ec-plugin.c',
     'fu-cros-ec-usb-device.c',
     'fu-cros-ec-hammer-touchpad.c',
+    'fu-cros-ec-hammer-touchpad-firmware.c',
     'fu-cros-ec-common.c',      # fuzzing
     'fu-cros-ec-firmware.c',    # fuzzing
   ],
