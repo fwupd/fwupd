@@ -932,6 +932,7 @@ listener_on_transact(AIBinder *binder, transaction_code_t code, const AParcel *i
 typedef struct ListenerDeathCookie {
 	FuBinderDaemon *daemon;
 	AIBinder *listener_binder;
+	AIBinder_DeathRecipient *death_recipient;
 } ListenerDeathCookie;
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(ListenerDeathCookie, g_free)
@@ -940,18 +941,19 @@ static void
 listener_on_binder_died(void *cookie)
 {
 	ListenerDeathCookie *death_cookie = cookie;
-	g_warning("listener is dead %p %d",
-		  cookie,
-		  death_cookie->daemon->event_listener_binders->len);
+	g_debug("listener has disconnected %p %d",
+		cookie,
+		death_cookie->daemon->event_listener_binders->len);
 
 	g_ptr_array_remove(death_cookie->daemon->event_listener_binders,
 			   death_cookie->listener_binder);
+
+	AIBinder_DeathRecipient_delete(death_cookie->death_recipient);
 }
 
 static void
 listener_death_recipient_on_unlinked(void *cookie)
 {
-	g_warning("put the cookie dawn %p", cookie);
 	g_free(cookie);
 }
 
@@ -978,16 +980,20 @@ fu_binder_daemon_method_add_event_listener(FuBinderDaemon *self,
 
 	g_ptr_array_add(self->event_listener_binders, event_listener_remote_object);
 
-	death_cookie = g_malloc0(sizeof(ListenerDeathCookie));
-	death_cookie->listener_binder = event_listener_remote_object;
-	death_cookie->daemon = self;
-
 	death_recipient = AIBinder_DeathRecipient_new(listener_on_binder_died);
 	AIBinder_DeathRecipient_setOnUnlinked(death_recipient,
 					      listener_death_recipient_on_unlinked);
+
+	death_cookie = g_malloc0(sizeof(ListenerDeathCookie));
+	death_cookie->listener_binder = event_listener_remote_object;
+	death_cookie->daemon = self;
+	death_cookie->death_recipient = death_recipient;
+
 	AIBinder_linkToDeath(event_listener_remote_object,
 			     death_recipient,
 			     g_steal_pointer(&death_cookie));
+
+	AParcel_writeStatusHeader(out, AStatus_newOk());
 
 	return STATUS_OK;
 }
