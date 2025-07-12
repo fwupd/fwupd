@@ -14,6 +14,8 @@
 #include "fu-cros-ec-struct.h"
 #include "fu-cros-ec-usb-device.h"
 
+#define SHA256_DIGEST_LENGTH 32
+
 #define ST_VENDOR_ID   0x0483
 #define ELAN_VENDOR_ID 0x04f3
 
@@ -131,6 +133,31 @@ fu_cros_ec_hammer_touchpad_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmware, GError **error)
+{
+	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	g_autoptr(GError) error_local = NULL;
+	GBytes *payload = NULL;
+	gsize fwsize;
+	gchar *fw = NULL;
+	;
+
+	payload = fu_firmware_get_bytes(firmware, error);
+	fw = g_bytes_get_data(payload, &fwsize);
+
+	if (self->fw_size != fwsize)
+		return FALSE;
+	g_info("Sizes Matches!");
+
+	gchar *digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256, fw, fwsize);
+	if (g_strcmp0(digest, self->allowed_fw_hash) != 0)
+		return FALSE;
+	g_info("Checksum Matches!");
+
+	return FALSE; // Set to false to prevent updating
+}
+
 static FuFirmware *
 fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 					    GInputStream *stream,
@@ -143,9 +170,7 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
-	if (!fu_cros_ec_hammer_touchpad_firmware_validate_checksum(
-		FU_CROS_EC_HAMMER_TOUCHPAD_FIRMWARE(firmware),
-		error))
+	if (!fu_cros_ec_hammer_touchpad_firmware_validate(device, firmware, error))
 		return NULL;
 
 	return g_steal_pointer(&firmware);
