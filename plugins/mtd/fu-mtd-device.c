@@ -41,10 +41,43 @@ static FuFirmware *
 fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuDeviceEvent *event = NULL;
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
-	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_partial = NULL;
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("MtdReadFirmware");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) blob = NULL;
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		blob = fu_device_event_get_bytes(event, "Data", error);
+		if (blob == NULL)
+			return NULL;
+		if (!fu_firmware_parse_bytes(firmware,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					     error)) {
+			return NULL;
+		}
+		return g_steal_pointer(&firmware);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* read contents at the search offset */
 	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
@@ -70,7 +103,17 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	} else {
 		stream_partial = g_object_ref(stream);
 	}
-	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
+
+	/* save response */
+	if (event != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_input_stream_read_bytes(stream_partial, 0x0, G_MAXSIZE, progress, error);
+		if (blob == NULL)
+			return NULL;
+		fu_device_event_set_bytes(event, "Data", blob);
+	}
+
+	/* parse as firmware image */
 	if (!fu_firmware_parse_stream(firmware,
 				      stream_partial,
 				      0x0,
@@ -150,7 +193,23 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (self->metadata_offset > firmware_size_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "offset of metadata (0x%x) greater than image size (0x%x)",
+			    (guint)self->metadata_offset,
+			    (guint)firmware_size_max);
+		return FALSE;
+	}
+	if (self->metadata_size > firmware_size_max - self->metadata_offset) {
+		self->metadata_size = firmware_size_max - self->metadata_offset;
+		g_debug("truncating metadata size to 0x%x", (guint)self->metadata_size);
+	}
 
 	/* nothing to do */
 	if (firmware_gtype == G_TYPE_INVALID)
@@ -594,7 +653,12 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
