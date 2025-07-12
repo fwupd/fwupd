@@ -1,0 +1,8 @@
+<firmware gtype="FuUswidFirmware">
+  <hdrver>0x1</hdrver>
+  <firmware gtype="FuCoswidFirmware">
+    <id>fwupd</id>
+    <version>1.2.3</version>
+    <version_scheme>semver</version_scheme>
+  </firmware>
+</firmware>
