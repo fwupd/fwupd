@@ -150,7 +150,23 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (self->metadata_offset > firmware_size_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "offset of metadata (0x%x) greater than image size (0x%x)",
+			    (guint)self->metadata_offset,
+			    (guint)firmware_size_max);
+		return FALSE;
+	}
+	if (self->metadata_size > firmware_size_max - self->metadata_offset) {
+		self->metadata_size = firmware_size_max - self->metadata_offset;
+		g_debug("truncating metadata size to 0x%x", (guint)self->metadata_size);
+	}
 
 	/* nothing to do */
 	if (firmware_gtype == G_TYPE_INVALID)
