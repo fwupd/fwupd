@@ -41,10 +41,43 @@ static FuFirmware *
 fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuDeviceEvent *event = NULL;
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
-	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_partial = NULL;
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("MtdReadFirmware");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) blob = NULL;
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		blob = fu_device_event_get_bytes(event, "Data", error);
+		if (blob == NULL)
+			return NULL;
+		if (!fu_firmware_parse_bytes(firmware,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					     error)) {
+			return NULL;
+		}
+		return g_steal_pointer(&firmware);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* read contents at the search offset */
 	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
@@ -70,7 +103,17 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	} else {
 		stream_partial = g_object_ref(stream);
 	}
-	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
+
+	/* save response */
+	if (event != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_input_stream_read_bytes(stream_partial, 0x0, G_MAXSIZE, progress, error);
+		if (blob == NULL)
+			return NULL;
+		fu_device_event_set_bytes(event, "Data", blob);
+	}
+
+	/* parse as firmware image */
 	if (!fu_firmware_parse_stream(firmware,
 				      stream_partial,
 				      0x0,

@@ -1,0 +1,4 @@
+[MTD\NAME_mtdram-test-device]
+FirmwareGType = FuUswidFirmware
+MtdMetadataOffset = 0x0
+MtdMetadataSize = 0x100
