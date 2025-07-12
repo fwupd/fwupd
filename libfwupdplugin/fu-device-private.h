@@ -39,8 +39,8 @@ const gchar *
 fu_device_get_update_request_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_set_update_request_id(FuDevice *self, const gchar *update_request_id) G_GNUC_NON_NULL(1);
-const gchar *
-fu_device_get_fwupd_version(FuDevice *self) G_GNUC_NON_NULL(1);
+gboolean
+fu_device_check_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 void
 fu_device_set_fwupd_version(FuDevice *self, const gchar *fwupd_version) G_GNUC_NON_NULL(1, 2);
 gboolean

@@ -2943,6 +2943,10 @@ fu_backend_emulate_func(void)
 	device2 = fu_device_get_backend_parent_with_subsystem(device, "usb", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(device2);
+
+	/* check version */
+	g_assert_false(fu_device_check_fwupd_version(device, "5.0.0"));
+	g_assert_true(fu_device_check_fwupd_version(device, "1.9.19"));
 }
 
 static void
