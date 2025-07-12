@@ -9,20 +9,13 @@
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"
 #include "fu-cros-ec-hammer-touchpad-firmware.h"
+#include "fu-cros-ec-hammer-touchpad.h"
 
 struct _FuCrosEcHammerTouchpadFirmware {
 	FuFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuCrosEcHammerTouchpadFirmware, fu_cros_ec_hammer_touchpad_firmware, FU_TYPE_FIRMWARE)
-
-gboolean
-fu_cros_ec_hammer_touchpad_firmware_validate_checksum(FuCrosEcHammerTouchpadFirmware *self,
-						      GError **error)
-{
-	/* success */
-	return TRUE;
-}
 
 static void
 fu_cros_ec_hammer_touchpad_firmware_init(FuCrosEcHammerTouchpadFirmware *self)
@@ -32,7 +25,8 @@ fu_cros_ec_hammer_touchpad_firmware_init(FuCrosEcHammerTouchpadFirmware *self)
 static void
 fu_cros_ec_hammer_touchpad_firmware_finalize(GObject *object)
 {
-	FuCrosEcFirmware *self = FU_CROS_EC_FIRMWARE(object);
+	FuCrosEcHammerTouchpadFirmware *self = FU_CROS_EC_HAMMER_TOUCHPAD_FIRMWARE(object);
+	FuFirmware *test = FU_FIRMWARE(object);
 	G_OBJECT_CLASS(fu_cros_ec_hammer_touchpad_firmware_parent_class)->finalize(object);
 }
 
