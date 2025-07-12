@@ -4062,10 +4062,7 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		const gchar *id;
 
 		/* we might have to propagate this to preserve compat with older emulation files */
-		if (priv->fwupd_version != NULL &&
-		    fu_version_compare(priv->fwupd_version,
-				       "2.0.8",
-				       FWUPD_VERSION_FORMAT_TRIPLET) >= 0) {
+		if (fu_device_check_fwupd_version(self, "2.0.8")) {
 			event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 			if (event == NULL)
 				return NULL;
@@ -4312,21 +4309,27 @@ fu_device_set_update_image(FuDevice *self, const gchar *update_image)
 }
 
 /**
- * fu_device_get_fwupd_version:
+ * fu_device_check_fwupd_version:
  * @self: a #FuDevice
+ * @fwupd_version: (not nullable): the version, e.g. `2.0.8`
  *
- * Gets the fwupd version that created the emulation.
+ * Checks the fwupd version that created the emulation.
  *
- * Returns: a version, e.g. `2.0.8`, or %NULL if unset
+ * Returns: %TRUE if @fwupd_version version is >= to the emulation version
  *
- * Since: 2.0.8
+ * Since: 2.0.13
  **/
-const gchar *
-fu_device_get_fwupd_version(FuDevice *self)
+gboolean
+fu_device_check_fwupd_version(FuDevice *self, const gchar *fwupd_version)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return priv->fwupd_version;
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(fwupd_version != NULL, FALSE);
+	if (priv->fwupd_version == NULL)
+		return FALSE;
+	return fu_version_compare(priv->fwupd_version,
+				  fwupd_version,
+				  FWUPD_VERSION_FORMAT_TRIPLET) >= 0;
 }
 
 /**
@@ -6747,8 +6750,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			fu_device_set_modified_usec(self, priv_donor->modified_usec);
 		if (priv->equivalent_id == NULL && fu_device_get_equivalent_id(donor) != NULL)
 			fu_device_set_equivalent_id(self, fu_device_get_equivalent_id(donor));
-		if (priv->fwupd_version == NULL && fu_device_get_fwupd_version(donor) != NULL)
-			fu_device_set_fwupd_version(self, fu_device_get_fwupd_version(donor));
+		if (priv->fwupd_version == NULL && priv_donor->fwupd_version != NULL)
+			fu_device_set_fwupd_version(self, priv_donor->fwupd_version);
 		if (priv_donor->required_free > 0)
 			fu_device_set_required_free(self, priv_donor->required_free);
 		if (priv->update_request_id == NULL && priv_donor->update_request_id != NULL)
