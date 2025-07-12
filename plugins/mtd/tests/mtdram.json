@@ -1,0 +1,18 @@
+{
+  "name": "MTD RAM",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "29804f5bfe107862dc5f090036d065ccf455284268e122a1b0246a71f25dec86-mtd-test-1.2.3.cab",
+      "emulation-url": "fc1b69d3ae89f1931655371e9336b3a0553f0a9d79c4b2b0fd5009e971c08dcd-emulation.zip",
+      "components": [
+        {
+          "version": "1.2.3",
+          "guids": [
+            "26ab306d-d6ce-58f0-94db-2215e24690b9"
+          ]
+        }
+      ]
+    }
+  ]
+}

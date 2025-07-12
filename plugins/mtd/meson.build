@@ -19,6 +19,11 @@ plugin_builtin_mtd = static_library('fu_plugin_mtd',
 )
 plugin_builtins += plugin_builtin_mtd
 
+if not supported_build
+  plugin_quirks += files('ci.quirk')
+  device_tests += files('tests/mtdram.json')
+endif
+
 if get_option('tests')
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
