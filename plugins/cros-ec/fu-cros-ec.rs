@@ -37,7 +37,7 @@ enum FuCrosEcFirmwareUpgradeStatus {
 #[repr(C, packed)]
 struct FuStructCrosEcUpdateFrameHeader {
     block_size: u32be,          // total frame size, including this field
-    _cmd_block_digest: u32be,    // four bytes of the structure sha1 digest (or 0 where ignored)
+    cmd_block_digest: u32be,    // first four bytes of the structure sha256 digest (or 0 where ignored)
     cmd_block_base: u32be,      // offset of this PDU into the flash SPI
     // payload goes here
 }
