@@ -212,6 +212,30 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
+static gboolean
+fu_cros_ec_hammer_touchpad_write_firmware(FuDevice *device,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
+{
+	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+
+	// Update is done through the parent device aka. the EC board,
+	// so we call this and it the EC will handle the updatng.
+	if (!fu_cros_ec_usb_device_write_touchpad_firmware(parent,
+							   firmware,
+							   progress,
+							   flags,
+							   self,
+							   error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_cros_ec_hammer_touchpad_finalize(GObject *object)
 {
@@ -255,6 +279,7 @@ fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 	device_class->setup = fu_cros_ec_hammer_touchpad_setup;
 	device_class->to_string = fu_cros_ec_hammer_touchpad_to_string;
 	device_class->prepare_firmware = fu_cros_ec_hammer_touchpad_prepare_firmware;
+	device_class->write_firmware = fu_cros_ec_hammer_touchpad_write_firmware;
 }
 
 FuCrosEcHammerTouchpad *
