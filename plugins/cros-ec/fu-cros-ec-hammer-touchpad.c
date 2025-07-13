@@ -19,8 +19,7 @@
 #define ST_VENDOR_ID   0x0483
 #define ELAN_VENDOR_ID 0x04f3
 
-struct _FuCrosEcHammerTouchpad {
-	FuDevice parent_instance;
+typedef struct {
 	guint16 vendor;
 	guint32 fw_address;
 	guint32 fw_size;
@@ -28,27 +27,43 @@ struct _FuCrosEcHammerTouchpad {
 	guint16 id;
 	guint16 fw_version;
 	guint16 fw_checksum;
-};
+} FuCrosEcHammerTouchpadPrivate;
 
-G_DEFINE_TYPE(FuCrosEcHammerTouchpad, fu_cros_ec_hammer_touchpad, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuCrosEcHammerTouchpad, fu_cros_ec_hammer_touchpad, FU_TYPE_DEVICE)
+#define GET_PRIVATE(o) (fu_cros_ec_hammer_touchpad_get_instance_private(o))
+
+guint32
+fu_cros_ec_hammer_touchpad_get_fw_address(FuCrosEcHammerTouchpad *self)
+{
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
+	return priv->fw_address;
+}
+
+guint32
+fu_cros_ec_hammer_touchpad_get_fw_size(FuCrosEcHammerTouchpad *self)
+{
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
+	return priv->fw_size;
+}
 
 static gboolean
 fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **error)
 {
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 	gchar *base_fw_ver;
 	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *vendor_name = NULL;
 	g_autofree gchar *device_name = NULL;
-	switch (self->vendor) {
+	switch (priv->vendor) {
 	case ST_VENDOR_ID:
 		base_fw_ver = g_strdup_printf("%d.%d",
-					      self->fw_version & 0x00ff,
-					      (self->fw_version & 0xff00) >> 8); // TODO: Fix
+					      priv->fw_version & 0x00ff,
+					      (priv->fw_version & 0xff00) >> 8); // TODO: Fix
 		vendor_name = g_strdup("ST");
 		break;
 	case ELAN_VENDOR_ID:
-		base_fw_ver = g_strdup_printf("%d.0", self->fw_version);
+		base_fw_ver = g_strdup_printf("%d.0", priv->fw_version);
 		vendor_name = g_strdup("ELAN");
 		break;
 	default:
@@ -70,6 +85,7 @@ fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **e
 static gboolean
 fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error)
 {
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 	gsize bufsz;
 	guint32 error_code;
@@ -104,16 +120,16 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 		return FALSE;
 	}
 
-	self->vendor = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_vendor(tpi_rpdu);
-	self->fw_address =
+	priv->vendor = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_vendor(tpi_rpdu);
+	priv->fw_address =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_address(tpi_rpdu);
-	self->fw_size = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_size(tpi_rpdu);
-	self->allowed_fw_hash =
+	priv->fw_size = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_size(tpi_rpdu);
+	priv->allowed_fw_hash =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_allowed_fw_hash(tpi_rpdu, &bufsz);
-	self->id = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_id(tpi_rpdu);
-	self->fw_version =
+	priv->id = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_id(tpi_rpdu);
+	priv->fw_version =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_version(tpi_rpdu);
-	self->fw_checksum =
+	priv->fw_checksum =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_checksum(tpi_rpdu);
 	fu_cros_ec_hammer_touchpad_set_metadata(self, error);
 
@@ -137,23 +153,25 @@ gboolean
 fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmware, GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
 	GBytes *payload = NULL;
 	gsize fwsize;
 	gchar *fw = NULL;
-	;
 
 	payload = fu_firmware_get_bytes(firmware, error);
 	fw = g_bytes_get_data(payload, &fwsize);
 
-	if (self->fw_size != fwsize)
+	if (priv->fw_size != fwsize)
 		return FALSE;
-	g_info("Sizes Matches!");
+	g_debug("Sizes Matches");
 
 	gchar *digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256, fw, fwsize);
-	if (g_strcmp0(digest, self->allowed_fw_hash) != 0)
+	if (g_strcmp0(digest, priv->allowed_fw_hash) != 0)
 		return FALSE;
-	g_info("Checksum Matches!");
+	g_debug("Checksum Matches");
+
+	// TODO: Check product if product id matches
 
 	return FALSE; // Set to false to prevent updating
 }
@@ -168,8 +186,17 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_hammer_touchpad_firmware_new();
 
+	// Touchpad is normally updated after the EC is updated,
+	// each EC firmware expects a certain touchpad firmware.
+	// So, before we start updating the touchpad, we need to make
+	// sure it matches the EC expected touchpad firmware. We do that
+	// by querying the EC board for info (that includes the touchpad firmware allowed hash).
+	if (!fu_cros_ec_hammer_touchpad_get_info(FU_CROS_EC_HAMMER_TOUCHPAD(device), error))
+		return NULL;
+
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
+
 	if (!fu_cros_ec_hammer_touchpad_firmware_validate(device, firmware, error))
 		return NULL;
 
@@ -180,7 +207,8 @@ static void
 fu_cros_ec_hammer_touchpad_finalize(GObject *object)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(object);
-	g_free(self->allowed_fw_hash);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
+	g_free(priv->allowed_fw_hash);
 	G_OBJECT_CLASS(fu_cros_ec_hammer_touchpad_parent_class)->finalize(object);
 }
 
@@ -191,6 +219,7 @@ fu_cros_ec_hammer_touchpad_init(FuCrosEcHammerTouchpad *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
@@ -199,12 +228,13 @@ static void
 fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
 	// TODO: Retake a look on what is important
-	fwupd_codec_string_append_int(str, idt, "Vendor", self->vendor);
-	fwupd_codec_string_append_hex(str, idt, "FwAddress", self->fw_address);
-	fwupd_codec_string_append_int(str, idt, "FwSize", self->fw_size);
-	fwupd_codec_string_append(str, idt, "AllowedFwHash", self->allowed_fw_hash);
-	fwupd_codec_string_append_int(str, idt, "RawVersion", self->fw_version);
+	fwupd_codec_string_append_int(str, idt, "Vendor", priv->vendor);
+	fwupd_codec_string_append_hex(str, idt, "FwAddress", priv->fw_address);
+	fwupd_codec_string_append_int(str, idt, "FwSize", priv->fw_size);
+	fwupd_codec_string_append(str, idt, "AllowedFwHash", priv->allowed_fw_hash);
+	fwupd_codec_string_append_int(str, idt, "RawVersion", priv->fw_version);
 }
 
 static void
