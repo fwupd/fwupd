@@ -17,5 +17,15 @@ G_DECLARE_FINAL_TYPE(FuCrosEcHammerTouchpad,
 		     CROS_EC_HAMMER_TOUCHPAD,
 		     FuDevice)
 
+struct _FuCrosEcHammerTouchpad {
+	FuDevice parent_instance;
+};
+
 FuCrosEcHammerTouchpad *
 fu_cros_ec_hammer_touchpad_new(FuDevice *proxy);
+
+guint32
+fu_cros_ec_hammer_touchpad_get_fw_address(FuCrosEcHammerTouchpad *self);
+
+guint32
+fu_cros_ec_hammer_touchpad_get_fw_size(FuCrosEcHammerTouchpad *self);
