@@ -187,21 +187,21 @@ This plugin supports the following protocol ID, used by all devices and sub-devi
 
 These devices use the standard PCI DeviceInstanceId values, e.g.
 
-* `PCI\VID_8086&DEV_4905`
+* `PCI\VEN_8086&DEV_E20B`
 
 They also define custom per-part PCI IDs such as:
 
-* `PCI\VID_8086&DEV_4905&PART_FWCODE`
-* `PCI\VID_8086&DEV_4905&PART_FWDATA`
-* `PCI\VID_8086&DEV_4905&PART_OPROMCODE`
-* `PCI\VID_8086&DEV_4905&PART_OPROMDATA`
+* `PCI\VEN_8086&DEV_E20B&PART_FWCODE`
+* `PCI\VEN_8086&DEV_E20B&PART_FWDATA`
+* `PCI\VEN_8086&DEV_E20B&PART_OPROMCODE`
+* `PCI\VEN_8086&DEV_E20B&PART_OPROMDATA`
 
 When the device needs recovery, the instance IDs will instead be:
 
-* `PCI\VEN_8086&DEV_4905&PART_FWCODE_RECOVERY`
-* `PCI\VID_8086&DEV_4905&PART_FWDATA_RECOVERY`
-* `PCI\VID_8086&DEV_4905&PART_OPROMCODE_RECOVERY`
-* `PCI\VID_8086&DEV_4905&PART_OPROMDATA_RECOVERY`
+* `PCI\VEN_8086&DEV_E20B&PART_FWCODE_RECOVERY`
+* `PCI\VEN_8086&DEV_E20B&PART_FWDATA_RECOVERY`
+* `PCI\VEN_8086&DEV_E20B&PART_OPROMCODE_RECOVERY`
+* `PCI\VEN_8086&DEV_E20B&PART_OPROMDATA_RECOVERY`
 
 ## Quirk Use
 
@@ -232,4 +232,4 @@ This plugin has been available since fwupd version `1.8.7`.
 Anyone can submit a pull request to modify this plugin, but the following people should be
 consulted before making major or functional changes:
 
-* Vitaly Lubart: @vlubart
+* Frank Scarbrough: @Fscarbr
