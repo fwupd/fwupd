@@ -33,7 +33,6 @@
 #include "fu-unix-seekable-input-stream.h"
 #endif
 
-#include "fu-binder-aidl.h"
 #include "fu-binder-daemon.h"
 
 /* this can be tested using:
@@ -120,60 +119,6 @@ fu_dbus_daemon_auth_helper_free(FuMainAuthHelper *helper)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainAuthHelper, fu_dbus_daemon_auth_helper_free)
-
-static binder_status_t
-fu_binder_daemon_method_invocation_return_error(AParcel *out, GError *error)
-{
-	g_autoptr(AStatus) status = NULL;
-
-	fu_error_convert(&error);
-
-	g_return_val_if_fail(error != NULL, STATUS_BAD_VALUE);
-
-	status = AStatus_fromServiceSpecificErrorWithMessage(error->code, error->message);
-
-	return AParcel_writeStatusHeader(out, status);
-}
-
-static binder_status_t
-fu_binder_daemon_method_invocation_return_error_literal(AParcel *out,
-							gint code,
-							const gchar *message)
-{
-	g_autoptr(AStatus) status = NULL;
-
-	g_return_val_if_fail(out != NULL, STATUS_UNEXPECTED_NULL);
-	g_return_val_if_fail(message != NULL, STATUS_UNEXPECTED_NULL);
-
-	status = AStatus_fromServiceSpecificErrorWithMessage(code, message);
-
-	return AParcel_writeStatusHeader(out, status);
-}
-
-static binder_status_t
-fu_binder_daemon_method_invocation_return_variant(AParcel *out, GVariant *value, GError **error)
-{
-	gint out_start = AParcel_getDataPosition(out);
-
-	AParcel_writeStatusHeader(out, AStatus_newOk());
-
-	// TODO: Improve error checking
-	if (value) {
-		if (gp_parcel_write_variant(out, value, error) != STATUS_OK) {
-			AParcel_setDataPosition(out, out_start);
-			if (*error) {
-				return fu_binder_daemon_method_invocation_return_error(out, *error);
-			} else {
-				return fu_binder_daemon_method_invocation_return_error_literal(
-				    out,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to encode parcel, no error");
-			}
-		}
-	}
-
-	return STATUS_OK;
-}
 
 static GVariant *
 fu_binder_daemon_device_array_to_variant(FuBinderDaemon *self,
@@ -1266,6 +1211,7 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 {
 	FuBinderDaemon *daemon = AIBinder_getUserData(binder);
 	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(daemon));
+	FuBinderDaemonMethodFunc method_func = NULL;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GError) error = NULL;
 	uid_t binder_caller_uid = 0;
@@ -1282,7 +1228,10 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 	    fu_binder_daemon_method_update_metadata,	/* updateMetadata */
 	};
 
-	g_debug("binder transaction is %u", code);
+	g_debug("daemon transaction code %d (%s)",
+		code,
+		fu_binder_get_daemon_transaction_name(code));
+
 	// TODO: debug log in and out
 	if (!in)
 		g_debug("  in parcel exists");
@@ -1308,7 +1257,19 @@ binder_class_on_transact(AIBinder *binder, transaction_code_t code, const AParce
 		return STATUS_INVALID_OPERATION;
 	}
 
-	return method_funcs[code](daemon, request, in, out, &error);
+	method_func = method_funcs[code];
+
+	if (method_func == NULL) {
+		g_set_error(&error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "daemon transaction %d has not been implemented",
+			    code);
+		fu_binder_daemon_method_invocation_return_error(out, error);
+		return STATUS_OK;
+	}
+
+	return method_func(daemon, request, in, out, &error);
 }
 
 static void
@@ -1321,12 +1282,18 @@ fu_binder_daemon_init(FuBinderDaemon *self)
 						   binder_class_on_create,
 						   binder_class_on_destroy,
 						   binder_class_on_transact);
-	// TODO: AIBinder_Class_setTransactionCodeToFunctionNameMap?
 
 	self->listener_binder_class = AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
 							    listener_on_create,
 							    listener_on_destroy,
 							    listener_on_transact);
+
+#if __ANDROID_MIN_SDK_VERSION__ >= 36
+	// TODO: AIBinder_Class_setTransactionCodeToFunctionNameMap(self->binder_class,
+	// fu_binder_call_names);
+	// TODO: AIBinder_Class_setTransactionCodeToFunctionNameMap(self->listener_binder_class,
+	// fu_binder_listener_call_names);
+#endif
 }
 
 static void

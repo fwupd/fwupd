@@ -22,7 +22,6 @@
 #include "fwupd-common-private.h"
 #include "fwupd-error.h"
 
-#include "fu-binder-aidl.h"
 #include "fu-binder-common.h"
 #include "fu-debug.h"
 #include "fu-util-common.h"
@@ -175,7 +174,7 @@ fu_util_binder_parcel_read_header(AParcel *parcel, GError **error)
 
 static gboolean
 fu_util_setup_event_listener(FuUtilPrivate *priv,
-			     const AIBinder_Class *listener_binder_class,
+			     const AIBinder_Class *binder_listener_class,
 			     GError **error)
 {
 	AParcel *in = NULL;
@@ -184,7 +183,7 @@ fu_util_setup_event_listener(FuUtilPrivate *priv,
 	g_autoptr(AStatus) status = NULL;
 	binder_status_t nstatus = STATUS_OK;
 
-	priv->listener_binder = AIBinder_new(listener_binder_class, priv);
+	priv->listener_binder = AIBinder_new(binder_listener_class, priv);
 
 	nstatus = AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
 	if (nstatus != STATUS_OK) {
@@ -754,6 +753,54 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+typedef binder_status_t (*FuBinderListenerMethodFunc)(FuUtilPrivate *priv,
+						      const AParcel *in,
+						      AParcel *out,
+						      GError **error);
+
+static binder_status_t
+fu_binder_listener_method_on_properties_changed(FuUtilPrivate *priv,
+						const AParcel *in,
+						AParcel *out,
+						GError **error)
+{
+	const GVariantType *param_type = G_VARIANT_TYPE("(a{sv})");
+	g_autoptr(GVariant) parameters = NULL;
+	g_autoptr(GVariant) p_value = NULL;
+	g_auto(GVariantBuilder) builder = G_VARIANT_BUILDER_INIT(param_type);
+	g_autoptr(GVariantIter) iter = NULL;
+	const gchar *key;
+	GVariant *value;
+
+	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
+		fu_util_print_error(priv, *error);
+		return STATUS_OK;
+	}
+
+	parameters = g_variant_builder_end(&builder);
+	g_debug("params are %s", g_variant_print(parameters, TRUE));
+
+	g_variant_get(parameters, "(a{sv})", &iter);
+	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
+		if (g_strcmp0(key, "Status") == 0) {
+			fu_console_print(priv->console,
+					 "daemon status is %s",
+					 fwupd_status_to_string(g_variant_get_int32(value)));
+		} else {
+			fu_console_print(priv->console,
+					 "property changed, %s: %s",
+					 key,
+					 g_variant_print(value, TRUE));
+		}
+		g_variant_unref(value);
+	}
+
+	// TODO: all listener events are oneway. There's probably no reason to return a status
+	AParcel_writeStatusHeader(out, AStatus_newOk());
+
+	return STATUS_OK;
+}
+
 static void *
 fwupd_listener_on_create(void *arg)
 {
@@ -770,8 +817,57 @@ fwupd_listener_on_transact(AIBinder *binder,
 			   const AParcel *in,
 			   AParcel *out)
 {
-	g_debug("listener transaction code %d", code);
-	return STATUS_OK;
+	// TODO: Currently all listener events are `oneway` which means responding is unnecessary
+	//  They should probably be logged to stdout though
+	FuUtilPrivate *priv = AIBinder_getUserData(binder);
+	g_autoptr(GError) error = NULL;
+	FuBinderListenerMethodFunc method_func = NULL;
+	uid_t binder_caller_uid = 0;
+	pid_t binder_caller_pid = 0;
+
+	static const FuBinderListenerMethodFunc method_funcs[] = {
+	    NULL,
+	    NULL,					     /* onChanged */
+	    NULL,					     /* onDeviceAdded */
+	    NULL,					     /* onDeviceRemoved */
+	    NULL,					     /* onDeviceChanged */
+	    NULL,					     /* onDeviceRequest */
+	    fu_binder_listener_method_on_properties_changed, /* onPropertiesChanged */
+	};
+
+	g_debug("listener transaction code %d (%s)",
+		code,
+		fu_binder_get_listener_transaction_name(code));
+
+	/* build request? */
+	binder_caller_uid = AIBinder_getCallingUid();
+	// AIBinder docs warns to be aware that PIDs can be reused by other processes after death
+	// And that oneway calls set PID to 0
+	binder_caller_pid = AIBinder_getCallingPid();
+
+	if (code <= 0 || code >= G_N_ELEMENTS(method_funcs)) {
+		g_set_error(&error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "listener transaction %d out of range",
+			    code);
+		fu_util_print_error(priv, error);
+		return STATUS_INVALID_OPERATION;
+	}
+
+	method_func = method_funcs[code];
+
+	if (method_func == NULL) {
+		g_set_error(&error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "listener transaction %d unimplemented",
+			    code);
+		fu_util_print_error(priv, error);
+		return STATUS_OK;
+	}
+
+	return method_func(priv, in, out, &error);
 }
 
 static void *
@@ -817,11 +913,18 @@ main(int argc, char *argv[])
 									 fwupd_service_on_create,
 									 fwupd_service_on_destroy,
 									 fwupd_service_on_transact);
-	const AIBinder_Class *listener_binder_class =
+	const AIBinder_Class *binder_listener_class =
 	    AIBinder_Class_define(BINDER_EVENT_LISTENER_IFACE,
 				  fwupd_listener_on_create,
 				  fwupd_listener_on_destroy,
 				  fwupd_listener_on_transact);
+
+#if __ANDROID_MIN_SDK_VERSION__ >= 36
+	// TODO: AIBinder_Class_setTransactionCodeToFunctionNameMap(fwupd_binder_class,
+	// fu_binder_call_names);
+	// TODO: AIBinder_Class_setTransactionCodeToFunctionNameMap(binder_listener_class,
+	// fu_binder_listener_call_names);
+#endif
 
 	const GOptionEntry options[] = {{"verbose",
 					 'v',
@@ -982,6 +1085,8 @@ main(int argc, char *argv[])
 	// TODO: Maybe create FuClientBinder
 	// priv->client = fwupd_client_new();
 	// fwupd_client_set_main_context(priv->client, priv->main_ctx);
+
+	// TODO: Unless we run the main loop this fd will never poll
 	ABinderProcess_setupPolling(&priv->binder_fd);
 	source = fu_binder_fd_source_new(priv->binder_fd);
 	g_source_attach(source, NULL);
@@ -1001,7 +1106,7 @@ main(int argc, char *argv[])
 
 	AIBinder_associateClass(priv->fwupd_binder, fwupd_binder_class);
 
-	if (!fu_util_setup_event_listener(priv, listener_binder_class, &error)) {
+	if (!fu_util_setup_event_listener(priv, binder_listener_class, &error)) {
 		g_prefix_error(&error, _("Failed to attach listener to daemon"));
 		fu_util_print_error(priv, error);
 		return EXIT_FAILURE;
@@ -1009,6 +1114,11 @@ main(int argc, char *argv[])
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
+
+	/* flush remaining listener events */
+	// TODO: As we aren't threaded events sent during local-install trigger here
+	while (g_main_context_pending(NULL))
+		g_main_context_iteration(NULL, FALSE);
 
 	if (!ret) {
 #ifdef SUPPORTED_BUILD
