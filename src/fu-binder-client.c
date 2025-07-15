@@ -786,6 +786,10 @@ fu_binder_listener_method_on_properties_changed(FuUtilPrivate *priv,
 			fu_console_print(priv->console,
 					 "daemon status is %s",
 					 fwupd_status_to_string(g_variant_get_int32(value)));
+		} else if (g_strcmp0(key, "Percentage") == 0) {
+			fu_console_print(priv->console,
+					 "install progress is %d%%",
+					 g_variant_get_int32(value));
 		} else {
 			fu_console_print(priv->console,
 					 "property changed, %s: %s",
@@ -891,6 +895,44 @@ fwupd_service_on_transact(AIBinder *binder,
 	return STATUS_OK;
 }
 
+typedef struct _FuUtilBinderThreadData {
+	FuUtilPrivate *priv;
+	GMainContext *worker_context;
+	GSource *source;
+	int binder_fd;
+	FwupdStatus status;
+} FuUtilBinderThreadData;
+
+// TODO: Should the listener or transactions be on the main thread?
+static gpointer
+listener_thread_cb(gpointer data)
+{
+	FuUtilBinderThreadData *thread_data = (FuUtilBinderThreadData *)data;
+	g_autoptr(GMainContextPusher) pusher =
+	    g_main_context_pusher_new(thread_data->worker_context);
+
+	/* setup polling on this thread */
+	ABinderProcess_setupPolling(&thread_data->binder_fd);
+	thread_data->source = fu_binder_fd_source_new(thread_data->binder_fd);
+	g_source_attach(thread_data->source, thread_data->worker_context);
+
+	while (g_atomic_int_get(&thread_data->status) != FWUPD_STATUS_SHUTDOWN)
+		g_main_context_iteration(thread_data->worker_context, TRUE);
+
+	g_source_destroy(thread_data->source);
+
+	return NULL;
+}
+
+static void
+fu_util_binder_thread_data_free(FuUtilBinderThreadData *thread_data)
+{
+	// TODO: Clean up
+	g_free(thread_data);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilBinderThreadData, fu_util_binder_thread_data_free)
+
 int
 main(int argc, char *argv[])
 {
@@ -898,7 +940,8 @@ main(int argc, char *argv[])
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
-	g_autoptr(GSource) source = NULL;
+	g_autoptr(FuUtilBinderThreadData) thread_data = g_new0(FuUtilBinderThreadData, 1);
+	g_autoptr(GThread) listener_thread = NULL;
 	g_autoptr(GError) error = NULL;
 	gboolean force = FALSE;
 	gboolean allow_branch_switch = FALSE;
@@ -1086,10 +1129,11 @@ main(int argc, char *argv[])
 	// priv->client = fwupd_client_new();
 	// fwupd_client_set_main_context(priv->client, priv->main_ctx);
 
-	// TODO: Unless we run the main loop this fd will never poll
-	ABinderProcess_setupPolling(&priv->binder_fd);
-	source = fu_binder_fd_source_new(priv->binder_fd);
-	g_source_attach(source, NULL);
+	thread_data->priv = priv;
+	thread_data->worker_context = g_main_context_new();
+	g_atomic_int_set(&thread_data->status, FWUPD_STATUS_UNKNOWN);
+
+	listener_thread = g_thread_new("fwupd-client-listener", listener_thread_cb, thread_data);
 
 	priv->fwupd_binder = AServiceManager_checkService(BINDER_SERVICE_NAME);
 
@@ -1115,10 +1159,10 @@ main(int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
 
-	/* flush remaining listener events */
-	// TODO: As we aren't threaded events sent during local-install trigger here
-	while (g_main_context_pending(NULL))
-		g_main_context_iteration(NULL, FALSE);
+	/* join listener thread */
+	g_atomic_int_set(&thread_data->status, FWUPD_STATUS_SHUTDOWN);
+	g_main_context_wakeup(thread_data->worker_context);
+	g_thread_join(listener_thread);
 
 	if (!ret) {
 #ifdef SUPPORTED_BUILD
