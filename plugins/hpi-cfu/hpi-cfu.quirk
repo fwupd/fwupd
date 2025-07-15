@@ -5,3 +5,7 @@ Plugin = hpi_cfu
 # HP Thunderbolt 4 Ultra 180W/280W G6 Dock
 [USB\VID_03F0&PID_03B7]
 Plugin = hpi_cfu
+
+# HP USB-C 100W G6 Dock
+[USB\VID_03F0&PID_04B7]
+Plugin = hpi_cfu
