@@ -1,0 +1,18 @@
+{
+  "name": "HP Portable USB-C 4K HDMI Hub (BR1U3AA)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "c931d9ae8085355c1372df70ee97c947a4efd00d0b6e60c6c3a65a0ede73dbbd-HP_Cypher_v09_v030_2p1_0004_test.cab",
+      "emulation-url": "f21b635cb7cfea451c9bcb2ac9656266bdffe66091b5bc43534e8a471d94c56a-rts54hub_addmergeinfofeature_20251126.zip",
+      "components": [
+        {
+          "version": "0.0.0.4",
+          "guids": [
+            "f6b32c07-9d67-5258-9264-4bb41bc486c7"
+          ]
+        }
+      ]
+    }
+  ]
+}
