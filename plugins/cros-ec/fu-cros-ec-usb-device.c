@@ -996,6 +996,8 @@ fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to pick sections: ");
 		return NULL;
 	}
+
+	return NULL; // Stop the update
 	return g_steal_pointer(&firmware);
 }
 

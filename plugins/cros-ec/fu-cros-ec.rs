@@ -80,7 +80,7 @@ struct FuStructCrosEcTouchpadGetInfoResponsePdu {
     vendor: u16le,                  // Vendor USB id
     fw_address: u32le,              // Virtual address to touchpad firmware
     fw_size: u32le,                 // Size of the touchpad firmware
-    allowed_fw_hash: [u8le; 32],    // Checksum of the entire touchpad firmware accepted by the EC image
+    allowed_fw_hash: [u8; 32],    // Checksum of the entire touchpad firmware accepted by the EC image
     id: u16le,
     fw_version: u16le,
     fw_checksum: u16le,

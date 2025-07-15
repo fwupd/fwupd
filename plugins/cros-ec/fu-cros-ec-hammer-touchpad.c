@@ -101,6 +101,7 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	guint8 *response = tpi_rpdu->data;
 	gsize response_size = tpi_rpdu->len;
 	g_autoptr(GError) error_local = NULL;
+	const guint *buffer = NULL;
 
 	g_return_val_if_fail(FU_IS_CROS_EC_USB_DEVICE(parent), FALSE);
 
@@ -133,14 +134,14 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	priv->fw_address =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_address(tpi_rpdu);
 	priv->fw_size = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_size(tpi_rpdu);
-	priv->allowed_fw_hash =
+	buffer =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_allowed_fw_hash(tpi_rpdu, &bufsz);
+	priv->allowed_fw_hash = g_memdup2(buffer, bufsz);
 	priv->id = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_id(tpi_rpdu);
 	priv->fw_version =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_version(tpi_rpdu);
 	priv->fw_checksum =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_checksum(tpi_rpdu);
-	fu_cros_ec_hammer_touchpad_set_metadata(self, error);
 
 	/* success */
 	return TRUE;
@@ -153,12 +154,13 @@ fu_cros_ec_hammer_touchpad_setup(FuDevice *device, GError **error)
 
 	if (!fu_cros_ec_hammer_touchpad_get_info(self, error))
 		return FALSE;
+	fu_cros_ec_hammer_touchpad_set_metadata(self, error);
 
 	/* success */
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmware, GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
@@ -167,18 +169,24 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	GBytes *payload = NULL;
 	gsize fwsize;
 	gchar *fw = NULL;
+	GChecksum *checksum = NULL;
+	g_autofree guint8 digest[SHA256_DIGEST_LENGTH];
+	gsize digest_len = sizeof(digest);
 
 	payload = fu_firmware_get_bytes(firmware, error);
 	fw = g_bytes_get_data(payload, &fwsize);
 
-	if (priv->fw_size != fwsize)
+	// TODO: Set error message
+	if (priv->fw_size != (guint32)fwsize)
 		return FALSE;
-	g_debug("Sizes Matches");
 
-	gchar *digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256, fw, fwsize);
-	if (g_strcmp0(digest, priv->allowed_fw_hash) != 0)
+	checksum = g_checksum_new(G_CHECKSUM_SHA256);
+	g_checksum_update(checksum, fw, fwsize);
+	g_checksum_get_digest(checksum, digest, &digest_len);
+
+	// TODO: Set error message
+	if (memcmp(digest, priv->allowed_fw_hash, SHA256_DIGEST_LENGTH) != 0)
 		return FALSE;
-	g_debug("Checksum Matches");
 
 	// TODO: Check product if product id matches
 
@@ -192,15 +200,20 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 					    FuFirmwareParseFlags flags,
 					    GError **error)
 {
-	FuCrosEcHammerTouchpad *self = FU_CROS_EC_USB_DEVICE(device);
+	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_hammer_touchpad_firmware_new();
 
-	// Touchpad is normally updated after the EC is updated,
-	// each EC firmware expects a certain touchpad firmware.
-	// So, before we start updating the touchpad, we need to make
-	// sure it matches the EC expected touchpad firmware. We do that
-	// by querying the EC board for info (that includes the touchpad firmware allowed hash).
-	if (!fu_cros_ec_hammer_touchpad_get_info(FU_CROS_EC_HAMMER_TOUCHPAD(device), error))
+	/*
+	 * Touchpad is updated after both the EC's RO & RW regions are updated.
+	 *
+	 * Each EC firmware expects a specific touchpad firmware.
+	 *
+	 * So, before we start flashing the touchpad firmware, we need to make
+	 * sure it matches the EC's expected touchpad firmware. We do that
+	 * by querying the EC board for touchpad info again (the first time was during the setup),
+	 * which includes allowed touchpad firmware hash.
+	 */
+	if (!fu_cros_ec_hammer_touchpad_get_info(self, error))
 		return NULL;
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -209,6 +222,7 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 	if (!fu_cros_ec_hammer_touchpad_firmware_validate(device, firmware, error))
 		return NULL;
 
+	return NULL; // Stops the update
 	return g_steal_pointer(&firmware);
 }
 
@@ -222,13 +236,15 @@ fu_cros_ec_hammer_touchpad_write_firmware(FuDevice *device,
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 
-	// Update is done through the parent device aka. the EC board,
-	// so we call this and it the EC will handle the updatng.
+	/*
+	 * Update is done through the parent device (the EC base),
+	 * so we call this and let EC handle the updating.
+	 */
 	if (!fu_cros_ec_usb_device_write_touchpad_firmware(parent,
 							   firmware,
 							   progress,
 							   flags,
-							   self,
+							   device,
 							   error))
 		return FALSE;
 
@@ -252,7 +268,8 @@ fu_cros_ec_hammer_touchpad_init(FuCrosEcHammerTouchpad *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	// fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
@@ -266,7 +283,7 @@ fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_int(str, idt, "Vendor", priv->vendor);
 	fwupd_codec_string_append_hex(str, idt, "FwAddress", priv->fw_address);
 	fwupd_codec_string_append_int(str, idt, "FwSize", priv->fw_size);
-	fwupd_codec_string_append(str, idt, "AllowedFwHash", priv->allowed_fw_hash);
+	// fwupd_codec_string_append(str, idt, "AllowedFwHash", (gchar *)priv->allowed_fw_hash);
 	fwupd_codec_string_append_int(str, idt, "RawVersion", priv->fw_version);
 }
 
