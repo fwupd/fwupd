@@ -18,6 +18,8 @@ typedef struct {
 	guint8 register_addr_len;
 } FuRts54hubRtd21xxDevicePrivate;
 
+#define FU_RTS54HUB_DDCCI_BUFFER_MAXSZ 256
+
 G_DEFINE_TYPE_WITH_PRIVATE(FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_rts54hub_rtd21xx_device_get_instance_private(o))
 
@@ -92,7 +94,7 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_VENDOR_CMD_ENABLE, error))
 		return FALSE;
 
 	if (target_addr != priv->target_addr) {
@@ -112,6 +114,52 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 	return TRUE;
 }
 
+static guint8
+_fu_xor8(const guint8 *buf, gsize bufsz)
+{
+	guint8 tmp = 0;
+	for (guint i = 0; i < bufsz; i++)
+		tmp ^= buf[i];
+	return tmp;
+}
+
+gboolean
+fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
+				       guint8 target_addr,
+				       guint8 sub_addr,
+				       const guint8 *data,
+				       gsize datasz,
+				       GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	if (datasz > FU_RTS54HUB_DDCCI_BUFFER_MAXSZ) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "DDC/CI write length exceed max length: ");
+		return FALSE;
+	}
+
+	fu_byte_array_append_uint8(buf, target_addr);
+	fu_byte_array_append_uint8(buf, sub_addr);
+	fu_byte_array_append_uint8(buf, (guint8)datasz | 0x80);
+	g_byte_array_append(buf, data, datasz);
+	fu_byte_array_append_uint8(buf, _fu_xor8(buf->data, buf->len));
+
+	if (!fu_rts54hub_rtd21xx_device_i2c_write(self,
+						  target_addr,
+						  sub_addr,
+						  buf->data + 2,
+						  buf->len - 2,
+						  error)) {
+		g_prefix_error_literal(error, "failed to DDC/CI write: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    guint8 target_addr,
@@ -126,7 +174,7 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_VENDOR_CMD_ENABLE, error))
 		return FALSE;
 	if (target_addr != priv->target_addr) {
 		if (!fu_rts54hub_device_i2c_config(parent,
@@ -142,6 +190,69 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+gboolean
+fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
+				      guint8 target_addr,
+				      guint8 sub_addr,
+				      guint8 *data,
+				      gsize datasz,
+				      GError **error)
+{
+	guint8 checksum = 0x50;
+	guint8 buf[FU_RTS54HUB_DDCCI_BUFFER_MAXSZ] = {0x00};
+	gsize length;
+
+	if (datasz > FU_RTS54HUB_DDCCI_BUFFER_MAXSZ) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "DDC/CI read length exceed max length: ");
+		return FALSE;
+	}
+
+	if (!fu_rts54hub_rtd21xx_device_i2c_read(self, target_addr, sub_addr, buf, datasz, error)) {
+		g_prefix_error_literal(error, "failed to DDC/CI read I2C: ");
+		return FALSE;
+	}
+
+	if (buf[0] != target_addr) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to DDC/CI read I2C target addr invalid: ");
+		return FALSE;
+	}
+
+	length = buf[1] & 0x7F;
+	if (length + 3 > sizeof(buf)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "DDC/CI read cmd length exceed max length: ");
+		return FALSE;
+	}
+
+	/* verify checksum */
+	checksum = 0x50 ^ _fu_xor8(buf, length + 2);
+	if (checksum != buf[length + 2]) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to DDCCI read I2C checksum error: ");
+		return FALSE;
+	}
+
+	/* success */
+	return fu_memcpy_safe(data,
+			      datasz,
+			      0x0, /* dst */
+			      buf,
+			      sizeof(buf),
+			      0x0, /* src */
+			      length + 3,
+			      error);
 }
 
 gboolean
