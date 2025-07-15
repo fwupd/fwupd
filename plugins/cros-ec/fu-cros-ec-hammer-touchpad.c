@@ -23,7 +23,7 @@ typedef struct {
 	guint16 vendor;
 	guint32 fw_address;
 	guint32 fw_size;
-	const guint8 *allowed_fw_hash;
+	guint8 *allowed_fw_hash;
 	guint16 id;
 	guint16 fw_version;
 	guint16 fw_checksum;
@@ -58,8 +58,8 @@ fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **e
 	switch (priv->vendor) {
 	case ST_VENDOR_ID:
 		base_fw_ver = g_strdup_printf("%d.%d",
-					      self->fw_version & 0x00ff,
-					      (self->fw_version & 0xff00) >> 8);
+					      priv->fw_version & 0x00ff,
+					      (priv->fw_version & 0xff00) >> 8);
 		vendor_name = g_strdup("STMicroelectronics");
 		break;
 	case ELAN_VENDOR_ID:
@@ -101,7 +101,7 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	guint8 *response = tpi_rpdu->data;
 	gsize response_size = tpi_rpdu->len;
 	g_autoptr(GError) error_local = NULL;
-	const guint *buffer = NULL;
+	guint8 *buffer = NULL;
 
 	g_return_val_if_fail(FU_IS_CROS_EC_USB_DEVICE(parent), FALSE);
 
@@ -135,7 +135,8 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_address(tpi_rpdu);
 	priv->fw_size = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_size(tpi_rpdu);
 	buffer =
-	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_allowed_fw_hash(tpi_rpdu, &bufsz);
+	    (guint8 *)fu_struct_cros_ec_touchpad_get_info_response_pdu_get_allowed_fw_hash(tpi_rpdu,
+											   &bufsz);
 	priv->allowed_fw_hash = g_memdup2(buffer, bufsz);
 	priv->id = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_id(tpi_rpdu);
 	priv->fw_version =
@@ -168,7 +169,7 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	g_autoptr(GError) error_local = NULL;
 	GBytes *payload = NULL;
 	gsize fwsize;
-	gchar *fw = NULL;
+	const guchar *fw = NULL;
 	GChecksum *checksum = NULL;
 	g_autofree guint8 digest[SHA256_DIGEST_LENGTH];
 	gsize digest_len = sizeof(digest);
@@ -176,21 +177,48 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	payload = fu_firmware_get_bytes(firmware, error);
 	fw = g_bytes_get_data(payload, &fwsize);
 
-	// TODO: Set error message
-	if (priv->fw_size != (guint32)fwsize)
+	if ((gsize)priv->fw_size != fwsize) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "Local touchpad binary doesn't match remote IC size."
+			    "Local = %" G_GSIZE_FORMAT " bytes."
+			    "Remote = %" G_GSIZE_FORMAT " bytes.",
+			    fwsize,
+			    (gsize)priv->fw_size);
 		return FALSE;
+	}
 
 	checksum = g_checksum_new(G_CHECKSUM_SHA256);
 	g_checksum_update(checksum, fw, fwsize);
 	g_checksum_get_digest(checksum, digest, &digest_len);
+	fu_dump_full(G_LOG_DOMAIN,
+		     "Computed local touchpad firmware hash",
+		     digest,
+		     digest_len,
+		     80,
+		     FU_DUMP_FLAGS_NONE);
 
-	// TODO: Set error message
-	if (memcmp(digest, priv->allowed_fw_hash, SHA256_DIGEST_LENGTH) != 0)
+	if (memcmp(digest, priv->allowed_fw_hash, SHA256_DIGEST_LENGTH) != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "Touchpad firmware mismatches hash in RW EC.");
 		return FALSE;
+	}
 
 	// TODO: Check product if product id matches
+	/*
+	 * In hammerd, this was done by comparing the product_id
+	 * from the touchpad firmware file name, and compare it with
+	 * the product id saved within the EC.
+	 * There is no direct way to do the comparison here, and is probably
+	 * not needed since we already do match the firmware file with the device
+	 * through GUIDs... Also there is no files to compare with instead the updates
+	 * is normally done through cab files.
+	 */
 
-	return FALSE; // Set to false to prevent updating
+	return TRUE;
 }
 
 static FuFirmware *
@@ -282,8 +310,6 @@ fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
 	// TODO: Retake a look on what is important
 	fwupd_codec_string_append_int(str, idt, "Vendor", priv->vendor);
 	fwupd_codec_string_append_hex(str, idt, "FwAddress", priv->fw_address);
-	fwupd_codec_string_append_int(str, idt, "FwSize", priv->fw_size);
-	// fwupd_codec_string_append(str, idt, "AllowedFwHash", (gchar *)priv->allowed_fw_hash);
 	fwupd_codec_string_append_int(str, idt, "RawVersion", priv->fw_version);
 }
 

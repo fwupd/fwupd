@@ -498,12 +498,22 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	    fu_chunk_get_address(helper->block));
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP)) {
-		// Sets the cmd_block_digest with the first 32 bits of the SHA256 digest
-		// as done in hammerd.
+		/* Sets the cmd_block_digest with the first 32 bits of the SHA256 digest
+		 * as done in hammerd.*/
 		gchar *digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256,
 							    fu_chunk_get_data(helper->block),
 							    fu_chunk_get_data_sz(helper->block));
-		fu_struct_cros_ec_update_frame_header_set_cmd_block_digest(ufh, *(guint32 *)digest);
+		guint32 digest_val;
+		if (!fu_memcpy_safe((guint8 *)&digest_val,
+				    sizeof(digest_val),
+				    0x0,
+				    (const guint8 *)digest,
+				    sizeof(digest),
+				    0x0,
+				    sizeof(digest_val),
+				    error))
+			return FALSE;
+		fu_struct_cros_ec_update_frame_header_set_cmd_block_digest(ufh, digest_val);
 	}
 
 	if (!fu_cros_ec_usb_device_do_xfer(self,
@@ -786,9 +796,7 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 					      GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
-	FuCrosEcHammerTouchpad *touchpad = FU_CROS_EC_HAMMER_TOUCHPAD(tp_device);
-	FuCrosEcHammerTouchpadFirmware *touchpad_firmware =
-	    FU_CROS_EC_HAMMER_TOUCHPAD_FIRMWARE(firmware);
+	FuCrosEcHammerTouchpad *touchpad = FU_CROS_EC_HAMMER_TOUCHPAD(device);
 	gsize data_len = 0;
 	guint32 maximum_pdu_size = 0;
 	guint32 tp_fw_size = 0;
@@ -826,7 +834,7 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 			    "image and section sizes do not match: image = %" G_GSIZE_FORMAT
 			    " bytes vs section size = %" G_GSIZE_FORMAT " bytes",
 			    data_len,
-			    tp_fw_size);
+			    (gsize)tp_fw_size);
 		return FALSE;
 	}
 

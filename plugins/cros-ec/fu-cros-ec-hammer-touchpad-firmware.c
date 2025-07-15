@@ -23,18 +23,8 @@ fu_cros_ec_hammer_touchpad_firmware_init(FuCrosEcHammerTouchpadFirmware *self)
 }
 
 static void
-fu_cros_ec_hammer_touchpad_firmware_finalize(GObject *object)
-{
-	FuCrosEcHammerTouchpadFirmware *self = FU_CROS_EC_HAMMER_TOUCHPAD_FIRMWARE(object);
-	FuFirmware *test = FU_FIRMWARE(object);
-	G_OBJECT_CLASS(fu_cros_ec_hammer_touchpad_firmware_parent_class)->finalize(object);
-}
-
-static void
 fu_cros_ec_hammer_touchpad_firmware_class_init(FuCrosEcHammerTouchpadFirmwareClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_cros_ec_hammer_touchpad_firmware_finalize;
 }
 
 FuFirmware *
