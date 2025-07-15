@@ -18,9 +18,5 @@ G_DECLARE_FINAL_TYPE(FuCrosEcHammerTouchpadFirmware,
 		     CROS_EC_HAMMER_TOUCHPAD_FIRMWARE,
 		     FuFirmware)
 
-gboolean
-fu_cros_ec_hammer_touchpad_firmware_validate_checksum(FuDevice *device,
-						      FuCrosEcHammerTouchpadFirmware *self,
-						      GError **error);
 FuFirmware *
 fu_cros_ec_hammer_touchpad_firmware_new(void);
