@@ -41,14 +41,18 @@ fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **e
 	case ST_VENDOR_ID:
 		base_fw_ver = g_strdup_printf("%d.%d",
 					      self->fw_version & 0x00ff,
-					      (self->fw_version & 0xff00) >> 8); // TODO: Fix
-		vendor_name = g_strdup("ST");
+					      (self->fw_version & 0xff00) >> 8);
+		vendor_name = g_strdup("STMicroelectronics");
 		break;
 	case ELAN_VENDOR_ID:
 		base_fw_ver = g_strdup_printf("%d.0", self->fw_version);
 		vendor_name = g_strdup("ELAN");
 		break;
 	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid touchpad vendor id received");
 		return FALSE;
 	}
 	device_name = g_strdup_printf("%s Touchpad", vendor_name);
@@ -88,8 +92,13 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 						   response,
 						   &response_size,
 						   FALSE,
-						   &error_local))
+						   &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "failed to probe touchpad");
 		return FALSE;
+	}
 
 	error_code = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_status(tpi_rpdu);
 	if (error_code != 0) {
