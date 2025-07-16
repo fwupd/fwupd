@@ -32,9 +32,23 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 				  GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	FuDevice *dfota = NULL;
 
-	/* ignore anything from other backends, e.g. usb */
 	if (!FU_IS_MM_DEVICE(device)) {
+		dfota = fu_plugin_cache_lookup(plugin, "dfota");
+		if (dfota != NULL) {
+			/* FIXME: check if we have the cached device */
+
+			if (fu_device_has_private_flag(dfota, FU_MM_DEVICE_FLAG_REPLUG_REPROBE)) {
+				g_debug("waiting for a ModemManager scan to replug");
+				return TRUE;
+			}
+
+			/* reuse existing device */
+			fu_plugin_device_add(plugin, dfota);
+			return TRUE;
+		}
+
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
 		return FALSE;
 	}
@@ -42,6 +56,11 @@ fu_mm_plugin_backend_device_added(FuPlugin *plugin,
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
+
+	if (FU_IS_MM_DFOTA_DEVICE(device))
+		fu_plugin_cache_add(plugin, "dfota", device);
+
+	fu_device_remove_private_flag(device, FU_MM_DEVICE_FLAG_REPLUG_REPROBE);
 	fu_plugin_device_add(plugin, device);
 
 	/* success */
