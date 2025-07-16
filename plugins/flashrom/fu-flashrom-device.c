@@ -13,6 +13,7 @@
 #include "fu-flashrom-device.h"
 
 #define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS     "reset-cmos"
+#define FU_FLASHROM_DEVICE_FLAG_FMAP           "fmap"
 #define FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK "fn-m-me-unlock"
 
 struct _FuFlashromDevice {
@@ -32,6 +33,12 @@ fu_flashrom_device_set_quirk_kv(FuDevice *device,
 				const gchar *value,
 				GError **error)
 {
+	if (g_strcmp0(key, FU_FLASHROM_DEVICE_FLAG_FMAP) == 0) {
+		fu_device_set_metadata_string(device,
+					      FU_FLASHROM_DEVICE_FLAG_FMAP,
+					      value);
+		return TRUE;
+	}
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
@@ -88,24 +95,33 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
-	/* update only one specific region of the flash and do not touch others */
 	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
 		struct flashrom_layout *layout = NULL;
-		if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "failed to read layout from Intel ICH descriptor");
-			return FALSE;
-		}
-		if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
-			flashrom_layout_release(layout);
+		const gchar *fmap = fu_device_get_metadata_string(device, FU_FLASHROM_DEVICE_FLAG_FMAP);
 
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid region name");
-			return FALSE;
+		if (fmap && flashrom_layout_read_fmap_from_rom(&layout, self->flashctx, 0, 0) == 0) {
+			/* Use region quirk */
+			gchar **targets = g_strsplit(fmap, ",", 0);
+			for (guint i = 0; targets[i] != NULL; i++)
+				flashrom_layout_include_region(layout, targets[i]);
+
+			g_strfreev(targets);
+		} else {
+			/* Fallback to BIOS region */
+			if (layout)
+				flashrom_layout_release(layout);
+
+			if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
+				g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "failed to read layout from Intel ICH descriptor");
+				return FALSE;
+			}
+
+			const char *bios = fu_ifd_region_to_string(self->region);
+			if (flashrom_layout_include_region(layout, bios)) {
+				flashrom_layout_release(layout);
+				g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "partition '%s' not found in IFD BIOS", bios);
+				return FALSE;
+			}
 		}
 
 		/* does not transfer ownership, so we must manage the lifetime of layout */
