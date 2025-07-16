@@ -22,6 +22,7 @@ struct _FuMtdDevice {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
+	gboolean is_pci_device;
 };
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
@@ -35,6 +36,24 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
+	fwupd_codec_string_append_hex(str, idt, "IsPciDevice", self->is_pci_device);
+}
+
+static gchar *
+fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+
+	/* let's assume for now that any PCI device with pair version format uses B&R encoding */
+	if (self->is_pci_device &&
+	    fu_device_get_version_format(self) == FWUPD_VERSION_FORMAT_PAIR) {
+		guint64 major = version_raw / 100;
+		guint64 minor = version_raw % 100;
+
+		return g_strdup_printf("%" G_GUINT64_FORMAT ".%02" G_GUINT64_FORMAT, major, minor);
+	}
+
+	return NULL;
 }
 
 static FuFirmware *
@@ -250,13 +269,13 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
 	g_autofree gchar *attr_flags = NULL;
 	g_autofree gchar *attr_size = NULL;
 	g_autofree gchar *attr_name = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) parent_device = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->probe(device, error))
@@ -293,19 +312,45 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	if (attr_name != NULL)
 		fu_device_set_name(FU_DEVICE(self), attr_name);
 
-	/* set vendor ID as the BIOS vendor */
-	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
-	fu_device_build_vendor_id(device, "DMI", vendor);
+	/* MTD devices backed by PCI should use that for identification */
+	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
+	if (parent_device != NULL) {
+		self->is_pci_device = TRUE;
 
-	/* use vendor and product as an optional instance ID prefix */
-	fu_device_add_instance_strsafe(device, "NAME", attr_name);
-	fu_device_add_instance_strsafe(device, "VENDOR", vendor);
-	fu_device_add_instance_strsafe(device,
-				       "PRODUCT",
-				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
-	fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
-	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "NAME", NULL);
-	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
+		fu_device_incorporate(
+		    device,
+		    parent_device,
+		    FU_DEVICE_INCORPORATE_FLAG_VENDOR | FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+			FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
+			FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+
+		if (fu_device_get_version(device) == NULL)
+			fu_device_set_version_raw(
+			    device,
+			    fu_pci_device_get_revision(FU_PCI_DEVICE(parent_device)));
+
+		fu_device_add_instance_strsafe(device, "NAME", attr_name);
+		fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VEN", "DEV", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VEN", "DEV", "NAME", NULL);
+	} else {
+		const gchar *vendor;
+
+		/* set vendor ID as the BIOS vendor */
+		vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
+		fu_device_build_vendor_id(device, "DMI", vendor);
+
+		/* use vendor and product as an optional instance ID prefix */
+		fu_device_add_instance_strsafe(device, "NAME", attr_name);
+		fu_device_add_instance_strsafe(device, "VENDOR", vendor);
+		fu_device_add_instance_strsafe(
+		    device,
+		    "PRODUCT",
+		    fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
+		fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
+	}
 
 	/* get properties about the device */
 	attr_size = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
@@ -672,6 +717,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->probe = fu_mtd_device_probe;
 	device_class->setup = fu_mtd_device_setup;
 	device_class->to_string = fu_mtd_device_to_string;
+	device_class->convert_version = fu_mtd_device_convert_version;
 	device_class->dump_firmware = fu_mtd_device_dump_firmware;
 	device_class->read_firmware = fu_mtd_device_read_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
