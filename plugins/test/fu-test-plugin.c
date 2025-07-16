@@ -160,11 +160,9 @@ fu_test_plugin_verify(FuPlugin *plugin,
 static gchar *
 fu_test_plugin_get_version(GBytes *blob_fw)
 {
-	gsize bufsz = 0;
-	const gchar *buf = g_bytes_get_data(blob_fw, &bufsz);
 	guint64 val = 0;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *str_safe = fu_strsafe(buf, bufsz);
+	g_autofree gchar *str_safe = fu_strsafe_bytes(blob_fw, G_MAXSIZE);
 
 	if (str_safe == NULL)
 		return NULL;
@@ -303,8 +301,12 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 	} else {
 		g_autofree gchar *ver = NULL;
 		g_autoptr(GBytes) blob_fw = NULL;
+		g_autoptr(GInputStream) stream = NULL;
 
-		blob_fw = fu_firmware_get_bytes(firmware, error);
+		stream = fu_firmware_get_stream(firmware, error);
+		if (stream == NULL)
+			return FALSE;
+		blob_fw = fu_input_stream_read_bytes(stream, 0x0, 9, NULL, error);
 		if (blob_fw == NULL)
 			return FALSE;
 		ver = fu_test_plugin_get_version(blob_fw);
