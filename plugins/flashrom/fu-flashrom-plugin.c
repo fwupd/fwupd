@@ -379,7 +379,9 @@ static void
 fu_flashrom_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	FuContext *ctx = fu_plugin_get_context(plugin);
 
+	fu_context_add_quirk_key(ctx, "FlashromFmapRegions");
 	(void)fu_plugin_alloc_data(plugin, sizeof(FuFlashromPlugin));
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
