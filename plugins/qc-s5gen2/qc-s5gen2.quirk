@@ -9,13 +9,13 @@ ProxyGType = FuQcS5gen2HidDevice
 Plugin = qc_s5gen2
 Flags = enforce-requires
 ProxyGType = FuQcS5gen2BleDevice
-AudioS5gen2Gaia3VendorId = 0x001D
+QcS5gen2Gaia3VendorId = 0x001D
 
 # by GAIA primary service with default vendor ID
 [BLUETOOTH\GATT_00001100-d102-11e1-9b23-00025b00a5a5]
 Plugin = qc_s5gen2
 ProxyGType = FuQcS5gen2BleDevice
-AudioS5gen2Gaia3VendorId = 0x001D
+QcS5gen2Gaia3VendorId = 0x001D
 
 # GID8 headset
 [USB\VID_18D1&PID_800C]

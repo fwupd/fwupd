@@ -573,7 +573,7 @@ fu_qc_s5gen2_ble_device_set_quirk_kv(FuDevice *device,
 	FuQcS5gen2BleDevice *self = FU_QC_S5GEN2_BLE_DEVICE(device);
 	guint64 tmp = 0;
 
-	if (g_strcmp0(key, "AudioS5gen2Gaia3VendorId") == 0) {
+	if (g_strcmp0(key, "QcS5gen2Gaia3VendorId") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vid_v3 = tmp;
