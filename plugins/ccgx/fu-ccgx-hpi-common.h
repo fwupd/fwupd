@@ -8,6 +8,11 @@
 
 #include <glib.h>
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-defines=33
+ */
+
 #define I2C_READ_WRITE_DELAY_MS 10 /* ms */
 
 #define CY_SCB_INDEX_POS	      15

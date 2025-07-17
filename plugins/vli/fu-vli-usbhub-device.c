@@ -17,6 +17,11 @@
 #include "fu-vli-usbhub-pd-device.h"
 #include "fu-vli-usbhub-rtd21xx-device.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=111
+ */
+
 struct _FuVliUsbhubDevice {
 	FuVliDevice parent_instance;
 	gboolean disable_powersave;
