@@ -55,3 +55,33 @@ enum FuWistronDockUpdatePhase {
     Download = 0x1,
     Deploy = 0x2,
 }
+
+enum FuWistronDockCmdIcp {
+    Enter = 0x81,
+    Exit = 0x82,
+    Address = 0x84,
+    Readblock = 0x85,
+    Writeblock = 0x86,
+    Mcuid = 0x87,
+    Bbinfo = 0x88, // bb code information
+    Userinfo = 0x89, // user code information
+    Done = 0x5A,
+    Error = 0xFF,
+    ExitWdreset = 0x01, // exit ICP with watch dog reset
+}
+
+enum FuWistronDockCmdDfu {
+    Enter = 0x91,
+    Exit = 0x92,
+    Address = 0x93,
+    ReadimgBlock = 0x94,
+    WriteimgBlock = 0x95,
+    Verify = 0x96,
+    CompositeVer = 0x97,
+    WriteWdflSig = 0x98,
+    WriteWdflData = 0x99,
+    VerifyWdfl = 0x9A,
+    SerinalNumber = 0x9B,
+    Done = 0x5A,
+    Error = 0xFF,
+}
