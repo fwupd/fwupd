@@ -1,6 +1,4 @@
-if not cc.has_header('linux/hidraw.h', required: false)
-  subdir_done()
-endif
+cc.has_header('linux/hidraw.h', required: false) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

@@ -1,9 +1,5 @@
-if not protobufc.found()
-  subdir_done()
-endif
-if not protoc.found()
-  subdir_done()
-endif
+protobufc.found() or subdir_done()
+protoc.found() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechBulkController"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

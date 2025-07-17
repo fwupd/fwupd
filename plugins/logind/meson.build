@@ -1,6 +1,4 @@
-if not libsystemd.found()
-  subdir_done()
-endif
+libsystemd.found() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

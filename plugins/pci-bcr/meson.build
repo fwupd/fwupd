@@ -1,6 +1,4 @@
-if not hsi
-  subdir_done()
-endif
+hsi or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciBcr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

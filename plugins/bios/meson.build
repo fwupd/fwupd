@@ -1,9 +1,5 @@
-if not allow_uefi
-  subdir_done()
-endif
-if host_cpu not in ['x86', 'x86_64']
-  subdir_done()
-endif
+allow_uefi or subdir_done()
+host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginBios"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

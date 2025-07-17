@@ -1,9 +1,5 @@
-if host_machine.system() != 'linux'
-  subdir_done()
-endif
-if not cc.has_header('linux/nvme_ioctl.h', required: false)
-  subdir_done()
-endif
+host_machine.system() == 'linux' or subdir_done()
+cc.has_header('linux/nvme_ioctl.h', required: false) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
