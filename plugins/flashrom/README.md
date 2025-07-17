@@ -69,6 +69,12 @@ mode, but it is only used when the device is rebooted.
 
 This plugin uses the following plugin-specific quirks:
 
+### `FlashromFmapRegions`
+
+A list of FMAP regions to be flashed, for instance `COREBOOT,EC,RW_MRC_CACHE`
+
+Since: 2.0.13
+
 ### `Flags=reset-cmos`
 
 Flag to determine if the CMOS checksum should be reset after the flash is reprogrammed.
