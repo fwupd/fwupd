@@ -69,3 +69,22 @@ enum FuDfuSectorCap {
     Writeable = 1 << 1,
     Erasable = 1 << 2,
 }
+
+// ATMEL AVR version of DFU: http://www.atmel.com/Images/doc7618.pdf
+enum FuDfuAvrCmd {
+    ProgStart = 0x01,
+    DisplayData = 0x03,
+    WriteCommand = 0x04,
+    ReadCommand = 0x05,
+    ChangeBaseAddr = 0x06,
+}
+
+enum FuDfuAvr32MemoryUnit {
+    Flash,
+    Eeprom,
+    Security,
+    Configuration,
+    Bootloader,
+    Signature,
+    User,
+}
