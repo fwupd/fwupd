@@ -1,9 +1,5 @@
-if host_machine.system() != 'linux'
-  subdir_done()
-endif
-if host_cpu not in ['x86', 'x86_64']
-  subdir_done()
-endif
+host_machine.system() == 'linux' or subdir_done()
+host_cpu in ['x86', 'x86_64'] or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 

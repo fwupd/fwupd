@@ -1,9 +1,5 @@
-if not hsi
-  subdir_done()
-endif
-if not has_cpuid
-  subdir_done()
-endif
+hsi or subdir_done()
+has_cpuid or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

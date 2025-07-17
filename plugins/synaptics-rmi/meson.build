@@ -1,9 +1,5 @@
-if host_machine.system() != 'linux'
-  subdir_done()
-endif
-if not gnutls.found()
-  subdir_done()
-endif
+host_machine.system() == 'linux' or subdir_done()
+gnutls.found() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}

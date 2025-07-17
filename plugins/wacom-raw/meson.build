@@ -1,6 +1,4 @@
-if host_machine.system() != 'linux'
-  subdir_done()
-endif
+host_machine.system() == 'linux' or subdir_done()
 
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']

@@ -1,6 +1,4 @@
-if not allow_uefi
-  subdir_done()
-endif
+allow_uefi or subdir_done()
 
 subdir('tests')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']

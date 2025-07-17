@@ -1,6 +1,4 @@
-if not allow_flashrom
-  subdir_done()
-endif
+allow_flashrom or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
