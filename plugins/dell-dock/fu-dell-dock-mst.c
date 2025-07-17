@@ -21,6 +21,11 @@
 #include "fu-dell-dock-common.h"
 #include "fu-dell-dock-struct.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-defines=38
+ */
+
 #define I2C_MST_ADDRESS 0x72
 
 /* Panamera MST registers */

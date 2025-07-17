@@ -10,6 +10,11 @@
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-scaler-firmware.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=119
+ */
+
 #define GENESYS_SCALER_BANK_SIZE 0x200000U
 
 #define GENESYS_SCALER_MSTAR_READ     0x7a

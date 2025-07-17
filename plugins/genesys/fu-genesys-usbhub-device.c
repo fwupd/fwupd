@@ -18,6 +18,12 @@
 #include "fu-genesys-usbhub-firmware.h"
 #include "fu-genesys-usbhub-struct.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=85
+ * nocheck:magic-defines=16
+ */
+
 #define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER "has-mstar-scaler"
 #define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY	"has-public-key"
 

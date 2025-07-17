@@ -8,6 +8,7 @@
 import glob
 import sys
 import os
+import re
 from typing import List, Optional
 
 
@@ -44,6 +45,8 @@ class SourceFailure:
 class Checker:
     MAX_FUNCTION_LINES: int = 400
     MAX_FUNCTION_SWITCH: int = 2
+    MAX_FILE_MAGIC_DEFINES: int = 15
+    MAX_FILE_MAGIC_INLINES: int = 80
 
     def __init__(self):
         self.failures: List[SourceFailure] = []
@@ -249,6 +252,47 @@ class Checker:
             if line.find(token) != -1:
                 self.add_failure(f"contains blocked token {token}: {msg}")
 
+    def _test_lines_magic_numbers(self, lines: List[str]) -> None:
+        if os.path.basename(self._current_fn) == "fu-self-test.c":
+            return
+
+        self._current_nocheck = "nocheck:magic"
+        magic_defines: list[int] = []
+        magic_inlines: list[int] = []
+        magic_defines_limit = self.MAX_FILE_MAGIC_DEFINES
+        magic_inlines_limit = self.MAX_FILE_MAGIC_INLINES
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                idx = line.find("nocheck:magic-defines=")
+                if idx != -1:
+                    magic_defines_limit = int(line[idx + 22 :].split(" ")[0])
+                    continue
+                idx = line.find("nocheck:magic-inlines=")
+                if idx != -1:
+                    magic_inlines_limit = int(line[idx + 22 :].split(" ")[0])
+                    continue
+                continue
+            tokens = re.split("(\\W+)", line)
+            for token in tokens:
+                if token in ["0x0", "0x00"]:
+                    continue
+                if len(token) >= 3 and token.startswith("0x"):
+                    if line.startswith("#define"):
+                        magic_defines.append(linecnt)
+                    else:
+                        magic_inlines.append(linecnt)
+                    break
+        if len(magic_defines) > magic_defines_limit:
+            self.add_failure(
+                f"file has too many #defined magic values ({len(magic_defines)}), "
+                f"limit of {magic_defines_limit}"
+            )
+        if len(magic_inlines) > magic_inlines_limit:
+            self.add_failure(
+                f"file has too many inline magic values ({len(magic_inlines)}), "
+                f"limit of {magic_inlines_limit}"
+            )
+
     def _test_lines_gerror(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error"
         linecnt_g_set_error: int = 0
@@ -411,6 +455,9 @@ class Checker:
 
             # test for invalid enum names
             self._test_line_enums(line)
+
+        # using too many hardcoded constants
+        self._test_lines_magic_numbers(lines)
 
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
