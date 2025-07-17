@@ -100,6 +100,7 @@ if build_daemon
       'char-gpiochip',
       'char-hidraw',
       'char-mei',
+      'char-mtd',
       'char-tpm',
       'char-usb',
       'char-usb_device',
