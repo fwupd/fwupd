@@ -167,11 +167,11 @@ static GByteArray *
 fu_ti_tps6598x_device_read_data(FuTiTps6598xDevice *self, gsize bufsz, GError **error)
 {
 	g_autoptr(GByteArray) buf =
-	    fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_DATA3, bufsz, error);
+	    fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_DATA3, bufsz, error);
 	if (buf == NULL) {
 		g_prefix_error(error,
 			       "failed to read data at 0x%x: ",
-			       (guint)TI_TPS6598X_REGISTER_DATA3);
+			       (guint)FU_TI_TPS6598X_REGISTER_DATA3);
 		return NULL;
 	}
 	return g_steal_pointer(&buf);
@@ -181,10 +181,10 @@ fu_ti_tps6598x_device_read_data(FuTiTps6598xDevice *self, gsize bufsz, GError **
 static gboolean
 fu_ti_tps6598x_device_write_data(FuTiTps6598xDevice *self, GByteArray *buf, GError **error)
 {
-	if (!fu_ti_tps6598x_device_usbep_write(self, TI_TPS6598X_REGISTER_DATA3, buf, error)) {
+	if (!fu_ti_tps6598x_device_usbep_write(self, FU_TI_TPS6598X_REGISTER_DATA3, buf, error)) {
 		g_prefix_error(error,
 			       "failed to write data at 0x%x: ",
-			       (guint)TI_TPS6598X_REGISTER_DATA3);
+			       (guint)FU_TI_TPS6598X_REGISTER_DATA3);
 		return FALSE;
 	}
 	return TRUE;
@@ -212,7 +212,7 @@ fu_ti_tps6598x_device_write_4cc(FuTiTps6598xDevice *self,
 	}
 	for (guint i = 0; i < 4; i++)
 		fu_byte_array_append_uint8(buf, cmd[i]);
-	return fu_ti_tps6598x_device_usbep_write(self, TI_TPS6598X_REGISTER_CMD3, buf, error);
+	return fu_ti_tps6598x_device_usbep_write(self, FU_TI_TPS6598X_REGISTER_CMD3, buf, error);
 }
 
 static gboolean
@@ -228,7 +228,7 @@ fu_ti_tps6598x_device_wait_for_command_cb(FuDevice *device, gpointer user_data, 
 	g_autoptr(GByteArray) buf = NULL;
 
 	/* 4 bytes of data and the first byte is length */
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_CMD3, 4, error);
+	buf = fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_CMD3, 4, error);
 	if (buf == NULL)
 		return FALSE;
 
@@ -424,7 +424,7 @@ fu_ti_tps6598x_device_ensure_version(FuTiTps6598xDevice *self, GError **error)
 	g_autoptr(GByteArray) buf = NULL;
 
 	/* get bcdVersion */
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_VERSION, 4, error);
+	buf = fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_VERSION, 4, error);
 	if (buf == NULL)
 		return FALSE;
 	str = g_strdup_printf("%X.%X.%X", buf->data[2], buf->data[1], buf->data[0]);
@@ -438,7 +438,7 @@ fu_ti_tps6598x_device_ensure_mode(FuTiTps6598xDevice *self, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autoptr(GByteArray) buf = NULL;
 
-	buf = fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_MODE, 4, error);
+	buf = fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_MODE, 4, error);
 	if (buf == NULL)
 		return FALSE;
 
@@ -468,7 +468,7 @@ static gboolean
 fu_ti_tps6598x_device_ensure_uid(FuTiTps6598xDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) buf =
-	    fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_UID, 16, error);
+	    fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_UID, 16, error);
 	if (buf == NULL)
 		return FALSE;
 	g_free(self->uid);
@@ -480,7 +480,7 @@ static gboolean
 fu_ti_tps6598x_device_ensure_ouid(FuTiTps6598xDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) buf =
-	    fu_ti_tps6598x_device_usbep_read(self, TI_TPS6598X_REGISTER_OUID, 8, error);
+	    fu_ti_tps6598x_device_usbep_read(self, FU_TI_TPS6598X_REGISTER_OUID, 8, error);
 	if (buf == NULL)
 		return FALSE;
 	g_free(self->ouid);
