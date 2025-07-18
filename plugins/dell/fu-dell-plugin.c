@@ -36,19 +36,19 @@ struct da_structure {
 /**
  * Dell device types to run
  */
-static guint8 enclosure_allowlist[] = {0x03, /* desktop */
-				       0x04, /* low profile desktop */
-				       0x06, /* mini tower */
-				       0x07, /* tower */
-				       0x08, /* portable */
-				       0x09, /* laptop */
-				       0x0A, /* notebook */
-				       0x0D, /* AIO */
-				       0x1E, /* tablet */
-				       0x1F, /* convertible */
-				       0x21, /* IoT gateway */
-				       0x22,
-				       /* embedded PC */};
+const guint8 enclosure_allowlist[] = {0x03, /* desktop */
+				      0x04, /* low profile desktop */
+				      0x06, /* mini tower */
+				      0x07, /* tower */
+				      0x08, /* portable */
+				      0x09, /* laptop */
+				      0x0A, /* notebook */
+				      0x0D, /* AIO */
+				      0x1E, /* tablet */
+				      0x1F, /* convertible */
+				      0x21, /* IoT gateway */
+				      0x22,
+				      /* embedded PC */};
 
 static guint16
 fu_dell_plugin_get_system_id(FuPlugin *plugin)

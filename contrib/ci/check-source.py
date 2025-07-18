@@ -181,6 +181,26 @@ class Checker:
             f"invalid enum name {enum_name} should have {'|'.join(valid_prefixes)} prefix"
         )
 
+    def _test_static_vars(self, line: str) -> None:
+        if self._current_fn and os.path.basename(self._current_fn) in [
+            "fu-main-windows.c",
+            "fu-self-test.c",
+        ]:
+            return
+        self._current_nocheck = "nocheck:static"
+        if line.find(self._current_nocheck) != -1:
+            return
+        if line.find(" = ") == -1:
+            return
+        tokens = line.split(" ")
+        for cnt, token in enumerate(tokens):
+            if token != "static":
+                continue
+            varname = tokens[cnt + 2].split("[")[0]
+            if varname not in ["signals", "quarks"]:
+                self.add_failure(f"static variable {varname} not allowed")
+            break
+
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
         self._current_nocheck = "nocheck:print"
@@ -455,6 +475,9 @@ class Checker:
 
             # test for invalid enum names
             self._test_line_enums(line)
+
+            # test for static variables
+            self._test_static_vars(line)
 
         # using too many hardcoded constants
         self._test_lines_magic_numbers(lines)
