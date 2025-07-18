@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "fu-dell-dock-common.h"
+#include "fu-dell-dock-struct.h"
 
 #define I2C_MST_ADDRESS 0x72
 
@@ -40,20 +41,6 @@
 #define CAYENNE_MST_RC_OFFSET_ADDR	    0x20200284
 #define CAYENNE_MST_RC_LENGTH_ADDR	    0x20200288
 #define CAYENNE_MST_RC_DATA_ADDR	    0x20200290
-
-/* MST remote control commands */
-#define MST_CMD_ENABLE_REMOTE_CONTROL  0x1
-#define MST_CMD_DISABLE_REMOTE_CONTROL 0x2
-#define MST_CMD_CHECKSUM	       0x11
-#define MST_CMD_ERASE_FLASH	       0x14
-#define MST_CMD_WRITE_FLASH	       0x20
-#define MST_CMD_READ_FLASH	       0x30
-#define MST_CMD_WRITE_MEMORY	       0x21
-#define MST_CMD_READ_MEMORY	       0x31
-
-/* Cayenne specific remote control commands */
-#define MST_CMD_CRC16_CHECKSUM 0x17
-#define MST_CMD_ACTIVATE_FW    0x18
 
 /* Arguments related to flashing */
 #define FLASH_SECTOR_ERASE_4K  0x1000
@@ -101,25 +88,25 @@ typedef struct {
 const MSTBankAttributes bank0_attributes = {
     .start = 0,
     .length = EEPROM_BANK_OFFSET,
-    .checksum_cmd = MST_CMD_CHECKSUM,
+    .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
 const MSTBankAttributes bank1_attributes = {
     .start = EEPROM_BANK_OFFSET,
     .length = EEPROM_BANK_OFFSET,
-    .checksum_cmd = MST_CMD_CHECKSUM,
+    .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
 const MSTBankAttributes esm_attributes = {
     .start = EEPROM_ESM_OFFSET,
     .length = 0x3ffff,
-    .checksum_cmd = MST_CMD_CHECKSUM,
+    .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
 const MSTBankAttributes cayenne_attributes = {
     .start = 0,
     .length = 0x50000,
-    .checksum_cmd = MST_CMD_CRC16_CHECKSUM,
+    .checksum_cmd = FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM,
 };
 
 FuHIDI2CParameters mst_base_settings = {
@@ -261,7 +248,7 @@ fu_dell_dock_mst_disable_remote_control(FuDevice *device, GError **error)
 {
 	g_debug("MST: Disabling remote control");
 	return fu_dell_dock_mst_rc_command(device,
-					   MST_CMD_DISABLE_REMOTE_CONTROL,
+					   FU_DELL_DOCK_MST_CMD_DISABLE_REMOTE_CONTROL,
 					   0,
 					   0,
 					   NULL,
@@ -276,7 +263,7 @@ fu_dell_dock_mst_enable_remote_control(FuDevice *device, GError **error)
 
 	g_debug("MST: Enabling remote control");
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_ENABLE_REMOTE_CONTROL,
+					 FU_DELL_DOCK_MST_CMD_ENABLE_REMOTE_CONTROL,
 					 5,
 					 0,
 					 (guint8 *)data,
@@ -548,7 +535,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 	}
 
 	/* checksum the file */
-	if (attribs->checksum_cmd == MST_CMD_CRC16_CHECKSUM)
+	if (attribs->checksum_cmd == FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM)
 		payload_sum =
 		    fu_dell_dock_mst_get_crc(16, (attribs->length + attribs->start), data);
 	else {
@@ -598,7 +585,7 @@ fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **er
 		sector = FLASH_SECTOR_ERASE_64K | (i / 0x10000);
 		g_debug("MST: Erasing sector 0x%x", sector);
 		if (!fu_dell_dock_mst_rc_command(device,
-						 MST_CMD_ERASE_FLASH,
+						 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 						 4,
 						 0,
 						 (guint8 *)&sector,
@@ -621,7 +608,7 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 	for (guint8 i = 0; i < 5; i++) {
 		data[0] = i;
 		if (!fu_dell_dock_mst_rc_command(device,
-						 MST_CMD_ERASE_FLASH,
+						 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 						 4,
 						 0,
 						 (guint8 *)&data,
@@ -657,7 +644,7 @@ fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 	g_debug("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
 		if (!fu_dell_dock_mst_rc_command(device,
-						 MST_CMD_WRITE_FLASH,
+						 FU_DELL_DOCK_MST_CMD_WRITE_FLASH,
 						 write_size,
 						 i,
 						 data + i,
@@ -686,7 +673,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 
 	/* disable ESM first */
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_WRITE_MEMORY,
+					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_RC_TRIGGER_ADDR,
 					 (guint8 *)&payload,
@@ -698,7 +685,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 
 	/* disable QUAD mode */
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_READ_MEMORY,
+					 FU_DELL_DOCK_MST_CMD_READ_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_QUAD_DISABLE,
 					 NULL,
@@ -716,7 +703,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = 0x00;
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_WRITE_MEMORY,
+					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_QUAD_DISABLE,
 					 data_out,
@@ -725,7 +712,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 
 	/* disable HDCP2.2 */
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_READ_MEMORY,
+					 FU_DELL_DOCK_MST_CMD_READ_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_HDCP22_DISABLE,
 					 NULL,
@@ -743,7 +730,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	memcpy(data_out, data, length); /* nocheck:blocked */
 	data_out[0] = data[0] & (1 << 2);
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_WRITE_MEMORY,
+					 FU_DELL_DOCK_MST_CMD_WRITE_MEMORY,
 					 length,
 					 PANAMERA_MST_REG_HDCP22_DISABLE,
 					 data_out,
@@ -771,7 +758,12 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 	crc_offset = attribs->start + EEPROM_TAG_OFFSET + 12;
 
 	/* Read CRC byte to flip */
-	if (!fu_dell_dock_mst_rc_command(device, MST_CMD_READ_FLASH, 4, crc_offset, NULL, error)) {
+	if (!fu_dell_dock_mst_rc_command(device,
+					 FU_DELL_DOCK_MST_CMD_READ_FLASH,
+					 4,
+					 crc_offset,
+					 NULL,
+					 error)) {
 		g_prefix_error(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
@@ -796,7 +788,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 				bank_in_use);
 			/* offset for last 4k of bank# */
 			if (!fu_dell_dock_mst_rc_command(device,
-							 MST_CMD_ERASE_FLASH,
+							 FU_DELL_DOCK_MST_CMD_ERASE_FLASH,
 							 4,
 							 0,
 							 (guint8 *)&sector,
@@ -811,7 +803,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 				crc_offset,
 				bank_in_use);
 			if (!fu_dell_dock_mst_rc_command(device,
-							 MST_CMD_WRITE_FLASH,
+							 FU_DELL_DOCK_MST_CMD_WRITE_FLASH,
 							 4,
 							 crc_offset,
 							 (guint8 *)&write,
@@ -822,7 +814,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 		}
 		/* re-read for comparison */
 		if (!fu_dell_dock_mst_rc_command(device,
-						 MST_CMD_READ_FLASH,
+						 FU_DELL_DOCK_MST_CMD_READ_FLASH,
 						 4,
 						 crc_offset,
 						 NULL,
@@ -1014,7 +1006,7 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 	}
 	/* activate the FW */
 	if (!fu_dell_dock_mst_rc_command(device,
-					 MST_CMD_ACTIVATE_FW,
+					 FU_DELL_DOCK_MST_CMD_ACTIVATE_FW,
 					 g_bytes_get_size(fw),
 					 0x0,
 					 NULL,
