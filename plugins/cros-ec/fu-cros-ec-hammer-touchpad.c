@@ -215,7 +215,7 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	 * There is no direct way to do the comparison here, and is probably
 	 * not needed since we already do match the firmware file with the device
 	 * through GUIDs... Also there is no files to compare with instead the updates
-	 * is normally done through cab files.
+	 * is usually done through cab files. Suggesting to skip this.
 	 */
 
 	return TRUE;
@@ -250,7 +250,6 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 	if (!fu_cros_ec_hammer_touchpad_firmware_validate(device, firmware, error))
 		return NULL;
 
-	return NULL; // Stops the update
 	return g_steal_pointer(&firmware);
 }
 
@@ -297,7 +296,7 @@ fu_cros_ec_hammer_touchpad_init(FuCrosEcHammerTouchpad *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
-	// fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
@@ -314,6 +313,15 @@ fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
+fu_cros_ec_usb_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 10, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
+}
+
+static void
 fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
@@ -323,6 +331,7 @@ fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 	device_class->to_string = fu_cros_ec_hammer_touchpad_to_string;
 	device_class->prepare_firmware = fu_cros_ec_hammer_touchpad_prepare_firmware;
 	device_class->write_firmware = fu_cros_ec_hammer_touchpad_write_firmware;
+	device_class->set_progress = fu_cros_ec_usb_device_set_progress;
 }
 
 FuCrosEcHammerTouchpad *

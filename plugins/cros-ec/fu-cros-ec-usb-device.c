@@ -498,8 +498,10 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	    fu_chunk_get_address(helper->block));
 
 	if (fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP)) {
-		/* Sets the cmd_block_digest with the first 32 bits of the SHA256 digest
-		 * as done in hammerd.*/
+		/* 
+                 * Sets the cmd_block_digest with the first 32 bits of the SHA256 digest
+		 * as done in hammerd.
+                 * */
 		gchar *digest = g_compute_checksum_for_data(G_CHECKSUM_SHA256,
 							    fu_chunk_get_data(helper->block),
 							    fu_chunk_get_data_sz(helper->block));
@@ -819,8 +821,10 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 
 	fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP);
 
-	// Probably, can be replaced with the CrosEcUsbDevice's maximum_pdu_size,
-	// but opting for independence here.
+	/*
+         * Probably, can be replaced with the CrosEcUsbDevice's maximum_pdu_size,
+	 * but opting for independence here.
+         */
 	maximum_pdu_size = fu_struct_cros_ec_first_response_pdu_get_maximum_pdu_size(st_rpdu);
 	img_bytes = fu_firmware_get_bytes(firmware, error);
 	data_ptr = (const guint8 *)g_bytes_get_data(img_bytes, &data_len);
