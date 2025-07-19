@@ -176,17 +176,17 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_ERASABLE;
 		break;
 	case 'd':
-		cap = FU_DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_WRITABLE;
 		break;
 	case 'e':
-		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITABLE;
 		break;
 	case 'f':
-		cap = FU_DFU_SECTOR_CAP_ERASABLE | FU_DFU_SECTOR_CAP_WRITEABLE;
+		cap = FU_DFU_SECTOR_CAP_ERASABLE | FU_DFU_SECTOR_CAP_WRITABLE;
 		break;
 	case 'g':
 		cap = FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_ERASABLE |
-		      FU_DFU_SECTOR_CAP_WRITEABLE;
+		      FU_DFU_SECTOR_CAP_WRITABLE;
 		break;
 	default:
 		g_set_error(error,
@@ -243,7 +243,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 					   0x0, /* zone */
 					   0x0, /* number */
 					   FU_DFU_SECTOR_CAP_ERASABLE | FU_DFU_SECTOR_CAP_READABLE |
-					       FU_DFU_SECTOR_CAP_WRITEABLE);
+					       FU_DFU_SECTOR_CAP_WRITABLE);
 		g_ptr_array_add(priv->sectors, sector);
 	}
 
@@ -642,13 +642,12 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
 	/* add a dummy entry */
 	if (priv->sectors->len == 0) {
 		FuDfuSector *sector;
-		sector =
-		    fu_dfu_sector_new(0x0, /* addr */
-				      0x0, /* size */
-				      0x0, /* size_left */
-				      0x0, /* zone */
-				      0x0, /* number */
-				      FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITEABLE);
+		sector = fu_dfu_sector_new(0x0, /* addr */
+					   0x0, /* size */
+					   0x0, /* size_left */
+					   0x0, /* zone */
+					   0x0, /* number */
+					   FU_DFU_SECTOR_CAP_READABLE | FU_DFU_SECTOR_CAP_WRITABLE);
 		g_debug("no UM0424 sector description in %s",
 			fu_device_get_logical_id(FU_DEVICE(self)));
 		g_ptr_array_add(priv->sectors, sector);

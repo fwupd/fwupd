@@ -62,7 +62,7 @@ fu_redfish_common_fix_version(const gchar *version)
 	if (g_strcmp0(version, "-*") == 0)
 		return NULL;
 
-	/* find the section preficed with "v" */
+	/* find the section prefixed with "v" */
 	split = g_strsplit(version, " ", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (g_str_has_prefix(split[i], "v")) {

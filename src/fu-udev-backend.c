@@ -460,7 +460,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "invalid ACSII buffer");
+					    "invalid ASCII buffer");
 			return FALSE;
 		}
 		kv = g_strsplit(kvstr, "=", 2);

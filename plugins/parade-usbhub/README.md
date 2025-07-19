@@ -27,7 +27,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 * Load 384KB SPI ROM data buffer
 * Specify target SPI ROM bank, ex: HUB_FW#1 or HUB_FW#2
 * Set UFP Disconnect Flag register to notify firmware that we are doing firmware update
-* Acquire SPI Master
+* Acquire SPI
 * Unprotect SPI ROM bank
 * Erase SPI ROM bank
 * Update SPI ROM bank

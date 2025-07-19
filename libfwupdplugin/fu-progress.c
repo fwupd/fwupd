@@ -30,7 +30,7 @@
  *
  * To get a child object, you should use [method@FuProgress.get_child]. and then
  * use the result in any sub-process. You should ensure that the child
- * is not re-used without calling fu_progress_step_done().
+ * is not reused without calling fu_progress_step_done().
  *
  * There are a few nice touches in this module, so that if a module only has
  * one progress step, the child progress is used for parent updates.

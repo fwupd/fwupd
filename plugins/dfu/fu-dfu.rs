@@ -66,6 +66,6 @@ enum FuDfuState {
 enum FuDfuSectorCap {
     None = 0, // No operations possible
     Readable = 1 << 0,
-    Writeable = 1 << 1,
+    Writable = 1 << 1,
     Erasable = 1 << 2,
 }

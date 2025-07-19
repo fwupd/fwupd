@@ -211,7 +211,7 @@ The following documents may help in understanding VBE:
 * [VBE](https://docs.google.com/document/d/e/2PACX-1vQjXLPWMIyVktaTMf8edHZYDrEvMYD_iNzIj1FgPmKF37fpglAC47Tt5cvPBC5fvTdoK-GA5Zv1wifo/pub)
 * [VBE Bootflows](https://docs.google.com/document/d/e/2PACX-1vR0OzhuyRJQ8kdeOibS3xB1rVFy3J4M_QKTM5-3vPIBNcdvR0W8EXu9ymG-yWfqthzWoM4JUNhqwydN/pub)
 * [VBE Firmware update](https://docs.google.com/document/d/e/2PACX-1vTnlIL17vVbl6TVoTHWYMED0bme7oHHNk-g5VGxblbPiKIdGDALE1HKId8Go5f0g1eziLsv4h9bocbk/pub)
-* [FIT](https://github.com/u-boot/u-boot/blob/master/doc/uImage.FIT/source_file_format.txt)
+* [FIT](https://fitspec.osfw.foundation/)
 * [U-Boot Standard boot](https://u-boot.readthedocs.io/en/latest/develop/bootstd.html)
 
 ## Useful information

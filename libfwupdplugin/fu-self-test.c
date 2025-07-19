@@ -2748,7 +2748,7 @@ fu_device_incorporate_func(void)
 	fu_device_register_private_flag(donor, "self-test");
 	fu_device_add_private_flag(donor, "self-test");
 
-	/* match a quirk entry, and then clear to ensure encorporate uses the quirk instance ID */
+	/* match a quirk entry, and then clear to ensure incorporate uses the quirk instance ID */
 	ret = fu_device_build_instance_id_full(donor,
 					       FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					       &error,
