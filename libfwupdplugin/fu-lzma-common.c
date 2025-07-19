@@ -89,7 +89,7 @@ fu_lzma_compress_bytes(GBytes *blob, GError **error)
 	strm.next_in = g_bytes_get_data(blob, NULL);
 	strm.avail_in = g_bytes_get_size(blob);
 
-        /* xz default compression level is 6, higher values increase CPU and memory usage */
+	/* xz default compression level is 6, higher values increase CPU and memory usage */
 	rc = lzma_easy_encoder(&strm, 6, LZMA_CHECK_CRC64);
 	if (rc != LZMA_OK) {
 		lzma_end(&strm);

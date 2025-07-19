@@ -1995,7 +1995,7 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
  * Gets the first interface that matches the vendor class interface descriptor.
  * If you want to find all the interfaces that match (there may be other
  * 'alternate' interfaces you have to use fu_usb_device_get_interfaces() and
- * check each one manally.
+ * check each one manually.
  *
  * Return value: (transfer full): a #FuUsbInterface or %NULL for not found
  *

@@ -169,7 +169,7 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 				return FALSE;
 			}
 		} else {
-			g_debug("%s: re-using existing boot entry", name);
+			g_debug("%s: reusing existing boot entry", name);
 		}
 		/* create a new one */
 	} else {

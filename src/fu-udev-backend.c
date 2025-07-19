@@ -23,9 +23,9 @@
 struct _FuUdevBackend {
 	FuBackend parent_instance;
 	gint netlink_fd;
-	GHashTable *map_paths;	  /* of str:None */
+	GHashTable *map_paths;	    /* of str:None */
 	GHashTable *coldplug_cache; /* of str:FuUdevBackendColdplugCacheItem */
-	GPtrArray *dpaux_devices; /* of FuDpauxDevice */
+	GPtrArray *dpaux_devices;   /* of FuDpauxDevice */
 	guint dpaux_devices_rescan_id;
 	gboolean done_coldplug;
 };
@@ -460,7 +460,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "invalid ACSII buffer");
+					    "invalid ASCII buffer");
 			return FALSE;
 		}
 		kv = g_strsplit(kvstr, "=", 2);

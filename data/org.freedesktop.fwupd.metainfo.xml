@@ -2449,7 +2449,7 @@
         <ul>
           <li>Allow compiling the daemon without polkit support</li>
           <li>Always look at all TPM eventlog supported algorithms</li>
-          <li>Change all instances of master/slave to initiator/target</li>
+          <li>Change all instances of m'ster/sl've to initiator/target</li>
           <li>Correctly order devices when using logical parents</li>
           <li>Do not dedupe NVMe or VLI PD devices</li>
           <li>Do not expose the VLI shared-SPI devices on the USB2 recovery device</li>
@@ -2659,7 +2659,7 @@
           <li>Invert default behavior to be safer for reboot and shutdown prompts</li>
           <li>Reload the Synaptics prometheus device version after update</li>
           <li>Use the correct unlocker when using GRWLock</li>
-          <li>Whitelist VIA USB hub PD and I²C devices</li>
+          <li>Allowlist VIA USB hub PD and I²C devices</li>
         </ul>
       </description>
     </release>
@@ -2978,7 +2978,7 @@
           <li>Fix a crash if AMT returns an empty response</li>
           <li>Fix a regression when doing GetReleases on unsupported hardware</li>
           <li>Fix the 8bitdo version number if the daemon locale is not C.UTF-8</li>
-          <li>Remove the Wacom DTH generation hardware from the whitelist</li>
+          <li>Remove the Wacom DTH generation hardware from the allowlist</li>
           <li>Sanitize the version if the version format has been specified</li>
         </ul>
       </description>

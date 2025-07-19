@@ -1019,7 +1019,7 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_fw_entity(msg, fw_entity);
 	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_flags(msg, flags);
 
-	/* re-use pre-rustgen send */
+	/* reuse pre-rustgen send */
 	hidpp_msg = (FuLogitechHidppHidppMsg *)msg->data;
 	hidpp_msg->hidpp_version = priv->hidpp_version;
 	/* don't expect the reply for forced applyDfu */

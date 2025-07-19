@@ -619,7 +619,7 @@ fu_util_release_get_name(FwupdRelease *release)
 		}
 		if (g_strcmp0(cat, "X-CpuMicrocode") == 0) {
 			/* TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-			 * at system bootup */
+			 * at system boot-up */
 			return g_strdup_printf(_("%s CPU Microcode Update"), name);
 		}
 		if (g_strcmp0(cat, "X-Battery") == 0) {

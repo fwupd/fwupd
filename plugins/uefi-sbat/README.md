@@ -4,7 +4,7 @@ title: Plugin: UEFI SBAT
 
 ## Introduction
 
-SBAT is a generation number based revocation mechanism that is used as a successsor to dbx checksum
+SBAT is a generation number based revocation mechanism that is used as a successor to dbx checksum
 blocklisting.
 
 See [https://github.com/rhboot/shim/blob/main/SBAT.md](the specification) for more details.

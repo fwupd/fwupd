@@ -486,7 +486,7 @@ fu_parade_usbhub_device_spi_write_command(FuParadeUsbhubDevice *self,
 }
 
 static gboolean
-fu_parade_usbhub_device_enable_spi_master(FuParadeUsbhubDevice *self, GError **error)
+fu_parade_usbhub_device_enable_spi(FuParadeUsbhubDevice *self, GError **error)
 {
 	return fu_parade_usbhub_device_mmio_set_bit(self,
 						    FU_PARADE_USBHUB_DEVICE_ADDR_SPI_MASTER,
@@ -495,7 +495,7 @@ fu_parade_usbhub_device_enable_spi_master(FuParadeUsbhubDevice *self, GError **e
 }
 
 static gboolean
-fu_parade_usbhub_device_disable_spi_master(FuParadeUsbhubDevice *self, GError **error)
+fu_parade_usbhub_device_disable_spi(FuParadeUsbhubDevice *self, GError **error)
 {
 	return fu_parade_usbhub_device_mmio_clear_bit(self,
 						      FU_PARADE_USBHUB_DEVICE_ADDR_SPI_MASTER,
@@ -957,10 +957,10 @@ fu_parade_usbhub_device_spi_rom_checksum(FuParadeUsbhubDevice *self,
 	guint8 buf_csum[4] = {0};
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* acquire and enable SPI master after internal reset */
+	/* acquire and enable SPI after internal reset */
 	if (!fu_parade_usbhub_device_acquire_spi_master(self, error))
 		return FALSE;
-	if (!fu_parade_usbhub_device_enable_spi_master(self, error))
+	if (!fu_parade_usbhub_device_enable_spi(self, error))
 		return FALSE;
 
 	/* calculate checksum internally */
@@ -1045,11 +1045,11 @@ fu_parade_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(device);
 
 	if (!fu_parade_usbhub_device_acquire_spi_master(self, error)) {
-		g_prefix_error(error, "failed to acquire SPI master: ");
+		g_prefix_error(error, "failed to acquire SPI: ");
 		return FALSE;
 	}
-	if (!fu_parade_usbhub_device_enable_spi_master(self, error)) {
-		g_prefix_error(error, "failed to enable SPI master: ");
+	if (!fu_parade_usbhub_device_enable_spi(self, error)) {
+		g_prefix_error(error, "failed to enable SPI: ");
 		return FALSE;
 	}
 	if (!fu_parade_usbhub_device_spi_rom_chip_unprotect(self, error)) {
@@ -1070,8 +1070,8 @@ fu_parade_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **
 		g_prefix_error(error, "failed to protect SPI ROM: ");
 		return FALSE;
 	}
-	if (!fu_parade_usbhub_device_disable_spi_master(self, error)) {
-		g_prefix_error(error, "failed to disable SPI master: ");
+	if (!fu_parade_usbhub_device_disable_spi(self, error)) {
+		g_prefix_error(error, "failed to disable SPI: ");
 		return FALSE;
 	}
 

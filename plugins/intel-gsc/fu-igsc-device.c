@@ -380,7 +380,8 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      error);
 		if (attr_survivability_mode == NULL) {
-			g_prefix_error(error, "cannot get survivability_mode for "
+			g_prefix_error(error,
+				       "cannot get survivability_mode for "
 				       "WEDGED=vendor-specific: ");
 			return FALSE;
 		}
