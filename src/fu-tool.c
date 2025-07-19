@@ -697,7 +697,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 			}
 			g_ptr_array_add(devices, device);
 		}
-        }
+	}
 
 	/* not for human consumption */
 	if (self->as_json)

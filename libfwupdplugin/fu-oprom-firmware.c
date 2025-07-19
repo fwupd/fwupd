@@ -36,7 +36,7 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuOpromFirmware, fu_oprom_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_oprom_firmware_get_instance_private(o))
 
-#define FU_OPROM_FIRMWARE_ALIGN_LEN		   512u
+#define FU_OPROM_FIRMWARE_ALIGN_LEN 512u
 
 /**
  * fu_oprom_firmware_get_machine_type:

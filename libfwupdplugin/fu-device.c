@@ -84,7 +84,7 @@ typedef struct {
 	guint64 size_min;
 	guint64 size_max;
 	guint64 required_free; /* bytes */
-	gint open_refcount; /* atomic */
+	gint open_refcount;    /* atomic */
 	GType specialized_gtype;
 	GType proxy_gtype;
 	GType firmware_gtype;

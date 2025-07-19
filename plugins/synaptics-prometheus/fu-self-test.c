@@ -39,12 +39,12 @@ fu_test_synaprom_firmware_func(void)
 	g_assert_cmpint(sz, ==, 294);
 	g_assert_cmpint(buf[0], ==, 0x01);
 	g_assert_cmpint(buf[1], ==, 0x00);
-	ret =
-	    fu_firmware_parse_bytes(firmware,
-				    fw,
-				    0x0,
-				    FU_FIRMWARE_PARSE_FLAG_NO_SEARCH | FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				    &error);
+	ret = fu_firmware_parse_bytes(firmware,
+				      fw,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NO_SEARCH |
+					  FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
