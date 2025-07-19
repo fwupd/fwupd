@@ -34,7 +34,8 @@
 #define IPMI_PASSWORD_SET_PASSWORD  0x02
 #define IPMI_PASSWORD_TEST_PASSWORD 0x03
 
-/* these are not provided in ipmi_msgdefs.h */
+/* these are not provided in ipmi_msgdefs.h,
+ * nocheck:magic-defines=50 */
 #define IPMI_INVALID_COMMAND_ON_LUN_ERR	 0xC2
 #define IPMI_OUT_OF_SPACE_ERR		 0xC4
 #define IPMI_CANCELLED_OR_INVALID_ERR	 0xC5

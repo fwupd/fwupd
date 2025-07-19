@@ -100,3 +100,24 @@ enum FuVliDeviceKind {
     Ps186 = 0xf186,   // guessed
     Rtd21xx = 0xff00, // guessed
 }
+
+enum FuVliDeviceFwTag {
+    VL100A = 0x01,
+    VL100B = 0x02,
+    VL100C = 0x03,
+    VL101A = 0x04,
+    VL101B = 0x05,
+    VL101C = 0x06,
+    VL102A = 0x07,
+    VL102B = 0x08,
+    VL103A = 0x09,
+    VL103B = 0x0A,
+    VL104  = 0x0B,
+    VL105  = 0x0C,
+    VL106  = 0x0D,
+    VL107  = 0x0E,
+    VL108A = 0xA1,
+    VL108B = 0xB1,
+    VL109A = 0xA2,
+    VL109B = 0xB2,
+}

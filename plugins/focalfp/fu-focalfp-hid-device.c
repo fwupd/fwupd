@@ -8,27 +8,13 @@
 
 #include "fu-focalfp-firmware.h"
 #include "fu-focalfp-hid-device.h"
+#include "fu-focalfp-struct.h"
 
 struct _FuFocalfpHidDevice {
 	FuHidrawDevice parent_instance;
 };
 
 G_DEFINE_TYPE(FuFocalfpHidDevice, fu_focalfp_hid_device, FU_TYPE_HIDRAW_DEVICE)
-
-#define CMD_ENTER_UPGRADE_MODE	       0x40
-#define CMD_CHECK_CURRENT_STATE	       0x41
-#define CMD_READY_FOR_UPGRADE	       0x42
-#define CMD_SEND_DATA		       0x43
-#define CMD_UPGRADE_CHECKSUM	       0x44
-#define CMD_EXIT_UPGRADE_MODE	       0x45
-#define CMD_USB_READ_UPGRADE_ID	       0x46
-#define CMD_USB_ERASE_FLASH	       0x47
-#define CMD_USB_BOOT_READ	       0x48
-#define CMD_USB_BOOT_BOOTLOADERVERSION 0x49
-#define CMD_READ_REGISTER	       0x50
-#define CMD_WRITE_REGISTER	       0x51
-#define CMD_ACK			       0xf0
-#define CMD_NACK		       0xff
 
 #define FIRST_PACKET	    0x00
 #define MID_PACKET	    0x01
@@ -164,7 +150,10 @@ fu_focalfp_hid_device_read_reg_cb(FuDevice *device, gpointer user_data, GError *
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_hid_device_check_cmd_crc(buf, sizeof(buf), CMD_READ_REGISTER, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(buf,
+						 sizeof(buf),
+						 FU_FOCALFP_CMD_READ_REGISTER,
+						 error))
 		return FALSE;
 
 	/* success */
@@ -178,7 +167,7 @@ fu_focalfp_hid_device_read_reg(FuFocalfpHidDevice *self,
 			       guint8 *val, /* out */
 			       GError **error)
 {
-	guint8 buf[64] = {CMD_READ_REGISTER, reg_address};
+	guint8 buf[64] = {FU_FOCALFP_CMD_READ_REGISTER, reg_address};
 
 	/* write */
 	if (!fu_focalfp_hid_device_io(self, buf, 2, NULL, 0, error))
@@ -197,23 +186,23 @@ fu_focalfp_hid_device_read_reg(FuFocalfpHidDevice *self,
 static gboolean
 fu_focalfp_hid_device_enter_upgrade_mode(FuFocalfpHidDevice *self, GError **error)
 {
-	guint8 wbuf[64] = {CMD_ENTER_UPGRADE_MODE};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_ENTER_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
-		g_prefix_error(error, "failed to CMD_ENTER_UPGRADE_MODE: ");
+		g_prefix_error(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
 
 	/* check was correct response */
-	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), FU_FOCALFP_CMD_ACK, error);
 }
 
 /* get bootloader current state */
 static gboolean
 fu_focalfp_hid_device_check_current_state(FuFocalfpHidDevice *self, guint8 *val, GError **error)
 {
-	guint8 wbuf[64] = {CMD_CHECK_CURRENT_STATE};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_CHECK_CURRENT_STATE};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 7, error))
@@ -222,7 +211,7 @@ fu_focalfp_hid_device_check_current_state(FuFocalfpHidDevice *self, guint8 *val,
 	/* check was correct response */
 	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf,
 						 sizeof(rbuf),
-						 CMD_CHECK_CURRENT_STATE,
+						 FU_FOCALFP_CMD_CHECK_CURRENT_STATE,
 						 error))
 		return FALSE;
 
@@ -237,7 +226,7 @@ fu_focalfp_hid_device_wait_for_upgrade_ready_cb(FuDevice *device,
 						GError **error)
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
-	guint8 wbuf[64] = {CMD_READY_FOR_UPGRADE};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_READY_FOR_UPGRADE};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 7, error))
@@ -246,7 +235,7 @@ fu_focalfp_hid_device_wait_for_upgrade_ready_cb(FuDevice *device,
 	/* check was correct response */
 	return fu_focalfp_hid_device_check_cmd_crc(rbuf,
 						   sizeof(rbuf),
-						   CMD_READY_FOR_UPGRADE,
+						   FU_FOCALFP_CMD_READY_FOR_UPGRADE,
 						   error);
 }
 
@@ -269,7 +258,7 @@ fu_focalfp_hid_device_read_update_id_cb(FuDevice *device, gpointer user_data, GE
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
 	guint16 *us_ic_id = (guint16 *)user_data;
-	guint8 wbuf[64] = {CMD_USB_READ_UPGRADE_ID};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_USB_READ_UPGRADE_ID};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 8, error))
@@ -278,7 +267,7 @@ fu_focalfp_hid_device_read_update_id_cb(FuDevice *device, gpointer user_data, GE
 	/* check was correct response */
 	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf,
 						 sizeof(rbuf),
-						 CMD_USB_READ_UPGRADE_ID,
+						 FU_FOCALFP_CMD_USB_READ_UPGRADE_ID,
 						 error))
 		return FALSE;
 
@@ -303,14 +292,14 @@ fu_focalfp_hid_device_read_update_id(FuFocalfpHidDevice *self, guint16 *us_ic_id
 static gboolean
 fu_focalfp_hid_device_erase_flash(FuFocalfpHidDevice *self, GError **error)
 {
-	guint8 wbuf[64] = {CMD_USB_ERASE_FLASH};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_USB_ERASE_FLASH};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error))
 		return FALSE;
 
 	/* check was correct response */
-	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), FU_FOCALFP_CMD_ACK, error);
 }
 
 static gboolean
@@ -323,7 +312,7 @@ fu_focalfp_hid_device_send_data_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 
 	/* check was correct response */
-	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error);
+	return fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), FU_FOCALFP_CMD_ACK, error);
 }
 
 /* send write data */
@@ -334,7 +323,7 @@ fu_focalfp_hid_device_send_data(FuFocalfpHidDevice *self,
 				guint8 bufsz,
 				GError **error)
 {
-	guint8 wbuf[64] = {CMD_SEND_DATA, packet_type};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_SEND_DATA, packet_type};
 
 	/* sanity check */
 	if (bufsz > REPORT_SIZE - 8) {
@@ -363,14 +352,17 @@ fu_focalfp_hid_device_send_data(FuFocalfpHidDevice *self,
 static gboolean
 fu_focalfp_hid_device_checksum_upgrade(FuFocalfpHidDevice *self, guint32 *val, GError **error)
 {
-	guint8 wbuf[64] = {CMD_UPGRADE_CHECKSUM};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_UPGRADE_CHECKSUM};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 7 + 3, error))
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_UPGRADE_CHECKSUM, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf,
+						 sizeof(rbuf),
+						 FU_FOCALFP_CMD_UPGRADE_CHECKSUM,
+						 error))
 		return FALSE;
 
 	/* success */
@@ -590,12 +582,12 @@ static gboolean
 fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
-	guint8 wbuf[64] = {CMD_ENTER_UPGRADE_MODE};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_ENTER_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 
 	/* command to go from APP --> Bootloader -- but we do not check crc */
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
-		g_prefix_error(error, "failed to CMD_ENTER_UPGRADE_MODE: ");
+		g_prefix_error(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
 	fu_device_sleep(device, 200);
@@ -619,14 +611,14 @@ static gboolean
 fu_focalfp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFocalfpHidDevice *self = FU_FOCALFP_HID_DEVICE(device);
-	guint8 wbuf[64] = {CMD_EXIT_UPGRADE_MODE};
+	guint8 wbuf[64] = {FU_FOCALFP_CMD_EXIT_UPGRADE_MODE};
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error))
 		return FALSE;
 
 	/* check was correct response */
-	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), CMD_ACK, error))
+	if (!fu_focalfp_hid_device_check_cmd_crc(rbuf, sizeof(rbuf), FU_FOCALFP_CMD_ACK, error))
 		return FALSE;
 
 	/* success */

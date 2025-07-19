@@ -6,9 +6,9 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('nvme.quirk')
 plugin_builtin_nvme = static_library('fu_plugin_nvme',
+  rustgen.process('fu-nvme.rs'),
   sources: [
     'fu-nvme-plugin.c',
-    'fu-nvme-common.c',
     'fu-nvme-device.c',
   ],
   include_directories: plugin_incdirs,
