@@ -38,7 +38,7 @@ fu_cros_ec_firmware_pick_sections(FuCrosEcFirmware *self, guint32 writeable_offs
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "no writeable section found with offset: 0x%x",
+			    "no writable section found with offset: 0x%x",
 			    writeable_offset);
 		return FALSE;
 	}

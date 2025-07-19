@@ -456,7 +456,7 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 		msg = g_strdup("own the dock");
 		bitmask = fu_dell_kestrel_ec_is_new_ownership_cmd(self) ? 0x10CC : 0xFFFF;
 	} else {
-		msg = g_strdup("relesae the dock");
+		msg = g_strdup("release the dock");
 		bitmask = fu_dell_kestrel_ec_is_new_ownership_cmd(self) ? 0xC001 : 0x0000;
 	}
 	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req,
