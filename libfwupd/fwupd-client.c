@@ -5751,6 +5751,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "not sure how to handle: %s",
 				    url);
+			/* nocheck:error-false-return */
 		}
 		if (i == helper->urls->len - 1) {
 			g_task_return_error(task, g_steal_pointer(&error));
