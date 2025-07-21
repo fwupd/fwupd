@@ -73,13 +73,6 @@ enum FuNvmeStatus {
     ReadOnly = 0x182,
     OncsNotSupported = 0x183,
 
-    // i/o command set specific - fabrics commands:
-    ConnectFormat = 0x180,
-    ConnectCtrlBusy = 0x181,
-    ConnectInvalidParam = 0x182,
-    ConnectRestartDisc = 0x183,
-    ConnectInvalidHost = 0x184,
-
     DiscoveryRestart = 0x190,
     AuthRequired = 0x191,
 
