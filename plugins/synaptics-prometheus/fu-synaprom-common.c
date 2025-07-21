@@ -23,47 +23,18 @@ fu_synaprom_reply_new(gsize cmdlen)
 gboolean
 fu_synaprom_error_from_status(guint16 status, GError **error)
 {
-	if (status == FU_SYNAPROM_RESULT_OK)
-		return TRUE;
-	switch (status) {
-	case FU_SYNAPROM_RESULT_GEN_OPERATION_CANCELED:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cancelled");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_BAD_PARAM:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad parameter");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_NULL_POINTER:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "NULL pointer");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_UNEXPECTED_FORMAT:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "unexpected format");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_TIMEOUT:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "timed out");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_OBJECT_DOESNT_EXIST:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "object does not exist");
-		break;
-	case FU_SYNAPROM_RESULT_GEN_ERROR:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic error");
-		break;
-	case FU_SYNAPROM_RESULT_SENSOR_MALFUNCTIONED:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "sensor malfunctioned");
-		break;
-	case FU_SYNAPROM_RESULT_SYS_OUT_OF_MEMORY:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "out of heap memory");
-		break;
-	default:
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "error status: 0x%x", status);
-	}
-	return FALSE;
+	const gchar *msg = fu_synaprom_result_to_string(status);
+	const FuErrorMapEntry entries[] = {
+	    {FU_SYNAPROM_RESULT_OK, FWUPD_ERROR_LAST, NULL},
+	    {FU_SYNAPROM_RESULT_GEN_OPERATION_CANCELED, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPROM_RESULT_GEN_BAD_PARAM, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPROM_RESULT_GEN_NULL_POINTER, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPROM_RESULT_GEN_UNEXPECTED_FORMAT, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPROM_RESULT_GEN_TIMEOUT, FWUPD_ERROR_TIMED_OUT, msg},
+	    {FU_SYNAPROM_RESULT_GEN_OBJECT_DOESNT_EXIST, FWUPD_ERROR_NOT_FOUND, msg},
+	    {FU_SYNAPROM_RESULT_GEN_ERROR, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPROM_RESULT_SENSOR_MALFUNCTIONED, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPROM_RESULT_SYS_OUT_OF_MEMORY, FWUPD_ERROR_INTERNAL, msg},
+	};
+	return fu_error_map_entry_to_gerror(status, entries, G_N_ELEMENTS(entries), error);
 }

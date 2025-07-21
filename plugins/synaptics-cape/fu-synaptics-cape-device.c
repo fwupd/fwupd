@@ -104,142 +104,36 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 	return TRUE;
 }
 
-/* dump CAPE command error if any */
 static gboolean
-fu_synaptics_cape_device_rc_set_error(const FuSynapticsCapeMsg *rsp, GError **error)
+fu_synaptics_cape_device_rc_set_error(gint16 status, GError **error)
 {
-	gint16 value;
-
-	g_return_val_if_fail(rsp != NULL, FALSE);
-	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	value = (gint16)fu_synaptics_cape_msg_get_data_len(rsp);
-	if (value >= 0)
-		return TRUE;
-	switch (value) {
-	case FU_SYNAPTICS_CAPE_ERROR_GENERIC_FAILURE:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "generic failure");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_ALREADY_EXISTS:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "already exists");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_NULL_APP_POINTER:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "null app pointer");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_NULL_MODULE_POINTER:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "null module pointer");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_NULL_POINTER:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "null pointer");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_BAD_APP_ID:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bad app id");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_MODULE_TYPE_HAS_NO_API:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "has no api");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_BAD_MAGIC_NUMBER:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "bad magic number");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_CMD_MODE_UNSUPPORTED:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "mode unsupported");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_EAGAIN:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "query timeout");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "command failed");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_WRITE_FAIL:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "writing to flash failed");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_READ_FAIL:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "reading from flash failed");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_CRC_ERROR:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware data has been corrupted");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_USB_ID_NOT_MATCH:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "vendor and device IDs do not match");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_VERSION_DOWNGRADE:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_VERSION_NEWER,
-				    "update is older than current version");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_HEADER_CORRUPTION:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware header data has been corrupted");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_IMAGE_CORRUPTION:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "firmware payload data has been corrupted");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_ALREADY_ACTIVE:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to active new firmward");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_NOT_READY:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_BUSY,
-				    "firmware update is not ready");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_SIGN_TRANSFER_CORRUPTION:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "signature data has been corrupted");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_DIGITAL_SIGNATURE_VERIFICATION_FAILED:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_AUTH_FAILED,
-				    "digital signature is invalid");
-		break;
-	case FU_SYNAPTICS_CAPE_ERROR_SFU_TASK_NOT_RUNNING:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware update task is not running");
-		break;
-	default:
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown error %d", value);
-	}
-
-	/* success */
-	return FALSE;
+	const gchar *msg = fu_synaptics_cape_error_to_string(status);
+	const FuErrorMapEntry entries[] = {
+	    {FU_SYNAPTICS_CAPE_ERROR_GENERIC_FAILURE, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_ALREADY_EXISTS, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_NULL_APP_POINTER, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_NULL_MODULE_POINTER, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_NULL_POINTER, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_BAD_APP_ID, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_MODULE_TYPE_HAS_NO_API, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_BAD_MAGIC_NUMBER, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_CMD_MODE_UNSUPPORTED, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_EAGAIN, FWUPD_ERROR_TIMED_OUT, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_FAIL, FWUPD_ERROR_INVALID_DATA, "command failed"},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_WRITE_FAIL, FWUPD_ERROR_WRITE, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_READ_FAIL, FWUPD_ERROR_READ, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_CRC_ERROR, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_USB_ID_NOT_MATCH, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_VERSION_DOWNGRADE, FWUPD_ERROR_VERSION_NEWER, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_HEADER_CORRUPTION, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_IMAGE_CORRUPTION, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_ALREADY_ACTIVE, FWUPD_ERROR_INTERNAL, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_NOT_READY, FWUPD_ERROR_BUSY, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_SIGN_TRANSFER_CORRUPTION, FWUPD_ERROR_INVALID_DATA, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_SIGNATURE_VERIFICATION, FWUPD_ERROR_AUTH_FAILED, msg},
+	    {FU_SYNAPTICS_CAPE_ERROR_SFU_TASK_NOT_RUNNING, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	};
+	return fu_error_map_entry_to_gerror(status, entries, G_N_ELEMENTS(entries), error);
 }
 
 /* sends a FuSynapticsCapeMsg structure command to device to get the response in the same structure
@@ -250,6 +144,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 				    guint delay_ms,
 				    GError **error)
 {
+	gint16 value;
 	guint elapsed_ms = 0;
 	g_autoptr(FuSynapticsCapeCmdHidReport) st_report = fu_synaptics_cape_cmd_hid_report_new();
 	g_autoptr(FuSynapticsCapeMsg) st_msg_res = NULL;
@@ -340,8 +235,11 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 			    "firmware don't respond to command");
 		return NULL;
 	}
-	if (!fu_synaptics_cape_device_rc_set_error(st_msg_res, error))
-		return NULL;
+	value = (gint16)fu_synaptics_cape_msg_get_data_len(st_msg_res);
+	if (value < 0) {
+		if (!fu_synaptics_cape_device_rc_set_error(value, error))
+			return NULL;
+	}
 
 	/* success */
 	return g_steal_pointer(&st_msg_res);

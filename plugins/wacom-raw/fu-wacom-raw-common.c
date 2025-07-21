@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-wacom-raw-common.h"
 
 gboolean
@@ -49,43 +51,16 @@ gboolean
 fu_wacom_raw_common_rc_set_error(const FuStructWacomRawResponse *st_rsp, GError **error)
 {
 	FuWacomRawRc rc = fu_struct_wacom_raw_response_get_resp(st_rsp);
-	if (rc == FU_WACOM_RAW_RC_OK)
-		return TRUE;
-	if (rc == FU_WACOM_RAW_RC_BUSY) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
-		return FALSE;
-	}
-	if (rc == FU_WACOM_RAW_RC_MCUTYPE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "MCU type does not match");
-		return FALSE;
-	}
-	if (rc == FU_WACOM_RAW_RC_PID) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "PID does not match");
-		return FALSE;
-	}
-	if (rc == FU_WACOM_RAW_RC_CHECKSUM1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "checksum1 does not match");
-		return FALSE;
-	}
-	if (rc == FU_WACOM_RAW_RC_CHECKSUM2) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "checksum2 does not match");
-		return FALSE;
-	}
-	if (rc == FU_WACOM_RAW_RC_TIMEOUT) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "command timed out");
-		return FALSE;
-	}
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown error 0x%02x", rc);
-	return FALSE;
+	const FuErrorMapEntry entries[] = {
+	    {FU_WACOM_RAW_RC_OK, FWUPD_ERROR_LAST, NULL},
+	    {FU_WACOM_RAW_RC_BUSY, FWUPD_ERROR_BUSY, NULL},
+	    {FU_WACOM_RAW_RC_MCUTYPE, FWUPD_ERROR_INVALID_DATA, "MCU type does not match"},
+	    {FU_WACOM_RAW_RC_PID, FWUPD_ERROR_INVALID_DATA, "PID does not match"},
+	    {FU_WACOM_RAW_RC_CHECKSUM1, FWUPD_ERROR_INVALID_DATA, "checksum1 does not match"},
+	    {FU_WACOM_RAW_RC_CHECKSUM2, FWUPD_ERROR_INVALID_DATA, "checksum2 does not match"},
+	    {FU_WACOM_RAW_RC_TIMEOUT, FWUPD_ERROR_TIMED_OUT, NULL},
+	};
+	return fu_error_map_entry_to_gerror(rc, entries, G_N_ELEMENTS(entries), error);
 }
 
 gboolean

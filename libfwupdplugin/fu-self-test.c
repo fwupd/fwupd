@@ -349,6 +349,29 @@ fu_common_align_up_func(void)
 }
 
 static void
+fu_common_error_map_func(void)
+{
+	const FuErrorMapEntry entries[] = {
+	    {0, FWUPD_ERROR_LAST, NULL},
+	    {1, FWUPD_ERROR_NOT_SUPPORTED, "not supported"},
+	};
+	gboolean ret;
+	g_autoptr(GError) error1 = NULL;
+	g_autoptr(GError) error2 = NULL;
+	g_autoptr(GError) error3 = NULL;
+
+	ret = fu_error_map_entry_to_gerror(0, entries, G_N_ELEMENTS(entries), &error1);
+	g_assert_no_error(error1);
+	g_assert_true(ret);
+	ret = fu_error_map_entry_to_gerror(1, entries, G_N_ELEMENTS(entries), &error2);
+	g_assert_error(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	ret = fu_error_map_entry_to_gerror(255, entries, G_N_ELEMENTS(entries), &error3);
+	g_assert_error(error3, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
+}
+
+static void
 fu_common_bitwise_func(void)
 {
 	guint64 val = 0;
@@ -7045,6 +7068,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
+	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);
