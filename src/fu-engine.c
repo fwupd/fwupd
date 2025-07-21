@@ -5641,13 +5641,13 @@ fu_engine_get_downgrades(FuEngine *self,
 				    "current version is %s: %s",
 				    fu_device_get_version(device),
 				    error_str->str);
-		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "current version is %s",
-				    fu_device_get_version(device));
+			return NULL;
 		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "current version is %s",
+			    fu_device_get_version(device));
 		return NULL;
 	}
 	g_ptr_array_sort_with_data(releases, fu_engine_sort_releases_cb, device);
@@ -5873,13 +5873,13 @@ fu_engine_get_upgrades(FuEngine *self,
 				    "current version is %s: %s",
 				    fu_device_get_version(device),
 				    error_str->str);
-		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "current version is %s",
-				    fu_device_get_version(device));
+			return NULL;
 		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "current version is %s",
+			    fu_device_get_version(device));
 		return NULL;
 	}
 	g_ptr_array_sort_with_data(releases, fu_engine_sort_releases_cb, device);
