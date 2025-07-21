@@ -11,6 +11,7 @@ enum FuSynapticsCapeCmd {
     GetVersion              = 0x103,
 }
 
+#[derive(ToString)]
 enum FuSynapticsCapeError {
     Eagain                                  = -11,
     SfuFail                                 = -200,
@@ -24,7 +25,7 @@ enum FuSynapticsCapeError {
     SfuAlreadyActive                        = -208,
     SfuNotReady                             = -209,
     SfuSignTransferCorruption               = -210,
-    SfuDigitalSignatureVerificationFailed   = -211,
+    SfuSignatureVerification                = -211,
     SfuTaskNotRunning                       = -212,
     GenericFailure                          = -1025,
     AlreadyExists                           = -1026,

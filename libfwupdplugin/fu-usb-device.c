@@ -126,53 +126,16 @@ fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 static gboolean
 fu_usb_device_libusb_status_to_gerror(gint status, GError **error)
 {
-	gboolean ret = FALSE;
-
-	switch (status) {
-	case LIBUSB_TRANSFER_COMPLETED:
-		ret = TRUE;
-		break;
-	case LIBUSB_TRANSFER_ERROR:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "transfer failed");
-		break;
-	case LIBUSB_TRANSFER_TIMED_OUT:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
-				    "transfer timed out");
-		break;
-	case LIBUSB_TRANSFER_CANCELLED:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "transfer cancelled");
-		break;
-	case LIBUSB_TRANSFER_STALL:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "endpoint stalled or request not supported");
-		break;
-	case LIBUSB_TRANSFER_NO_DEVICE:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "device was disconnected");
-		break;
-	case LIBUSB_TRANSFER_OVERFLOW:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device sent more data than requested");
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "unknown status [%i]",
-			    status);
-	}
-	return ret;
+	const FuErrorMapEntry entries[] = {
+	    {LIBUSB_TRANSFER_COMPLETED, FWUPD_ERROR_LAST, NULL},
+	    {LIBUSB_TRANSFER_ERROR, FWUPD_ERROR_INTERNAL, "failed"},
+	    {LIBUSB_TRANSFER_TIMED_OUT, FWUPD_ERROR_TIMED_OUT, NULL},
+	    {LIBUSB_TRANSFER_CANCELLED, FWUPD_ERROR_NOTHING_TO_DO, "cancelled"},
+	    {LIBUSB_TRANSFER_STALL, FWUPD_ERROR_NOT_SUPPORTED, "stalled or not supported"},
+	    {LIBUSB_TRANSFER_NO_DEVICE, FWUPD_ERROR_NOT_FOUND, "device was disconnected"},
+	    {LIBUSB_TRANSFER_OVERFLOW, FWUPD_ERROR_INTERNAL, "sent more data than requested"},
+	};
+	return fu_error_map_entry_to_gerror(status, entries, G_N_ELEMENTS(entries), error);
 }
 
 /**
