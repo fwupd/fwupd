@@ -285,7 +285,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 	mbim_device_command(self->mbim_device,
 			    mbim_message,
-			    2 * timeout_ms * 1000,
+			    2 * timeout_ms / 1000,
 			    helper->cancellable,
 			    fu_mm_mbim_device_command_cb,
 			    helper);
