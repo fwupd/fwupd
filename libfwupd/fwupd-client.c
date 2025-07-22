@@ -5676,31 +5676,47 @@ fwupd_client_download_error_is_fatal(const GError *error)
 	return TRUE;
 }
 
-static GBytes *
-fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+static gboolean
+fwupd_client_test_network(const gchar *url, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	GNetworkMonitor *monitor = g_network_monitor_get_default();
-	gulong delay_ms = 2500;
+	GNetworkMonitor *monitor;
+	g_autoptr(GUri) uri = NULL;
 	g_autoptr(GError) error_monitor = NULL;
 	g_autoptr(GSocketConnectable) address = NULL;
-	g_autoptr(GUri) uri = NULL;
 
-	/* test if we can reach this network */
+	if (g_getenv("FWUPD_IGNORE_NETWORK_REACHABLE") != NULL)
+		return TRUE;
+
 	uri = g_uri_parse(url, G_URI_FLAGS_NONE, error);
 	if (uri == NULL)
-		return NULL;
+		return FALSE;
+
 	address = g_network_address_parse(g_uri_get_host(uri), g_uri_get_port(uri), error);
 	if (address == NULL)
-		return NULL;
+		return FALSE;
+
+	monitor = g_network_monitor_get_default();
 	if (!g_network_monitor_can_reach(monitor, address, NULL, &error_monitor)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_REACHABLE,
 			    "network is unreachable: %s",
 			    error_monitor->message);
-		return NULL;
+		return FALSE;
 	}
+
+	return TRUE;
+}
+
+static GBytes *
+fwupd_client_download_http_retry(FwupdClient *self, CURL *curl, const gchar *url, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	gulong delay_ms = 2500;
+
+	/* test if we can reach this network */
+	if (!fwupd_client_test_network(url, error))
+		return NULL;
 
 	for (guint i = 0;; i++, delay_ms *= 2) {
 		g_autoptr(GBytes) blob = NULL;
