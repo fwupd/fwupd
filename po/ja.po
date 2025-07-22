@@ -4,6 +4,7 @@
 #
 # Translators:
 # Green <usergreen@users.osdn.me>, 2021
+# Makoto Sakaguchi <ycco34vx@gmail.com>, 2025
 # Nobuhiro Iwamatsu <iwamatsu@nigauri.org>, 2021
 # Ryo Nakano, 2024
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
@@ -19,13 +20,470 @@ msgstr ""
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#. TRANSLATORS: more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "残り %.0f 分です"
+
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr "%s BMC アップデート"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s バッテリーアップデート"
+
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system boot-up
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU マイクロコードアップデート"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s カメラアップデート"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "%s 構成の更新"
+
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s コンシューマー ME アップデート"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s コントローラーアップデート"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s コーポレート ME アップデート"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s デバイスアップデート"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr "%s ディスプレイアップデート"
+
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr "%s Dock アップデート"
+
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr "%s デバイスアップデート"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s 組み込みコントローラーアップデート"
+
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr "%s 指紋リーダーアップデート"
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr "%s フラッシュドライブアップデート"
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr "%s GPU アップデート"
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr "%s グラフィックスタブレットアップデート"
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr "%s ヘッドフォンアップデート"
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr "%s ヘッドセットアップデート"
+
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr "%s 入力コントローラーアップデート"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s キーボードアップデート"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME アップデート"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s マウスアップデート"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "%s ネットワークインターフェースアップデート"
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr "%s SSD アップデート"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "%s ストレージコントローラーアップデート"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s システムアップデート"
+
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s TPM アップデート"
+
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "%s Thunderbolt コントローラーアップデート"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s タッチパッドアップデート"
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr "%s USB Dock アップデート"
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr "%s USB レシーバーアップデート"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s アップデート"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "アップデート中は %s および接続されているすべてのデバイスが使用できなくなる可能性があります。"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s が出現しました: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s が変更されました: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s が消失しました: %s"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid
+#. closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr "%s は現在更新できません"
+
+#. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+#. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
+#, c-format
+msgid "%s is pending activation; use %s to complete the update."
+msgstr "%s のアクティベーションが保留中です。%s を実行してアップデートを完了してください。"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s manufacturing mode"
+msgstr "%s 製造モード"
+
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "損傷を避けるため、アップデート中は %s を接続したままにしておく必要があります。"
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "損傷を避けるため、アップデート中は %s を電源に接続したままにしておく必要があります。"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s override"
+msgstr "%s オーバーライド"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "%s バージョン"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u 日"
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u 個のデバイスでファームウェアアップグレードが利用可能です。"
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u 個のデバイスが推奨設定になっていません。"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u 時間"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u 分"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u 秒"
+
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] "%u 個のテストがスキップされました"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr "%u%% (しきい値 %u%%)"
+
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(廃止済み)"
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "TPM PCR が不正な値になりました"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr "AMD ファームウェアリプレイ保護"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr "AMD ファームウェア書き込み保護"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Secure Processor Rollback Protection"
+msgstr "AMD セキュアプロセッサ ロールバック保護"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "操作が必要です:"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "デバイスを有効化する"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "保留中のデバイスを有効化する"
+
 msgid "Activate the new firmware on the device"
 msgstr "機器上で新しいファームウェアを実行可能にする"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "ファームウェアアップデートを適用中"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "ファームウェアアップデートを有効化しています"
+
+#. TRANSLATORS: command description
+msgid "Adds devices to watch for future emulation"
+msgstr "エミュレーション対象として監視するデバイスを追加する"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "経過日数"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "同意してリモートを有効にしますか?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "%sの別名"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "すべての TPM PCR は現在有効です"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "すべての TPM PCR は有効"
+
+#. TRANSLATORS: an application is preventing system updates
+msgid "All devices are prevented from update by system inhibit"
+msgstr "すべてのデバイスはシステム抑制によりアップデートが妨げられています"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "同じ種類のすべてのデバイスは同時に更新されます"
+
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr "ファームウェアバージョンのダウングレードを許可する"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "既存のファームウェアバージョンの再インストールを許可する"
+
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "ファームウェアブランチの切り替えを許可する"
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "既に存在します。上書きするには --force オプションを指定してください"
+
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "代替ブランチ"
+
+#. TRANSLATORS: another application is updating the device already
+msgid "An update is in progress"
+msgstr "アップデートが進行中です"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "アップデートを完了するには、再起動が必要です。"
+
+#. TRANSLATORS: explain why
+msgid "An update requires the system to shutdown to complete."
+msgstr "アップデートを完了するには、システムをシャットダウンする必要があります。"
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "すべての質問に『はい』で答える"
+
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "推奨されていない場合でもアップデートを適用する"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "アップデートファイルを適用する"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "アップデートを適用しています…"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "承認済みファームウェア:"
+
+#. TRANSLATORS: command description
+msgid "Asks the daemon to quit"
+msgstr "デーモンに終了を要求"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "ファームウェアモードに切り替える"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "認証しています…"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "認証情報の入力が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -36,6 +494,22 @@ msgid "Authentication is required to downgrade the firmware on this machine"
 msgstr "この機器のファームウェアをダウングレードするには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "エミュレーションデータ収集を有効にするには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr "ホストのセキュリティ問題を修正するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "ハードウェアエミュレーションデータを読み込むには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr "BIOS 設定を変更するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "ファームウェア更新用の遠隔構成を変更するには認証が必要です"
 
@@ -44,8 +518,16 @@ msgid "Authentication is required to modify daemon configuration"
 msgstr "デーモン構成の変更には認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr "BIOS 設定を読み取るには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to reset daemon configuration to defaults"
 msgstr "デーモン構成をデフォルトにリセットするには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "ハードウェアエミュレーションデータを保存するには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -64,6 +546,10 @@ msgid "Authentication is required to switch to the new firmware version"
 msgstr "新版のファームウェアに切り替えるには認証が必要です"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr "ホストのセキュリティ問題の修正を元に戻すには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "機器のロックを解除するには認証が必要です"
 
@@ -79,16 +565,714 @@ msgstr "当機でファームウェアを更新するには認証が必要です
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "保存された機器の検査合計を更新するには認証が必要です"
 
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "自動レポート"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "%u ミリ秒後に自動で抑制を解除します…"
+
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "毎回自動的にアップロードしますか?"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr "BIOS ファームウェア更新"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr "BIOS ロールバック保護"
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr "BIOS ファームウェアアップデート"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr "BIOS ロールバック保護"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr "LVFS または Windows Update 経由で提供される BIOS アップデート"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BUILDER-XML FILENAME-DST"
+
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr "バッテリー"
+
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "新しいカーネルドライバーを結び付ける"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "ブロックされたファームウェアファイル:"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "ブロックされたバージョン"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "ファームウェアブロック中:"
+
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "特定のファームウェアのインストールをブロック"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "ブートローダーバージョン"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Branch"
+msgstr "ブランチ"
+
+#. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr "ファームウェアからキャビネットアーカイブを構築する"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "ファームウェアファイルをビルドする"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * Utilized by OS means the distribution enabled it
+msgid "CET OS Support"
+msgstr "CET OS サポート"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "CET Platform"
+msgstr "CET プラットフォーム"
+
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr "CPU マイクロコードは、さまざまな情報漏洩に関するセキュリティ問題に対処するために更新する必要があります。"
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr "エミュレーション用にタグ付け可能"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "キャンセル"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+#. TRANSLATORS: this is from ctrl+c
+msgid "Cancelled"
+msgstr "キャンセルされました"
+
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "dbx アップデートは既に適用されているため、適用できません"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "変更されました"
+
+#. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "アップデートを完了するために再起動が必要なデバイスがあるかをチェックする"
+
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "暗号学的ハッシュでファームウェアファイルの整合性を検証する"
+
+#. TRANSLATORS: hash to that exact firmware archive
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "チェックサム"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose branch"
+msgstr "ブランチを選択"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose device"
+msgstr "デバイスを選択"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose firmware"
+msgstr "ファームウェアを選択"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose release"
+msgstr "リリースを選択"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose volume"
+msgstr "ボリュームを選択"
+
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr "前回のアップデート結果をクリアする"
+
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "コマンドが見つかりません"
 
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "コミュニティサポート"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "2つのバージョンが等しいかどうかを比較します。"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr "設定変更の提案"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr "この設定はシステム管理者のみが読み取れます"
+
+#. TRANSLATORS: longer description
+msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr "制御フロー強制技術は、デバイス上で悪意のあるソフトウェアを実行しようとする特定の手法を検出して防ぎます。"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Control-flow Enforcement Technology"
+msgstr "制御フロー実行強制技術"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "ファームウェアファイルを変換する"
+
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr "EFI ブートエントリを作成する"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "作成日"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "緊急"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "暗号学的ハッシュ検証が利用可能です"
+
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr "現在の値"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "現在のバージョン"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "DEVICE-ID|GUID"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "デバッグオプション"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "展開中…"
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr "EFI ブートエントリを削除する"
+
+#. TRANSLATORS: description of BIOS setting
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "説明"
+
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "ブートローダーモードに切り替える"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "詳細"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works
+#. * well together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "最良既知構成 (BKC) から逸脱しますか?"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "デバイスフラグ"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "デバイス ID"
+
+#. TRANSLATORS: description of the device requests
+msgid "Device Requests"
+msgstr "デバイスリクエスト"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "デバイスが追加されました:"
+
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr "デバイスは既に接続されています"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+msgid "Device battery power is too low"
+msgstr "デバイスのバッテリー残量が不足しています"
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr "デバイスのバッテリー残量が不足しています (現在 %u%%、%u%% 必要)"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "デバイスはフラッシュの失敗から復旧できます"
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be updated while the lid is closed"
+msgstr "デバイスは蓋が閉じている間は更新できません"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "デバイスが変更されました:"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "デバイスファームウェアにはバージョンチェックが必要です"
+
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr "このデバイスはエミュレートされています"
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr "デバイスは使用中です"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "デバイスがロックされています"
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide
+#. one
+msgid "Device is lower priority than an equivalent device"
+msgstr "デバイスの優先度が同等のデバイスよりも低いです"
+
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
+msgid "Device is required to install all provided releases"
+msgstr "デバイスは提供されたすべてのリリースをインストールする必要があります"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "デバイスに接続できません"
+
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr "デバイスに接続できません (ワイヤレス範囲外、またはオフライン)"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "アップデート中もデバイスは使用可能です"
+
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr "デバイスはアップデートの適用を待機しています"
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Device list uploaded successfully, thanks!"
+msgstr "デバイス一覧のアップロードが完了しました。ありがとうございます!"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "デバイスが削除されました:"
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr "デバイスには AC 電源の接続が必要です"
+
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr "このデバイスにはディスプレイの接続が必要です"
+
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr "このデバイスのアップデートにはソフトウェアライセンスが必要です"
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr "このデバイスのファームウェアアップデートが利用可能です。"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "デバイスはアップデートを段階的に適用します"
+
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "デバイスは異なるファームウェアブランチへの切り替えに対応しています"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "デバイスのアップデートには有効化が必要です"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "デバイスはインストール前にファームウェアをバックアップします"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "アップデート完了後、デバイスは再認識されません"
+
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "正常に更新されたデバイス:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "正常に更新されなかったデバイス:"
+
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr "ファームウェアアップデートにユーザー操作が必要なデバイス: "
+
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no
+#. * device upgrade available due to missing on LVFS
+msgid "Devices with no available firmware updates: "
+msgstr "利用可能なファームウェアアップデートがないデバイス: "
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available
+msgid "Devices with the latest available firmware version:"
+msgstr "ファームウェアが最新のデバイス:"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "一致する GUID を持つデバイスが見つかりませんでした"
+
+#. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Disabled"
+msgstr "無効"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "指定されたリモートを無効にする"
+
+#. TRANSLATORS: command description
+msgid "Disables virtual testing devices"
+msgstr "仮想テストデバイスを無効にする"
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr "ディストリビューション"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "古いメタデータをチェックしない"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "未報告の履歴をチェックしない"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "ダウンロード用リモートを有効にするべきかをチェックしない"
+
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "更新後の再起動確認とプロンプト表示を無効にする"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "ログドメイン接頭辞を含めない"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "タイムスタンプ接頭辞を含めない"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "デバイス安全性チェックを実行しない"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt for devices"
+msgstr "デバイス選択のプロンプト表示を行わない"
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr "セキュリティ問題の修正を促さない"
+
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr "解析時にファームウェアを検索しない"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr "アップデート中は、コンピューターの電源を切ったり、AC アダプターを取り外したりしないでください。"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "履歴データベースに書き込まない"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "ファームウェアブランチを変更することによる影響を理解していますか?"
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "今すぐ変換しますか?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "今後のアップデートでこの機能を無効にしますか?"
+
+#. TRANSLATORS: ask if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "このリモートを今すぐ更新しますか?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "今後のアップデートでレポートを自動でアップロードしますか?"
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr "認証を求めない (表示される詳細情報が少なくなる場合があります)"
+
+#. TRANSLATORS: success
+msgid "Done!"
+msgstr "完了!"
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "%s を %s から %s にダウングレードしますか?"
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "デバイスのファームウェアをダウングレードする"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "%s をダウングレードしています…"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "ファイルをダウンロード"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "ダウンロード中…"
+
+#. TRANSLATORS: command description
+msgid "Dump SMBIOS data from a file"
+msgstr "ファイルから SMBIOS データをダンプする"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "所要時間"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr "EMULATION-FILE [ARCHIVE-FILE]"
+
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr "各システムには、ファームウェアセキュリティを確保するためのテストが必要です。"
+
+#. TRANSLATORS: command description
+msgid "Emulate a device using a JSON manifest"
+msgstr "JSON マニフェストを使用してデバイスをエミュレート"
+
+#. TRANSLATORS: this device is not actually real
+msgid "Emulated"
+msgstr "エミュレート済み"
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr "ホストエミュレーション"
+
+msgid "Enable"
+msgstr "有効"
+
+msgid "Enable emulation data collection"
+msgstr "エミュレーションデータ収集を有効にする"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "新しいリモートを有効にしますか?"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "このリモートを有効にしますか?"
+
+#. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Enabled"
+msgstr "有効"
+
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "ハードウェアが一致する場合に有効"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "指定されたリモートを有効にする"
+
+#. TRANSLATORS: command description
+msgid "Enables virtual testing devices"
+msgstr "仮想テストデバイスを有効にする"
+
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr "BIOS のファームウェアアップデートを有効にすることで、セキュリティ問題を修正できます。"
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr "この機能を有効にすることは、お客様自身の責任で行ってください。つまり、これらの更新によって発生した問題については、製造元のメーカーに連絡する必要があります。更新プロセス自体に関する問題だけを $OS_RELEASE:BUG_REPORT_URL$ へ提出してください。"
+msgstr "この機能を有効にすることは、お客様自身の責任で行ってください。つまり、これらの更新によって発生した問題については、製造元に連絡する必要があります。更新プロセス自体に関する問題だけを $OS_RELEASE:BUG_REPORT_URL$ へ提出してください。"
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "このリモートの有効化は自己責任で行ってください。"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "暗号化済み"
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "暗号化 RAM"
+
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr "暗号化 RAM により、メモリチップを取り外してアクセスしても、デバイスメモリに保存された情報を読み取ることができなくなります。"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "サポート終了"
+
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr "列挙型"
+
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "すべてのファームウェア更新履歴を消去する"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "消去しています…"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "起動後、短時間で終了"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "エンジン読み込み後、即座に終了"
+
+#. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "ファームウェアファイル構造をXMLにエクスポートする"
+
+#. TRANSLATORS: command description
+msgid "Export firmware history for manual upload"
+msgstr "手動アップロード用にファームウェア履歴をエクスポートする"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "ファームウェアブロブからイメージを抽出する"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FILE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "FILE [DEVICE-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "ファイル名"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "FILENAME DEVICE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "FILENAME [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILENAME [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "失敗"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "アップデートの適用に失敗しました"
+
+#. TRANSLATORS: error message for Windows
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr "Windows サービスへの接続に失敗しました。サービスが実行されていることを確認してください。"
+
+#. TRANSLATORS: could not contact the fwupd service over D-Bus
+msgid "Failed to connect to daemon"
+msgstr "サービスへの接続に失敗しました"
+
+#. TRANSLATORS: could not read existing system data
+#. TRANSLATORS: could not read file
+msgid "Failed to load local dbx"
+msgstr "ローカルの dbx の読み込みに失敗しました"
+
+#. TRANSLATORS: could not read existing system data
+msgid "Failed to load system dbx"
+msgstr "システムの dbx の読み込みに失敗しました"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "ロックに失敗しました"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -97,6 +1281,389 @@ msgstr "引数の解析に失敗しました"
 #. TRANSLATORS: failed to read measurements file
 msgid "Failed to parse file"
 msgstr "ファイルの解析に失敗しました"
+
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr "%s のフラグを解析できませんでした"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "ローカルの dbx の解析に失敗しました"
+
+#. TRANSLATORS: a feature is something like "can show an image"
+msgid "Failed to set front-end features"
+msgstr "フロントエンド機能の設定に失敗しました"
+
+#. TRANSLATORS: something with a blocked hash exists
+#. * in the users ESP -- which would be bad!
+msgid "Failed to validate ESP contents"
+msgstr "ESP の内容検証に失敗しました"
+
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr "False"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "ファイル名"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "ファイル名シグネチャ"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "ファイル名ソース"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "ファイル名の指定が必要です"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "デバイスフラグセットでフィルタリングし、~ プレフィックスを使用して除外します。例: 'internal,~needs-reboot'"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr "リリースフラグセットでフィルタリングし、~ プレフィックスを使用して除外します。例: 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr "ファームウェア認証"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr "ファームウェア認証は、参照版を使用してデバイスソフトウェアをチェックし、改ざんされていないことを確認します。"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr "ファームウェア BIOS ディスクリプタ"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr "ファームウェア BIOS ディスクリプタは、デバイスファームウェア領域を改ざんから保護します。"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr "ファームウェア BIOS リージョン"
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr "ファームウェア BIOS リージョンは、デバイスファームウェア領域を改ざんから保護します。"
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "ファームウェアベース URI"
+
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "ファームウェアアップデート D-Bus サービス"
+
+#. TRANSLATORS: program name
+msgid "Firmware Update Daemon"
+msgstr "ファームウェア更新デーモン"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr "ファームウェアアップデータ検証"
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr "ファームウェアアップデーター検証は、アップデートに使用されるソフトウェアが改ざんされていないことを確認します。"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr "ファームウェアアップデート"
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "ファームウェアユーティリティ"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr "ファームウェア書き込み保護"
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr "ファームウェア書き込みロック"
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr "ファームウェア書き込み保護は、デバイスファームウェア領域を改ざんから保護します。"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware attestation"
+msgstr "ファームウェア認証"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "ファームウェアはブロックされています"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "ファームウェアはブロックされていません"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#, c-format
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] "ファームウェアメタデータが %u 日間更新されておらず、最新でない可能性があります。"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "ファームウェアアップデート"
+
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr "ファームウェアアップデートは無効です。有効にするには '%s' を実行してください。"
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr "特定のホストセキュリティ属性を修正する"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr "修正の取り消しが完了しました"
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr "修正が完了しました"
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "フラグ"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "実行時チェックを緩和してアクションを強制する"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "検出"
+
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "ディスク全体の暗号化を検出"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "アップデート時にフルディスク暗号化のシークレットが無効になる場合があります"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr "Fused プラットフォーム"
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr "Fused プラットフォーム"
+
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr "GUID|DEVICE-ID"
+
+msgid "Get BIOS settings"
+msgstr "BIOS 設定を取得"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "fwupd でサポートされているすべてのデバイスフラグを取得する"
+
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "ファームウェアアップデートに対応しているすべてのデバイスを取得する"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "システムに登録された有効なプラグインをすべて取得する"
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "既知のバージョン形式をすべて取得する"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr "デバイスレポートのメタデータを取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets details about a firmware file"
+msgstr "ファームウェアファイルの詳細を取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets the configured remotes"
+msgstr "設定されたリモートを取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "ホストセキュリティ属性を取得する"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "承認済みファームウェアの一覧を取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "ブロックされたファームウェアのリストを取得"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "指定されたすべてのデバイス、または未指定の場合はすべてのデバイスの更新リストを取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets the releases for a device"
+msgstr "デバイスの利用可能なファームウェアバージョンを取得する"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "前回のアップデート結果を取得する"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FILE"
+
+#. TRANSLATORS: the hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "ハードウェアの再接続を待機しています"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "高"
+
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "ホストセキュリティイベント"
+
+#. TRANSLATORS: error message for unsupported feature
+#, c-format
+msgid "Host Security ID (HSI) is not supported"
+msgstr "ホストセキュリティ ID (HSI) はサポートされていません"
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Host Security ID attributes uploaded successfully, thanks!"
+msgstr "ホストセキュリティ ID 属性をアップロードしました。ありがとうございます!"
+
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "ホストセキュリティ ID:"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr "INDEX"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr "INDEX KEY [VALUE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "INDEX NAME TARGET [MOUNTPOINT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr "INDEX1,INDEX2"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INHIBIT-ID"
+msgstr "INHIBIT-ID"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr "IOMMU 保護"
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr "IOMMU 保護は、接続されたデバイスがシステムメモリへの不正アクセスを防止します。"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU デバイス保護が無効"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU デバイス保護が有効"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "待機中…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "ファイルダウンロード時に SSL 厳密チェックを無視する"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "ファームウェアチェックサム失敗を無視する"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "ファームウェアとハードウェアの不整合失敗を無視する"
+
+#. TRANSLATORS: command line option
+msgid "Ignore non-critical firmware requirements"
+msgstr "非重要なファームウェア要件を無視する"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "SSL の厳格なチェックを無視し、将来的にこれを自動化するには、環境変数 DISABLE_SSL_STRICT をエクスポートしてください。"
+
+#. TRANSLATORS: show the user a generic image that can be themed
+msgid "Image"
+msgstr "画像"
+
+#. TRANSLATORS: show the user a random image from the internet
+msgid "Image (custom)"
+msgstr "画像 (カスタム)"
+
+#. TRANSLATORS: the inhibit ID is a short string like dbus-123456
+#, c-format
+msgid "Inhibit ID is %s."
+msgstr "抑制 ID は %s です。"
+
+#. TRANSLATORS: command description
+msgid "Inhibit the system to prevent upgrades"
+msgstr "アップグレードを防ぐためにシステムをロック"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "インストール時間"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr "選択したデバイスにキャビネット形式のファームウェアファイルをインストールする"
+
+#. TRANSLATORS: command description
+msgid "Install a raw firmware blob on a device"
+msgstr "デバイスに生のファームウェアブロブをインストールする"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr "条件に一致するすべてのデバイスに特定のファームウェアファイルをインストールする"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr "デバイスに特定のファームウェアをインストールする。CAB が一致すると、対応するすべてのデバイスにもファームウェアがインストールされる"
 
 msgid "Install old version of signed system firmware"
 msgstr "旧版の署名済みシステムファームウェアを導入する"
@@ -116,9 +1683,214 @@ msgstr "署名のないデバイスファームウェアを導入する"
 msgid "Install unsigned system firmware"
 msgstr "署名のないシステムファームウェアを導入する"
 
+#. TRANSLATORS: stay on one firmware version unless the new version is
+#. explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr "特定のリリースを明示的にインストールする必要があります"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "ファームウェアの更新をインストールしています…"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "%s をインストール中…"
+
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "このファームウェアアップデートをインストールすると、機器の保証が無効になる可能性があります。"
+
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr "整数"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr "Intel BootGuard ACM 保護済み"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM protected"
+msgstr "Intel BootGuard ACM 保護済み"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr "Intel BootGuard エラーポリシー"
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr "Intel BootGuard エラーポリシーは、デバイスソフトウェアの改ざんが検出された場合、起動を続行しません。"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr "Intel BootGuard Fuse"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * OTP = one time programmable
+msgid "Intel BootGuard OTP fuse"
+msgstr "Intel BootGuard OTP fuse"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr "Intel BootGuard 検証済みブート"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "Intel BootGuard エラーポリシー"
+
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr "Intel BootGuard は、デバイス起動時に許可されていないデバイスソフトウェアの動作を防止します。"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Intel BootGuard 検証済みブート"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr "Intel GDS 軽減機能"
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr "Intel GDS 軽減機能"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr "インテル・マネジメント・エンジン 製造モード"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is
+#. enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on
+#. consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr "インテル・マネジメント・エンジン オーバーライド"
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr "インテル・マネジメント・エンジン オーバーライドは、デバイスソフトウェア改ざん検出機能を無効化します。"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr "インテル・マネジメント・エンジン バージョン"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "内蔵デバイス"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "無効"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr "無効な引数"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr "無効な引数です。GUID を指定してください"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr "無効な引数です。引数は INDEX KEY [VALUE] の形式で指定してください"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr "無効な引数です。引数は INDEX NAME TARGET [MOUNTPOINT] の形式で指定してください"
+
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr "無効な引数です。AppStream ID を指定してください"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr "引数が不足しています。少なくとも ARCHIVE FIRMWARE METAINFO を指定してください"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "無効な引数です。16進整数を指定してください"
+
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "ダウングレードです"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "ブートローダーモードです"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "アップグレードです"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "解決された問題"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "カーネルは汚染されていません"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "カーネルが汚染されました"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "カーネルロックダウンが無効"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "カーネルロックダウンが有効"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "LOCATION"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "最終変更日時"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "残り 1 分未満です"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "ライセンス"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr "Linux カーネルのロックダウン"
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr "Linux カーネルのロックダウンは、管理者 (root) 権限による重要システムソフトウェアへの変更を阻止します。"
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr "Linux カーネルスワップは、作業中のデータを一時的にディスクへ退避させます。保護されていないデータは外部から読み取られるリスクがあります。"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr "Linux カーネル検証"
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr "Linux カーネル検証は、重要なシステムソフトウェアが改ざんされていないことを保証します。 システム提供外のデバイスドライバ使用時は、このセキュリティ機能が正しく働かない場合があります。"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr "Linux スワップ"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux ベンダーファームウェアサービス (安定版ファームウェア)"
@@ -126,22 +1898,791 @@ msgstr "Linux ベンダーファームウェアサービス (安定版ファー�
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux ベンダーファームウェアサービス (試験版ファームウェア)"
 
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux カーネル"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Linux カーネルのロックダウン"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linux スワップ"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot files"
+msgstr "EFI ブートファイルを一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "List EFI boot parameters"
+msgstr "EFI ブートパラメータを一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr "特定の GUID を持つ EFI 変数を一覧表示する"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "dbx のエントリを一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr "利用可能なファームウェア GType を一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "利用可能なファームウェアタイプを一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "ESP 上のファイルを一覧表示する"
+
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr "デバイスエミュレーションデータを読み込む"
+
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr "外部モジュールから読み込まれました"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "ロード中…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "ロック済み"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "低"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr "MEI キーマニフェスト"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr "MEI キーマニフェスト"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "MEI manufacturing mode"
+msgstr "MEI 製造モード"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
+#. * "override" is the physical PIN that can be driven to
+#. * logic high -- luckily it is probably not accessible to
+#. * end users on consumer boards
+msgid "MEI override"
+msgstr "MEI オーバーライド"
+
+msgid "MEI version"
+msgstr "MEI バージョン"
+
+#. TRANSLATORS: command line option
+msgid "Manually enable specific plugins"
+msgstr "特定のプラグインを手動で有効にする"
+
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr "製造モードは、デバイス製造時に使用されるモードで、セキュリティ機能は無効化されています。"
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr "最大長"
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr "最大値"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "中"
+
+#. TRANSLATORS: ask the user to do a simple task which should be translated
+msgid "Message"
+msgstr "メッセージ"
+
+#. TRANSLATORS: ask the user a question, and it will not be translated
+msgid "Message (custom)"
+msgstr "メッセージ (カスタム)"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "メタデータシグネチャ"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "メタデータ URI"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "メタデータは Linux ベンダーファームウェアサービスから取得できます。"
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr "メタデータは最新です。再度更新する場合は %s を使用してください。"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "最小バージョン"
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr "最小長"
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr "最小値"
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Modifies a daemon configuration value"
+msgstr "デーモンの設定値を変更する"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "指定されたリモートを変更する"
+
 msgid "Modify a configured remote"
 msgstr "遠隔構成を変更する"
 
 msgid "Modify daemon configuration"
 msgstr "デーモン構成を変更する"
 
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "デーモンのイベントを監視する"
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "ESP をマウント"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "インストール後に再起動が必要です"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "再起動が必要です"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "インストール後にシャットダウンが必要です"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "新バージョン"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "アクションが指定されていません!"
+
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "%s にダウングレードはありません"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "ファームウェア ID が見つかりません"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr "ファームウェアが見つかりません"
+
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "ファームウェアアップデートに対応したハードウェアは検出されませんでした"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "再起動は不要です"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "利用可能なリリースがありません"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "現在リモートが有効になっていないため、メタデータが利用できません。"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "リモートがありません"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr "アップデート可能なデバイスがありません"
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr "アップデートはありません"
+
+msgid "No updates available for remaining devices"
+msgstr "その他のデバイスにはアップデートがありません"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "%s に該当するボリュームがありません"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "承認されていません"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "未検出"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "未対応"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
+
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr "旧バージョン"
+
+#. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "エミュレートされたデバイスにのみインストールする"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "単一の PCR 値のみ表示する"
+
+#. TRANSLATORS: command line option
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr "ファイルダウンロード時にピアツーピア通信のみを使用する"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "バージョンアップグレードのみが許可されています"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "JSON 形式で出力 (対話プロンプトをすべて無効化)"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "デフォルトの ESP パスをオーバーライドする"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr "P2P ファームウェア"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr "P2P メタデータ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "PATH"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "ファームウェアファイルを解析して詳細を表示する"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "dbx アップデートを解析しています…"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "システムの dbx を読み込んで解析しています…"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "パスワード"
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "ファームウェアブロブの既知のオフセットにパッチを適用する"
+
+msgid "Payload"
+msgstr "ペイロード"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Pending"
+msgstr "保留中"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "操作を実行しますか?"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr "プラットフォームデバッグ"
+
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr "プラットフォームデバッグは、デバイスのセキュリティ機能を無効化します。ハードウェアの製造元のみが使用してください。"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr "プラットフォームデバッグ"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "続行する前に、ボリューム回復キーを準備してください。"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "0 から %u までの数値を入力してください:"
+
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr "%s か %s のいずれかを入力してください:"
+
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "プラグインの依存関係が見つかりません"
+
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr "このプラグインはテスト専用です"
+
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr "選択可能な値"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr "プリブート DMA 保護"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA protection"
+msgstr "プリブート DMA 保護"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "起動前 DMA 保護が無効"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "起動前 DMA 保護が有効"
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr "プリブート DMA 保護は、デバイスがコンピューターに接続された後のシステムメモリへの不正なアクセスを防止します。"
+
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr "デバイスでロック解除を押して、アップデートプロセスを続行してください。"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "以前のバージョン"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "優先度"
+
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr "問題"
+
+msgid "Proceed with upload?"
+msgstr "アップロードを続行しますか?"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr "プロセッサセキュリティチェック"
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr "プロセッサのロールバック保護"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "プロプライエタリ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "REMOTE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "REMOTE-ID KEY VALUE"
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr "読み取り専用"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "デバイスからファームウェアブロブを読み取る"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr "デバイスからファームウェアを読み取る"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "%s から読み込み中…"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "読み込み中…"
+
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr "準備完了"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr "更新間隔"
+
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr "リモートサーバーからメタデータを更新する"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "%s を %s に再インストールしますか?"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "現在のファームウェアを再インストール"
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "デバイスのファームウェアを再インストールする"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Release Branch"
+msgstr "リリースブランチ"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "リリースフラグ"
+
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "リリース ID"
+
+#. TRANSLATORS: the server the file is coming from
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "リモート ID"
+
+#. TRANSLATORS: command description
+msgid "Removes devices to watch for future emulation"
+msgstr "エミュレーション用監視デバイスを削除する"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "レポート URI"
+
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "リモートサーバーに報告済み"
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "必要な efivarfs ファイルシステムが見つかりませんでした"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "必要なハードウェアが見つかりませんでした"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "ブートローダーが必要です"
+
+#. TRANSLATORS: metadata is downloaded
+msgid "Requires internet connection"
+msgstr "インターネット接続が必要です"
+
 msgid "Reset daemon configuration"
 msgstr "デーモン構成をリセットする"
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Resets a daemon configuration section"
+msgstr "デーモンの設定セクションをリセットする"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "今すぐ再起動しますか?"
+
+#. TRANSLATORS: changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "変更を有効にするためにデーモンを再起動しますか?"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "デバイスを再起動しています…"
+
+#. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr "BIOS 設定を取得します。引数未指定時はすべての設定を表示"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "マシンのすべてのハードウェア ID を返す"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr "レポートを今すぐ確認してアップロードしますか?"
+
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr "ロールバック保護は、セキュリティ上の問題がある古いバージョンへのデバイスソフトウェアのダウングレードを防ぎます。"
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
+#, c-format
+msgid "Run `%s` for more information."
+msgstr "詳細情報については `%s` を実行してください。"
+
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "Run `%s` to complete this action."
+msgstr "この操作を完了するには `%s` を実行してください。"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "install-blob 使用時にプラグインコンポジットクリーンアップルーチンを実行する"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "install-blob 使用時にプラグインコンポジット準備ルーチンを実行する"
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr "再起動後のクリーンアップアクションを実行する"
+
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr "詳細を確認するには、'%s' を付けずに実行してください"
+
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "実行中のカーネルが古すぎます"
+
+#. TRANSLATORS:  this is the HSI suffix
+msgid "Runtime Suffix"
+msgstr "ランタイム接尾辞"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr "SECTION"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING VALUE"
+msgstr "SETTING VALUE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "SMAP"
+msgstr "SMAP"
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM ロックダウン"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS ディスクリプタ"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "SPI BIOS リージョン"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI ロック"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr "SPI リプレイ保護"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "SPI 書き込み"
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr "SPI 書き込み保護"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "ハードウェア ID 生成用ファイルを保存する"
+
+#. TRANSLATORS: command description
+msgid "Save device emulation data"
+msgstr "デバイスエミュレーションデータを保存する"
+
+#. TRANSLATORS: key for a offline report filename
+msgid "Saved report"
+msgstr "保存済みレポート"
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr "増分値"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "スケジューリングしています…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "セキュアブートが無効"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "セキュアブートが有効"
+
+msgid "Security hardening for HSI"
+msgstr "HSI 向けセキュリティ強化"
+
+#. TRANSLATORS: the %1 is a URL to a wiki page
+#, c-format
+msgid "See %s for more details."
+msgstr "詳細については %s をご覧ください。"
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "詳細については %s を参照してください。"
+
+#. TRANSLATORS: device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "選択中のデバイス"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "選択中のボリューム"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "シリアルナンバー"
+
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr "BIOS 設定 '%s' を '%s' に設定しました。"
+
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr "BIOS 設定を変更する"
+
+msgid "Set one or more BIOS settings"
+msgstr "BIOS 設定を 1 つ以上設定する"
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr "EFI ブートハイブエントリを設定または削除する"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr "次回起動時に使用する EFI ブートエントリを設定する"
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr "EFI ブート順序を設定する"
+
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr "一時的エラー発生時のダウンロード再試行回数を設定する"
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr "一つ以上の BIOS 設定を変更"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "認証済みファームウェアの一覧を設定する"
 
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr "設定タイプ"
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr "設定はシステム再起動後に適用されます"
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "ファームウェア履歴を開発者と共有する"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "すべての結果を表示する"
+
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "クライアントとデーモンのバージョンを表示する"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "特定ドメインのデーモン詳細情報を表示する"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "すべてのドメインのデバッグ情報を表示する"
+
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "デバッグオプションを表示する"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "更新できないデバイスを表示する"
+
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "追加のデバッグ情報を表示する"
+
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "ファームウェアの更新履歴を表示する"
+
+#. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "dbx の計算済みバージョンを表示する"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "今すぐシャットダウンしますか?"
+
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "新しいキーでファームウェアに署名する"
 
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
@@ -151,18 +2692,871 @@ msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
 
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "アップロードされたデータをクライアント証明書で署名する"
+
+msgid "Signature"
+msgstr "署名"
+
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr "署名済みペイロード"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "サイズ"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "ファームウェアを更新すると、一部のプラットフォームシークレットが無効になる可能性があります。"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "ソース"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "dbx のデータベースファイルを指定する"
+
 msgid "Stop the fwupd service"
 msgstr "fwupd サービスを停止する"
+
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr "文字列"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "成功"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "すべてのデバイスを有効化しました"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "リモートを正常に無効にしました"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully disabled test devices"
+msgstr "テストデバイスを正常に無効にしました"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "新しいメタデータを正常にダウンロードしました: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "リモートを有効化し、更新しました"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "リモートを正常に有効にしました"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully enabled test devices"
+msgstr "テストデバイスを正常に有効にしました"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "ファームウェアのインストールが完了しました"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "設定値を正常に変更しました"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "リモートを正常に変更しました"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "メタデータを手動で正常に更新しました"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration section"
+msgstr "設定セクションを正常にリセットしました"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration values"
+msgstr "設定値をリセットしました"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "デバイスのチェックサムを正常に更新しました"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "%u 件のレポートを正常にアップロードしました"
+
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "デバイスのチェックサムを正常に検証しました"
+
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr "デバイスが %.0f ミリ秒以内に認識されました"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "デバイスの概要"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Supervisor Mode Access Prevention"
+msgstr "スーパーバイザーモードアクセス防止"
+
+#. TRANSLATORS: longer description
+msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr "スーパーバイザーモードアクセス防止は、低権限プログラムによるデバイスの重要メモリ領域へのアクセスを阻止します。"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "対応済み"
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr "対応 CPU"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "リモートサーバーに登録されています"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr "Suspend to Idle"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr "Suspend to RAM"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspend to Idle は、電力節約のためにデバイスをスリープに移行します。デバイスのスリープ中にメモリ取り外しで情報漏えいの恐れがあります。"
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr "Suspend to RAM は、電力節約のためにデバイスをスリープに移行します。デバイスのスリープ中にメモリ取り外しで情報漏えいの恐れがあります。"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "Suspend-to-Idle"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "Suspend-to-RAM"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "ブランチを %s から %s に切り替えますか?"
+
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "デバイスのファームウェアブランチを切り替える"
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr "ファームウェアバージョンを選択した構成に同期"
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr "システム管理モード"
+
+#. TRANSLATORS: this CLI tool is now preventing system updates
+msgid "System Update Inhibited"
+msgstr "システム更新が抑制されています"
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "システム管理モードは、ファームウェアが常駐 BIOS コードとデータにアクセスするために使用されます。"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "システムの電力残量が不足しています"
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr "システムの電力残量が不足しています (現在 %u%%、%u%% 必要)"
+
+#. TRANSLATORS: Must be plugged into an outlet
+msgid "System requires external power source"
+msgstr "デバイスを電源に接続してください"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEXT"
+
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr "TPM (トラステッド プラットフォーム モジュール) は、ハードウェア部品の改ざんを検出するセキュリティチップです。"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "TPM PCR0 再構築"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0 の再構築が無効"
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr "TPM PCR0 の再構築は現在有効です"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM Platform Configuration"
+msgstr "TPM プラットフォーム構成"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr "TPM 再構成"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM 空 PCR"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "タグ"
+
+#. TRANSLATORS: we're saving all USB events for emulation
+msgid "Tagged for emulation"
+msgstr "エミュレーション用にタグ付け済み"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "汚染済み"
+
+#. show the user the entire data blob
+msgid "Target"
+msgstr "対象"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "JSON マニフェストを使用してデバイスをテスト"
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr "テスト済み"
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr "%s によってテスト済み"
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr "信頼できるベンダーによるテスト済み"
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr "EFI ブートエントリが hive 形式ではありません。shim が古い場合、読み取りに失敗する可能性があります"
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr "EFI ブートエントリが hive 形式ではありません。レガシー形式として処理します"
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr "インテル・マネジメント・エンジンのキーマニフェストは、デバイスファームウェアが CPU によって信頼されるために有効である必要があります。"
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr "インテル・マネジメント・エンジンはデバイスコンポーネントを制御しており、セキュリティ上の問題を回避するために最新のバージョンである必要があります。"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS は独立した法人として機能する無料のサービスであり、$OS_RELEASE:NAME$ とは関係ありません。ディストリビューターは、システムまたは接続されているデバイスとの互換性について、ファームウェアの更新を確認していない可能性があります。すべてのファームウェアは、元の機器の製造元からのみ提供されています。"
 
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr "TPM (トラステッド プラットフォーム モジュール) プラットフォーム構成は、デバイス起動プロセスの改ざんをチェックするために利用されます。"
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr "TPM (トラステッド プラットフォーム モジュール) 再構成は、デバイス起動プロセスの改ざんをチェックするために利用されます。"
+
+#. TRANSLATORS: this is more background on a security measurement problem
+msgid "The TPM PCR0 differs from reconstruction."
+msgstr "TPM PCR0 が再構築された値と異なります。"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr "UEFI プラットフォームキーは、デバイスにロードされるソフトウェアが信頼済みのソースからのものであるかを判断するために使用されます。"
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "UEFI 証明書ストアが最新になりました"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "UEFI db には、EFI バイナリの実行を許可するための有効な証明書リストが含まれています。"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "UEFI システムは、起動時にメモリ属性を設定することで、一般的なエクスプロイトの実行を防ぐことができます。"
+
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "デーモンがサードパーティのコードを読み込んでいるため、アップストリーム開発者によるサポートは一切受けられません!"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "ファームウェアの提供元 %s がハードウェアベンダーである %s ではありません。"
+
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "システムクロックが正しく設定されておらず、ファイルのダウンロードが失敗する可能性があります。"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr "デバイスの USB ケーブルを差し込むと、アップデートが続行されます。"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr "デバイスの USB ケーブルを抜き差しすると、アップデートが続行されます。"
+
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr "デバイスの USB ケーブルを抜くと、アップデートが続行されます。"
+
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr "デバイスの電源ケーブルを抜き差しすると、アップデートが続行されます。"
+
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "ベンダーはリリースノートを提供していません。"
+
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr "問題のあるデバイス:"
+
+#. TRANSLATORS: nothing to show
+msgid "There are no blocked firmware files"
+msgstr "ブロックされたファームウェアファイルはありません"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "承認済みファームウェアがありません。"
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "%s コマンドが実行されると、このデバイスは %s に戻されます。"
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "このファームウェアは LVFS コミュニティメンバーが提供しており、元のハードウェアベンダーからの提供・サポートはありません。"
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "このパッケージは検証されていません。正常に動作しない可能性があります。"
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "root 権限でのみ正常に動作する可能性があります"
+
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "この遠隔側ソースには、輸出禁止ではないファームウェアが含まれていますが、ハードウェアベンダーによって未だテスト中です。ファームウェアの更新に失敗した場合は、ファームウェアを手動でダウングレードする方法を確保しておく必要があります。"
+
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr "このシステムはファームウェア設定に対応していません"
+
+#. TRANSLATORS: this is instructions on how to improve the HSI suffix
+msgid "This system has HSI runtime issues."
+msgstr "このシステムには HSI ランタイムの問題があります。"
+
+#. TRANSLATORS: this is instructions on how to improve the HSI security level
+msgid "This system has a low HSI security level."
+msgstr "システムの HSI セキュリティレベルが低いです。"
+
+#. TRANSLATORS: description of dbxtool
+msgid "This tool allows an administrator to apply UEFI dbx updates."
+msgstr "管理者が UEFI dbx のアップデートを適用できるツール"
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "このツールは、管理者が fwupd デーモンを照会・制御し、ファームウェアのインストールやダウングレードなどの操作を実行できます。"
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "このツールは、管理者が fwupd プラグインをホストシステムにインストールせずに利用できるようにします。"
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr "このツールはカーネル引数 '%s' を追加できますが、コンピューターを再起動した後でのみ有効になります。"
+
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr "このツールはBIOS設定 '%s' を '%s' から '%s' に自動的に変更できますが、コンピューターを再起動した後でのみ有効になります。"
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr "このツールはカーネル引数を '%s' から '%s' に変更できますが、コンピューターを再起動した後でのみ有効になります。"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "システムファームウェアから TPM イベントログを読み取り、解析する。"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Transient failure"
+msgstr "一時的なエラー"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr "True"
+
+#. TRANSLATORS: We verified the metadata against the server
+msgid "Trusted metadata"
+msgstr "信頼済みメタデータ"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "信頼済みペイロード"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "種類"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr "UEFI ブートサービス変数"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr "UEFI ESP パーティションが正しく設定されていない可能性があります"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "UEFI ESP パーティションが検出されないか、設定されていません"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "UEFI メモリ保護"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr "UEFI プラットフォームキー"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr "UEFI セキュアブート"
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr "UEFI セキュアブートは、デバイス起動時に悪意のあるソフトウェアが読み込まれるのを防止します。"
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr "UEFI ブートサービス変数をランタイムモードから読み取れないようにします。"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr "UEFI ブートサービス変数"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "UEFI カプセルアップデートはファームウェア設定で利用できないか、有効になっていません"
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "UEFI データベース"
+
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "UEFI dbx ユーティリティ"
+
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "UEFI ファームウェアはレガシー BIOS モードでは更新できません"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "UEFI メモリ保護"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "UEFI メモリ保護が有効でロックされています"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "UEFI メモリ保護が有効ですがロックされていません"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "UEFI メモリ保護がロックされました"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "UEFI メモリ保護がロック解除されました"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI プラットフォームキー"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI セキュアブート"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "サービスに接続できません"
+
+#. TRANSLATORS: error message
+msgid "Unable to find attribute"
+msgstr "属性が見つかりません"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "現在のドライバーを切り離す"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "ファームウェアブロック解除中:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "特定のファームウェアのインストールブロックを解除"
+
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr "ホストセキュリティ属性の修正を取り消す"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "暗号化されていません"
+
+#. TRANSLATORS: command description
+msgid "Uninhibit the system to allow upgrades"
+msgstr "アップグレードを許可するためにシステムのロックを解除"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
+msgid "Unknown"
+msgstr "不明"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "不明なデバイス"
 
 msgid "Unlock the device to allow access"
 msgstr "アクセスを許可するには機器のロックを解除してください"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "ロック解除済み"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "ファームウェア更新のためにデバイスをアンロックする"
+
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "ESP をアンマウント"
+
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr "デバイスを抜き差しして、アップデートプロセスを続行してください。"
+
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr "未署名ペイロード"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "サポートされていないデーモンバージョン %s です。クライアントバージョンは %s です"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Untainted"
+msgstr "非汚染"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "アップデート可能"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "アップデートエラー"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr "更新イメージ"
+
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "アップデートメッセージ"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "アップデートステータス"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "アップデート失敗は既知の問題です。詳細については、この URL をご覧ください:"
+
+#. TRANSLATORS: ask if we can update metadata
+msgid "Update now?"
+msgstr "今すぐ更新しますか?"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "現在の ROM 内容に基づいて保存済み暗号学的ハッシュを更新する"
+
 msgid "Update the stored device verification information"
 msgstr "保存された機器の検証情報を更新する"
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "保存されたメタデータを最新の内容でアップデートする"
+
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "指定されたデバイスを最新ファームウェアバージョンに更新する。デバイス未指定の場合はすべてのデバイスを更新する"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "Updates have been published for %u local device"
+msgid_plural "Updates have been published for %u of %u local devices"
+msgstr[0] "ローカルデバイス %u 台中 %u 台でアップデートが公開されました"
+
+msgid "Updating"
+msgstr "アップデート中"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "%s をアップデート中…"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade %s from %s to %s?"
+msgstr "%s を %s から %s にアップグレードしますか?"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload data now?"
+msgstr "今すぐデータをアップロードしますか?"
+
+#. TRANSLATORS: command description
+msgid "Upload the list of updatable devices to a remote server"
+msgstr "アップデート可能なデバイスのリストをリモートサーバーにアップロード"
+
+#. TRANSLATORS: ask the user to share, %s is something
+#. * like: "Linux Vendor Firmware Service"
+#, c-format
+msgid "Upload these anonymous results to the %s to help other users?"
+msgstr "他のユーザーを支援するため、これらの匿名の結果を %s にアップロードしますか?"
+
+#. TRANSLATORS: explain why we want to upload
+#, c-format
+msgid "Uploading a device list allows the %s team to know what hardware exists, and allows us to put pressure on vendors that do not upload firmware updates for their hardware."
+msgstr "デバイス一覧をアップロードすることで、%s チームは既存のハードウェアを把握し、ファームウェアアップデートを提供しないベンダーに対して改善を促すことができます。"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "ファームウェアレポートをアップロードすると、ハードウェアベンダーは実デバイスでのアップデートの失敗と成功を迅速に特定できます。"
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "重要度"
+
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
+#. TRANSLATORS: explain how to get help,
+#. * where $1 is something like 'fwupdmgr --help'
+#, c-format
+msgid "Use %s for help"
+msgstr "ヘルプを表示するには %s を使用してください。"
+
+#. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the
+#. program
+msgid "Use CTRL^C to cancel."
+msgstr "キャンセルするには Ctrl+C を使用してください。"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "ユーザーに通知済み"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "ユーザー名"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr "VERSION1 VERSION2 [FORMAT]"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "有効"
+
+#. TRANSLATORS: ESP refers to the EFI System Partition
+msgid "Validating ESP contents…"
+msgstr "ESP の内容を検証しています…"
+
+#. TRANSLATORS: one line variant of release (e.g. 'China')
+msgid "Variant"
+msgstr "バリアント"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "ベンダー"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "検証しています…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "バージョン"
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr "fwupd バージョン"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "警告"
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr "デバイスが表示されるまで待機"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "デバイスの応答を待っています…"
+
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "ハードウェアの変更を監視する"
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the
+#. update
+msgid "Will measure elements of system integrity around an update"
+msgstr "アップデート後にシステムの整合性を測定します"
+
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "ファイルを書き込み中:"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "書き込み中…"
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "この変更により、システムが Linux で起動しなくなったり、システムが不安定になったりする可能性があるため、リカバリディスクまたはインストールディスクから設定を復元する方法を理解していることを確認してください。"
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr "この変更により、システムが Linux で起動しなくなったり、システムが不安定になったりする可能性があるため、システムファームウェア設定から設定を復元する方法を理解していることを確認してください。"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "ディストリビューターは、ファームウェア更新とシステムや接続されたデバイスとの互換性を検証していない可能性があります。"
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "このファームウェアを使用するとハードウェアが損傷する可能性があり、このリリースをインストールすると %s との保証が無効になる場合があります。"
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "お使いのシステムは %s の BKC に設定されています。"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr "[APPSTREAM_ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[CHECKSUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[DEVICE-ID|GUID] [BRANCH]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr "[DEVICE-ID|GUID] [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr "[DEVICE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[FILE FILE_SIG REMOTE-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILENAME1] [FILENAME2]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FWUPD-VERSION]"
+msgstr "[FWUPD-VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr "[REASON] [TIMEOUT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr "[SECTION] KEY VALUE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr "[SETTING1] [SETTING2] [--no-authenticate]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2]..."
+msgstr "[SETTING1] [SETTING2]..."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FILE|HWIDS-FILE]"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "デフォルト"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd TPM イベントログユーティリティ"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "fwupd プラグイン"

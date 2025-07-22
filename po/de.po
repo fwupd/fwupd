@@ -40,7 +40,7 @@ msgid "%s Battery Update"
 msgstr "%s Akku-Aktualisierung"
 
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-#. * at system bootup
+#. * at system boot-up
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "%s CPU-Microcode-Aktualisierung"
@@ -686,6 +686,10 @@ msgstr "Eine bereits angewandte dbx-Aktualisierung kann nicht angewendet werden.
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Geändert"
+
+#. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Prüfen, ob für den Abschluss der Aktualisierung ein Neustart der Geräte aussteht"
 
 #. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
@@ -1530,6 +1534,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Holt die Liste der blockierten Firmware"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Ruft die Liste der Aktualisierungen für alle angegebenen Geräte ab, oder alle Geräte, wenn nicht angegeben"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Ermittelt die Versionen für ein Gerät"
 
@@ -2105,6 +2113,10 @@ msgstr "Keine Firmware gefunden"
 msgid "No hardware detected with firmware update capability"
 msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann"
 
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Es ist kein Neustart erforderlich"
+
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
 msgstr "Keine Freigaben verfügbar"
@@ -2158,6 +2170,10 @@ msgid "Old version"
 msgstr "Alte Version"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Nur auf emulierten Geräten installieren"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Nur einzelnen PCR-Wert anzeigen"
 
@@ -2169,6 +2185,10 @@ msgstr "Beim Herunterladen von Dateien nur Peer-to-Peer-Netzwerke verwenden"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Nur Versionsaktualisierungen sind erlaubt"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Ausgabe im JSON-Format (deaktiviert alle interaktiven Eingabeaufforderungen)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

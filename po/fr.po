@@ -7,6 +7,7 @@
 # Corentin Noël <tintou@noel.tf>, 2020
 # Franck <franck.routier@gmail.com>, 2015
 # Julien Humbert <julroy67@gmail.com>, 2020-2021
+# Léane GRASSER, 2025
 # Paragoumba <transifex.unedited741@simplelogin.com>, 2024
 # Yolopix ​, 2022
 msgid ""
@@ -107,6 +108,10 @@ msgstr "Âge"
 msgid "Alias to %s"
 msgstr "Alias de %s"
 
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr "Existe déjà, et aucun --force spécifié"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Une mise à jour nécessite un redémarrage pour se terminer."
@@ -144,8 +149,20 @@ msgid "Authenticating…"
 msgstr "Authentification…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr "Une authentification est requise pour activer la collecte des données d'émulation"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr "Une authentification est requise pour charger les données d'émulation de matériel"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to read BIOS settings"
 msgstr "Authentification requise pour lire les paramètres du BIOS"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr "Une authentification est requise pour enregistrer les données d'émulation de matériel"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -154,6 +171,10 @@ msgstr "Une authentification est nécessaire pour définir la liste des microlog
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
 msgstr "Une authentification est nécessaire pour signer les données en utilisant le certificat du client"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr "Une authentification est requise pour arrêter le service de mise à jour de micrologiciels"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -170,6 +191,11 @@ msgstr "Une authentification est nécessaire pour mettre à jour le micrologicie
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
 msgstr "Rapports automatiques"
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr "Désinhibition automatique dans %u ms…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -209,6 +235,10 @@ msgid "Changed"
 msgstr "Modifié"
 
 #. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Vérifier si un périphérique est en attente d'un redémarrage pour terminer sa mise à jour"
+
+#. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
 msgstr "Vérifie que l'empreinte cryptographique correspond au micrologiciel"
 
@@ -220,6 +250,10 @@ msgstr "Somme de contrôle"
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Commande non trouvée"
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr "Tester l'égalité de deux versions"
 
 #. TRANSLATORS: the release urgency
 msgid "Critical"
@@ -309,6 +343,11 @@ msgstr "Ne pas vérifier d'anciennes métadonnées"
 msgid "Do not write to the history database"
 msgstr "Ne pas écrire dans la base de données de l'historique"
 
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr "Voulez-vous la convertir maintenant ?"
+
 #. TRANSLATORS: success
 msgid "Done!"
 msgstr "Terminé !"
@@ -331,6 +370,9 @@ msgstr "Émulé"
 
 msgid "Enable"
 msgstr "Activer"
+
+msgid "Enable emulation data collection"
+msgstr "Activer la collecte de données d'émulation"
 
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
@@ -482,8 +524,16 @@ msgid "Get all devices that support firmware updates"
 msgstr "Obtenir la liste des périphériques supportant les mises à jour de micrologiciel"
 
 #. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr "Obtenir tous les formats de version connus"
+
+#. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
 msgstr "Obtenir les détails d'un fichier de micrologiciel"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Obtenir la liste des mises à jour des périphériques spécifiés, ou de tous les périphériques si aucun n'est spécifié"
 
 #. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -547,6 +597,10 @@ msgstr "Périphérique interne"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Invalide"
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr "Arguments invalides, nombre entier en base 16 attendu"
 
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
@@ -652,9 +706,18 @@ msgstr "Aucun identifiant de micrologiciel trouvé"
 msgid "No hardware detected with firmware update capability"
 msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'a été détecté"
 
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Aucun redémarrage n'est nécessaire"
+
 #. TRANSLATORS: this is an error string
 msgid "No updates available"
 msgstr "Pas de mise à jour disponible"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr "Aucun volume ne correspond à %s"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -668,10 +731,18 @@ msgstr "Non pris en charge"
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Installer uniquement sur les périphériques émulés"
+
 #. TRANSLATORS: some devices can only be updated to a new semver and cannot
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Seules les mises à jour de version sont autorisées"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Sortie au format JSON (désactive toutes les invites interactives)"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -765,6 +836,14 @@ msgstr "Redémarrer le service pour rendre la modification effective ?"
 msgid "Restarting device…"
 msgstr "Redémarrage du périphérique…"
 
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr "SBOM"
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr "SMM verrouillé"
+
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planification..."
@@ -856,6 +935,9 @@ msgstr "Source"
 msgid "Specify the dbx database file"
 msgstr "Indiquer le fichier de base de données dbx"
 
+msgid "Stop the fwupd service"
+msgstr "Arrêter le service fwupd"
+
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Succès"
@@ -886,6 +968,14 @@ msgstr "Résumé"
 msgid "Supported"
 msgstr "Pris en charge"
 
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr "Le mode de gestion du système (SMM) est utilisé par le micrologiciel pour accéder au code et aux données BIOS résidentes."
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr "L'alimentation du système est trop faible"
+
 #. TRANSLATORS: Must be plugged into an outlet
 msgid "System requires external power source"
 msgstr "Le système nécessite une source d'alimentation externe"
@@ -910,6 +1000,18 @@ msgstr "Cible"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS est un service libre qui opère en tant qu'entité légale indépendante et n'est aucunement connecté à $OS_RELEASE:NAME$. Votre distributeur n'a pas forcément vérifié la compatibilité des mises à jour de micrologiciel avec votre système ou avec les appareils connectés. Tous les micrologiciels ne sont fournis que par le fabricant original de votre équipement."
 
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr "Le magasin de certificats UEFI est maintenant à jour"
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr "La db UEFI contient la liste des certificats valides pouvant être utilisés pour autoriser ou non un binaire EFI à s'exécuter."
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr "Le système UEFI peut configurer des attributs mémoire au démarrage qui empêchent l'exécution d'exploits courants."
+
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
 msgid "There is no approved firmware."
@@ -931,13 +1033,41 @@ msgstr "Type"
 msgid "UEFI ESP partition not detected or configured"
 msgstr "Partition ESP UEFI non détectée ou non configurée"
 
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr "Protection de la mémoire UEFI"
+
 #. TRANSLATORS: capsule updates are an optional BIOS feature
 msgid "UEFI capsule updates not available or enabled in firmware setup"
 msgstr "Les mises à jour de capsule UEFI ne sont pas disponibles ou pas activées dans la configuration du micrologiciel"
 
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr "db UEFI"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilitaire dbx UEFI"
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr "Protection de la mémoire UEFI"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr "Protection de la mémoire UEFI activée et verrouillée"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr "Protection de la mémoire UEFI activée mais non verrouillée"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr "La protection de la mémoire UEFI est désormais verrouillée"
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr "La protection de la mémoire UEFI est désormais déverrouillée"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"

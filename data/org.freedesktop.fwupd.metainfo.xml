@@ -38,6 +38,47 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.13" date="2025-07-21">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a daemon config option to ignore efivars free space</li>
+          <li>Add support for glob-aware version comparison requirements</li>
+          <li>Allow targeting specific regions in FMAP when using flashrom</li>
+          <li>Detect static variables and magic numbers during code review</li>
+          <li>Remove the unused hailuck and rts54hid plugins</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Align MTD erase up to the erasesize as necessary</li>
+          <li>Allow parsing IGSC OptionROM when using fwupdtool</li>
+          <li>Allow removing private flags from UEFI capsule devices in quirks</li>
+          <li>Do not copy the vendor for Intel reference ME firmware</li>
+          <li>Do not use an interactive console if stdout is redirected</li>
+          <li>Fix the UEFI self-test when the capsule splash is disabled</li>
+          <li>Get better device information when using PCI-backed MTD devices</li>
+          <li>Get the Intel GPU SKU and SVN when using BMG hardware</li>
+          <li>Make MBIM modem devices emulatable</li>
+          <li>Make sure fwupdtool.exe is available in the Windows PATH</li>
+          <li>Only show the 'Full Disk Encryption Detected' warning when required</li>
+          <li>Set all QCDM modem devices to raw mode when updating</li>
+          <li>Show all devices for fwupdtool get-devices --show-all --force</li>
+          <li>Show correct dbx version if non-Microsoft entries are present</li>
+          <li>Show KEK device attributes in fwupdmgr</li>
+          <li>Use an alternate GUID when the Intel GPU is in recovery mode</li>
+          <li>Use the kernel netlink hotplug socket when there is no Udev</li>
+          <li>Various small changes to speed up startup by 60% and lower RSS by 40%</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP USB-C 100W G6 Dock</li>
+          <li>Logitech Bulk Controller pheripherals</li>
+          <li>More MediaTek scaler devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.12" date="2025-06-19">
       <description>
         <p>
