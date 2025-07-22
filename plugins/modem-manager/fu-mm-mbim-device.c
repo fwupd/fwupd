@@ -104,6 +104,7 @@ fu_mm_mbim_device_error_convert(GError **error)
 
 typedef struct {
 	gboolean ret;
+	GMainContext *main_ctx;
 	GMainLoop *loop;
 	GCancellable *cancellable;
 	guint timeout_id;
@@ -125,15 +126,20 @@ static FuMmMbimDeviceHelper *
 fu_mm_mbim_device_helper_helper_new(guint timeout_ms)
 {
 	FuMmMbimDeviceHelper *helper = g_new0(FuMmMbimDeviceHelper, 1);
+	g_autoptr(GSource) source = g_timeout_source_new(timeout_ms);
 	helper->cancellable = g_cancellable_new();
-	helper->loop = g_main_loop_new(NULL, FALSE);
-	helper->timeout_id = g_timeout_add(timeout_ms, fu_mm_mbim_device_helper_timeout_cb, helper);
+	helper->main_ctx = g_main_context_new();
+	helper->loop = g_main_loop_new(helper->main_ctx, FALSE);
+	g_source_set_callback(source, fu_mm_mbim_device_helper_timeout_cb, helper, NULL);
+	g_source_attach(source, helper->main_ctx);
+	g_main_context_push_thread_default(helper->main_ctx);
 	return helper;
 }
 
 static void
 fu_mm_mbim_device_helper_free(FuMmMbimDeviceHelper *helper)
 {
+	g_main_context_pop_thread_default(helper->main_ctx);
 	if (helper->timeout_id != 0)
 		g_source_remove(helper->timeout_id);
 	if (helper->mbim_device != NULL)
@@ -142,6 +148,7 @@ fu_mm_mbim_device_helper_free(FuMmMbimDeviceHelper *helper)
 		mbim_message_unref(helper->mbim_message);
 	g_object_unref(helper->cancellable);
 	g_main_loop_unref(helper->loop);
+	g_main_context_unref(helper->main_ctx);
 	g_free(helper);
 }
 
