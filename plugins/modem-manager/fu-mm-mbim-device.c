@@ -7,22 +7,22 @@
 
 #include "config.h"
 
-#include <libmbim-glib.h>
-
 #include "fu-mm-mbim-device.h"
 
-struct _FuMmMbimDevice {
+typedef struct {
 	FuMmDevice parent_instance;
 	MbimDevice *mbim_device;
-};
+} FuMmMbimDevicePrivate;
 
-G_DEFINE_TYPE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
+
+#define GET_PRIVATE(o) (fu_mm_mbim_device_get_instance_private(o))
 
 #define FU_MM_MBIM_DEVICE_MAX_OPEN_ATTEMPTS 8
 
 #define FU_MM_MBIM_DEVICE_TIMEOUT_MS 1500
 
-static gboolean
+gboolean
 fu_mm_mbim_device_error_convert(GError **error)
 {
 	const FuErrorConvertEntry entries[] = {
@@ -219,6 +219,7 @@ fu_mm_mbim_device_open_sync_cb(GObject *source, GAsyncResult *res, gpointer user
 static gboolean
 fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
 {
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
@@ -242,7 +243,7 @@ fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **err
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
-	mbim_device_open_full(self->mbim_device,
+	mbim_device_open_full(priv->mbim_device,
 			      MBIM_DEVICE_OPEN_FLAGS_PROXY,
 			      10,
 			      helper->cancellable,
@@ -274,6 +275,7 @@ fu_mm_mbim_device_close_sync_cb(GObject *source, GAsyncResult *res, gpointer use
 static gboolean
 fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
 {
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
@@ -290,7 +292,7 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		g_clear_object(&self->mbim_device);
+		g_clear_object(&priv->mbim_device);
 		return event != NULL;
 	}
 
@@ -298,7 +300,7 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
-	mbim_device_close(self->mbim_device,
+	mbim_device_close(priv->mbim_device,
 			  5,
 			  helper->cancellable,
 			  fu_mm_mbim_device_close_sync_cb,
@@ -315,7 +317,7 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 	}
 
 	/* success */
-	g_clear_object(&self->mbim_device);
+	g_clear_object(&priv->mbim_device);
 	return TRUE;
 }
 
@@ -336,12 +338,13 @@ fu_mm_mbim_device_command_cb(GObject *source, GAsyncResult *res, gpointer user_d
 	g_main_loop_quit(helper->loop);
 }
 
-static MbimMessage *
+MbimMessage *
 fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 			       MbimMessage *mbim_message,
 			       guint timeout_ms,
 			       GError **error)
 {
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
@@ -383,7 +386,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
-	mbim_device_command(self->mbim_device,
+	mbim_device_command(priv->mbim_device,
 			    mbim_message,
 			    2 * timeout_ms / 1000,
 			    helper->cancellable,
@@ -418,45 +421,9 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 }
 
 static gboolean
-fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
+fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autofree gchar *firmware_version = NULL;
-	g_autoptr(MbimMessage) request = NULL;
-	g_autoptr(MbimMessage) response = NULL;
-
-	request = mbim_message_device_caps_query_new(NULL);
-	response = fu_mm_mbim_device_command_sync(self, request, 10 * 1000, error);
-	if (response == NULL)
-		return FALSE;
-	if (!mbim_message_device_caps_response_parse(response,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     NULL,
-						     &firmware_version,
-						     NULL,
-						     error)) {
-		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse caps-query response: ");
-		return FALSE;
-	}
-	g_debug("[%s] modem query caps firmware version: %s",
-		mbim_device_get_path_display(self->mbim_device),
-		firmware_version);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_mm_mbim_device_detach_to_edl(FuMmMbimDevice *self, GError **error)
-{
+	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
@@ -465,27 +432,12 @@ fu_mm_mbim_device_detach_to_edl(FuMmMbimDevice *self, GError **error)
 	response = fu_mm_mbim_device_command_sync(self, request, 5 * 1000, &error_local);
 	if (response == NULL) {
 		/* MBIM port goes away */
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			g_debug("ignoring: %s", error_local->message);
-			return TRUE;
-		}
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
-{
-	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-
-	/* use special command for Quectel MBIM devices */
-	if (fu_device_get_vid(device) == 0x2C7C) {
-		if (!fu_mm_mbim_device_detach_to_edl(self, error))
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) &&
+		    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
+		g_debug("ignoring: %s", error_local->message);
 	}
 
 	/* success */
@@ -493,225 +445,14 @@ fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
-static GArray *
-fu_mm_mbim_device_get_checksum(GBytes *blob)
-{
-	gsize file_size;
-	gsize hash_size;
-	GArray *digest;
-	g_autoptr(GChecksum) checksum = NULL;
-
-	/* get checksum, to be used as unique id */
-	file_size = g_bytes_get_size(blob);
-	hash_size = g_checksum_type_get_length(G_CHECKSUM_SHA256);
-	checksum = g_checksum_new(G_CHECKSUM_SHA256);
-	g_checksum_update(checksum, g_bytes_get_data(blob, NULL), file_size);
-
-	/* libqmi expects a GArray of bytes, not a GByteArray */
-	digest = g_array_sized_new(FALSE, FALSE, sizeof(guint8), hash_size);
-	g_array_set_size(digest, hash_size);
-	g_checksum_get_digest(checksum, (guint8 *)digest->data, &hash_size);
-	return digest;
-}
-
-static gboolean
-fu_mm_mbim_device_write_chunk(FuMmMbimDevice *self, FuChunk *chk, GError **error)
-{
-	g_autoptr(MbimMessage) request = NULL;
-	g_autoptr(MbimMessage) response = NULL;
-
-	request = mbim_message_qdu_file_write_set_new(fu_chunk_get_data_sz(chk),
-						      fu_chunk_get_data(chk),
-						      NULL);
-	response = fu_mm_mbim_device_command_sync(self, request, 20 * 1000, error);
-	if (response == NULL)
-		return FALSE;
-	if (!mbim_message_qdu_file_write_response_parse(response, error)) {
-		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse write-chunk response: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_mm_mbim_device_write_chunks(FuMmMbimDevice *self,
-			       FuChunkArray *chunks,
-			       FuProgress *progress,
-			       GError **error)
-{
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(FuChunk) chk = NULL;
-		chk = fu_chunk_array_index(chunks, 0, error);
-		if (chk == NULL) {
-			g_prefix_error(error, "failed to get chunk: ");
-			return FALSE;
-		}
-		if (!fu_mm_mbim_device_write_chunk(self, chk, error))
-			return FALSE;
-		fu_progress_step_done(progress);
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_mm_mbim_device_write(FuMmMbimDevice *self,
-			const gchar *filename,
-			GBytes *blob,
-			FuProgress *progress,
-			GError **error)
-{
-	guint32 out_max_transfer_size = 0;
-	g_autoptr(FuChunkArray) chunks = NULL;
-	g_autoptr(GArray) checksum = fu_mm_mbim_device_get_checksum(blob);
-	g_autoptr(MbimMessage) action_start_req = NULL;
-	g_autoptr(MbimMessage) action_start_res = NULL;
-	g_autoptr(MbimMessage) file_open_req = NULL;
-	g_autoptr(MbimMessage) file_open_res = NULL;
-
-	/* progress */
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "start-update");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 2, "file-open");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "send-chunks");
-
-	/* start update */
-	action_start_req = mbim_message_qdu_update_session_set_new(MBIM_QDU_SESSION_ACTION_START,
-								   MBIM_QDU_SESSION_TYPE_LE,
-								   NULL);
-	action_start_res = fu_mm_mbim_device_command_sync(self, action_start_req, 10 * 1000, error);
-	if (action_start_res == NULL)
-		return FALSE;
-	if (!mbim_message_qdu_update_session_response_parse(action_start_res,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    NULL,
-							    error)) {
-		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse action-start response: ");
-		return FALSE;
-	}
-	g_debug("[%s] successfully request modem to update session",
-		mbim_device_get_path_display(self->mbim_device));
-	fu_progress_step_done(progress);
-
-	/* get the max transfer size */
-	file_open_req = mbim_message_qdu_file_open_set_new(MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE,
-							   g_bytes_get_size(blob),
-							   NULL);
-	file_open_res = fu_mm_mbim_device_command_sync(self, file_open_req, 10 * 1000, error);
-	if (file_open_res == NULL)
-		return FALSE;
-
-	if (!mbim_message_qdu_file_open_response_parse(file_open_res,
-						       &out_max_transfer_size,
-						       NULL,
-						       error)) {
-		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse file-open response: ");
-		return FALSE;
-	}
-	fu_progress_step_done(progress);
-
-	/* send chunks */
-	chunks = fu_chunk_array_new_from_bytes(blob,
-					       FU_CHUNK_ADDR_OFFSET_NONE,
-					       FU_CHUNK_PAGESZ_NONE,
-					       out_max_transfer_size);
-	if (!fu_mm_mbim_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_mm_mbim_device_write_firmware(FuDevice *device,
-				 FuFirmware *firmware,
-				 FuProgress *progress,
-				 FwupdInstallFlags flags,
-				 GError **error)
-{
-	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-	XbNode *part = NULL;
-	const gchar *filename = NULL;
-	const gchar *csum;
-	g_autofree gchar *csum_actual = NULL;
-	g_autofree gchar *version = NULL;
-	g_autoptr(FuArchive) archive = NULL;
-	g_autoptr(GBytes) data_part = NULL;
-	g_autoptr(GBytes) data_xml = NULL;
-	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(XbBuilder) builder = xb_builder_new();
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbSilo) silo = NULL;
-
-	/* decompress entire archive ahead of time */
-	stream = fu_firmware_get_stream(firmware, error);
-	if (stream == NULL)
-		return FALSE;
-	archive = fu_archive_new_stream(stream, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
-	if (archive == NULL)
-		return FALSE;
-
-	/* load the manifest of operations */
-	data_xml = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
-	if (data_xml == NULL)
-		return FALSE;
-	if (!xb_builder_source_load_bytes(source, data_xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
-		return FALSE;
-	xb_builder_import_source(builder, source);
-	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
-	if (silo == NULL)
-		return FALSE;
-
-	part = xb_silo_query_first(silo, "parts/part", error);
-	if (part == NULL)
-		return FALSE;
-	filename = xb_node_get_attr(part, "filename");
-	csum = xb_node_get_attr(part, "MD5");
-	data_part = fu_archive_lookup_by_fn(archive, filename, error);
-	if (data_part == NULL)
-		return FALSE;
-	csum_actual = g_compute_checksum_for_bytes(G_CHECKSUM_MD5, data_part);
-	if (g_strcmp0(csum, csum_actual) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "[%s] MD5 not matched",
-			    filename);
-		return FALSE;
-	}
-	g_debug("[%s] MD5 matched", filename);
-
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_mm_mbim_device_write(self, filename, data_part, progress, error))
-		return FALSE;
-
-	/* read back new version */
-	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
-	if (!fu_mm_mbim_device_ensure_firmware_version(self, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
 static gboolean
 fu_mm_mbim_device_probe(FuDevice *device, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	fu_device_add_protocol(device, "com.qualcomm.firehose");
+	fu_device_add_instance_id_full(device,
+				       "USB\\VID_05C6&PID_9008",
+				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
 	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_MBIM, error);
 }
 
@@ -726,13 +467,14 @@ static gboolean
 fu_mm_mbim_device_open(FuDevice *device, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GFile) mbim_device_file =
 	    g_file_new_for_path(fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)));
 
 	/* create and open */
-	self->mbim_device =
+	priv->mbim_device =
 	    fu_mm_mbim_device_new_sync(self, mbim_device_file, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
-	if (self->mbim_device == NULL)
+	if (priv->mbim_device == NULL)
 		return FALSE;
 	return fu_device_retry(device,
 			       fu_mm_mbim_device_open_cb,
@@ -745,9 +487,10 @@ static gboolean
 fu_mm_mbim_device_close(FuDevice *device, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* sanity check */
-	if (self->mbim_device == NULL) {
+	if (priv->mbim_device == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -764,13 +507,7 @@ fu_mm_mbim_device_prepare(FuDevice *device,
 			  GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-
-	/* autosuspend delay updated for a proper firmware update */
-	if (!fu_mm_device_set_autosuspend_delay(FU_MM_DEVICE(self), 20000, error))
-		return FALSE;
-
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), TRUE);
-	return TRUE;
+	return fu_mm_device_set_autosuspend_delay(FU_MM_DEVICE(self), 20000, error);
 }
 
 static gboolean
@@ -780,23 +517,17 @@ fu_mm_mbim_device_cleanup(FuDevice *device,
 			  GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
-
-	if (!fu_mm_device_set_autosuspend_delay(FU_MM_DEVICE(self), 2000, error))
-		return FALSE;
-
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), FALSE);
-	return TRUE;
+	return fu_mm_device_set_autosuspend_delay(FU_MM_DEVICE(self), 2000, error);
 }
 
 static void
-fu_mm_mbim_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_mbim_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 3, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 58, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 38, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
@@ -806,7 +537,6 @@ fu_mm_mbim_device_init(FuMmMbimDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG);
-	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.mbim_qdu");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
@@ -814,7 +544,8 @@ static void
 fu_mm_mbim_device_finalize(GObject *object)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(object);
-	g_warn_if_fail(self->mbim_device == NULL);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
+	g_warn_if_fail(priv->mbim_device == NULL);
 	G_OBJECT_CLASS(fu_mm_mbim_device_parent_class)->finalize(object);
 }
 
@@ -831,5 +562,4 @@ fu_mm_mbim_device_class_init(FuMmMbimDeviceClass *klass)
 	device_class->prepare = fu_mm_mbim_device_prepare;
 	device_class->cleanup = fu_mm_mbim_device_cleanup;
 	device_class->set_progress = fu_mm_mbim_device_set_progress;
-	device_class->write_firmware = fu_mm_mbim_device_write_firmware;
 }

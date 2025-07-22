@@ -15,6 +15,7 @@
 #include "fu-mm-mbim-device.h"
 #include "fu-mm-mhi-qcdm-device.h"
 #include "fu-mm-qcdm-device.h"
+#include "fu-mm-qdu-mbim-device.h"
 #include "fu-mm-qmi-device.h"
 
 struct _FuMmBackend {
@@ -142,7 +143,7 @@ fu_mm_backend_probe_gtype_fallback(FuMmBackend *self, MMObject *omodem, GError *
 		MMModemFirmwareUpdateMethod method;
 	} map[] = {
 	    {
-		FU_TYPE_MM_MBIM_DEVICE,
+		FU_TYPE_MM_QDU_MBIM_DEVICE,
 		MM_MODEM_PORT_TYPE_MBIM,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
 	    },
