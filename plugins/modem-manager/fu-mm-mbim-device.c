@@ -702,6 +702,7 @@ fu_mm_mbim_device_init(FuMmMbimDevice *self)
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATION_TAG);
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.mbim_qdu");
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
