@@ -8,8 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuDevlinkPlugin,
-		     fu_devlink_plugin,
-		     FU,
-		     DEVLINK_PLUGIN,
-		     FuPlugin)
+G_DECLARE_FINAL_TYPE(FuDevlinkPlugin, fu_devlink_plugin, FU, DEVLINK_PLUGIN, FuPlugin)

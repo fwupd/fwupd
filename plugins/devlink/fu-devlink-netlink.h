@@ -7,6 +7,7 @@
 #pragma once
 
 #include <fwupdplugin.h>
+
 #include <libmnl/libmnl.h>
 #include <linux/devlink.h>
 #include <linux/genetlink.h>
@@ -25,11 +26,11 @@ typedef struct {
 /* send/receive functions */
 gboolean
 fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
-				gsize len,
-				guint32 seq,
-				mnl_cb_t cb,
-				void *data,
-				GError **error);
+			   gsize len,
+			   guint32 seq,
+			   mnl_cb_t cb,
+			   void *data,
+			   GError **error);
 
 gboolean
 fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,

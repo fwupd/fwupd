@@ -16,6 +16,6 @@ fu_devlink_backend_new(FuContext *ctx);
 
 FuDevice *
 fu_devlink_backend_device_added(FuDevlinkBackend *self,
-                                const gchar *bus_name,
-                                const gchar *dev_name,
-                                GError **error);
+				const gchar *bus_name,
+				const gchar *dev_name,
+				GError **error);
