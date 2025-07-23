@@ -49,17 +49,11 @@ fu_devlink_netlink_gen_socket_open(GError **error);
 void
 fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg);
 
-static inline gint
-fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg)
-{
-	return mnl_socket_get_fd(nlg->nl);
-}
+gint
+fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg);
 
-static inline gchar *
-fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg)
-{
-	return nlg->buf;
-}
+gchar *
+fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg);
 
 /* prepare devlink command message */
 struct nlmsghdr *

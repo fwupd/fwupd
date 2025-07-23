@@ -396,6 +396,18 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 	g_free(nlg);
 }
 
+gint
+fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg)
+{
+	return mnl_socket_get_fd(nlg->nl);
+}
+
+gchar *
+fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg)
+{
+	return nlg->buf;
+}
+
 /* prepare devlink command message */
 struct nlmsghdr *
 fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dump)
