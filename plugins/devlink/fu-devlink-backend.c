@@ -15,12 +15,6 @@ struct _FuDevlinkBackend {
 
 G_DEFINE_TYPE(FuDevlinkBackend, fu_devlink_backend, FU_TYPE_BACKEND)
 
-static void
-fu_devlink_backend_to_string(FuBackend *backend, guint idt, GString *str)
-{
-	/* no specific state to display */
-}
-
 static FuDevice *
 fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 				     const gchar *bus_name,
@@ -155,23 +149,6 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 	return FU_DEVICE(g_steal_pointer(&devlink_device));
 }
 
-static gboolean
-fu_devlink_backend_setup(FuBackend *backend,
-			 FuBackendSetupFlags flags,
-			 FuProgress *progress,
-			 GError **error)
-{
-	/* no specific setup needed for devlink backend */
-	return TRUE;
-}
-
-static gboolean
-fu_devlink_backend_coldplug(FuBackend *backend, FuProgress *progress, GError **error)
-{
-	/* device discovery is handled by the plugin via netlink */
-	return TRUE;
-}
-
 static void
 fu_devlink_backend_init(FuDevlinkBackend *self)
 {
@@ -181,10 +158,7 @@ fu_devlink_backend_init(FuDevlinkBackend *self)
 static void
 fu_devlink_backend_class_init(FuDevlinkBackendClass *klass)
 {
-	FuBackendClass *backend_class = FU_BACKEND_CLASS(klass);
-	backend_class->setup = fu_devlink_backend_setup;
-	backend_class->coldplug = fu_devlink_backend_coldplug;
-	backend_class->to_string = fu_devlink_backend_to_string;
+	/* no initialization needed */
 }
 
 FuBackend *
