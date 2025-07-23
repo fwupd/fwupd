@@ -58,7 +58,7 @@ typedef struct {
 	void *user_data;
 	mnl_cb_t user_cb;
 	GError **error;
-} FuDevlinkCbCtx;
+} FuDevlinkCbHelper;
 
 static gboolean
 fu_devlink_netlink_error_cb_extack(const struct nlmsghdr *nlh, GError **error)
@@ -89,15 +89,15 @@ static int
 fu_devlink_netlink_error_cb(const struct nlmsghdr *nlh, void *data)
 {
 	const struct nlmsgerr *err = mnl_nlmsg_get_payload(nlh);
-	FuDevlinkCbCtx *ctx = data;
+	FuDevlinkCbHelper *helper = data;
 
 	if (mnl_nlmsg_get_payload_len(nlh) < sizeof(*err))
 		return MNL_CB_STOP;
 	if (!err->error)
 		return MNL_CB_STOP;
-	if (fu_devlink_netlink_error_cb_extack(nlh, ctx->error))
+	if (fu_devlink_netlink_error_cb_extack(nlh, helper->error))
 		return MNL_CB_ERROR;
-	g_set_error(ctx->error,
+	g_set_error(helper->error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "netlink error: %s",
@@ -121,11 +121,11 @@ fu_devlink_netlink_done_cb(const struct nlmsghdr *nlh, void *data)
 static int
 fu_devlink_netlink_data_cb(const struct nlmsghdr *nlh, void *data)
 {
-	FuDevlinkCbCtx *ctx = data;
+	FuDevlinkCbHelper *helper = data;
 
-	if (ctx->user_cb == NULL)
+	if (helper->user_cb == NULL)
 		return MNL_CB_OK;
-	return ctx->user_cb(nlh, ctx->user_data);
+	return helper->user_cb(nlh, helper->user_data);
 }
 
 static gint
@@ -137,7 +137,7 @@ fu_devlink_netlink_msg_cb_run(FuDevlinkGenSocket *nlg,
 			      GError **error)
 {
 	guint32 portid = mnl_socket_get_portid(nlg->nl);
-	FuDevlinkCbCtx ctx = {
+	FuDevlinkCbHelper helper = {
 	    .user_data = data,
 	    .user_cb = cb,
 	    .error = error,
@@ -154,7 +154,7 @@ fu_devlink_netlink_msg_cb_run(FuDevlinkGenSocket *nlg,
 			   seq,
 			   portid,
 			   fu_devlink_netlink_data_cb,
-			   &ctx,
+			   &helper,
 			   cbs,
 			   MNL_ARRAY_SIZE(cbs));
 }

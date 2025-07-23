@@ -31,8 +31,8 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autofree gchar *physical_id = NULL;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* parse netlink attributes using libmnl */
@@ -129,7 +129,7 @@ fu_devlink_plugin_netlink_cb(GIOChannel *channel, GIOCondition condition, gpoint
 	FuDevlinkPlugin *self = FU_DEVLINK_PLUGIN(user_data);
 	gsize len;
 	GIOStatus status;
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	if (condition & (G_IO_ERR | G_IO_HUP)) {
 		g_debug("devlink netlink socket error");
@@ -141,10 +141,10 @@ fu_devlink_plugin_netlink_cb(GIOChannel *channel, GIOCondition condition, gpoint
 					 fu_devlink_netlink_gen_socket_get_buf(self->nlg),
 					 FU_DEVLINK_NETLINK_BUF_SIZE,
 					 &len,
-					 &local_error);
+					 &error_local);
 	if (status != G_IO_STATUS_NORMAL) {
-		if (local_error != NULL)
-			g_debug("failed to read devlink netlink message: %s", local_error->message);
+		if (error_local != NULL)
+			g_debug("failed to read devlink netlink message: %s", error_local->message);
 		return TRUE;
 	}
 
@@ -154,8 +154,8 @@ fu_devlink_plugin_netlink_cb(GIOChannel *channel, GIOCondition condition, gpoint
 					0,
 					fu_devlink_plugin_process_message_cb,
 					self,
-					&local_error))
-		g_warning("failed to process netlink message: %s", local_error->message);
+					&error_local))
+		g_warning("failed to process netlink message: %s", error_local->message);
 
 	return TRUE;
 }
@@ -301,7 +301,6 @@ fu_devlink_plugin_constructed(GObject *obj)
 static void
 fu_devlink_plugin_init(FuDevlinkPlugin *self)
 {
-	/* empty function if no initialization needed */
 }
 
 static void
