@@ -1,9 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring
 #
-# Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# Copyright 2021 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 #
 # pylint: disable=too-many-instance-attributes,no-self-use
 
@@ -18,7 +18,6 @@ DEFAULT_BUILDDIR = ".ossfuzz"
 
 class Builder:
     def __init__(self) -> None:
-
         self.cc = self._ensure_environ("CC", "gcc")
         self.cxx = self._ensure_environ("CXX", "g++")
         self.builddir = self._ensure_environ("WORK", os.path.realpath(DEFAULT_BUILDDIR))
@@ -64,7 +63,13 @@ class Builder:
             os.environ[key] = value
         return os.environ[key]
 
-    def checkout_source(self, name: str, url: str, commit: Optional[str] = None) -> str:
+    def checkout_source(
+        self,
+        name: str,
+        url: str,
+        commit: Optional[str] = None,
+        patches: Optional[List[str]] = None,
+    ) -> str:
         """checkout source tree, optionally to a specific commit"""
         srcdir_name = os.path.join(self.srcdir, name)
         if os.path.exists(srcdir_name):
@@ -72,6 +77,12 @@ class Builder:
         subprocess.run(["git", "clone", url], cwd=self.srcdir, check=True)
         if commit:
             subprocess.run(["git", "checkout", commit], cwd=srcdir_name, check=True)
+        if patches:
+            for fn in patches:
+                with open(os.path.join(self.srcdir, "fwupd", fn), "rb") as f:
+                    subprocess.run(
+                        ["patch", "-p1"], cwd=srcdir_name, check=True, input=f.read()
+                    )
         return srcdir_name
 
     def build_meson_project(self, srcdir: str, argv) -> None:
@@ -131,7 +142,7 @@ class Builder:
         """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
-        with open(os.path.join(self.srcdir, src), "r") as f:
+        with open(os.path.join(self.srcdir, src)) as f:
             blob = f.read()
             for key in replacements:
                 blob = blob.replace(key, replacements[key])
@@ -157,7 +168,6 @@ class Builder:
         return os.path.join(self.builddir, f"{dst}")
 
     def rustgen(self, src: str) -> str:
-
         fn_root = os.path.basename(src).replace(".rs", "")
         fulldst_c = os.path.join(self.builddir, f"{fn_root}-struct.c")
         fulldst_h = os.path.join(self.builddir, f"{fn_root}-struct.h")
@@ -178,7 +188,7 @@ class Builder:
             sys.exit(1)
         return fulldst_c
 
-    def link(self, objs: List[str], dst: str) -> None:
+    def link(self, objs: List[str], dst: str) -> str:
         """link multiple objects into a binary"""
         argv = [self.cxx] + self.cxxflags
         for obj in objs:
@@ -190,29 +200,27 @@ class Builder:
         argv += self.ldflags
         print(f"building {','.join(objs)} into {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
+        return os.path.join(self.installdir, dst)
 
-    def mkfuzztargets(self, globstr: str) -> None:
+    def mkfuzztargets(self, exe: str, globstr: str) -> List[str]:
         """make binary fuzzing targets from builder.xml files"""
         builder_xmls = glob.glob(globstr)
+        corpus: List[str] = []
         if not builder_xmls:
             print(f"failed to find {globstr}")
-            sys.exit(1)
         for fn_src in builder_xmls:
-            fn_dst = fn_src.replace(".builder.xml", ".bin")
-            if os.path.exists(fn_dst):
-                continue
+            fn_dst = os.path.join(
+                self.builddir, os.path.basename(fn_src).replace(".builder.xml", ".bin")
+            )
             print(f"building {fn_src} into {fn_dst}")
             try:
-                argv = [
-                    "build/src/fwupdtool",
-                    "firmware-build",
-                    fn_src,
-                    fn_dst,
-                ]
+                argv = [exe, fn_src, fn_dst]
                 subprocess.run(argv, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"tried to run: `{' '.join(argv)}` and got {str(e)}")
                 sys.exit(1)
+            corpus.append(fn_dst)
+        return corpus
 
     def write_header(
         self, dst: str, defines: Dict[str, Optional[Union[str, int]]]
@@ -233,18 +241,18 @@ class Builder:
                     f.write(f"#define {key}\n")
         self.add_work_includedir(os.path.dirname(dst))
 
-    def makezip(self, dst: str, globstr: str) -> None:
+    def makezip(self, dst: str, corpus: List[str]) -> None:
         """create a zip file archive from a glob"""
-        argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + glob.glob(
-            os.path.join(self.srcdir, globstr)
-        )
+        if not corpus:
+            return
+        argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + corpus
         print(f"assembling {dst}")
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
     def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
         """find source files tagged with a specific comment"""
         srcs = []
-        with open(os.path.join(self.srcdir, src, "meson.build"), "r") as f:
+        with open(os.path.join(self.srcdir, src, "meson.build")) as f:
             for line in f.read().split("\n"):
                 if line.find(token) == -1:
                     continue
@@ -268,11 +276,10 @@ class Builder:
 
 
 class Fuzzer:
-    def __init__(self, name, srcdir=None, globstr=None, pattern=None) -> None:
-
+    def __init__(self, name, srcdir=None, pattern=None) -> None:
         self.name = name
         self.srcdir = srcdir or name
-        self.globstr = globstr or f"{name}*.bin"
+        self.globstr = f"{name}*.bin"
         self.pattern = pattern or f"{name}-firmware"
 
     @property
@@ -285,12 +292,13 @@ class Fuzzer:
 
 
 def _build(bld: Builder) -> None:
-
     # CBOR
     src = bld.checkout_source(
-        "libcbor", url="https://github.com/PJK/libcbor.git", commit="v0.9.0"
+        "libcbor",
+        url="https://github.com/PJK/libcbor.git",
+        commit="b223daaaa34dcb83f9c25576f05e4f1646f44bf9",
     )
-    bld.build_cmake_project(src)
+    bld.build_cmake_project(src, argv=["-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"])
     bld.add_build_ldflag("lib/libcbor.a")
 
     # GLib
@@ -319,7 +327,11 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libgthread-2.0.a")
 
     # JSON-GLib
-    src = bld.checkout_source("json-glib", url="https://github.com/GNOME/json-glib.git")
+    src = bld.checkout_source(
+        "json-glib",
+        url="https://github.com/GNOME/json-glib.git",
+        commit="1.8.0-actual",
+    )
     bld.build_meson_project(
         src, ["-Dgtk_doc=disabled", "-Dtests=false", "-Dintrospection=disabled"]
     )
@@ -337,31 +349,34 @@ def _build(bld: Builder) -> None:
     bld.add_build_ldflag("lib/libxmlb.a")
 
     # write required headers
-    bld.write_header("libfwupd/fwupd-version.h", {})
+    bld.write_header(
+        "libfwupd/fwupd-version.h",
+        {
+            "FWUPD_MAJOR_VERSION": 0,
+            "FWUPD_MINOR_VERSION": 0,
+            "FWUPD_MICRO_VERSION": 0,
+        },
+    )
     bld.write_header(
         "config.h",
         {
             "FWUPD_DATADIR": "/tmp",
+            "FWUPD_DATADIR_VENDOR_IDS": "/tmp",
             "FWUPD_LOCALSTATEDIR": "/tmp",
             "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
             "FWUPD_LIBEXECDIR": "/tmp",
+            "HAVE_CBOR": None,
+            "HAVE_CBOR_SET_ALLOCS": None,
             "HAVE_REALPATH": None,
             "PACKAGE_NAME": "fwupd",
             "PACKAGE_VERSION": "0.0.0",
         },
     )
-    bld.write_header(
-        "libfwupdplugin/fu-version.h",
-        {
-            "FU_MAJOR_VERSION": 0,
-            "FU_MINOR_VERSION": 0,
-            "FU_MICRO_VERSION": 0,
-        },
-    )
 
     # libfwupd + libfwupdplugin
     built_objs: List[str] = []
+    fuzzing_objs: List[str] = []
     bld.add_src_includedir("fwupd")
     for path in ["fwupd/libfwupd", "fwupd/libfwupdplugin"]:
         bld.add_src_includedir(path)
@@ -373,16 +388,18 @@ def _build(bld: Builder) -> None:
 
     # dummy binary entrypoint
     if "LIB_FUZZING_ENGINE" in os.environ:
-        built_objs.append(os.environ["LIB_FUZZING_ENGINE"])
+        fuzzing_objs.append(os.environ["LIB_FUZZING_ENGINE"])
     else:
-        built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
+        fuzzing_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
     for fzr in [
+        Fuzzer("efi-lz77", pattern="efi-lz77-decompressor"),
         Fuzzer("csv"),
         Fuzzer("cab"),
         Fuzzer("dfuse"),
         Fuzzer("edid", pattern="edid"),
+        Fuzzer("elf"),
         Fuzzer("fdt"),
         Fuzzer("fit"),
         Fuzzer("fmap"),
@@ -394,8 +411,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("ifwi-fpt"),
         Fuzzer("oprom"),
         Fuzzer("uswid"),
-        Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
-        Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
+        Fuzzer("efi-filesystem", pattern="efi-filesystem"),
+        Fuzzer("efi-volume", pattern="efi-volume"),
         Fuzzer("efi-load-option", pattern="efi-load-option"),
         Fuzzer("ifd"),
     ]:
@@ -406,19 +423,33 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        bld.link([bld.compile(src)] + built_objs, f"{fzr.name}_fuzzer")
-        bld.mkfuzztargets(
+        exe = bld.link(
+            [bld.compile(src)] + fuzzing_objs + built_objs, f"{fzr.name}_fuzzer"
+        )
+
+        src_generator = bld.substitute(
+            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+            {
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
+            },
+        )
+        exe_generator = bld.link(
+            [bld.compile(src_generator)] + built_objs, f"{fzr.name}_generator"
+        )
+        corpus = bld.mkfuzztargets(
+            exe_generator,
             os.path.join(
                 bld.srcdir,
                 "fwupd",
                 "libfwupdplugin",
                 "tests",
                 f"{fzr.name}*.builder.xml",
-            )
+            ),
         )
         bld.makezip(
             f"{fzr.name}_fuzzer_seed_corpus.zip",
-            f"fwupd/libfwupdplugin/tests/{fzr.globstr}",
+            corpus,
         )
 
     # plugins
@@ -455,9 +486,25 @@ def _build(bld: Builder) -> None:
                 "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
-        fuzz_objs.append(bld.compile(src))
-        bld.link(fuzz_objs + built_objs, f"{fzr.name}_fuzzer")
-        bld.mkfuzztargets(
+        exe = bld.link(
+            fuzz_objs + built_objs + fuzzing_objs + [bld.compile(src)],
+            f"{fzr.name}_fuzzer",
+        )
+
+        # generate the corpus
+        src_generator = bld.substitute(
+            "fwupd/libfwupdplugin/fu-fuzzer-generate.c.in",
+            {
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
+            },
+        )
+        exe_generator = bld.link(
+            fuzz_objs + built_objs + [bld.compile(src_generator)],
+            f"{fzr.name}_generator",
+        )
+        corpus = bld.mkfuzztargets(
+            exe_generator,
             os.path.join(
                 bld.srcdir,
                 "fwupd",
@@ -465,16 +512,15 @@ def _build(bld: Builder) -> None:
                 fzr.srcdir,
                 "tests",
                 f"{fzr.name}*.builder.xml",
-            )
+            ),
         )
         bld.makezip(
             f"{fzr.name}_fuzzer_seed_corpus.zip",
-            f"fwupd/plugins/{fzr.srcdir}/tests/{fzr.globstr}",
+            corpus,
         )
 
 
 if __name__ == "__main__":
-
     # install missing deps here rather than patching the Dockerfile in oss-fuzz
     try:
         subprocess.check_call(
@@ -487,6 +533,7 @@ if __name__ == "__main__":
                 "libcbor-dev",
                 "python3",
                 "python3-jinja2",
+                "python3-packaging",
             ],
             stdout=open(os.devnull, "wb"),
         )

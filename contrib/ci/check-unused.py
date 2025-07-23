@@ -1,22 +1,23 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-module-docstring,missing-function-docstring
 #
-# Copyright (C) 2023 Richard Hughes <richard@hughsie.com>
+# Copyright 2023 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
 import fnmatch
+import os
 import sys
 import subprocess
 
 
 def test_files() -> int:
-
     fns = sys.argv[1:]
     if not fns:
-        fns.append("./plugins")
-        fns.append("./src")
+        build = os.environ["BUILD"] if "BUILD" in os.environ else ""
+        fns.append(os.path.join(".", build, "plugins"))
+        fns.append(os.path.join(".", build, "src"))
 
     data = []
 
@@ -72,6 +73,5 @@ def test_files() -> int:
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

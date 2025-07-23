@@ -1,8 +1,8 @@
-FROM fedora:40
+FROM fedora:41
 %%%OS%%%
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN echo fubar > /etc/machine-id
