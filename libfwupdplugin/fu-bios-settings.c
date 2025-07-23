@@ -66,7 +66,7 @@ fu_bios_setting_get_key(FwupdBiosSetting *attr, /* nocheck:name */
 	tmp = g_build_filename(fwupd_bios_setting_get_path(attr), key, NULL);
 	if (!g_file_get_contents(tmp, value_out, NULL, error)) {
 		g_prefix_error(error, "failed to load %s: ", key);
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	g_strchomp(*value_out);
@@ -393,7 +393,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	class_dir = g_dir_open(sysfsfwdir, 0, error);
 	if (class_dir == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	do {
@@ -409,7 +409,7 @@ fu_bios_settings_setup(FuBiosSettings *self, GError **error)
 		}
 		driver_dir = g_dir_open(path, 0, error);
 		if (driver_dir == NULL) {
-			fu_error_convert(error);
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 		do {

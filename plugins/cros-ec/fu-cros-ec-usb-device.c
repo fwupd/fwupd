@@ -190,7 +190,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 						 FU_CROS_EC_BULK_RECV_TIMEOUT,
 						 NULL,
 						 error)) {
-			fu_error_convert(error);
+			fwupd_error_convert(error);
 			return FALSE;
 		}
 		if (actual != inlen && !allow_less) {

@@ -68,7 +68,7 @@ fu_engine_emulator_save(FuEngineEmulator *self, GOutputStream *stream, GError **
 	if (!fu_output_stream_write_bytes(stream, blob, NULL, error))
 		return FALSE;
 	if (!g_output_stream_flush(stream, NULL, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
