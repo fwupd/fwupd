@@ -83,7 +83,6 @@ fu_devlink_component_reload(FuDevice *device, GError **error)
 		return FALSE;
 
 	g_debug("reloading version for component '%s' via parent device", self->component_name);
-
 	return fu_device_reload(parent, error);
 }
 
@@ -103,7 +102,6 @@ fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **e
 		return FALSE;
 
 	g_debug("activating firmware for component '%s' via parent device", self->component_name);
-
 	return fu_device_activate(parent, progress, error);
 }
 

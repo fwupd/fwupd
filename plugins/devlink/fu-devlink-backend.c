@@ -152,13 +152,11 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 static void
 fu_devlink_backend_init(FuDevlinkBackend *self)
 {
-	/* no initialization needed */
 }
 
 static void
 fu_devlink_backend_class_init(FuDevlinkBackendClass *klass)
 {
-	/* no initialization needed */
 }
 
 FuBackend *
