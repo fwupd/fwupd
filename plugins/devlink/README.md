@@ -12,7 +12,7 @@ The plugin uses the Linux devlink netlink interface to communicate with the kern
 
 1. **Netlink Communication**: Opens Netlink socket to communicate with the devlink subsystem
 2. **Device Detection**:  Gets all existing devlink devices
-3. **Firmware Upload**: Writes the firmware file to `/lib/firmware/` and instructs devlink to flash it
+3. **Firmware Upload**: Writes the firmware file to `CACHE_DIRECTORY` and instructs devlink to flash it
 4. **Progress Monitoring**: Monitors devlink status messages to provide real-time progress updates
 5. **Firmware Activation**: Activates firmware using devlink reload activate action
 
