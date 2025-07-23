@@ -1,10 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 # pylint: disable=too-few-public-methods
 #
-# Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+# Copyright 2022 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
 import sys
@@ -13,7 +13,6 @@ from typing import List
 
 
 def test_files():
-
     # compare with POTFILES.in
     with open("po/POTFILES.in", "rb") as f:
         potfiles_fns: List[str] = f.read().decode().split("\n")
@@ -42,6 +41,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

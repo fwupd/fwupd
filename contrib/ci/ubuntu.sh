@@ -30,11 +30,35 @@ LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
 export LDFLAGS
 
 root=$(pwd)
-rm -rf ${root}/build
+export BUILD=${root}/build
+rm -rf ${BUILD}
 chown -R nobody ${root}
-sudo -u nobody meson ${root}/build -Dman=false -Ddocs=enabled -Dgusb:tests=false --prefix=${root}/dist
+sudo -u nobody meson ${BUILD}               \
+                    -Db_coverage=true       \
+                    -Dman=false             \
+                    -Ddocs=enabled          \
+                    -Dlibxmlb:gtkdoc=false  \
+                    --prefix=${root}/target
 #build with clang
-sudo -u nobody ninja -C ${root}/build test -v
+sudo -u nobody ninja -C ${BUILD} -v
+sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
+
+# check we've not become a CPU or memory hog
+ninja -C ${BUILD} install -v
+./contrib/ci/check-rss.py --limit 3072 ${BUILD}/src/fwupdtool get-devices
+./contrib/ci/check-cpu.py --limit 300 ${BUILD}/src/fwupdtool get-devices
+
+# check the daemon aborts
+set +e
+FWUPD_SYSCALL_FILTER=systemd ${BUILD}/src/fwupd --immediate-exit
+if [ $? -ne 1 ] ; then
+    echo "failed to detect missing syscall filtering"
+    exit 1
+fi
 
 #make docs available outside of docker
-ninja -C ${root}/build install -v
+mkdir -p ${root}/dist/share
+mv ${root}/target/share/doc ${root}/dist/share
+
+# generate coverage report
+./contrib/ci/coverage.sh

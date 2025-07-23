@@ -1,0 +1,13 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publish:
+    uses: ./.github/workflows/matrix.yml
+    with:
+      publish: true
+    secrets: inherit

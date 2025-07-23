@@ -11,18 +11,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-      - name: Refresh dependencies
-        run: sudo apt update
-      - name: Install dependencies
-        run: sudo apt install shellcheck clang-format -y
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Run pre-commit hooks
         run: |
-          ./contrib/setup
-          source venv/bin/activate
-          sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
-          pre-commit run --hook-stage commit --all-files
+          docker run --privileged -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-precommit:latest
 
   snap:
     needs: pre-commit
@@ -34,3 +29,6 @@ jobs:
   matrix:
     needs: pre-commit
     uses: ./.github/workflows/matrix.yml
+    with:
+      publish: false
+    secrets: inherit

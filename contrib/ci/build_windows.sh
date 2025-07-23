@@ -9,18 +9,10 @@ fi
 
 # install deps
 if [ "$(id -u)" -eq 0 ]; then
+    dnf install -y python3
+    dnf install -y xvfb-run
     ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
-fi
-
-# update to latest version of meson
-if [ "$(id -u)" -eq 0 ]; then
-    dnf install -y python-pip
-    pip install meson --force-reinstall
-fi
-
-# get a libxmlb with the workaround for the GLib regression
-if [ "$(id -u)" -eq 0 ]; then
-    dnf upgrade --enablerepo=updates-testing --refresh --advisory=FEDORA-2024-584ab295c8 -y
+    dnf install -y https://kojipkgs.fedoraproject.org//packages/msitools/0.106/1.fc42/x86_64/msitools-0.106-1.fc42.x86_64.rpm
 fi
 
 #prep
@@ -30,8 +22,17 @@ export DESTDIR=${root}/dist
 build=$root/build-win32
 
 rm -rf $DESTDIR $build
+mkdir -p $build $DESTDIR && cd $build
 
-# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=disabled):
+# Hack for Fedora bug
+if [ "$(id -u)" -eq 0 ]; then
+    sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+fi
+
+# run before using meson
+export WINEPREFIX=$build/.wine
+
+# For logitech bulk controller being disabled (-Dprotobuf=disabled):
 # See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
 # When fixed need to do the following to enable:
 # 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps
@@ -39,8 +40,7 @@ rm -rf $DESTDIR $build
 # 3. Only enable when not a tagged release (Unsupported by Logitech)
 
 # try to keep this and ../contrib/build-windows.sh in sync as much as makes sense
-mkdir -p $build $DESTDIR && cd $build
-meson setup .. \
+xvfb-run meson setup .. \
     --cross-file=/usr/share/mingw/toolchain-mingw64.meson \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -56,7 +56,7 @@ meson setup .. \
     -Dbash_completion=false \
     -Dfirmware-packager=false \
     -Dmetainfo=false \
-    -Dcompat_cli=false \
+    -Dpassim=disabled \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:tests=false \
@@ -65,6 +65,7 @@ meson setup .. \
     -Dgusb:docs=false \
     -Dgusb:introspection=false \
     -Dgusb:vapi=false $@
+    $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja --verbose -C "$build" -v install
 
@@ -104,16 +105,21 @@ find $MINGW32BINDIR \
 	-o -name "libnettle-*.dll" \
 	-o -name libp11-kit-0.dll \
 	-o -name libpcre2-8-0.dll \
+	-o -name libpsl-5.dll \
 	-o -name libsqlite3-0.dll \
 	-o -name libssh2-1.dll \
 	-o -name libssl-3-x64.dll \
 	-o -name libssp-0.dll \
+	-o -name libtermcap-0.dll \
+	-o -name libreadline8.dll \
 	-o -name libtasn1-6.dll \
+	-o -name libunistring-2.dll \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
 	-o -name libxmlb-2.dll \
 	-o -name libzstd.dll \
+	-o -name wldap32.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
 	-p $MINGW32BINDIR/ \
@@ -172,10 +178,6 @@ wixl -v \
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"
-ls -R ~/.wine/drive_c/Program\ Files/fwupd/
-wine ~/.wine/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
+ls -R ${WINEPREFIX}/drive_c/Program\ Files/fwupd/
+wine ${WINEPREFIX}/drive_c/Program\ Files/fwupd/bin/fwupdtool.exe get-plugins --json
 wine msiexec /x "${MSI_FILENAME}"
-
-#generate news release
-contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
-echo $VERSION > $DESTDIR/VERSION

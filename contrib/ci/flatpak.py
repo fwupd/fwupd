@@ -1,4 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+#
+# Copyright 2018 Mario Limonciello <mario.limonciello@dell.com>
+#
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 import subprocess
 import os
 import json
@@ -18,7 +23,7 @@ def prepare(target):
     if os.path.isdir("build"):
         shutil.rmtree("build")
     data = {}
-    with open("contrib/flatpak/org.freedesktop.fwupd.json", "r") as rfd:
+    with open("contrib/flatpak/org.freedesktop.fwupd.json") as rfd:
         data = json.load(rfd, strict=False)
     platform = f"runtime/{data['runtime']}/x86_64/{data['runtime-version']}"
     sdk = f"runtime/{data['sdk']}/x86_64/{data['runtime-version']}"

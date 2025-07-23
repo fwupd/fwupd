@@ -1,4 +1,6 @@
-# Maintainer: Bruno Pagani (a.k.a. ArchangeGabriel) <archange@archlinux.org>
+# Maintainer: Bruno Pagani <archange@archlinux.org>
+# Maintainer: Filipe Laíns (FFY00) <lains@archlinux.org>
+# Maintainer: Frederik Schwan <freswa at archlinux dot org>
 # Contributor: Mirco Tischler <mt-ml at gmx dot de>
 
 pkgname=fwupd
@@ -7,11 +9,54 @@ pkgrel=1
 pkgdesc='A system daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
 url='https://github.com/fwupd/fwupd'
-license=('GPL2')
-depends=('libgusb' 'modemmanager' 'tpm2-tss')
-makedepends=('meson' 'valgrind' 'gobject-introspection' 'gi-docgen' 'git'
-             'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
-             'libdrm' 'curl' 'polkit' 'xz')
+license=(LGPL-2.1-or-later)
+depends=(
+  bash
+  curl
+  flashrom
+  fwupd-efi
+  gcc-libs
+  glib2
+  glibc
+  gnutls
+  gsettings-desktop-schemas
+  hicolor-icon-theme
+  json-glib
+  libarchive
+  libcbor
+  libgusb
+  libjcat
+  libmbim
+  libmm-glib
+  libqmi
+  libxmlb
+  passim
+  polkit
+  protobuf-c
+  python
+  shared-mime-info
+  sqlite
+  systemd-libs
+  tpm2-tss
+  xz
+  zlib
+)
+makedepends=(
+  bash-completion
+  gi-docgen
+  gnu-efi-libs
+  gobject-introspection
+  libdrm
+  meson
+  noto-fonts
+  noto-fonts-cjk
+  python-cairo
+  python-dbus
+  python-gobject
+  vala
+  valgrind
+)
+checkdepends=(umockdev)
 
 pkgver() {
     cd ${pkgname}
@@ -23,25 +68,49 @@ pkgver() {
 }
 
 build() {
-    cd ${pkgname}
-    if [ -n "$CI" ]; then
-        export CI="--wrap-mode=default"
-    fi
-    arch-meson -D b_lto=false $CI ../build \
-        -Dplugin_intel_spi=true \
-        -Dplugin_powerd=disabled \
-        -Dlaunchd=disabled \
-        -Ddocs=enabled \
-        -Defi_binary=false \
-        -Dsupported_build=enabled
+  cd ${pkgname}
+  if [ -n "$CI" ]; then
+    export CI="--wrap-mode=default -Db_coverage=true"
+  fi
+  arch-meson -D b_lto=false $CI ../build \
+    -Dplugin_intel_spi=true \
+    -Dplugin_powerd=disabled \
+    -Dlaunchd=disabled \
+    -Ddocs=enabled \
+    -Defi_binary=false \
+    -Dplugin_uefi_capsule_splash=false \
+    -Dbluez=disabled
 
-    XDG_DATA_HOME=/tmp ninja -v -C ../build
+  XDG_DATA_HOME=/tmp meson compile -C ../build
 }
 
 check() {
-    CACHE_DIRECTORY=/tmp ninja -C build test
+  CACHE_DIRECTORY=/tmp meson test -C build --print-errorlogs
 }
 
 package() {
-    DESTDIR="${pkgdir}" ninja -C build install
+  depends+=(
+    libarchive.so
+    libcbor.so
+    libcurl.so
+    libjson-glib-1.0.so
+    libmm-glib.so
+    libpassim.so
+    libprotobuf-c.so
+    libqmi-glib.so
+  )
+  optdepends=(
+    'python-dbus: Firmware packaging tools'
+    'python-gobject: Firmware packaging tools'
+    'udisks2: UEFI firmware upgrade support'
+  )
+  provides=(libfwupd.so)
+  backup=(
+    'etc/fwupd/fwupd.conf'
+    'etc/fwupd/remotes.d/lvfs-testing.conf'
+    'etc/fwupd/remotes.d/lvfs.conf'
+    'etc/fwupd/remotes.d/vendor-directory.conf'
+  )
+
+  meson install -C build --destdir "${pkgdir}"
 }

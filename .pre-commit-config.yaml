@@ -13,7 +13,7 @@ repos:
         exclude: '.clang-format'
     -   id: check-json
     -   id: pretty-format-json
-        args: ['--no-sort-keys']
+        args: ['--no-sort-keys', '--autofix']
     -   id: check-symlinks
     -   id: check-xml
     -   id: end-of-file-fixer
@@ -35,10 +35,6 @@ repos:
     - id: black
 -   repo: local
     hooks:
-    - id: check-deprecated
-      name: check for use of any deprecated items
-      language: script
-      entry: ./contrib/ci/check-deprecated.sh
     - id: check-null-false-returns
       name: check for null / false return mismatch
       language: script
@@ -73,6 +69,11 @@ repos:
       language: script
       entry: ./contrib/run-tests.sh
       stages: [push]
+    - id: clang-format
+      name: clang-format
+      language: script
+      entry: ./contrib/reformat-code.py
+      types: [c]
     - id: check-license
       name: Check license header
       types_or: [shell, c, python]
@@ -83,3 +84,7 @@ repos:
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']
+-   repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.3
+    hooks:
+    -   id: gitleaks

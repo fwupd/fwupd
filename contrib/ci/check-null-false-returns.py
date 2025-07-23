@@ -1,18 +1,18 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,too-many-branches
 # pylint: disable=too-many-statements,too-many-return-statements,too-few-public-methods
 #
-# Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+# Copyright 2021 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
+import os
 import sys
 from typing import List
 
 
 def _tokenize(line: str) -> List[str]:
-
     # remove whitespace
     line = line.strip()
     line = line.replace("\t", "")
@@ -65,7 +65,6 @@ class ReturnValidator:
         return self._value
 
     def _test_rvif(self) -> None:
-
         # parse "g_return_val_if_fail (SOMETHING (foo), NULL);"
         self._value = self._tokens[-1]
 
@@ -82,20 +81,18 @@ class ReturnValidator:
             )
 
     def _test_return(self) -> None:
-
         # parse "return 0x0;"
         self._value = self._tokens[-1]
 
         # is invalid
         if self._nret and self._value_relaxed in self._nret:
             self.warnings.append(
-                "{} line {} got {}, which is not valid".format(
-                    self._fn, self._line_num, self._value
+                "{} line {} got {}, which is not valid -- expected {}".format(
+                    self._fn, self._line_num, self._value, "|".join(self._rvif)
                 )
             )
 
     def parse(self, fn: str) -> None:
-
         self._fn = fn
         with open(fn) as f:
             self._rvif = None
@@ -103,6 +100,7 @@ class ReturnValidator:
             self._line_num = 0
             for line in f.readlines():
                 self._line_num += 1
+                line = line.replace("LIBUSB_CALL", "")
                 line = line.rstrip()
                 if not line:
                     continue
@@ -221,12 +219,15 @@ class ReturnValidator:
 
 
 def test_files():
-
     # test all C source files
     validator = ReturnValidator()
-    for fn in glob.glob("**/*.c", recursive=True):
-        if fn.startswith("dist/") or fn.startswith("subprojects/"):
-            continue
+
+    for fn in (
+        glob.glob("libfwupd/*.c")
+        + glob.glob("libfwupdplugin/*.c")
+        + glob.glob("plugins/*/*.c")
+        + glob.glob("src/*.c")
+    ):
         validator.parse(fn)
     for warning in validator.warnings:
         print(warning)
@@ -235,6 +236,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())

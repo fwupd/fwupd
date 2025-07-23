@@ -1,10 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # pylint: disable=invalid-name,missing-docstring,consider-using-f-string
 # pylint: disable=too-few-public-methods
 #
-# Copyright (C) 2022 Richard Hughes <richard@hughsie.com>
+# Copyright 2022 Richard Hughes <richard@hughsie.com>
 #
-# SPDX-License-Identifier: LGPL-2.1+
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 import glob
 import sys
@@ -16,12 +16,10 @@ class ReturnValidator:
         self.warnings: List[str] = []
 
     def parse(self, fn: str) -> None:
-
         with open(fn, "rb") as f:
             infunc = False
             has_parent_finalize = False
             for line in f.read().decode().split("\n"):
-
                 # found the function, but ignore the prototype
                 if line.find("_finalize(") != -1:
                     if line.endswith(";"):
@@ -42,12 +40,14 @@ class ReturnValidator:
 
 
 def test_files():
-
     # test all C source files
     validator = ReturnValidator()
-    for fn in glob.glob("**/*.c", recursive=True):
-        if fn.startswith("dist/") or fn.startswith("subprojects/"):
-            continue
+    for fn in (
+        glob.glob("libfwupd/*.c")
+        + glob.glob("libfwupdplugin/*.c")
+        + glob.glob("plugins/*/*.c")
+        + glob.glob("src/*.c")
+    ):
         validator.parse(fn)
     for warning in validator.warnings:
         print(warning)
@@ -56,6 +56,5 @@ def test_files():
 
 
 if __name__ == "__main__":
-
     # all done!
     sys.exit(test_files())
