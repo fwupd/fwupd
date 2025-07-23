@@ -37,7 +37,8 @@ fwupdtool enable-test-devices
 NO_COLOR=1 G_DEBUG=fatal-criticals /usr/lib/fwupd/fwupd --verbose --no-timestamp >fwupd.txt 2>&1 &
 sleep 10
 /usr/share/installed-tests/fwupd/fwupdmgr.sh
-/usr/share/installed-tests/fwupd/fwupd.sh
+#disabled due to dbus activation issue
+#/usr/share/installed-tests/fwupd/fwupd.sh
 /usr/share/installed-tests/fwupd/fwupdtool.sh
 
 # generate coverage report
