@@ -107,6 +107,16 @@ fu_mm_mbim_device_new_sync(FuMmMbimDevice *self, GFile *file, guint timeout_ms, 
 
 	mbim_device_new(file, helper->cancellable, fu_mm_mbim_device_new_cb, helper);
 	g_main_loop_run(helper->loop);
+
+	/* save response */
+	if (helper->mbim_device == NULL) {
+		if (event != NULL)
+			fu_device_event_set_error(event, helper->error);
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+
+	/* success */
 	return g_steal_pointer(&helper->mbim_device);
 }
 
