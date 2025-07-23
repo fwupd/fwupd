@@ -99,16 +99,16 @@ fu_devlink_netdevsim_debugfs_write(const guint device_id,
 static void
 fu_devlink_netdevsim_cleanup(FuDevlinkNetdevsim *ndsim)
 {
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	if (ndsim->device_id != 0) {
 		/* remove netdevsim device */
 		if (!fu_devlink_netdevsim_sysfs_write("del_device",
 						      ndsim->device_id,
-						      &local_error)) {
+						      &error_local)) {
 			g_debug("Failed to remove netdevsim device %u: %s",
 				ndsim->device_id,
-				local_error->message);
+				error_local->message);
 		}
 	}
 	g_free(ndsim);
@@ -122,14 +122,14 @@ static FuDevlinkNetdevsim *
 fu_devlink_netdevsim_new(guint device_id, GError **error)
 {
 	g_autoptr(FuDevlinkNetdevsim) ndsim = g_new0(FuDevlinkNetdevsim, 1);
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* create netdevsim device */
 	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error)) {
 		/* try to load netdevsim module */
-		if (!fu_devlink_load_kernel_module_helper("netdevsim", &local_error)) {
-			g_debug("failed to load netdevsim module: %s", local_error->message);
-			g_clear_error(&local_error);
+		if (!fu_devlink_load_kernel_module_helper("netdevsim", &error_local)) {
+			g_debug("failed to load netdevsim module: %s", error_local->message);
+			g_clear_error(&error_local);
 			return NULL;
 		}
 		/* try creating the device again after module load */
@@ -143,9 +143,9 @@ fu_devlink_netdevsim_new(guint device_id, GError **error)
 	if (!fu_devlink_netdevsim_debugfs_write(device_id,
 						"fw_update_flash_chunk_time_ms",
 						FU_DEVLINK_NETDEVSIM_FW_UPDATE_FLASH_CHUNK_TIME_MS,
-						&local_error)) {
-		g_debug("Failed to write fw_update_flash_chunk_time_ms: %s", local_error->message);
-		g_clear_error(&local_error);
+						&error_local)) {
+		g_debug("Failed to write fw_update_flash_chunk_time_ms: %s", error_local->message);
+		g_clear_error(&error_local);
 	}
 
 	return g_steal_pointer(&ndsim);
@@ -160,24 +160,21 @@ fu_devlink_netdevsim_device_func(void)
 	gboolean ret;
 	g_autoptr(FuDevlinkDevice) device = NULL;
 	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
-	g_autoptr(FuContext) ctx = NULL;
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(GError) error_local = NULL;
 
 	/* create test netdevsim to set up netdevsim device */
-	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &local_error);
+	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
-		g_test_skip_printf("Failed to create netdevsim device: %s", local_error->message);
+		g_test_skip_printf("Failed to create netdevsim device: %s", error_local->message);
 		return;
 	}
-
-	/* create context */
-	ctx = fu_context_new();
 
 	/* create device with valid bus and device names */
 	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
 	g_assert_nonnull(device);
 
-	ret = fu_device_probe(FU_DEVICE(device), &local_error);
+	ret = fu_device_probe(FU_DEVICE(device), &error_local);
 	g_assert_true(ret);
 
 	/* check device properties were set correctly */
@@ -192,29 +189,26 @@ fu_devlink_netdevsim_device_flash_func(void)
 	g_autoptr(FuDevlinkDevice) device = NULL;
 	g_autoptr(FuDevice) component = NULL;
 	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
-	g_autoptr(FuContext) ctx = NULL;
-	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuProgress) progress = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) fw_data = NULL;
-	g_autoptr(GError) local_error = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *instance_id = NULL;
 
 	/* create test netdevsim to set up netdevsim device */
-	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &local_error);
+	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
-		g_test_skip_printf("Failed to create netdevsim device: %s", local_error->message);
+		g_test_skip_printf("Failed to create netdevsim device: %s", error_local->message);
 		return;
 	}
-
-	/* create context */
-	ctx = fu_context_new();
 
 	/* create device with valid bus and device names */
 	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
 	g_assert_nonnull(device);
 
 	/* probe device first */
-	ret = fu_device_probe(FU_DEVICE(device), &local_error);
+	ret = fu_device_probe(FU_DEVICE(device), &error_local);
 	g_assert_true(ret);
 
 	/* create fw.mgmt component */
@@ -230,16 +224,12 @@ fu_devlink_netdevsim_device_flash_func(void)
 	fu_device_set_version(component, "1.0.0");
 
 	/* create firmware */
-	firmware = fu_firmware_new();
 	fw_data = g_bytes_new(fw_content, strlen(fw_content));
 	fu_firmware_set_bytes(firmware, fw_data);
 	fu_firmware_set_version(firmware, "2.0.0");
 
-	/* create progress tracker */
-	progress = fu_progress_new(G_STRLOC);
-
 	/* prepare the component */
-	ret = fu_device_prepare(component, progress, FWUPD_INSTALL_FLAG_NONE, &local_error);
+	ret = fu_device_prepare(component, progress, FWUPD_INSTALL_FLAG_NONE, &error_local);
 	g_assert_true(ret);
 
 	/* test firmware flashing on the fw.mgmt component */
@@ -249,14 +239,14 @@ fu_devlink_netdevsim_device_flash_func(void)
 				       firmware,
 				       progress,
 				       FWUPD_INSTALL_FLAG_NONE,
-				       &local_error);
+				       &error_local);
 	g_assert_true(ret);
 
 	g_test_message("Firmware flash completed successfully for fw.mgmt component!");
 	g_assert_cmpuint(fu_progress_get_percentage(progress), ==, 100);
 
 	/* cleanup the component */
-	ret = fu_device_cleanup(component, progress, FWUPD_INSTALL_FLAG_NONE, &local_error);
+	ret = fu_device_cleanup(component, progress, FWUPD_INSTALL_FLAG_NONE, &error_local);
 	g_assert_true(ret);
 }
 

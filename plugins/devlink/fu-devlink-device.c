@@ -34,7 +34,7 @@ G_DEFINE_TYPE(FuDevlinkDevice, fu_devlink_device, FU_TYPE_DEVICE)
 typedef struct {
 	FuProgress *progress;
 	FuDevlinkDevice *self;
-} FuDevlinkFlashMonCtx;
+} FuDevlinkFlashMonHelper;
 
 /* flash send context for thread */
 typedef struct {
@@ -43,13 +43,13 @@ typedef struct {
 	const gchar *filename;
 	GError **error;
 	GMainLoop *loop;
-} FuDevlinkFlashSendCtx;
+} FuDevlinkFlashSendHelper;
 
 /* handle flash update status and end messages */
 static int
 fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
 {
-	FuDevlinkFlashMonCtx *ctx = data;
+	FuDevlinkFlashMonHelper *helper = data;
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name, *dev_name;
@@ -70,11 +70,12 @@ fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
 	bus_name = mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME]);
 	dev_name = mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME]);
 
-	if (g_strcmp0(bus_name, ctx->self->bus_name) || g_strcmp0(dev_name, ctx->self->dev_name))
+	if (g_strcmp0(bus_name, helper->self->bus_name) ||
+	    g_strcmp0(dev_name, helper->self->dev_name))
 		return MNL_CB_OK;
 
 	if (genl->cmd == DEVLINK_CMD_FLASH_UPDATE_END) {
-		fu_progress_set_percentage(ctx->progress, 100);
+		fu_progress_set_percentage(helper->progress, 100);
 		return MNL_CB_STOP;
 	}
 
@@ -85,7 +86,7 @@ fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
 		total = mnl_attr_get_u64(tb[DEVLINK_ATTR_FLASH_UPDATE_STATUS_TOTAL]);
 
 	if (total > 0)
-		fu_progress_set_percentage_full(ctx->progress, done, total);
+		fu_progress_set_percentage_full(helper->progress, done, total);
 
 	return MNL_CB_OK;
 }
@@ -133,15 +134,19 @@ fu_devlink_device_flash_send(FuDevlinkDevice *self,
 static gpointer
 fu_devlink_device_flash_send_thread(gpointer user_data)
 {
-	FuDevlinkFlashSendCtx *ctx = user_data;
+	FuDevlinkFlashSendHelper *helper = user_data;
 	gboolean ret;
 
-	g_debug("flash send thread started for %s/%s", ctx->self->bus_name, ctx->self->dev_name);
-	ret =
-	    fu_devlink_device_flash_send(ctx->self, ctx->component_name, ctx->filename, ctx->error);
+	g_debug("flash send thread started for %s/%s",
+		helper->self->bus_name,
+		helper->self->dev_name);
+	ret = fu_devlink_device_flash_send(helper->self,
+					   helper->component_name,
+					   helper->filename,
+					   helper->error);
 
 	/* signal completion by quitting the main loop  */
-	g_main_loop_quit(ctx->loop);
+	g_main_loop_quit(helper->loop);
 
 	return GINT_TO_POINTER(ret ? 1 : 0);
 }
@@ -152,7 +157,7 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 				       GIOCondition condition,
 				       gpointer user_data)
 {
-	FuDevlinkFlashMonCtx *ctx = user_data;
+	FuDevlinkFlashMonHelper *helper = user_data;
 	gsize len;
 	GIOStatus status;
 	g_autoptr(GError) error = NULL;
@@ -164,7 +169,7 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 
 	/* read netlink message via GIOChannel */
 	status = g_io_channel_read_chars(channel,
-					 fu_devlink_netlink_gen_socket_get_buf(ctx->self->nlg),
+					 fu_devlink_netlink_gen_socket_get_buf(helper->self->nlg),
 					 FU_DEVLINK_NETLINK_BUF_SIZE,
 					 &len,
 					 &error);
@@ -175,11 +180,11 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 	}
 
 	/* process netlink messages */
-	if (!fu_devlink_netlink_msg_run(ctx->self->nlg,
+	if (!fu_devlink_netlink_msg_run(helper->self->nlg,
 					len,
 					0,
 					fu_devlink_device_flash_mon_cb,
-					ctx,
+					helper,
 					&error))
 		g_warning("failed to process netlink message: %s", error->message);
 
@@ -193,12 +198,12 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 			FuProgress *progress,
 			GError **error)
 {
-	FuDevlinkFlashMonCtx flash_mon_ctx = {
+	FuDevlinkFlashMonHelper flash_mon_ctx = {
 	    .progress = progress,
 	    .self = self,
 	};
 	g_autoptr(GMainLoop) loop = g_main_loop_new(NULL, FALSE);
-	FuDevlinkFlashSendCtx flash_send_ctx = {
+	FuDevlinkFlashSendHelper flash_send_ctx = {
 	    .self = self,
 	    .component_name = component_name,
 	    .filename = filename,
@@ -283,22 +288,18 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 	if (fw == NULL)
 		return FALSE;
 
-	/* get the firmware search path from the locker */
+	/* create firmware file in the kernel search path for devlink */
 	fw_search_path = fu_kernel_search_path_locker_get_path(self->search_path_locker);
-
 	fw_basename = g_strdup_printf("%s-%s-%s.bin",
 				      self->bus_name,
 				      self->dev_name,
 				      component_name != NULL ? component_name : "default");
-
-	/* create firmware file in the kernel search path for devlink */
 	fw_fullpath = g_build_filename(fw_search_path, fw_basename, NULL);
+	g_debug("writing firmware to %s", fw_fullpath);
 
 	/* write firmware to kernel search path */
 	if (!fu_bytes_set_contents(fw_fullpath, fw, error))
 		return FALSE;
-
-	g_debug("wrote firmware to %s", fw_fullpath);
 
 	ret = fu_devlink_device_flash(self, component_name, fw_basename, progress, error);
 
@@ -308,32 +309,31 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 }
 
 typedef struct {
-	const gchar *fixed;
-	const gchar *running;
-	const gchar *stored;
+	gchar *fixed;
+	gchar *running;
+	gchar *stored;
 } FuDevlinkVersionInfo;
 
 static void
-fu_devlink_device_version_info_free(gpointer value)
+fu_devlink_device_version_info_free(FuDevlinkVersionInfo *version_info)
 {
-	FuDevlinkVersionInfo *version_info = value;
-
-	g_free((gpointer)version_info->fixed);
-	g_free((gpointer)version_info->running);
-	g_free((gpointer)version_info->stored);
+	g_free(version_info->fixed);
+	g_free(version_info->running);
+	g_free(version_info->stored);
 	g_free(version_info);
 }
 
 static GHashTable *
 fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 {
-	GHashTable *version_table = g_hash_table_new_full(g_str_hash,
-							  g_str_equal,
-							  g_free,
-							  fu_devlink_device_version_info_free);
 	FuDevlinkVersionInfo *version_info;
 	struct nlattr *attr;
+	g_autoptr(GHashTable) version_table = NULL;
 
+	version_table = g_hash_table_new_full(g_str_hash,
+					      g_str_equal,
+					      g_free,
+					      (GDestroyNotify)fu_devlink_device_version_info_free);
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
@@ -375,7 +375,7 @@ fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 		}
 	}
 
-	return version_table;
+	return g_steal_pointer(&version_table);
 }
 
 #define FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX "DEVLINK\\"
@@ -416,7 +416,7 @@ typedef struct {
 static void
 fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer user_data)
 {
-	FuDevlinkDeviceUpdateComponentCtx *ctx = user_data;
+	FuDevlinkDeviceUpdateComponentCtx *helper = user_data;
 	FuDevlinkVersionInfo *version_info = value;
 	const gchar *name = key;
 	const gchar *version;
@@ -429,15 +429,15 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	else
 		return;
 
-	component = fu_devlink_device_get_component(ctx->device, name);
+	component = fu_devlink_device_get_component(helper->device, name);
 	if (component == NULL) {
 		g_autofree gchar *component_instance_id =
-		    g_strdup_printf("%s&COMPONENT_%s", ctx->instance_id->str, name);
-		component = fu_devlink_component_new(fu_device_get_context(ctx->device),
+		    g_strdup_printf("%s&COMPONENT_%s", helper->instance_id->str, name);
+		component = fu_devlink_component_new(fu_device_get_context(helper->device),
 						     component_instance_id,
 						     name);
 		fu_device_set_version(component, version);
-		fu_device_add_child(ctx->device, component);
+		fu_device_add_child(helper->device, component);
 		g_debug("added component %s (version: %s)", name, version);
 	} else {
 		fu_device_set_version(component, version);
@@ -460,7 +460,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	FuDevice *device = FU_DEVICE(data);
 	GPtrArray *children = fu_device_get_children(device);
-	FuDevlinkDeviceUpdateComponentCtx ctx;
+	FuDevlinkDeviceUpdateComponentCtx helper;
 	g_autoptr(GString) instance_id = g_string_new(FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX);
 	g_autoptr(GHashTable) version_table = NULL;
 
@@ -507,9 +507,9 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 		}
 	}
 
-	ctx.device = device;
-	ctx.instance_id = instance_id;
-	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &ctx);
+	helper.device = device;
+	helper.instance_id = instance_id;
+	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &helper);
 
 	return MNL_CB_OK;
 }
@@ -597,16 +597,6 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
-/**
- * fu_devlink_device_new:
- * @ctx: (nullable): optional #FuContext
- * @bus_name: devlink bus name
- * @dev_name: devlink device name
- *
- * Creates a new #FuDevlinkDevice.
- *
- * Returns: (transfer full): a #FuDevlinkDevice
- */
 FuDevlinkDevice *
 fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name)
 {
