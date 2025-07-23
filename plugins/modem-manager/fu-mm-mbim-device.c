@@ -424,6 +424,7 @@ static gboolean
 fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(device);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(MbimMessage) request = NULL;
 	g_autoptr(MbimMessage) response = NULL;
@@ -437,7 +438,8 @@ fu_mm_mbim_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		g_debug("ignoring: %s", error_local->message);
+		g_clear_object(&priv->mbim_device);
+		g_debug("ignoring, and clearing MbimDevice: %s", error_local->message);
 	}
 
 	/* success */
@@ -490,13 +492,8 @@ fu_mm_mbim_device_close(FuDevice *device, GError **error)
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* sanity check */
-	if (priv->mbim_device == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no mbim_device");
-		return FALSE;
-	}
+	if (priv->mbim_device == NULL)
+		return TRUE;
 	return fu_mm_mbim_device_close_sync(self, FU_MM_MBIM_DEVICE_TIMEOUT_MS, error);
 }
 
