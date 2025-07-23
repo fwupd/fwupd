@@ -278,38 +278,6 @@ fu_power_state_is_ac(FuPowerState power_state)
 }
 
 /**
- * fu_error_convert:
- * @perror: (nullable): A #GError, perhaps with domain #GIOError
- *
- * Convert the error to a #FwupdError, if required.
- *
- * Since: 2.0.0
- **/
-void
-fu_error_convert(GError **perror)
-{
-	GError *error = (perror != NULL) ? *perror : NULL;
-
-	/* sanity check */
-	if (error == NULL)
-		return;
-
-	/* convert GIOError and GFileError */
-	fwupd_error_convert(perror);
-	if (error->domain == FWUPD_ERROR)
-		return;
-
-#ifndef SUPPORTED_BUILD
-	/* fallback */
-	g_critical("GError %s:%i sending over D-Bus was not converted to FwupdError",
-		   g_quark_to_string(error->domain),
-		   error->code);
-#endif
-	error->domain = FWUPD_ERROR;
-	error->code = FWUPD_ERROR_INTERNAL;
-}
-
-/**
  * fu_xmlb_builder_insert_kv:
  * @bn: #XbBuilderNode
  * @key: string key

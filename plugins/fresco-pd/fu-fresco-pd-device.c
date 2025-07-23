@@ -53,7 +53,7 @@ fu_fresco_pd_device_transfer_read(FuFrescoPdDevice *self,
 					    NULL,
 					    error)) {
 		g_prefix_error(error, "failed to read from offset 0x%x: ", offset);
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (bufsz != actual_length) {

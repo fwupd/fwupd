@@ -1054,7 +1054,7 @@ fu_usb_device_probe_bos_descriptors(FuUsbDevice *self, GError **error)
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	for (guint i = 0; i < priv->bos_descriptors->len; i++) {

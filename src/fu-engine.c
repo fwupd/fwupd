@@ -1503,7 +1503,7 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 				  XB_QUERY_FLAG_OPTIMIZE | XB_QUERY_FLAG_USE_INDEXES,
 				  error);
 	if (query == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 
@@ -4344,12 +4344,12 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	if (istream == NULL)
 		return NULL;
 	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	jcat_item = jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	results = jcat_context_verify_item(self->jcat_context,
@@ -4359,7 +4359,7 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 					   error);
 	if (results == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 

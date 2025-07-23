@@ -54,7 +54,7 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
 		g_prefix_error(error, "failed to refresh status: ");
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 

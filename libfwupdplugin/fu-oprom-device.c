@@ -41,7 +41,7 @@ fu_oprom_device_set_enabled(FuOpromDevice *self, gboolean value, GError **error)
 	if (output_stream == NULL)
 		return FALSE;
 	if (!g_output_stream_write_all(output_stream, value ? "1" : "0", 1, NULL, NULL, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 

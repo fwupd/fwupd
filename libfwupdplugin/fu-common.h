@@ -120,8 +120,6 @@ fu_error_map_entry_to_gerror(guint value,
 			     const FuErrorMapEntry entries[],
 			     guint n_entries,
 			     GError **error) G_GNUC_NON_NULL(2);
-void
-fu_error_convert(GError **perror);
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value)
