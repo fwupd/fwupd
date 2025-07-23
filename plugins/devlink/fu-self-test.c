@@ -41,6 +41,39 @@ fu_devlink_file_write_helper(const gchar *path, const guint value, GError **erro
 }
 
 static gboolean
+fu_devlink_load_kernel_module_helper(const gchar *module_name, GError **error)
+{
+	gint exit_status = 0;
+	g_autofree gchar *stderr_output = NULL;
+	const gchar *argv[] = {"modprobe", module_name, NULL};
+
+	if (!g_spawn_sync(NULL,
+			  (gchar **)argv,
+			  NULL,
+			  G_SPAWN_SEARCH_PATH,
+			  NULL,
+			  NULL,
+			  NULL,
+			  &stderr_output,
+			  &exit_status,
+			  error)) {
+		g_prefix_error(error, "failed to execute modprobe: ");
+		return FALSE;
+	}
+	if (exit_status != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "modprobe %s failed with exit status %d: %s",
+			    module_name,
+			    exit_status,
+			    stderr_output);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_devlink_netdevsim_sysfs_write(const gchar *filename, const guint value, GError **error)
 {
 	g_autofree gchar *sysfs_dir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
@@ -92,8 +125,19 @@ fu_devlink_netdevsim_new(guint device_id, GError **error)
 	g_autoptr(GError) local_error = NULL;
 
 	/* create netdevsim device */
-	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error))
-		return NULL;
+	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error)) {
+		/* try to load netdevsim module */
+		if (!fu_devlink_load_kernel_module_helper("netdevsim", &local_error)) {
+			g_debug("failed to load netdevsim module: %s", local_error->message);
+			g_clear_error(&local_error);
+			return NULL;
+		}
+		/* try creating the device again after module load */
+		g_clear_error(error);
+		if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error)) {
+			return NULL;
+		}
+	}
 	ndsim->device_id = device_id;
 
 	if (!fu_devlink_netdevsim_debugfs_write(device_id,
