@@ -22,6 +22,86 @@ G_DEFINE_TYPE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_MBIM_DEVICE_TIMEOUT_MS 1500
 
+static gboolean
+fu_mm_mbim_device_error_convert(GError **error)
+{
+	const FuErrorConvertEntry entries[] = {
+	    /* clang-format off */
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED, FWUPD_ERROR_INTERNAL},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT, FWUPD_ERROR_TIMED_OUT},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_ABORTED, FWUPD_ERROR_INTERNAL},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNKNOWN_STATE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_CORE_ERROR, MBIM_CORE_ERROR_INCOMPLETE_MESSAGE, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_INVALID, FWUPD_ERROR_INTERNAL},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_TIMEOUT_FRAGMENT, FWUPD_ERROR_TIMED_OUT},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_FRAGMENT_OUT_OF_SEQUENCE, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_LENGTH_MISMATCH, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_DUPLICATED_TID, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED, FWUPD_ERROR_INTERNAL},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_UNKNOWN, FWUPD_ERROR_INTERNAL},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_CANCEL, FWUPD_ERROR_INTERNAL},
+	    {MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_MAX_TRANSFER, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NONE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_BUSY, FWUPD_ERROR_BUSY},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_FAILURE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SIM_NOT_INSERTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_BAD_SIM, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PIN_REQUIRED, FWUPD_ERROR_AUTH_EXPIRED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PIN_DISABLED, FWUPD_ERROR_AUTH_FAILED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NOT_REGISTERED, FWUPD_ERROR_AUTH_FAILED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PROVIDERS_NOT_FOUND, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NO_DEVICE_SUPPORT, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PROVIDER_NOT_VISIBLE, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_DATA_CLASS_NOT_AVAILABLE, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PACKET_SERVICE_DETACHED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_MAX_ACTIVATED_CONTEXTS, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NOT_INITIALIZED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_VOICE_CALL_IN_PROGRESS, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_CONTEXT_NOT_ACTIVATED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SERVICE_NOT_ACTIVATED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_ACCESS_STRING, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_USER_NAME_PWD, FWUPD_ERROR_AUTH_FAILED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_RADIO_POWER_OFF, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_PARAMETERS, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_READ_FAILURE, FWUPD_ERROR_READ},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_WRITE_FAILURE, FWUPD_ERROR_WRITE},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NO_PHONEBOOK, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_PARAMETER_TOO_LONG, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_STK_BUSY, FWUPD_ERROR_BUSY},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_OPERATION_NOT_ALLOWED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_MEMORY_FAILURE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_MEMORY_INDEX, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_MEMORY_FULL, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_FILTER_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_DSS_INSTANCE_LIMIT, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_DEVICE_SERVICE_OPERATION, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN, FWUPD_ERROR_AUTH_FAILED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET, FWUPD_ERROR_INTERNAL},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_CONTEXT_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT, FWUPD_ERROR_TIMED_OUT},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+#if MBIM_CHECK_VERSION(1, 30, 0)
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_SIGNATURE, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_IMEI, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_INVALID_TIMESTAMP, FWUPD_ERROR_INVALID_DATA},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_NETWORK_LIST_TOO_LARGE, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_SIGNATURE_ALGORITHM_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_FEATURE_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED},
+	    {MBIM_STATUS_ERROR, MBIM_STATUS_ERROR_DECODE_OR_PARSING_ERROR, FWUPD_ERROR_INVALID_DATA},
+#endif
+	    /* clang-format on */
+	};
+	return fu_error_convert(entries, G_N_ELEMENTS(entries), error);
+}
+
 typedef struct {
 	gboolean ret;
 	GMainLoop *loop;
@@ -110,6 +190,7 @@ fu_mm_mbim_device_new_sync(FuMmMbimDevice *self, GFile *file, guint timeout_ms, 
 
 	/* save response */
 	if (helper->mbim_device == NULL) {
+		fu_mm_mbim_device_error_convert(&helper->error);
 		if (event != NULL)
 			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -164,6 +245,7 @@ fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **err
 
 	/* save response */
 	if (!helper->ret) {
+		fu_mm_mbim_device_error_convert(&helper->error);
 		if (event != NULL)
 			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -218,6 +300,7 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 
 	/* save response */
 	if (!helper->ret) {
+		fu_mm_mbim_device_error_convert(&helper->error);
 		if (event != NULL)
 			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -268,7 +351,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 		buf = mbim_message_get_raw(mbim_message, &bufsz, error);
 		if (buf == NULL) {
-			fwupd_error_convert(error);
+			fu_mm_mbim_device_error_convert(error);
 			return NULL;
 		}
 		data_base64 = g_base64_encode(buf, bufsz);
@@ -303,6 +386,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 	/* save response */
 	if (helper->mbim_message == NULL) {
+		fu_mm_mbim_device_error_convert(&helper->error);
 		if (event != NULL)
 			fu_device_event_set_error(event, helper->error);
 		g_propagate_error(error, g_steal_pointer(&helper->error));
@@ -316,7 +400,7 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 
 		buf = mbim_message_get_raw(helper->mbim_message, &bufsz, error);
 		if (buf == NULL) {
-			fwupd_error_convert(error);
+			fu_mm_mbim_device_error_convert(error);
 			return NULL;
 		}
 		fu_device_event_set_data(event, "Data", buf, bufsz);
@@ -351,7 +435,8 @@ fu_mm_mbim_device_ensure_firmware_version(FuMmMbimDevice *self, GError **error)
 						     &firmware_version,
 						     NULL,
 						     error)) {
-		g_debug("failed to parse caps-query response: ");
+		fu_mm_mbim_device_error_convert(error);
+		g_prefix_error(error, "failed to parse caps-query response: ");
 		return FALSE;
 	}
 	g_debug("[%s] modem query caps firmware version: %s",
@@ -373,7 +458,7 @@ fu_mm_mbim_device_detach_to_edl(FuMmMbimDevice *self, GError **error)
 	response = fu_mm_mbim_device_command_sync(self, request, 5 * 1000, &error_local);
 	if (response == NULL) {
 		/* MBIM port goes away */
-		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("ignoring: %s", error_local->message);
 			return TRUE;
 		}
@@ -435,6 +520,7 @@ fu_mm_mbim_device_write_chunk(FuMmMbimDevice *self, FuChunk *chk, GError **error
 	if (response == NULL)
 		return FALSE;
 	if (!mbim_message_qdu_file_write_response_parse(response, error)) {
+		fu_mm_mbim_device_error_convert(error);
 		g_prefix_error(error, "failed to parse write-chunk response: ");
 		return FALSE;
 	}
@@ -504,6 +590,7 @@ fu_mm_mbim_device_write(FuMmMbimDevice *self,
 							    NULL,
 							    NULL,
 							    error)) {
+		fu_mm_mbim_device_error_convert(error);
 		g_prefix_error(error, "failed to parse action-start response: ");
 		return FALSE;
 	}
@@ -523,6 +610,7 @@ fu_mm_mbim_device_write(FuMmMbimDevice *self,
 						       &out_max_transfer_size,
 						       NULL,
 						       error)) {
+		fu_mm_mbim_device_error_convert(error);
 		g_prefix_error(error, "failed to parse file-open response: ");
 		return FALSE;
 	}
