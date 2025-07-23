@@ -16,7 +16,7 @@
 
 #include "fu-devlink-netlink.h"
 
-struct nlmsghdr *
+static struct nlmsghdr *
 fu_devlink_netlink_msg_prepare(void *buf,
 			       uint32_t nlmsg_type,
 			       gboolean dump,
@@ -172,7 +172,7 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 }
 
 /* receive and run callback on netlink messages with proper error handling */
-gboolean
+static gboolean
 fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 				guint32 seq,
 				mnl_cb_t cb,
@@ -420,25 +420,6 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg)
 				   sizeof(devlink_config_grp));
 	if (rc < 0) {
 		g_debug("failed to subscribe to devlink notifications: %s", fwupd_strerror(errno));
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_devlink_netlink_mcast_group_unsubscribe(FuDevlinkGenSocket *nlg)
-{
-	guint32 devlink_config_grp = nlg->config_group_id;
-	gint rc;
-
-	rc = mnl_socket_setsockopt(nlg->nl,
-				   NETLINK_DROP_MEMBERSHIP,
-				   &devlink_config_grp,
-				   sizeof(devlink_config_grp));
-	if (rc < 0) {
-		g_debug("failed to unsubscribe from devlink notifications: %s",
-			fwupd_strerror(errno));
 		return FALSE;
 	}
 

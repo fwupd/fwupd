@@ -22,25 +22,10 @@ typedef struct {
 
 #define FU_DEVLINK_NETLINK_BUF_SIZE MNL_SOCKET_BUFFER_SIZE
 
-/* message preparation */
-struct nlmsghdr *
-fu_devlink_netlink_msg_prepare(void *buf,
-			       guint32 nlmsg_type,
-			       gboolean dump,
-			       void *extra_header,
-			       gsize extra_header_size);
-
 /* send/receive functions */
 gboolean
 fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 				gsize len,
-				guint32 seq,
-				mnl_cb_t cb,
-				void *data,
-				GError **error);
-
-gboolean
-fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 				guint32 seq,
 				mnl_cb_t cb,
 				void *data,
@@ -82,9 +67,6 @@ fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dum
 /* multicast group management */
 gboolean
 fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg);
-
-gboolean
-fu_devlink_netlink_mcast_group_unsubscribe(FuDevlinkGenSocket *nlg);
 
 /* attribute parsing callback */
 int
