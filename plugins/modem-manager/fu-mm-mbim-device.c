@@ -306,6 +306,7 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 			  fu_mm_mbim_device_close_sync_cb,
 			  helper);
 	g_main_loop_run(helper->loop);
+	g_clear_object(&priv->mbim_device);
 
 	/* save response */
 	if (!helper->ret) {
@@ -317,7 +318,6 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 	}
 
 	/* success */
-	g_clear_object(&priv->mbim_device);
 	return TRUE;
 }
 
