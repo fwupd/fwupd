@@ -67,9 +67,9 @@ fu_devlink_netlink_error_cb_extack(const struct nlmsghdr *nlh, GError **error)
 	struct nlattr *tb[NLMSGERR_ATTR_MAX + 1] = {};
 	unsigned int hlen = sizeof(struct nlmsgerr);
 
-	if (!(nlh->nlmsg_flags & NLM_F_ACK_TLVS))
+	if ((nlh->nlmsg_flags & NLM_F_ACK_TLVS) == 0)
 		return FALSE;
-	if (!(nlh->nlmsg_flags & NLM_F_CAPPED))
+	if ((nlh->nlmsg_flags & NLM_F_CAPPED) == 0)
 		hlen += mnl_nlmsg_get_payload_len(&err->msg);
 	if (mnl_attr_parse(nlh, hlen, fu_devlink_netlink_nlmsgerr_attr_cb, tb) != MNL_CB_OK)
 		return FALSE;
@@ -93,7 +93,7 @@ fu_devlink_netlink_error_cb(const struct nlmsghdr *nlh, void *data)
 
 	if (mnl_nlmsg_get_payload_len(nlh) < sizeof(*err))
 		return MNL_CB_STOP;
-	if (!err->error)
+	if (err->error == 0)
 		return MNL_CB_STOP;
 	if (fu_devlink_netlink_error_cb_extack(nlh, helper->error))
 		return MNL_CB_ERROR;
@@ -282,8 +282,8 @@ fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *
 		    tb_grp[CTRL_ATTR_MCAST_GRP_ID] == NULL)
 			continue;
 
-		if (!g_strcmp0(mnl_attr_get_str(tb_grp[CTRL_ATTR_MCAST_GRP_NAME]),
-			       DEVLINK_GENL_MCGRP_CONFIG_NAME)) {
+		if (g_strcmp0(mnl_attr_get_str(tb_grp[CTRL_ATTR_MCAST_GRP_NAME]),
+			      DEVLINK_GENL_MCGRP_CONFIG_NAME) == 0) {
 			nlg->config_group_id = mnl_attr_get_u32(tb_grp[CTRL_ATTR_MCAST_GRP_ID]);
 			return MNL_CB_OK;
 		}
