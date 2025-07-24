@@ -70,8 +70,8 @@ fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
 	bus_name = mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME]);
 	dev_name = mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME]);
 
-	if (g_strcmp0(bus_name, helper->self->bus_name) ||
-	    g_strcmp0(dev_name, helper->self->dev_name))
+	if (g_strcmp0(bus_name, helper->self->bus_name) != 0 ||
+	    g_strcmp0(dev_name, helper->self->dev_name) != 0)
 		return MNL_CB_OK;
 
 	if (genl->cmd == DEVLINK_CMD_FLASH_UPDATE_END) {
@@ -389,7 +389,7 @@ fu_devlink_device_instance_id_cb(gpointer key, gpointer value, gpointer user_dat
 
 	if (version_info->fixed == NULL)
 		return;
-	if (g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX))
+	if (g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX) != 0)
 		g_string_append_printf(instance_id, "&");
 	g_string_append_printf(instance_id, "%s_%s", name, version_info->fixed);
 }
@@ -402,7 +402,7 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *component = g_ptr_array_index(children, i);
 
-		if (!g_strcmp0(fu_device_get_name(component), name))
+		if (g_strcmp0(fu_device_get_name(component), name) == 0)
 			return g_object_ref(component);
 	}
 	return NULL;
@@ -445,7 +445,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	}
 
 	if (version_info->stored != NULL && version_info->running != NULL) {
-		if (g_strcmp0(version_info->stored, version_info->running))
+		if (g_strcmp0(version_info->stored, version_info->running) != 0)
 			fu_device_add_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		else
 			fu_device_remove_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
@@ -489,7 +489,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	/* append fixed versions to instance id */
 	g_hash_table_foreach(version_table, fu_devlink_device_instance_id_cb, instance_id);
 
-	if (!g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX)) {
+	if (g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX) == 0) {
 		g_warning("no instance id items found, ignoring component creation");
 		return MNL_CB_OK;
 	}
