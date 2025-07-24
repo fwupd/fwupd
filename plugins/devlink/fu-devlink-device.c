@@ -411,12 +411,12 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 typedef struct {
 	FuDevice *device;
 	GString *instance_id;
-} FuDevlinkDeviceUpdateComponentCtx;
+} FuDevlinkDeviceUpdateComponentHelper;
 
 static void
 fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer user_data)
 {
-	FuDevlinkDeviceUpdateComponentCtx *helper = user_data;
+	FuDevlinkDeviceUpdateComponentHelper *helper = user_data;
 	FuDevlinkVersionInfo *version_info = value;
 	const gchar *name = key;
 	const gchar *version;
@@ -460,7 +460,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	FuDevice *device = FU_DEVICE(data);
 	GPtrArray *children = fu_device_get_children(device);
-	FuDevlinkDeviceUpdateComponentCtx helper;
+	FuDevlinkDeviceUpdateComponentHelper helper;
 	g_autoptr(GString) instance_id = g_string_new(FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX);
 	g_autoptr(GHashTable) version_table = NULL;
 
