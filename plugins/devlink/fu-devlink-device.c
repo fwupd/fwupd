@@ -412,6 +412,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	if (component == NULL) {
 		component = fu_devlink_component_new(fu_device_get_context(helper->device), name);
 		fu_devlink_component_build_instance_id(component,
+						       helper->device,
 						       helper->driver_name,
 						       helper->version_table);
 		fu_device_set_version(component, version);

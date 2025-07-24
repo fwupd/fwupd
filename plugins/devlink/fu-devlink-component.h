@@ -16,5 +16,6 @@ fu_devlink_component_new(FuContext *ctx, const gchar *component_name);
 
 void
 fu_devlink_component_build_instance_id(FuDevice *device,
+				       FuDevice *parent,
 				       gchar *driver_name,
 				       GHashTable *version_table);
