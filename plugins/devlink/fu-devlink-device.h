@@ -21,3 +21,9 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error);
+
+typedef struct {
+	gchar *fixed;
+	gchar *running;
+	gchar *stored;
+} FuDevlinkVersionInfo;

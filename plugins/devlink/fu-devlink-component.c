@@ -164,7 +164,7 @@ fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
 }
 
 FuDevice *
-fu_devlink_component_new(FuContext *ctx, const gchar *instance_id, const gchar *component_name)
+fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
 {
 	g_autofree gchar *device_id = NULL;
 	FuDevlinkComponent *self;
@@ -179,7 +179,60 @@ fu_devlink_component_new(FuContext *ctx, const gchar *instance_id, const gchar *
 	fu_device_set_logical_id(FU_DEVICE(self),
 				 component_name); /* use component name as logical ID */
 	fu_device_set_name(FU_DEVICE(self), component_name);
-	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
 
 	return FU_DEVICE(self);
+}
+
+typedef struct {
+	FuDevice *device;
+	GStrvBuilder *keys_builder;
+} FuDevlinkComponentInstanceIdHelper;
+
+static void
+fu_devlink_component_instance_id_cb(gpointer key, gpointer value, gpointer user_data)
+{
+	FuDevlinkVersionInfo *version_info = value;
+	FuDevlinkComponentInstanceIdHelper *helper = user_data;
+
+	if (version_info->fixed == NULL)
+		return;
+
+	fu_device_add_instance_str(helper->device, key, version_info->fixed);
+	g_strv_builder_add(helper->keys_builder, key);
+}
+
+void
+fu_devlink_component_build_instance_id(FuDevice *device,
+				       gchar *driver_name,
+				       GHashTable *version_table)
+{
+	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
+	GError *error_local = NULL;
+	g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
+	FuDevlinkComponentInstanceIdHelper helper = {
+	    .device = device,
+	    .keys_builder = keys_builder,
+	};
+	g_auto(GStrv) keys = NULL;
+
+	if (driver_name != NULL) {
+		fu_device_add_instance_str(device, "DRIVER", driver_name);
+		g_strv_builder_add(keys_builder, "DRIVER");
+	}
+
+	/* append fixed versions to instance id */
+	g_hash_table_foreach(version_table, fu_devlink_component_instance_id_cb, &helper);
+
+	g_strv_builder_add(keys_builder, "COMPONENT");
+	fu_device_add_instance_str(device, "COMPONENT", self->component_name);
+
+	keys = g_strv_builder_end(keys_builder);
+	if (g_strv_length(keys) == 0) {
+		g_debug("no instance id items found, skipping building instance id");
+		return;
+	}
+	if (!fu_device_build_instance_id_strv(device, &error_local, "DEVLINK", keys))
+		g_debug("failed to build devlink info based instance id for component %s: %s",
+			self->component_name,
+			error_local->message);
 }
