@@ -203,6 +203,7 @@ fu_devlink_component_instance_id_cb(gpointer key, gpointer value, gpointer user_
 
 void
 fu_devlink_component_build_instance_id(FuDevice *device,
+				       FuDevice *parent,
 				       gchar *driver_name,
 				       GHashTable *version_table)
 {
@@ -235,4 +236,22 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 		g_debug("failed to build devlink info based instance id for component %s: %s",
 			self->component_name,
 			error_local->message);
+
+	/* build additional instance ID based on vid and pid if available */
+	if (fu_device_get_vid(parent) != 0x0 && fu_device_get_pid(parent) != 0x0) {
+		/* add PCI vendor and product IDs from parent device */
+		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(parent));
+		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(parent));
+
+		if (!fu_device_build_instance_id(device,
+						 &error_local,
+						 "DEVLINK",
+						 "VEN",
+						 "DEV",
+						 "COMPONENT",
+						 NULL))
+			g_debug("failed to build vid/pid instance id for component %s: %s",
+				self->component_name,
+				error_local->message);
+	}
 }
