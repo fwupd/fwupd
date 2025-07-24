@@ -185,6 +185,8 @@ fu_mm_mbim_device_new_sync(FuMmMbimDevice *self, GFile *file, guint timeout_ms, 
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
 			return NULL;
+		if (!fu_device_event_check_error(event, error))
+			return NULL;
 		return g_object_new(MBIM_TYPE_DEVICE, "device-file", file, NULL);
 	}
 
@@ -236,7 +238,9 @@ fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **err
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
-		return event != NULL;
+		if (event == NULL)
+			return FALSE;
+		return fu_device_event_check_error(event, error);
 	}
 
 	/* save */
@@ -292,8 +296,10 @@ fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **er
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return FALSE;
 		g_clear_object(&priv->mbim_device);
-		return event != NULL;
+		return fu_device_event_check_error(event, error);
 	}
 
 	/* save */
@@ -375,6 +381,8 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 		g_autoptr(GBytes) blob = NULL;
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
+			return NULL;
+		if (!fu_device_event_check_error(event, error))
 			return NULL;
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
