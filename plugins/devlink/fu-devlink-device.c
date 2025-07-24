@@ -308,12 +308,6 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 	return ret;
 }
 
-typedef struct {
-	gchar *fixed;
-	gchar *running;
-	gchar *stored;
-} FuDevlinkVersionInfo;
-
 static void
 fu_devlink_device_version_info_free(FuDevlinkVersionInfo *version_info)
 {
@@ -378,22 +372,6 @@ fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 	return g_steal_pointer(&version_table);
 }
 
-#define FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX "DEVLINK\\"
-
-static void
-fu_devlink_device_instance_id_cb(gpointer key, gpointer value, gpointer user_data)
-{
-	FuDevlinkVersionInfo *version_info = value;
-	GString *instance_id = user_data;
-	gchar *name = key;
-
-	if (version_info->fixed == NULL)
-		return;
-	if (g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX) != 0)
-		g_string_append_printf(instance_id, "&");
-	g_string_append_printf(instance_id, "%s_%s", name, version_info->fixed);
-}
-
 static FuDevice *
 fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 {
@@ -410,7 +388,8 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 
 typedef struct {
 	FuDevice *device;
-	GString *instance_id;
+	GHashTable *version_table;
+	gchar *driver_name;
 } FuDevlinkDeviceUpdateComponentHelper;
 
 static void
@@ -431,11 +410,10 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 
 	component = fu_devlink_device_get_component(helper->device, name);
 	if (component == NULL) {
-		g_autofree gchar *component_instance_id =
-		    g_strdup_printf("%s&COMPONENT_%s", helper->instance_id->str, name);
-		component = fu_devlink_component_new(fu_device_get_context(helper->device),
-						     component_instance_id,
-						     name);
+		component = fu_devlink_component_new(fu_device_get_context(helper->device), name);
+		fu_devlink_component_build_instance_id(component,
+						       helper->driver_name,
+						       helper->version_table);
 		fu_device_set_version(component, version);
 		fu_device_add_child(helper->device, component);
 		g_debug("added component %s (version: %s)", name, version);
@@ -461,8 +439,8 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	FuDevice *device = FU_DEVICE(data);
 	GPtrArray *children = fu_device_get_children(device);
 	FuDevlinkDeviceUpdateComponentHelper helper;
-	g_autoptr(GString) instance_id = g_string_new(FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX);
 	g_autoptr(GHashTable) version_table = NULL;
+	g_autofree gchar *driver_name = NULL;
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
@@ -472,9 +450,8 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 
 	/* parse driver name */
 	if (tb[DEVLINK_ATTR_INFO_DRIVER_NAME] != NULL) {
-		const gchar *driver_name = mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_DRIVER_NAME]);
+		driver_name = g_strdup(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_DRIVER_NAME]));
 		g_debug("device driver name: %s", driver_name);
-		g_string_append_printf(instance_id, "DRIVER_%s", driver_name);
 	}
 
 	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
@@ -485,14 +462,6 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	}
 
 	version_table = fu_devlink_device_get_version_table(nlh);
-
-	/* append fixed versions to instance id */
-	g_hash_table_foreach(version_table, fu_devlink_device_instance_id_cb, instance_id);
-
-	if (g_strcmp0(instance_id->str, FU_DEVLINK_DEVICE_INSTANCE_ID_PREFIX) == 0) {
-		g_warning("no instance id items found, ignoring component creation");
-		return MNL_CB_OK;
-	}
 
 	/* remove components that are not in the version table */
 	for (guint i = 0; i < children->len; i++) {
@@ -508,7 +477,8 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	}
 
 	helper.device = device;
-	helper.instance_id = instance_id;
+	helper.version_table = version_table;
+	helper.driver_name = driver_name;
 	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &helper);
 
 	return MNL_CB_OK;

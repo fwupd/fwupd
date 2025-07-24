@@ -212,9 +212,7 @@ fu_devlink_netdevsim_device_flash_func(void)
 	g_assert_true(ret);
 
 	/* create fw.mgmt component */
-	instance_id = g_strdup_printf("DEVLINK\\BUS_netdevsim&DEV_%s&COMPONENT_fw.mgmt",
-				      FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
-	component = fu_devlink_component_new(ctx, instance_id, "fw.mgmt");
+	component = fu_devlink_component_new(ctx, "fw.mgmt");
 	g_assert_nonnull(component);
 
 	/* set up parent-child relationship */
