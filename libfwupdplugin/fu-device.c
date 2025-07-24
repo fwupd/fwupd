@@ -7512,6 +7512,67 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 }
 
 /**
+ * fu_device_build_instance_id_strv:
+ * @self: a #FuDevice
+ * @subsystem: (not nullable): subsystem, e.g. `NVME`
+ * @keys: (nullable): %NULL terminated array of string keys
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates an instance ID from a prefix and an array of key values.
+ * If the key value cannot be found, the parent and then proxy is also queried.
+ *
+ * If any of the key values remain unset then no instance ID is added.
+ *
+ *	fu_device_add_instance_str(dev, "VID", "1234");
+ *	fu_device_add_instance_u16(dev, "PID", 5678);
+ *	const gchar *keys[] = {"VID", "PID", NULL};
+ *	if (!fu_device_build_instance_id_strv(dev, "NVME", keys, &error))
+ *		g_warning("failed to add ID: %s", error->message);
+ *
+ * Returns: %TRUE if the instance ID was added.
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_device_build_instance_id_strv(FuDevice *self,
+				 const gchar *subsystem,
+				 gchar **keys,
+				 GError **error)
+{
+	FuDevice *parent = fu_device_get_parent(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GString) str = g_string_new(subsystem);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(subsystem != NULL, FALSE);
+
+	for (guint i = 0; keys != NULL && keys[i] != NULL; i++) {
+		const gchar *key = keys[i];
+		const gchar *value;
+
+		value = fu_device_get_instance_str(self, key);
+		if (value == NULL && parent != NULL)
+			value = fu_device_get_instance_str(parent, key);
+		if (value == NULL && priv->proxy != NULL)
+			value = fu_device_get_instance_str(priv->proxy, key);
+		if (value == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no value for %s",
+				    key);
+			return FALSE;
+		}
+		g_string_append(str, i == 0 ? "\\" : "&");
+		g_string_append_printf(str, "%s_%s", key, value);
+	}
+
+	/* success */
+	fu_device_add_instance_id(self, str->str);
+	return TRUE;
+}
+
+/**
  * fu_device_build_instance_id:
  * @self: a #FuDevice
  * @error: (nullable): optional return location for an error
@@ -7535,47 +7596,26 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
 gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
 {
-	FuDevice *parent = fu_device_get_parent(self);
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	gboolean ret = TRUE;
 	va_list args;
-	g_autoptr(GString) str = g_string_new(subsystem);
+	g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
+	g_auto(GStrv) keys = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(subsystem != NULL, FALSE);
 
+	/* convert varargs to GStrv */
 	va_start(args, subsystem);
-	for (guint i = 0;; i++) {
+	for (;;) {
 		const gchar *key = va_arg(args, const gchar *);
-		const gchar *value;
 		if (key == NULL)
 			break;
-		value = fu_device_get_instance_str(self, key);
-		if (value == NULL && parent != NULL)
-			value = fu_device_get_instance_str(parent, key);
-		if (value == NULL && priv->proxy != NULL)
-			value = fu_device_get_instance_str(priv->proxy, key);
-		if (value == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no value for %s",
-				    key);
-			ret = FALSE;
-			break;
-		}
-		g_string_append(str, i == 0 ? "\\" : "&");
-		g_string_append_printf(str, "%s_%s", key, value);
+		g_strv_builder_add(keys_builder, key);
 	}
 	va_end(args);
+	keys = g_strv_builder_end(keys_builder);
 
-	/* we set an error above */
-	if (!ret)
-		return FALSE;
-
-	/* success */
-	fu_device_add_instance_id(self, str->str);
-	return TRUE;
+	/* call the strv version */
+	return fu_device_build_instance_id_strv(self, subsystem, keys, error);
 }
 
 /**
