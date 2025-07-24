@@ -3181,8 +3181,8 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  Flags:                updatable|historical|unsigned-payload\n"
 			    "  Version:              1.2.2\n"
 			    "  VersionFormat:        triplet\n"
-			    "  Created:              2018-01-07\n"
-			    "  Modified:             2017-12-27\n"
+			    "  Created:              2018-01-07 15:13:20\n"
+			    "  Modified:             2017-12-27 01:26:40\n"
 			    "  UpdateState:          success\n"
 			    "  FuRelease:\n"
 			    "    AppstreamId:        com.hughski.test.firmware\n"
@@ -3192,6 +3192,7 @@ fu_engine_history_func(gconstpointer user_data)
 			    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 			    "  AcquiesceDelay:       50\n",
 			    checksum);
+	g_debug("%s", device_str);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 
@@ -3914,8 +3915,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "  Flags:                updatable|historical|unsigned-payload\n"
 	    "  Version:              1.2.2\n"
 	    "  VersionFormat:        triplet\n"
-	    "  Created:              2018-01-07\n"
-	    "  Modified:             2017-12-27\n"
+	    "  Created:              2018-01-07 15:13:20\n"
+	    "  Modified:             2017-12-27 01:26:40\n"
 	    "  UpdateState:          failed\n"
 	    "  UpdateError:          failed to write-firmware: device was not in supported mode\n"
 	    "  FuRelease:\n"
@@ -3926,6 +3927,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	    "  InstanceId[vi]:       12345678-1234-1234-1234-123456789012\n"
 	    "  AcquiesceDelay:       50\n",
 	    checksum);
+	g_debug("%s", device_str);
 	ret = g_strcmp0(device_str, device_str_expected) == 0;
 	g_assert_true(ret);
 }
