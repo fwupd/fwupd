@@ -336,6 +336,7 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	const gchar *sysfs_path;
 	const gchar *version;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
+	g_autofree gchar *platform_id = NULL;
 
 	/* inhibition uid is the modem interface 'Device' property, which may
 	 * be the device sysfs path or a different user-provided id */
@@ -350,7 +351,8 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 				    "no physdev set");
 		return FALSE;
 	}
-	fu_device_set_physical_id(FU_DEVICE(self), sysfs_path);
+	platform_id = g_path_get_basename(sysfs_path);
+	fu_device_set_physical_id(FU_DEVICE(self), platform_id);
 
 	/* get GUIDs */
 	update_settings = mm_modem_firmware_get_update_settings(modem_fw);
@@ -862,6 +864,7 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_MODEM);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_USE_BRANCH);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_MM_DEVICE_FLAG_REPLUG_REPROBE);
 	fu_device_add_possible_plugin(FU_DEVICE(self), "modem_manager");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
