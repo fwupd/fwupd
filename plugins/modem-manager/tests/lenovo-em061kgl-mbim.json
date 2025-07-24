@@ -1,0 +1,19 @@
+{
+  "name": "Lenovo EM061KGL (MBIM -> EDL)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "b6d45ea6cc285ae4ae7c9cdae9607a3b7b579c78c7bf1f65825a3dc707ec20cb-EM061KGLAAR01A02M2G_01.013.01.013.cab",
+      "emulation-url": "fa74269fd6b466f108acca8aab442ecf5df4f14f450c2b37ae6b49b1fcaac1ad-EM061KGLAAR01A02M2G_01.013.01.013.zip",
+      "components": [
+        {
+          "version": "EM061KGLAAR01A02M2G_01.013.01.013",
+          "protocol": "com.qualcomm.firehose",
+          "guids": [
+            "2bdac371-5939-5239-9dfa-eb4d4ff12bc8"
+          ]
+        }
+      ]
+    }
+  ]
+}
