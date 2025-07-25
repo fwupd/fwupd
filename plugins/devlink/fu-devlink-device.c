@@ -345,8 +345,10 @@ fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 		    ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE] == NULL)
 			continue;
 
-		name = mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]);
-		value = mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]);
+		name =
+		    fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]), G_MAXSIZE);
+		value = fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]),
+				   G_MAXSIZE);
 
 		version_info = g_hash_table_lookup(version_table, name);
 		if (version_info == NULL) {
@@ -451,12 +453,14 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 
 	/* parse driver name */
 	if (tb[DEVLINK_ATTR_INFO_DRIVER_NAME] != NULL) {
-		driver_name = g_strdup(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_DRIVER_NAME]));
+		driver_name =
+		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_DRIVER_NAME]), G_MAXSIZE);
 		g_debug("device driver name: %s", driver_name);
 	}
 
 	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
-		const gchar *serial_number = mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]);
+		const gchar *serial_number =
+		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]), G_MAXSIZE);
 
 		g_debug("device serial number: %s", serial_number);
 		fu_device_set_serial(device, serial_number);
