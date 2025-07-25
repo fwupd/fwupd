@@ -1032,6 +1032,7 @@ fu_util_display_current_message(FuUtil *self)
 static gboolean
 fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 {
+	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GInputStream) stream_fw = NULL;
@@ -1060,6 +1061,10 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 	}
 	fu_release_set_stream(release, stream_fw);
 	fu_progress_step_done(self->progress);
+
+	/* some plugins need the firmware name */
+	firmware_basename = g_path_get_basename(values[0]);
+	fu_release_set_firmware_basename(release, firmware_basename);
 
 	/* load engine */
 	if (!fu_util_start_engine(self,

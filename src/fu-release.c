@@ -130,6 +130,19 @@ fu_release_get_firmware_basename(FuRelease *self)
 	return self->firmware_basename;
 }
 
+void
+fu_release_set_firmware_basename(FuRelease *self, const gchar *firmware_basename)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(self->firmware_basename, firmware_basename) == 0)
+		return;
+
+	g_free(self->firmware_basename);
+	self->firmware_basename = g_strdup(firmware_basename);
+}
+
 static void
 fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_old)
 {
