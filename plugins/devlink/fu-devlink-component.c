@@ -204,7 +204,7 @@ fu_devlink_component_instance_id_cb(gpointer key, gpointer value, gpointer user_
 void
 fu_devlink_component_build_instance_id(FuDevice *device,
 				       FuDevice *parent,
-				       gchar *driver_name,
+				       const gchar *driver_name,
 				       GHashTable *version_table)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);

@@ -389,7 +389,7 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 typedef struct {
 	FuDevice *device;
 	GHashTable *version_table;
-	gchar *driver_name;
+	const gchar *driver_name;
 } FuDevlinkDeviceUpdateComponentHelper;
 
 static void
@@ -441,7 +441,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 	GPtrArray *children = fu_device_get_children(device);
 	FuDevlinkDeviceUpdateComponentHelper helper;
 	g_autoptr(GHashTable) version_table = NULL;
-	g_autofree gchar *driver_name = NULL;
+	g_autofree const gchar *driver_name = NULL;
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
