@@ -30,6 +30,10 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 #define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP	   "verfmt-hp"
 #define FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE	   "set-chip-type"
 #define FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG "waiting-for-unplug"
+#define FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG	   "no-replug"
+
+#define FU_USI_DOCK_DEVICE_PHASE2_DELAY	  0x0F
+#define FU_USI_DOCK_DEVICE_PHASE2_TIMEOUT 0x5A
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -154,6 +158,46 @@ fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 	}
 	if (response == 0xFF) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "device timed out");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_usi_dock_mcu_device_set_phase2_parameters(FuUsiDockMcuDevice *self, GError **error)
+{
+	guint8 inbuf[] = {FU_USI_DOCK_MCU_CMD_SET_PHASE2_DISCONNECT, 0};
+
+	if (!fu_usi_dock_mcu_device_tx(self,
+				       FU_USI_DOCK_TAG2_CMD_MCU,
+				       inbuf,
+				       sizeof(inbuf),
+				       error)) {
+		g_prefix_error_literal(error, "failed to transmit set-phase2-no-replug: ");
+		return FALSE;
+	}
+
+	inbuf[0] = FU_USI_DOCK_MCU_CMD_SET_PHASE2_DELAY;
+	inbuf[1] = FU_USI_DOCK_DEVICE_PHASE2_DELAY;
+	if (!fu_usi_dock_mcu_device_tx(self,
+				       FU_USI_DOCK_TAG2_CMD_MCU,
+				       inbuf,
+				       sizeof(inbuf),
+				       error)) {
+		g_prefix_error_literal(error, "failed to transmit set-phase2-delay: ");
+		return FALSE;
+	}
+
+	inbuf[0] = FU_USI_DOCK_MCU_CMD_SET_PHASE2_TIMEOUT;
+	inbuf[1] = FU_USI_DOCK_DEVICE_PHASE2_TIMEOUT;
+	if (!fu_usi_dock_mcu_device_tx(self,
+				       FU_USI_DOCK_TAG2_CMD_MCU,
+				       inbuf,
+				       sizeof(inbuf),
+				       error)) {
+		g_prefix_error_literal(error, "failed to transmit set-phase2-timeout: ");
 		return FALSE;
 	}
 
@@ -386,18 +430,65 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 }
 
 static gboolean
+fu_usi_dock_mcu_device_reset_usb2(FuUsiDockMcuDevice *self, GError **error)
+{
+	FuDevice *proxy = NULL;
+	g_autoptr(FuDevice) device_usb2 = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	device_usb2 = fu_usi_dock_mcu_device_find_child(self, FU_USI_DOCK_FIRMWARE_IDX_USB2);
+	if (device_usb2 == NULL) {
+		g_debug("no USB2 MCU child, ignoring");
+		return TRUE;
+	}
+	proxy = fu_device_get_proxy(device_usb2);
+	if (proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no USB2 proxy");
+		return FALSE;
+	}
+	g_debug("doing manual USB2 reset");
+	locker = fu_device_locker_new(proxy, error);
+	if (locker == NULL) {
+		g_prefix_error_literal(error, "failed to open USB2 proxy: ");
+		return FALSE;
+	}
+	if (!fu_usb_device_reset(FU_USB_DEVICE(proxy), error)) {
+		g_prefix_error_literal(error, "failed to reset USB2 proxy: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 {
 	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_usi_dock_mcu_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get status and component versions */
-	if (!fu_usi_dock_mcu_device_get_status(self, error)) {
-		g_prefix_error_literal(error, "failed to get status: ");
-		return FALSE;
+	if (!fu_usi_dock_mcu_device_get_status(self, &error_local)) {
+		/* FIXME: check the error code */
+		g_warning("XXX FIXME error, please verify: %s [%i]",
+			  error_local->message,
+			  error_local->code);
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BUSY)) {
+			/* work around FL5801-1Q2 errata by resetting U2 */
+			if (!fu_usi_dock_mcu_device_reset_usb2(self, error))
+				return FALSE;
+			if (!fu_usi_dock_mcu_device_get_status(self, error))
+				return FALSE;
+		} else {
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to get status: ");
+			return FALSE;
+		}
 	}
 	if (!fu_usi_dock_mcu_device_enumerate_children(self, error)) {
 		g_prefix_error_literal(error, "failed to enumerate children: ");
@@ -669,6 +760,12 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 	}
 	fu_progress_step_done(progress);
 
+	/* set parameters for devices with new enough firmware to avoid the manual replug */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG)) {
+		if (!fu_usi_dock_mcu_device_set_phase2_parameters(self, error))
+			return FALSE;
+	}
+
 	/* internal flash */
 	cmd = FU_USI_DOCK_MCU_CMD_FW_UPDATE;
 	if (!fu_usi_dock_mcu_device_txrx(self,
@@ -680,6 +777,10 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					 error))
 		return FALSE;
 	fu_progress_step_done(progress);
+
+	/* device can self-reboot */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -724,7 +825,10 @@ fu_usi_dock_mcu_device_reload(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	fu_device_set_remove_delay(device, 900000);
+	/* device can self-reboot */
+	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
+		return TRUE;
+
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
@@ -747,6 +851,20 @@ fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
 
 	/* success */
 	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_usi_dock_mcu_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	/* new firmware is able to avoid the manual replug */
+	if (fu_device_get_vid(device) == 0x17EF && fu_device_get_pid(device) == 0x30B4 &&
+	    fu_version_compare(fu_device_get_version(device),
+			       "10.18",
+			       fu_device_get_version_format(device)) >= 0) {
+		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
+	} else {
+		fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
+	}
 }
 
 static void
@@ -774,9 +892,12 @@ fu_usi_dock_mcu_device_cleanup(FuDevice *device,
 {
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
+	/* device can self-reboot */
+	if (fu_device_has_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
+		return TRUE;
+
 	/* wait for the user to unplug then start the 40 second timer */
 	fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
-	fu_device_set_remove_delay(device, 900000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
@@ -792,6 +913,8 @@ fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
 {
 	if (fu_device_has_private_flag(donor, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE))
 		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
+	if (fu_device_has_private_flag(donor, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG))
+		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 }
 
 static void
@@ -815,20 +938,24 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
-	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
+			 NULL);
+	g_signal_connect(FWUPD_DEVICE(self),
+			 "notify::version",
+			 G_CALLBACK(fu_usi_dock_mcu_device_version_notify_cb),
 			 NULL);
 
 	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_SET_CHIP_TYPE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_USI_DOCK_DEVICE_FLAG_WAITING_FOR_UNPLUG);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
-	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay(FU_DEVICE(self), 900000);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DOCK);
 }
