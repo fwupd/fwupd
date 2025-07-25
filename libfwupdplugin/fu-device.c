@@ -7534,7 +7534,10 @@ fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value)
  * Since: 2.0.14
  **/
 gboolean
-fu_device_build_instance_id_strv(FuDevice *self, GError **error, const gchar *subsystem, GStrv keys)
+fu_device_build_instance_id_strv(FuDevice *self,
+				 GError **error,
+				 const gchar *subsystem,
+				 gchar **keys)
 {
 	FuDevice *parent = fu_device_get_parent(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);

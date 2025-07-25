@@ -1466,7 +1466,7 @@ gboolean
 fu_device_build_instance_id_strv(FuDevice *self,
 				 GError **error,
 				 const gchar *subsystem,
-				 GStrv keys) G_GNUC_NON_NULL(1, 3);
+				 gchar **keys) G_GNUC_NON_NULL(1, 3);
 gboolean
 fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...)
     G_GNUC_NULL_TERMINATED G_GNUC_NON_NULL(1, 3);
