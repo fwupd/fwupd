@@ -10,7 +10,6 @@
 #include "fu-usi-dock-child-device.h"
 #include "fu-usi-dock-dmc-device.h"
 #include "fu-usi-dock-mcu-device.h"
-#include "fu-usi-dock-struct.h"
 
 struct _FuUsiDockMcuDevice {
 	FuHidDevice parent_instance;
@@ -117,6 +116,20 @@ fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+FuDevice *
+fu_usi_dock_mcu_device_find_child(FuUsiDockMcuDevice *self, FuUsiDockFirmwareIdx chip_idx)
+{
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(children, i);
+		if (fu_usi_dock_child_device_get_chip_idx(FU_USI_DOCK_CHILD_DEVICE(device_tmp)) ==
+		    chip_idx) {
+			return g_object_ref(device_tmp);
+		}
+	}
+	return NULL;
 }
 
 static gboolean
