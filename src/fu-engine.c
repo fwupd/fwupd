@@ -8491,6 +8491,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "coswid", FU_TYPE_COSWID_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "pefile", FU_TYPE_PEFILE_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "elf", FU_TYPE_ELF_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "x509-certificate", FU_TYPE_X509_CERTIFICATE);
 	fu_context_add_firmware_gtype(self->ctx,
 				      "intel-thunderbolt",
 				      FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
