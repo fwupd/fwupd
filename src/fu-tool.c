@@ -1088,6 +1088,10 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	/* optional version */
+	if (g_strv_length(values) >= 3)
+		fu_release_set_version(release, values[2]);
+
 	self->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-changed",
@@ -5296,7 +5300,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "install-blob",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME DEVICE-ID"),
+			      _("FILENAME DEVICE-ID [VERSION]"),
 			      /* TRANSLATORS: command description */
 			      _("Install a raw firmware blob on a device"),
 			      fu_util_install_blob);
