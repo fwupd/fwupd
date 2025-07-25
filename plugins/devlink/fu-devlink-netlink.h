@@ -37,7 +37,7 @@ fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 				 struct nlmsghdr *nlh,
 				 mnl_cb_t cb,
 				 void *data,
-				 GError **error) G_GNUC_NON_NULL(1, 2, 3);
+				 GError **error) G_GNUC_NON_NULL(1, 2);
 
 gboolean
 fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error) G_GNUC_NON_NULL(1, 2);
