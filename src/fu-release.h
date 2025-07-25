@@ -77,6 +77,9 @@ void
 fu_release_set_remote(FuRelease *self, FwupdRemote *remote) G_GNUC_NON_NULL(1);
 void
 fu_release_set_config(FuRelease *self, FuEngineConfig *config) G_GNUC_NON_NULL(1);
+void
+fu_release_set_firmware_basename(FuRelease *self, const gchar *firmware_basename)
+    G_GNUC_NON_NULL(1);
 
 gboolean
 fu_release_load(FuRelease *self,
