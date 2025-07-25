@@ -3784,6 +3784,7 @@ fu_engine_install_request(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpstr(fu_release_get_firmware_basename(release), ==, "firmware.bin");
+	g_assert_cmpstr(fu_release_get_version(release), ==, "1.2.3");
 
 	g_signal_connect(FU_ENGINE(engine),
 			 "device-request",
