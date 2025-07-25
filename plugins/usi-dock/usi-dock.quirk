@@ -27,3 +27,8 @@ Plugin = usi_dock
 GType = FuUsiDockMcuDevice
 Name = USB-C G2 Multiport Hub MCU Controller
 Flags = verfmt-hp
+
+[USB\VID_17EF&PID_30BA]
+Name = Parent U2 hub
+Plugin = parade_usbhub
+Flags = ~updatable

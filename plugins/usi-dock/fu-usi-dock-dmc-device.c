@@ -22,12 +22,6 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 		g_autoptr(GError) error = NULL;
 		const gchar *serialnum;
 
-		/* slightly odd: the MCU device uses the DMC version number */
-		g_info("absorbing DMC version into MCU");
-		fu_device_set_version_format(parent, fu_device_get_version_format(device));
-		fu_device_set_version(parent, fu_device_get_version(device));
-		fu_device_set_serial(parent, fu_device_get_serial(device));
-
 		/* allow matching firmware */
 		fu_device_add_instance_str(parent, "CID", fu_device_get_name(device));
 		if (!fu_device_build_instance_id(parent,
@@ -78,6 +72,12 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 				return;
 			}
 		}
+
+		/* slightly odd: the MCU device uses the DMC version number */
+		g_info("absorbing DMC version into MCU");
+		fu_device_set_version_format(parent, fu_device_get_version_format(device));
+		fu_device_set_version(parent, fu_device_get_version(device));
+		fu_device_set_serial(parent, fu_device_get_serial(device));
 
 		/* use a better device name */
 		fu_device_set_name(device, "Dock Management Controller Information");
