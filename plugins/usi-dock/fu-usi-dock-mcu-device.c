@@ -580,7 +580,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_usi_dock_mcu_device_wait_for_spi_ready_cb,
-			     30,
+			     60,
 			     NULL,
 			     error)) {
 		g_prefix_error(error, "failed to wait for erase: ");
