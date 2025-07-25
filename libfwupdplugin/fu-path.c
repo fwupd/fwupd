@@ -519,6 +519,12 @@ fu_path_from_kind(FuPathKind path_kind)
 			return g_steal_pointer(&localtime);
 		return g_strdup("/etc/localtime");
 	}
+	/* /sys/kernel/debug */
+	case FU_PATH_KIND_DEBUGFSDIR:
+		tmp = g_getenv("FWUPD_DEBUGFSDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/sys/kernel/debug");
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
