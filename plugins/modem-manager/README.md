@@ -43,6 +43,16 @@ although it requires that the firmware branch is also set in the firmware metada
 
 Since: 1.9.8
 
+### `Flags=make-serial-raw`
+
+When using a port that was not previously configured by ModemManager (an 'ignored' port), we need
+to configure the serial port manually.
+
+This is automatically added for any ports being used from `mm_modem_get_ignored_ports()` and should
+not need to be added in quirk files.
+
+Since: 2.0.14
+
 ### `Flags=detach-at-fastboot-has-no-response`
 
 If no AT response is expected when entering fastboot mode.
