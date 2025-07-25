@@ -12,10 +12,10 @@
 G_DECLARE_FINAL_TYPE(FuDevlinkBackend, fu_devlink_backend, FU, DEVLINK_BACKEND, FuBackend)
 
 FuBackend *
-fu_devlink_backend_new(FuContext *ctx);
+fu_devlink_backend_new(FuContext *ctx) G_GNUC_NON_NULL(1);
 
 FuDevice *
 fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				const gchar *bus_name,
 				const gchar *dev_name,
-				GError **error);
+				GError **error) G_GNUC_NON_NULL(1, 2, 3);

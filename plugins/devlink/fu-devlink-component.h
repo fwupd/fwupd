@@ -12,10 +12,10 @@
 G_DECLARE_FINAL_TYPE(FuDevlinkComponent, fu_devlink_component, FU, DEVLINK_COMPONENT, FuDevice)
 
 FuDevice *
-fu_devlink_component_new(FuContext *ctx, const gchar *component_name);
+fu_devlink_component_new(FuContext *ctx, const gchar *component_name) G_GNUC_NON_NULL(1, 2);
 
 void
 fu_devlink_component_build_instance_id(FuDevice *device,
 				       FuDevice *parent,
 				       const gchar *driver_name,
-				       GHashTable *version_table);
+				       GHashTable *version_table) G_GNUC_NON_NULL(1, 2, 4);

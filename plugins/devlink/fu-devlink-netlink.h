@@ -30,17 +30,17 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 			   guint32 seq,
 			   mnl_cb_t cb,
 			   void *data,
-			   GError **error);
+			   GError **error) G_GNUC_NON_NULL(1, 4);
 
 gboolean
 fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 				 struct nlmsghdr *nlh,
 				 mnl_cb_t cb,
 				 void *data,
-				 GError **error);
+				 GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 gboolean
-fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error);
+fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error) G_GNUC_NON_NULL(1, 2);
 
 /* socket management */
 FuDevlinkGenSocket *
@@ -50,22 +50,22 @@ void
 fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg);
 
 gint
-fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg);
+fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg) G_GNUC_NON_NULL(1);
 
 gchar *
-fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg);
+fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg) G_GNUC_NON_NULL(1);
 
 /* prepare devlink command message */
 struct nlmsghdr *
-fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dump);
+fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dump) G_GNUC_NON_NULL(1);
 
 /* multicast group management */
 gboolean
-fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg);
+fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg) G_GNUC_NON_NULL(1);
 
 /* attribute parsing callback */
 int
-fu_devlink_netlink_attr_cb(const struct nlattr *attr, void *data);
+fu_devlink_netlink_attr_cb(const struct nlattr *attr, void *data) G_GNUC_NON_NULL(1, 2);
 
 /* cleanup function for auto cleanup */
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDevlinkGenSocket, fu_devlink_netlink_gen_socket_close)
