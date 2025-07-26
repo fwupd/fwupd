@@ -73,7 +73,7 @@ fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 		msg->function_id |= FU_LOGITECH_HIDPP_HIDPP_MSG_SW_ID;
 
 	/* force long reports for BLE-direct devices */
-	if (msg->hidpp_version == FU_HIDPP_VERSION_BLE) {
+	if (msg->hidpp_version == FU_LOGITECH_HIDPP_VERSION_BLE) {
 		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 		len = 20;
 	}

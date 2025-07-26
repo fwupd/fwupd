@@ -23,7 +23,7 @@ guint8
 fu_logitech_hidpp_runtime_get_version_bl_major(FuLogitechHidppRuntime *self)
 {
 	FuLogitechHidppRuntimePrivate *priv;
-	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), 0);
+	g_return_val_if_fail(FU_IS_LOGITECH_HIDPP_RUNTIME(self), 0);
 	priv = GET_PRIVATE(self);
 	return priv->version_bl_major;
 }
@@ -47,7 +47,7 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GEr
 static gboolean
 fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	FuLogitechHidppRuntimePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuDevice) device_usb = NULL;
 	g_autoptr(FuDevice) device_usb_iface = NULL;
@@ -169,7 +169,8 @@ fu_logitech_hidpp_runtime_init(FuLogitechHidppRuntime *self)
 	fu_device_set_name(FU_DEVICE(self), "Unifying Receiver");
 	fu_device_set_summary(FU_DEVICE(self), "Miniaturised USB wireless receiver");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_poll_interval(FU_DEVICE(self), FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
+	fu_device_set_poll_interval(FU_DEVICE(self),
+				    FU_LOGITECH_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	g_signal_connect(FU_DEVICE(self),
