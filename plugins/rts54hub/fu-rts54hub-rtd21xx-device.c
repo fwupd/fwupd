@@ -36,7 +36,7 @@ fu_rts54hub_rtd21xx_device_to_string(FuDevice *module, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", priv->register_addr_len);
 }
 
-static FuRts54HubDevice *
+static FuRts54hubDevice *
 fu_rts54hub_rtd21xx_device_get_parent(FuRts54hubRtd21xxDevice *self, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
@@ -102,7 +102,7 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 				     gsize datasz,
 				     GError **error)
 {
-	FuRts54HubDevice *parent;
+	FuRts54hubDevice *parent;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
 	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);
@@ -136,7 +136,7 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    gsize datasz,
 				    GError **error)
 {
-	FuRts54HubDevice *parent;
+	FuRts54hubDevice *parent;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
 	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);

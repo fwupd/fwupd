@@ -2,14 +2,14 @@
 [USB\VID_0BDA&PID_5B00]
 Plugin = rts54hub
 Flags = enforce-requires
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
 
 # Lenovo HotRod
 [USB\VID_17EF&PID_30BF]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 Vendor = Lenovo
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
@@ -25,7 +25,7 @@ Rts54RegisterAddrLen = 0x04
 # Acer D501 Dock
 [USB\VID_2BEF&PID_1009]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 Name = Acer D501 Dock USB Hub
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
@@ -43,28 +43,28 @@ Rts54RegisterAddrLen = 0x04
 # Acer T34 Dock gen1
 [USB\VID_0502&PID_0702]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
 # Acer T34 Dock gen2
 [USB\VID_0502&PID_0701]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
 # Acer U33 Dock gen2
 [USB\VID_0502&PID_0801]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
 # Acer U33 Dock gen1
 [USB\VID_0502&PID_0802]
 Plugin = rts54hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -72,7 +72,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_0502&PID_0804]
 Plugin = rts54hub
 Name = Acer Universal Dock U32 Lv1
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -80,7 +80,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_0502&PID_0806]
 Plugin = rts54hub
 Name = Acer Universal Dock U32 Lv2
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -88,7 +88,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_3749&PID_050B]
 Plugin = rts54hub
 Name = UCDDS1080P Lv1
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -96,7 +96,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_3749&PID_050D]
 Plugin = rts54hub
 Name = UCDDS1080P Lv2
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -104,7 +104,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_065F&PID_2260]
 Plugin = rts54hub
 Name = USB-C Dual Display Dock
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x20000
 
@@ -112,7 +112,7 @@ FirmwareSizeMax = 0x20000
 [USB\VID_03F0&PID_AE4A]
 Plugin = rts54hub
 Name = HP Portable USB-C Hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x30000
 Rts54BlockSize = 0x100

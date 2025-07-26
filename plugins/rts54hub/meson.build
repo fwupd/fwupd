@@ -1,4 +1,4 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hub"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginRts54hub"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('rts54hub.quirk')
