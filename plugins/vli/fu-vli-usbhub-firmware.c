@@ -11,7 +11,7 @@
 #include "fu-vli-usbhub-firmware.h"
 
 struct _FuVliUsbhubFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuVliDeviceKind device_kind;
 	guint16 dev_id;
 };

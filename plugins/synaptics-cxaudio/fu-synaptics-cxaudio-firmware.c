@@ -14,7 +14,7 @@
 #include "fu-synaptics-cxaudio-struct.h"
 
 struct _FuSynapticsCxaudioFirmware {
-	FuSrecFirmwareClass parent_instance;
+	FuSrecFirmware parent_instance;
 	FuSynapticsCxaudioFileKind file_kind;
 	FuSynapticsCxaudioDeviceKind device_kind;
 	guint8 layout_signature;

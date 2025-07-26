@@ -10,7 +10,7 @@
 #include "fu-elanfp-struct.h"
 
 struct _FuElanfpFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint32 format_version;
 };
 

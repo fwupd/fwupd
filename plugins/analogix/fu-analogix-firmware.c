@@ -10,7 +10,7 @@
 #include "fu-analogix-firmware.h"
 
 struct _FuAnalogixFirmware {
-	FuIhexFirmwareClass parent_instance;
+	FuIhexFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_IHEX_FIRMWARE)

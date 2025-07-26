@@ -11,7 +11,7 @@
 #include "fu-genesys-usbhub-struct.h"
 
 struct _FuGenesysUsbhubCodesignFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuGenesysFwCodesign codesign;
 };
 

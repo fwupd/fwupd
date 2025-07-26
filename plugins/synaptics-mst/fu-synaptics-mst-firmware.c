@@ -10,7 +10,7 @@
 #include "fu-synaptics-mst-firmware.h"
 
 struct _FuSynapticsMstFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint16 board_id;
 	FuSynapticsMstFamily family;
 };

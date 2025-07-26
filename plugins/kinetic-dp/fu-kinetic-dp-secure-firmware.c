@@ -12,7 +12,7 @@
 #include "fu-kinetic-dp-secure-firmware.h"
 
 struct _FuKineticDpSecureFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 typedef struct {

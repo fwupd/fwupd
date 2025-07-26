@@ -12,7 +12,7 @@
 #include "fu-genesys-usbhub-struct.h"
 
 struct _FuGenesysUsbhubPdFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuGenesysUsbhubPdFirmware, fu_genesys_usbhub_pd_firmware, FU_TYPE_FIRMWARE)

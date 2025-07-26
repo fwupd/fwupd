@@ -9,7 +9,7 @@
 #include "fu-steelseries-firmware.h"
 
 struct _FuSteelseriesFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint32 checksum;
 };
 

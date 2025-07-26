@@ -16,7 +16,7 @@
 #define MAX_VERSION_FORMAT 1
 
 struct _FuNordicHidArchive {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuNordicHidArchive, fu_nordic_hid_archive, FU_TYPE_FIRMWARE)

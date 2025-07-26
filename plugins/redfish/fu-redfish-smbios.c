@@ -11,7 +11,7 @@
 #include "fu-redfish-struct.h"
 
 struct _FuRedfishSmbios {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuRedfishSmbiosInterfaceType interface_type;
 	guint16 port;
 	gchar *hostname;
