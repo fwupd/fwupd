@@ -17,13 +17,13 @@ struct _FuLogitechHidppRuntimeUnifying {
 
 G_DEFINE_TYPE(FuLogitechHidppRuntimeUnifying,
 	      fu_logitech_hidpp_runtime_unifying,
-	      FU_TYPE_HIDPP_RUNTIME)
+	      FU_TYPE_LOGITECH_HIDPP_RUNTIME)
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_unifying_get_instance_private(o))
 
 static gboolean
 fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
@@ -56,7 +56,7 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 static gboolean
 fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	guint8 config[10];
 	g_autofree gchar *version_fw = NULL;
 

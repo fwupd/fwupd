@@ -19,14 +19,14 @@ G_DEFINE_TYPE(FuLogitechHidppRadio, fu_logitech_hidpp_radio, FU_TYPE_DEVICE)
 static void
 fu_logitech_hidpp_radio_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuLogitechHidppRadio *self = FU_HIDPP_RADIO(device);
+	FuLogitechHidppRadio *self = FU_LOGITECH_HIDPP_RADIO(device);
 	fwupd_codec_string_append_hex(str, idt, "Entity", self->entity);
 }
 
 static gboolean
 fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppRadio *self = FU_HIDPP_RADIO(device);
+	FuLogitechHidppRadio *self = FU_LOGITECH_HIDPP_RADIO(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -36,7 +36,7 @@ fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **
 		return FALSE;
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_logitech_hidpp_device_attach(FU_HIDPP_DEVICE(parent),
+	return fu_logitech_hidpp_device_attach(FU_LOGITECH_HIDPP_DEVICE(parent),
 					       self->entity,
 					       progress,
 					       error);
