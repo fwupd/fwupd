@@ -100,7 +100,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	/* RTS usb hub devices */
 	if (pid == DELL_KESTREL_USB_RTS0_G1_PID || pid == DELL_KESTREL_USB_RTS0_G2_PID ||
 	    pid == DELL_KESTREL_USB_RTS5_G2_PID) {
-		g_autoptr(FuDellKestrelRtsHub) hub_device = NULL;
+		g_autoptr(FuDellKestrelRtshub) hub_device = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
 
 		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type);
