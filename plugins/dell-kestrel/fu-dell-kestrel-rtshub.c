@@ -11,26 +11,26 @@
 #include "fu-dell-kestrel-rtshub-struct.h"
 #include "fu-dell-kestrel-rtshub.h"
 
-struct _FuDellKestrelRtsHub {
+struct _FuDellKestrelRtshub {
 	FuHidDevice parent_instance;
 	FuDellDockBaseType dock_type;
 	gboolean fw_auth;
 	gboolean dual_bank;
 };
 
-G_DEFINE_TYPE(FuDellKestrelRtsHub, fu_dell_kestrel_rtshub, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuDellKestrelRtshub, fu_dell_kestrel_rtshub, FU_TYPE_HID_DEVICE)
 
 static void
 fu_dell_kestrel_rtshub_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	fu_string_append_kb(str, idt, "FwAuth", self->fw_auth);
 	fu_string_append_kb(str, idt, "DualBank", self->dual_bank);
 	fu_string_append_kb(str, idt, "DockType", self->dock_type);
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtsHub *self, gboolean enable, GError **error)
+fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtshub *self, gboolean enable, GError **error)
 {
 	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
@@ -53,7 +53,7 @@ fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtsHub *self, gboolean enable
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtsHub *self, GError **error)
+fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtshub *self, GError **error)
 {
 	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
@@ -76,7 +76,7 @@ fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtsHub *self, GError **erro
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtsHub *self,
+fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 					FuProgress *progress,
 					GError **error)
 {
@@ -116,7 +116,7 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtsHub *self,
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtsHub *self, GError **error)
+fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtshub *self, GError **error)
 {
 	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
@@ -138,7 +138,7 @@ fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtsHub *self, GError **error)
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_write_flash(FuDellKestrelRtsHub *self,
+fu_dell_kestrel_rtshub_write_flash(FuDellKestrelRtshub *self,
 				   guint32 addr,
 				   const guint8 *data,
 				   guint16 data_sz,
@@ -177,7 +177,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
-	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
@@ -259,7 +259,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 static gboolean
 fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
 {
-	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
@@ -301,7 +301,7 @@ fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
 static gboolean
 fu_dell_kestrel_rtshub_setup(FuDevice *device, GError **error)
 {
-	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rtshub_parent_class)->setup(device, error))
@@ -323,7 +323,7 @@ static gboolean
 fu_dell_kestrel_rtshub_probe(FuDevice *device, GError **error)
 {
 	g_autofree const gchar *logical_id = NULL;
-	FuDellKestrelRtsHub *self = FU_DELL_KESTREL_RTSHUB(device);
+	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 
 	/* not interesting */
 	if (fu_usb_device_get_vid(FU_USB_DEVICE(device)) != DELL_VID) {
@@ -391,7 +391,7 @@ fu_dell_kestrel_rtshub_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_dell_kestrel_rtshub_init(FuDellKestrelRtsHub *self)
+fu_dell_kestrel_rtshub_init(FuDellKestrelRtshub *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.kestrel");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -406,7 +406,7 @@ fu_dell_kestrel_rtshub_init(FuDellKestrelRtsHub *self)
 }
 
 static void
-fu_dell_kestrel_rtshub_class_init(FuDellKestrelRtsHubClass *klass)
+fu_dell_kestrel_rtshub_class_init(FuDellKestrelRtshubClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_dell_kestrel_rtshub_to_string;
@@ -417,10 +417,10 @@ fu_dell_kestrel_rtshub_class_init(FuDellKestrelRtsHubClass *klass)
 	device_class->open = fu_dell_kestrel_rtshub_open;
 }
 
-FuDellKestrelRtsHub *
+FuDellKestrelRtshub *
 fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type)
 {
-	FuDellKestrelRtsHub *self = g_object_new(FU_TYPE_DELL_KESTREL_RTSHUB, NULL);
+	FuDellKestrelRtshub *self = g_object_new(FU_TYPE_DELL_KESTREL_RTSHUB, NULL);
 
 	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
 	self->dock_type = dock_type;
