@@ -1,11 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixMoc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-plugin_quirks += files('goodixmoc.quirk')
-plugin_builtins += static_library('fu_plugin_goodixmoc',
+plugin_quirks += files('goodix-moc.quirk')
+plugin_builtins += static_library('fu_plugin_goodix_moc',
   sources: [
-    'fu-goodixmoc-device.c',
-    'fu-goodixmoc-plugin.c',
+    'fu-goodix-moc-device.c',
+    'fu-goodix-moc-plugin.c',
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

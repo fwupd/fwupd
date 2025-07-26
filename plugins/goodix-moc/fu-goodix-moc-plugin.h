@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuGoodixMocPlugin, fu_goodixmoc_plugin, FU, GOODIXMOC_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuGoodixMocPlugin, fu_goodix_moc_plugin, FU, GOODIX_MOC_PLUGIN, FuPlugin)

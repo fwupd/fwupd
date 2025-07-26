@@ -9,5 +9,5 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_GOODIXMOC_DEVICE (fu_goodixmoc_device_get_type())
-G_DECLARE_FINAL_TYPE(FuGoodixMocDevice, fu_goodixmoc_device, FU, GOODIXMOC_DEVICE, FuUsbDevice)
+#define FU_TYPE_GOODIX_MOC_DEVICE (fu_goodix_moc_device_get_type())
+G_DECLARE_FINAL_TYPE(FuGoodixMocDevice, fu_goodix_moc_device, FU, GOODIX_MOC_DEVICE, FuUsbDevice)
