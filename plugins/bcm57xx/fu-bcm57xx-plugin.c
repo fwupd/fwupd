@@ -14,11 +14,11 @@
 #include "fu-bcm57xx-stage1-image.h"
 #include "fu-bcm57xx-stage2-image.h"
 
-struct _FuBcm57XxPlugin {
+struct _FuBcm57xxPlugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuBcm57XxPlugin, fu_bcm57xx_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuBcm57xxPlugin, fu_bcm57xx_plugin, FU_TYPE_PLUGIN)
 
 static gboolean
 fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
@@ -76,7 +76,7 @@ fu_bcm57xx_plugin_backend_device_added(FuPlugin *plugin,
 }
 
 static void
-fu_bcm57xx_plugin_init(FuBcm57XxPlugin *self)
+fu_bcm57xx_plugin_init(FuBcm57xxPlugin *self)
 {
 }
 
@@ -101,7 +101,7 @@ fu_bcm57xx_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_bcm57xx_plugin_class_init(FuBcm57XxPluginClass *klass)
+fu_bcm57xx_plugin_class_init(FuBcm57xxPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
