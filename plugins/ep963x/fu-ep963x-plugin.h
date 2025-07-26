@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuEp963XPlugin, fu_ep963x_plugin, FU, EP963X_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuEp963xPlugin, fu_ep963x_plugin, FU, EP963X_PLUGIN, FuPlugin)
