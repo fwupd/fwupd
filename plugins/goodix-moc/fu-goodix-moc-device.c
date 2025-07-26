@@ -7,15 +7,15 @@
 
 #include "config.h"
 
-#include "fu-goodixmoc-common.h"
-#include "fu-goodixmoc-device.h"
+#include "fu-goodix-moc-common.h"
+#include "fu-goodix-moc-device.h"
 
 struct _FuGoodixMocDevice {
 	FuUsbDevice parent_instance;
 	guint8 dummy_seq;
 };
 
-G_DEFINE_TYPE(FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuGoodixMocDevice, fu_goodix_moc_device, FU_TYPE_USB_DEVICE)
 
 #define GX_USB_BULK_EP_IN  (3 | 0x80)
 #define GX_USB_BULK_EP_OUT (1 | 0x00)
@@ -26,12 +26,12 @@ G_DEFINE_TYPE(FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
 #define GX_FLASH_TRANSFER_BLOCK_SIZE 1000 /* 1000 */
 
 static gboolean
-fu_goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
-			     guint8 cmd0,
-			     guint8 cmd1,
-			     GxPkgType type,
-			     GByteArray *req,
-			     GError **error)
+fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
+			      guint8 cmd0,
+			      guint8 cmd1,
+			      FuGoodixMocPkgType type,
+			      GByteArray *req,
+			      GError **error)
 {
 	guint32 crc_all = 0;
 	guint32 crc_hdr = 0;
@@ -87,10 +87,10 @@ fu_goodixmoc_device_cmd_send(FuGoodixMocDevice *self,
 }
 
 static gboolean
-fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
-			     GxfpCmdResp *presponse,
-			     gboolean data_reply,
-			     GError **error)
+fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self,
+			      FuGoodixMocCmdResp *presponse,
+			      gboolean data_reply,
+			      GError **error)
 {
 	guint32 crc_actual = 0;
 	guint32 crc_calculated = 0;
@@ -140,7 +140,7 @@ fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 					    G_LITTLE_ENDIAN,
 					    error))
 			return FALSE;
-		offset = sizeof(GxfpPkgHeader) + header_len - GX_SIZE_CRC32;
+		offset = sizeof(FuGoodixMocPkgHeader) + header_len - GX_SIZE_CRC32;
 		crc_actual = fu_crc32(FU_CRC_KIND_B32_STANDARD, reply->data, offset);
 		if (!fu_memread_uint32_safe(reply->data,
 					    reply->len,
@@ -162,11 +162,11 @@ fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 		/* parse package data */
 		if (!fu_memread_uint8_safe(reply->data,
 					   reply->len,
-					   sizeof(GxfpPkgHeader) + 0x00,
+					   sizeof(FuGoodixMocPkgHeader) + 0x00,
 					   &presponse->result,
 					   error))
 			return FALSE;
-		if (header_cmd0 == GX_CMD_ACK) {
+		if (header_cmd0 == FU_GOODIX_MOC_CMD_ACK) {
 			if (header_len == 0) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
@@ -176,24 +176,24 @@ fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 			}
 			if (!fu_memread_uint8_safe(reply->data,
 						   reply->len,
-						   sizeof(GxfpPkgHeader) + 0x01,
+						   sizeof(FuGoodixMocPkgHeader) + 0x01,
 						   &presponse->ack_msg.cmd,
 						   error))
 				return FALSE;
-		} else if (header_cmd0 == GX_CMD_VERSION) {
+		} else if (header_cmd0 == FU_GOODIX_MOC_CMD_VERSION) {
 			if (!fu_memcpy_safe((guint8 *)&presponse->version_info,
 					    sizeof(presponse->version_info),
 					    0x0, /* dst */
 					    reply->data,
 					    reply->len,
-					    sizeof(GxfpPkgHeader) + 0x01, /* src */
-					    sizeof(GxfpVersionInfo),
+					    sizeof(FuGoodixMocPkgHeader) + 0x01, /* src */
+					    sizeof(FuGoodixMocVersionInfo),
 					    error))
 				return FALSE;
 		}
 
 		/* continue after ack received */
-		if (header_cmd0 == GX_CMD_ACK && data_reply)
+		if (header_cmd0 == FU_GOODIX_MOC_CMD_ACK && data_reply)
 			continue;
 		break;
 	}
@@ -203,37 +203,37 @@ fu_goodixmoc_device_cmd_recv(FuGoodixMocDevice *self,
 }
 
 static gboolean
-fu_goodixmoc_device_cmd_xfer(FuGoodixMocDevice *device,
-			     guint8 cmd0,
-			     guint8 cmd1,
-			     GxPkgType type,
-			     GByteArray *req,
-			     GxfpCmdResp *presponse,
-			     gboolean data_reply,
-			     GError **error)
+fu_goodix_moc_device_cmd_xfer(FuGoodixMocDevice *device,
+			      guint8 cmd0,
+			      guint8 cmd1,
+			      FuGoodixMocPkgType type,
+			      GByteArray *req,
+			      FuGoodixMocCmdResp *presponse,
+			      gboolean data_reply,
+			      GError **error)
 {
-	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	if (!fu_goodixmoc_device_cmd_send(self, cmd0, cmd1, type, req, error))
+	FuGoodixMocDevice *self = FU_GOODIX_MOC_DEVICE(device);
+	if (!fu_goodix_moc_device_cmd_send(self, cmd0, cmd1, type, req, error))
 		return FALSE;
-	return fu_goodixmoc_device_cmd_recv(self, presponse, data_reply, error);
+	return fu_goodix_moc_device_cmd_recv(self, presponse, data_reply, error);
 }
 
 static gboolean
-fu_goodixmoc_device_setup_version(FuGoodixMocDevice *self, GError **error)
+fu_goodix_moc_device_setup_version(FuGoodixMocDevice *self, GError **error)
 {
-	GxfpCmdResp rsp = {0};
+	FuGoodixMocCmdResp rsp = {0};
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	fu_byte_array_append_uint8(req, 0); /* dummy */
-	if (!fu_goodixmoc_device_cmd_xfer(self,
-					  GX_CMD_VERSION,
-					  GX_CMD1_DEFAULT,
-					  GX_PKG_TYPE_EOP,
-					  req,
-					  &rsp,
-					  TRUE,
-					  error))
+	if (!fu_goodix_moc_device_cmd_xfer(self,
+					   FU_GOODIX_MOC_CMD_VERSION,
+					   FU_GOODIX_MOC_CMD1_DEFAULT,
+					   GX_PKG_TYPE_EOP,
+					   req,
+					   &rsp,
+					   TRUE,
+					   error))
 		return FALSE;
 	version = g_strndup((const gchar *)rsp.version_info.fwversion,
 			    sizeof(rsp.version_info.fwversion));
@@ -242,20 +242,20 @@ fu_goodixmoc_device_setup_version(FuGoodixMocDevice *self, GError **error)
 }
 
 static gboolean
-fu_goodixmoc_device_update_init(FuGoodixMocDevice *self, GError **error)
+fu_goodix_moc_device_update_init(FuGoodixMocDevice *self, GError **error)
 {
-	GxfpCmdResp rsp = {0};
+	FuGoodixMocCmdResp rsp = {0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* update initial */
-	if (!fu_goodixmoc_device_cmd_xfer(self,
-					  GX_CMD_UPGRADE,
-					  GX_CMD_UPGRADE_INIT,
-					  GX_PKG_TYPE_EOP,
-					  req,
-					  &rsp,
-					  TRUE,
-					  error)) {
+	if (!fu_goodix_moc_device_cmd_xfer(self,
+					   FU_GOODIX_MOC_CMD_UPGRADE,
+					   FU_GOODIX_MOC_CMD_UPGRADE_INIT,
+					   GX_PKG_TYPE_EOP,
+					   req,
+					   &rsp,
+					   TRUE,
+					   error)) {
 		g_prefix_error(error, "failed to send initial update: ");
 		return FALSE;
 	}
@@ -273,21 +273,21 @@ fu_goodixmoc_device_update_init(FuGoodixMocDevice *self, GError **error)
 }
 
 static gboolean
-fu_goodixmoc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_goodix_moc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	GxfpCmdResp rsp = {0};
+	FuGoodixMocDevice *self = FU_GOODIX_MOC_DEVICE(device);
+	FuGoodixMocCmdResp rsp = {0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* reset device */
-	if (!fu_goodixmoc_device_cmd_xfer(self,
-					  GX_CMD_RESET,
-					  0x03,
-					  GX_PKG_TYPE_EOP,
-					  req,
-					  &rsp,
-					  FALSE,
-					  error)) {
+	if (!fu_goodix_moc_device_cmd_xfer(self,
+					   FU_GOODIX_MOC_CMD_RESET,
+					   0x03,
+					   GX_PKG_TYPE_EOP,
+					   req,
+					   &rsp,
+					   FALSE,
+					   error)) {
 		g_prefix_error(error, "failed to send reset device: ");
 		return FALSE;
 	}
@@ -306,16 +306,16 @@ fu_goodixmoc_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 }
 
 static gboolean
-fu_goodixmoc_device_setup(FuDevice *device, GError **error)
+fu_goodix_moc_device_setup(FuDevice *device, GError **error)
 {
-	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
+	FuGoodixMocDevice *self = FU_GOODIX_MOC_DEVICE(device);
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_goodixmoc_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_goodix_moc_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* ensure version */
-	if (!fu_goodixmoc_device_setup_version(self, error)) {
+	if (!fu_goodix_moc_device_setup_version(self, error)) {
 		g_prefix_error(error, "failed to get firmware version: ");
 		return FALSE;
 	}
@@ -325,15 +325,15 @@ fu_goodixmoc_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_goodixmoc_device_write_firmware(FuDevice *device,
-				   FuFirmware *firmware,
-				   FuProgress *progress,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_goodix_moc_device_write_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuProgress *progress,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
-	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	GxPkgType pkg_eop = GX_PKG_TYPE_NORMAL;
-	GxfpCmdResp rsp = {0};
+	FuGoodixMocDevice *self = FU_GOODIX_MOC_DEVICE(device);
+	FuGoodixMocPkgType pkg_eop = GX_PKG_TYPE_NORMAL;
+	FuGoodixMocCmdResp rsp = {0};
 	gboolean wait_data_reply = FALSE;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -357,7 +357,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 					       GX_FLASH_TRANSFER_BLOCK_SIZE);
 
 	/* don't auto-boot firmware */
-	if (!fu_goodixmoc_device_update_init(self, &error_local)) {
+	if (!fu_goodix_moc_device_update_init(self, &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
@@ -384,14 +384,14 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 			wait_data_reply = TRUE;
 			pkg_eop = GX_PKG_TYPE_EOP;
 		}
-		if (!fu_goodixmoc_device_cmd_xfer(self,
-						  GX_CMD_UPGRADE,
-						  GX_CMD_UPGRADE_DATA,
-						  pkg_eop,
-						  req,
-						  &rsp,
-						  wait_data_reply,
-						  &error_block)) {
+		if (!fu_goodix_moc_device_cmd_xfer(self,
+						   FU_GOODIX_MOC_CMD_UPGRADE,
+						   FU_GOODIX_MOC_CMD_UPGRADE_DATA,
+						   pkg_eop,
+						   req,
+						   &rsp,
+						   wait_data_reply,
+						   &error_block)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_WRITE,
@@ -422,7 +422,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_goodixmoc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_goodix_moc_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -434,7 +434,7 @@ fu_goodixmoc_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_goodixmoc_device_init(FuGoodixMocDevice *self)
+fu_goodix_moc_device_init(FuGoodixMocDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
@@ -453,11 +453,11 @@ fu_goodixmoc_device_init(FuGoodixMocDevice *self)
 }
 
 static void
-fu_goodixmoc_device_class_init(FuGoodixMocDeviceClass *klass)
+fu_goodix_moc_device_class_init(FuGoodixMocDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->write_firmware = fu_goodixmoc_device_write_firmware;
-	device_class->setup = fu_goodixmoc_device_setup;
-	device_class->attach = fu_goodixmoc_device_attach;
-	device_class->set_progress = fu_goodixmoc_device_set_progress;
+	device_class->write_firmware = fu_goodix_moc_device_write_firmware;
+	device_class->setup = fu_goodix_moc_device_setup;
+	device_class->attach = fu_goodix_moc_device_attach;
+	device_class->set_progress = fu_goodix_moc_device_set_progress;
 }
