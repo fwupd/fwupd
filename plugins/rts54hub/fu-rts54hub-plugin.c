@@ -11,14 +11,14 @@
 #include "fu-rts54hub-rtd21xx-background.h"
 #include "fu-rts54hub-rtd21xx-foreground.h"
 
-struct _FuRts54HubPlugin {
+struct _FuRts54hubPlugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuRts54HubPlugin, fu_rts54hub_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuRts54hubPlugin, fu_rts54hub_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_rts54hub_plugin_init(FuRts54HubPlugin *self)
+fu_rts54hub_plugin_init(FuRts54hubPlugin *self)
 {
 }
 
@@ -44,7 +44,7 @@ fu_rts54hub_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_rts54hub_plugin_class_init(FuRts54HubPluginClass *klass)
+fu_rts54hub_plugin_class_init(FuRts54hubPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);

@@ -13,7 +13,7 @@
 #include "fu-ccgx-firmware.h"
 
 struct _FuCcgxFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	GPtrArray *records;
 	guint16 app_type;
 	guint16 silicon_id;

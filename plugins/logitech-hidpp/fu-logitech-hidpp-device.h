@@ -8,11 +8,11 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_HIDPP_DEVICE (fu_logitech_hidpp_device_get_type())
+#define FU_TYPE_LOGITECH_HIDPP_DEVICE (fu_logitech_hidpp_device_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppDevice,
 			 fu_logitech_hidpp_device,
 			 FU,
-			 HIDPP_DEVICE,
+			 LOGITECH_HIDPP_DEVICE,
 			 FuUdevDevice)
 
 struct _FuLogitechHidppDeviceClass {

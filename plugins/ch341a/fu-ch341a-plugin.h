@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuCh341APlugin, fu_ch341a_plugin, FU, CH341A_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuCh341aPlugin, fu_ch341a_plugin, FU, CH341A_PLUGIN, FuPlugin)

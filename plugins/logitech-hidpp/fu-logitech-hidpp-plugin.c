@@ -37,9 +37,9 @@ fu_logitech_hidpp_plugin_constructed(GObject *obj)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_NORDIC);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_BOOTLOADER_TEXAS);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_UNIFYING);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_DEVICE);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_BOLT);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RUNTIME_UNIFYING);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_LOGITECH_HIDPP_RUNTIME_BOLT);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_LOGITECH_RDFU_FIRMWARE);
 }
 

@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuBcm57XxPlugin, fu_bcm57xx_plugin, FU, BCM57XX_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuBcm57xxPlugin, fu_bcm57xx_plugin, FU, BCM57XX_PLUGIN, FuPlugin)

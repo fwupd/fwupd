@@ -13,7 +13,7 @@
 #include "fu-bnr-dp-struct.h"
 
 struct _FuBnrDpFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 
 	/* mandatory XML header attributes, not part of payload. additionally, "Ver" (version) is
 	 * also mandatory */

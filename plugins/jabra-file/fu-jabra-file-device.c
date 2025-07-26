@@ -19,7 +19,7 @@
 #define FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT 1000 /* ms */
 
 struct _FuJabraFileDevice {
-	FuHidDevice parent_instance;
+	FuUsbDevice parent_instance;
 	guint8 sequence_number;
 	guint8 address;
 	guint8 epin;
@@ -27,7 +27,7 @@ struct _FuJabraFileDevice {
 	guint dfu_pid;
 };
 
-G_DEFINE_TYPE(FuJabraFileDevice, fu_jabra_file_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuJabraFileDevice, fu_jabra_file_device, FU_TYPE_USB_DEVICE)
 
 static void
 fu_jabra_file_device_to_string(FuDevice *device, guint idt, GString *str)

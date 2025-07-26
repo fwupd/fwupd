@@ -11,7 +11,7 @@
 #include "fu-jabra-file-firmware.h"
 
 struct _FuJabraFileFirmware {
-	FuArchiveFirmware parent_instance;
+	FuFirmware parent_instance;
 	guint16 dfu_pid;
 };
 

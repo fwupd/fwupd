@@ -10,13 +10,13 @@
 #include <glib.h>
 
 /* protocol */
-#define GX_CMD_ACK	    0xAA
-#define GX_CMD_VERSION	    0xD0
-#define GX_CMD_RESET	    0xB4
-#define GX_CMD_UPGRADE	    0x80
-#define GX_CMD_UPGRADE_INIT 0x00
-#define GX_CMD_UPGRADE_DATA 0x01
-#define GX_CMD1_DEFAULT	    0x00
+#define FU_GOODIX_MOC_CMD_ACK	       0xAA
+#define FU_GOODIX_MOC_CMD_VERSION      0xD0
+#define FU_GOODIX_MOC_CMD_RESET	       0xB4
+#define FU_GOODIX_MOC_CMD_UPGRADE      0x80
+#define FU_GOODIX_MOC_CMD_UPGRADE_INIT 0x00
+#define FU_GOODIX_MOC_CMD_UPGRADE_DATA 0x01
+#define FU_GOODIX_MOC_CMD1_DEFAULT     0x00
 
 #define GX_SIZE_CRC32 4
 
@@ -35,25 +35,25 @@ typedef struct {
 	guint8 protocol[8];
 	guint8 flashVersion[8];
 	guint8 reserved[62];
-} GxfpVersionInfo;
+} FuGoodixMocVersionInfo;
 
 typedef struct {
 	guint8 cmd;
 	gboolean configured;
-} GxfpAckMsg;
+} FuGoodixMocAckMsg;
 
 typedef struct {
 	guint8 result;
 	union {
-		GxfpAckMsg ack_msg;
-		GxfpVersionInfo version_info;
+		FuGoodixMocAckMsg ack_msg;
+		FuGoodixMocVersionInfo version_info;
 	};
-} GxfpCmdResp;
+} FuGoodixMocCmdResp;
 
 typedef enum {
 	GX_PKG_TYPE_NORMAL = 0x80,
 	GX_PKG_TYPE_EOP = 0,
-} GxPkgType;
+} FuGoodixMocPkgType;
 
 typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 	guint8 cmd0;
@@ -63,4 +63,4 @@ typedef struct __attribute__((__packed__)) { /* nocheck:blocked */
 	guint16 len;
 	guint8 crc8;
 	guint8 rev_crc8;
-} GxfpPkgHeader;
+} FuGoodixMocPkgHeader;

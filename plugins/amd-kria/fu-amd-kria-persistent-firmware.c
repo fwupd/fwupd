@@ -15,7 +15,7 @@
 #include "fu-amd-kria-persistent-struct.h"
 
 struct _FuAmdKriaPersistentFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuAmdKriaBootImageId last_booted;
 };
 

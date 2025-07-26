@@ -10,7 +10,7 @@
 #include "fu-genesys-scaler-firmware.h"
 
 struct _FuGenesysScalerFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuGenesysPublicKey public_key;
 };
 

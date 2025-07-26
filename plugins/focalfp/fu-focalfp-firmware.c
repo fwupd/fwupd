@@ -9,7 +9,7 @@
 #include "fu-focalfp-firmware.h"
 
 struct _FuFocalfpFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint16 start_address;
 	guint32 checksum;
 };

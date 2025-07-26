@@ -15,7 +15,7 @@
 #define DOCK_RTSHUB_GEN1_PID_OFFSET	0x7FAA
 
 struct _FuDellKestrelRtshubFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint16 pid;
 };
 

@@ -1,26 +1,26 @@
 # Goodix Fingerprint sensor
 [USB\VID_27C6&PID_60A2]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_6384]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_639C]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_63AC]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_6594]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_6496]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_659A]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires
 [USB\VID_27C6&PID_609C]
-Plugin = goodixmoc
+Plugin = goodix_moc
 Flags = enforce-requires,dual-image
 RemoveDelay = 10000

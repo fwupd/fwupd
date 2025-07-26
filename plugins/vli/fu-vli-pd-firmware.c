@@ -12,7 +12,7 @@
 #include "fu-vli-struct.h"
 
 struct _FuVliPdFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	FuVliDeviceKind device_kind;
 };
 

@@ -34,6 +34,41 @@ def _find_func_name(line: str) -> Optional[str]:
     return func_name
 
 
+# make lines long again
+def _fix_newlines(lines: list[str]) -> list[str]:
+    lines_fixed = []
+    padding: int = 0
+    for line in lines:
+        # push back onto previous line
+        if lines_fixed and lines_fixed[-1].endswith(","):
+            lines_fixed[-1] += " " + line.lstrip()
+            padding += 1
+            continue
+
+        # this means the line numbers match
+        for _ in range(padding):
+            lines_fixed.append("\n")
+        padding = 0
+        lines_fixed.append(line)
+    return lines_fixed
+
+
+# convert a CamelCase name into snake_case
+def _camel_to_snake(name: str) -> str:
+    name_snake: str = ""
+    for char in name:
+        if char.islower() or char.isnumeric():
+            name_snake += char
+            continue
+        if char == "_":
+            name_snake += char
+            continue
+        if name_snake:  # and not char.isnumeric():
+            name_snake += "_"
+        name_snake += char.lower()
+    return name_snake
+
+
 class SourceFailure:
     def __init__(self, fn=None, linecnt=None, message=None, nocheck=None):
         self.fn: Optional[str] = fn
@@ -53,6 +88,7 @@ class Checker:
         self._current_fn: Optional[str] = None
         self._current_linecnt: Optional[int] = None
         self._current_nocheck: Optional[str] = None
+        self._gtype_parents: dict[str, str] = {}
 
     def add_failure(self, message=None):
         self.failures.append(
@@ -482,6 +518,64 @@ class Checker:
             self.add_failure("nesting was weird")
             success = False
 
+    def _test_gobject_parents(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:name"
+
+        gtype: Optional[str] = None
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                continue
+            self._current_linecnt = linecnt + 1
+            if line.find("G_DECLARE_FINAL_TYPE") != -1:
+                gtype, _, _, _, gtypeparent = line[21:-1].replace(" ", "").split(",")
+                self._gtype_parents[gtype] = gtypeparent
+                continue
+            if line.find("G_DECLARE_DERIVABLE_TYPE") != -1:
+                gtype, _, _, _, gtypeparent = line[25:-1].replace(" ", "").split(",")
+                self._gtype_parents[gtype] = gtypeparent
+                continue
+            if line.find("G_DEFINE_TYPE") != -1:
+                gtype, prefix, parent = (
+                    line.split("(")[1].split(")")[0].replace(" ", "").split(",")[0:3]
+                )
+                # verify prefix is correct
+                if gtype not in ["FuIOChannel"]:
+                    if prefix != _camel_to_snake(gtype):
+                        self.add_failure(
+                            f"Weird prefix for GType {gtype}, "
+                            f"got {prefix} and expected {_camel_to_snake(gtype)}"
+                        )
+
+                # verify the correct _get_type() define is being used
+                if gtype not in self._gtype_parents:
+                    continue
+                parentgtype_sections = _camel_to_snake(
+                    self._gtype_parents[gtype]
+                ).split("_")
+                parentgtype_sections.insert(1, "type")
+                expected_parentgtype = "_".join(parentgtype_sections).upper()
+                if parent != expected_parentgtype:
+                    self.add_failure(
+                        f"Invalid GType parent type for {gtype}, "
+                        f"got {parent} and expected {expected_parentgtype}"
+                    )
+                continue
+
+            # verify that the correct thing is included in the class struct
+            if line.startswith("struct _"):
+                gtype = line[8:].split(" ")[0]
+                continue
+            if line.endswith("parent_instance;"):
+                parentgtype = line[1:-17]
+                if gtype not in self._gtype_parents:
+                    continue
+                expected_parentgtype = self._gtype_parents[gtype]
+                if expected_parentgtype != parentgtype:
+                    self.add_failure(
+                        f"Invalid GType parent type for {gtype}, "
+                        f"got {parentgtype} and expected {expected_parentgtype}"
+                    )
+
     def _test_lines(self, lines: List[str]) -> None:
         lines_nocheck: List[str] = []
 
@@ -503,6 +597,9 @@ class Checker:
 
             # test for static variables
             self._test_static_vars(line)
+
+        # using too many hardcoded constants
+        self._test_gobject_parents(lines)
 
         # using too many hardcoded constants
         self._test_lines_magic_numbers(lines)
@@ -529,7 +626,7 @@ class Checker:
         self._current_fn = fn
         with open(fn, "rb") as f:
             try:
-                self._test_lines(f.read().decode().split("\n"))
+                self._test_lines(_fix_newlines(f.read().decode().split("\n")))
             except UnicodeDecodeError as e:
                 print(f"failed to read {fn}: {e}")
 
@@ -555,7 +652,7 @@ def test_files() -> int:
         fns.extend(glob.glob("libfwupdplugin/*.[c|h]"))
         fns.extend(glob.glob("plugins/*/*.[c|h]"))
         fns.extend(glob.glob("src/*.[c|h]"))
-    for fn in fns:
+    for fn in sorted(fns, reverse=True):
         if os.path.basename(fn) == "check-source.py":
             continue
         checker.test_file(fn)

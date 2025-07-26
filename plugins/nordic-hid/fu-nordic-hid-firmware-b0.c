@@ -14,7 +14,7 @@
 #define UPDATE_IMAGE_MAGIC_NRF53  0x00003502
 
 struct _FuNordicHidFirmwareB0 {
-	FuNordicHidFirmwareClass parent_instance;
+	FuNordicHidFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuNordicHidFirmwareB0, fu_nordic_hid_firmware_b0, FU_TYPE_NORDIC_HID_FIRMWARE)

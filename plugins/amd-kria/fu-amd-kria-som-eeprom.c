@@ -14,7 +14,7 @@
 #include "fu-amd-kria-som-eeprom.h"
 
 struct _FuAmdKriaSomEeprom {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	gchar *manufacturer;
 	gchar *product_name;
 	gchar *serial_number;

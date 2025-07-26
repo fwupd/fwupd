@@ -11,7 +11,7 @@
 #include "fu-fresco-pd-firmware.h"
 
 struct _FuFrescoPdFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint8 customer_id;
 };
 

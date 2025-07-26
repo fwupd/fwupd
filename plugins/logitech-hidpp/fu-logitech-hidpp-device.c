@@ -48,22 +48,22 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidppDevice, fu_logitech_hidpp_device, FU_T
 #define GET_PRIVATE(o) (fu_logitech_hidpp_device_get_instance_private(o))
 
 typedef enum {
-	FU_HIDPP_DEVICE_KIND_KEYBOARD,
-	FU_HIDPP_DEVICE_KIND_REMOTE_CONTROL,
-	FU_HIDPP_DEVICE_KIND_NUMPAD,
-	FU_HIDPP_DEVICE_KIND_MOUSE,
-	FU_HIDPP_DEVICE_KIND_TOUCHPAD,
-	FU_HIDPP_DEVICE_KIND_TRACKBALL,
-	FU_HIDPP_DEVICE_KIND_PRESENTER,
-	FU_HIDPP_DEVICE_KIND_RECEIVER,
-	FU_HIDPP_DEVICE_KIND_LAST
+	FU_LOGITECH_HIDPP_DEVICE_KIND_KEYBOARD,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_REMOTE_CONTROL,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_NUMPAD,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_MOUSE,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_TOUCHPAD,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_TRACKBALL,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_PRESENTER,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_RECEIVER,
+	FU_LOGITECH_HIDPP_DEVICE_KIND_LAST
 } FuLogitechHidppDeviceKind;
 
 void
 fu_logitech_hidpp_device_set_device_idx(FuLogitechHidppDevice *self, guint8 device_idx)
 {
 	FuLogitechHidppDevicePrivate *priv;
-	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
+	g_return_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self));
 	priv = GET_PRIVATE(self);
 	priv->device_idx = device_idx;
 }
@@ -72,7 +72,7 @@ guint16
 fu_logitech_hidpp_device_get_hidpp_pid(FuLogitechHidppDevice *self)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_HIDPP_DEVICE(self), G_MAXUINT16);
+	g_return_val_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self), G_MAXUINT16);
 	return priv->hidpp_pid;
 }
 
@@ -80,7 +80,7 @@ void
 fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidppDevice *self, guint16 hidpp_pid)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
+	g_return_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self));
 	priv->hidpp_pid = hidpp_pid;
 }
 
@@ -88,7 +88,7 @@ static void
 fu_logitech_hidpp_device_set_model_id(FuLogitechHidppDevice *self, const gchar *model_id)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
+	g_return_if_fail(FU_IS_LOGITECH_HIDPP_DEVICE(self));
 	if (g_strcmp0(priv->model_id, model_id) == 0)
 		return;
 	g_free(priv->model_id);
@@ -98,21 +98,21 @@ fu_logitech_hidpp_device_set_model_id(FuLogitechHidppDevice *self, const gchar *
 static const gchar *
 fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 {
-	if (kind == FU_HIDPP_DEVICE_KIND_KEYBOARD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_KEYBOARD)
 		return FU_DEVICE_ICON_INPUT_KEYBOARD;
-	if (kind == FU_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
 		return FU_DEVICE_ICON_PDA; // ish
-	if (kind == FU_HIDPP_DEVICE_KIND_NUMPAD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_NUMPAD)
 		return FU_DEVICE_ICON_INPUT_DIALPAD;
-	if (kind == FU_HIDPP_DEVICE_KIND_MOUSE)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_MOUSE)
 		return FU_DEVICE_ICON_INPUT_MOUSE;
-	if (kind == FU_HIDPP_DEVICE_KIND_TOUCHPAD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TOUCHPAD)
 		return FU_DEVICE_ICON_INPUT_TOUCHPAD;
-	if (kind == FU_HIDPP_DEVICE_KIND_TRACKBALL)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TRACKBALL)
 		return FU_DEVICE_ICON_INPUT_MOUSE; // ish
-	if (kind == FU_HIDPP_DEVICE_KIND_PRESENTER)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_PRESENTER)
 		return FU_DEVICE_ICON_PDA; // ish
-	if (kind == FU_HIDPP_DEVICE_KIND_RECEIVER)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_RECEIVER)
 		return FU_DEVICE_ICON_USB_RECEIVER;
 	return NULL;
 }
@@ -120,21 +120,21 @@ fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 static const gchar *
 fu_logitech_hidpp_device_get_summary(FuLogitechHidppDeviceKind kind)
 {
-	if (kind == FU_HIDPP_DEVICE_KIND_KEYBOARD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_KEYBOARD)
 		return "Unifying Keyboard";
-	if (kind == FU_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
 		return "Unifying Remote Control";
-	if (kind == FU_HIDPP_DEVICE_KIND_NUMPAD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_NUMPAD)
 		return "Unifying Number Pad";
-	if (kind == FU_HIDPP_DEVICE_KIND_MOUSE)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_MOUSE)
 		return "Unifying Mouse";
-	if (kind == FU_HIDPP_DEVICE_KIND_TOUCHPAD)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TOUCHPAD)
 		return "Unifying Touchpad";
-	if (kind == FU_HIDPP_DEVICE_KIND_TRACKBALL)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TRACKBALL)
 		return "Unifying Trackball";
-	if (kind == FU_HIDPP_DEVICE_KIND_PRESENTER)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_PRESENTER)
 		return "Unifying Presenter";
-	if (kind == FU_HIDPP_DEVICE_KIND_RECEIVER)
+	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_RECEIVER)
 		return "Unifying Receiver";
 	return NULL;
 }
@@ -185,7 +185,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 	}
 
 	/* format version in BCD format */
-	if (priv->hidpp_version != FU_HIDPP_VERSION_BLE) {
+	if (priv->hidpp_version != FU_LOGITECH_HIDPP_VERSION_BLE) {
 		/* minor version is in msg->data[1] */;
 		priv->hidpp_version = msg->data[0];
 	}
@@ -197,7 +197,7 @@ fu_logitech_hidpp_device_ping(FuLogitechHidppDevice *self, GError **error)
 static gboolean
 fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GError) error_local = NULL;
@@ -255,7 +255,7 @@ fu_logitech_hidpp_device_map_to_string(FuLogitechHidppHidppMap *map, guint idt, 
 static void
 fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	fwupd_codec_string_append_int(str, idt, "HidppVersion", priv->hidpp_version);
 	fwupd_codec_string_append_int(str, idt, "HidppPid", priv->hidpp_pid);
@@ -1163,7 +1163,7 @@ fu_logitech_hidpp_device_feature_search(FuLogitechHidppDevice *self,
 static gboolean
 fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* nearly... */
@@ -1207,7 +1207,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 static gboolean
 fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	const guint16 map_features[] = {FU_LOGITECH_HIDPP_FEATURE_GET_DEVICE_NAME_TYPE,
@@ -1222,7 +1222,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 					FU_LOGITECH_HIDPP_FEATURE_ROOT};
 
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
-		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
+		priv->hidpp_version = FU_LOGITECH_HIDPP_VERSION_BLE;
 		priv->device_idx = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 		/*
 		 * BLE devices might not be ready for ping right after
@@ -1362,14 +1362,14 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
 	/* poll for pings to track active state */
-	fu_device_set_poll_interval(device, FU_HIDPP_DEVICE_POLLING_INTERVAL);
+	fu_device_set_poll_interval(device, FU_LOGITECH_HIDPP_DEVICE_POLLING_INTERVAL);
 	return TRUE;
 }
 
 static gboolean
 fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
@@ -1628,7 +1628,7 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
 	const guint8 *data;
@@ -1687,7 +1687,7 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	FuLogitechRdfuFirmware *entity_fw = NULL;
 	guint8 idx;
@@ -1792,7 +1792,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 					FwupdInstallFlags flags,
 					GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	guint8 idx;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -1898,7 +1898,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 static gboolean
 fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH))
@@ -1912,7 +1912,7 @@ fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
 				      const gchar *value,
 				      GError **error)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	if (g_strcmp0(key, "LogitechHidppModelId") == 0) {
 		fu_logitech_hidpp_device_set_model_id(self, value);
 		return TRUE;
@@ -1938,7 +1938,7 @@ fu_logitech_hidpp_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_logitech_hidpp_device_finalize(GObject *object)
 {
-	FuLogitechHidppDevice *self = FU_HIDPP_DEVICE(object);
+	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(object);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	g_ptr_array_unref(priv->feature_index);
 	g_free(priv->model_id);
@@ -1953,7 +1953,8 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent != NULL)
-		fu_device_set_poll_interval(parent, FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
+		fu_device_set_poll_interval(parent,
+					    FU_LOGITECH_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
 
 	return TRUE;
 }
@@ -2015,7 +2016,7 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 FuLogitechHidppDevice *
 fu_logitech_hidpp_device_new(FuUdevDevice *parent)
 {
-	return g_object_new(FU_TYPE_HIDPP_DEVICE,
+	return g_object_new(FU_TYPE_LOGITECH_HIDPP_DEVICE,
 			    "proxy",
 			    parent,
 			    "device-file",

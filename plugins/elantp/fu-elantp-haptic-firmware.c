@@ -11,7 +11,7 @@
 #include "fu-elantp-struct.h"
 
 struct _FuElantpHapticFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint16 driver_ic;
 };
 
