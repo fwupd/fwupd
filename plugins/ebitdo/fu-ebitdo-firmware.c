@@ -10,7 +10,7 @@
 #include "fu-ebitdo-struct.h"
 
 struct _FuEbitdoFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuEbitdoFirmware, fu_ebitdo_firmware, FU_TYPE_FIRMWARE)

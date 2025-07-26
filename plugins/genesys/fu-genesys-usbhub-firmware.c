@@ -15,7 +15,7 @@
 #include "fu-genesys-usbhub-struct.h"
 
 struct _FuGenesysUsbhubFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	GByteArray *st_static_ts;
 	FuGenesysChip chip;
 };

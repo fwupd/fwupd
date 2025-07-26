@@ -13,7 +13,7 @@
 #include "fu-ccgx-dmc-struct.h"
 
 struct _FuCcgxDmcFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	GPtrArray *image_records;
 	GBytes *fwct_blob;
 	GBytes *custom_meta_blob;

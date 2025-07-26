@@ -17,7 +17,7 @@
 #define MTK_FW_TIMESTAMP_TIME_SIZE   8
 
 struct _FuMediatekScalerFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuMediatekScalerFirmware, fu_mediatek_scaler_firmware, FU_TYPE_FIRMWARE)

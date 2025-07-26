@@ -13,7 +13,7 @@
 #define IMAGE_TLV_PROT_INFO_MAGIC 0x6908
 
 struct _FuNordicHidFirmwareMcuboot {
-	FuNordicHidFirmwareClass parent_instance;
+	FuNordicHidFirmware parent_instance;
 };
 
 G_DEFINE_TYPE(FuNordicHidFirmwareMcuboot,
