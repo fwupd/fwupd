@@ -10,14 +10,14 @@
 #include "fu-ep963x-firmware.h"
 #include "fu-ep963x-plugin.h"
 
-struct _FuEp963XPlugin {
+struct _FuEp963xPlugin {
 	FuPlugin parent_instance;
 };
 
-G_DEFINE_TYPE(FuEp963XPlugin, fu_ep963x_plugin, FU_TYPE_PLUGIN)
+G_DEFINE_TYPE(FuEp963xPlugin, fu_ep963x_plugin, FU_TYPE_PLUGIN)
 
 static void
-fu_ep963x_plugin_init(FuEp963XPlugin *self)
+fu_ep963x_plugin_init(FuEp963xPlugin *self)
 {
 	fu_plugin_add_flag(FU_PLUGIN(self), FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION);
 }
@@ -38,7 +38,7 @@ fu_ep963x_plugin_constructed(GObject *obj)
 }
 
 static void
-fu_ep963x_plugin_class_init(FuEp963XPluginClass *klass)
+fu_ep963x_plugin_class_init(FuEp963xPluginClass *klass)
 {
 	FuPluginClass *plugin_class = FU_PLUGIN_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
