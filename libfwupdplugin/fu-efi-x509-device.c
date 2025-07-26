@@ -58,9 +58,8 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 				     subject_vendor != NULL ? subject_vendor : "UNKNOWN");
 	fu_device_set_logical_id(device, logical_id);
 
-	fu_device_build_vendor_id(device,
-				  "UEFI",
-				  subject_vendor != NULL ? subject_vendor : "UNKNOWN");
+	if (subject_vendor != NULL)
+		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
 
 	/* success */
 	fu_device_add_instance_strup(device, "CRT", fu_firmware_get_id(FU_FIRMWARE(priv->sig)));
