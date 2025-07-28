@@ -173,11 +173,7 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 		return FALSE;
 
 	/* subscribe to devlink multicast notifications */
-	if (!fu_devlink_netlink_mcast_group_subscribe(self->nlg)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to subscribe to devlink notifications");
+	if (!fu_devlink_netlink_mcast_group_subscribe(self->nlg, error)) {
 		fu_devlink_netlink_gen_socket_close(self->nlg);
 		return FALSE;
 	}
