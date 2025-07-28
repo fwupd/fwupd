@@ -564,7 +564,7 @@ fu_parade_usbhub_device_spi_rom_chip_unprotect(FuParadeUsbhubDevice *self, GErro
 {
 	guint8 status = 0;
 	guint8 status_new = 0;
-	guint8 buf_spi[2];
+	guint8 buf_spi[2] = {0};
 	guint8 spi_cmd_write_en = 0;
 	guint8 spi_cmd_read_status = 0;
 	guint8 spi_cmd_write_status = 0;
@@ -851,7 +851,7 @@ fu_parade_usbhub_device_spi_rom_chip_protect(FuParadeUsbhubDevice *self, GError 
 {
 	guint8 status = 0;
 	guint8 status_new = 0;
-	guint8 buf_spi[2];
+	guint8 buf_spi[2] = {0};
 	guint8 spi_cmd_write_en = 0;
 	guint8 spi_cmd_read_status = 0;
 	guint8 spi_cmd_write_status = 0;

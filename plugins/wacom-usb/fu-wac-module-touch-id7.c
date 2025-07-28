@@ -193,7 +193,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 	/* write data */
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		guint8 buf[11 + FU_WAC_MODULE_CHUNK_SIZE];
+		guint8 buf[11 + FU_WAC_MODULE_CHUNK_SIZE] = {0};
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		buf[0] = FU_WAC_MODULE_COMMAND_DATA;
@@ -250,7 +250,7 @@ fu_wac_module_touch_id7_write_record(FuWacModule *self,
 	WtaRecordHeader record_hdr = {0x0};
 	g_autoptr(GBytes) blob_start = NULL;
 	g_autoptr(GBytes) blob_end = NULL;
-	guint8 command[11];
+	guint8 command[11] = {0};
 
 	if (!fu_wac_module_touch_id7_read_record_header(&record_hdr, info, error))
 		return FALSE;

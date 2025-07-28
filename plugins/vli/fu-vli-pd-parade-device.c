@@ -463,7 +463,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
-	guint8 buf[0x20];
+	guint8 buf[0x20] = {0};
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) buf_verify = NULL;

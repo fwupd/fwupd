@@ -45,7 +45,7 @@ fu_qsi_dock_mcu_device_tx(FuQsiDockMcuDevice *self,
 static gboolean
 fu_qsi_dock_mcu_device_rx(FuQsiDockMcuDevice *self, guint8 *outbuf, gsize outbufsz, GError **error)
 {
-	guint8 buf[64];
+	guint8 buf[64] = {0};
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      FU_QSI_DOCK_REPORT_ID,
@@ -206,8 +206,8 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 			  FU_QSI_DOCK_CMD1_SPI,
 			  FU_QSI_DOCK_CMD2_SPI_EXTERNAL_FLASH_CHECKSUM,
 			  0};
-	guint8 fw_length[4];
-	guint8 checksum_val[2];
+	guint8 fw_length[4] = {0};
+	guint8 checksum_val[2] = {0};
 
 	fu_memwrite_uint32(fw_length, length, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(checksum_val, checksum, G_LITTLE_ENDIAN);
@@ -423,8 +423,8 @@ fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(FuQsiDockMcuDevice *self,
 			  FU_QSI_DOCK_CMD1_SPI,
 			  FU_QSI_DOCK_CMD2_SPI_EXTERNAL_FLASH_ERASE};
 	guint32 offset = 0;
-	guint8 fw_length[4];
-	guint8 flash_offset[4];
+	guint8 fw_length[4] = {0};
+	guint8 flash_offset[4] = {0};
 
 	fu_memwrite_uint32(fw_length, length, G_LITTLE_ENDIAN);
 	fu_memwrite_uint32(flash_offset, offset, G_LITTLE_ENDIAN);

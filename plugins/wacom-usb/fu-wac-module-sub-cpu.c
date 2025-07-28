@@ -100,7 +100,7 @@ fu_wac_module_sub_cpu_parse_chunks(FuSrecFirmware *srec_firmware, guint32 *data_
 static GBytes *
 fu_wac_module_sub_cpu_build_packet(FuChunk *chunk, GError **error)
 {
-	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5];
+	guint8 buf[FU_WAC_MODULE_SUB_CPU_PAYLOAD_SZ + 5]; /* nocheck:zero-init */
 
 	memset(buf, 0xff, sizeof(buf));
 	fu_memwrite_uint32(&buf[0], fu_chunk_get_address(chunk), G_BIG_ENDIAN);

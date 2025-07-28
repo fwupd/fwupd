@@ -447,7 +447,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
 	const guint8 *buf;
 	gsize bufsz = 0;
-	guint32 serial_new[3];
+	guint32 serial_new[3] = {0};
 	g_autoptr(GBytes) fw_hdr = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GError) error_local = NULL;

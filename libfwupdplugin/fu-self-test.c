@@ -2081,7 +2081,7 @@ fu_device_locker_fail_func(void)
 static void
 fu_common_endian_func(void)
 {
-	guint8 buf[3];
+	guint8 buf[3] = {0};
 
 	fu_memwrite_uint16(buf, 0x1234, G_LITTLE_ENDIAN);
 	g_assert_cmpint(buf[0], ==, 0x34);

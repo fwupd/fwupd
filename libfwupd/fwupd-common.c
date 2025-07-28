@@ -306,7 +306,7 @@ gchar *
 fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 {
 	gsize digestlen = 20;
-	guint8 hash[20];
+	guint8 hash[20] = {0};
 	fwupd_guid_t uu_new;
 	g_autoptr(GChecksum) csum = NULL;
 	const fwupd_guid_t uu_default = {0x6b,

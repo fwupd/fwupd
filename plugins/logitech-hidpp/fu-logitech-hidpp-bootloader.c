@@ -305,11 +305,10 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 				     GError **error)
 {
 	gsize actual_length = 0;
-	guint8 buf_request[32];
-	guint8 buf_response[32];
+	guint8 buf_request[32] = {0};
+	guint8 buf_response[32] = {0};
 
 	/* build packet */
-	memset(buf_request, 0x00, sizeof(buf_request));
 	buf_request[0x00] = req->cmd;
 	buf_request[0x01] = req->addr >> 8;
 	buf_request[0x02] = req->addr & 0xff;
@@ -356,7 +355,6 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 	}
 
 	/* get response */
-	memset(buf_response, 0x00, sizeof(buf_response));
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(self),
 					      FU_LOGITECH_HIDPP_DEVICE_EP1,
 					      buf_response,

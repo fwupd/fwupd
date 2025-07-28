@@ -366,7 +366,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	guint32 sector_size;
 	gboolean check_sect_done = FALSE;
 	gsize multi_cmdsz;
-	guint8 ext_csd[512];
+	guint8 ext_csd[512] = {0};
 	guint failure_cnt = 0;
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
 	g_autoptr(GInputStream) stream = NULL;

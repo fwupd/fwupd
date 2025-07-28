@@ -237,6 +237,28 @@ class Checker:
                 self.add_failure(f"static variable {varname} not allowed")
             break
 
+    def _test_zero_init(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:zero-init"
+        in_struct: bool = False
+        for linecnt, line in enumerate(lines):
+            self._current_linecnt = linecnt + 1
+            if line.find(self._current_nocheck) != -1:
+                continue
+            if line.find("struct ") != -1:
+                in_struct = True
+                continue
+            if in_struct and line == "}":
+                in_struct = False
+                continue
+            if in_struct:
+                continue
+            if line.find(" = ") != -1:
+                continue
+            if not line.lstrip().startswith("guint"):
+                continue
+            if line.endswith("];"):
+                self.add_failure(f"buffer not zero init, use ` = {{0}}`")
+
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
         self._current_nocheck = "nocheck:print"
@@ -621,6 +643,9 @@ class Checker:
 
         # should use FuDeviceClass->convert_version
         self._test_lines_device_convert_version(lines)
+
+        # test for non-zero'd init
+        self._test_zero_init(lines)
 
     def test_file(self, fn: str) -> None:
         self._current_fn = fn

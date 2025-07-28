@@ -204,7 +204,7 @@ static gboolean
 fu_goodixtp_brlb_device_wait_erase_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
-	guint8 hidbuf[5];
+	guint8 hidbuf[5]; /* nocheck:zero-init */
 	guint8 recvBuf[5] = {0x0};
 
 	memset(hidbuf, 0x55, sizeof(hidbuf));
@@ -223,7 +223,7 @@ fu_goodixtp_brlb_device_wait_erase_cb(FuDevice *device, gpointer user_data, GErr
 static gboolean
 fu_goodixtp_brlb_device_update_prepare(FuGoodixtpBrlbDevice *self, GError **error)
 {
-	guint8 cmdbuf[1];
+	guint8 cmdbuf[1] = {0};
 
 	/* step 1. switch mini system */
 	cmdbuf[0] = 0x01;

@@ -270,7 +270,7 @@ fu_input_stream_read_byte_array(GInputStream *stream,
 				FuProgress *progress,
 				GError **error)
 {
-	guint8 tmp[0x8000];
+	guint8 tmp[0x8000]; /* nocheck:zero-init */
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error_local = NULL;
 

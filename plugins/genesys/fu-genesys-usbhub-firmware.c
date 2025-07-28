@@ -27,7 +27,7 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 				    GInputStream *stream,
 				    GError **error)
 {
-	guint8 project_ic_type[6];
+	guint8 project_ic_type[6] = {0};
 
 	/* recognize GL3523 code base product */
 	if (!fu_input_stream_read_safe(

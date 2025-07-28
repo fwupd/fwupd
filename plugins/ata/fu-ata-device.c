@@ -329,7 +329,7 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 	gboolean has_oui_quirk = FALSE;
 	guint16 xfer_min = 1;
 	guint16 xfer_max = 0xffff;
-	guint16 id[FU_ATA_IDENTIFY_SIZE / 2];
+	guint16 id[FU_ATA_IDENTIFY_SIZE / 2] = {0};
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *sku = NULL;
 
