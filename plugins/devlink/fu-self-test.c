@@ -41,39 +41,6 @@ fu_devlink_file_write_helper(const gchar *path, const guint value, GError **erro
 }
 
 static gboolean
-fu_devlink_load_kernel_module_helper(const gchar *module_name, GError **error)
-{
-	gint exit_status = 0;
-	g_autofree gchar *stderr_output = NULL;
-	const gchar *argv[] = {"modprobe", module_name, NULL};
-
-	if (!g_spawn_sync(NULL,
-			  (gchar **)argv,
-			  NULL,
-			  G_SPAWN_SEARCH_PATH,
-			  NULL,
-			  NULL,
-			  NULL,
-			  &stderr_output,
-			  &exit_status,
-			  error)) {
-		g_prefix_error(error, "failed to execute modprobe: ");
-		return FALSE;
-	}
-	if (exit_status != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "modprobe %s failed with exit status %d: %s",
-			    module_name,
-			    exit_status,
-			    stderr_output);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_devlink_netdevsim_sysfs_write(const gchar *filename, const guint value, GError **error)
 {
 	g_autofree gchar *sysfs_dir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
@@ -125,19 +92,9 @@ fu_devlink_netdevsim_new(guint device_id, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* create netdevsim device */
-	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error)) {
-		/* try to load netdevsim module */
-		if (!fu_devlink_load_kernel_module_helper("netdevsim", &error_local)) {
-			g_debug("failed to load netdevsim module: %s", error_local->message);
-			g_clear_error(&error_local);
-			return NULL;
-		}
-		/* try creating the device again after module load */
-		g_clear_error(error);
-		if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error)) {
-			return NULL;
-		}
-	}
+	if (!fu_devlink_netdevsim_sysfs_write("new_device", device_id, error))
+		return NULL;
+
 	ndsim->device_id = device_id;
 
 	if (!fu_devlink_netdevsim_debugfs_write(device_id,
@@ -166,7 +123,9 @@ fu_devlink_netdevsim_device_func(void)
 	/* create test netdevsim to set up netdevsim device */
 	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
-		g_test_skip_printf("Failed to create netdevsim device: %s", error_local->message);
+		g_test_skip_printf("Failed to create netdevsim device (perhaps netdevsim module is "
+				   "not loaded): %s",
+				   error_local->message);
 		return;
 	}
 
@@ -199,7 +158,9 @@ fu_devlink_netdevsim_device_flash_func(void)
 	/* create test netdevsim to set up netdevsim device */
 	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
-		g_test_skip_printf("Failed to create netdevsim device: %s", error_local->message);
+		g_test_skip_printf("Failed to create netdevsim device (perhaps netdevsim module is "
+				   "not loaded): %s",
+				   error_local->message);
 		return;
 	}
 
