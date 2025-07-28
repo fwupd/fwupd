@@ -36,3 +36,5 @@ rpmbuild -ba "${QUBES_MACRO[@]}" build/fwupd.spec
 
 mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
+
+modprobe netdevsim
