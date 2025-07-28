@@ -384,15 +384,10 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 {
 	if (nlg == NULL)
 		return;
-
-	if (nlg->nl != NULL) {
+	if (nlg->nl != NULL)
 		mnl_socket_close(nlg->nl);
-		nlg->nl = NULL;
-	}
-	if (nlg->buf != NULL) {
+	if (nlg->buf != NULL)
 		g_free(nlg->buf);
-		nlg->buf = NULL;
-	}
 	g_free(nlg);
 }
 
