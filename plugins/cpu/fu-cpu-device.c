@@ -457,9 +457,8 @@ static void
 fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) < 0) {
 		g_warning("failed to read CPU architecture");
 		return;

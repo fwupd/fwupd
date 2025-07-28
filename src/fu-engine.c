@@ -1962,7 +1962,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	gchar *btime;
 	guint64 nvram_total;
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 #endif
 	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GList) compile_keys = g_hash_table_get_keys(compile_versions);
@@ -2058,7 +2058,6 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 
 	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {
 		g_hash_table_insert(hash, g_strdup("CpuArchitecture"), g_strdup(name_tmp.machine));
 		g_hash_table_insert(hash, g_strdup("KernelName"), g_strdup(name_tmp.sysname));
@@ -8896,7 +8895,7 @@ fu_engine_constructed(GObject *obj)
 {
 	FuEngine *self = FU_ENGINE(obj);
 #ifdef HAVE_UTSNAME_H
-	struct utsname uname_tmp;
+	struct utsname uname_tmp = {0};
 #endif
 	g_autofree gchar *keyring_path = NULL;
 	g_autofree gchar *pkidir_fw = NULL;
@@ -9000,7 +8999,6 @@ fu_engine_constructed(GObject *obj)
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H
-	memset(&uname_tmp, 0, sizeof(uname_tmp));
 	if (uname(&uname_tmp) >= 0)
 		fu_engine_add_runtime_version(self, "org.kernel", uname_tmp.release);
 #endif

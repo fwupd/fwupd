@@ -67,12 +67,11 @@ gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	g_return_val_if_fail(minimum_kernel != NULL, FALSE);
 
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) < 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
