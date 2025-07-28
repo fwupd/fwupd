@@ -232,7 +232,7 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 		g_debug("no instance id items found, skipping building instance id");
 		return;
 	}
-	if (!fu_device_build_instance_id_strv(device, &error_local, "DEVLINK", keys)) {
+	if (!fu_device_build_instance_id_strv(device, "DEVLINK", keys, &error_local)) {
 		g_debug("failed to build devlink info based instance id for component %s: %s",
 			self->component_name,
 			error_local->message);
