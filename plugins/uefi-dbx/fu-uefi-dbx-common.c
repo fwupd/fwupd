@@ -16,7 +16,7 @@ const gchar *
 fu_uefi_dbx_get_efi_arch(void)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 	struct {
 		const gchar *arch;
 		const gchar *arch_efi;
@@ -29,7 +29,6 @@ fu_uefi_dbx_get_efi_arch(void)
 	    {"riscv64", "riscv64"},
 	};
 
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) < 0)
 		return NULL;
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {

@@ -331,7 +331,7 @@ static gchar *
 fwupd_client_build_user_agent_system(void)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 #endif
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
@@ -339,7 +339,6 @@ fwupd_client_build_user_agent_system(void)
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
 #ifdef HAVE_UTSNAME_H
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) >= 0) {
 		g_ptr_array_add(ids,
 				g_strdup_printf("%s %s %s",
