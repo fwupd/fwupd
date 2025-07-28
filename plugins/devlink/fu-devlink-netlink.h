@@ -61,7 +61,7 @@ fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dum
 
 /* multicast group management */
 gboolean
-fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg) G_GNUC_NON_NULL(1);
+fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error) G_GNUC_NON_NULL(1);
 
 /* attribute parsing callback */
 int

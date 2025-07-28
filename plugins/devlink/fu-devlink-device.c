@@ -221,13 +221,8 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 	nlg = fu_devlink_netlink_gen_socket_open(error);
 	if (nlg == NULL)
 		return FALSE;
-	if (!fu_devlink_netlink_mcast_group_subscribe(nlg)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to subscribe to multicast group");
+	if (!fu_devlink_netlink_mcast_group_subscribe(nlg, error))
 		return FALSE;
-	}
 
 	/* setup netlink channel and watch */
 	fd = fu_devlink_netlink_gen_socket_get_fd(nlg);

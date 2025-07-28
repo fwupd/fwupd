@@ -421,7 +421,7 @@ fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dum
 }
 
 gboolean
-fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg)
+fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error)
 {
 	guint32 devlink_config_grp = nlg->config_group_id;
 	gint rc;
@@ -431,7 +431,11 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg)
 				   &devlink_config_grp,
 				   sizeof(devlink_config_grp));
 	if (rc < 0) {
-		g_debug("failed to subscribe to devlink notifications: %s", fwupd_strerror(errno));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "failed to subscribe to devlink notifications: %s",
+			    fwupd_strerror(errno));
 		return FALSE;
 	}
 
