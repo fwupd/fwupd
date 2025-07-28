@@ -386,8 +386,7 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 		return;
 	if (nlg->nl != NULL)
 		mnl_socket_close(nlg->nl);
-	if (nlg->buf != NULL)
-		g_free(nlg->buf);
+	g_free(nlg->buf);
 	g_free(nlg);
 }
 
