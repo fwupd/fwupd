@@ -277,7 +277,7 @@ fu_hughski_colorhug_device_erase(FuHughskiColorhugDevice *self,
 				 gsize sz,
 				 GError **error)
 {
-	guint8 buf[4];
+	guint8 buf[4]; /* nocheck:zero-init */
 	g_autoptr(GError) error_local = NULL;
 
 	fu_memwrite_uint16(buf + 0, addr, G_LITTLE_ENDIAN);
@@ -302,7 +302,7 @@ fu_hughski_colorhug_device_erase(FuHughskiColorhugDevice *self,
 static gchar *
 fu_hughski_colorhug_device_get_version(FuHughskiColorhugDevice *self, GError **error)
 {
-	guint8 buf[6];
+	guint8 buf[6] = {0};
 	if (!fu_hughski_colorhug_device_msg(self,
 					    CH_CMD_GET_FIRMWARE_VERSION,
 					    NULL,
@@ -411,7 +411,7 @@ fu_hughski_colorhug_device_write_blocks(FuHughskiColorhugDevice *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4];
+		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4] = {0};
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -468,8 +468,8 @@ fu_hughski_colorhug_device_verify_blocks(FuHughskiColorhugDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		guint8 buf[3];
-		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE + 1];
+		guint8 buf[3] = {0};
+		guint8 buf_out[CH_FLASH_TRANSFER_BLOCK_SIZE + 1] = {0};
 		g_autoptr(GError) error_local = NULL;
 
 		/* prepare chunk */

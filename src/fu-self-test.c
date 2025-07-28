@@ -5641,7 +5641,7 @@ fu_memcpy_func(gconstpointer user_data)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e'};
 	gboolean ret;
-	guint8 dst[4];
+	guint8 dst[4] = {0};
 	g_autoptr(GError) error = NULL;
 
 	/* copy entire buffer */

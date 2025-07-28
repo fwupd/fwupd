@@ -57,11 +57,10 @@ static gboolean
 fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **error)
 {
 	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
-	guint8 config[10];
+	guint8 config[10] = {0};
 	g_autofree gchar *version_fw = NULL;
 
 	/* read all 10 bytes of the version register */
-	memset(config, 0x00, sizeof(config));
 	for (guint i = 0x01; i < 0x05; i++) {
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 

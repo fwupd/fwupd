@@ -338,7 +338,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 			       FuProgress *progress,
 			       GError **error)
 {
-	guint8 metadata[4];
+	guint8 metadata[4] = {0};
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	if (nvm_addr % 4 != 0) {

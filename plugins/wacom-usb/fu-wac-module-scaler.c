@@ -116,7 +116,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 	/* data */
 	for (guint i = 0; i < blocks->len; i++) {
 		FuWacModuleScalerBlockData *bd = g_ptr_array_index(blocks, i);
-		guint8 buf[FU_WAC_MODULE_SCALER_PAYLOAD_SZ + 4];
+		guint8 buf[FU_WAC_MODULE_SCALER_PAYLOAD_SZ + 4]; /* nocheck:zero-init */
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		/* build data packet */

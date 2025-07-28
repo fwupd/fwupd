@@ -102,7 +102,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 	FuPxiFirmware *self = FU_PXI_FIRMWARE(firmware);
 	gsize streamsz = 0;
 	guint32 version_raw = 0;
-	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
+	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = {0};
 	guint8 model_name[FU_PXI_DEVICE_MODEL_NAME_LEN] = {0x0};
 	guint16 hpac_ver = 0;
 	g_autofree gchar *version = NULL;

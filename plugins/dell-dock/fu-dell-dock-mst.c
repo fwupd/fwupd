@@ -674,7 +674,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 	guint32 payload = 0x21;
 	gsize length = sizeof(guint32);
 	const guint8 *data;
-	guint8 data_out[sizeof(guint32)];
+	guint8 data_out[4] = {0};
 
 	/* disable ESM first */
 	if (!fu_dell_dock_mst_rc_command(device,

@@ -22,14 +22,13 @@ static gboolean
 fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 {
 	gsize actual_len = 0;
-	guint8 data[32];
+	guint8 data[32] = {0};
 	g_autofree gchar *version = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_steelseries_mouse_parent_class)->setup(device, error))
 		return FALSE;
 
-	memset(data, 0x00, sizeof(data));
 	data[0] = 0x16;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(device),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,

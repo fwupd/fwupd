@@ -150,7 +150,7 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 static gboolean
 fu_elantp_i2c_device_write_cmd(FuElantpI2cDevice *self, guint16 reg, guint16 cmd, GError **error)
 {
-	guint8 buf[4];
+	guint8 buf[4]; /* nocheck:zero-init */
 	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x2, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
@@ -163,7 +163,7 @@ fu_elantp_i2c_device_read_cmd(FuElantpI2cDevice *self,
 			      gsize rxsz,
 			      GError **error)
 {
-	guint8 buf[2];
+	guint8 buf[2]; /* nocheck:zero-init */
 	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }

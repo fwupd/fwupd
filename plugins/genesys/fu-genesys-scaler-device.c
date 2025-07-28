@@ -1456,7 +1456,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 						     FuGenesysScalerFirmwarePacketVersion *ver,
 						     GError **error)
 {
-	guint8 buf[0x40];
+	guint8 buf[0x40] = {0};
 	guint8 offset = 4;
 
 	if (!fu_genesys_scaler_device_get_ddcci_data(
