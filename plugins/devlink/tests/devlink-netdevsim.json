@@ -1,0 +1,20 @@
+{
+  "name": "Devlink Netdevsim Install",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "@enumeration_datadir@/devlink-netdevsim-firmware.cab",
+      "emulation-file": "@enumeration_datadir@/devlink-netdevsim-emulation.json",
+      "components": [
+        {
+          "name": "fw.mgmt",
+          "protocol": "org.kernel.devlink",
+          "version": "10.20.30",
+          "guids": [
+            "cf3aca64-f7e1-5bba-ba8a-89c8daa80cfb"
+          ]
+        }
+      ]
+    }
+  ]
+}

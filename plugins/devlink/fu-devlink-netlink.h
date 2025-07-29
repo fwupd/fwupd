@@ -19,6 +19,10 @@ typedef struct {
 	gchar *buf;
 	guint32 family_id;
 	guint32 config_group_id;
+	FuDevice *device; /* device for emulation recording/playback */
+	gboolean is_emulated;
+	gboolean save_events;
+	gint pipe_fds[2];  /* dummy pipe for emulation (read=0, write=1) */
 } FuDevlinkGenSocket;
 
 #define FU_DEVLINK_NETLINK_BUF_SIZE MNL_SOCKET_BUFFER_SIZE
@@ -44,7 +48,7 @@ fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GErro
 
 /* socket management */
 FuDevlinkGenSocket *
-fu_devlink_netlink_gen_socket_open(GError **error);
+fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error);
 
 void
 fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg);

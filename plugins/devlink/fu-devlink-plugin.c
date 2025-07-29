@@ -166,7 +166,7 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 	g_autoptr(FuDevlinkGenSocket) nlg = NULL;
 
 	/* open devlink netlink socket */
-	nlg = fu_devlink_netlink_gen_socket_open(error);
+	nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
 	if (nlg == NULL)
 		return FALSE;
 
