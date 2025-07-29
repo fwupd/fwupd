@@ -1,0 +1,24 @@
+# Laptop 16 Keyboard Module - ANSI
+[HIDRAW\VEN_32AC&DEV_0012]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
+
+# Laptop 16 RGB Macropad
+[HIDRAW\VEN_32AC&DEV_0013]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
+
+# Laptop 16 Numpad
+[HIDRAW\VEN_32AC&DEV_0014]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
+
+# Laptop 16 Keyboard Module - ISO
+[HIDRAW\VEN_32AC&DEV_0018]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
+
+# Laptop 16 Keyboard Module - JIS
+[HIDRAW\VEN_32AC&DEV_0019]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
