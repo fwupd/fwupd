@@ -185,7 +185,7 @@ fu_devlink_plugin_flash_func(void)
 		g_test_skip_printf("Failed to create netdevsim device (perhaps netdevsim module is "
 				   "not loaded): %s",
 				   error_local->message);
-		return;
+		g_clear_error(&error_local);
 	} else {
 		/* test firmware flashing on the fw.mgmt component */
 		g_test_message("Testing firmware flash for fw.mgmt component on netdevsim/%s",
