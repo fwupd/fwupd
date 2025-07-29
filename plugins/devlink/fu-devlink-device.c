@@ -214,7 +214,7 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 	g_autoptr(GThread) flash_send_thread = NULL;
 
 	/* open netlink socket and subscribe to multicast */
-	nlg = fu_devlink_netlink_gen_socket_open(error);
+	nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
 	if (nlg == NULL)
 		return FALSE;
 	if (!fu_devlink_netlink_mcast_group_subscribe(nlg, error))
@@ -591,7 +591,7 @@ fu_devlink_device_open(FuDevice *device, GError **error)
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 
 	/* open devlink netlink socket */
-	self->nlg = fu_devlink_netlink_gen_socket_open(error);
+	self->nlg = fu_devlink_netlink_gen_socket_open(device, error);
 	if (self->nlg == NULL)
 		return FALSE;
 
@@ -665,6 +665,106 @@ fu_devlink_device_cleanup(FuDevice *device,
 }
 
 static void
+fu_devlink_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+{
+	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
+	GPtrArray *events = fu_device_get_events(device);
+
+	/* add device type identifier */
+	fwupd_codec_json_append(builder, "GType", "FuDevlinkDevice");
+
+	/* add devlink-specific properties for regular devices */
+	fwupd_codec_json_append(builder, "BusName", self->bus_name);
+	fwupd_codec_json_append(builder, "DevName", self->dev_name);
+
+	/* serialize recorded events */
+	if (events->len > 0) {
+		json_builder_set_member_name(builder, "Events");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < events->len; i++) {
+			FuDeviceEvent *event = g_ptr_array_index(events, i);
+
+			json_builder_begin_object(builder);
+			fwupd_codec_to_json(FWUPD_CODEC(event),
+					    builder,
+					    events->len > 1000 ? flags | FWUPD_CODEC_FLAG_COMPRESSED
+							       : flags);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
+}
+
+static gboolean
+fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+{
+	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
+	const gchar *bus_name;
+	const gchar *dev_name;
+	g_autofree gchar *device_id = NULL;
+
+	/* devlink-specific properties */
+	bus_name = json_object_get_string_member_with_default(json_object, "BusName", NULL);
+	dev_name = json_object_get_string_member_with_default(json_object, "DevName", NULL);
+
+	if (bus_name == NULL || dev_name == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "BusName and DevName required for devlink device");
+		return FALSE;
+	}
+
+	g_free(self->bus_name);
+	g_free(self->dev_name);
+	self->bus_name = g_strdup(bus_name);
+	self->dev_name = g_strdup(dev_name);
+
+	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
+	fu_device_set_physical_id(FU_DEVICE(self), device_id);
+	fu_device_set_name(FU_DEVICE(self), device_id);
+	fu_device_set_backend_id(device, device_id);
+
+	/* array of events */
+	if (json_object_has_member(json_object, "Events")) {
+		JsonArray *json_array = json_object_get_array_member(json_object, "Events");
+
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			JsonNode *node_tmp = json_array_get_element(json_array, i);
+			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
+
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+				return FALSE;
+			fu_device_add_event(device, event);
+		}
+	}
+
+	return TRUE;
+}
+
+static void
+fu_devlink_device_incorporate(FuDevice *device, FuDevice *donor_device)
+{
+	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
+	FuDevlinkDevice *donor = FU_DEVLINK_DEVICE(donor_device);
+
+	g_return_if_fail(FU_IS_DEVLINK_DEVICE(device));
+	g_return_if_fail(FU_IS_DEVLINK_DEVICE(donor_device));
+
+	/* copy bus_name if not already set */
+	if (self->bus_name == NULL && donor->bus_name != NULL) {
+		g_free(self->bus_name);
+		self->bus_name = g_strdup(donor->bus_name);
+	}
+
+	/* copy dev_name if not already set */
+	if (self->dev_name == NULL && donor->dev_name != NULL) {
+		g_free(self->dev_name);
+		self->dev_name = g_strdup(donor->dev_name);
+	}
+}
+
+static void
 fu_devlink_device_finalize(GObject *object)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(object);
@@ -680,6 +780,8 @@ fu_devlink_device_init(FuDevlinkDevice *self)
 {
 	fu_device_set_summary(FU_DEVICE(self), "Devlink device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_device_add_possible_plugin(FU_DEVICE(self), "devlink");
 }
 
 static void
@@ -697,4 +799,7 @@ fu_devlink_device_class_init(FuDevlinkDeviceClass *klass)
 	device_class->setup = fu_devlink_device_setup;
 	device_class->reload = fu_devlink_device_setup;
 	device_class->activate = fu_devlink_device_activate;
+	device_class->add_json = fu_devlink_device_add_json;
+	device_class->from_json = fu_devlink_device_from_json;
+	device_class->incorporate = fu_devlink_device_incorporate;
 }

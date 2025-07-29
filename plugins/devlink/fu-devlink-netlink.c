@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <glib-unix.h>
 #include <libmnl/libmnl.h>
 #include <linux/genetlink.h>
 #include <linux/netlink.h>
@@ -132,7 +133,7 @@ fu_devlink_netlink_msg_cb_run(FuDevlinkGenSocket *nlg,
 			      void *data,
 			      GError **error)
 {
-	guint32 portid = mnl_socket_get_portid(nlg->nl);
+	guint32 portid;
 	FuDevlinkCbHelper helper = {
 	    .user_data = data,
 	    .user_cb = cb,
@@ -144,6 +145,15 @@ fu_devlink_netlink_msg_cb_run(FuDevlinkGenSocket *nlg,
 	    [NLMSG_DONE] = fu_devlink_netlink_done_cb,
 	    [NLMSG_OVERRUN] = fu_devlink_netlink_noop_cb,
 	};
+
+	if (nlg->is_emulated) {
+		struct nlmsghdr *nlh = (void *)nlg->buf;
+
+		nlh->nlmsg_seq = seq;
+		portid = nlh->nlmsg_pid;
+	} else {
+		portid = mnl_socket_get_portid(nlg->nl);
+	}
 
 	return mnl_cb_run2(nlg->buf,
 			   len,
@@ -167,28 +177,154 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 	return fu_devlink_netlink_msg_cb_run(nlg, len, seq, cb, data, error) != MNL_CB_ERROR;
 }
 
-/* receive and run callback on netlink messages with proper error handling */
+/* callback for extracting event_id from devlink messages */
+static int
+fu_devlink_netlink_event_id_msg_cb(const struct nlmsghdr *nlh, void *data)
+{
+	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
+	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
+	GStrvBuilder *tuples_builder = data;
+
+	switch (genl->cmd) {
+	case DEVLINK_CMD_GET:
+		g_strv_builder_add(tuples_builder, "cmd=get");
+		break;
+	case DEVLINK_CMD_RELOAD:
+		g_strv_builder_add(tuples_builder, "cmd=reload");
+		break;
+	case DEVLINK_CMD_INFO_GET:
+		g_strv_builder_add(tuples_builder, "cmd=info_get");
+		break;
+	case DEVLINK_CMD_FLASH_UPDATE:
+		g_strv_builder_add(tuples_builder, "cmd=flash_update");
+		break;
+	default:
+		break;
+	}
+
+	/* parse attributes */
+	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
+
+	/* extract attribute name and value based on type */
+	if (tb[DEVLINK_ATTR_BUS_NAME] != NULL)
+		g_strv_builder_add(
+		    tuples_builder,
+		    g_strdup_printf("bus_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME])));
+	if (tb[DEVLINK_ATTR_DEV_NAME] != NULL)
+		g_strv_builder_add(
+		    tuples_builder,
+		    g_strdup_printf("dev_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME])));
+	if (tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME] != NULL)
+		g_strv_builder_add(
+		    tuples_builder,
+		    g_strdup_printf("file_name=%s",
+				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME])));
+	if (tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT] != NULL)
+		g_strv_builder_add(
+		    tuples_builder,
+		    g_strdup_printf("component=%s",
+				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT])));
+	if (tb[DEVLINK_ATTR_RELOAD_ACTION] != NULL)
+		g_strv_builder_add(
+		    tuples_builder,
+		    g_strdup_printf("reload_action=%u",
+				    mnl_attr_get_u8(tb[DEVLINK_ATTR_RELOAD_ACTION])));
+
+	return MNL_CB_OK;
+}
+
+static gchar *
+fu_devlink_netlink_get_event_id(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh)
+{
+	g_autoptr(GStrvBuilder) tuples_builder = g_strv_builder_new();
+	g_auto(GStrv) strv = NULL;
+
+	/* parse the message and build get event_id tuples */
+	mnl_cb_run(nlh,
+		   nlh->nlmsg_len,
+		   nlh->nlmsg_seq,
+		   nlh->nlmsg_pid,
+		   fu_devlink_netlink_event_id_msg_cb,
+		   tuples_builder);
+
+	strv = g_strv_builder_end(tuples_builder);
+
+	/* return the constructed event_id */
+	return g_strjoinv(",", strv);
+}
+
+/* receive and run callback on netlink messages */
 static gboolean
 fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
-				guint32 seq,
+				struct nlmsghdr *nlh,
 				mnl_cb_t cb,
 				void *data,
 				GError **error)
 {
+	FuDeviceEvent *event = NULL;
+	guint i = 0;
+	g_autofree gchar *event_id = NULL;
+	guint32 seq = nlh->nlmsg_seq;
 	gint rc;
 
-	do {
-		rc = mnl_socket_recvfrom(nlg->nl, nlg->buf, MNL_SOCKET_BUFFER_SIZE);
-		if (rc == 0)
-			return TRUE;
-		if (rc < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to receive netlink message: %s",
-				    fwupd_strerror(errno));
+	/* generate event ID if device is available and we need emulation/recording */
+	if (nlg->is_emulated || nlg->save_events)
+		event_id = fu_devlink_netlink_get_event_id(nlg, nlh);
+
+	if (nlg->is_emulated) {
+		event = fu_device_load_event(nlg->device, event_id, error);
+		if (event == NULL)
 			return FALSE;
+	}
+
+	if (nlg->save_events)
+		event = fu_device_save_event(nlg->device, event_id);
+
+	do {
+		if (nlg->is_emulated) {
+			const guint8 *response_buf;
+			gsize response_len;
+			g_autofree gchar *response_key = g_strdup_printf("ResponseData%u", i++);
+			g_autoptr(GBytes) response_data =
+			    fu_device_event_get_bytes(event, response_key, NULL);
+
+			if (response_data == NULL)
+				return TRUE;
+
+			response_buf = g_bytes_get_data(response_data, &response_len);
+			if (response_len > (gsize)FU_DEVLINK_NETLINK_BUF_SIZE) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "recorded response too large: %zu > %ld",
+					    response_len,
+					    FU_DEVLINK_NETLINK_BUF_SIZE);
+				return FALSE;
+			}
+			memcpy(nlg->buf, response_buf, response_len); /* nocheck:blocked */
+			rc = response_len;
+		} else {
+			rc = mnl_socket_recvfrom(nlg->nl, nlg->buf, MNL_SOCKET_BUFFER_SIZE);
+			if (rc == 0) {
+				return TRUE;
+			}
+			if (rc < 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "failed to receive netlink message: %s",
+					    fwupd_strerror(errno));
+				return FALSE;
+			}
+			if (nlg->save_events) {
+				g_autoptr(GBytes) response_data = g_bytes_new(nlg->buf, rc);
+				g_autofree gchar *response_key =
+				    g_strdup_printf("ResponseData%u", i++);
+
+				fu_device_event_set_bytes(event, response_key, response_data);
+			}
 		}
+
 		rc = fu_devlink_netlink_msg_cb_run(nlg, rc, seq, cb, data, error);
 	} while (rc > MNL_CB_STOP);
 
@@ -203,19 +339,21 @@ fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 				 void *data,
 				 GError **error)
 {
-	guint32 seq = nlh->nlmsg_seq;
 	gint rc;
 
-	rc = mnl_socket_sendto(nlg->nl, nlh, nlh->nlmsg_len);
-	if (rc < 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to send netlink message: %s",
-			    fwupd_strerror(errno));
-		return FALSE;
+	if (!nlg->is_emulated) {
+		/* send netlink message */
+		rc = mnl_socket_sendto(nlg->nl, nlh, nlh->nlmsg_len);
+		if (rc < 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to send netlink message: %s",
+				    fwupd_strerror(errno));
+			return FALSE;
+		}
 	}
-	return fu_devlink_netlink_msg_recv_run(nlg, seq, cb, data, error);
+	return fu_devlink_netlink_msg_recv_run(nlg, nlh, cb, data, error);
 }
 
 gboolean
@@ -312,7 +450,7 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 
 /* open generic netlink socket for devlink family */
 FuDevlinkGenSocket *
-fu_devlink_netlink_gen_socket_open(GError **error)
+fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 {
 	g_autoptr(FuDevlinkGenSocket) nlg = NULL;
 	gint one = 1;
@@ -323,6 +461,21 @@ fu_devlink_netlink_gen_socket_open(GError **error)
 
 	/* initialize structure with properly aligned buffer */
 	nlg->buf = g_malloc0(FU_DEVLINK_NETLINK_BUF_SIZE);
+	nlg->device = device;
+
+	/* skip actual socket operations if emulated */
+	if (device != NULL && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+		/* create dummy pipe for emulation */
+		if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
+			g_prefix_error(error, "failed to create pipe for emulation: ");
+			return NULL;
+		}
+		nlg->is_emulated = TRUE;
+
+		/* set family ID to a valid value */
+		nlg->family_id = NLMSG_MIN_TYPE + 1;
+		return g_steal_pointer(&nlg);
+	}
 
 	/* open netlink socket */
 	nlg->nl = mnl_socket_open(NETLINK_GENERIC);
@@ -371,6 +524,11 @@ fu_devlink_netlink_gen_socket_open(GError **error)
 		return NULL;
 	}
 
+	if (device != NULL &&
+	    fu_context_has_flag(fu_device_get_context(nlg->device), FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		nlg->save_events = TRUE;
+	}
+
 	return g_steal_pointer(&nlg);
 }
 
@@ -382,6 +540,11 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 		return;
 	if (nlg->nl != NULL)
 		mnl_socket_close(nlg->nl);
+	/* close both ends of the pipe if they were created */
+	if (nlg->pipe_fds[0] != 0)
+		g_close(nlg->pipe_fds[0], NULL);
+	if (nlg->pipe_fds[1] != 0)
+		g_close(nlg->pipe_fds[1], NULL);
 	g_free(nlg->buf);
 	g_free(nlg);
 }
@@ -389,6 +552,9 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 gint
 fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg)
 {
+	/* return read side of pipe for emulated devices */
+	if (nlg->is_emulated)
+		return nlg->pipe_fds[0]; /* read end of the pipe */
 	return mnl_socket_get_fd(nlg->nl);
 }
 
@@ -415,6 +581,10 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error
 {
 	guint32 devlink_config_grp = nlg->config_group_id;
 	gint rc;
+
+	/* skip multicast subscription for emulated devices */
+	if (nlg->is_emulated)
+		return TRUE;
 
 	rc = mnl_socket_setsockopt(nlg->nl,
 				   NETLINK_ADD_MEMBERSHIP,
