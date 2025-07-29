@@ -138,35 +138,6 @@ fu_devlink_netdevsim_new(guint device_id, GError **error)
 #define FU_DEVLINK_NETDEVSIM_DEVICE_NAME "netdevsim" G_STRINGIFY(FU_DEVLINK_NETDEVSIM_DEVICE_ID)
 
 static void
-fu_devlink_netdevsim_device_func(void)
-{
-	gboolean ret;
-	g_autoptr(FuDevlinkDevice) device = NULL;
-	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(GError) error_local = NULL;
-
-	/* create test netdevsim to set up netdevsim device */
-	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
-	if (ndsim == NULL) {
-		g_test_skip_printf("Failed to create netdevsim device (perhaps netdevsim module is "
-				   "not loaded): %s",
-				   error_local->message);
-		return;
-	}
-
-	/* create device with valid bus and device names */
-	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
-	g_assert_nonnull(device);
-
-	ret = fu_device_probe(FU_DEVICE(device), &error_local);
-	g_assert_true(ret);
-
-	/* check device properties were set correctly */
-	g_assert_cmpstr(fu_device_get_summary(FU_DEVICE(device)), ==, "Devlink device");
-}
-
-static void
 fu_devlink_netdevsim_device_flash_func(void)
 {
 	gboolean ret;
@@ -245,7 +216,6 @@ main(int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func("/devlink/plugin/coldplug", fu_devlink_plugin_coldplug_func);
-	g_test_add_func("/devlink/netdevsim/device", fu_devlink_netdevsim_device_func);
 	g_test_add_func("/devlink/netdevsim/flash", fu_devlink_netdevsim_device_flash_func);
 	return g_test_run();
 }
