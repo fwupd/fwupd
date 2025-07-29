@@ -28,6 +28,18 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 			     gsize bufsz,
 			     FuIoctlFlags flags,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
+fu_hidraw_device_set_report(FuHidrawDevice *self,
+			    const guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error);
+gboolean
+fu_hidraw_device_get_report(FuHidrawDevice *self,
+			    guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error);
 FuHidDescriptor *
 fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

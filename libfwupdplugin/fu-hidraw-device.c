@@ -353,6 +353,84 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 #endif
 }
 
+/**
+ * fu_hidraw_device_set_report:
+ * @self: a #FuHidrawDevice
+ * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Do a HID SetOutputReport request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_hidraw_device_set_report(FuHidrawDevice *self,
+			    const guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error)
+{
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fu_dump_raw(G_LOG_DOMAIN, "SetReport", buf, bufsz);
+	return fu_udev_device_write(FU_UDEV_DEVICE(self),
+				    buf,
+				    bufsz,
+				    FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+				    flags,
+				    error);
+}
+
+/**
+ * fu_hidraw_device_get_report:
+ * @self: a #FuHidrawDevice
+ * @buf: (not nullable): a buffer to use, which *must* be large enough for the request
+ * @bufsz: the size of @buf
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: (nullable): optional return location for an error
+ *
+ * Do a HID GetInputReport request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.14
+ **/
+gboolean
+fu_hidraw_device_get_report(FuHidrawDevice *self,
+			    guint8 *buf,
+			    gsize bufsz,
+			    FuIOChannelFlags flags,
+			    GError **error)
+{
+	gsize bytes_read = 0;
+
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FALSE);
+	g_return_val_if_fail(buf != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	fu_dump_raw(G_LOG_DOMAIN, "GetReport", buf, bufsz);
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+				 buf,
+				 bufsz,
+				 &bytes_read,
+				 FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+				 flags,
+				 error))
+		return FALSE;
+
+	if (bytes_read != bufsz) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "invalid response");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fu_hidraw_device_init(FuHidrawDevice *self)
 {
