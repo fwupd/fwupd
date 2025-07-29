@@ -27,6 +27,7 @@ typedef struct {
 	guint16 id;
 	guint16 fw_version;
 	guint16 fw_checksum;
+	gboolean is_remunerated; // Data can be populated only when ec is in runtime mode.
 } FuCrosEcHammerTouchpadPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCrosEcHammerTouchpad, fu_cros_ec_hammer_touchpad, FU_TYPE_DEVICE)
@@ -50,7 +51,8 @@ static gboolean
 fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **error)
 {
 	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+
 	gchar *base_fw_ver;
 	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *vendor_name = NULL;
@@ -77,8 +79,8 @@ fu_cros_ec_hammer_touchpad_set_metadata(FuCrosEcHammerTouchpad *self, GError **e
 	fu_device_set_name(FU_DEVICE(self), device_name);
 	fu_device_set_version(FU_DEVICE(self), base_fw_ver);
 	instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&VENDORNAME_%s",
-				      fu_device_get_vid(FU_DEVICE(parent)),
-				      fu_device_get_pid(FU_DEVICE(parent)),
+				      fu_device_get_vid(FU_DEVICE(proxy)),
+				      fu_device_get_pid(FU_DEVICE(proxy)),
 				      vendor_name);
 	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
 
@@ -90,7 +92,7 @@ static gboolean
 fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error)
 {
 	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	gsize bufsz;
 	guint32 error_code;
 	guint16 subcommand = FU_CROS_EC_UPDATE_EXTRA_CMD_TOUCHPAD_INFO;
@@ -103,9 +105,9 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	g_autoptr(GError) error_local = NULL;
 	guint8 *buffer = NULL;
 
-	g_return_val_if_fail(FU_IS_CROS_EC_USB_DEVICE(parent), FALSE);
+	g_return_val_if_fail(FU_IS_CROS_EC_USB_DEVICE(proxy), FALSE);
 
-	if (!fu_cros_ec_usb_device_send_subcommand(FU_CROS_EC_USB_DEVICE(parent),
+	if (!fu_cros_ec_usb_device_send_subcommand(FU_CROS_EC_USB_DEVICE(proxy),
 						   subcommand,
 						   command_body,
 						   command_body_size,
@@ -113,10 +115,10 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 						   &response_size,
 						   FALSE,
 						   &error_local)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to probe touchpad");
+		g_prefix_error(error,
+			       FWUPD_ERROR,
+			       FWUPD_ERROR_INVALID_DATA,
+			       "failed to probe touchpad");
 		return FALSE;
 	}
 
@@ -129,6 +131,7 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 			    error_code);
 		return FALSE;
 	}
+	g_warning("(DEBUG) RECEIVED TOUCHPAD INFO");
 
 	priv->vendor = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_vendor(tpi_rpdu);
 	priv->fw_address =
@@ -144,17 +147,37 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 	priv->fw_checksum =
 	    fu_struct_cros_ec_touchpad_get_info_response_pdu_get_fw_checksum(tpi_rpdu);
 
+	priv->is_remunerated = TRUE;
+
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_cros_ec_hammer_touchpad_setup(FuDevice *device, GError **error)
+fu_cros_ec_hammer_touchpad_probe(FuDevice *device, GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	g_autofree gchar *instance_id = NULL;
+
+	g_return_val_if_fail(FU_IS_CROS_EC_USB_DEVICE(proxy), FALSE);
+
+	priv->is_remunerated = FALSE;
+
+	instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&TP",
+				      fu_device_get_vid(FU_DEVICE(proxy)),
+				      fu_device_get_pid(FU_DEVICE(proxy)));
+	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
+
+	if (fu_cros_ec_usb_device_get_in_bootloader(proxy)) {
+		g_warning("(DEBUG) IN BOOTLOADER NOW! SKIP...");
+		return TRUE;
+	}
 
 	if (!fu_cros_ec_hammer_touchpad_get_info(self, error))
 		return FALSE;
+
 	fu_cros_ec_hammer_touchpad_set_metadata(self, error);
 
 	/* success */
@@ -171,7 +194,7 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	gsize fwsize;
 	const guchar *fw = NULL;
 	GChecksum *checksum = NULL;
-	g_autofree guint8 digest[SHA256_DIGEST_LENGTH];
+	guint8 digest[SHA256_DIGEST_LENGTH];
 	gsize digest_len = sizeof(digest);
 
 	payload = fu_firmware_get_bytes(firmware, error);
@@ -217,7 +240,6 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	 * through GUIDs... Also there is no files to compare with instead the updates
 	 * is usually done through cab files. Suggesting to skip this.
 	 */
-
 	return TRUE;
 }
 
@@ -229,6 +251,7 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 					    GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_hammer_touchpad_firmware_new();
 
 	/*
@@ -241,8 +264,15 @@ fu_cros_ec_hammer_touchpad_prepare_firmware(FuDevice *device,
 	 * by querying the EC board for touchpad info again (the first time was during the setup),
 	 * which includes allowed touchpad firmware hash.
 	 */
-	if (!fu_cros_ec_hammer_touchpad_get_info(self, error))
+
+	/* device should've already been probed */
+	if (!priv->is_remunerated) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "touchpad info missing");
 		return NULL;
+	}
 
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
 		return NULL;
@@ -261,12 +291,23 @@ fu_cros_ec_hammer_touchpad_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(device);
 	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
 
 	/*
 	 * Update is done through the parent device (the EC base),
 	 * so we call this and let EC handle the updating.
 	 */
+
+	/* device should've already been probed */
+	if (!priv->is_remunerated) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "touchpad info missing");
+		return FALSE;
+	}
+
 	if (!fu_cros_ec_usb_device_write_touchpad_firmware(parent,
 							   firmware,
 							   progress,
@@ -293,9 +334,11 @@ fu_cros_ec_hammer_touchpad_init(FuCrosEcHammerTouchpad *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.usb.crosec");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_DETACH_PREPARE_FIRMWARE);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -313,12 +356,14 @@ fu_cros_ec_hammer_touchpad_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static void
-fu_cros_ec_usb_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_cros_ec_hammer_touchpad_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 10, "prepare-fw");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "reload");
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
 
 static void
@@ -327,21 +372,21 @@ fu_cros_ec_hammer_touchpad_class_init(FuCrosEcHammerTouchpadClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_cros_ec_hammer_touchpad_finalize;
-	device_class->setup = fu_cros_ec_hammer_touchpad_setup;
+	device_class->probe = fu_cros_ec_hammer_touchpad_probe;
 	device_class->to_string = fu_cros_ec_hammer_touchpad_to_string;
 	device_class->prepare_firmware = fu_cros_ec_hammer_touchpad_prepare_firmware;
 	device_class->write_firmware = fu_cros_ec_hammer_touchpad_write_firmware;
-	device_class->set_progress = fu_cros_ec_usb_device_set_progress;
+	device_class->set_progress = fu_cros_ec_hammer_touchpad_set_progress;
 }
 
 FuCrosEcHammerTouchpad *
-fu_cros_ec_hammer_touchpad_new(FuDevice *parent)
+fu_cros_ec_hammer_touchpad_new(FuDevice *proxy)
 {
 	FuCrosEcHammerTouchpad *self = NULL;
-	FuContext *ctx = fu_device_get_context(parent);
+	FuContext *ctx = fu_device_get_context(proxy);
 
-	self = g_object_new(FU_TYPE_CROS_EC_HAMMER_TOUCHPAD, "context", ctx, NULL);
-	fu_device_incorporate(FU_DEVICE(self), parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+	self = g_object_new(FU_TYPE_CROS_EC_HAMMER_TOUCHPAD, "context", ctx, "proxy", proxy, NULL);
+	fu_device_incorporate(FU_DEVICE(self), proxy, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(self), "cros-ec-hammer-touchpad");
 	return self;
 }

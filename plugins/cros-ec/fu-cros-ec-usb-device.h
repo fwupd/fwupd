@@ -35,3 +35,5 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 					      FwupdInstallFlags flags,
 					      FuDevice *tp_device,
 					      GError **error);
+gboolean
+fu_cros_ec_usb_device_get_in_bootloader(FuDevice *device);
