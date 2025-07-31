@@ -142,7 +142,7 @@ fu_devlink_plugin_flash_func(void)
 {
 	gboolean ret;
 	const gchar *fw_content = "FWUPD_TEST_FIRMWARE_v2.0.0\nTest firmware for devlink device";
-	g_autoptr(FuDevlinkDevice) device = NULL;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) component = NULL;
 	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
@@ -157,7 +157,7 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_nonnull(device);
 
 	/* probe device first */
-	ret = fu_device_probe(FU_DEVICE(device), &error_local);
+	ret = fu_device_probe(device, &error_local);
 	g_assert_true(ret);
 
 	/* create fw.mgmt component */
@@ -165,7 +165,7 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_nonnull(component);
 
 	/* set up parent-child relationship */
-	fu_device_add_child(FU_DEVICE(device), component);
+	fu_device_add_child(device, component);
 
 	/* set component version for testing */
 	fu_device_set_version(component, "1.0.0");

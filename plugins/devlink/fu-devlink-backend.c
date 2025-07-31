@@ -90,7 +90,7 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
-	g_autoptr(FuDevlinkDevice) devlink_device = NULL;
+	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -130,23 +130,23 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 	}
 
 	/* incorporate vendor information from parent device (without setting hierarchy) */
-	fu_device_incorporate(FU_DEVICE(devlink_device),
+	fu_device_incorporate(devlink_device,
 			      parent_device,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR |
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
 
 	/* open device to trigger setup */
-	locker = fu_device_locker_new(FU_DEVICE(devlink_device), error);
+	locker = fu_device_locker_new(devlink_device, error);
 	if (locker == NULL) {
 		g_prefix_error(error, "failed to open devlink device: ");
 		return NULL;
 	}
 
 	/* only add the devlink device to the backend - parent is managed by its own backend */
-	fu_backend_device_added(FU_BACKEND(self), FU_DEVICE(devlink_device));
+	fu_backend_device_added(FU_BACKEND(self), devlink_device);
 
-	return FU_DEVICE(g_steal_pointer(&devlink_device));
+	return g_steal_pointer(&devlink_device);
 }
 
 static void

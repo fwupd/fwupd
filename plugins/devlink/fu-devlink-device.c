@@ -567,7 +567,7 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
-FuDevlinkDevice *
+FuDevice *
 fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name)
 {
 	g_autoptr(FuDevlinkDevice) self = NULL;
@@ -585,7 +585,7 @@ fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_na
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
 	fu_device_set_name(FU_DEVICE(self), device_id);
 
-	return g_steal_pointer(&self);
+	return FU_DEVICE(g_steal_pointer(&self));
 }
 
 static gboolean
