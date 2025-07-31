@@ -924,7 +924,7 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, blocks->len);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	g_warning("(DEBUG) TO WRITE %d blocks to touchpad", blocks->len);
+	g_warning("(DEBUG) TO WRITE %u blocks to touchpad", blocks->len);
 	for (guint i = 0; i < blocks->len; i++) {
 		FuCrosEcUsbBlockHelper helper = {
 		    .block = g_ptr_array_index(blocks, i),

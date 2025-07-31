@@ -115,10 +115,7 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 						   &response_size,
 						   FALSE,
 						   &error_local)) {
-		g_prefix_error(error,
-			       FWUPD_ERROR,
-			       FWUPD_ERROR_INVALID_DATA,
-			       "failed to probe touchpad");
+		g_prefix_error(error, "failed to probe touchpad");
 		return FALSE;
 	}
 
