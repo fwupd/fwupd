@@ -229,7 +229,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+						       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
@@ -488,7 +489,8 @@ fu_cabinet_build_silo_metainfo(FuCabinet *self, FuFirmware *img, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+						       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
