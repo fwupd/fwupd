@@ -235,7 +235,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_target(self->jcat_context,
 						     item_target,
 						     item,
-						     JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+							 JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						     &error_local);
 		if (results == NULL) {
@@ -258,7 +259,8 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 		results = jcat_context_verify_item(self->jcat_context,
 						   blob,
 						   item,
-						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+						       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						   &error_local);
 		if (results == NULL) {
@@ -291,11 +293,13 @@ fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 			if (data_sig == NULL)
 				return FALSE;
 			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result = jcat_context_verify_blob(self->jcat_context,
-							       blob,
-							       jcat_blob,
-							       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-							       &error_local);
+			jcat_result =
+			    jcat_context_verify_blob(self->jcat_context,
+						     blob,
+						     jcat_blob,
+						     JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+							 JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						     &error_local);
 			if (jcat_result == NULL) {
 				g_info("failed to verify payload %s using detached: %s",
 				       basename,
