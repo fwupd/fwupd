@@ -167,7 +167,7 @@ FuDevice *
 fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
 {
 	g_autofree gchar *device_id = NULL;
-	FuDevlinkComponent *self;
+	g_autoptr(FuDevlinkComponent) self = NULL;
 
 	g_return_val_if_fail(component_name, NULL);
 
@@ -180,7 +180,7 @@ fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
 				 component_name); /* use component name as logical ID */
 	fu_device_set_name(FU_DEVICE(self), component_name);
 
-	return FU_DEVICE(self);
+	return FU_DEVICE(g_steal_pointer(&self));
 }
 
 typedef struct {
