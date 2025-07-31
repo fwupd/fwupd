@@ -4358,7 +4358,8 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	results = jcat_context_verify_item(self->jcat_context,
 					   blob,
 					   jcat_item,
-					   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+					   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+					       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
 					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 					   error);
 	if (results == NULL) {
