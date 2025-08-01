@@ -258,7 +258,7 @@ fu_steelseries_fizz_tunnel_setup(FuDevice *device, GError **error)
 	}
 
 	serial = fu_steelseries_fizz_impl_get_serial(FU_STEELSERIES_FIZZ_IMPL(proxy),
-						     FALSE,
+						     TRUE,
 						     &error_local);
 	if (serial != NULL) {
 		fu_device_set_serial(device, serial);

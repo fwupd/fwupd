@@ -19,6 +19,7 @@
 
 struct _FuSteelseriesFizzGen2 {
 	FuSteelseriesDevice parent_instance;
+	guint protocol_revision;
 };
 
 static void
@@ -43,35 +44,30 @@ fu_steelseries_fizz_gen2_response(FuSteelseriesFizzImpl *self, GError **error)
 }
 
 static gchar *
-fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+fu_steelseries_fizz_gen2_get_version2(FuSteelseriesFizzImpl *self,
+				      gboolean tunnel,
+				      GByteArray *buf_res,
+				      GError **error)
 {
 	g_autofree gchar *version_raw = NULL;
-	g_autoptr(FuStructSteelseriesFizzVersion2Req) st_req =
-	    fu_struct_steelseries_fizz_version2_req_new();
-	g_autoptr(FuStructSteelseriesVersion2Res) st_res = NULL;
-	g_autoptr(GByteArray) buf_res = NULL;
+	g_autoptr(FuStructSteelseriesVersion2Res2) st_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
-		return NULL;
-	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
-	if (buf_res == NULL)
-		return NULL;
-
-	st_res = fu_struct_steelseries_version2_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	st_res = fu_struct_steelseries_version2_res2_parse(buf_res->data, buf_res->len, 0x0, error);
 	if (st_res == NULL)
 		return NULL;
+	/* versions of receiver and device are swapped depending how queried */
 	if (tunnel)
-		version_raw = fu_struct_steelseries_version2_res_get_version_device(st_res);
+		version_raw = fu_struct_steelseries_version2_res2_get_version2(st_res);
 	else
-		version_raw = fu_struct_steelseries_version2_res_get_version_receiver(st_res);
+		version_raw = fu_struct_steelseries_version2_res2_get_version1(st_res);
 	if (version_raw == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "version number provided");
+				    "version number not provided");
 		return NULL;
 	}
-	if (strlen(version_raw) != FU_STRUCT_STEELSERIES_VERSION2_RES_SIZE_VERSION_RECEIVER) {
+	if (strlen(version_raw) != FU_STRUCT_STEELSERIES_VERSION2_RES2_SIZE_VERSION1) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -80,7 +76,7 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 		return NULL;
 	}
 
-	/* very interesting version format */
+	/* custom version format */
 	if (version_raw[1] == 0x2E && version_raw[4] == 0x2E && version_raw[8] == 0x2E) {
 		/* format triple */
 		return g_strdup_printf(
@@ -94,6 +90,53 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 	return g_strdup_printf("%u.%u.0",
 			       ((guint32)(version_raw[7] - 0x30) << 4) + (version_raw[8] - 0x30),
 			       ((guint32)(version_raw[10] - 0x30) << 4) + (version_raw[11] - 0x30));
+}
+
+static gchar *
+fu_steelseries_fizz_gen2_get_version3(FuSteelseriesFizzImpl *self,
+				      gboolean tunnel,
+				      GByteArray *buf_res,
+				      GError **error)
+{
+	g_autofree gchar *version_raw = NULL;
+	g_autoptr(FuStructSteelseriesVersion2Res3) st_res = NULL;
+
+	st_res = fu_struct_steelseries_version2_res3_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
+		return NULL;
+	/* versions of receiver and device are swapped depending how queried */
+	if (tunnel)
+		version_raw = fu_struct_steelseries_version2_res3_get_version2(st_res);
+	else
+		version_raw = fu_struct_steelseries_version2_res3_get_version1(st_res);
+	if (version_raw == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "version number not provided");
+		return NULL;
+	}
+	return g_steal_pointer(&version_raw);
+}
+
+static gchar *
+fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+{
+	FuSteelseriesFizzGen2 *device = FU_STEELSERIES_FIZZ_GEN2(self);
+	g_autoptr(FuStructSteelseriesFizzVersion2Req) st_req =
+	    fu_struct_steelseries_fizz_version2_req_new();
+	g_autoptr(GByteArray) buf_res = NULL;
+
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return NULL;
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
+		return NULL;
+
+	if (device->protocol_revision > 2)
+		return fu_steelseries_fizz_gen2_get_version3(self, tunnel, buf_res, error);
+	/* fallback to initial variant */
+	return fu_steelseries_fizz_gen2_get_version2(self, tunnel, buf_res, error);
 }
 
 static gboolean
@@ -205,22 +248,18 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 }
 
 static gchar *
-fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+fu_steelseries_fizz_gen2_get_serial2(FuSteelseriesFizzImpl *self,
+				     gboolean tunnel,
+				     GByteArray *buf_res,
+				     GError **error)
 {
 	g_autofree gchar *serial = NULL;
-	g_autoptr(FuStructSteelseriesSerial2Req) st_req = fu_struct_steelseries_serial2_req_new();
-	g_autoptr(FuStructSteelseriesSerial2Res) st_res = NULL;
-	g_autoptr(GByteArray) buf_res = NULL;
+	g_autoptr(FuStructSteelseriesSerial2Res2) st_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
-		return NULL;
-	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
-	if (buf_res == NULL)
-		return NULL;
-	st_res = fu_struct_steelseries_serial2_res_parse(buf_res->data, buf_res->len, 0x0, error);
+	st_res = fu_struct_steelseries_serial2_res2_parse(buf_res->data, buf_res->len, 0x0, error);
 	if (st_res == NULL)
 		return NULL;
-	serial = fu_struct_steelseries_serial2_res_get_serial(st_res);
+	serial = fu_struct_steelseries_serial2_res2_get_serial(st_res);
 	if (serial == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -229,6 +268,52 @@ fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel
 		return NULL;
 	}
 	return g_steal_pointer(&serial);
+}
+
+static gchar *
+fu_steelseries_fizz_gen2_get_serial3(FuSteelseriesFizzImpl *self,
+				     gboolean tunnel,
+				     GByteArray *buf_res,
+				     GError **error)
+{
+	g_autofree gchar *serial = NULL;
+	g_autoptr(FuStructSteelseriesSerial2Res3) st_res = NULL;
+
+	st_res = fu_struct_steelseries_serial2_res3_parse(buf_res->data, buf_res->len, 0x0, error);
+	if (st_res == NULL)
+		return NULL;
+	/* versions of receiver and device are swapped depending how queried */
+	if (tunnel)
+		serial = fu_struct_steelseries_serial2_res3_get_serial2(st_res);
+	else
+		serial = fu_struct_steelseries_serial2_res3_get_serial1(st_res);
+	if (serial == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no serial number provided");
+		return NULL;
+	}
+	return g_steal_pointer(&serial);
+}
+
+static gchar *
+fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel, GError **error)
+{
+	FuSteelseriesFizzGen2 *device = FU_STEELSERIES_FIZZ_GEN2(self);
+	g_autoptr(FuStructSteelseriesSerial2Req) st_req = fu_struct_steelseries_serial2_req_new();
+	g_autoptr(GByteArray) buf_res = NULL;
+
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+		return NULL;
+	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
+	if (buf_res == NULL)
+		return NULL;
+
+	if (device->protocol_revision > 2)
+		return fu_steelseries_fizz_gen2_get_serial3(self, tunnel, buf_res, error);
+	/* fallback to initial variant */
+	return fu_steelseries_fizz_gen2_get_serial2(self, tunnel, buf_res, error);
 }
 
 static gboolean
@@ -313,6 +398,14 @@ fu_steelseries_fizz_gen2_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 
+	if (g_strcmp0(key, "SteelSeriesFizzProtocolRevision") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+
+		self->protocol_revision = (guint)tmp;
+		return TRUE;
+	}
+
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
 	return FALSE;
 }
@@ -329,5 +422,7 @@ fu_steelseries_fizz_gen2_class_init(FuSteelseriesFizzGen2Class *klass)
 static void
 fu_steelseries_fizz_gen2_init(FuSteelseriesFizzGen2 *self)
 {
+	/* Set the default protocol version */
+	self->protocol_revision = 2;
 	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x05);
 }
