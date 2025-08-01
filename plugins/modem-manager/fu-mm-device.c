@@ -423,50 +423,42 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 	fu_device_set_backend_id(FU_DEVICE(self), mm_object_get_path(omodem));
 
 	/* look for the AT and QMI/MBIM ports */
-	if (!mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get port information");
-		return FALSE;
-	}
-	for (guint i = 0; i < n_used_ports; i++) {
-		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", used_ports[i].name);
-		if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
-			continue;
-		if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
-		    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
-			fu_mm_device_add_port(self,
-					      MM_MODEM_PORT_TYPE_QCDM,
-					      device_file,
-					      FU_MM_DEVICE_PORT_FLAG_NONE);
-		} else {
-			fu_mm_device_add_port(self,
-					      used_ports[i].type,
-					      device_file,
-					      FU_MM_DEVICE_PORT_FLAG_NONE);
+	if (mm_modem_get_ports(modem, &used_ports, &n_used_ports)) {
+		for (guint i = 0; i < n_used_ports; i++) {
+			g_autofree gchar *device_file =
+			    g_strdup_printf("/dev/%s", used_ports[i].name);
+			if (used_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+				continue;
+			if (used_ports[i].type == MM_MODEM_PORT_TYPE_IGNORED &&
+			    g_pattern_match_simple("wwan*qcdm*", used_ports[i].name)) {
+				fu_mm_device_add_port(self,
+						      MM_MODEM_PORT_TYPE_QCDM,
+						      device_file,
+						      FU_MM_DEVICE_PORT_FLAG_NONE);
+			} else {
+				fu_mm_device_add_port(self,
+						      used_ports[i].type,
+						      device_file,
+						      FU_MM_DEVICE_PORT_FLAG_NONE);
+			}
 		}
+		mm_modem_port_info_array_free(used_ports, n_used_ports);
 	}
-	mm_modem_port_info_array_free(used_ports, n_used_ports);
 
 #if MM_CHECK_VERSION(1, 26, 0)
-	if (!mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get ignored port information");
-		return FALSE;
+	if (mm_modem_get_ignored_ports(modem, &ignored_ports, &n_ignored_ports)) {
+		for (guint i = 0; i < n_ignored_ports; i++) {
+			g_autofree gchar *device_file =
+			    g_strdup_printf("/dev/%s", ignored_ports[i].name);
+			if (ignored_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
+				continue;
+			fu_mm_device_add_port(self,
+					      ignored_ports[i].type,
+					      device_file,
+					      FU_MM_DEVICE_PORT_FLAG_MAKE_RAW);
+		}
+		mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 	}
-	for (guint i = 0; i < n_ignored_ports; i++) {
-		g_autofree gchar *device_file = g_strdup_printf("/dev/%s", ignored_ports[i].name);
-		if (ignored_ports[i].type >= MM_MODEM_PORT_TYPE_LAST)
-			continue;
-		fu_mm_device_add_port(self,
-				      ignored_ports[i].type,
-				      device_file,
-				      FU_MM_DEVICE_PORT_FLAG_MAKE_RAW);
-	}
-	mm_modem_port_info_array_free(ignored_ports, n_ignored_ports);
 #endif // MM_CHECK_VERSION(1, 26, 0)
 
 	/* add properties to fwupd device */
