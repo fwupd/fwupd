@@ -1,0 +1,4 @@
+# Egis Fingerprint sensor
+[USB\VID_1C7A&PID_05AE]
+Plugin = egismoc
+Flags = enforce-requires

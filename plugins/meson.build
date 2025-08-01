@@ -45,6 +45,7 @@ plugins = {
   'dell-kestrel': false,
   'dfu': false,
   'ebitdo': false,
+  'egismoc': false,
   'elantp': false,
   'elanfp': false,
   'elan-kbd': false,
