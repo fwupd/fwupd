@@ -469,6 +469,8 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	}
 	fu_device_set_version(device, version);
 
+	/* read serial only for headset, since it is used to discover the same device attached
+	 * directly and via receiver in the same time */
 	if (!fu_device_has_private_flag(device, FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER)) {
 		/* direct connection */
 		serial = fu_steelseries_fizz_impl_get_serial(FU_STEELSERIES_FIZZ_IMPL(proxy),

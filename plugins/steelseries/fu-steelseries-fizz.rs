@@ -228,11 +228,20 @@ struct FuStructSteelseriesFizzVersion2Req {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSteelseriesVersion2Res {
+struct FuStructSteelseriesVersion2Res2 {
     reserved: u8,
-    version_receiver: [char; 12],
+    version1: [char; 12],
     _version_unknown: [char; 12],
-    version_device: [char; 12],
+    version2: [char; 12],
+}
+
+// Starting from protocol revision v.3
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructSteelseriesVersion2Res3 {
+    reserved: u8,
+    version1: [char; 12],
+    version2: [char; 12],
 }
 
 // gen2 only
@@ -272,7 +281,16 @@ struct FuStructSteelseriesSerial2Req {
 
 #[derive(Parse)]
 #[repr(C, packed)]
-struct FuStructSteelseriesSerial2Res {
+struct FuStructSteelseriesSerial2Res2 {
     reserved: u8,
-    serial: [char; 0x12],
+    serial: [char; 0x13],
+}
+
+// Starting from protocol revision v.3
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructSteelseriesSerial2Res3 {
+    reserved: u8,
+    serial1: [char; 0x13],
+    serial2: [char; 0x13],
 }
