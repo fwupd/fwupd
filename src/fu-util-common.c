@@ -1623,6 +1623,10 @@ fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: The plugin is only for testing */
 		return g_strdup(_("Plugin is only for testing"));
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_MUTABLE_ENUMERATION) {
+		/* TRANSLATORS: The plugin enumeration might change the device current mode */
+		return g_strdup(_("Plugin enumeration may change device state"));
+	}
 
 	/* fall back for unknown types */
 	return g_strdup(fwupd_plugin_flag_to_string(plugin_flag));
