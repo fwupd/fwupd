@@ -105,22 +105,6 @@ fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 	intfs = fu_usb_device_get_interfaces(device, error);
 	if (intfs == NULL)
 		return FALSE;
-	/*
-	 * NOTE, this might need fixing or might be okay...
-	 *
-	 * When working with hammer the interface that is targeted is the interface having
-	 * CLASS:FF, SUBCLASS:53, and PROTOCOL:FF (typically interface #1).
-	 *
-	 * Sometimes, while fwupd is parsing the USB descriptor it reads that interface 0 also has
-	 * this mentioned values, so it adds it to the device's interfaces.
-	 *
-	 * A guess here of what is happening; it could be that while the device is in bootloader
-	 * mode, the usb describtor might be intentionally altered for a while, and that could be
-	 * why it matches interface 0 as well. However, this doesn't cause a problem because when
-	 * fwupd tries to claim that interface, it fails either way and uses interface 1 instead.
-	 *
-	 * Might be worth having a look at to make sure whether this is a hammer
-	 * specific behavior, or a fwupd bug. */
 	for (guint i = 0; i < intfs->len; i++) {
 		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
 		if (fu_usb_interface_get_class(intf) == 255 &&
@@ -146,13 +130,13 @@ fu_cros_ec_usb_device_ensure_children(FuCrosEcUsbDevice *self, GError **error)
 {
 	FuDevice *device = FU_DEVICE(self);
 	g_autoptr(FuCrosEcHammerTouchpad) touchpad = NULL;
+
 	if (!fu_device_has_private_flag(device, FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD))
 		return TRUE;
 
-	if (fu_device_has_private_flag(device, FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD)) {
-		touchpad = fu_cros_ec_hammer_touchpad_new(FU_DEVICE(device));
-		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(touchpad));
-	}
+	touchpad = fu_cros_ec_hammer_touchpad_new(FU_DEVICE(device));
+	fu_device_add_child(FU_DEVICE(device), FU_DEVICE(touchpad));
+
 	/* success */
 	return TRUE;
 }
@@ -693,7 +677,6 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 			g_prefix_error(error, "failed to transfer block 0x%x: ", i);
 			return FALSE;
 		}
-		g_warning("(SUCCESS) transferring block: 0x%x ", i);
 		fu_progress_step_done(progress);
 	}
 
@@ -751,7 +734,7 @@ fu_cros_ec_usb_device_send_subcommand(FuCrosEcUsbDevice *self,
 	return TRUE;
 }
 
-static void
+static gboolean
 fu_cros_ec_usb_device_unlock_rw(FuCrosEcUsbDevice *self)
 {
 	guint8 response = 0x0;
@@ -769,9 +752,12 @@ fu_cros_ec_usb_device_unlock_rw(FuCrosEcUsbDevice *self)
 						   &response_size,
 						   FALSE,
 						   &error_local)) {
-		/* failure here is ok */
-		g_warning("unlock rw failed: reset: %s", error_local->message);
+		g_prefix_error("unlock rw failed: %s", error_local->message);
+		return FALSE;
 	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -859,7 +845,6 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 					      FuDevice *tp_device,
 					      GError **error)
 {
-	g_warning("(DEBUG) WRITING TOUCHPAD FIRMWARE");
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	FuCrosEcHammerTouchpad *touchpad = FU_CROS_EC_HAMMER_TOUCHPAD(tp_device);
 	gsize data_len = 0;
@@ -894,8 +879,6 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 	tp_fw_address = fu_cros_ec_hammer_touchpad_get_fw_address(touchpad);
 	tp_fw_size = fu_cros_ec_hammer_touchpad_get_fw_size(touchpad);
 
-	g_warning("(DEBUG) TP FW Start address %u", tp_fw_address);
-	g_warning("(DEBUG) TP FW size %u", tp_fw_size);
 	if (tp_fw_address != (1u << 31)) { // This is for testing safety only, should be removed
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -924,7 +907,6 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, blocks->len);
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
-	g_warning("(DEBUG) TO WRITE %u blocks to touchpad", blocks->len);
 	for (guint i = 0; i < blocks->len; i++) {
 		FuCrosEcUsbBlockHelper helper = {
 		    .block = g_ptr_array_index(blocks, i),
@@ -938,7 +920,6 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 			g_prefix_error(error, "touchpad: failed to transfer block 0x%x: ", i);
 			return FALSE;
 		}
-		g_warning("(SUCCESS) transferring block: 0x%x ", i);
 		fu_progress_step_done(progress);
 	}
 
@@ -953,7 +934,6 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
-	g_warning("(DEBUG) WRITING EC FIRMWARE");
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autoptr(GPtrArray) sections = NULL;
 	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE(firmware);
@@ -1011,8 +991,8 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 	if (!fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) &&
 	    (!self->in_bootloader || (self->flash_protection & (1 << 8)) != 0)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-		fu_cros_ec_usb_device_unlock_rw(self);
-		g_warning("(DEBUG) UNLOCK RW... REBOOTING");
+		if (!fu_cros_ec_usb_device_unlock_rw(self))
+			return FALSE;
 		return TRUE;
 	}
 
@@ -1028,14 +1008,12 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GError) error_local = NULL;
 
-		g_warning("(DEBUG) ATTEMPT WRITE");
 		if (!fu_cros_ec_usb_device_transfer_section(self,
 							    firmware,
 							    section,
 							    fu_progress_get_child(progress),
 							    &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ)) {
-				g_warning("FAILED!!!");
 				g_debug("failed to transfer section, trying another write, "
 					"ignoring error: %s",
 					error_local->message);
@@ -1047,7 +1025,6 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		g_warning("(DEBUG) SUCCESS");
 
 		// TODO: Fix me, section->version.triplet has no data...
 		if (self->in_bootloader) {

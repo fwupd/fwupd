@@ -128,7 +128,6 @@ fu_cros_ec_hammer_touchpad_get_info(FuCrosEcHammerTouchpad *self, GError **error
 			    error_code);
 		return FALSE;
 	}
-	g_warning("(DEBUG) RECEIVED TOUCHPAD INFO");
 
 	priv->vendor = fu_struct_cros_ec_touchpad_get_info_response_pdu_get_vendor(tpi_rpdu);
 	priv->fw_address =
@@ -168,7 +167,7 @@ fu_cros_ec_hammer_touchpad_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
 
 	if (fu_cros_ec_usb_device_get_in_bootloader(proxy)) {
-		g_warning("(DEBUG) IN BOOTLOADER NOW! SKIP...");
+		g_debug("skipping enumeration: ec is in bootloader mode");
 		return TRUE;
 	}
 
