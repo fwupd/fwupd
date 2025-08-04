@@ -1199,7 +1199,6 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
-	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_DEVICE_FLAG_CHILDREN_SET);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD);
 }
 
