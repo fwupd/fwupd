@@ -12,7 +12,6 @@ if [ "$(id -u)" -eq 0 ]; then
     dnf install -y python3
     dnf install -y xvfb-run
     ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
-    dnf install -y https://kojipkgs.fedoraproject.org//packages/msitools/0.106/1.fc42/x86_64/msitools-0.106-1.fc42.x86_64.rpm
 fi
 
 #prep
