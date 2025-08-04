@@ -27,9 +27,6 @@
 #define FU_CROS_EC_REQUEST_UPDATE_DONE	    0xB007AB1E
 #define FU_CROS_EC_REQUEST_UPDATE_EXTRA_CMD 0xB007AB1F
 
-#define FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD "has-touchpad"
-#define FU_CROS_EC_DEVICE_FLAG_CHILDREN_SET "children-set"
-
 struct _FuCrosEcUsbDevice {
 	FuUsbDevice parent_instance;
 	guint8 iface_idx;  /* bInterfaceNumber */
@@ -56,6 +53,7 @@ typedef struct {
 #define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO "rebooting-to-ro"
 #define FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP	   "updating-touchpad"
 #define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL	   "special"
+#define FU_CROS_EC_DEVICE_FLAG_HAS_TOUCHPAD	   "has-touchpad"
 
 gboolean
 fu_cros_ec_usb_device_get_in_bootloader(FuDevice *device)
@@ -870,9 +868,9 @@ fu_cros_ec_usb_device_write_touchpad_firmware(FuDevice *device,
 	fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_UPDATING_TP);
 
 	/*
-         * Probably, can be replaced with the CrosEcUsbDevice's maximum_pdu_size,
+	 * Probably, can be replaced with the CrosEcUsbDevice's maximum_pdu_size,
 	 * but opting for independence here.
-         */
+	 */
 	maximum_pdu_size = fu_struct_cros_ec_first_response_pdu_get_maximum_pdu_size(st_rpdu);
 	img_bytes = fu_firmware_get_bytes(firmware, error);
 	data_ptr = (const guint8 *)g_bytes_get_data(img_bytes, &data_len);
@@ -988,6 +986,18 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		return TRUE;
 	}
 
+	/*
+	 * If it is turn to update RW section, two conditions need
+	 * to be satisfied:
+	 *   1. ec has to be in bootloader mode
+	 *   2. RW Flash protection has to be disabled (enabled by default).
+	 *
+	 * We set another ANOTHER_WRITE_REQUIRED if any of the conditions is not met.
+	 *
+	 * Proceed with unlocking the the RW flash protection and rebooting
+	 * the device, attempting to land in bootloader mode with RW flash
+	 * protection disabled with the next write attempt.
+	 */
 	if (!fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) &&
 	    (!self->in_bootloader || (self->flash_protection & (1 << 8)) != 0)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
