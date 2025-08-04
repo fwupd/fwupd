@@ -116,7 +116,10 @@ fu_mm_mhi_qcdm_device_write_firmware(FuDevice *device,
 
 	/* firehose modems that use mhi_pci drivers require firehose binary
 	 * to be present in the firmware-loader search path. */
-	firehose_prog = fu_firmware_get_image_by_id_bytes(firmware, "firehose-prog.mbn", error);
+	firehose_prog =
+	    fu_firmware_get_image_by_id_bytes(firmware,
+					      "firehose-prog.mbn|prog_nand*.mbn|prog_firehose*",
+					      error);
 	if (firehose_prog == NULL)
 		return FALSE;
 	if (!fu_mm_mhi_qcdm_device_copy_firehose_prog(self, firehose_prog, error))
