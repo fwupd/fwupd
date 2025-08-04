@@ -190,7 +190,7 @@ fu_cros_ec_hammer_touchpad_firmware_validate(FuDevice *device, FuFirmware *firmw
 	gsize fwsize;
 	const guchar *fw = NULL;
 	GChecksum *checksum = NULL;
-	guint8 digest[SHA256_DIGEST_LENGTH];
+	guint8 digest[SHA256_DIGEST_LENGTH] = {0x0};
 	gsize digest_len = sizeof(digest);
 
 	payload = fu_firmware_get_bytes(firmware, error);
