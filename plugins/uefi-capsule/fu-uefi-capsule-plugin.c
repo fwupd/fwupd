@@ -1146,6 +1146,9 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	str = fu_uefi_bgrt_get_supported(self->bgrt) ? "Enabled" : "Disabled";
 	g_info("UX capsule support : %s", str);
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
+	str = bootloader_supports_fwupd ? "True" : "False";
+	g_info("Bootloader supports fwupd: %s", str);
+	fu_plugin_add_report_metadata(plugin, "BootloaderSupportsFwupd", str);
 	fu_progress_step_done(progress);
 
 	return TRUE;
