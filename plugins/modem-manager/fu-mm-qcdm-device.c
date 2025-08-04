@@ -89,28 +89,6 @@ fu_mm_qcdm_device_probe(FuDevice *device, GError **error)
 	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_QCDM, error);
 }
 
-static gboolean
-fu_mm_qcdm_device_prepare(FuDevice *device,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), TRUE);
-	return TRUE;
-}
-
-static gboolean
-fu_mm_qcdm_device_cleanup(FuDevice *device,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), FALSE);
-	return TRUE;
-}
-
 static void
 fu_mm_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -141,7 +119,5 @@ fu_mm_qcdm_device_class_init(FuMmQcdmDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_mm_qcdm_device_probe;
 	device_class->detach = fu_mm_qcdm_device_detach;
-	device_class->prepare = fu_mm_qcdm_device_prepare;
-	device_class->cleanup = fu_mm_qcdm_device_cleanup;
 	device_class->set_progress = fu_mm_qcdm_device_set_progress;
 }
