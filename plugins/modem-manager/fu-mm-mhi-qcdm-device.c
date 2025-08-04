@@ -167,7 +167,6 @@ fu_mm_mhi_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_mm_mhi_qcdm_device_init(FuMmMhiQcdmDevice *self)
 {
-	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_protocol(FU_UDEV_DEVICE(self), "com.qualcomm.firehose");
