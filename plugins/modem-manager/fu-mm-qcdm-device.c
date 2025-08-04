@@ -131,6 +131,7 @@ fu_mm_qcdm_device_init(FuMmQcdmDevice *self)
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       "USB\\VID_05C6&PID_9008",
 				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
+	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_device_add_protocol(FU_UDEV_DEVICE(self), "com.qualcomm.firehose");
 }
 
