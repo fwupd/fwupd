@@ -733,14 +733,13 @@ fu_cros_ec_usb_device_send_subcommand(FuCrosEcUsbDevice *self,
 }
 
 static gboolean
-fu_cros_ec_usb_device_unlock_rw(FuCrosEcUsbDevice *self)
+fu_cros_ec_usb_device_unlock_rw(FuCrosEcUsbDevice *self, GError **error)
 {
 	guint8 response = 0x0;
 	guint16 subcommand = FU_CROS_EC_UPDATE_EXTRA_CMD_UNLOCK_RW;
 	guint8 command_body[2] = {0x0}; /* max command body size */
 	gsize command_body_size = 0;
 	gsize response_size = 1;
-	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_cros_ec_usb_device_send_subcommand(self,
 						   subcommand,
@@ -749,8 +748,8 @@ fu_cros_ec_usb_device_unlock_rw(FuCrosEcUsbDevice *self)
 						   &response,
 						   &response_size,
 						   FALSE,
-						   &error_local)) {
-		g_prefix_error("unlock rw failed: %s", error_local->message);
+						   error)) {
+		g_prefix_error(error, "unlock rw failed:");
 		return FALSE;
 	}
 
@@ -1001,7 +1000,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 	if (!fu_device_has_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) &&
 	    (!self->in_bootloader || (self->flash_protection & (1 << 8)) != 0)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-		if (!fu_cros_ec_usb_device_unlock_rw(self))
+		if (!fu_cros_ec_usb_device_unlock_rw(self, error))
 			return FALSE;
 		return TRUE;
 	}

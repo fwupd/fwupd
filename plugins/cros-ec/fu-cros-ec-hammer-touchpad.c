@@ -287,8 +287,8 @@ fu_cros_ec_hammer_touchpad_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuCrosEcHammerTouchpad *self = FU_CROS_EC_HAMMER_TOUCHPAD(device);
-	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(device);
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuCrosEcHammerTouchpadPrivate *priv = GET_PRIVATE(self);
+	FuDevice *parent = fu_device_get_parent(device);
 
 	/*
 	 * Update is done through the parent device (the EC base),
