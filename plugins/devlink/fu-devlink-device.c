@@ -208,6 +208,7 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 	    .component_name = component_name,
 	    .filename = filename,
 	    .loop = loop,
+	    .error = error,
 	};
 	guint watch_id;
 	gint fd;
