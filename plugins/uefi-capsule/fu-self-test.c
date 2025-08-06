@@ -316,6 +316,11 @@ fu_uefi_plugin_no_coalesce_func(void)
 	/* set up at least one HWID */
 	fu_config_set_default(fu_context_get_config(ctx), "fwupd", "Manufacturer", "fwupd");
 
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
@@ -328,11 +333,6 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-
-	/* do not save silo */
-	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -395,6 +395,11 @@ fu_uefi_plugin_no_flashes_func(void)
 
 	/* override ESP */
 	fu_context_add_esp_volume(ctx, esp);
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
@@ -490,6 +495,11 @@ fu_uefi_plugin_nvram_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_efivars_build_boot_order(fu_context_get_efivars(ctx), &error, 0x0000, G_MAXUINT16);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -649,6 +659,11 @@ fu_uefi_plugin_cod_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* load dummy hwids */
 	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
 	g_assert_no_error(error);
@@ -744,6 +759,11 @@ fu_uefi_plugin_grub_func(void)
 
 	/* set up system so that secure boot is on */
 	ret = fu_efivars_set_secure_boot(fu_context_get_efivars(ctx), TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
