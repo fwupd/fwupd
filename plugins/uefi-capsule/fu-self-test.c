@@ -381,6 +381,80 @@ fu_uefi_plugin_no_coalesce_func(void)
 }
 
 static void
+fu_uefi_plugin_setup_indications(FuContext *ctx, guint64 indications)
+{
+	FuEfivars *efivars = fu_context_get_efivars(ctx);
+	gboolean ret;
+	guint8 buf[8] = {0};
+	g_autoptr(GError) error = NULL;
+
+	fu_memwrite_uint64(buf, indications, G_LITTLE_ENDIAN);
+	ret = fu_efivars_set_data(efivars,
+				  FU_EFIVARS_GUID_EFI_GLOBAL,
+				  "OsIndicationsSupported",
+				  buf,
+				  sizeof(buf),
+				  0x0,
+				  &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_uefi_plugin_no_cod_func(void)
+{
+	FuBackend *backend;
+	GType device_gtype;
+	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuPlugin) plugin = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
+	g_autoptr(GError) error = NULL;
+
+#ifndef __linux__
+	g_test_skip("ESRT data is mocked only on Linux");
+	return;
+#endif
+
+	/* the firmware supports CoD */
+	fu_uefi_plugin_setup_indications(ctx, EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED);
+
+	/* override ESP */
+	fu_context_add_esp_volume(ctx, esp);
+
+	/* set up at least one HWID */
+	fu_config_set_default(fu_context_get_config(ctx), "fwupd", "Manufacturer", "fwupd");
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* load dummy hwids */
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* create plugin, and ->startup then ->coldplug */
+	plugin =
+	    g_object_new(FU_TYPE_UEFI_CAPSULE_PLUGIN, "context", ctx, "name", "uefi_capsule", NULL);
+	ret = fu_plugin_runner_startup(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_coldplug(plugin, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* backend devices should be NVRAM, not CoD */
+	backend = fu_uefi_capsule_plugin_get_backend(FU_UEFI_CAPSULE_PLUGIN(plugin));
+	g_assert_nonnull(backend);
+	g_assert_true(FU_IS_UEFI_CAPSULE_BACKEND(backend));
+	device_gtype = fu_uefi_capsule_backend_get_device_gtype(FU_UEFI_CAPSULE_BACKEND(backend));
+	g_assert_cmpint(device_gtype, ==, FU_TYPE_UEFI_NVRAM_DEVICE);
+}
+
+static void
 fu_uefi_plugin_no_flashes_func(void)
 {
 	gboolean ret;
@@ -970,6 +1044,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi/plugin{no-flashes-left}", fu_uefi_plugin_no_flashes_func);
 	g_test_add_func("/uefi/plugin{nvram}", fu_uefi_plugin_nvram_func);
 	g_test_add_func("/uefi/plugin{cod}", fu_uefi_plugin_cod_func);
+	g_test_add_func("/uefi/plugin{no-cod}", fu_uefi_plugin_no_cod_func);
 	g_test_add_func("/uefi/plugin{grub}", fu_uefi_plugin_grub_func);
 	return g_test_run();
 }

@@ -186,6 +186,12 @@ If this flag is set then the `RequireESPFreeSpace` config file option is ignored
 
 Since: 2.0.7
 
+### `Flags=no-capsule-on-disk`
+
+Do not use Capsule-on-Disk support even if `OsIndicationsSupported` says it should be used.
+
+Since: 2.0.14
+
 ## External Interface Access
 
 This plugin requires:

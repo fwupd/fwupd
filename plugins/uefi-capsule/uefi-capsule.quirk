@@ -18,6 +18,56 @@ Flags = uefi-force-enable
 [6de5d951-d755-576b-bd09-c5cf66b27234]
 Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-closed,modify-bootorder
 
+# Lenovo ThinkStation P5
+[04438294-462d-5010-8761-5466e1e5f6c1]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P7
+[72de847f-43d5-59fc-832a-d9b829b59bfc]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation PX
+[ec21890e-61c9-5827-ab8b-0ec6f5aef57f]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P620
+[f34d76b0-884a-55ff-837c-66284d290ebc]
+Flags = no-capsule-on-disk
+[958b05d4-211e-57ae-8a54-e9514a9f8a27]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P3 Ultra G2
+[41a50049-0de1-5f50-b2c4-31286499b526]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P8
+[94ac1885-3df4-5720-86b3-3018c8083b68]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P358
+[4196c391-d492-51a1-af54-f731ec88490e]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P3Tiny
+[33841716-92b3-5240-8545-5f522847c9f5]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P360 Ultra
+[c215a1ff-e168-5bc8-be70-e306a82f5183]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P3 Ultra
+[8742804b-1183-5616-9758-3b721dd97ad8]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P360Tiny
+[55db0253-c51a-527d-a7ec-6a8fd1bd07eb]
+Flags = no-capsule-on-disk
+
+# Lenovo ThinkStation P360TWR
+[518479dc-8767-510b-a103-8baaa51a81e1]
+Flags = no-capsule-on-disk
+
 # Intel CSME reference value
 [23192307-d667-4bdf-af1a-6059db171246]
 Flags = ~md-set-vendor
