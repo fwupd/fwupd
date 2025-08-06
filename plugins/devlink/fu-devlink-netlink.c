@@ -6,13 +6,9 @@
 
 #include "config.h"
 
-#include <complex.h>
-#include <errno.h>
 #include <libmnl/libmnl.h>
 #include <linux/genetlink.h>
 #include <linux/netlink.h>
-#include <string.h>
-#include <time.h>
 
 #include "fu-devlink-netlink.h"
 

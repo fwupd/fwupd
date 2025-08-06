@@ -6,10 +6,7 @@
 
 #include "config.h"
 
-#include <errno.h>
 #include <gio/gio.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #include "fu-devlink-backend.h"
 #include "fu-devlink-device.h"
