@@ -34,6 +34,7 @@ G_DEFINE_TYPE(FuDevlinkDevice, fu_devlink_device, FU_TYPE_DEVICE)
 typedef struct {
 	FuProgress *progress;
 	FuDevlinkDevice *self;
+	FuDevlinkGenSocket *nlg;
 } FuDevlinkFlashMonHelper;
 
 /* flash send context for thread */
@@ -169,7 +170,7 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 
 	/* read netlink message via GIOChannel */
 	status = g_io_channel_read_chars(channel,
-					 fu_devlink_netlink_gen_socket_get_buf(helper->self->nlg),
+					 fu_devlink_netlink_gen_socket_get_buf(helper->nlg),
 					 FU_DEVLINK_NETLINK_BUF_SIZE,
 					 &len,
 					 &error);
@@ -180,7 +181,7 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 	}
 
 	/* process netlink messages */
-	if (!fu_devlink_netlink_msg_run(helper->self->nlg,
+	if (!fu_devlink_netlink_msg_run(helper->nlg,
 					len,
 					0,
 					fu_devlink_device_flash_mon_cb,
@@ -225,6 +226,7 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 	if (!fu_devlink_netlink_mcast_group_subscribe(nlg, error))
 		return FALSE;
 
+	flash_mon_ctx.nlg = nlg;
 	/* setup netlink channel and watch */
 	fd = fu_devlink_netlink_gen_socket_get_fd(nlg);
 	channel = g_io_channel_unix_new(fd);
