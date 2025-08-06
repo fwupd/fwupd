@@ -8,13 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#include <complex.h>
 #include <glib/gstdio.h>
-#include <linux/devlink.h>
-#include <linux/netlink.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #include "fu-devlink-component.h"
 #include "fu-devlink-device.h"
