@@ -56,6 +56,10 @@ enum FuUsiDockMcuCmd {
     FwUpdate = 0x0B,
     FwTargetChecksum = 0x0C,
     FwIspEnd = 0x0D,
+    SetPhase2Disconnect = 0x12,
+    SetPhase2Delay = 0x13,
+    SetPhase2Timeout = 0x14,
+    GetPhase2Parameter = 0x15,
     All = 0xFF,
 }
 
