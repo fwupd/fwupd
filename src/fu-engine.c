@@ -2755,9 +2755,23 @@ fu_engine_get_plugin_by_name(FuEngine *self, const gchar *name, GError **error)
 gboolean
 fu_engine_emulation_load(FuEngine *self, GInputStream *stream, GError **error)
 {
+	gsize streamsz = 0;
+
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (streamsz > fu_common_get_memory_size() / 10) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "skipping large emulation due to memory constraint");
+		return FALSE;
+	}
+
 	return fu_engine_emulator_load(self->emulation, stream, error);
 }
 

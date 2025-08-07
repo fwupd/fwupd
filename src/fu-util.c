@@ -953,6 +953,7 @@ fu_util_device_test_step(FuUtil *self,
 	if (helper->use_emulation) {
 		g_autofree gchar *emulation_filename = NULL;
 		g_autofree gchar *emulation_url = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* just ignore anything without emulation data */
 		if (json_object_has_member(json_obj, "emulation-url")) {
@@ -985,8 +986,16 @@ fu_util_device_test_step(FuUtil *self,
 		if (!fwupd_client_emulation_load(self->client,
 						 emulation_filename,
 						 self->cancellable,
-						 error)) {
-			g_prefix_error(error, "failed to load %s: ", emulation_filename);
+						 &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug("ignoring: %s", error_local->message);
+				helper->nr_skipped++;
+				return TRUE;
+			}
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to load %s: ",
+						   emulation_filename);
 			return FALSE;
 		}
 	}
