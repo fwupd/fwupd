@@ -19,6 +19,7 @@ struct FuStructSelfTest {
     oem_revision: u32le,
     asl_compiler_id: [u8; 4] =	0xDF,
     asl_compiler_revision: u32le,
+    reserved: [u8; 8] == [0xFF; 8],
 }
 
 #[derive(New, Validate, Parse, ToString)]
