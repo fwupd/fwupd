@@ -249,9 +249,6 @@
     <distro id="arch">
       <package variant="x86_64">libftdi</package>
     </distro>
-    <distro id="centos">
-      <package variant="x86_64">libftdi-devel</package>
-    </distro>
     <distro id="fedora">
       <package variant="x86_64">libftdi-devel</package>
       <package variant="aarch64">libftdi-devel</package>
@@ -476,6 +473,9 @@
     <distro id="fedora">
       <package variant="x86_64">flashrom-devel</package>
       <package variant="aarch64">flashrom-devel</package>
+    </distro>
+    <distro id="centos">
+      <package variant="x86_64">flashrom-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -969,11 +969,6 @@
       <package variant="x86_64">passim</package>
     </distro>
   </dependency>
-  <dependency id="libstemmer-0">
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency id="libumockdev-dev">
     <control />
     <distro id="debian">
@@ -1262,9 +1257,6 @@
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
-    </distro>
     <distro id="fedora">
       <package variant="x86_64" />
       <package variant="aarch64" />
@@ -1416,9 +1408,6 @@
       <control />
       <package variant="x86_64" />
       <package variant="i386" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64" />
@@ -1774,9 +1763,6 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64" />
     </distro>
     <distro id="fedora">
       <package variant="x86_64">ShellCheck</package>
