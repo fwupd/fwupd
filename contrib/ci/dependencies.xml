@@ -864,6 +864,9 @@
       <package variant="x86_64">libcbor-devel</package>
       <package variant="aarch64">libcbor-devel</package>
     </distro>
+    <distro id="centos">
+      <package variant="x86_64">libcbor-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
