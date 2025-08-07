@@ -13,3 +13,5 @@ plugin_builtins += static_library('fu_plugin_framework_qmk',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+enumeration_data += files('tests/framework16-macropad-setup.json')
+device_tests += files('tests/framework-qmk.json')
