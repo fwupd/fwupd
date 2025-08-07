@@ -249,7 +249,6 @@ fu_ch341a_device_init(FuCh341aDevice *self)
 	self->speed = FU_CH341A_STM_I2C_SPEED_STANDARD;
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);
 	fu_device_set_name(FU_DEVICE(self), "CH341A");
-	fu_device_set_vendor(FU_DEVICE(self), "WinChipHead");
 }
 
 static void

@@ -445,7 +445,6 @@ fu_goodix_moc_device_init(FuGoodixMocDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.goodix.goodixmoc");
 	fu_device_set_name(FU_DEVICE(self), "Fingerprint Sensor");
 	fu_device_set_summary(FU_DEVICE(self), "Match-On-Chip fingerprint sensor");
-	fu_device_set_vendor(FU_DEVICE(self), "Goodix");
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x20000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x30000);

@@ -61,7 +61,7 @@ fu_cpu_device_convert_vendor(const gchar *vendor)
 	if (g_strcmp0(vendor, "GenuineIntel") == 0)
 		return "Intel";
 	if (g_strcmp0(vendor, "AuthenticAMD") == 0 || g_strcmp0(vendor, "AMDisbetter!") == 0)
-		return "Advanced Micro Devices, Inc.";
+		return "AMD";
 	if (g_strcmp0(vendor, "CentaurHauls") == 0)
 		return "IDT";
 	if (g_strcmp0(vendor, "CyrixInstead") == 0)

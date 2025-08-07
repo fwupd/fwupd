@@ -3160,6 +3160,11 @@ fu_device_fixup_vendor_name(FuDevice *self)
  *
  * Sets the vendor name on the device.
  *
+ * NOTE: The vendor is frequently used as a prefix to the device name in front-end tools, and so
+ * @vendor should be as short as possible.
+ * This should also be the "nice name" the user is familiar with and should not be the legal name,
+ * for example use `AMD` not `Advanced Micro Devices, Inc.`.
+ *
  * Since: 1.6.2
  **/
 void

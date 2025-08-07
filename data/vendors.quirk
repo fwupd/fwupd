@@ -1,0 +1,57 @@
+# use this file when usb.ids is insufficient to map the ID to a nice name
+
+[USB\VID_03F0]
+Vendor = HP
+[USB\VID_045E]
+Vendor = Microsoft
+[USB\VID_046D]
+Vendor = Logitech
+[USB\VID_04F2]
+Vendor = Chicony
+[USB\VID_04F3]
+Vendor = Elan
+[USB\VID_06CB]
+Vendor = Synaptics
+[USB\VID_10AB]
+Vendor = USI
+[USB\VID_273F]
+Vendor = Hughski
+[USB\VID_27C6]
+Vendor = Goodix
+[USB\VID_32AC]
+Vendor = Framework
+[USB\VID_8087]
+Vendor = Intel
+
+[PCI\VEN_1002]
+Vendor = AMD
+[PCI\VEN_1022]
+Vendor = AMD
+[PCI\VEN_106B]
+Vendor = Apple
+[PCI\VEN_10EC]
+Vendor = Realtek
+[PCI\VEN_1179]
+Vendor = Toshiba
+[PCI\VEN_1344]
+Vendor = Micron
+[PCI\VEN_15B7]
+Vendor = Sandisk
+[PCI\VEN_144D]
+Vendor = Samsung
+[PCI\VEN_15B7]
+Vendor = Sandisk
+[PCI\VEN_17CB]
+Vendor = Qualcomm
+[PCI\VEN_1987]
+Vendor = Phison
+[PCI\VEN_1D97]
+Vendor = Lexar
+[PCI\VEN_1E0F]
+Vendor = KIOXIA
+[PCI\VEN_1E4B]
+Vendor = MAXIO
+[PCI\VEN_2646]
+Vendor = Kingston
+[PCI\VEN_8086]
+Vendor = Intel

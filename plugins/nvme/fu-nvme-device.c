@@ -327,10 +327,6 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	if (!fu_nvme_device_pci_probe(self, error))
 		return FALSE;
 
-	/* fix up vendor name so we can remove it from the product name */
-	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
-		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
-
 	/* look at the PCI depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_subsystem_depth(FU_UDEV_DEVICE(device), "pci");
 	if (self->pci_depth <= 2) {

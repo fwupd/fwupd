@@ -10,7 +10,6 @@ FirmwareSizeMax = 0x40000
 [USB\VID_17EF&PID_30BF]
 Plugin = rts54hub
 GType = FuRts54hubDevice
-Vendor = Lenovo
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
 Children = FuRts54hubRtd21xxForeground|USB\VID_17EF&PID_30BF&I2C_01

@@ -110,55 +110,6 @@ fu_tpm_v2_device_get_string(FuTpmV2Device *self, guint32 query, GError **error)
 	return fu_strstrip(result);
 }
 
-/* taken from TCG-TPM-Vendor-ID-Registry-Version-1.01-Revision-1.00.pdf */
-static const gchar *
-fu_tpm_v2_device_convert_manufacturer(const gchar *manufacturer)
-{
-	if (g_strcmp0(manufacturer, "AMD") == 0)
-		return "Advanced Micro Devices, Inc.";
-	if (g_strcmp0(manufacturer, "ATML") == 0)
-		return "Atmel";
-	if (g_strcmp0(manufacturer, "BRCM") == 0)
-		return "Broadcom";
-	if (g_strcmp0(manufacturer, "HPE") == 0)
-		return "HPE";
-	if (g_strcmp0(manufacturer, "IBM") == 0)
-		return "IBM";
-	if (g_strcmp0(manufacturer, "IFX") == 0)
-		return "Infineon";
-	if (g_strcmp0(manufacturer, "INTC") == 0)
-		return "Intel";
-	if (g_strcmp0(manufacturer, "LEN") == 0)
-		return "Lenovo";
-	if (g_strcmp0(manufacturer, "MSFT") == 0)
-		return "Microsoft";
-	if (g_strcmp0(manufacturer, "NSM") == 0)
-		return "National Semiconductor";
-	if (g_strcmp0(manufacturer, "NTZ") == 0)
-		return "Nationz";
-	if (g_strcmp0(manufacturer, "NTC") == 0)
-		return "Nuvoton Technology";
-	if (g_strcmp0(manufacturer, "QCOM") == 0)
-		return "Qualcomm";
-	if (g_strcmp0(manufacturer, "SMSC") == 0)
-		return "SMSC";
-	if (g_strcmp0(manufacturer, "STM") == 0)
-		return "ST Microelectronics";
-	if (g_strcmp0(manufacturer, "SMSN") == 0)
-		return "Samsung";
-	if (g_strcmp0(manufacturer, "SNS") == 0)
-		return "Sinosun";
-	if (g_strcmp0(manufacturer, "TXN") == 0)
-		return "Texas Instruments";
-	if (g_strcmp0(manufacturer, "WEC") == 0)
-		return "Winbond";
-	if (g_strcmp0(manufacturer, "ROCC") == 0)
-		return "Fuzhou Rockchip";
-	if (g_strcmp0(manufacturer, "GOOG") == 0)
-		return "Google";
-	return NULL;
-}
-
 static gboolean
 fu_tpm_v2_device_setup_pcrs(FuTpmV2Device *self, GError **error)
 {
@@ -290,7 +241,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 {
 	FuTpmV2Device *self = FU_TPM_V2_DEVICE(device);
 	TSS2_RC rc;
-	const gchar *tmp;
 	guint32 tpm_type = 0;
 	guint32 version1 = 0;
 	guint32 version2 = 0;
@@ -349,6 +299,12 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	fu_device_add_instance_u16(device, "DEV", tpm_type);
 	fu_device_add_instance_str(device, "MOD", model);
 	fu_device_add_instance_str(device, "VER", family);
+	fu_device_build_instance_id_full(device,
+					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					 NULL,
+					 "TPM",
+					 "VEN",
+					 NULL);
 	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "DEV", NULL);
 	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "MOD", NULL);
 	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "DEV", "VER", NULL);
@@ -356,8 +312,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 
 	/* enforce vendors can only ship updates for their own hardware */
 	fu_device_build_vendor_id(device, "TPM", manufacturer);
-	tmp = fu_tpm_v2_device_convert_manufacturer(manufacturer);
-	fu_device_set_vendor(device, tmp != NULL ? tmp : manufacturer);
 
 	/* get version */
 	if (!fu_tpm_v2_device_get_uint32(self, TPM2_PT_FIRMWARE_VERSION_1, &version1, error))
