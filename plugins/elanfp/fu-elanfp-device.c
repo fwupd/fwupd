@@ -437,7 +437,6 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elanfp");
 	fu_device_set_name(FU_DEVICE(self), "Fingerprint Sensor");
 	fu_device_set_summary(FU_DEVICE(self), "Match-On-Chip Fingerprint Sensor");
-	fu_device_set_vendor(FU_DEVICE(self), "Elan");
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x20000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);

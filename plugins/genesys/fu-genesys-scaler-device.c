@@ -1897,7 +1897,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 static void
 fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 {
-	fu_device_set_vendor(FU_DEVICE(self), "MStar Semiconductor");
+	fu_device_set_vendor(FU_DEVICE(self), "MStar");
 	fu_device_set_name(FU_DEVICE(self), "TSUMG");
 	fu_device_add_protocol(FU_DEVICE(self), "com.mstarsemi.scaler");
 	fu_device_retry_set_delay(FU_DEVICE(self), 10); /* 10ms */

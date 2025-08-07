@@ -816,7 +816,6 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_GENERIC_GUIDS);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
-	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "PCI", 0x10EC);
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort MST hub");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);

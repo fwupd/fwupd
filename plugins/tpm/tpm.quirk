@@ -1,2 +1,46 @@
 [TPM\VEN_MSFT&MOD_Pluton.TPM.A]
 Flags = host-cpu-child
+
+# taken from TCG-TPM-Vendor-ID-Registry-Version-1.01-Revision-1.00.pdf
+[TPM\VEN_AMD]
+Vendor = AMD
+[TPM\VEN_ATML]
+Vendor = Atmel
+[TPM\VEN_BRCM]
+Vendor = Broadcom
+[TPM\VEN_HPE]
+Vendor = HPE
+[TPM\VEN_IBM]
+Vendor = IBM
+[TPM\VEN_IFX]
+Vendor = Infineon
+[TPM\VEN_INTC]
+Vendor = Intel
+[TPM\VEN_LEN]
+Vendor = Lenovo
+[TPM\VEN_MSFT]
+Vendor = Microsoft
+[TPM\VEN_NSM]
+Vendor = National Semiconductor
+[TPM\VEN_NTZ]
+Vendor = Nationz
+[TPM\VEN_NTC]
+Vendor = Nuvoton Technology
+[TPM\VEN_QCOM]
+Vendor = Qualcomm
+[TPM\VEN_SMSC]
+Vendor = SMSC
+[TPM\VEN_STM]
+Vendor = ST Microelectronics
+[TPM\VEN_SMSN]
+Vendor = Samsung
+[TPM\VEN_SNS]
+Vendor = Sinosun
+[TPM\VEN_TXN]
+Vendor = Texas Instruments
+[TPM\VEN_WEC]
+Vendor = Winbond
+[TPM\VEN_ROCC]
+Vendor = Fuzhou Rockchip
+[TPM\VEN_GOOG]
+Vendor = Google

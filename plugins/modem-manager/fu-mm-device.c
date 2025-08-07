@@ -479,10 +479,6 @@ fu_mm_device_probe_from_omodem(FuMmDevice *self, MMObject *omodem, GError **erro
 			return FALSE;
 	}
 
-	/* fix up vendor name */
-	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "QUALCOMM INCORPORATED") == 0)
-		fu_device_set_vendor(FU_DEVICE(self), "Qualcomm");
-
 	/* success */
 	return TRUE;
 }

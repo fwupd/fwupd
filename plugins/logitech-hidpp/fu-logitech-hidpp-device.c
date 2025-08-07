@@ -1989,7 +1989,6 @@ fu_logitech_hidpp_device_init(FuLogitechHidppDevice *self)
 	fu_device_set_vid(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_VID);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
-	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);

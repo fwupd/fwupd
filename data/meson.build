@@ -34,6 +34,7 @@ if build_standalone
     'ds20.quirk',
     'power.quirk',
     'cfi.quirk',
+    'vendors.quirk',
   ])
 endif
 

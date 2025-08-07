@@ -297,7 +297,6 @@ fu_ch347_device_init(FuCh347Device *self)
 	self->divisor = 0b10;
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_CH347_MODE1_IFACE);
 	fu_device_set_name(FU_DEVICE(self), "CH347");
-	fu_device_set_vendor(FU_DEVICE(self), "WinChipHead");
 }
 
 static void
