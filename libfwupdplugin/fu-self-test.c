@@ -6776,7 +6776,7 @@ fu_plugin_struct_func(void)
 	g_autofree gchar *oem_table_id = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 51);
+	g_assert_cmpint(st->len, ==, 59);
 
 	/* getters and setters */
 	fu_struct_self_test_set_revision(st, 0xFF);
@@ -6792,7 +6792,7 @@ fu_plugin_struct_func(void)
 	g_assert_cmpstr(str1,
 			==,
 			"12345678adde0000ff000000000000000000000000000000004142434445465800000000"
-			"00000000000000dfdfdfdf00000000");
+			"00000000000000dfdfdfdf00000000ffffffffffffffff");
 
 	/* parse */
 	st2 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
@@ -6842,7 +6842,7 @@ fu_plugin_struct_wrapped_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 53);
+	g_assert_cmpint(st->len, ==, 61);
 
 	/* getters and setters */
 	fu_struct_self_test_wrapped_set_less(st, 0x99);
@@ -6851,8 +6851,8 @@ fu_plugin_struct_wrapped_func(void)
 	str1 = fu_byte_array_to_string(st);
 	g_assert_cmpstr(str1,
 			==,
-			"991234567833000000000000000000000000000000000000000041424344454600000000"
-			"0000000000000000dfdfdfdf0000000012");
+			"99123456783b000000000000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf00000000ffffffffffffffff12");
 
 	/* modify the base */
 	fu_struct_self_test_set_revision(st_base, 0xFE);
@@ -6862,8 +6862,8 @@ fu_plugin_struct_wrapped_func(void)
 	str4 = fu_byte_array_to_string(st);
 	g_assert_cmpstr(str4,
 			==,
-			"991234567833000000fe0000000000000000000000000000000041424344454600000000"
-			"0000000000000000dfdfdfdf0000000012");
+			"99123456783b000000fe0000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf00000000ffffffffffffffff12");
 
 	/* parse */
 	st2 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
@@ -6881,7 +6881,7 @@ fu_plugin_struct_wrapped_func(void)
 			"FuStructSelfTestWrapped:\n"
 			"  less: 0x99\n"
 			"  base: FuStructSelfTest:\n"
-			"  length: 0x33\n"
+			"  length: 0x3b\n"
 			"  revision: 0xfe\n"
 			"  owner: 00000000-0000-0000-0000-000000000000\n"
 			"  oem_revision: 0x0\n"
