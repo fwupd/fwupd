@@ -1487,3 +1487,7 @@ FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id);
 FuDeviceEvent *
 fu_device_load_event(FuDevice *self, const gchar *id, GError **error);
+void
+fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
+GPtrArray *
+fu_device_get_events(FuDevice *self);
