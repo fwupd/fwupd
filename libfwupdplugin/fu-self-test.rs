@@ -17,7 +17,7 @@ struct FuStructSelfTest {
     oem_id: [char; 6] == "ABCDEF",
     oem_table_id: [char; 8],
     oem_revision: u32le,
-    asl_compiler_id: [u8; 4] =	0xDF,
+    asl_compiler_id: [u8; 4] =	[0xDF; 4],
     asl_compiler_revision: u32le,
     reserved: [u8; 8] == [0xFF; 8],
 }
