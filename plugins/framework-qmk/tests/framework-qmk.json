@@ -11,6 +11,16 @@
           ]
         }
       ]
+    },
+    {
+      "emulation-file": "@enumeration_datadir@/framework16-ansi-setup.json",
+      "components": [
+        {
+          "guids": [
+            "bf9a4319-494f-5c88-9637-72f97222cac9"
+          ]
+        }
+      ]
     }
   ]
 }
