@@ -491,14 +491,6 @@ class StructItem:
         raise ValueError(f"do not know how to parse value for type: {self.type}")
 
     def parse_default(self, val: str) -> None:
-        if (
-            self.type == Type.U8
-            and self.n_elements
-            and val.startswith("0x")
-            and len(val) == 4
-        ):
-            self.padding = val
-            return
         self.default = self._parse_default(val)
 
     def parse_constant(self, val: str) -> None:

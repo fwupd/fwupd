@@ -19,8 +19,8 @@ struct FuStructDellKestrelHidCmdBuffer {
     dwregaddr: u32le,
     bufferlen: u16le,
     parameters: [u8; 3] = 0xEC0180, // addr, length, speed
-    extended_cmdarea: [u8; 53] = 0x00,
-    databytes: [u8; 192] = 0x00,
+    extended_cmdarea: [u8; 53],
+    databytes: [u8; 192],
 }
 
 #[derive(New, Setters)]
