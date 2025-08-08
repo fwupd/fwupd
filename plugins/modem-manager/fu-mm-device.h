@@ -17,6 +17,8 @@ G_DECLARE_DERIVABLE_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuUdevDevice)
 
 #define FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW "make-serial-raw"
 
+#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE 210000
+
 /* less ifdefs */
 #if !MM_CHECK_VERSION(1, 24, 0)
 #define MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA	      (1 << 5)
