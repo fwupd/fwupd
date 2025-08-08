@@ -76,7 +76,8 @@ fwupd = library(
   include_directories: root_incdir,
   link_args: cc.get_supported_link_arguments([vflag]),
   link_depends: fwupd_mapfile,
-  install: true
+  install: true,
+  install_tag: 'lib',
 )
 
 libfwupd_dep = declare_dependency(
