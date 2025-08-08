@@ -461,7 +461,7 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 
 	/* initialize structure with properly aligned buffer */
 	nlg->buf = g_malloc0(FU_DEVLINK_NETLINK_BUF_SIZE);
-	nlg->device = device;
+	nlg->device = g_object_ref(device);
 
 	/* skip actual socket operations if emulated */
 	if (device != NULL && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
@@ -546,6 +546,8 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 	if (nlg->pipe_fds[1] != 0)
 		g_close(nlg->pipe_fds[1], NULL);
 	g_free(nlg->buf);
+	if (nlg->device != NULL)
+		g_object_unref(nlg->device);
 	g_free(nlg);
 }
 
