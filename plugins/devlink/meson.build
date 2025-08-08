@@ -5,7 +5,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginDevlink"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 enumeration_data += files(
-  'tests/devlink-netdevsim-emulation.json',
+  'tests/devlink-netdevsim-setup.json',
 )
 
 device_tests += files(
@@ -35,31 +35,6 @@ plugin_builtin_devlink = static_library('fu_plugin_devlink',
 plugin_builtins += plugin_builtin_devlink
 
 if get_option('tests')
-  # generate test firmware.bin file
-  test_firmware_bin = custom_target('devlink-netdevsim-firmware-bin',
-    output: 'firmware.bin',
-    command: [
-      'sh', '-c', 'echo -n "hello world" > @OUTPUT@'
-    ],
-    build_by_default: true,
-  )
-
-  # build cabinet file for device tests
-  test_firmware_cab = custom_target('devlink-netdevsim-firmware-cab',
-    input: [
-      test_firmware_bin,
-      files('tests/firmware.metainfo.xml'),
-    ],
-    output: 'devlink-netdevsim-firmware.cab',
-    command: [
-      gcab, '--create', '@OUTPUT@', '@INPUT@',
-    ],
-    depends: test_firmware_bin,
-    install: true,
-    install_dir: join_paths(installed_test_datadir, 'enumeration-data'),
-    build_by_default: true,
-  )
-
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
