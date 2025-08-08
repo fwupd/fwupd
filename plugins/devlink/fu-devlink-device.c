@@ -564,6 +564,20 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 	return TRUE;
 }
 
+static void
+fu_devlink_device_set_bus_name(FuDevlinkDevice *self, const gchar *bus_name)
+{
+	g_free(self->bus_name);
+	self->bus_name = g_strdup(bus_name);
+}
+
+static void
+fu_devlink_device_set_dev_name(FuDevlinkDevice *self, const gchar *dev_name)
+{
+	g_free(self->dev_name);
+	self->dev_name = g_strdup(dev_name);
+}
+
 FuDevice *
 fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name)
 {
@@ -575,8 +589,8 @@ fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_na
 
 	/* create object and assign the strings */
 	self = g_object_new(FU_TYPE_DEVLINK_DEVICE, "context", ctx, NULL);
-	self->bus_name = g_strdup(bus_name);
-	self->dev_name = g_strdup(dev_name);
+	fu_devlink_device_set_bus_name(self, bus_name);
+	fu_devlink_device_set_dev_name(self, dev_name);
 
 	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
@@ -715,10 +729,8 @@ fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **
 		return FALSE;
 	}
 
-	g_free(self->bus_name);
-	g_free(self->dev_name);
-	self->bus_name = g_strdup(bus_name);
-	self->dev_name = g_strdup(dev_name);
+	fu_devlink_device_set_bus_name(self, bus_name);
+	fu_devlink_device_set_dev_name(self, dev_name);
 
 	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
@@ -752,16 +764,12 @@ fu_devlink_device_incorporate(FuDevice *device, FuDevice *donor_device)
 	g_return_if_fail(FU_IS_DEVLINK_DEVICE(donor_device));
 
 	/* copy bus_name if not already set */
-	if (self->bus_name == NULL && donor->bus_name != NULL) {
-		g_free(self->bus_name);
-		self->bus_name = g_strdup(donor->bus_name);
-	}
+	if (self->bus_name == NULL && donor->bus_name != NULL)
+		fu_devlink_device_set_bus_name(self, donor->bus_name);
 
 	/* copy dev_name if not already set */
-	if (self->dev_name == NULL && donor->dev_name != NULL) {
-		g_free(self->dev_name);
-		self->dev_name = g_strdup(donor->dev_name);
-	}
+	if (self->dev_name == NULL && donor->dev_name != NULL)
+		fu_devlink_device_set_dev_name(self, donor->dev_name);
 }
 
 static void
