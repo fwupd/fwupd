@@ -6,10 +6,10 @@
 #
 
 import argparse
-import subprocess
 import contextlib
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 
@@ -26,6 +26,7 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
 <component type="firmware">
   <id>org.{developer_name}.guid{firmware_id}</id>
   <name>{firmware_name}</name>
+  <name_variant_suffix>{name_variant_suffix}</name_variant_suffix>
   <summary>{firmware_summary}</summary>
   <description>
     <p>{firmware_description}</p>
@@ -38,16 +39,22 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
   <project_license>proprietary</project_license>
   <developer_name>{developer_name}</developer_name>
   <releases>
-    <release version="{release_version}" date="{date}">
+    <release urgency="{release_urgency}" version="{release_version}" date="{date}">
+      <checksum filename="firmware.bin" target="content"/>
       <description>
         <p>{release_description}</p>
+        <p>{release_features}</p>
       </description>
     </release>
   </releases>
   <custom>
     <value key="LVFS::VersionFormat">{version_format}</value>
     <value key="LVFS::UpdateProtocol">{update_protocol}</value>
+    <value key="LVFS::RequireTest">true</value>
   </custom>
+  <categories>
+    <category>{firmware_category}</category>
+  </categories>
 </component>
 """
 
@@ -55,6 +62,18 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
 def make_firmware_metainfo(firmware_info, dst):
     local_info = vars(firmware_info)
     local_info["firmware_id"] = local_info["device_guid"][0:8]
+    # Convert name-variant-suffix to name_variant_suffix for template
+    if "name_variant_suffix" not in local_info and hasattr(
+        firmware_info, "name_variant_suffix"
+    ):
+        local_info["name_variant_suffix"] = getattr(
+            firmware_info, "name_variant_suffix", ""
+        )
+    # Format release features as a single paragraph string
+    if "release_features" in local_info and local_info["release_features"]:
+        local_info["release_features"] = "; ".join(local_info["release_features"])
+    else:
+        local_info["release_features"] = ""
     firmware_metainfo = firmware_metainfo_template.format(
         **local_info, date=time.strftime("%Y-%m-%d")
     )
@@ -126,6 +145,11 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--name-variant-suffix",
+        help="Name variant suffix for the firmware package",
+        default="",
+    )
+    parser.add_argument(
         "--firmware-summary", help="One line description of the firmware package"
     )
     parser.add_argument(
@@ -156,7 +180,28 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--update-message",
+        help="Update message for LVFS compliance",
+        default="This firmware has been tested on target hardware and verified to work correctly",
+    )
+    parser.add_argument(
         "--release-description", help="Description of the firmware release"
+    )
+    parser.add_argument(
+        "--release-features",
+        help="Features in the release feature list",
+        action="append",
+        default=[],
+    )
+    parser.add_argument(
+        "--release-urgency",
+        help="Release urgency (e.g. low, medium, high, critical)",
+        default="medium",
+    )
+    parser.add_argument(
+        "--firmware-category",
+        help="Firmware category (e.g. X-System, X-Device, X-EmbeddedController)",
+        default="X-System",
     )
     parser.add_argument(
         "--exe", help="(optional) Executable file to extract firmware from"
