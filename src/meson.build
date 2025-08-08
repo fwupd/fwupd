@@ -246,6 +246,7 @@ if build_daemon
         '--replace', 'PACKAGE_VERSION', fwupd_version,
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man1'),
     )
   endif
@@ -272,6 +273,7 @@ if build_standalone
         '--replace', 'PACKAGE_VERSION', fwupd_version,
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man1'),
     )
   endif

@@ -57,6 +57,7 @@ if libsystemd.found()
         '--replace', 'PACKAGE_VERSION', fwupd_version,
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man8'),
     )
   endif
