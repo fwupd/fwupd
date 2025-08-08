@@ -45,6 +45,7 @@ if build_standalone and get_option('lvfs') != 'false'
 endif
 
 install_data('README.md',
+  install_tag: 'doc',
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d', 'vendor', 'firmware')
 )
 
