@@ -1,0 +1,18 @@
+{
+  "name": "Egis ETU905Axx",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "d956c84cf48a1a470d29ba121e068567ae24ac90fab57e3842782fd9855367c9-firmware_5326_test.cab",
+      "emulation-url": "e0cfac0bc57119fc3b5e9ecc5116b31c71cf80c742c1d4169f8db3102eff2064-egismoc_emu.zip",
+      "components": [
+        {
+          "version": "0.5.3.26",
+          "guids": [
+            "e23ec6df-3672-54ae-8c0d-926e02210d29"
+          ]
+        }
+      ]
+    }
+  ]
+}
