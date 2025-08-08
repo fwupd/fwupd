@@ -49,9 +49,11 @@ if get_option('metainfo')
       '@OUTPUT@',
     ],
     install: true,
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'metainfo'),
   )
   install_data(['org.freedesktop.fwupd.svg'],
+    install_tag: 'doc',
     install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
   )
 endif
