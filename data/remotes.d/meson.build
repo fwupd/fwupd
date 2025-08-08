@@ -11,6 +11,7 @@ if build_standalone and get_option('lvfs') != 'false'
     output: 'lvfs.conf',
     configuration: con3,
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
   )
   configure_file(
@@ -18,6 +19,7 @@ if build_standalone and get_option('lvfs') != 'false'
     output: 'lvfs-testing.conf',
     configuration: con3,
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
   )
   i18n.merge_file(
@@ -27,6 +29,7 @@ if build_standalone and get_option('lvfs') != 'false'
     po_dir: join_paths(meson.project_source_root(), 'po'),
     data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
   i18n.merge_file(
@@ -36,6 +39,7 @@ if build_standalone and get_option('lvfs') != 'false'
     po_dir: join_paths(meson.project_source_root(), 'po'),
     data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
 endif
@@ -52,6 +56,7 @@ configure_file(
   output: 'vendor.conf',
   configuration: con2,
   install: get_option('vendor_metadata'),
+  install_tag: 'runtime',
   install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
 configure_file(
@@ -59,5 +64,6 @@ configure_file(
   output: 'vendor-directory.conf',
   configuration: con2,
   install: true,
+  install_tag: 'runtime',
   install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
