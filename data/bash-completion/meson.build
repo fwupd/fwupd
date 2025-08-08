@@ -11,6 +11,7 @@ if bashcomp.found()
     output: 'fwupdtool',
     configuration: con,
     install: true,
+    install_tag: 'runtime',
     install_dir: completions_dir,
   )
 
@@ -20,6 +21,7 @@ if bashcomp.found()
       output: 'fwupdmgr',
       configuration: con,
       install: true,
+      install_tag: 'runtime',
       install_dir: completions_dir,
     )
   endif # build_daemon

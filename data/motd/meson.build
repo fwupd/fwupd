@@ -1,6 +1,7 @@
 
 if libsystemd.found()
   install_data(['fwupd-refresh.timer'],
+    install_tag: 'runtime',
     install_dir: systemdunitdir)
   motd_fullpath = join_paths ('/run', motd_dir, motd_file)
 else
@@ -31,6 +32,7 @@ if libsystemd.found()
     output: 'fwupd-refresh.service',
     configuration: con2,
     install: true,
+    install_tag: 'runtime',
     install_dir: systemdunitdir,
   )
 endif
@@ -81,6 +83,7 @@ if libsystemd.found() and get_option('systemd_unit_user') != ''
     output: 'fwupd.conf',
     configuration: con3,
     install: true,
+    install_tag: 'runtime',
     install_dir: systemd_sysusers_dir,
   )
 endif

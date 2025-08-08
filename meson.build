@@ -688,6 +688,7 @@ if build_standalone
       '@INPUT@',
     ],
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
   )
 endif
