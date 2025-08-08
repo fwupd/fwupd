@@ -1,10 +1,9 @@
 {
-  "name": "Devlink Netdevsim Install",
+  "name": "Devlink Netdevsim Setup",
   "interactive": false,
   "steps": [
     {
-      "url": "@enumeration_datadir@/devlink-netdevsim-firmware.cab",
-      "emulation-file": "@enumeration_datadir@/devlink-netdevsim-emulation.json",
+      "emulation-file": "@enumeration_datadir@/devlink-netdevsim-setup.json",
       "components": [
         {
           "name": "fw.mgmt",
