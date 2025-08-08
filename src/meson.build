@@ -121,6 +121,7 @@ dbus_interface = custom_target('fwupd-generate-dbus-interface',
     '@OUTPUT@',
   ],
   install: build_daemon,
+  install_tag: 'runtime',
   install_dir: join_paths(datadir, 'dbus-1', 'interfaces'),
 )
 
