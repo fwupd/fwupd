@@ -81,6 +81,7 @@ if get_option('man')
       '--replace', 'PACKAGE_VERSION', fwupd_version,
     ],
     install: true,
+    install_tag: 'man',
     install_dir: join_paths(mandir, 'man1'),
   )
 endif

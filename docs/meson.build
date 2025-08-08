@@ -32,6 +32,7 @@ if build_standalone
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-engine-config.c'),
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man5'),
     )
     custom_target('fwupd-remotes.d.5',
@@ -45,6 +46,7 @@ if build_standalone
         '--defines', join_paths(meson.project_source_root(), 'src', 'fu-remote.c'),
       ],
       install: true,
+      install_tag: 'man',
       install_dir: join_paths(mandir, 'man5'),
     )
   endif
