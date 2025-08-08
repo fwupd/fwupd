@@ -17,9 +17,8 @@ G_DEFINE_TYPE(FuMmDfotaDevice, fu_mm_dfota_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_DFOTA_DEVICE_FILENAME "dfota_update.bin"
 
-#define FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS    90
-#define FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS 15
-#define FU_MM_DFOTA_DEVICE_TIMEOUT_SECS		     5
+#define FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS 90
+#define FU_MM_DFOTA_DEVICE_TIMEOUT_SECS		  5
 
 static gboolean
 fu_mm_dfota_device_probe(FuDevice *device, GError **error)
@@ -391,6 +390,7 @@ fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			return FALSE;
 	}
 
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -427,7 +427,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to start update: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -471,6 +471,7 @@ static void
 fu_mm_dfota_device_init(FuMmDfotaDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.quectel.dfota");
+	fu_device_set_remove_delay(FU_DEVICE(self), 15000);
 }
 
 static void
