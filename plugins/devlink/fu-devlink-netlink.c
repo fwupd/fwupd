@@ -461,20 +461,22 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 
 	/* initialize structure with properly aligned buffer */
 	nlg->buf = g_malloc0(FU_DEVLINK_NETLINK_BUF_SIZE);
-	nlg->device = g_object_ref(device);
 
-	/* skip actual socket operations if emulated */
-	if (device != NULL && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
-		/* create dummy pipe for emulation */
-		if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
-			g_prefix_error(error, "failed to create pipe for emulation: ");
-			return NULL;
+	if (device != NULL) {
+		nlg->device = g_object_ref(device);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			/* skip actual socket operations if emulated */
+			/* create dummy pipe for emulation */
+			if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
+				g_prefix_error(error, "failed to create pipe for emulation: ");
+				return NULL;
+			}
+			nlg->is_emulated = TRUE;
+
+			/* set family ID to a valid value */
+			nlg->family_id = NLMSG_MIN_TYPE + 1;
+			return g_steal_pointer(&nlg);
 		}
-		nlg->is_emulated = TRUE;
-
-		/* set family ID to a valid value */
-		nlg->family_id = NLMSG_MIN_TYPE + 1;
-		return g_steal_pointer(&nlg);
 	}
 
 	/* open netlink socket */
