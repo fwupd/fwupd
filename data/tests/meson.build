@@ -130,6 +130,7 @@ configure_file(
   output: 'fwupd-tests.conf',
   configuration: con2,
   install: true,
+  install_tag: 'tests',
   install_dir: join_paths(datadir, 'fwupd', 'remotes.d'),
 )
 

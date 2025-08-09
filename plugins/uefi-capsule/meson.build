@@ -22,6 +22,7 @@ if host_machine.system() == 'linux'
     output: '35_fwupd',
     configuration: con2,
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'grub.d')
   )
 elif host_machine.system() == 'freebsd'
