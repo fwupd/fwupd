@@ -43,6 +43,9 @@ sudo -u nobody meson ${BUILD}               \
 sudo -u nobody ninja -C ${BUILD} -v
 sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
 
+# check meson install tags look fine
+./contrib/ci/check-meson-install-tags.py -C "$BUILD" check
+
 # check we've not become a CPU or memory hog
 ninja -C ${BUILD} install -v
 ./contrib/ci/check-rss.py --limit 3072 ${BUILD}/src/fwupdtool get-devices
