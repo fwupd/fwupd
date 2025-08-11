@@ -46,6 +46,13 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 		return;
 	}
 
+	physical_id = g_strdup_printf("%s/%s", bus_name, dev_name);
+	device = fu_plugin_cache_lookup(FU_PLUGIN(self), physical_id);
+	if (device != NULL) {
+		g_debug("devlink device already exists: %s/%s", bus_name, dev_name);
+		return;
+	}
+
 	g_debug("devlink device added: %s/%s", bus_name, dev_name);
 
 	/* use backend to create device with proper hierarchy */
@@ -59,7 +66,6 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	}
 
 	/* add device to plugin and cache for removal */
-	physical_id = g_strdup_printf("%s/%s", bus_name, dev_name);
 	fu_plugin_cache_add(FU_PLUGIN(self), physical_id, device);
 	fu_plugin_device_add(FU_PLUGIN(self), device);
 }
