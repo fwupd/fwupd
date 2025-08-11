@@ -92,7 +92,6 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVLINK_BACKEND(self), NULL);
 	g_return_val_if_fail(bus_name != NULL, NULL);
@@ -135,13 +134,6 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 			      FU_DEVICE_INCORPORATE_FLAG_VENDOR |
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
-
-	/* open device to trigger setup */
-	locker = fu_device_locker_new(devlink_device, error);
-	if (locker == NULL) {
-		g_prefix_error(error, "failed to open devlink device: ");
-		return NULL;
-	}
 
 	/* only add the devlink device to the backend - parent is managed by its own backend */
 	fu_backend_device_added(FU_BACKEND(self), devlink_device);
