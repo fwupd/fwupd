@@ -9,7 +9,7 @@
 #include "fu-steelseries-device.h"
 
 typedef struct {
-	gint iface_idx_offset;
+	gint iface_number;
 	guint8 iface_idx;
 	guint8 ep;
 	gsize ep_in_size;
@@ -20,10 +20,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_U
 
 /* @iface_idx_offset can be negative to specify from the end */
 void
-fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset)
+fu_steelseries_device_set_iface_number(FuSteelseriesDevice *self, gint iface_number)
 {
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
-	priv->iface_idx_offset = iface_idx_offset;
+	priv->iface_number = iface_number;
 }
 
 gboolean
@@ -102,13 +102,31 @@ fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
 }
 
 static gboolean
+fu_steelseries_device_find_cmd_iface(gconstpointer item, gconstpointer number)
+{
+	FuUsbInterface *iface = (FuUsbInterface *)item;
+	gint iface_number_requested = *(gint *)number;
+
+	/* must be HID */
+	if (fu_usb_interface_get_class(iface) != FU_USB_CLASS_HID)
+		return FALSE;
+
+	/* in case of autodetection first found fits */
+	if (iface_number_requested != -1 &&
+	    iface_number_requested != (gint)fu_usb_interface_get_number(iface))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
 fu_steelseries_device_probe(FuDevice *device, GError **error)
 {
 	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
 	FuSteelseriesDevicePrivate *priv = GET_PRIVATE(self);
 	FuUsbInterface *iface = NULL;
 	FuUsbEndpoint *ep = NULL;
-	guint8 iface_idx;
+	guint iface_idx;
 	guint8 ep_id;
 	guint16 packet_size;
 	g_autoptr(GPtrArray) ifaces = NULL;
@@ -118,20 +136,18 @@ fu_steelseries_device_probe(FuDevice *device, GError **error)
 	if (ifaces == NULL)
 		return FALSE;
 
-	/* use the correct interface for interrupt transfer, either specifying an absolute offset,
-	 * or a negative offset value for the "last" one */
-	if (priv->iface_idx_offset >= 0) {
-		if ((guint)priv->iface_idx_offset > ifaces->len) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "update interface 0x%x not found",
-				    (guint)priv->iface_idx_offset);
-			return FALSE;
-		}
-		iface_idx = priv->iface_idx_offset;
-	} else {
-		iface_idx = ifaces->len - 1;
+	/* use the correct interface for interrupt transfer, either specifying an absolute
+	 * offset, or a negative offset value for the default HID interface autodetection */
+	if (!g_ptr_array_find_with_equal_func(ifaces,
+					      priv,
+					      fu_steelseries_device_find_cmd_iface,
+					      &iface_idx)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "update interface 0x%x not found",
+			    (guint)priv->iface_number);
+		return FALSE;
 	}
 	iface = g_ptr_array_index(ifaces, iface_idx);
 	priv->iface_idx = fu_usb_interface_get_number(iface);

@@ -172,7 +172,7 @@ fu_steelseries_fizz_tunnel_attach(FuDevice *device, FuProgress *progress, GError
 				       TRUE,
 				       FU_STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
-		g_warning("failed to reset: %s", error_local->message);
+		g_debug("failed to reset: %s", error_local->message);
 	fu_progress_step_done(progress);
 
 	/* wait for receiver to reset the connection status to 0 */

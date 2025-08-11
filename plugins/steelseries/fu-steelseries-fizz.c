@@ -429,7 +429,7 @@ fu_steelseries_fizz_attach(FuDevice *device, FuProgress *progress, GError **erro
 				       FALSE,
 				       FU_STEELSERIES_FIZZ_RESET_MODE_NORMAL,
 				       &error_local))
-		g_warning("failed to reset: %s", error_local->message);
+		g_debug("failed to reset: %s", error_local->message);
 
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
