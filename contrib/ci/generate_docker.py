@@ -55,7 +55,7 @@ with open("Dockerfile", "w") as wfd:
             if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "centos":
-                wfd.write("RUN yum -y install \\\n")
+                wfd.write("RUN dnf -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
                 wfd.write("RUN apt update -qq && \\\n")
                 wfd.write(

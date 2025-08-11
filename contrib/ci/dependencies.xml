@@ -729,11 +729,9 @@
     <distro id="arch">
       <package variant="x86_64">libxmlb</package>
     </distro>
-<!--
     <distro id="centos">
       <package variant="x86_64">libxmlb-devel</package>
     </distro>
--->
     <distro id="fedora">
       <package variant="x86_64">libxmlb-devel</package>
       <package variant="aarch64">libxmlb-devel</package>
