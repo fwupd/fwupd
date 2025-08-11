@@ -31,6 +31,11 @@ fu_uefi_dbx_zero_func(void)
 	g_autoptr(GBytes) csum = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* zero hash = empty */
 	csum =
 	    fu_bytes_from_string("0000000000000000000000000000000000000000000000000000000000000000",
