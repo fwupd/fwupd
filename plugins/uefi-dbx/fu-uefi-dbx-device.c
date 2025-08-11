@@ -147,6 +147,14 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 		}
 	}
 
+	/* special entry for "empty" */
+	if (sigs->len == 1) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, 0);
+		const gchar *owner = fu_efi_signature_get_owner(sig);
+		if (g_strcmp0(owner, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
+			fu_device_set_version_raw(FU_DEVICE(self), 0);
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -264,6 +272,12 @@ fu_uefi_dbx_device_cleanup(FuDevice *self,
 	return TRUE;
 }
 
+static gchar *
+fu_uefi_dbx_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 {
@@ -315,6 +329,7 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	device_class->prepare_firmware = fu_uefi_dbx_device_prepare_firmware;
 	device_class->set_progress = fu_uefi_dbx_device_set_progress;
 	device_class->cleanup = fu_uefi_dbx_device_cleanup;
+	device_class->convert_version = fu_uefi_dbx_device_convert_version;
 
 	object_class->finalize = fu_uefi_dbx_device_finalize;
 }
