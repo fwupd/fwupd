@@ -159,6 +159,7 @@ CounterpartGuid = USB\VID_1038&PID_2233
 FirmwareSize = 0x14B000
 Flags = is-receiver,detach-bootloader
 InstallDuration = 165
+SteelSeriesFizzInterface = 3
 
 [USB\VID_1038&PID_2233]
 Plugin = steelseries
@@ -170,3 +171,64 @@ FirmwareSize = 0x14B000
 CounterpartGuid = USB\VID_1038&PID_2232
 Flags = is-bootloader,is-receiver,~usable-during-update
 InstallDuration = 165
+
+# Arctis Nova 3P
+[USB\VID_1038&PID_2267]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 3P Headset
+Icon = usb-headset
+FirmwareSize = 0x14B000
+Flags = ~usable-during-update,detach-bootloader
+InstallDuration = 87
+CounterpartGuid = USB\VID_1038&PID_2268,STEELSERIES\VID_1038&PID_2269&PROTOCOL_FIZZ_TUNNEL
+SteelSeriesFizzInterface = 0
+SteelSeriesFizzProtocolRevision = 3
+
+[USB\VID_1038&PID_2268]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 3P Headset bootloader
+Icon = usb-headset
+FirmwareSize = 0x14B000
+CounterpartGuid = USB\VID_1038&PID_2267,STEELSERIES\VID_1038&PID_2269&PROTOCOL_FIZZ_TUNNEL
+Flags = is-bootloader,~usable-during-update
+InstallDuration = 87
+SteelSeriesFizzProtocolRevision = 3
+
+[STEELSERIES\VID_1038&PID_2269&PROTOCOL_FIZZ_TUNNEL]
+Plugin = steelseries
+GType = FuSteelseriesFizzTunnel
+Name = Arctis Nova 3P Headset via USB Receiver
+Icon = usb-headset
+Flags = ~usable-during-update,detach-bootloader
+FirmwareSize = 0x14B000
+CounterpartGuid = USB\VID_1038&PID_2267,USB\VID_1038&PID_2268
+SteelSeriesFizzProtocolRevision = 3
+
+[USB\VID_1038&PID_2269]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 3P USB Receiver
+Icon = usb-receiver
+CounterpartGuid = USB\VID_1038&PID_226A
+FirmwareSize = 0x14B000
+Flags = is-receiver,detach-bootloader
+InstallDuration = 165
+SteelSeriesFizzInterface = 3
+SteelSeriesFizzProtocolRevision = 3
+
+[USB\VID_1038&PID_226A]
+Plugin = steelseries
+GType = FuSteelseriesFizz
+ProxyGType = FuSteelseriesFizzGen2
+Name = Arctis Nova 3P USB Receiver bootloader
+Icon = usb-receiver
+CounterpartGuid = USB\VID_1038&PID_2269
+FirmwareSize = 0x14B000
+Flags = is-bootloader,is-receiver,~usable-during-update
+InstallDuration = 165
+SteelSeriesFizzProtocolRevision = 3
