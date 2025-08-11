@@ -4,13 +4,15 @@ title: Plugin: SteelSeries
 
 ## Introduction
 
-This plugin allows to update firmware on SteelSeries gamepads:
+This plugin allows to update firmware on SteelSeries peripherals:
 
 * Stratus Duo
 * Stratus Duo USB wireless adapter
 * Stratus+
 * Aerox 3 Wireless
 * Rival 3 Wireless
+* Arctis Nova 5 headset and dongle
+* Arctis Nova 3P headset and dongle
 
 SteelSeries Rival 100 gaming mice support is limited by getting the correct
 version number. These mice have updatable firmware but so far no updates are
@@ -38,6 +40,19 @@ The device is a USB receiver.
 
 Since 1.8.1
 
+### SteelSeriesFizzInterface
+
+USB HID command interface number.
+
+Since 2.0.2
+
+### SteelSeriesFizzProtocolRevision
+
+Defines the revision of the FIZZ protocol.
+Some replies should be parsed differently depending on the revision.
+
+Since 2.0.14
+
 ## Update Behavior
 
 ### Gamepad
@@ -62,6 +77,14 @@ Wireless adapter must be connected to host.
 The mouse switch button underneath must be set to 2.4G, and its 2.4G USB
 Wireless adapter must be connected to host; or the mouse must be connected to
 host via the USB-A to USB-C cable.
+
+### Arctis Nova 5 headset
+
+The headset can only be updated via a direct USB-C connection.
+
+### Arctis Nova 3P headset and dongle
+
+The headset can only be updated via a direct USB-C connection.
 
 ## Vendor ID Security
 
