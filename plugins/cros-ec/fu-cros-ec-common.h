@@ -8,6 +8,15 @@
 
 #include <fwupdplugin.h>
 
+#define FU_CROS_EC_MAX_BLOCK_XFER_RETRIES  10
+#define FU_CROS_EC_FLUSH_TIMEOUT_MS	   10
+#define FU_CROS_EC_BULK_SEND_TIMEOUT	   2000 /* ms */
+#define FU_CROS_EC_BULK_RECV_TIMEOUT	   5000 /* ms */
+#define FU_CROS_EC_USB_DEVICE_REMOVE_DELAY 20000
+
+#define FU_CROS_EC_REQUEST_UPDATE_DONE	    0xB007AB1E
+#define FU_CROS_EC_REQUEST_UPDATE_EXTRA_CMD 0xB007AB1F
+
 typedef struct {
 	gchar *boardname;
 	gchar *triplet;

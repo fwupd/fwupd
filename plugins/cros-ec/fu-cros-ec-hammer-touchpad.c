@@ -13,6 +13,7 @@
 #include "fu-cros-ec-hammer-touchpad.h"
 #include "fu-cros-ec-struct.h"
 #include "fu-cros-ec-usb-device.h"
+#include "fu-cros-ec-usb-hammer.h"
 
 #define SHA256_DIGEST_LENGTH 32
 
@@ -166,7 +167,7 @@ fu_cros_ec_hammer_touchpad_probe(FuDevice *device, GError **error)
 				      fu_device_get_pid(FU_DEVICE(proxy)));
 	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
 
-	if (fu_cros_ec_usb_device_get_in_bootloader(proxy)) {
+	if (fu_cros_ec_usb_device_get_in_bootloader(FU_CROS_EC_USB_DEVICE(proxy))) {
 		g_debug("skipping enumeration: ec is in bootloader mode");
 		return TRUE;
 	}
@@ -304,7 +305,7 @@ fu_cros_ec_hammer_touchpad_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	if (!fu_cros_ec_usb_device_write_touchpad_firmware(parent,
+	if (!fu_cros_ec_usb_hammer_write_touchpad_firmware(parent,
 							   firmware,
 							   progress,
 							   flags,
