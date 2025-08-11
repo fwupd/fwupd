@@ -12,10 +12,10 @@
 guint32
 fu_egis_moc_checksum_add(guint32 csum, const guint8 *buf, gsize bufsz)
 {
-	g_autofree guint16 *buf16 = g_new0(guint16, (bufsz / 2) + 1);
-	memcpy(buf16, buf, bufsz); /* nocheck:blocked */
-	for (gsize i = 0; i < bufsz / 2; i++)
-		csum += buf16[i];
+	if (bufsz > 0) {
+		for (gsize i = 0; i < bufsz - 1; i += 2)
+			csum += fu_memread_uint16(buf + i, G_LITTLE_ENDIAN);
+	}
 	if (bufsz % 2)
 		csum += buf[bufsz - 1];
 	return csum;
