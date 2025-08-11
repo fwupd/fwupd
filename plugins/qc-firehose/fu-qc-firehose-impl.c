@@ -847,17 +847,13 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 				   GError **error)
 {
 	const gchar *fnglob = "firehose-rawprogram.xml|rawprogram_*.xml";
-	const gchar *fnglob_patch = "firehose-patch.xml|patch_*.xml|patch-*.xml";
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GBytes) blob_patch = NULL;
 	g_autoptr(GPtrArray) xns_erase = NULL;
 	g_autoptr(GPtrArray) xns_program = NULL;
 	g_autoptr(GPtrArray) xns_patch = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
-	g_autoptr(XbBuilderSource) source_patch = xb_builder_source_new();
 	g_autoptr(XbSilo) silo = NULL;
-	g_autoptr(GError) error_local = NULL;
 	FuQcFirehoseImplHelper helper = {
 	    .no_zlp = no_zlp,
 	    .rawmode = FALSE,
@@ -884,24 +880,6 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 		return FALSE;
 	}
 	xb_builder_import_source(builder, source);
-
-	/* load patch XML */
-	blob_patch = fu_firmware_get_image_by_id_bytes(firmware, fnglob_patch, &error_local);
-	if (blob_patch == NULL) {
-		/* continue even without patch XML */
-		g_info("failed to find patch file %s: %s", fnglob_patch, error_local->message);
-	} else {
-		if (!xb_builder_source_load_bytes(source_patch,
-						  blob_patch,
-						  XB_BUILDER_SOURCE_FLAG_NONE,
-						  error)) {
-			g_prefix_error(error, "failed to load %s: ", fnglob_patch);
-			fwupd_error_convert(error);
-			return FALSE;
-		}
-		xb_builder_import_source(builder, source_patch);
-	}
-
 	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL) {
 		g_prefix_error(error, "failed to compile %s: ", fnglob);
@@ -945,7 +923,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 	fu_progress_step_done(progress);
 
 	/* patch */
-	xns_patch = xb_silo_query(silo, "data/patch|patches/patch", 0, NULL);
+	xns_patch = xb_silo_query(silo, "data/patch", 0, NULL);
 	if (xns_patch != NULL) {
 		if (!fu_qc_firehose_impl_patch_targets(self,
 						       xns_patch,
