@@ -31,7 +31,7 @@ struct _FuSteelseriesDeviceClass {
 #define FU_STEELSERIES_DEVICE_FLAG_DETACH_BOOTLOADER "detach-bootloader"
 
 void
-fu_steelseries_device_set_iface_idx_offset(FuSteelseriesDevice *self, gint iface_idx_offset);
+fu_steelseries_device_set_iface_number(FuSteelseriesDevice *self, gint iface_number);
 gboolean
 fu_steelseries_device_request(FuSteelseriesDevice *self, const GByteArray *buf, GError **error);
 GByteArray *

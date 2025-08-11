@@ -358,10 +358,6 @@ fu_steelseries_fizz_gen2_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *dev
 static gboolean
 fu_steelseries_fizz_gen2_probe(FuDevice *device, GError **error)
 {
-	/* in bootloader mode */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(device), 0x00);
-
 	/* FuUsbDevice->probe */
 	return FU_DEVICE_CLASS(fu_steelseries_fizz_gen2_parent_class)->probe(device, error);
 }
@@ -394,7 +390,7 @@ fu_steelseries_fizz_gen2_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 
-		fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), tmp);
+		fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), tmp);
 		return TRUE;
 	}
 
@@ -424,5 +420,5 @@ fu_steelseries_fizz_gen2_init(FuSteelseriesFizzGen2 *self)
 {
 	/* Set the default protocol version */
 	self->protocol_revision = 2;
-	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x05);
+	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 }

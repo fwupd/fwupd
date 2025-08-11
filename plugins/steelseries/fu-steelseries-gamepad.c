@@ -294,7 +294,7 @@ fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 static void
 fu_steelseries_gamepad_init(FuSteelseriesGamepad *self)
 {
-	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), -1);
+	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);

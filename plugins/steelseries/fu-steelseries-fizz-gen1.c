@@ -198,5 +198,5 @@ fu_steelseries_fizz_gen1_class_init(FuSteelseriesFizzGen1Class *klass)
 static void
 fu_steelseries_fizz_gen1_init(FuSteelseriesFizzGen1 *self)
 {
-	fu_steelseries_device_set_iface_idx_offset(FU_STEELSERIES_DEVICE(self), 0x03);
+	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), 0x03);
 }
