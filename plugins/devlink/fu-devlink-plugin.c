@@ -28,8 +28,6 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
-	g_autofree gchar *physical_id = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* parse netlink attributes using libmnl */
@@ -46,28 +44,16 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 		return;
 	}
 
-	physical_id = g_strdup_printf("%s/%s", bus_name, dev_name);
-	device = fu_plugin_cache_lookup(FU_PLUGIN(self), physical_id);
-	if (device != NULL) {
-		g_debug("devlink device already exists: %s/%s", bus_name, dev_name);
-		return;
-	}
-
 	g_debug("devlink device added: %s/%s", bus_name, dev_name);
 
 	/* use backend to create device with proper hierarchy */
-	device = fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error);
-	if (device == NULL) {
+	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error)) {
 		g_debug("failed to add devlink device %s/%s: %s",
 			bus_name,
 			dev_name,
 			error->message);
 		return;
 	}
-
-	/* add device to plugin and cache for removal */
-	fu_plugin_cache_add(FU_PLUGIN(self), physical_id, device);
-	fu_plugin_device_add(FU_PLUGIN(self), device);
 }
 
 static void
@@ -76,8 +62,6 @@ fu_devlink_plugin_device_removed_from_netlink(FuDevlinkPlugin *self, const struc
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
-	FuDevice *device = NULL;
-	g_autofree gchar *physical_id = NULL;
 
 	/* parse netlink attributes using libmnl */
 	mnl_attr_parse(nlh, sizeof(struct genlmsghdr), fu_devlink_netlink_attr_cb, tb);
@@ -95,13 +79,8 @@ fu_devlink_plugin_device_removed_from_netlink(FuDevlinkPlugin *self, const struc
 
 	g_debug("devlink device removed: %s/%s", bus_name, dev_name);
 
-	/* find and remove device */
-	physical_id = g_strdup_printf("%s/%s", bus_name, dev_name);
-	device = fu_plugin_cache_lookup(FU_PLUGIN(self), physical_id);
-	if (device != NULL) {
-		fu_plugin_cache_remove(FU_PLUGIN(self), physical_id);
-		fu_plugin_device_remove(FU_PLUGIN(self), device);
-	}
+	/* use backend to remove device */
+	fu_devlink_backend_device_removed(self->backend, bus_name, dev_name);
 }
 
 /* callback for processing individual netlink messages */
