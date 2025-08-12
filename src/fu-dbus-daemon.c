@@ -1075,7 +1075,7 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	}
 	return g_steal_pointer(&stream);
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
 #endif
 }
@@ -1108,7 +1108,7 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 	}
 	return g_steal_pointer(&stream);
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unsupported feature");
 	return NULL;
 #endif
 }
@@ -1822,7 +1822,7 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
 	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 2) {
-		g_set_error(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+		g_set_error_literal(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}

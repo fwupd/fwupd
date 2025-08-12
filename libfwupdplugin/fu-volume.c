@@ -530,10 +530,10 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 	g_close(fd, NULL);
 	return sector_size;
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <sys/ioctl.h> or BLKSSZGET not found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <sys/ioctl.h> or BLKSSZGET not found");
 	return 0;
 #endif
 }

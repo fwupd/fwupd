@@ -82,10 +82,10 @@ fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
 	g_autofree gchar *bind_fn = g_build_filename(self->bind_path, "bind", NULL);
 
 	if (self->bind_path == NULL || self->bind_id == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no Path or ID for rebind driver");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no Path or ID for rebind driver");
 		return FALSE;
 	}
 

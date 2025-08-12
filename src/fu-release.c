@@ -805,10 +805,10 @@ fu_release_check_version(FuRelease *self,
 				    fu_device_get_version_format(self->device));
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) &&
 	    vercmp > 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device only supports version upgrades");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Device only supports version upgrades");
 		return FALSE;
 	}
 	if (vercmp == 0 && (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {

@@ -525,7 +525,7 @@ fu_fdt_image_build_metadata_node(FuFdtImage *self, XbNode *n, GError **error)
 
 	key = xb_node_get_attr(n, "key");
 	if (key == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "key invalid");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "key invalid");
 		return FALSE;
 	}
 	format = xb_node_get_attr(n, "format");

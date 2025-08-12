@@ -95,10 +95,10 @@ fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GErro
 
 	/* nothing found */
 	if (device_file == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no DRM device file found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no DRM device file found");
 		return FALSE;
 	}
 

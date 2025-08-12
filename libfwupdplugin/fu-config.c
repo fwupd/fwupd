@@ -503,7 +503,7 @@ fu_config_set_value(FuConfig *self,
 
 	/* sanity check */
 	if (priv->items->len == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no config to load");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no config to load");
 		return FALSE;
 	}
 

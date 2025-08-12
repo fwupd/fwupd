@@ -390,10 +390,10 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 		if (dt_struct == NULL)
 			return FALSE;
 		if (dt_struct->len != fu_struct_fdt_get_size_dt_struct(st_hdr)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "invalid firmware -- dt_struct invalid");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "invalid firmware -- dt_struct invalid");
 			return FALSE;
 		}
 		dt_struct_buf =

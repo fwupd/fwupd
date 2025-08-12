@@ -46,7 +46,10 @@ fu_intel_amt_device_status_set_error(guint32 status, GError **error)
 		return FALSE;
 	}
 	if (status == FU_AMT_STATUS_HOST_IF_EMPTY_RESPONSE) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Intel AMT is disabled");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Intel AMT is disabled");
 		return FALSE;
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown error");

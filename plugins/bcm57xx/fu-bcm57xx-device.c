@@ -262,10 +262,10 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 	/* success */
 	return TRUE;
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <linux/ethtool.h> not found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <linux/ethtool.h> not found");
 	return FALSE;
 #endif
 }

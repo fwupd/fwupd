@@ -4193,10 +4193,10 @@ fu_util_sync(FuUtil *self, gchar **values, GError **error)
 
 	/* nothing was done */
 	if (cnt == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "No devices required modification");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No devices required modification");
 		return FALSE;
 	}
 
@@ -4298,11 +4298,11 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *str = NULL;
 
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4808,11 +4808,11 @@ static gboolean
 fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4924,11 +4924,11 @@ static gboolean
 fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 

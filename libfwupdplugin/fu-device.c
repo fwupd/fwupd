@@ -680,10 +680,10 @@ fu_device_retry_full(FuDevice *self,
 
 		/* sanity check */
 		if (error_local == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "exec failed but no error set!");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "exec failed but no error set!");
 			return FALSE;
 		}
 

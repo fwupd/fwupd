@@ -25,10 +25,10 @@ fu_mm_mhi_qcdm_device_detach(FuDevice *device, FuProgress *progress, GError **er
 
 	/* sanity check */
 	if (self->firehose_prog_file == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "Firehose prog filename is not set for the device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "Firehose prog filename is not set for the device");
 		return FALSE;
 	}
 

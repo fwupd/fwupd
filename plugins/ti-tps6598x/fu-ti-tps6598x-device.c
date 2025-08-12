@@ -495,10 +495,10 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 
 	/* there are two devices with the same VID:PID -- ignore the non-vendor one */
 	if (fu_usb_device_get_class(FU_USB_DEVICE(self)) != FU_USB_CLASS_VENDOR_SPECIFIC) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "non-vendor specific interface ignored");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "non-vendor specific interface ignored");
 		return FALSE;
 	}
 

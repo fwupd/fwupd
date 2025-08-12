@@ -52,10 +52,10 @@ fu_pxi_receiver_device_prepare_firmware(FuDevice *device,
 			return NULL;
 	} else if (fu_device_has_private_flag(device, FU_PXI_DEVICE_FLAG_IS_HPAC) !=
 		   fu_pxi_firmware_is_hpac(FU_PXI_FIRMWARE(firmware))) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "The firmware is incompatible with the device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware is incompatible with the device");
 		return NULL;
 	}
 
@@ -838,10 +838,10 @@ fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 	if (iface_nr == NULL)
 		return FALSE;
 	if (g_strcmp0(iface_nr, "01") != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "only USB interface 1 supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only USB interface 1 supported");
 		return FALSE;
 	}
 

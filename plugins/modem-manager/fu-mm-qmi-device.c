@@ -316,10 +316,10 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 
 	if (qmi_indication_pdc_load_config_output_get_frame_reset(output, &frame_reset, NULL) &&
 	    frame_reset) {
-		g_set_error(&ctx->error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "couldn't load mcfg: sent data discarded");
+		g_set_error_literal(&ctx->error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "couldn't load mcfg: sent data discarded");
 		g_main_loop_quit(ctx->mainloop);
 		return;
 	}

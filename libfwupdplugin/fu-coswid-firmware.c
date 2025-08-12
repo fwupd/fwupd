@@ -294,10 +294,10 @@ fu_coswid_firmware_parse_file(cbor_item_t *item, gpointer user_data, GError **er
 						return FALSE;
 				}
 			} else {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "hashes neither an array or array of array");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "hashes neither an array or array of array");
 				return FALSE;
 			}
 		} else {

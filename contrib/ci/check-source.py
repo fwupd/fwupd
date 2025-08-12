@@ -230,6 +230,23 @@ class Checker:
         if len(sections) == 2:
             self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
 
+    def _test_line_missing_literal_set_error(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_set_error(")
+        if idx == -1:
+            return
+        if line.find("%m") != -1:
+            return
+        if line.find("TRANSLATORS") != -1:
+            return
+        sections = line.split(",")
+        if len(sections) == 4:
+            print(line)
+            self.add_failure(f"missing literal, use g_set_error_literal() instead")
+
     def _test_line_enums(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:prefix"
@@ -655,6 +672,7 @@ class Checker:
             # test for missing literals
             self._test_line_missing_literal_task_return_new(line)
             self._test_line_missing_literal_prefix_error(line)
+            self._test_line_missing_literal_set_error(line)
 
             # test for static variables
             self._test_static_vars(line)

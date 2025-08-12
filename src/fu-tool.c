@@ -2462,10 +2462,10 @@ fu_util_enable_test_devices(FuUtil *self, gchar **values, GError **error)
 	if (!found) {
 		if (!fu_util_set_test_devices_enabled(self, FALSE, error))
 			return FALSE;
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to enable fwupd-tests remote");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to enable fwupd-tests remote");
 		return FALSE;
 	}
 
@@ -3495,7 +3495,10 @@ fu_util_firmware_patch(FuUtil *self, gchar **values, GError **error)
 	if (patch == NULL)
 		return FALSE;
 	if (g_bytes_get_size(patch) == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "no data provided");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "no data provided");
 		return FALSE;
 	}
 
@@ -3834,11 +3837,11 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *host_security_id = NULL;
 
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4311,11 +4314,11 @@ static gboolean
 fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4348,11 +4351,11 @@ static gboolean
 fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 

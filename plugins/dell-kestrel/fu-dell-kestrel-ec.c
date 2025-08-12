@@ -306,7 +306,10 @@ fu_dell_kestrel_ec_dock_type_extract(FuDellKestrelEc *self, GError **error)
 
 	/* don't change error type, the plugin ignores it */
 	if (dock_type != FU_DELL_DOCK_BASE_TYPE_KESTREL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "No valid dock was found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no valid dock was found");
 		return FALSE;
 	}
 

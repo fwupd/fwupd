@@ -310,10 +310,10 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 				return FALSE;
 
 		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "updates are distributed as part of the platform");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "updates are distributed as part of the platform");
 			return FALSE;
 		}
 		fu_device_add_instance_id(device, device_id);

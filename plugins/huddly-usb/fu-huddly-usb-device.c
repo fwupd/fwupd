@@ -63,10 +63,10 @@ fu_huddly_usb_device_find_interface(FuHuddlyUsbDevice *self, GError **error)
 		}
 	}
 	if (self->bulk_ep[EP_OUT] == 0 || self->bulk_ep[EP_IN] == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "could not find usb endpoints");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "could not find usb endpoints");
 		return FALSE;
 	}
 	return TRUE;

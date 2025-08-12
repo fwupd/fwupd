@@ -132,12 +132,12 @@ fu_amd_kria_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 
 	/* if there is an ESRT use that instead and disable the plugin */
 	if (g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "system uses UEFI ESRT");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "system uses ESRT");
 		return FALSE;
 	}
 	return TRUE;
 #else
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "only for aarch64");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "only for aarch64");
 	return FALSE;
 #endif
 }

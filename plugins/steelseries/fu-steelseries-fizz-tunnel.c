@@ -99,7 +99,10 @@ fu_steelseries_fizz_tunnel_wait_for_reconnect_cb(FuDevice *device,
 	g_debug("FuSteelseriesFizzConnection: %s",
 		fu_steelseries_fizz_connection_status_to_string(status));
 	if (status == FU_STEELSERIES_FIZZ_CONNECTION_STATUS_NOT_CONNECTED) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device is unreachable");
 		return FALSE;
 	}
 

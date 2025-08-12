@@ -445,7 +445,7 @@ fu_io_channel_read_byte_array(FuIOChannel *self,
 		/* wait for data to appear */
 		gint rc = g_poll(&fds, 1, (gint)timeout_ms);
 		if (rc == 0) {
-			g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "timeout");
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "timeout");
 			return NULL;
 		}
 		if (rc < 0) {

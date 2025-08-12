@@ -467,7 +467,7 @@ fu_dfu_device_get_target_by_alt_setting(FuDfuDevice *self, guint8 alt_setting, G
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_FOUND,
-		    "No target with alt-setting %i",
+		    "no target with alt-setting %i",
 		    alt_setting);
 	return NULL;
 }
@@ -1224,19 +1224,19 @@ fu_dfu_device_download(FuDfuDevice *self,
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
 		if (firmware_vid == 0xffff) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware vendor ID not specified");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware vendor ID not specified");
 			return FALSE;
 		}
 	}
 	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
 		if (firmware_pid == 0xffff) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware product ID not specified");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware product ID not specified");
 			return FALSE;
 		}
 	}

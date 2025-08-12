@@ -113,10 +113,10 @@ fu_vbe_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	/* nothing found? */
 	if (fu_plugin_get_devices(plugin)->len == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no valid VBE update mechanism found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no valid VBE update mechanism found");
 		return FALSE;
 	}
 

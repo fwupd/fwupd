@@ -291,7 +291,10 @@ fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data
 	}
 
 	if (subdevices == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "subdevice is not connected");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "subdevice is not connected");
 		return FALSE;
 	}
 	return TRUE;
@@ -503,10 +506,10 @@ fu_corsair_device_poll(FuDevice *device, GError **error)
 
 	/* stop polling if a subdevice was added */
 	if (subdevice_added) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "subdevice added successfully");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "subdevice added successfully");
 		return FALSE;
 	}
 

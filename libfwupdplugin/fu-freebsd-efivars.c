@@ -27,10 +27,10 @@ static gboolean
 fu_freebsd_efivars_supported(FuEfivars *efivars, GError **error)
 {
 	if (efi_variables_supported() == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "kernel efivars support missing");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "kernel efivars support missing");
 		return FALSE;
 	}
 	return TRUE;
@@ -158,10 +158,10 @@ fu_freebsd_efivars_space_used(FuEfivars *efivars, GError **error)
 	while (efi_get_next_variable_name(&guidt, &name)) {
 		size_t size = 0;
 		if (efi_get_variable_size(*guidt, name, &size) < 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "failed to get efivars size");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "failed to get efivars size");
 			return G_MAXUINT64;
 		}
 		total += size;

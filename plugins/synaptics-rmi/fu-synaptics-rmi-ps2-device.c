@@ -43,7 +43,7 @@ fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf
 		}
 		return TRUE;
 	}
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "read timed out");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "read timed out");
 	return FALSE;
 }
 
@@ -204,7 +204,7 @@ fu_synaptics_rmi_ps2_device_status_request(FuSynapticsRmiPs2Device *self,
 		break;
 	}
 	if (success == FALSE) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
 		return FALSE;
 	}
 

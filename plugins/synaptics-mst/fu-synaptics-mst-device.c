@@ -1296,10 +1296,10 @@ fu_synaptics_mst_device_update_firmware(FuSynapticsMstDevice *self,
 		fw_size = CARRERA_FIRMWARE_SIZE;
 		break;
 	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unsupported chip family");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported chip family");
 		return FALSE;
 	}
 
@@ -1355,10 +1355,10 @@ fu_synaptics_mst_device_restart(FuSynapticsMstDevice *self, GError **error)
 		offset = 0x2020A024;
 		break;
 	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unsupported chip family");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported chip family");
 		return FALSE;
 	}
 	/* issue the reboot command, ignore return code (triggers before returning) */
@@ -1500,10 +1500,10 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		}
 		break;
 	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Unsupported chip family");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported chip family");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1597,10 +1597,10 @@ fu_synaptics_mst_device_ensure_board_id(FuSynapticsMstDevice *self, GError **err
 			offset = (gint)ADDR_MEMORY_CUSTOMER_ID_SPYDER;
 			break;
 		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Unsupported chip family");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "unsupported chip family");
 			return FALSE;
 		}
 

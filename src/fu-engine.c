@@ -3444,10 +3444,10 @@ fu_engine_install_loop(FuEngine *self,
 	if (!fu_input_stream_size(stream_fw, &streamsz, error))
 		return FALSE;
 	if (streamsz == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "Firmware is invalid as has zero size");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "Firmware is invalid as has zero size");
 		return FALSE;
 	}
 
@@ -4396,7 +4396,10 @@ fu_engine_validate_result_timestamp(JcatResult *jcat_result,
 	g_return_val_if_fail(JCAT_IS_RESULT(jcat_result_old), FALSE);
 
 	if (jcat_result_get_timestamp(jcat_result) == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "no signing timestamp");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no signing timestamp");
 		return FALSE;
 	}
 	if (jcat_result_get_timestamp(jcat_result_old) > 0) {
@@ -4608,10 +4611,10 @@ fu_engine_update_metadata(FuEngine *self,
 	/* update with blobs */
 	return fu_engine_update_metadata_bytes(self, remote_id, bytes_raw, bytes_sig, error);
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <glib-unix.h> is unavailable");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as <glib-unix.h> is unavailable");
 	return FALSE;
 #endif
 }
@@ -5126,7 +5129,10 @@ fu_engine_get_remotes(FuEngine *self, GError **error)
 
 	remotes = fu_remote_list_get_all(self->remote_list);
 	if (remotes->len == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "No remotes configured");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "No remotes configured");
 		return NULL;
 	}
 
@@ -5382,7 +5388,10 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* no components in silo */
 	if (self->query_component_by_guid == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no components in silo");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no components in silo");
 		return NULL;
 	}
 
@@ -5391,10 +5400,10 @@ fu_engine_get_releases_for_device(FuEngine *self,
 	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS)) {
 		const gchar *version = fu_device_get_version(device);
 		if (version == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no version set");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no version set");
 			return NULL;
 		}
 	}
@@ -5479,7 +5488,10 @@ fu_engine_get_releases_for_device(FuEngine *self,
 
 	/* return the compound error */
 	if (releases->len == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO, "No releases found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "No releases found");
 		return NULL;
 	}
 	return g_steal_pointer(&releases);

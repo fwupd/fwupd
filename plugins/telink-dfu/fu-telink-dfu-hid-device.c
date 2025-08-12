@@ -176,10 +176,10 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 					return FALSE;
 			} else {
 				/* should not reach here */
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "wrong payload index");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "wrong payload index");
 				return FALSE;
 			}
 		} else {

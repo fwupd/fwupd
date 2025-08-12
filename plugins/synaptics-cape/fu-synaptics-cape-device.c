@@ -229,10 +229,10 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 
 	st_msg_res = fu_synaptics_cape_cmd_hid_report_get_msg(st_report);
 	if ((fu_synaptics_cape_msg_get_cmd_id(st_msg_res) & FU_SYNAPTICS_CAPE_CMD_IS_REPLY) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "firmware don't respond to command");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "firmware don't respond to command");
 		return NULL;
 	}
 	value = (gint16)fu_synaptics_cape_msg_get_data_len(st_msg_res);

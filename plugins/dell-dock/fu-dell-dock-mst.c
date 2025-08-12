@@ -166,7 +166,7 @@ fu_dell_dock_mst_get_bank_attribs(MSTBank bank, const MSTBankAttributes **out, G
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "Invalid bank specified %u",
+			    "invalid bank specified %u",
 			    bank);
 		return FALSE;
 	}
@@ -1006,7 +1006,10 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 	}
 	/* failed after all our retries */
 	if (!checksum) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to write to bank");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to write to bank");
 		return FALSE;
 	}
 	/* activate the FW */
@@ -1071,7 +1074,10 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 		if (!fu_dell_dock_mst_write_cayenne(device, fw, flags, progress, error))
 			return FALSE;
 	} else {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Unknown mst found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Unknown mst found");
 		return FALSE;
 	}
 

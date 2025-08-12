@@ -114,10 +114,10 @@ fu_uefi_dbx_snapd_notifier_simple_req(FuUefiDbxSnapdNotifier *self,
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 
 	if (status_code == 404) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "snapd notification endpoint not supported by snapd API");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "snapd notification endpoint not supported by snapd API");
 		return FALSE;
 	}
 

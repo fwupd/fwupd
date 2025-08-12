@@ -578,10 +578,10 @@ fu_wac_device_write_firmware(FuDevice *device,
 
 	/* check at least one block was written */
 	if (blocks_done == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "empty firmware image or all blocks write-protected");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "empty firmware image or all blocks write-protected");
 		return FALSE;
 	}
 

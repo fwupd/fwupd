@@ -48,12 +48,12 @@ fu_redfish_hpe_device_attach(FuDevice *dev, FuProgress *progress, GError **error
 			    g_strcmp0(status, "Complete") == 0) {
 				return TRUE;
 			}
-			g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
 			return FALSE;
 		}
 	}
 
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown failure");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unknown failure");
 	return FALSE;
 }
 

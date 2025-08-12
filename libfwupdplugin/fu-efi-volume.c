@@ -253,7 +253,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 
 	/* GUID */
 	if (fu_firmware_get_id(firmware) == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set for EFI FV");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set for FV");
 		return NULL;
 	}
 	if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),

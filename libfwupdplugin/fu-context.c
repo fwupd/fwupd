@@ -1812,10 +1812,10 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 		}
 
 		if (g_hash_table_size(esp_scores) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no EFI system partition found");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no EFI system partition found");
 			return NULL;
 		}
 
@@ -1898,7 +1898,7 @@ fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
 	}
 
 	/* failed */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
 	return NULL;
 }
 
