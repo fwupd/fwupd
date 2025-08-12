@@ -184,10 +184,32 @@ fu_steelseries_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "Endpoint", priv->ep);
 }
 
+static gboolean
+fu_steelseries_device_set_quirk_kv(FuDevice *device,
+				   const gchar *key,
+				   const gchar *value,
+				   GError **error)
+{
+	FuSteelseriesDevice *self = FU_STEELSERIES_DEVICE(device);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "SteelSeriesCmdInterface") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+
+		fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), tmp);
+		return TRUE;
+	}
+
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+	return FALSE;
+}
+
 static void
 fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
 	fu_device_register_private_flag(FU_DEVICE(self), FU_STEELSERIES_DEVICE_FLAG_IS_RECEIVER);
+	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 }
 
 static void
@@ -196,4 +218,5 @@ fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_steelseries_device_to_string;
 	device_class->probe = fu_steelseries_device_probe;
+	device_class->set_quirk_kv = fu_steelseries_device_set_quirk_kv;
 }

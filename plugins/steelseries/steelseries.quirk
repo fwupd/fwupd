@@ -6,6 +6,7 @@ Name = Stratus Duo RX
 Icon = usb-receiver
 CounterpartGuid = USB\VID_1038&PID_1432
 Flags = is-receiver
+SteelSeriesCmdInterface = 2
 
 [USB\VID_1038&PID_1432]
 Plugin = steelseries
@@ -22,6 +23,7 @@ GType = FuSteelseriesGamepad
 Name = Stratus Duo Gamepad
 Icon = input-gaming
 CounterpartGuid = USB\VID_1038&PID_1433
+SteelSeriesCmdInterface = 2
 
 [USB\VID_1038&PID_1433]
 Plugin = steelseries
@@ -57,6 +59,7 @@ Icon = input-mouse
 Plugin = steelseries
 GType = FuSteelseriesSonic
 Icon = input-mouse
+SteelSeriesCmdInterface = 3
 
 # Aerox 3 Wireless
 [HIDRAW\VEN_0111&DEV_183A]
@@ -124,7 +127,7 @@ ProxyGType = FuSteelseriesFizzGen2
 Name = Arctis Nova 5 Headset
 Icon = usb-headset
 FirmwareSize = 0x14B000
-SteelSeriesFizzInterface = 0
+SteelSeriesCmdInterface = 0
 Flags = ~usable-during-update,detach-bootloader
 InstallDuration = 87
 CounterpartGuid = USB\VID_1038&PID_2231,STEELSERIES\VID_1038&PID_2232&PROTOCOL_FIZZ_TUNNEL
@@ -159,7 +162,7 @@ CounterpartGuid = USB\VID_1038&PID_2233
 FirmwareSize = 0x14B000
 Flags = is-receiver,detach-bootloader
 InstallDuration = 165
-SteelSeriesFizzInterface = 3
+SteelSeriesCmdInterface = 3
 
 [USB\VID_1038&PID_2233]
 Plugin = steelseries
@@ -183,7 +186,7 @@ FirmwareSize = 0x14B000
 Flags = ~usable-during-update,detach-bootloader
 InstallDuration = 87
 CounterpartGuid = USB\VID_1038&PID_2268,STEELSERIES\VID_1038&PID_2269&PROTOCOL_FIZZ_TUNNEL
-SteelSeriesFizzInterface = 0
+SteelSeriesCmdInterface = 0
 SteelSeriesFizzProtocolRevision = 3
 
 [USB\VID_1038&PID_2268]
@@ -218,7 +221,7 @@ CounterpartGuid = USB\VID_1038&PID_226A
 FirmwareSize = 0x14B000
 Flags = is-receiver,detach-bootloader
 InstallDuration = 165
-SteelSeriesFizzInterface = 3
+SteelSeriesCmdInterface = 3
 SteelSeriesFizzProtocolRevision = 3
 
 [USB\VID_1038&PID_226A]

@@ -927,8 +927,6 @@ fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 static void
 fu_steelseries_sonic_init(FuSteelseriesSonic *self)
 {
-	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
-
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

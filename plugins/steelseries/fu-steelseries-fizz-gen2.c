@@ -386,14 +386,6 @@ fu_steelseries_fizz_gen2_set_quirk_kv(FuDevice *device,
 	FuSteelseriesFizzGen2 *self = FU_STEELSERIES_FIZZ_GEN2(device);
 	guint64 tmp = 0;
 
-	if (g_strcmp0(key, "SteelSeriesFizzInterface") == 0) {
-		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
-			return FALSE;
-
-		fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), tmp);
-		return TRUE;
-	}
-
 	if (g_strcmp0(key, "SteelSeriesFizzProtocolRevision") == 0) {
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT16, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
@@ -420,5 +412,4 @@ fu_steelseries_fizz_gen2_init(FuSteelseriesFizzGen2 *self)
 {
 	/* Set the default protocol version */
 	self->protocol_revision = 2;
-	fu_steelseries_device_set_iface_number(FU_STEELSERIES_DEVICE(self), -1);
 }
