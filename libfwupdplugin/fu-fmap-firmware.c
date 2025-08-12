@@ -92,7 +92,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 							 (gsize)area_size,
 							 error);
 		if (img_stream == NULL) {
-			g_prefix_error(error, "failed to cut FMAP area: ");
+			g_prefix_error_literal(error, "failed to cut FMAP area: ");
 			return FALSE;
 		}
 		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))

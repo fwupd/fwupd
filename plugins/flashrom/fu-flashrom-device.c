@@ -264,7 +264,7 @@ fu_flashrom_device_prepare(FuDevice *device,
 		g_autoptr(GBytes) buf = NULL;
 		buf = fu_flashrom_device_dump_firmware(device, progress, error);
 		if (buf == NULL) {
-			g_prefix_error(error, "failed to back up original firmware: ");
+			g_prefix_error_literal(error, "failed to back up original firmware: ");
 			return FALSE;
 		}
 		if (!fu_bytes_set_contents(firmware_orig, buf, error))
@@ -336,7 +336,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
 		g_debug("attempting CMOS reset");
 		if (!fu_flashrom_cmos_reset(error)) {
-			g_prefix_error(error, "failed CMOS reset: ");
+			g_prefix_error_literal(error, "failed CMOS reset: ");
 			return FALSE;
 		}
 	}

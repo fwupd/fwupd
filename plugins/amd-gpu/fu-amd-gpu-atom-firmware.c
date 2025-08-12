@@ -101,7 +101,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_version(FuAmdGpuAtomFirmware *self,
 			    sizeof(BIOS_VERSION_PREFIX) - 1,
 			    &offset,
 			    error)) {
-		g_prefix_error(error, "failed to find anchor: ");
+		g_prefix_error_literal(error, "failed to find anchor: ");
 		return FALSE;
 	}
 

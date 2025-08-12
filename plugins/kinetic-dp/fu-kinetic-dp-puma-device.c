@@ -54,7 +54,7 @@ fu_kinetic_dp_puma_device_wait_dpcd_cmd_status_cb(FuDevice *device,
 				  sizeof(status),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read PUMA_DPCD_CMD_STATUS_REG for status: ");
+		g_prefix_error_literal(error, "failed to read PUMA_DPCD_CMD_STATUS_REG status: ");
 		return FALSE;
 	}
 	if (status != status_want) {
@@ -86,7 +86,7 @@ fu_kinetic_dp_puma_device_wait_dpcd_sink_mode_cb(FuDevice *device,
 				  sizeof(status),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read PUMA_DPCD_SINK_MODE_REG for status: ");
+		g_prefix_error_literal(error, "failed to read PUMA_DPCD_SINK_MODE_REG status: ");
 		return FALSE;
 	}
 	if (status != status_want) {
@@ -115,9 +115,9 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 				   sizeof(cmd),
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error,
-			       "failed to write PUMA_DPCD_SINK_MODE_REG with "
-			       "CODE_LOAD_REQUEST: ");
+		g_prefix_error_literal(error,
+				       "failed to write PUMA_DPCD_SINK_MODE_REG with "
+				       "CODE_LOAD_REQUEST: ");
 		return FALSE;
 	}
 
@@ -128,7 +128,7 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_CODE_LOAD_READY),
 				  error)) {
-		g_prefix_error(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
+		g_prefix_error_literal(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
 		return FALSE;
 	}
 
@@ -208,7 +208,7 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 					  POLL_INTERVAL_MS,
 					  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_MODE_CHUNK_PROCESSED),
 					  error)) {
-			g_prefix_error(error, "timeout waiting for MODE_CHUNK_PROCESSED: ");
+			g_prefix_error_literal(error, "timeout waiting for MODE_CHUNK_PROCESSED: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -236,7 +236,7 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_CODE_BOOTUP_DONE),
 				  error)) {
-		g_prefix_error(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
+		g_prefix_error_literal(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
 		return FALSE;
 	}
 	if (!fu_dpaux_device_read(FU_DPAUX_DEVICE(self),
@@ -245,7 +245,7 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
 				  sizeof(flashinfo),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read Flash Info from Isp Driver: ");
+		g_prefix_error_literal(error, "failed to read Flash Info from Isp Driver: ");
 		return FALSE;
 	}
 	st = fu_struct_kinetic_dp_flash_info_parse(flashinfo, sizeof(flashinfo), 0x0, error);
@@ -265,7 +265,7 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 {
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	if (!fu_kinetic_dp_puma_device_enter_code_loading_mode(self, error)) {
-		g_prefix_error(error, "enter code loading mode failed: ");
+		g_prefix_error_literal(error, "enter code loading mode failed: ");
 		return FALSE;
 	}
 	fu_kinetic_dp_puma_device_send_payload(self,
@@ -276,7 +276,7 @@ fu_kinetic_dp_puma_device_send_isp_drv(FuKineticDpPumaDevice *self,
 					       TRUE,
 					       error);
 	if (!fu_kinetic_dp_puma_device_wait_drv_ready(self, io_channel, error)) {
-		g_prefix_error(error, "wait for ISP driver ready failed: ");
+		g_prefix_error_literal(error, "wait for ISP driver ready failed: ");
 		return FALSE;
 	}
 	if (self->flash_size >= 0x400)
@@ -313,8 +313,9 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 				   sizeof(cmd),
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error,
-			       "failed to write PUMA_DPCD_SINK_MODE_REG with FW_UPDATE_REQUEST: ");
+		g_prefix_error_literal(
+		    error,
+		    "failed to write PUMA_DPCD_SINK_MODE_REG with FW_UPDATE_REQUEST: ");
 		return FALSE;
 	}
 	if (fu_kinetic_dp_device_get_fw_state(FU_KINETIC_DP_DEVICE(self)) ==
@@ -331,7 +332,8 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 			POLL_INTERVAL_MS,
 			GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_MODE_FLASH_INFO_READY),
 			error)) {
-			g_prefix_error(error, "timeout waiting for MODE_FLASH_INFO_READY: ");
+			g_prefix_error_literal(error,
+					       "timeout waiting for MODE_FLASH_INFO_READY: ");
 			return FALSE;
 		}
 
@@ -342,7 +344,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 					  sizeof(flashinfo),
 					  FU_KINETIC_DP_DEVICE_TIMEOUT,
 					  error)) {
-			g_prefix_error(error, "failed to read Flash Info: ");
+			g_prefix_error_literal(error, "failed to read Flash Info: ");
 			return FALSE;
 		}
 		st =
@@ -382,7 +384,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_FW_UPDATE_READY),
 				  error)) {
-		g_prefix_error(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
+		g_prefix_error_literal(error, "timeout waiting for REQUEST_FW_UPDATE_READY: ");
 		return FALSE;
 	}
 
@@ -451,8 +453,9 @@ fu_kinetic_dp_puma_device_cleanup(FuDevice *device,
 				   sizeof(cmd),
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error,
-			       "failed to write PUMA_DPCD_SINK_MODE_REG with CHIP_RESET_REQUEST: ");
+		g_prefix_error_literal(
+		    error,
+		    "failed to write PUMA_DPCD_SINK_MODE_REG with CHIP_RESET_REQUEST: ");
 		return FALSE;
 	}
 
@@ -520,7 +523,7 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 						    PUMA_CHUNK_PROCESS_MAX_WAIT,
 						    FALSE,
 						    error)) {
-		g_prefix_error(error, "sending App Firmware payload failed: ");
+		g_prefix_error_literal(error, "sending App Firmware payload failed: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -533,7 +536,7 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 				  POLL_INTERVAL_MS,
 				  GUINT_TO_POINTER(FU_KINETIC_DP_PUMA_REQUEST_FW_UPDATE_DONE),
 				  error)) {
-		g_prefix_error(error, "validating App Firmware failed: ");
+		g_prefix_error_literal(error, "validating App Firmware failed: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

@@ -80,7 +80,7 @@ fu_qc_firehose_usb_device_read(FuQcFirehoseUsbDevice *self, guint timeout_ms, GE
 					 timeout_ms,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to do bulk transfer (read): ");
+		g_prefix_error_literal(error, "failed to do bulk transfer (read): ");
 		return NULL;
 	}
 
@@ -120,7 +120,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 timeout_ms,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to do bulk transfer (write data): ");
+			g_prefix_error_literal(error, "failed to do bulk transfer (write data): ");
 			return FALSE;
 		}
 		if (actual_len != fu_chunk_get_data_sz(chk)) {
@@ -144,7 +144,7 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 						 timeout_ms,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to do bulk transfer (write zlp): ");
+			g_prefix_error_literal(error, "failed to do bulk transfer (write zlp): ");
 			return FALSE;
 		}
 	}

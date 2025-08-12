@@ -1104,7 +1104,7 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(devices, g_object_ref(device));
 		if (!fu_engine_composite_prepare(self->engine, devices, error)) {
-			g_prefix_error(error, "failed to prepare composite action: ");
+			g_prefix_error_literal(error, "failed to prepare composite action: ");
 			return FALSE;
 		}
 	}
@@ -1133,7 +1133,8 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 			    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 			g_ptr_array_add(devices_new, g_steal_pointer(&device_new));
 			if (!fu_engine_composite_cleanup(self->engine, devices_new, error)) {
-				g_prefix_error(error, "failed to cleanup composite action: ");
+				g_prefix_error_literal(error,
+						       "failed to cleanup composite action: ");
 				return FALSE;
 			}
 		}
@@ -3258,7 +3259,7 @@ fu_util_firmware_build(FuUtil *self, gchar **values, GError **error)
 
 	/* parse XML */
 	if (!xb_builder_source_load_bytes(source, blob_src, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error(error, "could not parse XML: ");
+		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -3485,7 +3486,7 @@ fu_util_firmware_patch(FuUtil *self, gchar **values, GError **error)
 
 	/* parse offset */
 	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error)) {
-		g_prefix_error(error, "failed to parse offset: ");
+		g_prefix_error_literal(error, "failed to parse offset: ");
 		return FALSE;
 	}
 
@@ -4278,7 +4279,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 
 	if (!fu_engine_modify_bios_settings(self->engine, settings, FALSE, error)) {
 		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error(error, "failed to set BIOS setting: ");
+			g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 

@@ -351,7 +351,7 @@ fu_synaptics_cxaudio_device_ensure_patch_level(FuSynapticsCxaudioDevice *self, G
 						   sizeof(tmp),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM patch validation byte: ");
+		g_prefix_error_literal(error, "failed to read EEPROM patch validation byte: ");
 		return FALSE;
 	}
 	if (tmp == FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
@@ -366,7 +366,7 @@ fu_synaptics_cxaudio_device_ensure_patch_level(FuSynapticsCxaudioDevice *self, G
 						   sizeof(tmp),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM patch validation byte: ");
+		g_prefix_error_literal(error, "failed to read EEPROM patch validation byte: ");
 		return FALSE;
 	}
 	if (tmp == FU_SYNAPTICS_CXAUDIO_SIGNATURE_PATCH_BYTE) {
@@ -413,7 +413,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   sizeof(chip_id_offset),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read ChipID: ");
+		g_prefix_error_literal(error, "failed to read ChipID: ");
 		return FALSE;
 	}
 	self->chip_id = self->chip_id_base + chip_id_offset;
@@ -443,7 +443,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 		sizeof(sigbuf),
 		FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 		error)) {
-		g_prefix_error(error, "failed to read EEPROM signature bytes: ");
+		g_prefix_error_literal(error, "failed to read EEPROM signature bytes: ");
 		return FALSE;
 	}
 
@@ -496,7 +496,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   sizeof(sigbuf),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM signature bytes: ");
+		g_prefix_error_literal(error, "failed to read EEPROM signature bytes: ");
 		return FALSE;
 	}
 	self->eeprom_storage_sz = fu_memread_uint16(sigbuf, G_LITTLE_ENDIAN);
@@ -515,7 +515,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   sizeof(cinfo),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM custom info: ");
+		g_prefix_error_literal(error, "failed to read EEPROM custom info: ");
 		return FALSE;
 	}
 
@@ -555,7 +555,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   sizeof(verbuf_fw),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM firmware version: ");
+		g_prefix_error_literal(error, "failed to read EEPROM firmware version: ");
 		return FALSE;
 	}
 	version_fw = g_strdup_printf("%02X.%02X.%02X.%02X",
@@ -580,7 +580,7 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 						   sizeof(verbuf_patch),
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to read EEPROM patch version: ");
+		g_prefix_error_literal(error, "failed to read EEPROM patch version: ");
 		return FALSE;
 	}
 	version_patch =
@@ -697,7 +697,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			sizeof(value),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 			error)) {
-			g_prefix_error(error, "failed to initialize layout signature: ");
+			g_prefix_error_literal(error, "failed to initialize layout signature: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_cxaudio_device_operation(
@@ -710,7 +710,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			sizeof(value),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 			error)) {
-			g_prefix_error(error, "failed to initialize layout signature: ");
+			g_prefix_error_literal(error, "failed to initialize layout signature: ");
 			return FALSE;
 		}
 	}
@@ -758,7 +758,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			sizeof(buf),
 			FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 			error)) {
-			g_prefix_error(error, "failed to read EEPROM patch info: ");
+			g_prefix_error_literal(error, "failed to read EEPROM patch info: ");
 			return FALSE;
 		}
 		st_pat = fu_struct_synaptics_cxaudio_patch_info_parse(buf, sizeof(buf), 0x0, error);
@@ -777,7 +777,8 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 				st_pat->len,
 				FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 				error)) {
-				g_prefix_error(error, "failed to write empty EEPROM patch info: ");
+				g_prefix_error_literal(error,
+						       "failed to write empty EEPROM patch info: ");
 				return FALSE;
 			}
 			g_debug("invalidated old FW patch for CX2070x (RAM) device");

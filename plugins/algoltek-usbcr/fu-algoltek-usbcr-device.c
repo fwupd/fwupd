@@ -405,7 +405,7 @@ fu_algoltek_usbcr_device_ensure_version(FuAlgoltekUsbcrDevice *self, GError **er
 
 	ver_array = fu_algoltek_usbcr_device_cmd_get_ver(self, error);
 	if (ver_array == NULL) {
-		g_prefix_error(error, "failed to read version: ");
+		g_prefix_error_literal(error, "failed to read version: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(ver_array->data,

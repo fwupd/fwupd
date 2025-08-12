@@ -370,7 +370,7 @@ fu_steelseries_fizz_ensure_children(FuSteelseriesFizz *self, GError **error)
 		return TRUE;
 
 	if (!fu_steelseries_fizz_get_paired_status(self, &status, error)) {
-		g_prefix_error(error, "failed to get paired status: ");
+		g_prefix_error_literal(error, "failed to get paired status: ");
 		return FALSE;
 	}
 
@@ -464,7 +464,7 @@ fu_steelseries_fizz_setup(FuDevice *device, GError **error)
 	version =
 	    fu_steelseries_fizz_impl_get_version(FU_STEELSERIES_FIZZ_IMPL(proxy), FALSE, error);
 	if (version == NULL) {
-		g_prefix_error(error, "failed to get version: "); /* nocheck:set-version */
+		g_prefix_error_literal(error, "failed to get version: "); /* nocheck:set-version */
 		return FALSE;
 	}
 	fu_device_set_version(device, version);

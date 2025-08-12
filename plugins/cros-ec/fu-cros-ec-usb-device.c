@@ -120,7 +120,7 @@ fu_cros_ec_usb_device_probe(FuDevice *device, GError **error)
 
 	/* very much like usb_updater2's usb_findit() */
 	if (!fu_cros_ec_usb_device_find_interface(FU_USB_DEVICE(device), error)) {
-		g_prefix_error(error, "failed to find update interface: ");
+		g_prefix_error_literal(error, "failed to find update interface: ");
 		return FALSE;
 	}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface_idx);
@@ -250,7 +250,7 @@ fu_cros_ec_usb_device_recovery(FuCrosEcUsbDevice *self, GError **error)
 			     FU_CROS_EC_SETUP_RETRY_CNT,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to flush device to idle state: ");
+		g_prefix_error_literal(error, "failed to flush device to idle state: ");
 		return FALSE;
 	}
 
@@ -354,7 +354,7 @@ fu_cros_ec_usb_device_setup(FuDevice *device, GError **error)
 			     FU_CROS_EC_SETUP_RETRY_CNT,
 			     st_rpdu,
 			     error)) {
-		g_prefix_error(error, "failed to send start request: ");
+		g_prefix_error_literal(error, "failed to send start request: ");
 		return FALSE;
 	}
 
@@ -497,7 +497,7 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 		/* flush all data from endpoint to recover in case of error */
 		if (!fu_cros_ec_usb_device_recovery(self, &error_flush))
 			g_debug("failed to flush to idle: %s", error_flush->message);
-		g_prefix_error(error, "failed at sending header: ");
+		g_prefix_error_literal(error, "failed at sending header: ");
 		return FALSE;
 	}
 
@@ -544,7 +544,7 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 					   &transfer_size,
 					   error)) {
 		g_autoptr(GError) error_flush = NULL;
-		g_prefix_error(error, "failed at reply: ");
+		g_prefix_error_literal(error, "failed at reply: ");
 		/* flush all data from endpoint to recover in case of error */
 		if (!fu_cros_ec_usb_device_recovery(self, &error_flush))
 			g_debug("failed to flush to idle: %s", error_flush->message);
@@ -582,7 +582,7 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 
 	img_bytes = fu_firmware_get_image_by_idx_bytes(firmware, section->image_idx, error);
 	if (img_bytes == NULL) {
-		g_prefix_error(error, "failed to find section image: ");
+		g_prefix_error_literal(error, "failed to find section image: ");
 		return FALSE;
 	}
 
@@ -775,13 +775,13 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 
 		fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 		if (!fu_cros_ec_usb_device_stay_in_ro(self, error)) {
-			g_prefix_error(error, "failed to send stay-in-ro subcommand: ");
+			g_prefix_error_literal(error, "failed to send stay-in-ro subcommand: ");
 			return FALSE;
 		}
 
 		/* flush all data from endpoint to recover in case of error */
 		if (!fu_cros_ec_usb_device_recovery(self, error)) {
-			g_prefix_error(error, "failed to flush device to idle state: ");
+			g_prefix_error_literal(error, "failed to flush device to idle state: ");
 			return FALSE;
 		}
 
@@ -791,7 +791,7 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 				     FU_CROS_EC_SETUP_RETRY_CNT,
 				     st_rpdu,
 				     error)) {
-			g_prefix_error(error, "failed to send start request: ");
+			g_prefix_error_literal(error, "failed to send start request: ");
 			return FALSE;
 		}
 	}
@@ -892,7 +892,7 @@ fu_cros_ec_usb_device_prepare_firmware(FuDevice *device,
 	if (!fu_cros_ec_firmware_pick_sections(FU_CROS_EC_FIRMWARE(firmware),
 					       self->writeable_offset,
 					       error)) {
-		g_prefix_error(error, "failed to pick sections: ");
+		g_prefix_error_literal(error, "failed to pick sections: ");
 		return NULL;
 	}
 	return g_steal_pointer(&firmware);

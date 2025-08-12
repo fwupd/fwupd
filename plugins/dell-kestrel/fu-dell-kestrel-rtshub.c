@@ -69,7 +69,7 @@ fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtshub *self, GError **erro
 				      DELL_KESTREL_RTSHUB_TIMEOUT * 3,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to erase spare bank: ");
+		g_prefix_error_literal(error, "failed to erase spare bank: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -130,7 +130,7 @@ fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtshub *self, GError **error)
 				      DELL_KESTREL_RTSHUB_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to soft reset: ");
+		g_prefix_error_literal(error, "failed to soft reset: ");
 		return FALSE;
 	}
 	g_debug("soft reset completed for %s", fu_device_get_name(FU_DEVICE(self)));
@@ -249,7 +249,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 		/* rts5g2 only */
 		if (fu_device_get_pid(device) == DELL_KESTREL_USB_RTS5_G2_PID) {
 			if (!fu_dell_kestrel_rtshub_reset_device(self, error)) {
-				g_prefix_error(error, "failed to reset rts5g2 device: ");
+				g_prefix_error_literal(error, "failed to reset rts5g2 device: ");
 				return FALSE;
 			}
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

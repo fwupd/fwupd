@@ -80,7 +80,7 @@ fu_goodixtp_hid_device_get_report(FuGoodixtpHidDevice *self,
 					  sizeof(rcv_buf),
 					  FU_IOCTL_FLAG_NONE,
 					  error)) {
-		g_prefix_error(error, "failed get report: ");
+		g_prefix_error_literal(error, "failed get report: ");
 		return FALSE;
 	}
 	if (rcv_buf[0] != REPORT_ID) {
@@ -108,7 +108,7 @@ fu_goodixtp_hid_device_set_report(FuGoodixtpHidDevice *self,
 					  bufsz,
 					  FU_IOCTL_FLAG_NONE,
 					  error)) {
-		g_prefix_error(error, "failed set report: ");
+		g_prefix_error_literal(error, "failed set report: ");
 		return FALSE;
 	}
 	return TRUE;

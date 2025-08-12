@@ -126,7 +126,7 @@ fu_polkit_authority_load(FuPolkitAuthority *self, GError **error)
 #ifdef HAVE_POLKIT
 	self->pkauthority = polkit_authority_get_sync(NULL, error);
 	if (self->pkauthority == NULL) {
-		g_prefix_error(error, "failed to load authority: ");
+		g_prefix_error_literal(error, "failed to load authority: ");
 		return FALSE;
 	}
 #endif

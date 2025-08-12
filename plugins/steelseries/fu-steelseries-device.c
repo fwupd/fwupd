@@ -52,7 +52,7 @@ fu_steelseries_device_request(FuSteelseriesDevice *self, const GByteArray *buf, 
 					    FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to do control transfer: ");
+		g_prefix_error_literal(error, "failed to do control transfer: ");
 		return FALSE;
 	}
 	if (actual_len != buf_padded->len) {
@@ -84,7 +84,7 @@ fu_steelseries_device_response(FuSteelseriesDevice *self, GError **error)
 					      FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to do EP transfer: ");
+		g_prefix_error_literal(error, "failed to do EP transfer: ");
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "Response", buf->data, actual_len);

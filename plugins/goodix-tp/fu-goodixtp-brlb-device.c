@@ -157,7 +157,7 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	g_autofree gchar *patch_pid = NULL;
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x1001E, hidbuf, sizeof(hidbuf), error)) {
-		g_prefix_error(error, "failed read PID/VID: ");
+		g_prefix_error_literal(error, "failed read PID/VID: ");
 		return FALSE;
 	}
 	vice_ver = hidbuf[10];
@@ -175,7 +175,7 @@ fu_goodixtp_brlb_device_ensure_version(FuGoodixtpBrlbDevice *self, GError **erro
 	fu_goodixtp_hid_device_set_sensor_id(FU_GOODIXTP_HID_DEVICE(self), hidbuf[13]);
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x10076, hidbuf, 5, error)) {
-		g_prefix_error(error, "Failed read config id/version: ");
+		g_prefix_error_literal(error, "failed read config id/version: ");
 		return FALSE;
 	}
 
@@ -228,7 +228,7 @@ fu_goodixtp_brlb_device_update_prepare(FuGoodixtpBrlbDevice *self, GError **erro
 	/* step 1. switch mini system */
 	cmdbuf[0] = 0x01;
 	if (!fu_goodixtp_brlb_device_send_cmd(self, 0x10, cmdbuf, sizeof(cmdbuf), error)) {
-		g_prefix_error(error, "failed send minisystem cmd: ");
+		g_prefix_error_literal(error, "failed send minisystem cmd: ");
 		return FALSE;
 	}
 
@@ -239,7 +239,7 @@ fu_goodixtp_brlb_device_update_prepare(FuGoodixtpBrlbDevice *self, GError **erro
 				  30,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "wait brlb minisystem status failed: ");
+		g_prefix_error_literal(error, "wait brlb minisystem status failed: ");
 		return FALSE;
 	}
 	g_debug("switch mini system successfully");
@@ -247,7 +247,7 @@ fu_goodixtp_brlb_device_update_prepare(FuGoodixtpBrlbDevice *self, GError **erro
 	/* step 2. erase flash */
 	cmdbuf[0] = 0x01;
 	if (!fu_goodixtp_brlb_device_send_cmd(self, 0x11, cmdbuf, sizeof(cmdbuf), error)) {
-		g_prefix_error(error, "Failed send erase flash cmd: ");
+		g_prefix_error_literal(error, "failed send erase flash cmd: ");
 		return FALSE;
 	}
 
@@ -258,7 +258,7 @@ fu_goodixtp_brlb_device_update_prepare(FuGoodixtpBrlbDevice *self, GError **erro
 				  20,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "wait brlb erase status failed: ");
+		g_prefix_error_literal(error, "wait brlb erase status failed: ");
 		return FALSE;
 	}
 
@@ -273,7 +273,7 @@ fu_goodixtp_brlb_device_wait_flash_cb(FuDevice *device, gpointer user_data, GErr
 	guint8 hidbuf[1] = {0};
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x10011, hidbuf, 1, error)) {
-		g_prefix_error(error, "Failed to read 0x10011");
+		g_prefix_error_literal(error, "failed to read 0x10011");
 		return FALSE;
 	}
 	if (hidbuf[0] != 0xAA) {
@@ -308,7 +308,7 @@ fu_goodixtp_brlb_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 					       buf_align4k,
 					       sizeof(buf_align4k),
 					       error)) {
-		g_prefix_error(error, "write fw data failed: ");
+		g_prefix_error_literal(error, "write fw data failed: ");
 		return FALSE;
 	}
 
@@ -329,7 +329,7 @@ fu_goodixtp_brlb_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 	fu_memwrite_uint32(cmdbuf + 2, fu_chunk_get_address(chk), G_BIG_ENDIAN);
 	fu_memwrite_uint32(cmdbuf + 6, checksum, G_BIG_ENDIAN);
 	if (!fu_goodixtp_brlb_device_send_cmd(self, 0x12, cmdbuf, sizeof(cmdbuf), error)) {
-		g_prefix_error(error, "failed send start update cmd: ");
+		g_prefix_error_literal(error, "failed send start update cmd: ");
 		return FALSE;
 	}
 
@@ -342,7 +342,7 @@ fu_goodixtp_brlb_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 				  20,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "wait flash status failed: ");
+		g_prefix_error_literal(error, "wait flash status failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -372,7 +372,7 @@ fu_goodixtp_brlb_device_update_finish(FuGoodixtpBrlbDevice *self, GError **error
 
 	/* reset IC */
 	if (!fu_goodixtp_brlb_device_send_cmd(self, 0x13, cmdbuf, sizeof(cmdbuf), error)) {
-		g_prefix_error(error, "failed reset IC: ");
+		g_prefix_error_literal(error, "failed reset IC: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100);
@@ -384,7 +384,7 @@ fu_goodixtp_brlb_device_setup(FuDevice *device, GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
 	if (!fu_goodixtp_brlb_device_ensure_version(self, error)) {
-		g_prefix_error(error, "brlb read version failed: ");
+		g_prefix_error_literal(error, "brlb read version failed: ");
 		return FALSE;
 	}
 	return TRUE;

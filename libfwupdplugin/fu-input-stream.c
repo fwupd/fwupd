@@ -428,7 +428,7 @@ fu_input_stream_size(GInputStream *stream, gsize *val, GError **error)
 	}
 
 	if (!g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_END, NULL, error)) {
-		g_prefix_error(error, "seek to end: ");
+		g_prefix_error_literal(error, "seek to end: ");
 		return FALSE;
 	}
 	if (val != NULL)

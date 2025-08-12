@@ -98,7 +98,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 						      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 						      error);
 			if (attr_ffu_timeout == NULL) {
-				g_prefix_error(error, "no ffu timeout specified: ");
+				g_prefix_error_literal(error, "no ffu timeout specified: ");
 				return FALSE;
 			}
 			if (!fu_strtoull(attr_ffu_timeout,
@@ -298,7 +298,7 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 					     sizeof(buf),
 					     SG_DXFER_FROM_DEV,
 					     error)) {
-		g_prefix_error(error, "SG_IO INQUIRY_CMD data error: ");
+		g_prefix_error_literal(error, "SG_IO INQUIRY_CMD data error: ");
 		return FALSE;
 	}
 

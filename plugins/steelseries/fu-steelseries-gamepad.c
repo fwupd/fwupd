@@ -32,7 +32,7 @@ fu_steelseries_gamepad_cmd_erase(FuSteelseriesGamepad *self, GError **error)
 		fu_struct_steelseries_gamepad_erase_req_set_magic3(st_req, 0x02);
 	}
 	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error)) {
-		g_prefix_error(error, "unable erase flash block: ");
+		g_prefix_error_literal(error, "unable erase flash block: ");
 		return FALSE;
 	}
 
@@ -189,7 +189,7 @@ fu_steelseries_gamepad_write_checksum(FuSteelseriesGamepad *self, guint32 checks
 
 	fu_struct_steelseries_gamepad_write_checksum_req_set_checksum(st_req, checksum);
 	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error)) {
-		g_prefix_error(error, "unable to write checksum: ");
+		g_prefix_error_literal(error, "unable to write checksum: ");
 		return FALSE;
 	}
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
@@ -202,7 +202,7 @@ fu_steelseries_gamepad_write_checksum(FuSteelseriesGamepad *self, guint32 checks
 									0x0,
 									error);
 	if (st_res == NULL) {
-		g_prefix_error(error, "controller is unable to validate checksum: ");
+		g_prefix_error_literal(error, "controller is unable to validate checksum: ");
 		return FALSE;
 	}
 

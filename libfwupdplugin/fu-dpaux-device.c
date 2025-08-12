@@ -119,7 +119,7 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 				  sizeof(buf),
 				  FU_DPAUX_DEVICE_READ_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "DPCD read failed: ");
+		g_prefix_error_literal(error, "DPCD read failed: ");
 		return FALSE;
 	}
 	st = fu_struct_dpaux_dpcd_parse(buf, sizeof(buf), 0x0, error);

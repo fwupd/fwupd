@@ -33,7 +33,7 @@ fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
 						  req->len,
 						  FU_IOCTL_FLAG_NONE,
 						  error)) {
-			g_prefix_error(error, "failed to send packet: ");
+			g_prefix_error_literal(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
@@ -43,7 +43,7 @@ fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
 						  res->len,
 						  FU_IOCTL_FLAG_NONE,
 						  error)) {
-			g_prefix_error(error, "failed to receive packet: ");
+			g_prefix_error_literal(error, "failed to receive packet: ");
 			return FALSE;
 		}
 	}
@@ -63,7 +63,7 @@ fu_asus_hid_device_init_seq(FuAsusHidDevice *self, GError **error)
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error)) {
-		g_prefix_error(error, "failed to initialize device: ");
+		g_prefix_error_literal(error, "failed to initialize device: ");
 		return FALSE;
 	}
 
@@ -149,7 +149,7 @@ fu_asus_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_FLASHING,
 						 error)) {
-		g_prefix_error(error, "failed to reset device: ");
+		g_prefix_error_literal(error, "failed to reset device: ");
 		return FALSE;
 	}
 

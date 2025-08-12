@@ -162,7 +162,7 @@ fu_uefi_dbx_snapd_notifier_dbx_manager_startup(FuUefiDbxSnapdNotifier *self, GEr
 						   startup_msg,
 						   strlen(startup_msg),
 						   error)) {
-		g_prefix_error(error, "failed to notify snapd of startup: ");
+		g_prefix_error_literal(error, "failed to notify snapd of startup: ");
 		return FALSE;
 	}
 
@@ -200,7 +200,7 @@ fu_uefi_dbx_snapd_notifier_dbx_update_prepare(FuUefiDbxSnapdNotifier *self,
 						   msg,
 						   strlen(msg),
 						   error)) {
-		g_prefix_error(error, "failed to notify snapd of prepare: ");
+		g_prefix_error_literal(error, "failed to notify snapd of prepare: ");
 		return FALSE;
 	}
 
@@ -228,7 +228,7 @@ fu_uefi_dbx_snapd_notifier_dbx_update_cleanup(FuUefiDbxSnapdNotifier *self, GErr
 						   msg,
 						   strlen(msg),
 						   error)) {
-		g_prefix_error(error, "failed to notify snapd of cleanup: ");
+		g_prefix_error_literal(error, "failed to notify snapd of cleanup: ");
 		return FALSE;
 	}
 

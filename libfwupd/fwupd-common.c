@@ -500,7 +500,7 @@ fwupd_unix_input_stream_from_bytes(GBytes *bytes, GError **error)
 		rc = g_unlink(tmp_file);
 		if (rc != 0) {
 			if (!g_close(fd, error)) {
-				g_prefix_error(error, "failed to close temporary file: ");
+				g_prefix_error_literal(error, "failed to close temporary file: ");
 				return NULL;
 			}
 			g_set_error_literal(error,

@@ -190,7 +190,7 @@ fu_ch341a_device_configure_stream(FuCh341aDevice *self, GError **error)
 			FU_CH341A_CMD_I2C_STM_SET | self->speed,
 			FU_CH341A_CMD_I2C_STM_END};
 	if (!fu_ch341a_device_write(self, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to configure stream: ");
+		g_prefix_error_literal(error, "failed to configure stream: ");
 		return FALSE;
 	}
 

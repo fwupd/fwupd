@@ -31,7 +31,7 @@ fu_ccgx_hid_device_enable_hpi_mode_cb(FuDevice *device, gpointer user_data, GErr
 				      FU_CCGX_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "switch to HPI mode error: ");
+		g_prefix_error_literal(error, "switch to HPI mode error: ");
 		return FALSE;
 	}
 	return TRUE;

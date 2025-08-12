@@ -273,8 +273,9 @@ fu_qc_firehose_impl_read_xml_cb(FuQcFirehoseImpl *self,
 					 G_MAXUINT64,
 					 FU_INTEGER_BASE_AUTO,
 					 error)) {
-				g_prefix_error(error,
-					       "failed to parse MaxPayloadSizeToTargetInBytes:");
+				g_prefix_error_literal(
+				    error,
+				    "failed to parse MaxPayloadSizeToTargetInBytes:");
 				return FALSE;
 			}
 			g_debug("max payload size now 0x%x", (guint)helper->max_payload_size);
@@ -573,7 +574,7 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
 	if (!fu_qc_firehose_impl_read_xml(self, 2500, helper, error)) {
-		g_prefix_error(error, "failed to setup: ");
+		g_prefix_error_literal(error, "failed to setup: ");
 		return FALSE;
 	}
 
@@ -830,7 +831,7 @@ fu_qc_firehose_impl_setup(FuQcFirehoseImpl *self, GError **error)
 	if (!fu_qc_firehose_impl_has_function(self, FU_QC_FIREHOSE_FUNCTIONS_CONFIGURE)) {
 		helper.read_func = fu_qc_firehose_impl_read_xml_nop_cb;
 		if (!fu_qc_firehose_impl_send_nop(self, &helper, error)) {
-			g_prefix_error(error, "failed to send NOP: ");
+			g_prefix_error_literal(error, "failed to send NOP: ");
 			return FALSE;
 		}
 	}
@@ -889,7 +890,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 
 	/* hardcode storage */
 	if (!fu_qc_firehose_impl_configure(self, "nand", &helper, error)) {
-		g_prefix_error(error, "failed to configure: ");
+		g_prefix_error_literal(error, "failed to configure: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -902,7 +903,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 						       &helper,
 						       fu_progress_get_child(progress),
 						       error)) {
-			g_prefix_error(error, "failed to erase targets: ");
+			g_prefix_error_literal(error, "failed to erase targets: ");
 			return FALSE;
 		}
 	}
@@ -916,7 +917,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 							 &helper,
 							 fu_progress_get_child(progress),
 							 error)) {
-			g_prefix_error(error, "failed to program targets: ");
+			g_prefix_error_literal(error, "failed to program targets: ");
 			return FALSE;
 		}
 	}
@@ -930,7 +931,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 						       &helper,
 						       fu_progress_get_child(progress),
 						       error)) {
-			g_prefix_error(error, "failed to patch targets: ");
+			g_prefix_error_literal(error, "failed to patch targets: ");
 			return FALSE;
 		}
 	}
@@ -947,7 +948,7 @@ fu_qc_firehose_impl_write_firmware(FuQcFirehoseImpl *self,
 							      (guint)bootable,
 							      &helper,
 							      error)) {
-				g_prefix_error(error, "failed to set bootable: ");
+				g_prefix_error_literal(error, "failed to set bootable: ");
 				return FALSE;
 			}
 		}

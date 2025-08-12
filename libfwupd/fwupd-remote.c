@@ -861,7 +861,7 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 		g_autofree gchar *buf = NULL;
 		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
 		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
-			g_prefix_error(error, "failed to get signature checksum: ");
+			g_prefix_error_literal(error, "failed to get signature checksum: ");
 			return FALSE;
 		}
 		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);

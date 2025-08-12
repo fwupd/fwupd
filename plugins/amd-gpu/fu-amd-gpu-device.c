@@ -219,7 +219,7 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 			      1000, /* ms */
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
+		g_prefix_error_literal(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
 		return FALSE;
 	}
 

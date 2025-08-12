@@ -84,7 +84,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL) {
-		g_prefix_error(error, "wacom scaler module failed to get bytes: ");
+		g_prefix_error_literal(error, "wacom scaler module failed to get bytes: ");
 		return FALSE;
 	}
 
@@ -95,7 +95,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 	blocks = fu_wac_module_scaler_parse_blocks(data, len, error);
 
 	if (blocks == NULL) {
-		g_prefix_error(error, "wacom scaler module failed to parse blocks: ");
+		g_prefix_error_literal(error, "wacom scaler module failed to parse blocks: ");
 		return FALSE;
 	}
 
@@ -107,7 +107,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_START_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom scaler module failed to erase: ");
+		g_prefix_error_literal(error, "wacom scaler module failed to erase: ");
 		return FALSE;
 	}
 
@@ -133,7 +133,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 					       FU_WAC_MODULE_POLL_INTERVAL,
 					       FU_WAC_MODULE_DATA_TIMEOUT,
 					       error)) {
-			g_prefix_error(error, "wacom scaler module failed to write: ");
+			g_prefix_error_literal(error, "wacom scaler module failed to write: ");
 			return FALSE;
 		}
 		/* update progress */
@@ -151,7 +151,7 @@ fu_wac_module_scaler_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_END_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom scaler module failed to end: ");
+		g_prefix_error_literal(error, "wacom scaler module failed to end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

@@ -406,7 +406,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 				     0x0,
 				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error)) {
-		g_prefix_error(error, "splash invalid: ");
+		g_prefix_error_literal(error, "splash invalid: ");
 		return FALSE;
 	}
 	width = fu_bitmap_image_get_width(bmp_image);
@@ -853,7 +853,7 @@ fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GErr
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse ScreenWidth: ");
+			g_prefix_error_literal(error, "failed to parse ScreenWidth: ");
 			return FALSE;
 		}
 		self->screen_width = (guint32)tmp64;
@@ -867,7 +867,7 @@ fu_uefi_capsule_plugin_ensure_screen_size_config(FuUefiCapsulePlugin *self, GErr
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse ScreenHeight: ");
+			g_prefix_error_literal(error, "failed to parse ScreenHeight: ");
 			return FALSE;
 		}
 		self->screen_height = (guint32)tmp64;
@@ -1028,7 +1028,7 @@ fu_uefi_capsule_plugin_check_cod_support(FuUefiCapsulePlugin *self, GError **err
 				 &bufsz,
 				 NULL,
 				 error)) {
-		g_prefix_error(error, "failed to read EFI variable: ");
+		g_prefix_error_literal(error, "failed to read EFI variable: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint64_safe(buf, bufsz, 0x0, &value, G_LITTLE_ENDIAN, error))

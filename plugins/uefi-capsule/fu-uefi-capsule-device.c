@@ -306,7 +306,7 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 		return FALSE;
 	st_inf = fu_struct_efi_update_info_parse(data, datasz, 0x0, error);
 	if (st_inf == NULL) {
-		g_prefix_error(error, "EFI variable is corrupt: ");
+		g_prefix_error_literal(error, "EFI variable is corrupt: ");
 		return FALSE;
 	}
 
@@ -321,7 +321,7 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 				 error)) {
-		g_prefix_error(error, "could not set EfiUpdateInfo: ");
+		g_prefix_error_literal(error, "could not set EfiUpdateInfo: ");
 		return FALSE;
 	}
 
@@ -399,7 +399,7 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error)) {
-		g_prefix_error(error, "Invalid ESRT GUID: ");
+		g_prefix_error_literal(error, "Invalid ESRT GUID: ");
 		return NULL;
 	}
 	fu_struct_efi_capsule_header_set_guid(st_cap, &esrt_guid);
@@ -474,7 +474,7 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 
 	source_app = fu_uefi_get_built_app_path(efivars, "fwupd", error);
 	if (source_app == NULL && secureboot_enabled) {
-		g_prefix_error(error, "missing signed bootloader for secure boot: ");
+		g_prefix_error_literal(error, "missing signed bootloader for secure boot: ");
 		return FALSE;
 	}
 
@@ -618,7 +618,7 @@ fu_uefi_capsule_device_perhaps_enable_debugging(FuUefiCapsuleDevice *self, GErro
 					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 					 error)) {
-			g_prefix_error(error, "failed to enable debugging: ");
+			g_prefix_error_literal(error, "failed to enable debugging: ");
 			return FALSE;
 		}
 		return TRUE;

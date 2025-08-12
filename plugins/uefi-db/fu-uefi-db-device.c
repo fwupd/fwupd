@@ -34,7 +34,7 @@ fu_uefi_db_device_probe(FuDevice *device, GError **error)
 					  FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 					  error);
 	if (siglist == NULL) {
-		g_prefix_error(error, "failed to parse db: ");
+		g_prefix_error_literal(error, "failed to parse db: ");
 		return FALSE;
 	}
 	sigs = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));

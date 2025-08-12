@@ -79,7 +79,7 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 				      FU_CFU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to send offer info: ");
+		g_prefix_error_literal(error, "failed to send offer info: ");
 		return FALSE;
 	}
 
@@ -93,7 +93,7 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 				      FU_CFU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error)) {
-		g_prefix_error(error, "failed to send offer info: ");
+		g_prefix_error_literal(error, "failed to send offer info: ");
 		return FALSE;
 	}
 	st_res = fu_struct_cfu_offer_rsp_parse(buf_in->data, buf_in->len, 0x1, error);
@@ -154,7 +154,7 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 				      FU_CFU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to send offer: ");
+		g_prefix_error_literal(error, "failed to send offer: ");
 		return FALSE;
 	}
 
@@ -168,7 +168,7 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 				      FU_CFU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error)) {
-		g_prefix_error(error, "failed to get offer response: ");
+		g_prefix_error_literal(error, "failed to get offer response: ");
 		return FALSE;
 	}
 	st = fu_struct_cfu_offer_rsp_parse(buf_in->data, buf_in->len, 0x1, error);
@@ -243,7 +243,7 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 					      FU_CFU_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
-			g_prefix_error(error, "failed to send payload: ");
+			g_prefix_error_literal(error, "failed to send payload: ");
 			return FALSE;
 		}
 
@@ -257,7 +257,7 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 					      FU_CFU_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					      error)) {
-			g_prefix_error(error, "failed to get payload response: ");
+			g_prefix_error_literal(error, "failed to get payload response: ");
 			return FALSE;
 		}
 		st_rsp = fu_struct_cfu_content_rsp_parse(buf_in->data, buf_in->len, 0x1, error);
@@ -383,23 +383,23 @@ static gboolean
 fu_cfu_device_verify_descriptor(FuCfuDevice *self, FuHidDescriptor *descriptor, GError **error)
 {
 	if (!fu_cfu_device_ensure_map_item(descriptor, &self->version_get_report, error)) {
-		g_prefix_error(error, "invalid version-get-report: ");
+		g_prefix_error_literal(error, "invalid version-get-report: ");
 		return FALSE;
 	}
 	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_set_report, error)) {
-		g_prefix_error(error, "invalid offer-set-report: ");
+		g_prefix_error_literal(error, "invalid offer-set-report: ");
 		return FALSE;
 	}
 	if (!fu_cfu_device_ensure_map_item(descriptor, &self->offer_get_report, error)) {
-		g_prefix_error(error, "invalid offer-get-report: ");
+		g_prefix_error_literal(error, "invalid offer-get-report: ");
 		return FALSE;
 	}
 	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_set_report, error)) {
-		g_prefix_error(error, "invalid content-set-report: ");
+		g_prefix_error_literal(error, "invalid content-set-report: ");
 		return FALSE;
 	}
 	if (!fu_cfu_device_ensure_map_item(descriptor, &self->content_get_report, error)) {
-		g_prefix_error(error, "invalid content-get-report: ");
+		g_prefix_error_literal(error, "invalid content-get-report: ");
 		return FALSE;
 	}
 	return TRUE;

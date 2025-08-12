@@ -231,7 +231,7 @@ fu_dbus_daemon_create_request(FuDbusDaemon *self, const gchar *sender, GError **
 				       NULL,
 				       error);
 	if (value == NULL) {
-		g_prefix_error(error, "failed to read user id of caller: ");
+		g_prefix_error_literal(error, "failed to read user id of caller: ");
 		return NULL;
 	}
 	g_variant_get(value, "(u)", &calling_uid);
@@ -2799,7 +2799,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 				FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG,
 			    fu_progress_get_child(progress),
 			    error)) {
-		g_prefix_error(error, "failed to load engine: ");
+		g_prefix_error_literal(error, "failed to load engine: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -2808,7 +2808,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 	self->introspection_daemon =
 	    fu_dbus_daemon_load_introspection(FWUPD_DBUS_INTERFACE ".xml", error);
 	if (self->introspection_daemon == NULL) {
-		g_prefix_error(error, "failed to load introspection: ");
+		g_prefix_error_literal(error, "failed to load introspection: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -2831,7 +2831,7 @@ fu_dbus_daemon_setup(FuDaemon *daemon,
 						NULL,
 						error);
 		if (server == NULL) {
-			g_prefix_error(error, "failed to create D-Bus server: ");
+			g_prefix_error_literal(error, "failed to create D-Bus server: ");
 			return FALSE;
 		}
 		g_message("using socket address: %s", g_dbus_server_get_client_address(server));

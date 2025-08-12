@@ -81,7 +81,7 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 		return FALSE;
 	}
 	if (!fu_strtoull(attribute, &status, 0, G_MAXUINT64, FU_INTEGER_BASE_16, error)) {
-		g_prefix_error(error, "failed to read authorized: ");
+		g_prefix_error_literal(error, "failed to read authorized: ");
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
@@ -227,7 +227,7 @@ fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **er
 			 G_MAXUINT64,
 			 FU_INTEGER_BASE_16,
 			 error)) {
-		g_prefix_error(error, "failed to read nvm_authenticate: ");
+		g_prefix_error_literal(error, "failed to read nvm_authenticate: ");
 		return FALSE;
 	}
 
@@ -364,7 +364,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 
 	/* authenticate (possibly on unplug if device supports it) */
 	if (!fu_thunderbolt_device_authenticate(FU_DEVICE(self), error)) {
-		g_prefix_error(error, "could not start thunderbolt device upgrade: ");
+		g_prefix_error_literal(error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
 

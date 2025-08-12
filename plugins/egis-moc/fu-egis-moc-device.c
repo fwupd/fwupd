@@ -108,7 +108,7 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to req: ");
+		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
 	if (actual_len != st_hdr->len) {
@@ -140,7 +140,7 @@ fu_egis_moc_device_cmd_recv_cb(FuDevice *self, gpointer user_data, GError **erro
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to reply: ");
+		g_prefix_error_literal(error, "failed to reply: ");
 		return FALSE;
 	}
 	g_byte_array_set_size(buf, actual_len);
@@ -259,7 +259,7 @@ fu_egis_moc_device_update_init(FuEgisMocDevice *self, GError **error)
 					 sizeof(challenge),
 					 TRUE,
 					 error)) {
-		g_prefix_error(error, "failed to get challenge: ");
+		g_prefix_error_literal(error, "failed to get challenge: ");
 		return FALSE;
 	}
 	g_hmac_update(hmac, (guchar *)challenge, sizeof(challenge));
@@ -274,7 +274,7 @@ fu_egis_moc_device_update_init(FuEgisMocDevice *self, GError **error)
 					 sizeof(digest),
 					 FALSE,
 					 error)) {
-		g_prefix_error(error, "failed to go to OTA mode: ");
+		g_prefix_error_literal(error, "failed to go to OTA mode: ");
 		return FALSE;
 	}
 
@@ -295,7 +295,7 @@ fu_egis_moc_device_ensure_op_mode(FuEgisMocDevice *self, GError **error)
 					 sizeof(op_mode),
 					 TRUE,
 					 error)) {
-		g_prefix_error(error, "failed to get mode: ");
+		g_prefix_error_literal(error, "failed to get mode: ");
 		return FALSE;
 	}
 	if (op_mode[0] == FU_EGIS_MOC_OP_MODE_BOOTLOADER) {
@@ -318,14 +318,14 @@ fu_egis_moc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_egis_moc_device_ensure_op_mode(self, error)) {
-		g_prefix_error(error, "failed to get device mode: ");
+		g_prefix_error_literal(error, "failed to get device mode: ");
 		return FALSE;
 	}
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		fu_device_set_version(FU_DEVICE(self), "0.0.0.1");
 	} else {
 		if (!fu_egis_moc_device_ensure_version(self, error)) {
-			g_prefix_error(error, "failed to get firmware version: ");
+			g_prefix_error_literal(error, "failed to get firmware version: ");
 			return FALSE;
 		}
 	}
@@ -368,7 +368,7 @@ fu_egis_moc_device_write_packets(FuEgisMocDevice *self,
 						 req->len,
 						 FALSE,
 						 error)) {
-			g_prefix_error(error, "failed to write: ");
+			g_prefix_error_literal(error, "failed to write: ");
 			return FALSE;
 		}
 
@@ -406,7 +406,7 @@ fu_egis_moc_device_write_checksum(FuEgisMocDevice *self, FuChunkArray *chunks, G
 					 sizeof(hmac),
 					 FALSE,
 					 error)) {
-		g_prefix_error(error, "failed to send OTA final: ");
+		g_prefix_error_literal(error, "failed to send OTA final: ");
 		return FALSE;
 	}
 
@@ -478,7 +478,7 @@ fu_egis_moc_device_detach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 	}
 	if (!fu_egis_moc_device_update_init(self, error)) {
-		g_prefix_error(error, "failed to detach: ");
+		g_prefix_error_literal(error, "failed to detach: ");
 		return FALSE;
 	}
 

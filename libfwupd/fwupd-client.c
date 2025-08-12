@@ -4431,7 +4431,7 @@ fwupd_client_refresh_remote_signature_cb(GObject *source, GAsyncResult *res, gpo
 	}
 	data->signature = g_steal_pointer(&bytes);
 	if (!fwupd_remote_load_signature_bytes(data->remote, data->signature, &error)) {
-		g_prefix_error(&error, "Failed to load signature: ");
+		g_prefix_error_literal(&error, "Failed to load signature: ");
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -6049,7 +6049,7 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 	/* parse */
 	bytes = fwupd_client_upload_bytes_finish(FWUPD_CLIENT(source), res, &error);
 	if (bytes == NULL) {
-		g_prefix_error(&error, "failed to upload report: ");
+		g_prefix_error_literal(&error, "failed to upload report: ");
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}

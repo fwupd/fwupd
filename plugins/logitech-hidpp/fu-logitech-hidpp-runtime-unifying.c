@@ -44,7 +44,7 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
 		} else {
-			g_prefix_error(&error_local, "failed to detach to bootloader: ");
+			g_prefix_error_literal(&error_local, "failed to detach to bootloader: ");
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -76,7 +76,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to read device config: ");
+			g_prefix_error_literal(error, "failed to read device config: ");
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(config,
@@ -123,7 +123,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications(self, error)) {
-		g_prefix_error(error, "failed to enable notifications: ");
+		g_prefix_error_literal(error, "failed to enable notifications: ");
 		return FALSE;
 	}
 

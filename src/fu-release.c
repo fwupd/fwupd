@@ -654,7 +654,8 @@ fu_release_check_requirements(FuRelease *self,
 	/* device requires a version check */
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED)) {
 		if (!fu_release_check_requirements_version_check(self, error)) {
-			g_prefix_error(error, "device requires firmware with a version check: ");
+			g_prefix_error_literal(error,
+					       "device requires firmware with a version check: ");
 			return FALSE;
 		}
 	}

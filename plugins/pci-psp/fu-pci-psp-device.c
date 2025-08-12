@@ -38,7 +38,7 @@ fu_pci_psp_device_ensure_agesa_version(FuPciPspDevice *self, GError **error)
 						   FU_CPU_AGESA_SMBIOS_OFFSET,
 						   error);
 	if (agesa_stream == NULL) {
-		g_prefix_error(error, "no SMBIOS data: ");
+		g_prefix_error_literal(error, "no SMBIOS data: ");
 		return FALSE;
 	}
 	split = g_strsplit(agesa_stream, " ", 3);

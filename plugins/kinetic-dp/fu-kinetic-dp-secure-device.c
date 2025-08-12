@@ -68,7 +68,7 @@ fu_kinetic_dp_secure_device_read_param_reg(FuKineticDpSecureDevice *self,
 				  1,
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read DPCD_KT_PARAM_REG: ");
+		g_prefix_error_literal(error, "failed to read DPCD_KT_PARAM_REG: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -87,7 +87,7 @@ fu_kinetic_dp_secure_device_write_kt_prop_cmd(FuKineticDpSecureDevice *self,
 				   sizeof(cmd_id),
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error, "failed to write DPCD_KT_CMD_STATUS_REG: ");
+		g_prefix_error_literal(error, "failed to write DPCD_KT_CMD_STATUS_REG: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -104,7 +104,7 @@ fu_kinetic_dp_secure_device_clear_kt_prop_cmd(FuKineticDpSecureDevice *self, GEr
 				   sizeof(cmd_id),
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error, "failed to write DPCD_KT_CMD_STATUS_REG: ");
+		g_prefix_error_literal(error, "failed to write DPCD_KT_CMD_STATUS_REG: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -125,7 +125,7 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 				  sizeof(status),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read DPCD_ADDR_CMD_STATUS_REG: ");
+		g_prefix_error_literal(error, "failed to read DPCD_ADDR_CMD_STATUS_REG: ");
 		return FALSE;
 	}
 
@@ -178,7 +178,7 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd(FuKineticDpSecureDevice *self,
 				  poll_interval_ms,
 				  GUINT_TO_POINTER(cmd_id),
 				  error)) {
-		g_prefix_error(error, "timeout waiting for prop command: ");
+		g_prefix_error_literal(error, "timeout waiting for prop command: ");
 		return FALSE;
 	}
 
@@ -202,7 +202,7 @@ fu_kinetic_dp_secure_device_read_dpcd_reply_data_reg(FuKineticDpSecureDevice *se
 				  1,
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read DPCD_ISP_REPLY_DATA_LEN_REG: ");
+		g_prefix_error_literal(error, "failed to read DPCD_ISP_REPLY_DATA_LEN_REG: ");
 		return FALSE;
 	}
 
@@ -223,7 +223,7 @@ fu_kinetic_dp_secure_device_read_dpcd_reply_data_reg(FuKineticDpSecureDevice *se
 					  read_data_len,
 					  FU_KINETIC_DP_DEVICE_TIMEOUT,
 					  error)) {
-			g_prefix_error(error, "failed to read DPCD_ISP_REPLY_DATA_REG: ");
+			g_prefix_error_literal(error, "failed to read DPCD_ISP_REPLY_DATA_REG: ");
 			return FALSE;
 		}
 		*read_len = read_data_len;
@@ -255,7 +255,7 @@ fu_kinetic_dp_secure_device_write_dpcd_reply_data_reg(FuKineticDpSecureDevice *s
 				   len,
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error, "failed to write DPCD_KT_REPLY_DATA_REG: ");
+		g_prefix_error_literal(error, "failed to write DPCD_KT_REPLY_DATA_REG: ");
 		return FALSE;
 	}
 	return fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
@@ -425,7 +425,7 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 									   buf_crc16,
 									   sizeof(buf_crc16),
 									   error)) {
-			g_prefix_error(error, "failed to send CRC16 to reply data register: ");
+			g_prefix_error_literal(error, "failed to send CRC16 to reply register: ");
 			return FALSE;
 		}
 
@@ -437,7 +437,7 @@ fu_kinetic_dp_secure_device_send_payload(FuKineticDpSecureDevice *self,
 			wait_interval_ms,
 			&status,
 			error)) {
-			g_prefix_error(error, "target failed to process payload chunk: ");
+			g_prefix_error_literal(error, "target failed to process payload chunk: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -504,7 +504,7 @@ fu_kinetic_dp_secure_device_wait_dpcd_cmd_cleared(FuKineticDpSecureDevice *self,
 				  poll_interval_ms,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "timeout waiting for DPCD_ISP_SINK_STATUS_REG: ");
+		g_prefix_error_literal(error, "timeout waiting for DPCD_ISP_SINK_STATUS_REG: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -548,7 +548,7 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 								  sizeof(reply_data),
 								  &read_len,
 								  error)) {
-		g_prefix_error(error, "failed to read flash ID and size: ");
+		g_prefix_error_literal(error, "failed to read flash ID and size: ");
 		return FALSE;
 	}
 	st = fu_struct_kinetic_dp_flash_info_parse(reply_data, sizeof(reply_data), 0x0, error);
@@ -589,18 +589,18 @@ fu_kinetic_dp_secure_device_send_isp_drv(FuKineticDpSecureDevice *self,
 	if (!fu_kinetic_dp_secure_device_enter_code_loading_mode(self,
 								 g_bytes_get_size(fw),
 								 error)) {
-		g_prefix_error(error, "enabling code-loading mode failed: ");
+		g_prefix_error_literal(error, "enabling code-loading mode failed: ");
 		return FALSE;
 	}
 
 	if (!fu_kinetic_dp_secure_device_send_payload(self, fw, 10000, 50, progress, error)) {
-		g_prefix_error(error, "sending ISP driver payload failed: ");
+		g_prefix_error_literal(error, "sending ISP driver payload failed: ");
 		return FALSE;
 	}
 
 	g_debug("sending ISP driver payload...");
 	if (!fu_kinetic_dp_secure_device_execute_isp_drv(self, error)) {
-		g_prefix_error(error, "ISP driver booting up failed: ");
+		g_prefix_error_literal(error, "ISP driver booting up failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -650,7 +650,7 @@ fu_kinetic_dp_secure_device_enable_fw_update_mode(FuKineticDpSecureFirmware *fir
 		return FALSE;
 
 	if (!fu_kinetic_dp_secure_device_write_dpcd_reply_data_reg(self, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "send payload size failed: ");
+		g_prefix_error_literal(error, "send payload size failed: ");
 		return FALSE;
 	}
 
@@ -661,7 +661,7 @@ fu_kinetic_dp_secure_device_enable_fw_update_mode(FuKineticDpSecureFirmware *fir
 		500,
 		&status,
 		error)) {
-		g_prefix_error(error, "entering F/W update mode failed: ");
+		g_prefix_error_literal(error, "entering F/W update mode failed: ");
 		return FALSE;
 	}
 
@@ -705,7 +705,7 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 							      200,
 							      fu_progress_get_child(progress),
 							      error)) {
-			g_prefix_error(error, "failed to send certificates: ");
+			g_prefix_error_literal(error, "failed to send certificates: ");
 			return FALSE;
 		}
 	}
@@ -724,7 +724,7 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 						      200,
 						      fu_progress_get_child(progress),
 						      error)) {
-		g_prefix_error(error, "failed to send ESM payload: ");
+		g_prefix_error_literal(error, "failed to send ESM payload: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -742,7 +742,7 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 						      200,
 						      fu_progress_get_child(progress),
 						      error)) {
-		g_prefix_error(error, "failed to send App FW payload: ");
+		g_prefix_error_literal(error, "failed to send App FW payload: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -763,7 +763,7 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 						      200,
 						      fu_progress_get_child(progress),
 						      error)) {
-		g_prefix_error(error, "failed to send App init data: ");
+		g_prefix_error_literal(error, "failed to send App init data: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -781,7 +781,7 @@ fu_kinetic_dp_secure_device_send_app_fw(FuKineticDpSecureDevice *self,
 						      200,
 						      fu_progress_get_child(progress),
 						      error)) {
-		g_prefix_error(error, "failed to send App ID data: ");
+		g_prefix_error_literal(error, "failed to send App ID data: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -804,7 +804,7 @@ fu_kinetic_dp_secure_device_install_fw_images_cb(FuDevice *device,
 				  sizeof(status),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "failed to read DPCD_MCA_CMD_REG: ");
+		g_prefix_error_literal(error, "failed to read DPCD_MCA_CMD_REG: ");
 		return FALSE;
 	}
 
@@ -834,7 +834,7 @@ fu_kinetic_dp_secure_device_install_fw_images(FuKineticDpSecureDevice *self, GEr
 	guint8 cmd_id = FU_KINETIC_DP_DPCD_CMD_INSTALL_IMAGES;
 
 	if (!fu_kinetic_dp_secure_device_write_kt_prop_cmd(self, cmd_id, error)) {
-		g_prefix_error(error, "failed to send DPCD command: ");
+		g_prefix_error_literal(error, "failed to send DPCD command: ");
 		return FALSE;
 	}
 
@@ -844,7 +844,7 @@ fu_kinetic_dp_secure_device_install_fw_images(FuKineticDpSecureDevice *self, GEr
 				  INSTALL_IMAGE_POLL_INTERVAL_MS,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "timeout waiting for install command to be processed ");
+		g_prefix_error_literal(error, "timeout waiting for install to be processed ");
 		return FALSE;
 	}
 

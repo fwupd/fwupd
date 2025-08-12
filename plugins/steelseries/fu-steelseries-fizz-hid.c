@@ -47,7 +47,7 @@ fu_steelseries_fizz_hid_command_cb(FuDevice *device, gpointer user_data, GError 
 		return FALSE;
 	fu_dump_raw(G_LOG_DOMAIN, "write", buf, sizeof(buf));
 	if (!fu_udev_device_pwrite(FU_UDEV_DEVICE(device), 0, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to write report: ");
+		g_prefix_error_literal(error, "failed to write report: ");
 		return FALSE;
 	}
 

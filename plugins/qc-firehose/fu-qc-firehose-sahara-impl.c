@@ -93,7 +93,7 @@ fu_qc_firehose_sahara_impl_read32(FuQcFirehoseSaharaImpl *self,
 					 fu_qc_firehose_sahara_pkt_read_get_length(st),
 					 error);
 	if (blob_chunk == NULL) {
-		g_prefix_error(error, "failed to get bootloader chunk: ");
+		g_prefix_error_literal(error, "failed to get bootloader chunk: ");
 		return FALSE;
 	}
 	return fu_qc_firehose_sahara_impl_write(self,
@@ -120,7 +120,7 @@ fu_qc_firehose_sahara_impl_read64(FuQcFirehoseSaharaImpl *self,
 					 fu_qc_firehose_sahara_pkt_read64_get_length(st),
 					 error);
 	if (blob_chunk == NULL) {
-		g_prefix_error(error, "failed to get bootloader chunk: ");
+		g_prefix_error_literal(error, "failed to get bootloader chunk: ");
 		return FALSE;
 	}
 	return fu_qc_firehose_sahara_impl_write(self,
@@ -198,7 +198,7 @@ fu_qc_firehose_sahara_impl_write_firmware(FuQcFirehoseSaharaImpl *self,
 
 		buf = fu_qc_firehose_sahara_impl_read(self, error);
 		if (buf == NULL) {
-			g_prefix_error(error, "failed to get device response: ");
+			g_prefix_error_literal(error, "failed to get device response: ");
 			return FALSE;
 		}
 

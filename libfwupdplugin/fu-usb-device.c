@@ -384,7 +384,7 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 					    1000,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to get USB descriptor: ");
+		g_prefix_error_literal(error, "failed to get USB descriptor: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
@@ -528,14 +528,14 @@ fu_usb_device_open(FuDevice *device, GError **error)
 
 	/* open */
 	if (!fu_usb_device_open_internal(self, error)) {
-		g_prefix_error(error, "failed to open device: ");
+		g_prefix_error_literal(error, "failed to open device: ");
 		return FALSE;
 	}
 
 	/* if set */
 	if (priv->configuration >= 0) {
 		if (!fu_usb_device_set_configuration_internal(self, priv->configuration, error)) {
-			g_prefix_error(error, "failed to set configuration: ");
+			g_prefix_error_literal(error, "failed to set configuration: ");
 			return FALSE;
 		}
 	}
@@ -746,7 +746,7 @@ fu_usb_device_ready(FuDevice *device, GError **error)
 	/* get the interface GUIDs */
 	intfs = fu_usb_device_get_interfaces(self, error);
 	if (intfs == NULL) {
-		g_prefix_error(error, "failed to get interfaces: ");
+		g_prefix_error_literal(error, "failed to get interfaces: ");
 		return FALSE;
 	}
 
@@ -847,7 +847,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 					   FU_TYPE_USB_DEVICE_MS_DS20,
 					   G_TYPE_INVALID);
 	if (ds20 == NULL) {
-		g_prefix_error(error, "failed to parse: ");
+		g_prefix_error_literal(error, "failed to parse: ");
 		return FALSE;
 	}
 	str = fu_firmware_to_string(ds20);
@@ -865,7 +865,7 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 	if (usb_locker == NULL)
 		return FALSE;
 	if (!fu_usb_device_ds20_apply_to_device(FU_USB_DEVICE_DS20(ds20), self, error)) {
-		g_prefix_error(error, "failed to apply DS20 data: ");
+		g_prefix_error_literal(error, "failed to apply DS20 data: ");
 		return FALSE;
 	}
 
@@ -1205,7 +1205,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	/* add the interface GUIDs */
 	intfs = fu_usb_device_get_interfaces(self, error);
 	if (intfs == NULL) {
-		g_prefix_error(error, "failed to get interfaces: ");
+		g_prefix_error_literal(error, "failed to get interfaces: ");
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {
@@ -2647,7 +2647,7 @@ fu_usb_device_ensure_hid_descriptor(FuUsbDevice *self,
 					    5000,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to get HID report descriptor: ");
+		g_prefix_error_literal(error, "failed to get HID report descriptor: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "HidDescriptor", buf, bufsz);

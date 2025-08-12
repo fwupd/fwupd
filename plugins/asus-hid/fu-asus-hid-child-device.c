@@ -42,7 +42,7 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 						  req->len,
 						  FU_IOCTL_FLAG_NONE,
 						  error)) {
-			g_prefix_error(error, "failed to send packet: ");
+			g_prefix_error_literal(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
@@ -52,7 +52,7 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 						  res->len,
 						  FU_IOCTL_FLAG_NONE,
 						  error)) {
-			g_prefix_error(error, "failed to receive packet: ");
+			g_prefix_error_literal(error, "failed to receive packet: ");
 			return FALSE;
 		}
 	}
@@ -170,11 +170,11 @@ fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 	}
 
 	if (!fu_asus_hid_child_device_ensure_manufacturer(self, error)) {
-		g_prefix_error(error, "failed to ensure manufacturer: ");
+		g_prefix_error_literal(error, "failed to ensure manufacturer: ");
 		return FALSE;
 	}
 	if (!fu_asus_hid_child_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to ensure version: ");
+		g_prefix_error_literal(error, "failed to ensure version: ");
 		return FALSE;
 	}
 

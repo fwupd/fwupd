@@ -1070,7 +1070,7 @@ fu_util_device_test_step(FuUtil *self,
 	/* remove emulated devices */
 	if (helper->use_emulation) {
 		if (!fu_util_device_test_remove_emulated_devices(self, error)) {
-			g_prefix_error(error, "failed to remove emulated devices: ");
+			g_prefix_error_literal(error, "failed to remove emulated devices: ");
 			return FALSE;
 		}
 	}
@@ -1099,7 +1099,7 @@ fu_util_device_test_filename(FuUtil *self,
 
 	/* parse JSON */
 	if (!json_parser_load_from_file(parser, filename, error)) {
-		g_prefix_error(error, "test not in JSON format: ");
+		g_prefix_error_literal(error, "test not in JSON format: ");
 		return FALSE;
 	}
 	json_root = json_parser_get_root(parser);
@@ -4737,7 +4737,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
 		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error(error, "failed to set BIOS setting: ");
+			g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 

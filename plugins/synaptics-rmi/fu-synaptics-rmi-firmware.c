@@ -143,7 +143,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 	g_debug("v10 RmiContainerDescriptor at 0x%x", cntr_addr);
 	st_dsc = fu_struct_rmi_container_descriptor_parse_stream(stream, cntr_addr, error);
 	if (st_dsc == NULL) {
-		g_prefix_error(error, "RmiContainerDescriptor invalid: ");
+		g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
 	if (bufsz < sizeof(guint32) + st_dsc->len) {

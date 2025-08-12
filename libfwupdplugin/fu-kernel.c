@@ -396,7 +396,7 @@ fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
 
 	grubby_path = fu_path_find_program("grubby", error);
 	if (grubby_path == NULL) {
-		g_prefix_error(error, "failed to find grubby: ");
+		g_prefix_error_literal(error, "failed to find grubby: ");
 		return FALSE;
 	}
 	if (enable)

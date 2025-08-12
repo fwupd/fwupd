@@ -44,7 +44,7 @@ fu_powerd_plugin_create_suspend_file(GError **error)
 	inhibitsuspend_filename = g_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
 	getpid_str = g_strdup_printf("%d", getpid());
 	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
-		g_prefix_error(error, "lock file unable to be created: ");
+		g_prefix_error_literal(error, "lock file unable to be created: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -131,7 +131,7 @@ fu_powerd_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 						    error);
 
 	if (self->proxy == NULL) {
-		g_prefix_error(error, "failed to connect to powerd: ");
+		g_prefix_error_literal(error, "failed to connect to powerd: ");
 		return FALSE;
 	}
 	name_owner = g_dbus_proxy_get_name_owner(self->proxy);

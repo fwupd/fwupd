@@ -216,7 +216,7 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 	    fu_logitech_hidpp_bootloader_request_new();
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_REBOOT;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to attach back to runtime: ");
+		g_prefix_error_literal(error, "failed to attach back to runtime: ");
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -236,7 +236,7 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	/* call into hardware */
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_BL_VERSION;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get firmware version: ");
+		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}
 
@@ -248,7 +248,7 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	minor = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6);
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
-		g_prefix_error(error, "failed to format firmware version: ");
+		g_prefix_error_literal(error, "failed to format firmware version: ");
 		return FALSE;
 	}
 	fu_device_set_version_bootloader(FU_DEVICE(self), version);
@@ -278,7 +278,7 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 	/* get memory map */
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_MEMINFO;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get meminfo: ");
+		g_prefix_error_literal(error, "failed to get meminfo: ");
 		return FALSE;
 	}
 	if (req->len != 0x06) {
@@ -332,7 +332,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 				      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "failed to send data: ");
+		g_prefix_error_literal(error, "failed to send data: ");
 		return FALSE;
 	}
 
@@ -363,7 +363,7 @@ fu_logitech_hidpp_bootloader_request(FuLogitechHidppBootloader *self,
 					      FU_LOGITECH_HIDPP_DEVICE_TIMEOUT_MS,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to get data: ");
+		g_prefix_error_literal(error, "failed to get data: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "device->host", buf_response, actual_length);

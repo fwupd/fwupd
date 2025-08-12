@@ -1045,15 +1045,15 @@ fu_parade_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(device);
 
 	if (!fu_parade_usbhub_device_acquire_spi_master(self, error)) {
-		g_prefix_error(error, "failed to acquire SPI: ");
+		g_prefix_error_literal(error, "failed to acquire SPI: ");
 		return FALSE;
 	}
 	if (!fu_parade_usbhub_device_enable_spi(self, error)) {
-		g_prefix_error(error, "failed to enable SPI: ");
+		g_prefix_error_literal(error, "failed to enable SPI: ");
 		return FALSE;
 	}
 	if (!fu_parade_usbhub_device_spi_rom_chip_unprotect(self, error)) {
-		g_prefix_error(error, "failed to unprotect SPI ROM: ");
+		g_prefix_error_literal(error, "failed to unprotect SPI ROM: ");
 		return FALSE;
 	}
 
@@ -1067,11 +1067,11 @@ fu_parade_usbhub_device_attach(FuDevice *device, FuProgress *progress, GError **
 	FuParadeUsbhubDevice *self = FU_PARADE_USBHUB_DEVICE(device);
 
 	if (!fu_parade_usbhub_device_spi_rom_chip_protect(self, error)) {
-		g_prefix_error(error, "failed to protect SPI ROM: ");
+		g_prefix_error_literal(error, "failed to protect SPI ROM: ");
 		return FALSE;
 	}
 	if (!fu_parade_usbhub_device_disable_spi(self, error)) {
-		g_prefix_error(error, "failed to disable SPI: ");
+		g_prefix_error_literal(error, "failed to disable SPI: ");
 		return FALSE;
 	}
 
@@ -1090,7 +1090,7 @@ fu_parade_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* get the version from the hardware */
 	if (!fu_parade_usbhub_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to get version: ");
+		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
 
@@ -1109,7 +1109,7 @@ fu_parade_usbhub_device_prepare(FuDevice *device,
 	if (self->chip == FU_PARADE_USBHUB_CHIP_PS188) {
 		/* prevent staying in high-power charging mode if UFP is disconnected */
 		if (!fu_parade_usbhub_device_set_ufp_disconnect_flag(self, error)) {
-			g_prefix_error(error, "failed to set UFP disconnect flag: ");
+			g_prefix_error_literal(error, "failed to set UFP disconnect flag: ");
 			return FALSE;
 		}
 	}
@@ -1196,7 +1196,7 @@ fu_parade_usbhub_device_write_firmware(FuDevice *device,
 
 	/* compare checksum */
 	if (!fu_parade_usbhub_device_spi_rom_checksum(self, blob->len, &checksum_new, error)) {
-		g_prefix_error(error, "failed to get ROM checksum: ");
+		g_prefix_error_literal(error, "failed to get ROM checksum: ");
 		return FALSE;
 	}
 	checksum = fu_crc32(FU_CRC_KIND_B32_MPEG2, blob->data, blob->len);

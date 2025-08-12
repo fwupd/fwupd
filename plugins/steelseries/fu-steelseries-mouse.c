@@ -43,7 +43,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 					    FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to do control transfer: ");
+		g_prefix_error_literal(error, "failed to do control transfer: ");
 		return FALSE;
 	}
 	if (actual_len != 32) {
@@ -62,7 +62,7 @@ fu_steelseries_mouse_setup(FuDevice *device, GError **error)
 					      FU_STEELSERIES_TRANSACTION_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to do EP1 transfer: ");
+		g_prefix_error_literal(error, "failed to do EP1 transfer: ");
 		return FALSE;
 	}
 	if (actual_len != 32) {

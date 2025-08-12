@@ -45,6 +45,17 @@ def _fix_newlines(lines: list[str]) -> list[str]:
             padding += 1
             continue
 
+        # push back onto previous line
+        if (
+            line
+            and line.lstrip()[0] == '"'
+            and lines_fixed
+            and lines_fixed[-1].endswith('"')
+        ):
+            lines_fixed[-1] = lines_fixed[-1][:-1] + line.lstrip()[1:]
+            padding += 1
+            continue
+
         # this means the line numbers match
         for _ in range(padding):
             lines_fixed.append("\n")
@@ -205,9 +216,19 @@ class Checker:
             return
         sections = line.split(",")
         if len(sections) == 4:
-            self.add_failure(
-                f"missing literal, use g_task_return_new_error_literal() instead"
-            )
+            self.add_failure(f"missing literal, use g_task_return_new_error() instead")
+
+    def _test_line_missing_literal_prefix_error(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_prefix_error(")
+        if idx == -1:
+            return
+        sections = line.split(",")
+        if len(sections) == 2:
+            self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
 
     def _test_line_enums(self, line: str) -> None:
         # skip!
@@ -633,6 +654,7 @@ class Checker:
 
             # test for missing literals
             self._test_line_missing_literal_task_return_new(line)
+            self._test_line_missing_literal_prefix_error(line)
 
             # test for static variables
             self._test_static_vars(line)

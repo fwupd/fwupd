@@ -58,7 +58,7 @@ fu_qc_firehose_raw_device_impl_write_firmware(FuDevice *device,
 	FuQcFirehoseRawDevice *self = FU_QC_FIREHOSE_RAW_DEVICE(device);
 	if (self->supported_functions == FU_QC_FIREHOSE_FUNCTIONS_NONE) {
 		if (!fu_qc_firehose_impl_setup(FU_QC_FIREHOSE_IMPL(self), error)) {
-			g_prefix_error(error, "failed to setup before write: ");
+			g_prefix_error_literal(error, "failed to setup before write: ");
 			return FALSE;
 		}
 	}
@@ -162,7 +162,7 @@ fu_qc_firehose_raw_device_impl_read(FuQcFirehoseImpl *impl, guint timeout_ms, GE
 				 timeout_ms,
 				 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 				 error)) {
-		g_prefix_error(error, "failed to do bulk transfer (read): ");
+		g_prefix_error_literal(error, "failed to do bulk transfer (read): ");
 		return NULL;
 	}
 

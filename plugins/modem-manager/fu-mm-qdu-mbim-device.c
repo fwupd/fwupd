@@ -58,7 +58,7 @@ fu_mm_qdu_mbim_device_write_chunk(FuMmQduMbimDevice *self, FuChunk *chk, GError 
 		return FALSE;
 	if (!mbim_message_qdu_file_write_response_parse(response, error)) {
 		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse write-chunk response: ");
+		g_prefix_error_literal(error, "failed to parse write-chunk response: ");
 		return FALSE;
 	}
 
@@ -78,7 +78,7 @@ fu_mm_qdu_mbim_device_write_chunks(FuMmQduMbimDevice *self,
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_chunk_array_index(chunks, 0, error);
 		if (chk == NULL) {
-			g_prefix_error(error, "failed to get chunk: ");
+			g_prefix_error_literal(error, "failed to get chunk: ");
 			return FALSE;
 		}
 		if (!fu_mm_qdu_mbim_device_write_chunk(self, chk, error))
@@ -131,7 +131,7 @@ fu_mm_qdu_mbim_device_write(FuMmQduMbimDevice *self,
 							    NULL,
 							    error)) {
 		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse action-start response: ");
+		g_prefix_error_literal(error, "failed to parse action-start response: ");
 		return FALSE;
 	}
 	g_debug("successfully request modem to update session");
@@ -153,7 +153,7 @@ fu_mm_qdu_mbim_device_write(FuMmQduMbimDevice *self,
 						       NULL,
 						       error)) {
 		fu_mm_mbim_device_error_convert(error);
-		g_prefix_error(error, "failed to parse file-open response: ");
+		g_prefix_error_literal(error, "failed to parse file-open response: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

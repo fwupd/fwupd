@@ -442,7 +442,7 @@ fu_nvme_device_write_firmware(FuDevice *device,
 				      commit_action,
 				      0x00, /* boot partition identifier */
 				      error)) {
-		g_prefix_error(error, "failed to commit to auto slot: ");
+		g_prefix_error_literal(error, "failed to commit to auto slot: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

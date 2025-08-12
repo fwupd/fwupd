@@ -136,7 +136,7 @@ fu_algoltek_usb_device_en(FuAlgoltekUsbDevice *self, GError **error)
 						  st,
 						  st->data[0],
 						  error)) {
-		g_prefix_error(error, "system activation failure: ");
+		g_prefix_error_literal(error, "system activation failure: ");
 		return FALSE;
 	}
 
@@ -170,7 +170,7 @@ fu_algoltek_usb_device_rst(FuAlgoltekUsbDevice *self, guint16 address, GError **
 						  st,
 						  st->data[0],
 						  error)) {
-		g_prefix_error(error, "system reboot failure: ");
+		g_prefix_error_literal(error, "system reboot failure: ");
 		return FALSE;
 	}
 
@@ -205,7 +205,7 @@ fu_algoltek_usb_device_wrr(FuAlgoltekUsbDevice *self, int address, int value, GE
 						  st,
 						  st->data[0],
 						  error)) {
-		g_prefix_error(error, "data write failure: ");
+		g_prefix_error_literal(error, "data write failure: ");
 		return FALSE;
 	}
 
@@ -248,7 +248,7 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 								  fu_chunk_get_data(chk),
 								  fu_chunk_get_data_sz(chk),
 								  error)) {
-			g_prefix_error(error, "assign isp data failure: ");
+			g_prefix_error_literal(error, "assign isp data failure: ");
 			return FALSE;
 		}
 		fu_struct_algoltek_cmd_transfer_pkt_set_checksum(st,
@@ -270,7 +270,7 @@ fu_algoltek_usb_device_isp(FuAlgoltekUsbDevice *self,
 							  st,
 							  st->data[0],
 							  error)) {
-			g_prefix_error(error, "isp failure: ");
+			g_prefix_error_literal(error, "isp failure: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -306,7 +306,7 @@ fu_algoltek_usb_device_bot(FuAlgoltekUsbDevice *self, int address, GError **erro
 						  st,
 						  st->data[0],
 						  error)) {
-		g_prefix_error(error, "system boot failure: ");
+		g_prefix_error_literal(error, "system boot failure: ");
 		return FALSE;
 	}
 
@@ -335,7 +335,7 @@ fu_algoltek_usb_device_ers(FuAlgoltekUsbDevice *self,
 						  st,
 						  st->len,
 						  error)) {
-		g_prefix_error(error, "data clear failure: ");
+		g_prefix_error_literal(error, "data clear failure: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -418,7 +418,7 @@ fu_algoltek_usb_device_wrf(FuAlgoltekUsbDevice *self,
 							  buf,
 							  buf->len,
 							  error)) {
-			g_prefix_error(error, "data write failure: ");
+			g_prefix_error_literal(error, "data write failure: ");
 			return FALSE;
 		}
 

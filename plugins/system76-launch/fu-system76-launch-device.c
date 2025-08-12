@@ -42,7 +42,7 @@ fu_system76_launch_device_response_cb(FuDevice *device, gpointer user_data, GErr
 					      SYSTEM76_LAUNCH_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to read response: ");
+		g_prefix_error_literal(error, "failed to read response: ");
 		return FALSE;
 	}
 	if (actual_len < helper->len) {
@@ -74,7 +74,7 @@ fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GEr
 					      SYSTEM76_LAUNCH_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to send command: ");
+		g_prefix_error_literal(error, "failed to send command: ");
 		return FALSE;
 	}
 	if (actual_len < len) {
@@ -96,7 +96,7 @@ fu_system76_launch_device_version_cb(FuDevice *device, gpointer user_data, GErro
 
 	/* execute version command */
 	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
-		g_prefix_error(error, "failed to execute version command: ");
+		g_prefix_error_literal(error, "failed to execute version command: ");
 		return FALSE;
 	}
 
@@ -129,7 +129,7 @@ fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
 
 	/* execute reset command */
 	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
-		g_prefix_error(error, "failed to execute reset command: ");
+		g_prefix_error_literal(error, "failed to execute reset command: ");
 		return FALSE;
 	}
 
@@ -147,7 +147,7 @@ fu_system76_launch_device_security_set(FuDevice *device,
 
 	/* execute security set command */
 	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
-		g_prefix_error(error, "failed to execute security set command: ");
+		g_prefix_error_literal(error, "failed to execute security set command: ");
 		return FALSE;
 	}
 

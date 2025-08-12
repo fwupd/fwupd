@@ -254,7 +254,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 						path,
 						FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 						error)) {
-			g_prefix_error(error, "failed to request etag: ");
+			g_prefix_error_literal(error, "failed to request etag: ");
 			return FALSE;
 		}
 		json_obj = fu_redfish_request_get_json_object(self);

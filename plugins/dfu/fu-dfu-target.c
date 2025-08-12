@@ -276,7 +276,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_16,
 				 error)) {
-			g_prefix_error(error, "sector address invalid: ");
+			g_prefix_error_literal(error, "sector address invalid: ");
 			return FALSE;
 		}
 		addr = (guint32)addr_tmp;
@@ -299,7 +299,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 							(i - 1) / 2,
 							j,
 							error)) {
-				g_prefix_error(error, "Failed to parse: '%s': ", sectors[j]);
+				g_prefix_error(error, "failed to parse: '%s': ", sectors[j]);
 				return FALSE;
 			}
 		}
@@ -715,7 +715,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 
 	/* find out if the write was successful, waiting for BUSY to clear */
 	if (!fu_dfu_target_check_status(self, error)) {
-		g_prefix_error(error, "cannot wait for busy: ");
+		g_prefix_error_literal(error, "cannot wait for busy: ");
 		return FALSE;
 	}
 

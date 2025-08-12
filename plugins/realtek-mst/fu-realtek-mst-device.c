@@ -234,7 +234,7 @@ fu_realtek_mst_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	if (!fu_i2c_device_set_address(FU_I2C_DEVICE(self), I2C_ADDR_DEBUG, FALSE, error)) {
-		g_prefix_error(error, "failed to ensure address: ");
+		g_prefix_error_literal(error, "failed to ensure address: ");
 		return FALSE;
 	}
 
@@ -509,7 +509,7 @@ fu_realtek_mst_device_flash_iface_write(FuRealtekMstDevice *self,
 							 MCU_MODE_WRITE_BUF,
 							 10,
 							 error)) {
-			g_prefix_error(error, "failed waiting for write buffer to clear: ");
+			g_prefix_error_literal(error, "failed waiting for write buffer to clear: ");
 			return FALSE;
 		}
 		/* write data into FIFO */

@@ -255,7 +255,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 					      NULL,
 					      error);
 	if (info == NULL) {
-		g_prefix_error(error, "failed to get stream info: ");
+		g_prefix_error_literal(error, "failed to get stream info: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -274,7 +274,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	/* read out the attributes */
 	attr_sz = g_input_stream_read(istr, &attr_tmp, sizeof(attr_tmp), NULL, error);
 	if (attr_sz == -1) {
-		g_prefix_error(error, "failed to read attr: ");
+		g_prefix_error_literal(error, "failed to read attr: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -295,7 +295,7 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 	if (data != NULL) {
 		g_autofree guint8 *data_tmp = g_malloc0(data_sz_tmp);
 		if (!g_input_stream_read_all(istr, data_tmp, data_sz_tmp, NULL, NULL, error)) {
-			g_prefix_error(error, "failed to read data: ");
+			g_prefix_error_literal(error, "failed to read data: ");
 			return FALSE;
 		}
 		*data = g_steal_pointer(&data_tmp);
@@ -506,7 +506,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 	memcpy(buf, &attr, sizeof(attr));     /* nocheck:blocked */
 	memcpy(buf + sizeof(attr), data, sz); /* nocheck:blocked */
 	if (g_output_stream_write(ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {
-		g_prefix_error(error, "failed to write data to efivarsfs: ");
+		g_prefix_error_literal(error, "failed to write data to efivarsfs: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}

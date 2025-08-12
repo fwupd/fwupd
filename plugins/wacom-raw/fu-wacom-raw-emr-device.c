@@ -79,7 +79,7 @@ fu_wacom_raw_emr_device_w9013_erase_data(FuWacomRawEmrDevice *self, GError **err
 				     1, /* ms */
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				     error)) {
-		g_prefix_error(error, "failed to erase datamem: ");
+		g_prefix_error_literal(error, "failed to erase datamem: ");
 		return FALSE;
 	}
 	g_usleep(50);
@@ -108,7 +108,7 @@ fu_wacom_raw_emr_device_w9013_erase_code(FuWacomRawEmrDevice *self,
 				     1, /* ms */
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				     error)) {
-		g_prefix_error(error, "failed to erase codemem: ");
+		g_prefix_error_literal(error, "failed to erase codemem: ");
 		return FALSE;
 	}
 	g_usleep(50);
@@ -129,7 +129,7 @@ fu_wacom_raw_emr_device_w9021_erase_all(FuWacomRawEmrDevice *self, GError **erro
 				     2000, /* this takes a long time */
 				     FU_WACOM_RAW_DEVICE_CMD_FLAG_POLL_ON_WAITING,
 				     error)) {
-		g_prefix_error(error, "failed to send eraseall command: ");
+		g_prefix_error_literal(error, "failed to send eraseall command: ");
 		return FALSE;
 	}
 	g_usleep(50);
@@ -153,7 +153,7 @@ fu_wacom_raw_emr_device_attach(FuDevice *device, FuProgress *progress, GError **
 	    st_req,
 	    fu_wacom_raw_device_get_echo_next(FU_WACOM_RAW_DEVICE(self)));
 	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error, "failed to switch to runtime mode: ");
+		g_prefix_error_literal(error, "failed to switch to runtime mode: ");
 		return FALSE;
 	}
 

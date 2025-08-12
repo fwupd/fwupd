@@ -139,7 +139,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(JsonObject *obj,
 			G_MAXINT64,
 			FU_INTEGER_BASE_AUTO,
 			error)) {
-		g_prefix_error(error, "fu_strtoll failed for image_index:");
+		g_prefix_error_literal(error, "failed to parse image_index:");
 		return FALSE;
 	}
 
@@ -159,7 +159,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(JsonObject *obj,
 		return FALSE;
 	}
 	if (!fu_strtoll(slot_str, &slot, G_MININT64, G_MAXINT64, FU_INTEGER_BASE_AUTO, error)) {
-		g_prefix_error(error, "fu_strtoll failed for slot:");
+		g_prefix_error_literal(error, "failed to parse slot:");
 		return FALSE;
 	}
 
@@ -240,7 +240,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 					(const gchar *)g_bytes_get_data(manifest, NULL),
 					(gssize)g_bytes_get_size(manifest),
 					error)) {
-		g_prefix_error(error, "manifest not in JSON format: ");
+		g_prefix_error_literal(error, "manifest not in JSON format: ");
 		return FALSE;
 	}
 	json_root_node = json_parser_get_root(parser);

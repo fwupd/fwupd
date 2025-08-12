@@ -478,7 +478,7 @@ fu_synaptics_rmi_hid_device_disable_sleep(FuSynapticsRmiDevice *rmi_device, GErr
 		return FALSE;
 	f01_control0 = fu_synaptics_rmi_device_read(rmi_device, f01->control_base, 0x1, error);
 	if (f01_control0 == NULL) {
-		g_prefix_error(error, "failed to write get f01_control0: ");
+		g_prefix_error_literal(error, "failed to write get f01_control0: ");
 		return FALSE;
 	}
 	f01_control0->data[0] |= RMI_F01_CRTL0_NOSLEEP_BIT;
@@ -489,7 +489,7 @@ fu_synaptics_rmi_hid_device_disable_sleep(FuSynapticsRmiDevice *rmi_device, GErr
 					   f01_control0,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write f01_control0: ");
+		g_prefix_error_literal(error, "failed to write f01_control0: ");
 		return FALSE;
 	}
 

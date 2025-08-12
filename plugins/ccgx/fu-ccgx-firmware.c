@@ -363,7 +363,7 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 
 	/* parse metadata block */
 	if (!fu_ccgx_firmware_parse_md_block(self, flags, error)) {
-		g_prefix_error(error, "failed to parse metadata: ");
+		g_prefix_error_literal(error, "failed to parse metadata: ");
 		return FALSE;
 	}
 

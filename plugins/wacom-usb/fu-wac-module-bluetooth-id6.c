@@ -139,7 +139,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 	/* get default image */
 	stream = fu_firmware_get_stream(firmware, error);
 	if (stream == NULL) {
-		g_prefix_error(error, "wacom bluetooth-id6 module failed to get stream: ");
+		g_prefix_error_literal(error, "failed to get stream: ");
 		return FALSE;
 	}
 
@@ -151,7 +151,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_BLUETOOTH_ID6_START_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom bluetooth-id6 module failed to erase: ");
+		g_prefix_error_literal(error, "failed to erase: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -161,7 +161,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 						    stream,
 						    fu_progress_get_child(progress),
 						    error)) {
-		g_prefix_error(error, "wacom bluetooth-id6 module failed to write: ");
+		g_prefix_error_literal(error, "failed to write: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -174,7 +174,7 @@ fu_wac_module_bluetooth_id6_write_firmware(FuDevice *device,
 				       FU_WAC_MODULE_POLL_INTERVAL,
 				       FU_WAC_MODULE_BLUETOOTH_ID6_END_TIMEOUT,
 				       error)) {
-		g_prefix_error(error, "wacom bluetooth-id6 module failed to end: ");
+		g_prefix_error_literal(error, "failed to end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

@@ -134,7 +134,7 @@ fu_genesys_usbhub_firmware_verify_checksum(GInputStream *stream, GError **error)
 				      &fw_checksum,
 				      G_BIG_ENDIAN,
 				      error)) {
-		g_prefix_error(error, "failed to get checksum: ");
+		g_prefix_error_literal(error, "failed to get checksum: ");
 		return FALSE;
 	}
 
@@ -162,7 +162,7 @@ fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GEr
 {
 	guint8 kbs = 0;
 	if (!fu_input_stream_read_u8(stream, GENESYS_USBHUB_CODE_SIZE_OFFSET, &kbs, error)) {
-		g_prefix_error(error, "failed to get codesize: ");
+		g_prefix_error_literal(error, "failed to get codesize: ");
 		return FALSE;
 	}
 	if (kbs == 0) {
@@ -192,7 +192,7 @@ fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 				    &version_raw,
 				    G_LITTLE_ENDIAN,
 				    error)) {
-		g_prefix_error(error, "failed to get version: ");
+		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
 	fu_firmware_set_version_raw(firmware, version_raw);
@@ -225,7 +225,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 
 	/* get chip */
 	if (!fu_genesys_usbhub_firmware_get_chip(self, stream, error)) {
-		g_prefix_error(error, "failed to get chip: ");
+		g_prefix_error_literal(error, "failed to get chip: ");
 		return FALSE;
 	}
 	fu_firmware_set_id(firmware, fu_genesys_fw_type_to_string(FU_GENESYS_FW_TYPE_HUB));
@@ -319,7 +319,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 							   FU_TYPE_GENESYS_USBHUB_CODESIGN_FIRMWARE,
 							   G_TYPE_INVALID);
 		if (firmware_sub == NULL) {
-			g_prefix_error(error, "fw bytes have dual hub firmware: ");
+			g_prefix_error_literal(error, "fw bytes have dual hub firmware: ");
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware_sub, offset);

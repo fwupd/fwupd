@@ -119,7 +119,7 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 	res_buf = g_malloc0(res_bufsz);
 	fu_igsc_fwu_heci_version_req_set_partition(st_req, partition);
 	if (!fu_igsc_device_command(self, st_req->data, st_req->len, res_buf, res_bufsz, error)) {
-		g_prefix_error(error, "invalid HECI message response: ");
+		g_prefix_error_literal(error, "invalid HECI message response: ");
 		return FALSE;
 	}
 	st_res = fu_igsc_fwu_heci_version_res_parse(res_buf, res_bufsz, 0x0, error);
@@ -252,7 +252,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 
 	/* connect to MCA interface */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_MCHI2, 0, error)) {
-		g_prefix_error(error, "failed to connect: ");
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 	if (!fu_heci_device_arbh_svn_get_info(FU_HECI_DEVICE(self),
@@ -260,7 +260,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 					      &self->svn_executing,
 					      &self->svn_min_allowed,
 					      error)) {
-		g_prefix_error(error, "failed to get ARBH SVN: ");
+		g_prefix_error_literal(error, "failed to get ARBH SVN: ");
 		return FALSE;
 	}
 	if (!fu_udev_device_reopen(FU_UDEV_DEVICE(self), error))
@@ -268,7 +268,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 
 	/* now connect to fwupdate interface */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
-		g_prefix_error(error, "failed to connect: ");
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 
@@ -278,7 +278,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 					    fw_code_version->data,
 					    fw_code_version->len,
 					    error)) {
-		g_prefix_error(error, "cannot get fw version: ");
+		g_prefix_error_literal(error, "cannot get fw version: ");
 		return FALSE;
 	}
 	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
@@ -296,7 +296,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 		fu_device_add_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_SKU);
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_HAS_SKU)) {
 		if (!fu_igsc_device_get_config(self, error)) {
-			g_prefix_error(error, "cannot get SKU: ");
+			g_prefix_error_literal(error, "cannot get SKU: ");
 			return FALSE;
 		}
 	} else {
@@ -345,7 +345,7 @@ fu_igsc_device_get_fw_status(FuIgscDevice *self, guint line, guint32 *fw_status,
 	/* read value and convert to hex */
 	tmp = fu_mei_device_get_fw_status(FU_MEI_DEVICE(self), line - 1, error);
 	if (tmp == NULL) {
-		g_prefix_error(error, "device is corrupted: ");
+		g_prefix_error_literal(error, "device is corrupted: ");
 		return FALSE;
 	}
 	hex = g_strdup_printf("0x%s", tmp);
@@ -380,9 +380,9 @@ fu_igsc_device_probe(FuDevice *device, GError **error)
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      error);
 		if (attr_survivability_mode == NULL) {
-			g_prefix_error(error,
-				       "cannot get survivability_mode for "
-				       "WEDGED=vendor-specific: ");
+			g_prefix_error_literal(error,
+					       "cannot get survivability_mode for "
+					       "WEDGED=vendor-specific: ");
 			return FALSE;
 		}
 		g_debug("survivability_mode: %s", attr_survivability_mode);
@@ -649,7 +649,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 
 	/* start */
 	if (!fu_igsc_device_update_start(self, payload_type, fw_info, fw, error)) {
-		g_prefix_error(error, "failed to start: ");
+		g_prefix_error_literal(error, "failed to start: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -668,7 +668,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 
 	/* stop */
 	if (!fu_igsc_device_update_end(self, error)) {
-		g_prefix_error(error, "failed to end: ");
+		g_prefix_error_literal(error, "failed to end: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -695,7 +695,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 					  error))
 			return FALSE;
 		if (!fu_igsc_device_no_update(self, error)) {
-			g_prefix_error(error, "failed to send no-update: ");
+			g_prefix_error_literal(error, "failed to send no-update: ");
 			return FALSE;
 		}
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

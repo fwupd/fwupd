@@ -50,7 +50,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 			    strlen(needle),
 			    &data_offset,
 			    error)) {
-		g_prefix_error(error, "$QUIRK not found");
+		g_prefix_error_literal(error, "$QUIRK not found");
 		return FALSE;
 	}
 

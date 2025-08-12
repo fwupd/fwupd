@@ -179,7 +179,7 @@ fu_intel_usb4_device_mbox_data_read(FuIntelUsb4Device *self,
 	/* read 4 bytes per iteration */
 	for (gint i = 0; i < bufsz / 4; i++) {
 		if (!fu_intel_usb4_device_get_mmio(self, i, ptr, 0x4, error)) {
-			g_prefix_error(error, "failed to read mbox data registers: ");
+			g_prefix_error_literal(error, "failed to read mbox data registers: ");
 			return FALSE;
 		}
 		ptr += 4;
@@ -313,7 +313,7 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 						    st->data,
 						    st->len,
 						    error)) {
-			g_prefix_error(error, "hub NVM read error: ");
+			g_prefix_error_literal(error, "hub NVM read error: ");
 			return FALSE;
 		}
 
@@ -322,7 +322,7 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 							 fu_chunk_get_data_out(chk),
 							 fu_chunk_get_data_sz(chk),
 							 error)) {
-			g_prefix_error(error, "hub firmware mbox data read error: ");
+			g_prefix_error_literal(error, "hub firmware mbox data read error: ");
 			return FALSE;
 		}
 	}
@@ -365,7 +365,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 					    metadata,
 					    sizeof(metadata),
 					    error)) {
-		g_prefix_error(error, "hub NVM set offset error: ");
+		g_prefix_error_literal(error, "hub NVM set offset error: ");
 		return FALSE;
 	}
 
@@ -390,7 +390,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 							  fu_chunk_get_data(chk),
 							  fu_chunk_get_data_sz(chk),
 							  error)) {
-			g_prefix_error(error, "hub mbox data write error: ");
+			g_prefix_error_literal(error, "hub mbox data write error: ");
 			return FALSE;
 		}
 		/* ask hub to write 64 bytes from data regs to NVM */
@@ -399,7 +399,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 						    NULL,
 						    0,
 						    error)) {
-			g_prefix_error(error, "hub NVM write operation error: ");
+			g_prefix_error_literal(error, "hub NVM write operation error: ");
 			return FALSE;
 		}
 
@@ -425,7 +425,7 @@ fu_intel_usb4_device_activate(FuDevice *device, FuProgress *progress, GError **e
 					    NULL,
 					    0,
 					    error)) {
-		g_prefix_error(error, "NVM authenticate failed: ");
+		g_prefix_error_literal(error, "NVM authenticate failed: ");
 		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		return FALSE;
 	}
@@ -510,7 +510,7 @@ fu_intel_usb4_device_write_firmware(FuDevice *device,
 					    NULL,
 					    0,
 					    error)) {
-		g_prefix_error(error, "NVM authenticate failed: ");
+		g_prefix_error_literal(error, "NVM authenticate failed: ");
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -534,12 +534,12 @@ fu_intel_usb4_device_setup(FuDevice *device, GError **error)
 
 	/* read from device and parse firmware */
 	if (!fu_intel_usb4_device_nvm_read(self, buf, sizeof(buf), 0, error)) {
-		g_prefix_error(error, "NVM read error: ");
+		g_prefix_error_literal(error, "NVM read error: ");
 		return FALSE;
 	}
 	blob = g_bytes_new(buf, sizeof(buf));
 	if (!fu_firmware_parse_bytes(fw, blob, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
-		g_prefix_error(error, "NVM parse error: ");
+		g_prefix_error_literal(error, "NVM parse error: ");
 		return FALSE;
 	}
 	self->nvm_vendor_id = fu_intel_thunderbolt_nvm_get_vendor_id(FU_INTEL_THUNDERBOLT_NVM(fw));

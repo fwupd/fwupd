@@ -279,7 +279,7 @@ fu_dell_dock_ec_read(FuDevice *device, guint32 cmd, gsize length, GBytes **bytes
 				       &bytes_local,
 				       &ec_base_settings,
 				       error)) {
-		g_prefix_error(error, "read over HID-I2C failed: ");
+		g_prefix_error_literal(error, "read over HID-I2C failed: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(bytes_local, NULL);
@@ -310,7 +310,7 @@ fu_dell_dock_ec_write(FuDevice *device, gsize length, guint8 *data, GError **err
 					length,
 					&ec_base_settings,
 					error)) {
-		g_prefix_error(error, "write over HID-I2C failed: ");
+		g_prefix_error_literal(error, "write over HID-I2C failed: ");
 		return FALSE;
 	}
 
@@ -328,7 +328,7 @@ fu_dell_dock_ec_is_valid_dock(FuDevice *device, GError **error)
 	g_return_val_if_fail(device != NULL, FALSE);
 
 	if (!fu_dell_dock_ec_read(device, EC_CMD_GET_DOCK_TYPE, 1, &data, error)) {
-		g_prefix_error(error, "Failed to query dock type: ");
+		g_prefix_error_literal(error, "Failed to query dock type: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(data, &sz);
@@ -375,7 +375,7 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 				  EXPECTED_DOCK_INFO_SIZE,
 				  &data,
 				  error)) {
-		g_prefix_error(error, "Failed to query dock info: ");
+		g_prefix_error_literal(error, "Failed to query dock info: ");
 		return FALSE;
 	}
 	if (!g_bytes_get_data(data, NULL)) {
@@ -520,7 +520,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	g_return_val_if_fail(device != NULL, FALSE);
 
 	if (!fu_dell_dock_ec_read(device, EC_CMD_GET_DOCK_DATA, length, &data, error)) {
-		g_prefix_error(error, "Failed to query dock info: ");
+		g_prefix_error_literal(error, "Failed to query dock info: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(data, NULL);
@@ -624,7 +624,7 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 	      unlocked << 24;	   /* unlock/lock */
 
 	if (!fu_dell_dock_ec_write(device, 4, (guint8 *)&cmd, error)) {
-		g_prefix_error(error, "Failed to unlock device %d: ", target);
+		g_prefix_error(error, "failed to unlock device %d: ", target);
 		return FALSE;
 	}
 	g_debug("Modified lock for %d to %d through %s (%s)",
@@ -699,7 +699,7 @@ fu_dell_dock_ec_get_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_
 	g_return_val_if_fail(status_out != NULL, FALSE);
 
 	if (!fu_dell_dock_ec_read(device, EC_GET_FW_UPDATE_STATUS, 1, &data, error)) {
-		g_prefix_error(error, "Failed to read FW update status: ");
+		g_prefix_error_literal(error, "failed to read FW update status: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(data, NULL);
@@ -708,7 +708,7 @@ fu_dell_dock_ec_get_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
-				    "Failed to read FW update status");
+				    "failed to read FW update status");
 		return FALSE;
 	}
 	*status_out = *result;
@@ -770,7 +770,7 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 	memcpy(payload + 2, data, length); /* nocheck:blocked */
 
 	if (!fu_dell_dock_ec_write(device, length + 2, payload, error)) {
-		g_prefix_error(error, "Failed to query dock info: ");
+		g_prefix_error_literal(error, "failed to query dock info: ");
 		return FALSE;
 	}
 
@@ -847,7 +847,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 						  data,
 						  write_size,
 						  error)) {
-			g_prefix_error(error, "write over HID failed: ");
+			g_prefix_error_literal(error, "write over HID failed: ");
 			return FALSE;
 		}
 		fu_progress_set_percentage_full(fu_progress_get_child(progress), nwritten, fw_size);

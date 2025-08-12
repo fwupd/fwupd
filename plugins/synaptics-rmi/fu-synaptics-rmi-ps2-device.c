@@ -212,7 +212,7 @@ fu_synaptics_rmi_ps2_device_status_request(FuSynapticsRmiPs2Device *self,
 	for (gint i = 0; i < 3; ++i) {
 		guint8 tmp = 0x0;
 		if (!fu_synaptics_rmi_ps2_device_read_byte(self, &tmp, 10, error)) {
-			g_prefix_error(error, "failed to read byte: ");
+			g_prefix_error_literal(error, "failed to read byte: ");
 			return FALSE;
 		}
 		*buf = ((*buf) << 8) | tmp;
@@ -273,11 +273,11 @@ fu_synaptics_rmi_ps2_device_detect_synaptics_styk(FuSynapticsRmiPs2Device *self,
 						    10,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
-		g_prefix_error(error, "failed to write IBMReadSecondaryID(0xE1): ");
+		g_prefix_error_literal(error, "failed to write IBMReadSecondaryID(0xE1): ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_ps2_device_read_byte(self, &buf, 10, error)) {
-		g_prefix_error(error, "failed to receive IBMReadSecondaryID: ");
+		g_prefix_error_literal(error, "failed to receive IBMReadSecondaryID: ");
 		return FALSE;
 	}
 	if (buf == FU_RMI_STICK_DEVICE_TYPE_JYT_SYNA || buf == FU_RMI_STICK_DEVICE_TYPE_SYNAPTICS)
@@ -299,14 +299,14 @@ fu_synaptics_rmi_ps2_device_query_build_id(FuSynapticsRmiDevice *rmi_device,
 							FU_RMI_STATUS_REQUEST_IDENTIFY_SYNAPTICS,
 							&buf,
 							error)) {
-		g_prefix_error(error, "failed to request IdentifySynaptics: ");
+		g_prefix_error_literal(error, "failed to request IdentifySynaptics: ");
 		return FALSE;
 	}
 	g_debug("identify Synaptics response = 0x%x", buf);
 
 	esdr = (buf & 0xFF00) >> 8;
 	if (!fu_synaptics_rmi_ps2_device_detect_synaptics_styk(self, &is_synaptics_styk, error)) {
-		g_prefix_error(error, "failed to detect Synaptics styk: ");
+		g_prefix_error_literal(error, "failed to detect Synaptics styk: ");
 		return FALSE;
 	}
 	fu_synaptics_rmi_device_set_iepmode(rmi_device, FALSE);
@@ -318,7 +318,7 @@ fu_synaptics_rmi_ps2_device_query_build_id(FuSynapticsRmiDevice *rmi_device,
 			FU_RMI_STATUS_REQUEST_READ_EXTRA_CAPABILITIES2,
 			build_id,
 			error)) {
-			g_prefix_error(error, "failed to read extraCapabilities2: ");
+			g_prefix_error_literal(error, "failed to read extraCapabilities2: ");
 			return FALSE;
 		}
 	}
@@ -336,8 +336,9 @@ fu_synaptics_rmi_ps2_device_query_product_sub_id(FuSynapticsRmiDevice *rmi_devic
 							FU_RMI_STATUS_REQUEST_READ_CAPABILITIES,
 							&buf,
 							error)) {
-		g_prefix_error(error,
-			       "failed to status_request_sequence read esrReadCapabilities: ");
+		g_prefix_error_literal(
+		    error,
+		    "failed to status_request_sequence read esrReadCapabilities: ");
 		return FALSE;
 	}
 	*sub_id = (buf >> 8) & 0xFF;
@@ -355,7 +356,7 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode(FuSynapticsRmiDevice *rmi_device, GEr
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
-		g_prefix_error(error, "failed to disable stream mode: ");
+		g_prefix_error_literal(error, "failed to disable stream mode: ");
 		return FALSE;
 	}
 
@@ -365,7 +366,7 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode(FuSynapticsRmiDevice *rmi_device, GEr
 						     FU_RMI_EDP_COMMAND_AUX_FULL_RMI_BACK_DOOR,
 						     FALSE,
 						     error)) {
-		g_prefix_error(error, "failed to enter RMI mode: ");
+		g_prefix_error_literal(error, "failed to enter RMI mode: ");
 		return FALSE;
 	}
 
@@ -393,7 +394,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 						    timeout,
 						    flags,
 						    error)) {
-		g_prefix_error(error, "failed to edpAuxSetScaling2To1: ");
+		g_prefix_error_literal(error, "failed to edpAuxSetScaling2To1: ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self,
@@ -401,11 +402,11 @@ fu_synaptics_rmi_ps2_device_write_rmi_register(FuSynapticsRmiPs2Device *self,
 						    timeout,
 						    flags,
 						    error)) {
-		g_prefix_error(error, "failed to edpAuxSetSampleRate: ");
+		g_prefix_error_literal(error, "failed to edpAuxSetSampleRate: ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_ps2_device_write_byte(self, addr, timeout, flags, error)) {
-		g_prefix_error(error, "failed to write address: ");
+		g_prefix_error_literal(error, "failed to write address: ");
 		return FALSE;
 	}
 	for (guint8 i = 0; i < buflen; i++) {
@@ -462,7 +463,8 @@ fu_synaptics_rmi_ps2_device_read_rmi_register(FuSynapticsRmiPs2Device *self,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
-			g_prefix_error(error, "failed to write command in Read RMI register: ");
+			g_prefix_error_literal(error,
+					       "failed to write command in Read RMI register: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_rmi_ps2_device_read_byte(self, buf, 10, &error_local)) {
@@ -520,7 +522,8 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register(FuSynapticsRmiPs2Device *se
 						    50,
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
-		g_prefix_error(error, "failed to write command in Read RMI Packet Register: ");
+		g_prefix_error_literal(error,
+				       "failed to write command in Read RMI Packet Register: ");
 		return NULL;
 	}
 	for (guint i = 0; i < req_sz; ++i) {
@@ -586,7 +589,7 @@ fu_synaptics_rmi_ps2_device_read(FuSynapticsRmiDevice *rmi_device,
 	g_autofree gchar *dump = NULL;
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
-		g_prefix_error(error, "failed to set RMI page: ");
+		g_prefix_error_literal(error, "failed to set RMI page: ");
 		return NULL;
 	}
 
@@ -635,7 +638,7 @@ fu_synaptics_rmi_ps2_device_read_packet_register(FuSynapticsRmiDevice *rmi_devic
 	g_autofree gchar *dump = g_strdup_printf("R %x", addr);
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
-		g_prefix_error(error, "failed to set RMI page: ");
+		g_prefix_error_literal(error, "failed to set RMI page: ");
 		return NULL;
 	}
 
@@ -660,7 +663,7 @@ fu_synaptics_rmi_ps2_device_write(FuSynapticsRmiDevice *rmi_device,
 	g_autofree gchar *str = g_strdup_printf("W %x", addr);
 
 	if (!fu_synaptics_rmi_device_set_page(rmi_device, addr >> 8, error)) {
-		g_prefix_error(error, "failed to set RMI page: ");
+		g_prefix_error_literal(error, "failed to set RMI page: ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_ps2_device_write_rmi_register(self,
@@ -732,14 +735,14 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 							    600,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
-			g_prefix_error(error, "failed to reset: ");
+			g_prefix_error_literal(error, "failed to reset: ");
 			return FALSE;
 		}
 
 		/* read the 0xAA 0x00 announcing the touchpad is ready */
 		if (!fu_synaptics_rmi_ps2_device_read_byte(self, &buf[0], 500, error) ||
 		    !fu_synaptics_rmi_ps2_device_read_byte(self, &buf[1], 500, error)) {
-			g_prefix_error(error, "failed to read 0xAA00: ");
+			g_prefix_error_literal(error, "failed to read 0xAA00: ");
 			return FALSE;
 		}
 		if (buf[0] != 0xAA || buf[1] != 0x00) {
@@ -758,7 +761,7 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error)) {
-			g_prefix_error(error, "failed to disable stream mode: ");
+			g_prefix_error_literal(error, "failed to disable stream mode: ");
 			return FALSE;
 		}
 	}
@@ -785,7 +788,7 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 					"serio_raw",
 					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "failed to write to drvctl: ");
+		g_prefix_error_literal(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
 
@@ -822,7 +825,7 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GErro
 		return FALSE;
 
 	if (!fu_synaptics_rmi_ps2_device_query_status(self, error)) {
-		g_prefix_error(error, "failed to query status after detach: ");
+		g_prefix_error_literal(error, "failed to query status after detach: ");
 		return FALSE;
 	}
 
@@ -862,7 +865,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 						    error))
 		return FALSE;
 	if (!fu_synaptics_rmi_device_reset(rmi_device, error)) {
-		g_prefix_error(error, "failed to reset device: ");
+		g_prefix_error_literal(error, "failed to reset device: ");
 		return FALSE;
 	}
 	fu_device_sleep_full(device, 5000, progress); /* ms */
@@ -873,7 +876,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GErro
 					"psmouse",
 					FU_SYNAPTICS_RMI_DEVICE_BIND_TIMEOUT,
 					error)) {
-		g_prefix_error(error, "failed to write to drvctl: ");
+		g_prefix_error_literal(error, "failed to write to drvctl: ");
 		return FALSE;
 	}
 

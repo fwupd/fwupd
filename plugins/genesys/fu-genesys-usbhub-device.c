@@ -421,7 +421,7 @@ fu_genesys_usbhub_device_reset(FuGenesysUsbhubDevice *self, GError **error)
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error resetting device: ");
+		g_prefix_error_literal(error, "error resetting device: ");
 		return FALSE;
 	}
 
@@ -460,7 +460,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 							    GENESYS_USBHUB_USB_TIMEOUT,
 							    NULL,
 							    error)) {
-			g_prefix_error(error, "error reading flash chip: ");
+			g_prefix_error_literal(error, "error reading flash chip: ");
 			return NULL;
 		}
 
@@ -570,7 +570,7 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 				     5,
 				     &helper,
 				     error)) {
-			g_prefix_error(error, "error setting isp mode: ");
+			g_prefix_error_literal(error, "error setting isp mode: ");
 			return FALSE;
 		}
 	}
@@ -673,7 +673,7 @@ fu_genesys_usbhub_device_authenticate(FuGenesysUsbhubDevice *self, GError **erro
 							     offset_end,
 							     temp_byte,
 							     error)) {
-		g_prefix_error(error, "error authenticating device: ");
+		g_prefix_error_literal(error, "error authenticating device: ");
 		return FALSE;
 	}
 
@@ -836,7 +836,7 @@ fu_genesys_usbhub_device_get_fw_bank_code_size(FuGenesysUsbhubDevice *self,
 						 1,
 						 NULL,
 						 error)) {
-		g_prefix_error(error, "error getting fw size from device: ");
+		g_prefix_error_literal(error, "error getting fw size from device: ");
 		return FALSE;
 	}
 	self->fw_bank_code_sizes[bank_num][fw_type] = 1024 * kbs;
@@ -915,7 +915,7 @@ fu_genesys_usbhub_device_get_fw_bank_version(FuGenesysUsbhubDevice *self,
 				    &self->fw_bank_vers[bank_num][fw_type],
 				    G_LITTLE_ENDIAN,
 				    error)) {
-		g_prefix_error(error, "failed to get version: ");
+		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
 
@@ -955,7 +955,7 @@ fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_nu
 		bufsz,
 		NULL,
 		error)) {
-		g_prefix_error(error, "error getting public-key from device: ");
+		g_prefix_error_literal(error, "error getting public-key from device: ");
 		return FALSE;
 	}
 
@@ -1076,7 +1076,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 
 	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, 0, error);
 	if (self->st_static_ts == NULL) {
-		g_prefix_error(error, "failed to parse static tool info: ");
+		g_prefix_error_literal(error, "failed to parse static tool info: ");
 		return FALSE;
 	}
 
@@ -1215,7 +1215,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		self->st_dynamic_ts =
 		    fu_struct_genesys_ts_dynamic_gl3523_parse(buf, bufsz, 0, error);
 		if (self->st_dynamic_ts == NULL) {
-			g_prefix_error(error, "failed to parse dynamic tool info: ");
+			g_prefix_error_literal(error, "failed to parse dynamic tool info: ");
 			return FALSE;
 		}
 
@@ -1235,7 +1235,8 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 			self->st_dynamic_ts =
 			    fu_struct_genesys_ts_dynamic_gl359030_parse(buf, bufsz, 0, error);
 			if (self->st_dynamic_ts == NULL) {
-				g_prefix_error(error, "failed to parse dynamic tool info: ");
+				g_prefix_error_literal(error,
+						       "failed to parse dynamic tool info: ");
 				return FALSE;
 			}
 
@@ -1254,7 +1255,8 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 			self->st_dynamic_ts =
 			    fu_struct_genesys_ts_dynamic_gl3590_parse(buf, bufsz, 0, error);
 			if (self->st_dynamic_ts == NULL) {
-				g_prefix_error(error, "failed to parse dynamic tool info: ");
+				g_prefix_error_literal(error,
+						       "failed to parse dynamic tool info: ");
 				return FALSE;
 			}
 
@@ -1275,7 +1277,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 		self->st_dynamic_ts =
 		    fu_struct_genesys_ts_dynamic_gl3525_parse(buf, bufsz, 0, error);
 		if (self->st_dynamic_ts == NULL) {
-			g_prefix_error(error, "failed to parse dynamic tool info: ");
+			g_prefix_error_literal(error, "failed to parse dynamic tool info: ");
 			return FALSE;
 		}
 
@@ -1326,7 +1328,7 @@ fu_genesys_usbhub_device_get_info_from_vendor_ts(FuGenesysUsbhubDevice *self,
 {
 	self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_parse(buf, bufsz, 0, error);
 	if (self->st_vendor_ts == NULL) {
-		g_prefix_error(error, "failed to parse vendor support tool info: ");
+		g_prefix_error_literal(error, "failed to parse vendor support tool info: ");
 		return FALSE;
 	}
 
@@ -1355,7 +1357,7 @@ fu_genesys_usbhub_device_get_info_from_project_ts(FuGenesysUsbhubDevice *self,
 
 	self->st_project_ts = fu_struct_genesys_ts_brand_project_parse(buf, bufsz, 0, error);
 	if (self->st_project_ts == NULL) {
-		g_prefix_error(error, "failed to parse brand project tool info: ");
+		g_prefix_error_literal(error, "failed to parse brand project tool info: ");
 		return FALSE;
 	}
 
@@ -1507,7 +1509,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
-		g_prefix_error(error, "error setting up device: ");
+		g_prefix_error_literal(error, "error setting up device: ");
 		return FALSE;
 	}
 
@@ -1548,7 +1550,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(static_buf, buf, bufsz, error)) {
-		g_prefix_error(error, "failed to get static tool info from device: ");
+		g_prefix_error_literal(error, "failed to get static tool info from device: ");
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_info_from_static_ts(self, buf, bufsz, error))
@@ -1568,7 +1570,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf, buf, bufsz, error)) {
-		g_prefix_error(error, "failed to get dynamic tool info from device: ");
+		g_prefix_error_literal(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_info_from_dynamic_ts(self, buf, bufsz, error))
@@ -1581,16 +1583,16 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 								64,
 								error);
 	if (fw_buf == NULL) {
-		g_prefix_error(error, "failed to get firmware tool info from device: ");
+		g_prefix_error_literal(error, "failed to get firmware tool info from device: ");
 		return FALSE;
 	}
 	if (!fu_genesys_usbhub_device_get_descriptor_data(fw_buf, buf, bufsz, error)) {
-		g_prefix_error(error, "failed to get firmware tool info from device: ");
+		g_prefix_error_literal(error, "failed to get firmware tool info from device: ");
 		return FALSE;
 	}
 	self->st_fwinfo_ts = fu_struct_genesys_ts_firmware_info_parse(buf, bufsz, 0, error);
 	if (self->st_fwinfo_ts == NULL) {
-		g_prefix_error(error, "failed to parse firmware tool info: ");
+		g_prefix_error_literal(error, "failed to parse firmware tool info: ");
 		return FALSE;
 	}
 
@@ -1603,13 +1605,15 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		    64,
 		    error);
 		if (vendor_buf == NULL) {
-			g_prefix_error(error,
-				       "failed to get vendor support tool info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
 		if (!fu_genesys_usbhub_device_get_descriptor_data(vendor_buf, buf, bufsz, error)) {
-			g_prefix_error(error,
-				       "failed to get vendor support tool info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
 		if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self, buf, bufsz, error))
@@ -1627,13 +1631,15 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		    64,
 		    error);
 		if (project_buf == NULL) {
-			g_prefix_error(error,
-				       "failed to get brand project tool info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get brand project tool info from device: ");
 			return FALSE;
 		}
 		if (!fu_genesys_usbhub_device_get_descriptor_data(project_buf, buf, bufsz, error)) {
-			g_prefix_error(error,
-				       "failed to get brand project tool info from device: ");
+			g_prefix_error_literal(
+			    error,
+			    "failed to get brand project tool info from device: ");
 			return FALSE;
 		}
 		if (!fu_genesys_usbhub_device_get_info_from_project_ts(self, buf, bufsz, error))
@@ -2010,7 +2016,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 				    0,
 				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_N,
 				    error)) {
-			g_prefix_error(error, "mismatch public-keyN: ");
+			g_prefix_error_literal(error, "mismatch public-keyN: ");
 			return FALSE;
 		}
 
@@ -2024,7 +2030,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 				    0,
 				    FU_STRUCT_GENESYS_FW_RSA_PUBLIC_KEY_TEXT_SIZE_TEXT_E,
 				    error)) {
-			g_prefix_error(error, "mismatch public-keyE: ");
+			g_prefix_error_literal(error, "mismatch public-keyE: ");
 			return FALSE;
 		}
 		break;
@@ -2059,7 +2065,7 @@ fu_genesys_usbhub_device_compare_fw_public_key(FuGenesysUsbhubDevice *self,
 				    0,
 				    FU_STRUCT_GENESYS_FW_ECDSA_PUBLIC_KEY_SIZE,
 				    error)) {
-			g_prefix_error(error, "mismatch public-key: ");
+			g_prefix_error_literal(error, "mismatch public-key: ");
 			fu_dump_raw(G_LOG_DOMAIN, "PublicKey", fw_key, fw_keysz);
 			return FALSE;
 		}
@@ -2246,7 +2252,7 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 				     self->flash_erase_delay / 30,
 				     &helper,
 				     error)) {
-			g_prefix_error(error, "error erasing flash: ");
+			g_prefix_error_literal(error, "error erasing flash: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2305,7 +2311,7 @@ fu_genesys_usbhub_device_write_flash(FuGenesysUsbhubDevice *self,
 				     self->flash_write_delay / 30,
 				     &helper,
 				     error)) {
-			g_prefix_error(error, "error writing flash: ");
+			g_prefix_error_literal(error, "error writing flash: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2552,7 +2558,7 @@ fu_genesys_usbhub_device_setup_hw_module(FuGenesysUsbhubDevice *self, GError **e
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error setting up HW module: ");
+		g_prefix_error_literal(error, "error setting up HW module: ");
 		return FALSE;
 	}
 
@@ -2600,13 +2606,13 @@ fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
 
 	hash_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_hash(st_codesign, &hash_bufsz);
 	if (hash_buf == NULL) {
-		g_prefix_error(error, "failed to get hash digest: ");
+		g_prefix_error_literal(error, "failed to get hash digest: ");
 		return FALSE;
 	}
 
 	buf_mut = fu_memdup_safe(hash_buf, hash_bufsz, error);
 	if (buf_mut == NULL) {
-		g_prefix_error(error, "failed to dup hash digest: ");
+		g_prefix_error_literal(error, "failed to dup hash digest: ");
 		return FALSE;
 	}
 
@@ -2624,7 +2630,7 @@ fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error sending hash digest: ");
+		g_prefix_error_literal(error, "error sending hash digest: ");
 		return FALSE;
 	}
 
@@ -2651,7 +2657,7 @@ fu_genesys_usbhub_device_check_hash_digest_verification(FuGenesysUsbhubDevice *s
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error getting hash digest verification: ");
+		g_prefix_error_literal(error, "error getting hash digest verification: ");
 		return FALSE;
 	}
 
@@ -2706,13 +2712,13 @@ fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
 
 	sig_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_signature(st_codesign, &sig_bufsz);
 	if (sig_buf == NULL) {
-		g_prefix_error(error, "failed to get signature: ");
+		g_prefix_error_literal(error, "failed to get signature: ");
 		return FALSE;
 	}
 
 	buf_mut = fu_memdup_safe(sig_buf, sig_bufsz, error);
 	if (buf_mut == NULL) {
-		g_prefix_error(error, "failed to dup signature: ");
+		g_prefix_error_literal(error, "failed to dup signature: ");
 		return FALSE;
 	}
 
@@ -2730,7 +2736,7 @@ fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error sending signature: ");
+		g_prefix_error_literal(error, "error sending signature: ");
 		return FALSE;
 	}
 
@@ -2757,7 +2763,7 @@ fu_genesys_usbhub_device_check_signature_verification(FuGenesysUsbhubDevice *sel
 						    GENESYS_USBHUB_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-		g_prefix_error(error, "error getting signature verification: ");
+		g_prefix_error_literal(error, "error getting signature verification: ");
 		return FALSE;
 	}
 
@@ -2978,7 +2984,7 @@ fu_genesys_usbhub_device_write_firmware(FuDevice *device,
 			firmware,
 			fu_progress_get_child(progress),
 			error)) {
-			g_prefix_error(error, "failed to verify HW codesign: ");
+			g_prefix_error_literal(error, "failed to verify HW codesign: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

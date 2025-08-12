@@ -307,7 +307,7 @@ fu_vli_pd_device_parade_setup(FuVliPdDevice *self, GError **error)
 		return TRUE;
 	}
 	if (!fu_device_setup(dev, error)) {
-		g_prefix_error(error, "failed to set up parade device: ");
+		g_prefix_error_literal(error, "failed to set up parade device: ");
 		return FALSE;
 	}
 	fu_device_add_child(FU_DEVICE(self), dev);
@@ -341,7 +341,7 @@ fu_vli_pd_device_setup(FuDevice *device, GError **error)
 					    1000,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to get version: ");
+		g_prefix_error_literal(error, "failed to get version: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint32_safe(verbuf, sizeof(verbuf), 0x0, &version_raw, G_BIG_ENDIAN, error))
@@ -560,7 +560,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(sbuf, sbufsz, sbufsz - 2, &crc_file, G_LITTLE_ENDIAN, error)) {
-		g_prefix_error(error, "failed to read file CRC: ");
+		g_prefix_error_literal(error, "failed to read file CRC: ");
 		return FALSE;
 	}
 	crc_actual = fu_crc16(FU_CRC_KIND_B16_USB, sbuf, sbufsz - 2);
@@ -658,7 +658,7 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
 					 fu_progress_get_child(progress),
 					 error)) {
-		g_prefix_error(error, "failed to erase all: ");
+		g_prefix_error_literal(error, "failed to erase all: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

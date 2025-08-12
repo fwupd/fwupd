@@ -90,7 +90,7 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					    tx_data->timeout,
 					    NULL, /* cancellable */
 					    error)) {
-		g_prefix_error(error, "failed to write to device: ");
+		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -116,7 +116,7 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 					      rx_data->timeout,
 					      NULL, /* cancellable */
 					      error)) {
-		g_prefix_error(error, "failed to read from device: ");
+		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
 	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[5] == match_buf[5] &&
@@ -130,7 +130,7 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 						      rx_data->timeout,
 						      NULL, /* cancellable */
 						      error)) {
-			g_prefix_error(error, "failed to read from device: ");
+			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
 	}
@@ -892,7 +892,7 @@ fu_jabra_gnp_device_add_child(FuDevice *device, guint dfu_pid, GError **error)
 	fu_device_set_logical_id(FU_DEVICE(child), "ota_device");
 
 	if (!fu_device_setup(FU_DEVICE(child), error)) {
-		g_prefix_error(error, "failed to setup child device: ");
+		g_prefix_error_literal(error, "failed to setup child device: ");
 		return FALSE;
 	}
 

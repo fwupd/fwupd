@@ -122,7 +122,7 @@ fu_corsair_device_poll_subdevice(FuDevice *device, gboolean *subdevice_added, GE
 					FU_CORSAIR_BP_PROPERTY_SUBDEVICES,
 					&subdevices,
 					error)) {
-		g_prefix_error(error, "cannot get subdevices: ");
+		g_prefix_error_literal(error, "cannot get subdevices: ");
 		return FALSE;
 	}
 
@@ -214,14 +214,14 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 
 	version = fu_corsair_device_get_version(device, error);
 	if (version == NULL) {
-		g_prefix_error(error, "cannot get version: ");
+		g_prefix_error_literal(error, "cannot get version: ");
 		return FALSE;
 	}
 	fu_device_set_version(device, version);
 
 	bootloader_version = fu_corsair_device_get_bootloader_version(self->bp, error);
 	if (bootloader_version == NULL) {
-		g_prefix_error(error, "cannot get bootloader version: ");
+		g_prefix_error_literal(error, "cannot get bootloader version: ");
 		return FALSE;
 	}
 	fu_device_set_version_bootloader(device, bootloader_version);
@@ -232,7 +232,7 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 						FU_CORSAIR_BP_PROPERTY_BATTERY_LEVEL,
 						&battery_level,
 						error)) {
-			g_prefix_error(error, "cannot get battery level: ");
+			g_prefix_error_literal(error, "cannot get battery level: ");
 			return FALSE;
 		}
 		fu_device_set_battery_level(device, battery_level / 10);
@@ -286,7 +286,7 @@ fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data
 					FU_CORSAIR_BP_PROPERTY_SUBDEVICES,
 					&subdevices,
 					error)) {
-		g_prefix_error(error, "cannot get subdevices: ");
+		g_prefix_error_literal(error, "cannot get subdevices: ");
 		return FALSE;
 	}
 
@@ -303,7 +303,7 @@ fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
 	FuDevice *parent = fu_device_get_parent(device);
 
 	if (parent == NULL) {
-		g_prefix_error(error, "cannot get parent: ");
+		g_prefix_error_literal(error, "cannot get parent: ");
 		return FALSE;
 	}
 
@@ -316,7 +316,7 @@ fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
 				  CORSAIR_SUBDEVICE_RECONNECT_PERIOD,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "a subdevice did not reconnect after attach: ");
+		g_prefix_error_literal(error, "a subdevice did not reconnect after attach: ");
 		return FALSE;
 	}
 
@@ -340,19 +340,19 @@ fu_corsair_device_ensure_mode(FuDevice *device, FuCorsairDeviceMode mode, GError
 
 	if (mode == FU_CORSAIR_DEVICE_MODE_APPLICATION) {
 		if (!fu_device_attach(FU_DEVICE(self->bp), error)) {
-			g_prefix_error(error, "attach failed: ");
+			g_prefix_error_literal(error, "attach failed: ");
 			return FALSE;
 		}
 	} else {
 		if (!fu_device_detach(FU_DEVICE(self->bp), error)) {
-			g_prefix_error(error, "detach failed: ");
+			g_prefix_error_literal(error, "detach failed: ");
 			return FALSE;
 		}
 	}
 
 	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
 		if (!fu_corsair_device_reconnect_subdevice(device, error)) {
-			g_prefix_error(error, "subdevice did not reconnect: ");
+			g_prefix_error_literal(error, "subdevice did not reconnect: ");
 			return FALSE;
 		}
 		if (mode == FU_CORSAIR_DEVICE_MODE_BOOTLOADER) {
@@ -397,7 +397,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 				      fu_progress_get_child(progress),
 				      flags,
 				      error)) {
-		g_prefix_error(error, "cannot write firmware: ");
+		g_prefix_error_literal(error, "cannot write firmware: ");
 		return FALSE;
 	}
 
@@ -405,7 +405,7 @@ fu_corsair_device_write_firmware(FuDevice *device,
 
 	if (!fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_LEGACY_ATTACH)) {
 		if (!fu_corsair_bp_activate_firmware(self->bp, firmware, error)) {
-			g_prefix_error(error, "firmware activation fail: ");
+			g_prefix_error_literal(error, "firmware activation fail: ");
 			return FALSE;
 		}
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -467,7 +467,7 @@ fu_corsair_device_set_quirk_kv(FuDevice *device,
 				 G_MAXUINT8,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "cannot parse CorsairVendorInterface: ");
+			g_prefix_error_literal(error, "cannot parse CorsairVendorInterface: ");
 			return FALSE;
 		}
 		self->vendor_interface = vendor_interface;
@@ -493,7 +493,7 @@ fu_corsair_device_poll(FuDevice *device, GError **error)
 
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL) {
-		g_prefix_error(error, "cannot open device: ");
+		g_prefix_error_literal(error, "cannot open device: ");
 		return FALSE;
 	}
 
