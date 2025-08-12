@@ -279,7 +279,7 @@ fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 	if (!fu_kinetic_dp_puma_firmware_parse_chip_id(app_fw_stream, &priv->chip_id, error))
 		return FALSE;
 	if (!fu_kinetic_dp_puma_firmware_parse_app_fw(self, app_fw_stream, error)) {
-		g_prefix_error(error, "failed to parse info from Puma App firmware: ");
+		g_prefix_error_literal(error, "failed to parse info from Puma App firmware: ");
 		return FALSE;
 	}
 

@@ -33,7 +33,7 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 				       FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
 				       &compatible,
 				       error)) {
-		g_prefix_error(error, "missing update mechanism: ");
+		g_prefix_error_literal(error, "missing update mechanism: ");
 		return FALSE;
 	}
 	split = g_strsplit(compatible, ",", 2);

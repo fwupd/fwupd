@@ -262,7 +262,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_DEBUG_INTERFACE: ");
+			g_prefix_error_literal(error, "could not read IA32_DEBUG_INTERFACE: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint32_safe(buf,
@@ -279,7 +279,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_TME_ACTIVATION: ");
+			g_prefix_error_literal(error, "could not read IA32_TME_ACTIVATION: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
@@ -296,7 +296,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_ARCH_CAPABILITIES: ");
+			g_prefix_error_literal(error, "could not read IA32_ARCH_CAPABILITIES: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
@@ -313,7 +313,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_MCU_OPT_CTRL: ");
+			g_prefix_error_literal(error, "could not read IA32_MCU_OPT_CTRL: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
@@ -332,7 +332,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read PCI_MSR_AMD64_SYSCFG: ");
+			g_prefix_error_literal(error, "could not read PCI_MSR_AMD64_SYSCFG: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint32_safe(buf,
@@ -349,7 +349,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read PCI_MSR_AMD64_SEV: ");
+			g_prefix_error_literal(error, "could not read PCI_MSR_AMD64_SEV: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint32_safe(buf,
@@ -366,7 +366,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read PCI_MSR_AMD66_HWCFG: ");
+			g_prefix_error_literal(error, "could not read PCI_MSR_AMD66_HWCFG: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint64_safe(buf,
@@ -390,7 +390,7 @@ fu_msr_plugin_backend_device_added(FuPlugin *plugin,
 					  buf,
 					  sizeof(buf),
 					  error)) {
-			g_prefix_error(error, "could not read IA32_BIOS_SIGN_ID: ");
+			g_prefix_error_literal(error, "could not read IA32_BIOS_SIGN_ID: ");
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));

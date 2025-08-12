@@ -35,7 +35,7 @@ fu_mm_dfota_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT+QFLST=?", TRUE, error)) {
-		g_prefix_error(error, "listing files not supported: ");
+		g_prefix_error_literal(error, "listing files not supported: ");
 		return FALSE;
 	}
 	/* if listing firmware file does not fail, there is an old firmware file to remove */
@@ -52,7 +52,7 @@ fu_mm_dfota_device_setup(FuDevice *device, GError **error)
 				 "AT+QFDEL=\"" FU_MM_DFOTA_DEVICE_FILENAME "\"",
 				 TRUE,
 				 error)) {
-		g_prefix_error(error, "failed to delete existing firmware file: ");
+		g_prefix_error_literal(error, "failed to delete existing firmware file: ");
 		return FALSE;
 	}
 
@@ -100,7 +100,7 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 					1500,
 					FU_IO_CHANNEL_FLAG_NONE,
 					error)) {
-		g_prefix_error(error, "failed to upload firmware to the device: ");
+		g_prefix_error_literal(error, "failed to upload firmware to the device: ");
 		return FALSE;
 	}
 	if (acks_expected == 0)
@@ -112,7 +112,7 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 					      FU_IO_CHANNEL_FLAG_NONE,
 					      error);
 	if (ack_bytes == NULL) {
-		g_prefix_error(error, "failed to read response: ");
+		g_prefix_error_literal(error, "failed to read response: ");
 		return FALSE;
 	}
 
@@ -155,7 +155,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 	/* +QFUPL: <filesize>,<hex checksum> */
 	result_regex = g_regex_new("\\r\\n\\+QFUPL:\\s*(\\d+),([0-9a-f]+)\\r\\n", 0, 0, error);
 	if (result_regex == NULL) {
-		g_prefix_error(error, "failed to build regex: ");
+		g_prefix_error_literal(error, "failed to build regex: ");
 		return FALSE;
 	}
 
@@ -165,7 +165,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 						 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 						 error);
 	if (result_bytes == NULL) {
-		g_prefix_error(error, "failed to read AT+QFUPL response: ");
+		g_prefix_error_literal(error, "failed to read AT+QFUPL response: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(result_bytes, NULL);
@@ -282,7 +282,7 @@ fu_mm_dfota_device_parse_fota_response(FuMmDfotaDevice *self,
 	/* +QIND: "FOTA","<STATUS>"(,<number>)? */
 	fota_regex = g_regex_new("\\+QIND:\\s*\"FOTA\",\"([A-Z]+)\"(,(\\d+))?", 0, 0, error);
 	if (fota_regex == NULL) {
-		g_prefix_error(error, "failed to build regex: ");
+		g_prefix_error_literal(error, "failed to build regex: ");
 		return FALSE;
 	}
 
@@ -415,7 +415,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 				     FU_MM_DFOTA_DEVICE_FILENAME,
 				     fu_firmware_get_size(firmware));
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), upload_cmd, TRUE, error)) {
-		g_prefix_error(error, "failed to enable upload mode: ");
+		g_prefix_error_literal(error, "failed to enable upload mode: ");
 		return FALSE;
 	}
 	if (!fu_mm_dfota_device_upload_stream(self, stream, error))
@@ -424,7 +424,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 				 "AT+QFOTADL=\"/data/ufs/" FU_MM_DFOTA_DEVICE_FILENAME "\"",
 				 TRUE,
 				 error)) {
-		g_prefix_error(error, "failed to start update: ");
+		g_prefix_error_literal(error, "failed to start update: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);

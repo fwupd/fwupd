@@ -654,7 +654,8 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 						      sizeof(buf),
 						      FU_HID_DEVICE_FLAG_NONE,
 						      error)) {
-			g_prefix_error(error, "Failed to get GetFirmwareVersionBluetooth: ");
+			g_prefix_error_literal(error,
+					       "failed to get GetFirmwareVersionBluetooth: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint16_safe(buf, sizeof(buf), 1, &fw_ver, G_LITTLE_ENDIAN, error))
@@ -706,7 +707,7 @@ fu_wac_device_add_modules_cb(FuDevice *device, gpointer user_data, GError **erro
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
-		g_prefix_error(error, "failed to get DeviceFirmwareDescriptor: ");
+		g_prefix_error_literal(error, "failed to get DeviceFirmwareDescriptor: ");
 		return FALSE;
 	}
 
@@ -930,7 +931,7 @@ fu_wac_device_close(FuDevice *device, GError **error)
 					     0x00, /* HID */
 					     FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
 					     error)) {
-		g_prefix_error(error, "failed to re-attach interface: ");
+		g_prefix_error_literal(error, "failed to re-attach interface: ");
 		return FALSE;
 	}
 

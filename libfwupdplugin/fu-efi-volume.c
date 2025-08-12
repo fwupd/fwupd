@@ -169,7 +169,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	partial_stream =
 	    fu_partial_input_stream_new(stream, hdr_length, fv_length - hdr_length, error);
 	if (partial_stream == NULL) {
-		g_prefix_error(error, "failed to cut EFI volume: ");
+		g_prefix_error_literal(error, "failed to cut EFI volume: ");
 		return FALSE;
 	}
 	fu_firmware_set_id(firmware, guid_str);
@@ -267,13 +267,13 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	if (img != NULL) {
 		img_blob = fu_firmware_write(img, error);
 		if (img_blob == NULL) {
-			g_prefix_error(error, "no EFI FV child payload: ");
+			g_prefix_error_literal(error, "no EFI FV child payload: ");
 			return NULL;
 		}
 	} else {
 		img_blob = fu_firmware_get_bytes_with_patches(firmware, error);
 		if (img_blob == NULL) {
-			g_prefix_error(error, "no EFI FV payload: ");
+			g_prefix_error_literal(error, "no EFI FV payload: ");
 			return NULL;
 		}
 	}

@@ -33,7 +33,7 @@ fu_legion_hid2_device_transfer(FuLegionHid2Device *self,
 					  FU_LEGION_HID2_DEVICE_TIMEOUT,
 					  FU_IO_CHANNEL_FLAG_NONE,
 					  error)) {
-			g_prefix_error(error, "failed to write packet: ");
+			g_prefix_error_literal(error, "failed to write packet: ");
 			return FALSE;
 		}
 	}
@@ -45,7 +45,7 @@ fu_legion_hid2_device_transfer(FuLegionHid2Device *self,
 					 FU_LEGION_HID2_DEVICE_TIMEOUT,
 					 FU_IO_CHANNEL_FLAG_NONE,
 					 error)) {
-			g_prefix_error(error, "failed to read packet: ");
+			g_prefix_error_literal(error, "failed to read packet: ");
 			return FALSE;
 		}
 	}

@@ -363,7 +363,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 	msg_count->function_id = 0x00 << 4; /* getCount */
 	msg_count->hidpp_version = priv->hidpp_version;
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg_count, error)) {
-		g_prefix_error(error, "failed to get firmware count: ");
+		g_prefix_error_literal(error, "failed to get firmware count: ");
 		return FALSE;
 	}
 	entity_count = msg_count->data[0];
@@ -383,7 +383,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 		msg->hidpp_version = priv->hidpp_version;
 		msg->data[0] = i;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to get firmware info: ");
+			g_prefix_error_literal(error, "failed to get firmware info: ");
 			return FALSE;
 		}
 		/* use the single available slot, otherwise -- the slot which is not active */
@@ -414,7 +414,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 			   fu_device_has_private_flag(FU_DEVICE(self),
 						      FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO)) {
 			if (!fu_logitech_hidpp_device_create_radio_child(self, i, build, error)) {
-				g_prefix_error(error, "failed to create radio: ");
+				g_prefix_error_literal(error, "failed to create radio: ");
 				return FALSE;
 			}
 			radio_ok = TRUE;
@@ -427,7 +427,7 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidppDevice *self, GError
 	    !radio_ok) {
 		g_debug("no radio found, creating a fake one for recovery");
 		if (!fu_logitech_hidpp_device_create_radio_child(self, 1, 0, error)) {
-			g_prefix_error(error, "failed to create radio: ");
+			g_prefix_error_literal(error, "failed to create radio: ");
 			return FALSE;
 		}
 	}
@@ -457,7 +457,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 	msg->function_id = 0x00 << 4; /* getDeviceInfo */
 	msg->hidpp_version = priv->hidpp_version;
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-		g_prefix_error(error, "failed to get the model ID: ");
+		g_prefix_error_literal(error, "failed to get the model ID: ");
 		return FALSE;
 	}
 
@@ -469,7 +469,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidppDevice *self, GError **er
 	/* truncate to 4 chars and convert to a PID */
 	g_string_set_size(str, 4);
 	if (!fu_strtoull(str->str, &pid_tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_16, error)) {
-		g_prefix_error(error, "failed to parse the model ID: ");
+		g_prefix_error_literal(error, "failed to parse the model ID: ");
 		return FALSE;
 	}
 	fu_device_set_pid(FU_DEVICE(self), (guint32)pid_tmp);
@@ -502,14 +502,14 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 			msg->function_id = 0x00 << 4; /* get_capabilities */
 			msg->hidpp_version = priv->hidpp_version;
 			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-				g_prefix_error(error, "failed to get battery info: ");
+				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
 			if (msg->data[1] & 0x02)
 				socc = TRUE;
 			msg->function_id = 0x01 << 4; /* get_status */
 			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-				g_prefix_error(error, "failed to get battery info: ");
+				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
 			if (socc) {
@@ -548,7 +548,7 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidppDevice *self, GError
 			msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
 			msg->hidpp_version = priv->hidpp_version;
 			if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-				g_prefix_error(error, "failed to get battery info: ");
+				g_prefix_error_literal(error, "failed to get battery info: ");
 				return FALSE;
 			}
 			if (msg->data[0] != 0x00)
@@ -656,7 +656,7 @@ fu_logitech_hidpp_device_rdfu_get_capabilities(FuLogitechHidppDevice *self, GErr
 
 	g_debug("read capabilities");
 	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
-		g_prefix_error(error, "failed to get capabilities: ");
+		g_prefix_error_literal(error, "failed to get capabilities: ");
 		return FALSE;
 	}
 
@@ -697,7 +697,7 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 
 	g_debug("startDfu");
 	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
-		g_prefix_error(error, "startDfu failed: ");
+		g_prefix_error_literal(error, "startDfu failed: ");
 		return FALSE;
 	}
 
@@ -971,7 +971,7 @@ fu_logitech_hidpp_device_rdfu_get_dfu_status(FuLogitechHidppDevice *self, GError
 
 	g_debug("getDfuStatus for entity %u", priv->cached_fw_entity);
 	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
-		g_prefix_error(error, "getDfuStatus failed: ");
+		g_prefix_error_literal(error, "getDfuStatus failed: ");
 		return FALSE;
 	}
 
@@ -1062,7 +1062,7 @@ fu_logitech_hidpp_device_rdfu_transfer_pkt(FuLogitechHidppDevice *self,
 
 	g_debug("transferDfuData");
 	if (!fu_logitech_hidpp_device_transfer_msg(self, msg, error)) {
-		g_prefix_error(error, "transferDfuData failed: ");
+		g_prefix_error_literal(error, "transferDfuData failed: ");
 		return FALSE;
 	}
 
@@ -1282,7 +1282,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		msg->function_id = 0x02 << 4; /* getDeviceType */
 		msg->hidpp_version = priv->hidpp_version;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to get device type: ");
+			g_prefix_error_literal(error, "failed to get device type: ");
 			return FALSE;
 		}
 
@@ -1316,7 +1316,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		msg->function_id = 0x00 << 4; /* getDfuStatus */
 		msg->hidpp_version = priv->hidpp_version;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to get DFU status: ");
+			g_prefix_error_literal(error, "failed to get DFU status: ");
 			return FALSE;
 		}
 		if ((msg->data[2] & 0x01) > 0) {
@@ -1471,7 +1471,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 		msg->data[6] = 'U';
 		msg->flags = FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_IGNORE_SUB_ID;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to put device into DFU mode: ");
+			g_prefix_error_literal(error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
 		fu_device_sleep(device, 200); /* ms */
@@ -1573,7 +1573,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 			    error))
 		return FALSE;
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-		g_prefix_error(error, "failed to supply program data: ");
+		g_prefix_error_literal(error, "failed to supply program data: ");
 		return FALSE;
 	}
 

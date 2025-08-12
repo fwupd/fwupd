@@ -1070,7 +1070,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 	} else {
 		partial_stream = fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut firmware: ");
+			g_prefix_error_literal(error, "failed to cut firmware: ");
 			return FALSE;
 		}
 	}
@@ -1405,7 +1405,7 @@ fu_firmware_build_from_xml(FuFirmware *self, const gchar *xml, GError **error)
 
 	/* parse XML */
 	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error(error, "could not parse XML: ");
+		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}

@@ -550,7 +550,7 @@ fu_bcm57xx_recovery_device_prepare_firmware(FuDevice *device,
 
 	/* check is a NVRAM backup */
 	if (!fu_firmware_parse_stream(firmware_tmp, stream, 0x0, flags, error)) {
-		g_prefix_error(error, "failed to parse new firmware: ");
+		g_prefix_error_literal(error, "failed to parse new firmware: ");
 		return NULL;
 	}
 	if (!fu_bcm57xx_firmware_is_backup(FU_BCM57XX_FIRMWARE(firmware_tmp))) {

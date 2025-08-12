@@ -109,7 +109,7 @@ static gboolean
 fu_vli_pd_parade_device_start_mcu(FuVliPdParadeDevice *self, GError **error)
 {
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x00, error)) {
-		g_prefix_error(error, "failed to start MCU: ");
+		g_prefix_error_literal(error, "failed to start MCU: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -119,11 +119,11 @@ static gboolean
 fu_vli_pd_parade_device_stop_mcu(FuVliPdParadeDevice *self, GError **error)
 {
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0xC0, error)) {
-		g_prefix_error(error, "failed to stop MCU: ");
+		g_prefix_error_literal(error, "failed to stop MCU: ");
 		return FALSE;
 	}
 	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x40, error)) {
-		g_prefix_error(error, "failed to stop MCU 2nd: ");
+		g_prefix_error_literal(error, "failed to stop MCU 2nd: ");
 		return FALSE;
 	}
 	return TRUE;

@@ -56,13 +56,13 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 	case 0x0d12:
 		/* VL81x */
 		if (!fu_input_stream_read_u16(stream, 0x1f4c, &version, G_LITTLE_ENDIAN, error)) {
-			g_prefix_error(error, "failed to get version: ");
+			g_prefix_error_literal(error, "failed to get version: ");
 			return FALSE;
 		}
 		version |= (strapping1 >> 4) & 0x07;
 		if ((version & 0x0f) == 0x04) {
 			if (!fu_input_stream_read_u8(stream, 0x700d, &tmp, error)) {
-				g_prefix_error(error, "failed to get version increment: ");
+				g_prefix_error_literal(error, "failed to get version increment: ");
 				return FALSE;
 			}
 			if (tmp & 0x40)
@@ -72,7 +72,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 	case 0x0507:
 		/* VL210 */
 		if (!fu_input_stream_read_u16(stream, 0x8f0c, &version, G_LITTLE_ENDIAN, error)) {
-			g_prefix_error(error, "failed to get version: ");
+			g_prefix_error_literal(error, "failed to get version: ");
 			return FALSE;
 		}
 		version |= (strapping1 >> 4) & 0x07;
@@ -82,7 +82,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 	case 0x0566:
 		/* U4ID_Address_In_FW_Zone */
 		if (!fu_input_stream_read_u24(stream, 0x3F80, &adr_ofs32, G_LITTLE_ENDIAN, error)) {
-			g_prefix_error(error, "failed to get offset addr: ");
+			g_prefix_error_literal(error, "failed to get offset addr: ");
 			return FALSE;
 		}
 		if (adr_ofs32 < 0x20000 + 0x2000 + 4) {
@@ -98,7 +98,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 					      &version,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to get offset version: ");
+			g_prefix_error_literal(error, "failed to get offset version: ");
 			return FALSE;
 		}
 		version |= (strapping1 >> 4) & 0x07;
@@ -106,7 +106,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 	default:
 		/* U3ID_Address_In_FW_Zone */
 		if (!fu_input_stream_read_u16(stream, 0x8000, &adr_ofs, G_BIG_ENDIAN, error)) {
-			g_prefix_error(error, "failed to get offset addr: ");
+			g_prefix_error_literal(error, "failed to get offset addr: ");
 			return FALSE;
 		}
 		if (!fu_input_stream_read_u16(stream,
@@ -114,7 +114,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 					      &version,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to get offset version: ");
+			g_prefix_error_literal(error, "failed to get offset version: ");
 			return FALSE;
 		}
 		version |= (strapping1 >> 4) & 0x07;
@@ -142,7 +142,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	/* map into header */
 	st = fu_struct_vli_usbhub_hdr_parse_stream(stream, 0x0, error);
 	if (st == NULL) {
-		g_prefix_error(error, "failed to read header: ");
+		g_prefix_error_literal(error, "failed to read header: ");
 		return FALSE;
 	}
 	self->dev_id = fu_struct_vli_usbhub_hdr_get_dev_id(st);
@@ -164,7 +164,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 					      &binver1,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to get binver1: ");
+			g_prefix_error_literal(error, "failed to get binver1: ");
 			return FALSE;
 		}
 		if (!fu_input_stream_read_u16(stream,
@@ -172,7 +172,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 					      &binver2,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to get binver2: ");
+			g_prefix_error_literal(error, "failed to get binver2: ");
 			return FALSE;
 		}
 
@@ -214,18 +214,18 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 	case 0x0518:
 		/* VL819~VL822 == VT3518 */
 		if (!fu_input_stream_read_u8(stream, 0x8021, &tmp, error)) {
-			g_prefix_error(error, "failed to get 820/822 byte: ");
+			g_prefix_error_literal(error, "failed to get 820/822 byte: ");
 			return FALSE;
 		}
 		/* Q5/Q7/Q8 requires searching two addresses for offset value */
 		if (!fu_input_stream_read_u16(stream, 0x8018, &adr_ofs, G_BIG_ENDIAN, error)) {
-			g_prefix_error(error, "failed to get Q7/Q8 offset mapping: ");
+			g_prefix_error_literal(error, "failed to get Q7/Q8 offset mapping: ");
 			return FALSE;
 		}
 		/* VL819, VL821, VL822 */
 		if (tmp == 0xF0) {
 			if (!fu_input_stream_read_u8(stream, adr_ofs + 0x2000, &tmp, error)) {
-				g_prefix_error(error, "failed to get offset version: ");
+				g_prefix_error_literal(error, "failed to get offset version: ");
 				return FALSE;
 			}
 			/* VL819 */
@@ -257,7 +257,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 				self->device_kind = FU_VLI_DEVICE_KIND_VL819Q8;
 				break;
 			default:
-				g_prefix_error(error, "failed to match Q5/Q7/Q8 fw type: ");
+				g_prefix_error_literal(error, "failed to match Q5/Q7/Q8 fw type: ");
 				return FALSE;
 			}
 			/* VL820 */
@@ -265,7 +265,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			self->device_kind = FU_VLI_DEVICE_KIND_VL822C0;
 		} else {
 			if (!fu_input_stream_read_u8(stream, 0xf000, &tmp, error)) {
-				g_prefix_error(error, "failed to get Q7/Q8 difference: ");
+				g_prefix_error_literal(error, "failed to get Q7/Q8 difference: ");
 				return FALSE;
 			}
 			if (tmp & (1 << 0))
@@ -303,7 +303,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 					      &binveraddr,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to get binveraddr: ");
+			g_prefix_error_literal(error, "failed to get binveraddr: ");
 			return FALSE;
 		}
 		if (binveraddr < 0x20000 + 0x2000) {
@@ -317,7 +317,7 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 					     binveraddr - 0x20000 + 0x2000,
 					     &binver,
 					     error)) {
-			g_prefix_error(error, "failed to get binver2: ");
+			g_prefix_error_literal(error, "failed to get binver2: ");
 			return FALSE;
 		}
 

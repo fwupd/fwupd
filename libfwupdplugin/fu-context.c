@@ -135,7 +135,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
 					    file,
 					    FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					    error)) {
-			g_prefix_error(error, "failed to parse FDT: ");
+			g_prefix_error_literal(error, "failed to parse FDT: ");
 			return NULL;
 		}
 		priv->fdt = g_steal_pointer(&fdt_tmp);

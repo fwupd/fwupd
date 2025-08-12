@@ -35,7 +35,7 @@ fu_mm_fdl_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
 		return FALSE;
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT^SFDL", TRUE, error)) {
-		g_prefix_error(error, "enabling firmware download mode not supported: ");
+		g_prefix_error_literal(error, "enabling firmware download mode not supported: ");
 		return FALSE;
 	}
 

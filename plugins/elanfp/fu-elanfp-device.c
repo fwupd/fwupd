@@ -83,7 +83,7 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 						 BULK_SEND_TIMEOUT_MS,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to send command (bulk): ");
+			g_prefix_error_literal(error, "failed to send command (bulk): ");
 			return FALSE;
 		}
 	} else {
@@ -100,7 +100,7 @@ fu_elanfp_device_iap_send_command(FuElanfpDevice *self,
 						    CTRL_SEND_TIMEOUT_MS,
 						    NULL,
 						    error)) {
-			g_prefix_error(error, "failed to send command (ctrl transfer): ");
+			g_prefix_error_literal(error, "failed to send command (ctrl transfer): ");
 			return FALSE;
 		}
 	}
@@ -136,7 +136,7 @@ fu_elanfp_device_iap_recv_status(FuElanfpDevice *self, guint8 *buf, gsize bufsz,
 					 BULK_RECV_TIMEOUT_MS,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to receive status: ");
+		g_prefix_error_literal(error, "failed to receive status: ");
 		return FALSE;
 	}
 	if (actual != bufsz) {
@@ -235,7 +235,7 @@ fu_elanfp_device_setup(FuDevice *device, GError **error)
 				      TRUE,
 				      NULL,
 				      error)) {
-		g_prefix_error(error, "failed to device setup: ");
+		g_prefix_error_literal(error, "failed to device setup: ");
 		return FALSE;
 	}
 	fw_ver = fu_memread_uint16(usb_buf, G_BIG_ENDIAN);
@@ -301,7 +301,7 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 				    0x0, /* src */
 				    fu_chunk_get_data_sz(chk),
 				    error)) {
-			g_prefix_error(error, "memory copy for payload fail: ");
+			g_prefix_error_literal(error, "memory copy for payload fail: ");
 			return FALSE;
 		}
 		if (!fu_elanfp_device_iap_send_command(self,
@@ -311,11 +311,11 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 						       sizeof(databuf),
 						       sizeof(recvbuf),
 						       error)) {
-			g_prefix_error(error, "send payload command fail: ");
+			g_prefix_error_literal(error, "send payload command fail: ");
 			return FALSE;
 		}
 		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
-			g_prefix_error(error, "received payload status fail: ");
+			g_prefix_error_literal(error, "received payload status fail: ");
 			return FALSE;
 		}
 		if (recvbuf[5] != FU_CFU_CONTENT_STATUS_SUCCESS) {
@@ -374,11 +374,11 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 						       g_bytes_get_size(offer),
 						       g_bytes_get_size(offer) + 1,
 						       error)) {
-			g_prefix_error(error, "send offer command fail: ");
+			g_prefix_error_literal(error, "send offer command fail: ");
 			return FALSE;
 		}
 		if (!fu_elanfp_device_iap_recv_status(self, recvbuf, sizeof(recvbuf), error)) {
-			g_prefix_error(error, "received offer status fail: ");
+			g_prefix_error_literal(error, "received offer status fail: ");
 			return FALSE;
 		}
 		g_debug("offer-%s status:%s reject:%s",
@@ -413,7 +413,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				      TRUE,
 				      NULL,
 				      error)) {
-		g_prefix_error(error, "failed to hardware reset ");
+		g_prefix_error_literal(error, "failed to hardware reset ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

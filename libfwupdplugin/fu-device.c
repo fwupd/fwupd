@@ -5843,13 +5843,13 @@ fu_device_open_internal(FuDevice *self, GError **error)
 
 	/* probe */
 	if (!fu_device_probe(self, error)) {
-		g_prefix_error(error, "failed to probe: ");
+		g_prefix_error_literal(error, "failed to probe: ");
 		return FALSE;
 	}
 
 	/* ensure the device ID is already setup */
 	if (!fu_device_ensure_id(self, error)) {
-		g_prefix_error(error, "failed to ensure ID: ");
+		g_prefix_error_literal(error, "failed to ensure ID: ");
 		return FALSE;
 	}
 
@@ -5862,12 +5862,12 @@ fu_device_open_internal(FuDevice *self, GError **error)
 						  FU_DEVICE_RETRY_OPEN_DELAY,
 						  NULL,
 						  error)) {
-				g_prefix_error(error, "failed to retry subclass open: ");
+				g_prefix_error_literal(error, "failed to retry subclass open: ");
 				return FALSE;
 			}
 		} else {
 			if (!device_class->open(self, error)) {
-				g_prefix_error(error, "failed to subclass open: ");
+				g_prefix_error_literal(error, "failed to subclass open: ");
 				return FALSE;
 			}
 		}
@@ -5875,13 +5875,13 @@ fu_device_open_internal(FuDevice *self, GError **error)
 
 	/* setup */
 	if (!fu_device_setup(self, error)) {
-		g_prefix_error(error, "failed to setup: ");
+		g_prefix_error_literal(error, "failed to setup: ");
 		return FALSE;
 	}
 
 	/* ensure the device ID is still valid */
 	if (!fu_device_ensure_id(self, error)) {
-		g_prefix_error(error, "failed to ensure ID: ");
+		g_prefix_error_literal(error, "failed to ensure ID: ");
 		return FALSE;
 	}
 

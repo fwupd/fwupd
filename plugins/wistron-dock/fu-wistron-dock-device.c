@@ -416,7 +416,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 						   g_bytes_get_data(fw_wsig, NULL),
 						   g_bytes_get_size(fw_wsig),
 						   error)) {
-		g_prefix_error(error, "failed to write WDFL signature: ");
+		g_prefix_error_literal(error, "failed to write WDFL signature: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -429,7 +429,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 						    g_bytes_get_data(fw_wdfl, NULL),
 						    g_bytes_get_size(fw_wdfl),
 						    error)) {
-		g_prefix_error(error, "failed to write WDFL data: ");
+		g_prefix_error_literal(error, "failed to write WDFL data: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -449,7 +449,7 @@ fu_wistron_dock_device_write_firmware(FuDevice *device,
 						 chunks,
 						 fu_progress_get_child(progress),
 						 error)) {
-		g_prefix_error(error, "failed to write payload: ");
+		g_prefix_error_literal(error, "failed to write payload: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -658,7 +658,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		st->len + 0x1,
 		MIN(fu_struct_wistron_dock_wdit_get_device_cnt(st), 32),
 		error)) {
-		g_prefix_error(error, "failed to parse imgs: ");
+		g_prefix_error_literal(error, "failed to parse imgs: ");
 		return FALSE;
 	}
 
@@ -686,19 +686,19 @@ fu_wistron_dock_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_wistron_dock_device_ensure_mcuid(self, error)) {
-		g_prefix_error(error, "failed to get MCUID: ");
+		g_prefix_error_literal(error, "failed to get MCUID: ");
 		return FALSE;
 	}
 	if (!fu_wistron_dock_device_ensure_bbinfo(self, error)) {
-		g_prefix_error(error, "failed to get BBINFO: ");
+		g_prefix_error_literal(error, "failed to get BBINFO: ");
 		return FALSE;
 	}
 	if (!fu_wistron_dock_device_ensure_userinfo(self, error)) {
-		g_prefix_error(error, "failed to get USERINFO: ");
+		g_prefix_error_literal(error, "failed to get USERINFO: ");
 		return FALSE;
 	}
 	if (!fu_wistron_dock_device_ensure_wdit(self, error)) {
-		g_prefix_error(error, "failed to get WDIT: ");
+		g_prefix_error_literal(error, "failed to get WDIT: ");
 		return FALSE;
 	}
 

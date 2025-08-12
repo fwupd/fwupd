@@ -1089,7 +1089,7 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
 		g_info("bus reset is not required; device will reboot to normal");
 	} else if (!fu_dfu_target_attach(target, progress, error)) {
-		g_prefix_error(error, "failed to attach target: ");
+		g_prefix_error_literal(error, "failed to attach target: ");
 		return FALSE;
 	}
 
@@ -1355,7 +1355,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		/* ignore */
 		break;
 	case FU_DFU_STATUS_ERR_VENDOR:
-		g_prefix_error(error, "read protection is active: ");
+		g_prefix_error_literal(error, "read protection is active: ");
 		break;
 	default:
 		g_prefix_error(error,

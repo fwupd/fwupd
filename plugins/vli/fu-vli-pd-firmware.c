@@ -48,7 +48,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 	/* parse */
 	st = fu_struct_vli_pd_hdr_parse_stream(stream, VLI_USBHUB_PD_FLASHMAP_ADDR, error);
 	if (st == NULL) {
-		g_prefix_error(error, "failed to read header: ");
+		g_prefix_error_literal(error, "failed to read header: ");
 		return FALSE;
 	}
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -96,7 +96,7 @@ fu_vli_pd_firmware_parse(FuFirmware *firmware,
 					      &crc_file,
 					      G_LITTLE_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to read file CRC: ");
+			g_prefix_error_literal(error, "failed to read file CRC: ");
 			return FALSE;
 		}
 		stream_tmp = fu_partial_input_stream_new(stream, 0, streamsz - 2, error);

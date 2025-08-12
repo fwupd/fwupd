@@ -37,7 +37,7 @@ fu_vli_device_spi_write_enable(FuVliDevice *self, GError **error)
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS(self);
 	if (klass->spi_write_enable != NULL) {
 		if (!klass->spi_write_enable(self, error)) {
-			g_prefix_error(error, "failed to write enable SPI: ");
+			g_prefix_error_literal(error, "failed to write enable SPI: ");
 			return FALSE;
 		}
 	}
@@ -50,7 +50,7 @@ fu_vli_device_spi_chip_erase(FuVliDevice *self, GError **error)
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS(self);
 	if (klass->spi_chip_erase != NULL) {
 		if (!klass->spi_chip_erase(self, error)) {
-			g_prefix_error(error, "failed to erase SPI data: ");
+			g_prefix_error_literal(error, "failed to erase SPI data: ");
 			return FALSE;
 		}
 	}
@@ -76,7 +76,7 @@ fu_vli_device_spi_read_status(FuVliDevice *self, guint8 *status, GError **error)
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS(self);
 	if (klass->spi_read_status != NULL) {
 		if (!klass->spi_read_status(self, status, error)) {
-			g_prefix_error(error, "failed to read status: ");
+			g_prefix_error_literal(error, "failed to read status: ");
 			return FALSE;
 		}
 	}
@@ -161,23 +161,23 @@ fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error)
 
 	/* erase sector */
 	if (!fu_vli_device_spi_write_enable(self, error)) {
-		g_prefix_error(error, "->spi_write_enable failed: ");
+		g_prefix_error_literal(error, "->spi_write_enable failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_status(self, 0x00, error)) {
-		g_prefix_error(error, "->spi_write_status failed: ");
+		g_prefix_error_literal(error, "->spi_write_status failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_enable(self, error)) {
-		g_prefix_error(error, "->spi_write_enable failed: ");
+		g_prefix_error_literal(error, "->spi_write_enable failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_sector_erase(self, addr, error)) {
-		g_prefix_error(error, "->spi_sector_erase failed: ");
+		g_prefix_error_literal(error, "->spi_sector_erase failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_wait_finish(self, error)) {
-		g_prefix_error(error, "->spi_wait_finish failed: ");
+		g_prefix_error_literal(error, "->spi_wait_finish failed: ");
 		return FALSE;
 	}
 
@@ -185,7 +185,7 @@ fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error)
 	for (guint32 offset = 0; offset < bufsz; offset += FU_VLI_DEVICE_TXSIZE) {
 		guint8 buf[FU_VLI_DEVICE_TXSIZE] = {0x0};
 		if (!fu_vli_device_spi_read_block(self, addr + offset, buf, sizeof(buf), error)) {
-			g_prefix_error(error, "failed to read back empty: ");
+			g_prefix_error_literal(error, "failed to read back empty: ");
 			return FALSE;
 		}
 		for (guint i = 0; i < sizeof(buf); i++) {
@@ -258,18 +258,18 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 	/* write */
 	g_debug("writing 0x%x block @0x%x", (guint)bufsz, address);
 	if (!fu_vli_device_spi_write_enable(self, error)) {
-		g_prefix_error(error, "enabling SPI write failed: ");
+		g_prefix_error_literal(error, "enabling SPI write failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_data(self, address, buf, bufsz, error)) {
-		g_prefix_error(error, "SPI data write failed: ");
+		g_prefix_error_literal(error, "SPI data write failed: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 1); /* ms */
 
 	/* verify */
 	if (!fu_vli_device_spi_read_block(self, address, buf_tmp, bufsz, error)) {
-		g_prefix_error(error, "SPI data read failed: ");
+		g_prefix_error_literal(error, "SPI data read failed: ");
 		return FALSE;
 	}
 	return fu_memcmp_safe(buf, bufsz, 0, buf_tmp, bufsz, 0, bufsz, error);
@@ -324,7 +324,7 @@ fu_vli_device_spi_write(FuVliDevice *self,
 					   fu_chunk_get_data_sz(chk),
 					   fu_progress_get_child(progress),
 					   error)) {
-		g_prefix_error(error, "failed to write CRC block: ");
+		g_prefix_error_literal(error, "failed to write CRC block: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -557,7 +557,7 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to read chip ID: ");
+		g_prefix_error_literal(error, "failed to read chip ID: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
@@ -596,7 +596,7 @@ fu_vli_device_setup(FuDevice *device, GError **error)
 	/* get the flash chip attached */
 	if (priv->spi_auto_detect) {
 		if (!fu_vli_device_spi_read_flash_id(self, error)) {
-			g_prefix_error(error, "failed to read SPI chip ID: ");
+			g_prefix_error_literal(error, "failed to read SPI chip ID: ");
 			return FALSE;
 		}
 		if (priv->flash_id != 0x0) {

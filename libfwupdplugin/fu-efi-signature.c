@@ -140,7 +140,7 @@ fu_efi_signature_parse(FuFirmware *firmware,
 				       0x0, /* offset */
 				       sizeof(guid),
 				       error)) {
-		g_prefix_error(error, "failed to read signature GUID: ");
+		g_prefix_error_literal(error, "failed to read signature GUID: ");
 		return FALSE;
 	}
 	priv->owner = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
@@ -152,7 +152,7 @@ fu_efi_signature_parse(FuFirmware *firmware,
 					  NULL,
 					  error);
 	if (data == NULL) {
-		g_prefix_error(error, "failed to read signature data: ");
+		g_prefix_error_literal(error, "failed to read signature data: ");
 		return FALSE;
 	}
 	fu_firmware_set_bytes(firmware, data);

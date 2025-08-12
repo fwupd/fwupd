@@ -163,7 +163,7 @@ fu_dell_kestrel_ec_read(FuDellKestrelEc *self,
 						 res,
 						 100,
 						 error)) {
-		g_prefix_error(error, "read over HID-I2C failed: ");
+		g_prefix_error_literal(error, "read over HID-I2C failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -175,7 +175,7 @@ fu_dell_kestrel_ec_write(FuDellKestrelEc *self, GByteArray *buf, GError **error)
 	g_return_val_if_fail(buf->len > 1, FALSE);
 
 	if (!fu_dell_kestrel_hid_device_i2c_write(FU_DELL_KESTREL_HID_DEVICE(self), buf, error)) {
-		g_prefix_error(error, "write over HID-I2C failed: ");
+		g_prefix_error_literal(error, "write over HID-I2C failed: ");
 		return FALSE;
 	}
 
@@ -333,7 +333,7 @@ fu_dell_kestrel_ec_dock_type_cmd(FuDellKestrelEc *self, GError **error)
 
 	/* expect response 1 byte */
 	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
-		g_prefix_error(error, "Failed to query dock type: ");
+		g_prefix_error_literal(error, "failed to query dock type: ");
 		return FALSE;
 	}
 
@@ -351,7 +351,7 @@ fu_dell_kestrel_ec_dock_info_cmd(FuDellKestrelEc *self, GError **error)
 
 	/* get dock info over HID */
 	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
-		g_prefix_error(error, "Failed to query dock info: ");
+		g_prefix_error_literal(error, "failed to query dock info: ");
 		return FALSE;
 	}
 	self->dock_info = fu_struct_dell_kestrel_dock_info_parse(res->data, res->len, 0, error);
@@ -388,7 +388,7 @@ fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 
 	/* get dock data over HID */
 	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
-		g_prefix_error(error, "Failed to query dock data: ");
+		g_prefix_error_literal(error, "failed to query dock data: ");
 		return FALSE;
 	}
 
@@ -499,7 +499,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 	for (guint i = 1; i <= max_tries; i++) {
 		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
 		if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
-			g_prefix_error(error, "failed to register uod flow: ");
+			g_prefix_error_literal(error, "failed to register uod flow: ");
 			return FALSE;
 		}
 		fu_device_sleep(FU_DEVICE(self), 100);
@@ -636,7 +636,7 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "Invalid package size %" G_GSIZE_FORMAT,
+			    "invalid package size %" G_GSIZE_FORMAT,
 			    streamsz);
 		return FALSE;
 	}
@@ -656,7 +656,7 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", st_req->data, st_req->len);
 
 	if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
-		g_prefix_error(error, "Failed to commit package: ");
+		g_prefix_error_literal(error, "failed to commit package: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -710,7 +710,7 @@ fu_dell_kestrel_ec_reload(FuDevice *device, GError **error)
 				  500,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "failed to query dock ec: ");
+		g_prefix_error_literal(error, "failed to query dock ec: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -737,7 +737,7 @@ fu_dell_kestrel_ec_setup(FuDevice *device, GError **error)
 				  500,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "failed to query dock ec: ");
+		g_prefix_error_literal(error, "failed to query dock ec: ");
 		return FALSE;
 	}
 

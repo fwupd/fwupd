@@ -109,7 +109,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	}
 	stream = fu_input_stream_from_path(fn, error);
 	if (stream == NULL) {
-		g_prefix_error(error, "failed to open device: ");
+		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
 	}
 	if (self->metadata_size > 0) {
@@ -138,7 +138,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 				      0x0,
 				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
 				      error)) {
-		g_prefix_error(error, "failed to parse image: ");
+		g_prefix_error_literal(error, "failed to parse image: ");
 		return NULL;
 	}
 
@@ -464,7 +464,7 @@ fu_mtd_device_write(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progres
 
 	/* rewind */
 	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
-		g_prefix_error(error, "failed to rewind: ");
+		g_prefix_error_literal(error, "failed to rewind: ");
 		return FALSE;
 	}
 

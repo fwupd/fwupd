@@ -190,7 +190,7 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 
 	/* grab BIOS Control Register */
 	if (!fu_udev_device_pread(FU_UDEV_DEVICE(device), self->bcr_addr, &self->bcr, 1, error)) {
-		g_prefix_error(error, "could not read BCR: ");
+		g_prefix_error_literal(error, "could not read BCR: ");
 		return FALSE;
 	}
 

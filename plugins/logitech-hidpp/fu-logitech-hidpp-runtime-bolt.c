@@ -47,7 +47,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
 		} else {
-			g_prefix_error(&error_local, "failed to detach to bootloader: ");
+			g_prefix_error_literal(&error_local, "failed to detach to bootloader: ");
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -132,7 +132,7 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 			fu_device_probe_invalidate(FU_DEVICE(child));
 			locker = fu_device_locker_new(FU_DEVICE(child), error);
 			if (locker == NULL) {
-				g_prefix_error(error, "cannot rescan paired device: ");
+				g_prefix_error_literal(error, "cannot rescan paired device: ");
 				return FALSE;
 			}
 			fu_device_remove_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -349,7 +349,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 	msg->data[0] = 0x02; /* FW Version (contains the number of pairing slots) */
 	msg->hidpp_version = 1;
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-		g_prefix_error(error, "failed to fetch the number of pairing slots: ");
+		g_prefix_error_literal(error, "failed to fetch the number of pairing slots: ");
 		return FALSE;
 	}
 	bolt->pairing_slots = msg->data[8];
@@ -371,7 +371,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to read device config: ");
+			g_prefix_error_literal(error, "failed to read device config: ");
 			return FALSE;
 		}
 
@@ -447,7 +447,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications(self, error)) {
-		g_prefix_error(error, "failed to enable notifications: ");
+		g_prefix_error_literal(error, "failed to enable notifications: ");
 		return FALSE;
 	}
 	fu_logitech_hidpp_runtime_bolt_poll_peripherals(device);

@@ -234,7 +234,7 @@ fu_dell_dock_mst_query_active_bank(FuDevice *proxy, MSTBank *active, GError **er
 					    length,
 					    &bytes,
 					    error)) {
-		g_prefix_error(error, "Failed to query active bank: ");
+		g_prefix_error_literal(error, "failed to query active bank: ");
 		return FALSE;
 	}
 
@@ -297,7 +297,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
 					     (guint8 *)&tmp,
 					     sizeof(guint32),
 					     error)) {
-		g_prefix_error(error, "Failed to write MST_RC_TRIGGER_ADDR: ");
+		g_prefix_error_literal(error, "failed to write MST_RC_TRIGGER_ADDR: ");
 		return FALSE;
 	}
 	/* poll for completion */
@@ -309,7 +309,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDevice *device, GError **error)
 						    sizeof(guint32),
 						    &bytes,
 						    error)) {
-			g_prefix_error(error, "Failed to poll MST_RC_COMMAND_ADDR: ");
+			g_prefix_error_literal(error, "failed to poll MST_RC_COMMAND_ADDR: ");
 			return FALSE;
 		}
 		result = g_bytes_get_data(bytes, NULL);
@@ -557,7 +557,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 					 attribs->start,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "Failed to checksum bank %u: ", bank);
+		g_prefix_error(error, "failed to checksum bank %u: ", bank);
 		return FALSE;
 	}
 	/* read result from data register */
@@ -595,7 +595,7 @@ fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **er
 						 0,
 						 (guint8 *)&sector,
 						 error)) {
-			g_prefix_error(error, "Failed to erase sector 0x%x: ", sector);
+			g_prefix_error(error, "failed to erase sector 0x%x: ", sector);
 			return FALSE;
 		}
 	}
@@ -618,7 +618,7 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 						 0,
 						 (guint8 *)&data,
 						 error)) {
-			g_prefix_error(error, "Failed to erase sector: %d", i);
+			g_prefix_error(error, "failed to erase sector: %d", i);
 			return FALSE;
 		}
 	}
@@ -655,7 +655,7 @@ fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 						 data + i,
 						 error)) {
 			g_prefix_error(error,
-				       "Failed to write bank %u payload offset 0x%x: ",
+				       "failed to write bank %u payload offset 0x%x: ",
 				       bank,
 				       i);
 			return FALSE;
@@ -756,7 +756,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 	guint retries = 2;
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank_in_use, &attribs, error)) {
-		g_prefix_error(error, "unable to invalidate bank: ");
+		g_prefix_error_literal(error, "unable to invalidate bank: ");
 		return FALSE;
 	}
 	/* we need to write 4 byte increments over I2C so this differs from DP aux */
@@ -769,7 +769,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 					 crc_offset,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to read tag from flash: ");
+		g_prefix_error_literal(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
 	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
@@ -813,7 +813,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 							 crc_offset,
 							 (guint8 *)&write,
 							 error)) {
-				g_prefix_error(error, "failed to clear CRC byte: ");
+				g_prefix_error_literal(error, "failed to clear CRC byte: ");
 				return FALSE;
 			}
 		}
@@ -824,7 +824,7 @@ fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError *
 						 crc_offset,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to read tag from flash: ");
+			g_prefix_error_literal(error, "failed to read tag from flash: ");
 			return FALSE;
 		}
 		if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(device),
@@ -1016,7 +1016,7 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 					 0x0,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "Failed to activate FW: ");
+		g_prefix_error_literal(error, "failed to activate FW: ");
 		return FALSE;
 	}
 	return TRUE;

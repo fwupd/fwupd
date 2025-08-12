@@ -90,7 +90,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 		fu_device_add_child(ec_device, FU_DEVICE(rmm_device));
 
 		if (!fu_dell_kestrel_rmm_fix_version(rmm_device, error)) {
-			g_prefix_error(error, "failed to fix rmm version: ");
+			g_prefix_error_literal(error, "failed to fix rmm version: ");
 			return FALSE;
 		}
 

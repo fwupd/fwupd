@@ -501,11 +501,11 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   buf,
 				   bufsz,
 				   error)) {
-		g_prefix_error(error, "failed to set up firmware header: ");
+		g_prefix_error_literal(error, "failed to set up firmware header: ");
 		return FALSE;
 	}
 	if (!fu_ebitdo_device_receive(self, NULL, 0, error)) {
-		g_prefix_error(error, "failed to get ACK for fw update header: ");
+		g_prefix_error_literal(error, "failed to get ACK for fw update header: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -566,7 +566,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   (guint8 *)serial_new,
 				   sizeof(serial_new),
 				   error)) {
-		g_prefix_error(error, "failed to set encoding ID: ");
+		g_prefix_error_literal(error, "failed to set encoding ID: ");
 		return FALSE;
 	}
 
@@ -578,11 +578,12 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   NULL,
 				   0,
 				   error)) {
-		g_prefix_error(error, "failed to mark firmware as successful: ");
+		g_prefix_error_literal(error, "failed to mark firmware as successful: ");
 		return FALSE;
 	}
 	if (!fu_ebitdo_device_receive(self, NULL, 0, &error_local)) {
-		g_prefix_error(&error_local, "failed to get ACK for mark firmware as successful: ");
+		g_prefix_error_literal(&error_local,
+				       "failed to get ACK for mark firmware as successful: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 			fu_device_set_remove_delay(device, 0);
 			g_debug("%s", error_local->message);
@@ -605,7 +606,7 @@ fu_ebitdo_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the FuUsbDevice */
 	if (!fu_usb_device_reset(FU_USB_DEVICE(device), &error_local)) {
-		g_prefix_error(&error_local, "failed to force-reset device: ");
+		g_prefix_error_literal(&error_local, "failed to force-reset device: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 			fu_device_set_remove_delay(device, 0);
 			g_debug("%s", error_local->message);

@@ -53,7 +53,7 @@ fu_genesys_gl32xx_device_cmd_switch_to_rom_mode(FuGenesysGl32xxDevice *self, GEr
 {
 	const guint8 cmd[] = {0xF3, 0x06, 0x00, 0x00, 0x00, 0x00};
 	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
-		g_prefix_error(error, "failed to switch into ROM mode: ");
+		g_prefix_error_literal(error, "failed to switch into ROM mode: ");
 		return FALSE;
 	}
 
@@ -66,7 +66,7 @@ fu_genesys_gl32xx_device_cmd_reset_usb(FuGenesysGl32xxDevice *self, GError **err
 {
 	const guint8 cmd[] = {0xE6, 0x00, 0x00, 0x00, 0x00, 0x00};
 	if (!fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), cmd, sizeof(cmd), error)) {
-		g_prefix_error(error, "failed to reset USB: ");
+		g_prefix_error_literal(error, "failed to reset USB: ");
 		return FALSE;
 	}
 
@@ -158,7 +158,7 @@ fu_genesys_gl32xx_device_ensure_version(FuGenesysGl32xxDevice *self, GError **er
 
 	buf = fu_genesys_gl32xx_device_cmd_get_version(self, error);
 	if (buf == NULL) {
-		g_prefix_error(error, "failed to read version: ");
+		g_prefix_error_literal(error, "failed to read version: ");
 		return FALSE;
 	}
 	if (buf->len < 0x24) {
@@ -387,7 +387,7 @@ fu_genesys_gl32xx_device_get_usb_mode(FuGenesysGl32xxDevice *self, GError **erro
 					    &mode,
 					    sizeof(mode),
 					    error)) {
-		g_prefix_error(error, "failed to read USB mode: ");
+		g_prefix_error_literal(error, "failed to read USB mode: ");
 		return FALSE;
 	}
 	switch (mode) {
@@ -418,33 +418,33 @@ fu_genesys_gl32xx_device_erase(FuGenesysGl32xxDevice *self, GError **error)
 {
 	/* write enable */
 	if (!fu_genesys_gl32xx_device_cmd_write_enable(self, error)) {
-		g_prefix_error(error, "failed to write enable: ");
+		g_prefix_error_literal(error, "failed to write enable: ");
 		return FALSE;
 	}
 
 	/* clear write protect */
 	if (!fu_genesys_gl32xx_device_cmd_clear_wp(self, error)) {
-		g_prefix_error(error, "failed to clear WP: ");
+		g_prefix_error_literal(error, "failed to clear WP: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), FU_GENESYS_GL32XX_CLEAR_WP_SLEEP_MS);
 
 	/* write enable */
 	if (!fu_genesys_gl32xx_device_cmd_write_enable(self, error)) {
-		g_prefix_error(error, "failed to write enable: ");
+		g_prefix_error_literal(error, "failed to write enable: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), FU_GENESYS_GL32XX_CLEAR_WP_SLEEP_MS);
 
 	/* chip erase */
 	if (!fu_genesys_gl32xx_device_cmd_chip_erase(self, error)) {
-		g_prefix_error(error, "failed to erase chip: ");
+		g_prefix_error_literal(error, "failed to erase chip: ");
 		return FALSE;
 	}
 
 	/* wait WIP to reset back to 0 */
 	if (!fu_genesys_gl32xx_device_cmd_wait_wip(self, error)) {
-		g_prefix_error(error, "failed to wait WIP: ");
+		g_prefix_error_literal(error, "failed to wait WIP: ");
 		return FALSE;
 	}
 
@@ -478,7 +478,7 @@ fu_genesys_gl32xx_device_detach(FuDevice *device, FuProgress *progress, GError *
 
 	/* clear SR */
 	if (!fu_genesys_gl32xx_device_cmd_write_sr(self, error)) {
-		g_prefix_error(error, "failed to clear SR: ");
+		g_prefix_error_literal(error, "failed to clear SR: ");
 		return FALSE;
 	}
 
@@ -504,7 +504,7 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_genesys_gl32xx_device_ensure_rom_mode(self, error)) {
-		g_prefix_error(error, "failed to check ROM mode: ");
+		g_prefix_error_literal(error, "failed to check ROM mode: ");
 		return FALSE;
 	}
 
@@ -642,7 +642,7 @@ fu_genesys_gl32xx_device_write_block(FuGenesysGl32xxDevice *self, FuChunk *chunk
 					     data,
 					     datasz,
 					     error)) {
-		g_prefix_error(error, "failed to write flash data: ");
+		g_prefix_error_literal(error, "failed to write flash data: ");
 		return FALSE;
 	}
 
@@ -734,7 +734,7 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 
 	/* write disable */
 	if (!fu_genesys_gl32xx_device_cmd_write_disable(self, error)) {
-		g_prefix_error(error, "failed to write disable: ");
+		g_prefix_error_literal(error, "failed to write disable: ");
 		return FALSE;
 	}
 

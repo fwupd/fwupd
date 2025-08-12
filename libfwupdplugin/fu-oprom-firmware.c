@@ -174,7 +174,7 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 						  FU_TYPE_FIRMWARE,
 						  G_TYPE_INVALID);
 		if (img == NULL) {
-			g_prefix_error(error, "failed to build firmware: ");
+			g_prefix_error_literal(error, "failed to build firmware: ");
 			return FALSE;
 		}
 		fu_firmware_set_id(img, "cpd");

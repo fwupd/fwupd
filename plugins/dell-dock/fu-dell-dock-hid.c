@@ -136,11 +136,11 @@ fu_dell_dock_hid_get_hub_version(FuDevice *self, GError **error)
 	};
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to query hub version: ");
+		g_prefix_error_literal(error, "failed to query hub version: ");
 		return FALSE;
 	}
 	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-		g_prefix_error(error, "failed to query hub version: ");
+		g_prefix_error_literal(error, "failed to query hub version: ");
 		return FALSE;
 	}
 
@@ -189,7 +189,7 @@ fu_dell_dock_hid_erase_bank(FuDevice *self, guint8 idx, GError **error)
 	};
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to erase bank: ");
+		g_prefix_error_literal(error, "failed to erase bank: ");
 		return FALSE;
 	}
 
@@ -242,11 +242,11 @@ fu_dell_dock_hid_verify_update(FuDevice *self, gboolean *result, GError **error)
 	};
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to verify update: ");
+		g_prefix_error_literal(error, "failed to verify update: ");
 		return FALSE;
 	}
 	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-		g_prefix_error(error, "failed to verify update: ");
+		g_prefix_error_literal(error, "failed to verify update: ");
 		return FALSE;
 	}
 	*result = cmd_buffer.data[0];
@@ -328,11 +328,11 @@ fu_dell_dock_hid_tbt_wake(FuDevice *self, const FuHIDI2CParameters *parameters, 
 	};
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to set wake thunderbolt: ");
+		g_prefix_error_literal(error, "failed to set wake thunderbolt: ");
 		return FALSE;
 	}
 	if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-		g_prefix_error(error, "failed to get wake thunderbolt status: ");
+		g_prefix_error_literal(error, "failed to get wake thunderbolt status: ");
 		return FALSE;
 	}
 	g_debug("thunderbolt wake result: 0x%x", cmd_buffer.data[1]);
@@ -377,11 +377,11 @@ fu_dell_dock_hid_tbt_write(FuDevice *self,
 
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
 		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-			g_prefix_error(error, "failed to run TBT update: ");
+			g_prefix_error_literal(error, "failed to run TBT update: ");
 			return FALSE;
 		}
 		if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-			g_prefix_error(error, "failed to get TBT flash status: ");
+			g_prefix_error_literal(error, "failed to get TBT flash status: ");
 			return FALSE;
 		}
 		result = cmd_buffer.data[1] & 0xf;
@@ -419,7 +419,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	guint8 result;
 
 	if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-		g_prefix_error(error, "failed to send authentication: ");
+		g_prefix_error_literal(error, "failed to send authentication: ");
 		return FALSE;
 	}
 
@@ -429,11 +429,11 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *self,
 	fu_device_sleep(self, 2000);
 	for (gint i = 1; i <= TBT_MAX_RETRIES; i++) {
 		if (!fu_dell_dock_hid_set_report(self, (guint8 *)&cmd_buffer, error)) {
-			g_prefix_error(error, "failed to set check authentication: ");
+			g_prefix_error_literal(error, "failed to set check authentication: ");
 			return FALSE;
 		}
 		if (!fu_dell_dock_hid_get_report(self, cmd_buffer.data, error)) {
-			g_prefix_error(error, "failed to get check authentication: ");
+			g_prefix_error_literal(error, "failed to get check authentication: ");
 			return FALSE;
 		}
 		result = cmd_buffer.data[1] & 0xf;

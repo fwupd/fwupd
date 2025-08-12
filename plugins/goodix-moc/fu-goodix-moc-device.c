@@ -60,7 +60,7 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 					 GX_USB_DATAOUT_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to req: ");
+		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
 	fu_dump_full(G_LOG_DOMAIN, "REQST", buf->data, buf->len, 16, FU_DUMP_FLAGS_SHOW_ADDRESSES);
@@ -74,7 +74,7 @@ fu_goodix_moc_device_cmd_send(FuGoodixMocDevice *self,
 					 GX_USB_DATAOUT_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to req: ");
+		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
 	if (actual_len != buf->len) {
@@ -116,7 +116,7 @@ fu_goodix_moc_device_cmd_recv(FuGoodixMocDevice *self,
 						 GX_USB_DATAIN_TIMEOUT,
 						 NULL,
 						 error)) {
-			g_prefix_error(error, "failed to reply: ");
+			g_prefix_error_literal(error, "failed to reply: ");
 			return FALSE;
 		}
 
@@ -256,7 +256,7 @@ fu_goodix_moc_device_update_init(FuGoodixMocDevice *self, GError **error)
 					   &rsp,
 					   TRUE,
 					   error)) {
-		g_prefix_error(error, "failed to send initial update: ");
+		g_prefix_error_literal(error, "failed to send initial update: ");
 		return FALSE;
 	}
 
@@ -288,7 +288,7 @@ fu_goodix_moc_device_attach(FuDevice *device, FuProgress *progress, GError **err
 					   &rsp,
 					   FALSE,
 					   error)) {
-		g_prefix_error(error, "failed to send reset device: ");
+		g_prefix_error_literal(error, "failed to send reset device: ");
 		return FALSE;
 	}
 
@@ -316,7 +316,7 @@ fu_goodix_moc_device_setup(FuDevice *device, GError **error)
 
 	/* ensure version */
 	if (!fu_goodix_moc_device_setup_version(self, error)) {
-		g_prefix_error(error, "failed to get firmware version: ");
+		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}
 

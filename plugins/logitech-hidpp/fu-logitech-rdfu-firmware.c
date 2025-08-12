@@ -244,12 +244,12 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
 	if (!g_seekable_seek(G_SEEKABLE(stream), 0, G_SEEK_SET, NULL, error)) {
-		g_prefix_error(error, "seek to start: ");
+		g_prefix_error_literal(error, "seek to start: ");
 		return FALSE;
 	}
 
 	if (!json_parser_load_from_stream(parser, stream, NULL, error)) {
-		g_prefix_error(error, "failed to parse RDFU firmware: ");
+		g_prefix_error_literal(error, "failed to parse RDFU firmware: ");
 		return FALSE;
 	}
 	json_root_node = json_parser_get_root(parser);

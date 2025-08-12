@@ -503,7 +503,7 @@ fu_qsi_dock_mcu_device_write_firmware_with_idx(FuQsiDockMcuDevice *self,
 			     30,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to wait for initial: ");
+		g_prefix_error_literal(error, "failed to wait for initial: ");
 		return FALSE;
 	}
 	if (!fu_qsi_dock_mcu_device_wait_for_spi_erase_ready_cb(self,

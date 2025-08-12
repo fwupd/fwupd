@@ -131,7 +131,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
 						      &tbt_base_settings,
 						      error)) {
-		g_prefix_error(error, "failed to authenticate: ");
+		g_prefix_error_literal(error, "failed to authenticate: ");
 		return FALSE;
 	}
 

@@ -162,7 +162,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 
 	/* parse the info block */
 	if (!fu_igsc_aux_firmware_parse_info(self, error)) {
-		g_prefix_error(error, "failed to parse info block: ");
+		g_prefix_error_literal(error, "failed to parse info block: ");
 		return FALSE;
 	}
 

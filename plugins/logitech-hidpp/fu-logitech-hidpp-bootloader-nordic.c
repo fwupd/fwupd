@@ -28,7 +28,7 @@ fu_logitech_hidpp_bootloader_nordic_get_hw_platform_id(FuLogitechHidppBootloader
 	    fu_logitech_hidpp_bootloader_request_new();
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_HW_PLATFORM_ID;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get HW ID: ");
+		g_prefix_error_literal(error, "failed to get HW ID: ");
 		return NULL;
 	}
 	return g_strndup((const gchar *)req->data, req->len);
@@ -43,7 +43,7 @@ fu_logitech_hidpp_bootloader_nordic_get_fw_version(FuLogitechHidppBootloader *se
 	    fu_logitech_hidpp_bootloader_request_new();
 	req->cmd = FU_LOGITECH_HIDPP_BOOTLOADER_CMD_GET_FW_VERSION;
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to get firmware version: ");
+		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return NULL;
 	}
 

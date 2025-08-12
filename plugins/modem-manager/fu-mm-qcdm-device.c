@@ -26,7 +26,7 @@ fu_mm_qcdm_device_cmd(FuMmQcdmDevice *self, const guint8 *buf, gsize bufsz, GErr
 					1500,
 					FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
 					error)) {
-		g_prefix_error(error, "failed to write qcdm command: ");
+		g_prefix_error_literal(error, "failed to write qcdm command: ");
 		return FALSE;
 	}
 
@@ -37,7 +37,7 @@ fu_mm_qcdm_device_cmd(FuMmQcdmDevice *self, const guint8 *buf, gsize bufsz, GErr
 					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 					     error);
 	if (qcdm_res == NULL) {
-		g_prefix_error(error, "failed to read qcdm response: ");
+		g_prefix_error_literal(error, "failed to read qcdm response: ");
 		return FALSE;
 	}
 	fu_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);

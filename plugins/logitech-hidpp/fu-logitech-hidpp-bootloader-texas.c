@@ -27,7 +27,7 @@ fu_logitech_hidpp_bootloader_texas_erase_all(FuLogitechHidppBootloader *self, GE
 	req->len = 0x01;     /* magic number */
 	req->data[0] = 0x00; /* magic number */
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to erase all pages: ");
+		g_prefix_error_literal(error, "failed to erase all pages: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -43,7 +43,7 @@ fu_logitech_hidpp_bootloader_texas_compute_and_test_crc(FuLogitechHidppBootloade
 	req->len = 0x01;     /* magic number */
 	req->data[0] = 0x03; /* magic number */
 	if (!fu_logitech_hidpp_bootloader_request(self, req, error)) {
-		g_prefix_error(error, "failed to compute and test CRC: ");
+		g_prefix_error_literal(error, "failed to compute and test CRC: ");
 		return FALSE;
 	}
 	if (req->cmd == FU_LOGITECH_HIDPP_BOOTLOADER_CMD_FLASH_RAM_WRONG_CRC) {

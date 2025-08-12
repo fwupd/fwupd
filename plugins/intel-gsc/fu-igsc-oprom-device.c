@@ -102,7 +102,7 @@ fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 					    buf,
 					    sizeof(buf),
 					    error)) {
-		g_prefix_error(error, "failed to get oprom version: ");
+		g_prefix_error_literal(error, "failed to get oprom version: ");
 		return FALSE;
 	}
 	st = fu_struct_igsc_oprom_version_parse(buf, sizeof(buf), 0x0, error);

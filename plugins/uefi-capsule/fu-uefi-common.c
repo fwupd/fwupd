@@ -301,7 +301,7 @@ fu_uefi_esp_target_copy(const gchar *source_fn,
 			 NULL,
 			 NULL,
 			 error)) {
-		g_prefix_error(error, "Failed to copy %s to %s: ", source_fn, target_fn);
+		g_prefix_error(error, "failed to copy %s to %s: ", source_fn, target_fn);
 		return FALSE;
 	}
 

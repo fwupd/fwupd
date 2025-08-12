@@ -62,7 +62,7 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 				      &magic,
 				      G_BIG_ENDIAN,
 				      error)) {
-		g_prefix_error(error, "failed to read magic: ");
+		g_prefix_error_literal(error, "failed to read magic: ");
 		return FALSE;
 	}
 	if (magic != PIXART_RF_FW_HEADER_MAGIC) {
@@ -74,7 +74,7 @@ fu_pxi_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 					      &magic,
 					      G_BIG_ENDIAN,
 					      error)) {
-			g_prefix_error(error, "failed to read magic: ");
+			g_prefix_error_literal(error, "failed to read magic: ");
 			return FALSE;
 		}
 		if (magic != PIXART_RF_FW_HEADER_MAGIC) {
@@ -125,7 +125,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 					       streamsz - PIXART_RF_FW_HEADER_HPAC_POS_FROM_END,
 					       sizeof(fw_header),
 					       error)) {
-			g_prefix_error(error, "failed to read fw header: ");
+			g_prefix_error_literal(error, "failed to read fw header: ");
 			return FALSE;
 		}
 	} else {
@@ -143,7 +143,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 					       streamsz - sizeof(fw_header),
 					       sizeof(fw_header),
 					       error)) {
-			g_prefix_error(error, "failed to read fw header: ");
+			g_prefix_error_literal(error, "failed to read fw header: ");
 			return FALSE;
 		}
 	}
@@ -180,7 +180,7 @@ fu_pxi_firmware_parse(FuFirmware *firmware,
 			    0x05,
 			    sizeof(model_name),
 			    error)) {
-		g_prefix_error(error, "failed to get fw model name: ");
+		g_prefix_error_literal(error, "failed to get fw model name: ");
 		return FALSE;
 	}
 	self->model_name = g_strndup((gchar *)model_name, sizeof(model_name));
@@ -271,7 +271,7 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 				    0x0, /* src */
 				    model_namesz,
 				    error)) {
-			g_prefix_error(error, "failed to get fw model name: ");
+			g_prefix_error_literal(error, "failed to get fw model name: ");
 			return NULL;
 		}
 	}

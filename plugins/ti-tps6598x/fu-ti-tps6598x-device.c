@@ -63,7 +63,7 @@ fu_ti_tps6598x_device_usbep_read_raw(FuTiTps6598xDevice *self,
 					    TI_TPS6598X_DEVICE_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to contact device: ");
+		g_prefix_error_literal(error, "failed to contact device: ");
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, title, buf->data, buf->len);
@@ -144,7 +144,7 @@ fu_ti_tps6598x_device_usbep_write(FuTiTps6598xDevice *self,
 						    TI_TPS6598X_DEVICE_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-			g_prefix_error(error, "failed to contact device: ");
+			g_prefix_error_literal(error, "failed to contact device: ");
 			return FALSE;
 		}
 		if (actual_length != fu_chunk_get_data_sz(chk)) {
@@ -508,19 +508,19 @@ fu_ti_tps6598x_device_setup(FuDevice *device, GError **error)
 
 	/* get hardware details */
 	if (!fu_ti_tps6598x_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to read version: ");
+		g_prefix_error_literal(error, "failed to read version: ");
 		return FALSE;
 	}
 	if (!fu_ti_tps6598x_device_ensure_mode(self, error)) {
-		g_prefix_error(error, "failed to read mode: ");
+		g_prefix_error_literal(error, "failed to read mode: ");
 		return FALSE;
 	}
 	if (!fu_ti_tps6598x_device_ensure_uid(self, error)) {
-		g_prefix_error(error, "failed to read UID: ");
+		g_prefix_error_literal(error, "failed to read UID: ");
 		return FALSE;
 	}
 	if (!fu_ti_tps6598x_device_ensure_ouid(self, error)) {
-		g_prefix_error(error, "failed to read oUID: ");
+		g_prefix_error_literal(error, "failed to read oUID: ");
 		return FALSE;
 	}
 
@@ -688,7 +688,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 						chunks_payload,
 						fu_progress_get_child(progress),
 						error)) {
-		g_prefix_error(error, "failed to write SFWd: ");
+		g_prefix_error_literal(error, "failed to write SFWd: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -708,7 +708,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 						     chunks_sig,
 						     fu_progress_get_child(progress),
 						     error)) {
-		g_prefix_error(error, "failed to write SFWs with signature: ");
+		g_prefix_error_literal(error, "failed to write SFWs with signature: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -728,7 +728,7 @@ fu_ti_tps6598x_device_write_firmware(FuDevice *device,
 						     chunks_pubkey,
 						     fu_progress_get_child(progress),
 						     error)) {
-		g_prefix_error(error, "failed to write SFWs with pubkey: ");
+		g_prefix_error_literal(error, "failed to write SFWs with pubkey: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

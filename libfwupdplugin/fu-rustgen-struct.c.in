@@ -430,7 +430,7 @@
     g_return_val_if_fail(buf != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
     if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
-        g_prefix_error(error, "invalid struct {{obj.name}}: ");
+        g_prefix_error_literal(error, "invalid struct {{obj.name}}: ");
         return FALSE;
     }
     if (!{{obj.c_method('ValidateInternal')}}(&st, error))
@@ -510,7 +510,7 @@
     g_return_val_if_fail(buf != NULL, NULL);
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
     if (!fu_memchk_read(bufsz, offset, {{obj.size}}, error)) {
-        g_prefix_error(error, "invalid struct {{obj.name}}: ");
+        g_prefix_error_literal(error, "invalid struct {{obj.name}}: ");
         return NULL;
     }
     g_byte_array_append(st, buf + offset, {{obj.size}});

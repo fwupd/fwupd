@@ -208,7 +208,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse DecompressDelay: ");
+			g_prefix_error_literal(error, "failed to parse DecompressDelay: ");
 			return FALSE;
 		}
 	}
@@ -238,7 +238,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 					 10000,
 					 FU_INTEGER_BASE_AUTO,
 					 error)) {
-				g_prefix_error(error, "failed to parse RequestDelay: ");
+				g_prefix_error_literal(error, "failed to parse RequestDelay: ");
 				return FALSE;
 			}
 		}
@@ -254,7 +254,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse WriteDelay: ");
+			g_prefix_error_literal(error, "failed to parse WriteDelay: ");
 			return FALSE;
 		}
 	}
@@ -271,7 +271,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse VerifyDelay: ");
+			g_prefix_error_literal(error, "failed to parse VerifyDelay: ");
 			return FALSE;
 		}
 	}

@@ -155,7 +155,7 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 
 	st_inf = fu_struct_efi_update_info_parse_stream(stream, 0x0, error);
 	if (st_inf == NULL) {
-		g_prefix_error(error, "EFI variable is corrupt: ");
+		g_prefix_error_literal(error, "EFI variable is corrupt: ");
 		return FALSE;
 	}
 	fu_firmware_set_version_raw(firmware, fu_struct_efi_update_info_get_version(st_inf));
@@ -174,7 +174,7 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 					      FU_STRUCT_EFI_UPDATE_INFO_SIZE,
 					      flags,
 					      error)) {
-			g_prefix_error(error, "failed to parse dpbuf: ");
+			g_prefix_error_literal(error, "failed to parse dpbuf: ");
 			return FALSE;
 		}
 		dp = fu_firmware_get_image_by_gtype(FU_FIRMWARE(dpbuf),

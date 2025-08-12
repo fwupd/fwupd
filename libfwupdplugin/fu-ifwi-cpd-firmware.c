@@ -114,7 +114,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 							     extension_length - st_mex->len,
 							     error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut CPD extension: ");
+			g_prefix_error_literal(error, "failed to cut CPD extension: ");
 			return FALSE;
 		}
 		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
@@ -202,7 +202,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 						fu_struct_ifwi_cpd_entry_get_length(st_ent),
 						error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut IFD image: ");
+			g_prefix_error_literal(error, "failed to cut IFD image: ");
 			return FALSE;
 		}
 		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))

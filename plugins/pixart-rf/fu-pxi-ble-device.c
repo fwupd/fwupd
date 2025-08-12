@@ -552,7 +552,7 @@ fu_pxi_ble_device_reset(FuPxiBleDevice *self, GError **error)
 	fu_byte_array_append_uint8(req, FU_PXI_OTA_DISCONNECT_REASON_RESET);
 
 	if (!fu_pxi_ble_device_set_feature(self, req, error)) {
-		g_prefix_error(error, "failed to reset: ");
+		g_prefix_error_literal(error, "failed to reset: ");
 		return FALSE;
 	}
 
@@ -703,7 +703,7 @@ fu_pxi_ble_device_write_firmware(FuDevice *device,
 
 	/* send fw ota retransmit command to reset status */
 	if (!fu_pxi_ble_device_fw_ota_check_retransmit(self, error)) {
-		g_prefix_error(error, "failed to OTA check retransmit: ");
+		g_prefix_error_literal(error, "failed to OTA check retransmit: ");
 		return FALSE;
 	}
 	/* send fw ota init command */
@@ -901,27 +901,27 @@ fu_pxi_ble_device_setup(FuDevice *device, GError **error)
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(device);
 
 	if (!fu_pxi_ble_device_check_support_report_id(self, error)) {
-		g_prefix_error(error, "failed to check report id: ");
+		g_prefix_error_literal(error, "failed to check report id: ");
 		return FALSE;
 	}
 	if (!fu_pxi_ble_device_fw_ota_check_retransmit(self, error)) {
-		g_prefix_error(error, "failed to OTA check retransmit: ");
+		g_prefix_error_literal(error, "failed to OTA check retransmit: ");
 		return FALSE;
 	}
 	if (!fu_pxi_ble_device_fw_ota_init(self, error)) {
-		g_prefix_error(error, "failed to OTA init: ");
+		g_prefix_error_literal(error, "failed to OTA init: ");
 		return FALSE;
 	}
 	if (!fu_pxi_ble_device_fw_get_info(self, error)) {
-		g_prefix_error(error, "failed to get info: ");
+		g_prefix_error_literal(error, "failed to get info: ");
 		return FALSE;
 	}
 	if (!fu_pxi_ble_device_get_model_info(self, error)) {
-		g_prefix_error(error, "failed to get model: ");
+		g_prefix_error_literal(error, "failed to get model: ");
 		return FALSE;
 	}
 	if (!fu_pxi_ble_device_setup_guid(self, error)) {
-		g_prefix_error(error, "failed to setup GUID: ");
+		g_prefix_error_literal(error, "failed to setup GUID: ");
 		return FALSE;
 	}
 

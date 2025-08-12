@@ -31,7 +31,7 @@ fu_framework_qmk_device_detach(FuDevice *device, FuProgress *progress, GError **
 					 req->len,
 					 FU_IO_CHANNEL_FLAG_NONE,
 					 error)) {
-		g_prefix_error(error, "failed to write packet: ");
+		g_prefix_error_literal(error, "failed to write packet: ");
 		return FALSE;
 	}
 
@@ -80,7 +80,7 @@ fu_framework_qmk_device_setup(FuDevice *device, GError **error)
 
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL) {
-		g_prefix_error(error, "Failed to parse descriptor: ");
+		g_prefix_error_literal(error, "failed to parse descriptor: ");
 		return FALSE;
 	}
 	report = fu_hid_descriptor_find_report(descriptor,
@@ -99,11 +99,11 @@ fu_framework_qmk_device_setup(FuDevice *device, GError **error)
 
 	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
 	if (device_usb == NULL) {
-		g_prefix_error(error, "USB device NULL: ");
+		g_prefix_error_literal(error, "no USB device: ");
 		return FALSE;
 	}
 	if (!fu_device_probe(device_usb, error)) {
-		g_prefix_error(error, "USB probe failed: ");
+		g_prefix_error_literal(error, "USB probe failed: ");
 		return FALSE;
 	}
 	version = fu_usb_device_get_release(FU_USB_DEVICE(device_usb));

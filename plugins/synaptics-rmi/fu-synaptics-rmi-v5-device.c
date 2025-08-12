@@ -41,7 +41,7 @@ fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError
 	if (!fu_synaptics_rmi_device_disable_irqs(self, error))
 		return FALSE;
 	if (!fu_synaptics_rmi_device_write_bus_select(self, 0, error)) {
-		g_prefix_error(error, "failed to write bus select: ");
+		g_prefix_error_literal(error, "failed to write bus select: ");
 		return FALSE;
 	}
 
@@ -54,7 +54,7 @@ fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError
 					   enable_req,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to enable programming: ");
+		g_prefix_error_literal(error, "failed to enable programming: ");
 		return FALSE;
 	}
 
@@ -81,7 +81,7 @@ fu_synaptics_rmi_v5_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 					   erase_cmd,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					   error)) {
-		g_prefix_error(error, "failed to erase core config: ");
+		g_prefix_error_literal(error, "failed to erase core config: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), RMI_F34_ERASE_WAIT_MS);
@@ -94,7 +94,7 @@ fu_synaptics_rmi_v5_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 						   RMI_F34_ERASE_WAIT_MS,
 						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
 						   error)) {
-		g_prefix_error(error, "failed to wait for idle for erase: ");
+		g_prefix_error_literal(error, "failed to wait for idle for erase: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -156,7 +156,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 	for (guint retries = 0;; retries++) {
 		/* need read another register to reset the offset of packet register */
 		if (!fu_synaptics_rmi_v5_device_query_status(self, error)) {
-			g_prefix_error(error, "failed to read status: ");
+			g_prefix_error_literal(error, "failed to read status: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_rmi_device_enter_iep_mode(self,
@@ -278,7 +278,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 						   0,
 						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
 						   error)) {
-		g_prefix_error(error, "not idle: ");
+		g_prefix_error_literal(error, "not idle: ");
 		return FALSE;
 	}
 	if (fu_synaptics_rmi_firmware_get_sig_size(rmi_firmware) == 0 &&
@@ -321,20 +321,20 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 							     firmware_bin,
 							     signature_bin,
 							     error)) {
-			g_prefix_error(error, "secure check failed: ");
+			g_prefix_error_literal(error, "secure check failed: ");
 			return FALSE;
 		}
 	}
 
 	/* disable powersaving */
 	if (!fu_synaptics_rmi_device_disable_sleep(self, error)) {
-		g_prefix_error(error, "failed to disable sleep: ");
+		g_prefix_error_literal(error, "failed to disable sleep: ");
 		return FALSE;
 	}
 
 	/* unlock again */
 	if (!fu_synaptics_rmi_device_write_bootloader_id(self, error)) {
-		g_prefix_error(error, "failed to unlock again: ");
+		g_prefix_error_literal(error, "failed to unlock again: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -342,7 +342,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 	/* erase all */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_synaptics_rmi_v5_device_erase_all(self, error)) {
-		g_prefix_error(error, "failed to erase all: ");
+		g_prefix_error_literal(error, "failed to erase all: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -355,7 +355,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					   req_addr,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write 1st address zero: ");
+		g_prefix_error_literal(error, "failed to write 1st address zero: ");
 		return FALSE;
 	}
 
@@ -406,7 +406,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 						   req_addr,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to write 1st address zero: ");
+			g_prefix_error_literal(error, "failed to write 1st address zero: ");
 			return FALSE;
 		}
 		fu_progress_set_id(progress_child, G_STRLOC);
@@ -443,7 +443,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					   req_addr,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to 2nd write address zero: ");
+		g_prefix_error_literal(error, "failed to 2nd write address zero: ");
 		return FALSE;
 	}
 	for (guint i = 0; i < fu_chunk_array_length(chunks_cfg); i++) {
@@ -489,7 +489,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	/* get bootloader ID */
 	f34_data0 = fu_synaptics_rmi_device_read(self, f34->query_base, 0x2, error);
 	if (f34_data0 == NULL) {
-		g_prefix_error(error, "failed to read bootloader ID: ");
+		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
 	flash->bootloader_id[0] = f34_data0->data[0];
@@ -505,7 +505,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		buf_flash_properties2 =
 		    fu_synaptics_rmi_device_read(self, f34->query_base + 0x9, 1, error);
 		if (buf_flash_properties2 == NULL) {
-			g_prefix_error(error, "failed to read Flash Properties 2: ");
+			g_prefix_error_literal(error, "failed to read Flash Properties 2: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint8_safe(buf_flash_properties2->data,
@@ -513,7 +513,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 					   0x0, /* offset */
 					   &flash_properties2,
 					   error)) {
-			g_prefix_error(error, "failed to parse Flash Properties 2: ");
+			g_prefix_error_literal(error, "failed to parse Flash Properties 2: ");
 			return FALSE;
 		}
 		if (flash_properties2 & 0x01) {
@@ -524,7 +524,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 								   2,
 								   error);
 			if (buf_rsa_key == NULL) {
-				g_prefix_error(error, "failed to read RSA key length: ");
+				g_prefix_error_literal(error, "failed to read RSA key length: ");
 				return FALSE;
 			}
 			if (!fu_memread_uint16_safe(buf_rsa_key->data,
@@ -533,7 +533,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 						    &sig_size,
 						    G_LITTLE_ENDIAN,
 						    error)) {
-				g_prefix_error(error, "failed to parse RSA key length: ");
+				g_prefix_error_literal(error, "failed to parse RSA key length: ");
 				return FALSE;
 			}
 			fu_synaptics_rmi_device_set_sig_size(self, sig_size);
@@ -580,7 +580,7 @@ fu_synaptics_rmi_v5_device_query_status(FuSynapticsRmiDevice *self, GError **err
 		return FALSE;
 	f01_db = fu_synaptics_rmi_device_read(self, f01->data_base, 0x1, error);
 	if (f01_db == NULL) {
-		g_prefix_error(error, "failed to read the f01 data base: ");
+		g_prefix_error_literal(error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
 	if (f01_db->data[0] & 0x40) {

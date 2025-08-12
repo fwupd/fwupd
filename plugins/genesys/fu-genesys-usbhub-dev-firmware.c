@@ -41,7 +41,7 @@ fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
 
 	/* truncate to correct size */
 	if (!fu_genesys_usbhub_firmware_calculate_size(stream, &code_size, error)) {
-		g_prefix_error(error, "not valid for dev: ");
+		g_prefix_error_literal(error, "not valid for dev: ");
 		return FALSE;
 	}
 	stream_trunc = fu_partial_input_stream_new(stream, 0x0, code_size, error);
@@ -53,14 +53,14 @@ fu_genesys_usbhub_dev_firmware_parse(FuFirmware *firmware,
 	/* calculate checksum */
 	if ((flags & FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (!fu_genesys_usbhub_firmware_verify_checksum(stream_trunc, error)) {
-			g_prefix_error(error, "not valid for dev: ");
+			g_prefix_error_literal(error, "not valid for dev: ");
 			return FALSE;
 		}
 	}
 
 	/* get firmware version */
 	if (!fu_genesys_usbhub_firmware_ensure_version(firmware, error)) {
-		g_prefix_error(error, "not valid for dev: ");
+		g_prefix_error_literal(error, "not valid for dev: ");
 		return FALSE;
 	}
 

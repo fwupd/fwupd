@@ -112,7 +112,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 
 	st = fu_struct_pe_coff_section_parse_stream(stream, hdr_offset, error);
 	if (st == NULL) {
-		g_prefix_error(error, "failed to read section: ");
+		g_prefix_error_literal(error, "failed to read section: ");
 		return FALSE;
 	}
 	sect_id_tmp = fu_struct_pe_coff_section_get_name(st);
@@ -190,7 +190,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 		fu_firmware_set_offset(img, sect_offset);
 		img_stream = fu_partial_input_stream_new(stream, sect_offset, sect_size, error);
 		if (img_stream == NULL) {
-			g_prefix_error(error, "failed to cut raw PE data: ");
+			g_prefix_error_literal(error, "failed to cut raw PE data: ");
 			return FALSE;
 		}
 		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error)) {
@@ -234,13 +234,13 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	/* parse the DOS header to get the COFF header */
 	st_doshdr = fu_struct_pe_dos_header_parse_stream(stream, offset, error);
 	if (st_doshdr == NULL) {
-		g_prefix_error(error, "failed to read DOS header: ");
+		g_prefix_error_literal(error, "failed to read DOS header: ");
 		return FALSE;
 	}
 	offset += fu_struct_pe_dos_header_get_lfanew(st_doshdr);
 	st_coff = fu_struct_pe_coff_file_header_parse_stream(stream, offset, error);
 	if (st_coff == NULL) {
-		g_prefix_error(error, "failed to read COFF header: ");
+		g_prefix_error_literal(error, "failed to read COFF header: ");
 		return FALSE;
 	}
 	offset += st_coff->len;
@@ -276,7 +276,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuStructPeCoffOptionalHeader64) st_opt =
 		    fu_struct_pe_coff_optional_header64_parse_stream(stream, offset, error);
 		if (st_opt == NULL) {
-			g_prefix_error(error, "failed to read optional header: ");
+			g_prefix_error_literal(error, "failed to read optional header: ");
 			return FALSE;
 		}
 
@@ -353,7 +353,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 			(guint)r->size);
 		partial_stream = fu_partial_input_stream_new(stream, r->offset, r->size, error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut Authenticode region: ");
+			g_prefix_error_literal(error, "failed to cut Authenticode region: ");
 			return FALSE;
 		}
 		fu_composite_input_stream_add_partial_stream(

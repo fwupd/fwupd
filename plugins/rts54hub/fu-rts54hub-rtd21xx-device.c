@@ -154,7 +154,7 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 		priv->target_addr = target_addr;
 	}
 	if (!fu_rts54hub_device_i2c_read(parent, sub_addr, data, datasz, error)) {
-		g_prefix_error(error, "failed to read I2C: ");
+		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
 	}
 	return TRUE;

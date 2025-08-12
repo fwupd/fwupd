@@ -149,7 +149,7 @@ fu_telink_dfu_archive_parse(FuFirmware *firmware,
 					g_bytes_get_data(manifest, NULL),
 					g_bytes_get_size(manifest),
 					error)) {
-		g_prefix_error(error, "manifest not in JSON format: ");
+		g_prefix_error_literal(error, "manifest not in JSON format: ");
 		return FALSE;
 	}
 	json_root_node = json_parser_get_root(parser);

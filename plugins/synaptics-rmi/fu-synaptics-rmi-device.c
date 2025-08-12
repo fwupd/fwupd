@@ -387,7 +387,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 
 	f01_basic = fu_synaptics_rmi_device_read(self, addr, RMI_DEVICE_F01_BASIC_QUERY_LEN, error);
 	if (f01_basic == NULL) {
-		g_prefix_error(error, "failed to read the basic query: ");
+		g_prefix_error_literal(error, "failed to read the basic query: ");
 		return FALSE;
 	}
 	has_lts = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_LTS) > 0;
@@ -398,11 +398,11 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	addr += 11;
 	f01_product_id = fu_synaptics_rmi_device_read(self, addr, RMI_PRODUCT_ID_LENGTH, error);
 	if (f01_product_id == NULL) {
-		g_prefix_error(error, "failed to read the product id: ");
+		g_prefix_error_literal(error, "failed to read the product id: ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_device_query_product_sub_id(self, &product_sub_id, error)) {
-		g_prefix_error(error, "failed to query product sub id: ");
+		g_prefix_error_literal(error, "failed to query product sub id: ");
 		return FALSE;
 	}
 	if (product_sub_id == 0) {
@@ -437,7 +437,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
 		if (f01_tmp == NULL) {
-			g_prefix_error(error, "failed to read query 42: ");
+			g_prefix_error_literal(error, "failed to read query 42: ");
 			return FALSE;
 		}
 		has_dds4_queries = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
@@ -446,14 +446,14 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
 		if (f01_tmp == NULL) {
-			g_prefix_error(error, "failed to read DS4 query length: ");
+			g_prefix_error_literal(error, "failed to read DS4 query length: ");
 			return FALSE;
 		}
 		ds4_query_length = f01_tmp->data[0];
 	}
 	f01_ds4 = fu_synaptics_rmi_device_read(self, addr, 0x1, error);
 	if (f01_ds4 == NULL) {
-		g_prefix_error(error, "failed to read F01 Query43: ");
+		g_prefix_error_literal(error, "failed to read F01 Query43: ");
 		return FALSE;
 	}
 	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
@@ -466,7 +466,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		guint8 buf32[4] = {0x0};
 		f01_tmp = fu_synaptics_rmi_device_read(self, prod_info_addr, 0x3, error);
 		if (f01_tmp == NULL) {
-			g_prefix_error(error, "failed to read build ID bytes: ");
+			g_prefix_error_literal(error, "failed to read build ID bytes: ");
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(buf32,
@@ -489,7 +489,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 
 	/* read build ID, typically only for PS/2 */
 	if (!fu_synaptics_rmi_device_query_build_id(self, &priv->flash.build_id, error)) {
-		g_prefix_error(error, "failed to query build id: ");
+		g_prefix_error_literal(error, "failed to query build id: ");
 		return FALSE;
 	}
 
@@ -499,17 +499,17 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	if (priv->f34->function_version == 0x0) {
 		if (!fu_synaptics_rmi_v5_device_setup(self, error)) {
-			g_prefix_error(error, "failed to do v5 setup: ");
+			g_prefix_error_literal(error, "failed to do v5 setup: ");
 			return FALSE;
 		}
 	} else if (priv->f34->function_version == 0x1) {
 		if (!fu_synaptics_rmi_v6_device_setup(self, error)) {
-			g_prefix_error(error, "failed to do v6 setup: ");
+			g_prefix_error_literal(error, "failed to do v6 setup: ");
 			return FALSE;
 		}
 	} else if (priv->f34->function_version == 0x2) {
 		if (!fu_synaptics_rmi_v7_device_setup(self, error)) {
-			g_prefix_error(error, "failed to do v7 setup: ");
+			g_prefix_error_literal(error, "failed to do v7 setup: ");
 			return FALSE;
 		}
 	} else {
@@ -521,7 +521,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_device_query_status(self, error)) {
-		g_prefix_error(error, "failed to read bootloader status: ");
+		g_prefix_error_literal(error, "failed to read bootloader status: ");
 		return FALSE;
 	}
 
@@ -600,7 +600,7 @@ fu_synaptics_rmi_device_poll(FuSynapticsRmiDevice *self, GError **error)
 	/* get if the last flash read completed successfully */
 	f34_db = fu_synaptics_rmi_device_read(self, priv->f34->data_base, 0x1, error);
 	if (f34_db == NULL) {
-		g_prefix_error(error, "failed to read f34_db: ");
+		g_prefix_error_literal(error, "failed to read f34_db: ");
 		return FALSE;
 	}
 	if ((f34_db->data[0] & 0x1f) != 0x0) {
@@ -659,7 +659,7 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 	if (rmi_class->enter_iep_mode != NULL) {
 		g_debug("enabling RMI iep_mode");
 		if (!rmi_class->enter_iep_mode(self, error)) {
-			g_prefix_error(error, "failed to enable RMI iep_mode: ");
+			g_prefix_error_literal(error, "failed to enable RMI iep_mode: ");
 			return FALSE;
 		}
 	}
@@ -775,7 +775,7 @@ fu_synaptics_rmi_device_write_bootloader_id(FuSynapticsRmiDevice *self, GError *
 					   bootloader_id_req,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write bootloader_id: ");
+		g_prefix_error_literal(error, "failed to write bootloader_id: ");
 		return FALSE;
 	}
 
@@ -796,7 +796,7 @@ fu_synaptics_rmi_device_disable_irqs(FuSynapticsRmiDevice *self, GError **error)
 					   interrupt_disable_req,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to disable interrupts: ");
+		g_prefix_error_literal(error, "failed to disable interrupts: ");
 		return FALSE;
 	}
 	return TRUE;

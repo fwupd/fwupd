@@ -412,7 +412,7 @@ fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, G
 	FuSteelseriesSonicWirelessStatus *wl_status = (FuSteelseriesSonicWirelessStatus *)user_data;
 
 	if (!fu_steelseries_sonic_wireless_status(self, wl_status, error)) {
-		g_prefix_error(error, "failed to get wireless status: ");
+		g_prefix_error_literal(error, "failed to get wireless status: ");
 		return FALSE;
 	}
 	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(*wl_status));
@@ -437,7 +437,7 @@ fu_steelseries_sonic_wait_for_connect(FuSteelseriesSonic *self,
 	g_autofree gchar *msg = NULL;
 
 	if (!fu_steelseries_sonic_wireless_status(self, &wl_status, error)) {
-		g_prefix_error(error, "failed to get wireless status: ");
+		g_prefix_error_literal(error, "failed to get wireless status: ");
 		return FALSE;
 	}
 	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(wl_status));
@@ -532,7 +532,7 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 						   error))
 		return FALSE;
 	if (!fu_steelseries_sonic_ensure_battery_state(self, error)) {
-		g_prefix_error(error, "failed to get battery state: ");
+		g_prefix_error_literal(error, "failed to get battery state: ");
 		return FALSE;
 	}
 

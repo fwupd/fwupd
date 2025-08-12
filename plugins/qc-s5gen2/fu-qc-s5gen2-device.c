@@ -406,15 +406,15 @@ fu_qc_s5gen2_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 				      (FuDeviceLockerFunc)fu_qc_s5gen2_device_cmd_req_disconnect,
 				      error);
 	if (locker == NULL) {
-		g_prefix_error(error, "failed to connect: ");
+		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 	if (!fu_qc_s5gen2_device_cmd_sync(self, error)) {
-		g_prefix_error(error, "failed to cmd-sync: ");
+		g_prefix_error_literal(error, "failed to cmd-sync: ");
 		return FALSE;
 	}
 	if (!fu_qc_s5gen2_device_cmd_start(self, error)) {
-		g_prefix_error(error, "failed to cmd-start: ");
+		g_prefix_error_literal(error, "failed to cmd-start: ");
 		return FALSE;
 	}
 
@@ -437,7 +437,7 @@ fu_qc_s5gen2_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 
 	if (self->resume_point == FU_QC_RESUME_POINT_POST_REBOOT) {
 		if (!fu_qc_s5gen2_device_cmd_proceed_to_commit(self, error)) {
-			g_prefix_error(error, "failed to cmd-proceed-to-commit: ");
+			g_prefix_error_literal(error, "failed to cmd-proceed-to-commit: ");
 			return FALSE;
 		}
 		self->resume_point = FU_QC_RESUME_POINT_COMMIT;
@@ -445,7 +445,7 @@ fu_qc_s5gen2_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 
 	g_debug("resume point: %s", fu_qc_resume_point_to_string(self->resume_point));
 	if (!fu_qc_s5gen2_device_cmd_commit_cfm(self, error)) {
-		g_prefix_error(error, "failed to cmd-commit: ");
+		g_prefix_error_literal(error, "failed to cmd-commit: ");
 		return FALSE;
 	}
 	self->resume_point = FU_QC_RESUME_POINT_POST_COMMIT;
@@ -460,7 +460,7 @@ fu_qc_s5gen2_device_reload(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
 	if (!fu_qc_s5gen2_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to ensure version on reload: ");
+		g_prefix_error_literal(error, "failed to ensure version on reload: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -471,7 +471,7 @@ fu_qc_s5gen2_device_setup(FuDevice *device, GError **error)
 {
 	FuQcS5gen2Device *self = FU_QC_S5GEN2_DEVICE(device);
 	if (!fu_qc_s5gen2_device_ensure_version(self, error)) {
-		g_prefix_error(error, "failed to ensure version: ");
+		g_prefix_error_literal(error, "failed to ensure version: ");
 		return FALSE;
 	}
 	return TRUE;

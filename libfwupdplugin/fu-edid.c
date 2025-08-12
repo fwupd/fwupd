@@ -291,7 +291,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 							(const guint8 *)self->product_name,
 							strlen(self->product_name),
 							error)) {
-			g_prefix_error(error, "cannot write product name: ");
+			g_prefix_error_literal(error, "cannot write product name: ");
 			return NULL;
 		}
 		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
@@ -306,7 +306,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 							(const guint8 *)self->serial_number,
 							strlen(self->serial_number),
 							error)) {
-			g_prefix_error(error, "cannot write serial number: ");
+			g_prefix_error_literal(error, "cannot write serial number: ");
 			return NULL;
 		}
 		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
@@ -320,7 +320,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 							(const guint8 *)self->eisa_id,
 							strlen(self->eisa_id),
 							error)) {
-			g_prefix_error(error, "cannot write EISA ID: ");
+			g_prefix_error_literal(error, "cannot write EISA ID: ");
 			return NULL;
 		}
 		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */

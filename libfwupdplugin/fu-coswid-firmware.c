@@ -130,14 +130,15 @@ fu_coswid_firmware_parse_meta(cbor_item_t *item, gpointer user_data, GError **er
 			g_free(priv->summary);
 			priv->summary = fu_coswid_read_string(pairs[i].value, error);
 			if (priv->summary == NULL) {
-				g_prefix_error(error, "failed to parse summary: ");
+				g_prefix_error_literal(error, "failed to parse summary: ");
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_COLLOQUIAL_VERSION) {
 			g_free(priv->colloquial_version);
 			priv->colloquial_version = fu_coswid_read_string(pairs[i].value, error);
 			if (priv->colloquial_version == NULL) {
-				g_prefix_error(error, "failed to parse colloquial-version: ");
+				g_prefix_error_literal(error,
+						       "failed to parse colloquial-version: ");
 				return FALSE;
 			}
 		} else {
@@ -168,13 +169,13 @@ fu_coswid_firmware_parse_link(cbor_item_t *item, gpointer user_data, GError **er
 			g_free(link->href);
 			link->href = fu_coswid_read_string(pairs[i].value, error);
 			if (link->href == NULL) {
-				g_prefix_error(error, "failed to parse link href: ");
+				g_prefix_error_literal(error, "failed to parse link href: ");
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_REL) {
 			gint8 tmp = 0;
 			if (!fu_coswid_read_s8(pairs[i].value, &tmp, error)) {
-				g_prefix_error(error, "failed to parse link rel: ");
+				g_prefix_error_literal(error, "failed to parse link rel: ");
 				return FALSE;
 			}
 			link->rel = tmp;
@@ -225,7 +226,7 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 		return FALSE;
 	}
 	if (!fu_coswid_read_u8(hash_item_alg_id, &alg_id8, error)) {
-		g_prefix_error(error, "failed to parse hash alg-id: ");
+		g_prefix_error_literal(error, "failed to parse hash alg-id: ");
 		return FALSE;
 	}
 
@@ -233,7 +234,7 @@ fu_coswid_firmware_parse_hash(cbor_item_t *item, gpointer user_data, GError **er
 	hash->alg_id = alg_id8;
 	hash->value = fu_coswid_read_byte_array(hash_item_value, error);
 	if (hash->value == NULL) {
-		g_prefix_error(error, "failed to parse hash value: ");
+		g_prefix_error_literal(error, "failed to parse hash value: ");
 		return FALSE;
 	}
 	g_ptr_array_add(payload->hashes, g_steal_pointer(&hash));
@@ -269,7 +270,7 @@ fu_coswid_firmware_parse_file(cbor_item_t *item, gpointer user_data, GError **er
 			g_free(payload->name);
 			payload->name = fu_coswid_read_string(pairs[i].value, error);
 			if (payload->name == NULL) {
-				g_prefix_error(error, "failed to parse payload name: ");
+				g_prefix_error_literal(error, "failed to parse payload name: ");
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_SIZE) {
@@ -408,7 +409,7 @@ fu_coswid_firmware_parse_entity_name(FuCoswidFirmwareEntity *entity,
 
 	entity->name = fu_coswid_read_string(item, error);
 	if (entity->name == NULL) {
-		g_prefix_error(error, "failed to parse entity name: ");
+		g_prefix_error_literal(error, "failed to parse entity name: ");
 		return FALSE;
 	}
 
@@ -426,7 +427,7 @@ fu_coswid_firmware_parse_entity_regid(FuCoswidFirmwareEntity *entity,
 
 	entity->regid = fu_coswid_read_string(item, error);
 	if (entity->regid == NULL) {
-		g_prefix_error(error, "failed to parse entity regid: ");
+		g_prefix_error_literal(error, "failed to parse entity regid: ");
 		return FALSE;
 	}
 
@@ -442,7 +443,7 @@ fu_coswid_firmware_parse_entity_role(FuCoswidFirmwareEntity *entity,
 	if (cbor_isa_uint(item)) {
 		guint8 role8 = 0;
 		if (!fu_coswid_read_u8(item, &role8, error)) {
-			g_prefix_error(error, "failed to parse entity role: ");
+			g_prefix_error_literal(error, "failed to parse entity role: ");
 			return FALSE;
 		}
 		if (role8 >= FU_COSWID_ENTITY_ROLE_LAST) {
@@ -460,7 +461,7 @@ fu_coswid_firmware_parse_entity_role(FuCoswidFirmwareEntity *entity,
 			guint8 role8 = 0;
 			g_autoptr(cbor_item_t) value = cbor_array_get(item, j);
 			if (!fu_coswid_read_u8(value, &role8, error)) {
-				g_prefix_error(error, "failed to parse entity role: ");
+				g_prefix_error_literal(error, "failed to parse entity role: ");
 				return FALSE;
 			}
 			if (role8 >= FU_COSWID_ENTITY_ROLE_LAST) {
@@ -621,7 +622,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
 			g_autofree gchar *str = fu_coswid_read_string(pairs[i].value, error);
 			if (str == NULL) {
-				g_prefix_error(error, "failed to parse tag-id: ");
+				g_prefix_error_literal(error, "failed to parse tag-id: ");
 				return FALSE;
 			}
 			fu_firmware_set_id(firmware, str);
@@ -629,13 +630,13 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 			g_free(priv->product);
 			priv->product = fu_coswid_read_string(pairs[i].value, error);
 			if (priv->product == NULL) {
-				g_prefix_error(error, "failed to parse product: ");
+				g_prefix_error_literal(error, "failed to parse product: ");
 				return FALSE;
 			}
 		} else if (tag_id == FU_COSWID_TAG_SOFTWARE_VERSION) {
 			g_autofree gchar *str = fu_coswid_read_string(pairs[i].value, error);
 			if (str == NULL) {
-				g_prefix_error(error, "failed to parse software-version: ");
+				g_prefix_error_literal(error, "failed to parse software-version: ");
 				return FALSE;
 			}
 			fu_firmware_set_version(firmware, str);
@@ -812,7 +813,7 @@ fu_coswid_firmware_write_payload(cbor_item_t *root,
 		for (guint j = 0; j < payload->hashes->len; j++) {
 			FuCoswidFirmwareHash *hash = g_ptr_array_index(payload->hashes, j);
 			if (!fu_coswid_firmware_write_hash(item_hashes, hash, error)) {
-				g_prefix_error(error, "failed to add payload: ");
+				g_prefix_error_literal(error, "failed to add payload: ");
 				return FALSE;
 			}
 		}

@@ -52,7 +52,7 @@ fu_vli_usbhub_msp430_device_i2c_read(FuVliUsbhubDevice *self,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "failed to read I2C: ");
+		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "I2cReadData", buf, bufsz);
@@ -123,7 +123,7 @@ fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 						  buf,
 						  sizeof(buf),
 						  error)) {
-		g_prefix_error(error, "failed to read versions: ");
+		g_prefix_error_literal(error, "failed to read versions: ");
 		return FALSE;
 	}
 	if ((buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x00) ||
@@ -164,7 +164,7 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_msp430_device_i2c_read_status(parent, &status, error)) {
-		g_prefix_error(error, "device did not come back after detach: ");
+		g_prefix_error_literal(error, "device did not come back after detach: ");
 		return FALSE;
 	}
 	return fu_vli_usbhub_i2c_check_status(status, error);

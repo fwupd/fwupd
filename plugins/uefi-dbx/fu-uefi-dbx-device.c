@@ -186,7 +186,7 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 
 	/* parse dbx */
 	if (!fu_firmware_parse_stream(siglist, stream, 0x0, flags, error)) {
-		g_prefix_error(error, "cannot parse DBX update: ");
+		g_prefix_error_literal(error, "cannot parse DBX update: ");
 		return NULL;
 	}
 
@@ -197,9 +197,9 @@ fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 							 FU_EFI_SIGNATURE_LIST(siglist),
 							 flags,
 							 error)) {
-			g_prefix_error(error,
-				       "Blocked executable in the ESP, "
-				       "ensure grub and shim are up to date: ");
+			g_prefix_error_literal(error,
+					       "Blocked executable in the ESP, "
+					       "ensure grub and shim are up to date: ");
 			return NULL;
 		}
 	}
@@ -224,7 +224,7 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 				      FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 				      error);
 	if (kek == NULL) {
-		g_prefix_error(error, "failed to parse KEK: ");
+		g_prefix_error_literal(error, "failed to parse KEK: ");
 		return FALSE;
 	}
 	fu_device_add_instance_strup(device, "ARCH", fu_uefi_dbx_get_efi_arch());

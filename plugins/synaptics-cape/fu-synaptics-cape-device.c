@@ -94,7 +94,7 @@ fu_synaptics_cape_device_get_report_intr(FuSynapticsCapeDevice *self,
 					      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_INTR_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "failed to get report over interrupt ep: ");
+		g_prefix_error_literal(error, "failed to get report over interrupt ep: ");
 		return FALSE;
 	}
 
@@ -164,7 +164,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 		return NULL;
 
 	if (!fu_synaptics_cape_device_set_report(self, st_report, error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return NULL;
 	}
 
@@ -292,7 +292,7 @@ fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
 					      0,
 					      0,
 					      error)) {
-		g_prefix_error(error, "reset command is not supported: ");
+		g_prefix_error_literal(error, "reset command is not supported: ");
 		return FALSE;
 	}
 
@@ -384,12 +384,12 @@ fu_synaptics_cape_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!fu_synaptics_cape_device_setup_version(self, error)) {
-		g_prefix_error(error, "failed to get firmware version info: ");
+		g_prefix_error_literal(error, "failed to get firmware version info: ");
 		return FALSE;
 	}
 
 	if (!fu_synaptics_cape_device_setup_active_partition(self, error)) {
-		g_prefix_error(error, "failed to get active partition info: ");
+		g_prefix_error_literal(error, "failed to get active partition info: ");
 		return FALSE;
 	}
 
@@ -589,7 +589,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 	if (fw_header == NULL)
 		return FALSE;
 	if (!fu_synaptics_cape_device_write_firmware_header(self, fw_header, error)) {
-		g_prefix_error(error, "update header failed: ");
+		g_prefix_error_literal(error, "update header failed: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -602,7 +602,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 							   stream,
 							   fu_progress_get_child(progress),
 							   error)) {
-		g_prefix_error(error, "update image failed: ");
+		g_prefix_error_literal(error, "update image failed: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -615,7 +615,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 					      0,
 					      0,
 					      error)) {
-		g_prefix_error(error, "failed to verify firmware: ");
+		g_prefix_error_literal(error, "failed to verify firmware: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

@@ -97,7 +97,7 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		partial_stream =
 		    fu_partial_input_stream_new(stream, offset, streamsz - offset, error);
 		if (partial_stream == NULL) {
-			g_prefix_error(error, "failed to cut payload: ");
+			g_prefix_error_literal(error, "failed to cut payload: ");
 			return FALSE;
 		}
 		if (!fu_firmware_parse_stream(img,

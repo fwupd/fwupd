@@ -85,7 +85,7 @@ fu_logitech_rallysystem_tablehub_device_send(FuLogitechRallysystemTablehubDevice
 					 FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to send using bulk transfer: ");
+		g_prefix_error_literal(error, "failed to send using bulk transfer: ");
 		return FALSE;
 	}
 	if (bufsz != actual_length) {
@@ -115,7 +115,7 @@ fu_logitech_rallysystem_tablehub_device_recv(FuLogitechRallysystemTablehubDevice
 					 timeout,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to receive using bulk transfer: ");
+		g_prefix_error_literal(error, "failed to receive using bulk transfer: ");
 		return FALSE;
 	}
 	if (bufsz != actual_length) {
@@ -183,7 +183,7 @@ fu_logitech_rallysystem_tablehub_device_progress_cb(FuDevice *device,
 		sizeof(buf),
 		FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_PROGRESS_TIMEOUT,
 		error)) {
-		g_prefix_error(error, "failed to get progress report: ");
+		g_prefix_error_literal(error, "failed to get progress report: ");
 		return FALSE;
 	}
 	st_res = fu_struct_usb_progress_response_parse(buf, sizeof(buf), 0x0, error);
@@ -233,11 +233,11 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 	if (!fu_struct_usb_firmware_download_request_set_fw_version(st_req,
 								    fu_device_get_version(device),
 								    error)) {
-		g_prefix_error(error, "failed to copy download mode payload: ");
+		g_prefix_error_literal(error, "failed to copy download mode payload: ");
 		return FALSE;
 	}
 	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error, "failed to set download mode: ");
+		g_prefix_error_literal(error, "failed to set download mode: ");
 		return FALSE;
 	}
 	if (!fu_logitech_rallysystem_tablehub_device_recv(
@@ -272,7 +272,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 				  1000,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "failed to wait for 100pc: ");
+		g_prefix_error_literal(error, "failed to wait for 100pc: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -298,7 +298,7 @@ fu_logitech_rallysystem_tablehub_device_send_init_cmd_cb(FuDevice *device,
 	g_autoptr(GByteArray) st_res = NULL;
 
 	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error, "failed to send init packet: ");
+		g_prefix_error_literal(error, "failed to send init packet: ");
 		return FALSE;
 	}
 	if (!fu_logitech_rallysystem_tablehub_device_recv(
@@ -307,12 +307,12 @@ fu_logitech_rallysystem_tablehub_device_send_init_cmd_cb(FuDevice *device,
 		sizeof(buf),
 		FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 		error)) {
-		g_prefix_error(error, "failed to receive init packet: ");
+		g_prefix_error_literal(error, "failed to receive init packet: ");
 		return FALSE;
 	}
 	st_res = fu_struct_usb_init_response_parse(buf, sizeof(buf), 0x0, error);
 	if (st_res == NULL) {
-		g_prefix_error(error, "failed to get correct init packet: ");
+		g_prefix_error_literal(error, "failed to get correct init packet: ");
 		return FALSE;
 	}
 
@@ -340,15 +340,16 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 			     5,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to write init packet: please reboot the device: ");
+		g_prefix_error_literal(error,
+				       "failed to write init packet: please reboot the device: ");
 		return FALSE;
 	}
 
 	/* query tablehub firmware version */
 	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
-		g_prefix_error(error,
-			       "failed to send tablehub firmware version request: "
-			       "please reboot the device: ");
+		g_prefix_error_literal(error,
+				       "failed to send tablehub firmware version request: "
+				       "please reboot the device: ");
 		return FALSE;
 	}
 	if (!fu_logitech_rallysystem_tablehub_device_recv(
@@ -357,9 +358,9 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 		sizeof(buf),
 		FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 		error)) {
-		g_prefix_error(error,
-			       "failed to get response for tablehub firmware "
-			       "version request: please reboot the device: ");
+		g_prefix_error_literal(error,
+				       "failed to get response for tablehub firmware "
+				       "version request: please reboot the device: ");
 		return FALSE;
 	}
 	st_res = fu_struct_usb_read_version_response_parse(buf, sizeof(buf), 0x0, error);

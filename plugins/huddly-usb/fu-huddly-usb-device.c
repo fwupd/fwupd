@@ -44,7 +44,7 @@ fu_huddly_usb_device_find_interface(FuHuddlyUsbDevice *self, GError **error)
 
 	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL) {
-		g_prefix_error(error, "could not find interface");
+		g_prefix_error_literal(error, "could not find interface");
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {
@@ -140,12 +140,12 @@ fu_huddly_usb_device_hlink_receive(FuHuddlyUsbDevice *self, GError **error)
 
 	fu_byte_array_set_size(msg_res, HUDDLY_USB_RECEIVE_BUFFER_SIZE, 0u);
 	if (!fu_huddly_usb_device_bulk_read(self, msg_res, &received_length, error)) {
-		g_prefix_error(error, "HLink receive failed: ");
+		g_prefix_error_literal(error, "HLink receive failed: ");
 		return NULL;
 	}
 	msg = fu_huddly_usb_hlink_msg_parse(msg_res->data, received_length, error);
 	if (msg == NULL) {
-		g_prefix_error(error, "HLink receive failed: ");
+		g_prefix_error_literal(error, "HLink receive failed: ");
 		return NULL;
 	}
 	return g_steal_pointer(&msg);
@@ -179,7 +179,7 @@ fu_huddly_usb_device_send_reset(FuHuddlyUsbDevice *self, GError **error)
 {
 	g_autoptr(GByteArray) packet = g_byte_array_new();
 	if (!fu_huddly_usb_device_bulk_write(self, packet, NULL, error)) {
-		g_prefix_error(error, "reset device failed: ");
+		g_prefix_error_literal(error, "reset device failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -198,13 +198,13 @@ fu_huddly_usb_device_salute(FuHuddlyUsbDevice *self, GError **error)
 	fu_byte_array_append_uint8(salutation, 0x00);
 
 	if (!fu_huddly_usb_device_bulk_write(self, salutation, NULL, error)) {
-		g_prefix_error(error, "send salute send message failed: ");
+		g_prefix_error_literal(error, "send salute send message failed: ");
 		return FALSE;
 	}
 
 	fu_byte_array_set_size(response, 100, 0x0);
 	if (!fu_huddly_usb_device_bulk_read(self, response, &received_length, error)) {
-		g_prefix_error(error, "send salute read response failed: ");
+		g_prefix_error_literal(error, "send salute read response failed: ");
 		return FALSE;
 	}
 	str = fu_strsafe((const gchar *)response->data, received_length);
@@ -223,17 +223,17 @@ fu_huddly_usb_device_ensure_product_info(FuHuddlyUsbDevice *self, GError **error
 	g_autoptr(GPtrArray) items = NULL;
 
 	if (!fu_huddly_usb_device_hlink_subscribe(self, "prodinfo/get_msgpack_reply", error)) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 	msg_req = fu_huddly_usb_hlink_msg_new("prodinfo/get_msgpack", NULL);
 	if (!fu_huddly_usb_device_hlink_send(self, msg_req, error)) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 	msg_res = fu_huddly_usb_device_hlink_receive(self, error);
 	if (msg_res == NULL) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 	g_debug("receive data %s", msg_res->msg_name);
@@ -244,7 +244,7 @@ fu_huddly_usb_device_ensure_product_info(FuHuddlyUsbDevice *self, GError **error
 	/* version */
 	item_version = fu_msgpack_map_lookup(items, 0, "app_version", error);
 	if (item_version == NULL) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 	version_split = g_regex_split_simple("[-+]",
@@ -256,7 +256,7 @@ fu_huddly_usb_device_ensure_product_info(FuHuddlyUsbDevice *self, GError **error
 	/* state */
 	item_state = fu_msgpack_map_lookup(items, 0, "state", error);
 	if (item_state == NULL) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 	fu_huddly_usb_device_set_state(self, fu_msgpack_item_get_string(item_state)->str);
@@ -466,7 +466,7 @@ fu_huddly_usb_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	FuHuddlyUsbDevice *self = FU_HUDDLY_USB_DEVICE(device);
 
 	if (!fu_huddly_usb_device_ensure_product_info(self, error)) {
-		g_prefix_error(error, "failed to read product info: ");
+		g_prefix_error_literal(error, "failed to read product info: ");
 		return FALSE;
 	}
 

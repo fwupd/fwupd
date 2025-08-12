@@ -572,7 +572,7 @@ fu_cabinet_build_jcat_folder(FuCabinet *self, FuFirmware *img, GError **error)
 					     JCAT_IMPORT_FLAG_NONE,
 					     NULL,
 					     error)) {
-			g_prefix_error(error, "failed to import JCat stream: ");
+			g_prefix_error_literal(error, "failed to import JCat stream: ");
 			return FALSE;
 		}
 	}

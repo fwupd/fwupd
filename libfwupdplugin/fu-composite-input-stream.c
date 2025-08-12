@@ -174,7 +174,7 @@ fu_composite_input_stream_add_stream(FuCompositeInputStream *self,
 	/* create a partial stream that is actually the size of the entire GInputStream */
 	partial_stream = fu_partial_input_stream_new(stream, 0x0, G_MAXSIZE, error);
 	if (partial_stream == NULL) {
-		g_prefix_error(error, "failed to add input stream: ");
+		g_prefix_error_literal(error, "failed to add input stream: ");
 		return FALSE;
 	}
 	fu_composite_input_stream_add_partial_stream(self, FU_PARTIAL_INPUT_STREAM(partial_stream));

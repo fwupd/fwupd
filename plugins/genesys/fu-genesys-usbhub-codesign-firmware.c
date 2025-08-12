@@ -62,13 +62,13 @@ fu_genesys_usbhub_codesign_firmware_parse(FuFirmware *firmware,
 	code_size = streamsz;
 	if (code_size == FU_STRUCT_GENESYS_FW_CODESIGN_INFO_RSA_SIZE) {
 		if (!fu_struct_genesys_fw_codesign_info_rsa_validate_stream(stream, 0x0, error)) {
-			g_prefix_error(error, "not valid for codesign: ");
+			g_prefix_error_literal(error, "not valid for codesign: ");
 			return FALSE;
 		}
 		self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
 	} else if (code_size == FU_STRUCT_GENESYS_FW_CODESIGN_INFO_ECDSA_SIZE) {
 		if (!fu_struct_genesys_fw_codesign_info_ecdsa_validate_stream(stream, 0x0, error)) {
-			g_prefix_error(error, "not valid for codesign: ");
+			g_prefix_error_literal(error, "not valid for codesign: ");
 			return FALSE;
 		}
 		self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;

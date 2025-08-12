@@ -178,7 +178,7 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 					 BULK_TRANSFER_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to send sync bulk transfer: ");
+		g_prefix_error_literal(error, "failed to send sync bulk transfer: ");
 		return FALSE;
 	}
 
@@ -223,7 +223,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 					 BULK_TRANSFER_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "response", buf, MIN(actual_length, 12));
@@ -339,7 +339,7 @@ fu_logitech_bulkcontroller_device_sync_check_ack_cmd(GByteArray *buf,
 			    0x0,
 			    sizeof(ack_payload) - 1,
 			    error)) {
-		g_prefix_error(error, "failed to copy ack payload: ");
+		g_prefix_error_literal(error, "failed to copy ack payload: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "ack_payload", (guint8 *)ack_payload, sizeof(ack_payload));
@@ -349,7 +349,7 @@ fu_logitech_bulkcontroller_device_sync_check_ack_cmd(GByteArray *buf,
 			 G_MAXUINT32,
 			 FU_INTEGER_BASE_AUTO,
 			 error)) {
-		g_prefix_error(error, "failed to parse ack payload cmd: ");
+		g_prefix_error_literal(error, "failed to parse ack payload cmd: ");
 		return FALSE;
 	}
 	g_debug("ack_cmd: %s [0x%x]",
@@ -440,7 +440,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
 		req,
 		error)) {
-		g_prefix_error(error, "failed to send request: ");
+		g_prefix_error_literal(error, "failed to send request: ");
 		return NULL;
 	}
 
@@ -449,7 +449,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
 		error)) {
-		g_prefix_error(error, "failed to wait for ack: ");
+		g_prefix_error_literal(error, "failed to wait for ack: ");
 		return NULL;
 	}
 
@@ -459,7 +459,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 		NULL,
 		error)) {
-		g_prefix_error(error, "failed to uninit buffer: ");
+		g_prefix_error_literal(error, "failed to uninit buffer: ");
 		return NULL;
 	}
 
@@ -468,7 +468,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		g_autoptr(FuLogitechBulkcontrollerResponse) response_tmp = NULL;
 		response_tmp = fu_logitech_bulkcontroller_device_sync_wait_any(self, error);
 		if (response_tmp == NULL) {
-			g_prefix_error(error, "failed to wait for any: ");
+			g_prefix_error_literal(error, "failed to wait for any: ");
 			return NULL;
 		}
 		if (response_tmp->cmd == FU_LOGITECH_BULKCONTROLLER_CMD_ACK) {
@@ -484,7 +484,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 				response_tmp,
 				FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 				error)) {
-				g_prefix_error(error, "failed to check uninit buffer: ");
+				g_prefix_error_literal(error, "failed to check uninit buffer: ");
 				return NULL;
 			}
 			res_ack = g_steal_pointer(&response_tmp->data);
@@ -505,7 +505,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
 		error)) {
-		g_prefix_error(error, "failed to ack read buffer: ");
+		g_prefix_error_literal(error, "failed to ack read buffer: ");
 		return NULL;
 	}
 
@@ -516,7 +516,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	    0x0, /* why? */
 	    error);
 	if (buf == NULL) {
-		g_prefix_error(error, "failed to wait for uninit buffer: ");
+		g_prefix_error_literal(error, "failed to wait for uninit buffer: ");
 		return NULL;
 	}
 
@@ -525,7 +525,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 		error)) {
-		g_prefix_error(error, "failed to ack uninit buffer: ");
+		g_prefix_error_literal(error, "failed to ack uninit buffer: ");
 		return NULL;
 	}
 
@@ -563,7 +563,7 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					 BULK_TRANSFER_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to send upd bulk transfer: ");
+		g_prefix_error_literal(error, "failed to send upd bulk transfer: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -577,7 +577,7 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					 timeout,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "response", buf_tmp, MIN(actual_length, 12));
@@ -714,7 +714,7 @@ fu_logitech_bulkcontroller_device_json_parser(FuLogitechBulkcontrollerDevice *se
 					(const gchar *)decoded_pkt->data,
 					decoded_pkt->len,
 					error)) {
-		g_prefix_error(error, "failed to parse json data: ");
+		g_prefix_error_literal(error, "failed to parse json data: ");
 		return FALSE;
 	}
 	json_root = json_parser_get_root(json_parser);
@@ -795,7 +795,7 @@ fu_logitech_bulkcontroller_device_parse_info(FuLogitechBulkcontrollerDevice *sel
 									      &proto_id,
 									      error);
 	if (decoded_pkt == NULL) {
-		g_prefix_error(error, "failed to unpack packet for device info request: ");
+		g_prefix_error_literal(error, "failed to unpack packet for device info request: ");
 		return FALSE;
 	}
 	bufstr = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
@@ -1015,8 +1015,9 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 			     MAX_RETRIES,
 			     NULL,
 			     error)) {
-		g_prefix_error(error,
-			       "failed to write init transfer packet: please reboot the device: ");
+		g_prefix_error_literal(
+		    error,
+		    "failed to write init transfer packet: please reboot the device: ");
 		return FALSE;
 	}
 
@@ -1031,7 +1032,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		start_pkt_blob,
 		BULK_TRANSFER_TIMEOUT,
 		error)) {
-		g_prefix_error(error, "failed to write start transfer packet: ");
+		g_prefix_error_literal(error, "failed to write start transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1041,7 +1042,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 							stream,
 							fu_progress_get_child(progress),
 							error)) {
-		g_prefix_error(error, "failed to write firmware: ");
+		g_prefix_error_literal(error, "failed to write firmware: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1061,7 +1062,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 		end_pkt_blob,
 		HASH_TIMEOUT,
 		error)) {
-		g_prefix_error(error, "failed to write end transfer packet: ");
+		g_prefix_error_literal(error, "failed to write end transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1072,7 +1073,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 							    NULL,
 							    BULK_TRANSFER_TIMEOUT,
 							    error)) {
-		g_prefix_error(error, "failed to write finish transfer packet: ");
+		g_prefix_error_literal(error, "failed to write finish transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -1145,7 +1146,7 @@ fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_da
 									      &proto_id,
 									      error);
 	if (decoded_pkt == NULL) {
-		g_prefix_error(error, "failed to unpack packet: ");
+		g_prefix_error_literal(error, "failed to unpack packet: ");
 		return FALSE;
 	}
 	bufstr = fu_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
@@ -1197,7 +1198,7 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 									      &proto_id,
 									      error);
 	if (decoded_pkt == NULL) {
-		g_prefix_error(error, "failed to unpack packet: ");
+		g_prefix_error_literal(error, "failed to unpack packet: ");
 		return FALSE;
 	}
 	g_debug("received transition mode response: id: %u, length %u", proto_id, res->len);
@@ -1278,7 +1279,7 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 		FU_LOGITECH_BULKCONTROLLER_CMD_CHECK_BUFFERSIZE,
 		NULL, /* data */
 		error)) {
-		g_prefix_error(error, "failed to send request: ");
+		g_prefix_error_literal(error, "failed to send request: ");
 		return FALSE;
 	}
 	buf = fu_logitech_bulkcontroller_device_sync_wait_cmd_retry(
@@ -1312,13 +1313,13 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)
 		 ->setup(device, error)) {
-		g_prefix_error(error, "failed to FuUsbDevice->setup: ");
+		g_prefix_error_literal(error, "failed to FuUsbDevice->setup: ");
 		return FALSE;
 	}
 
 	/* empty the queue */
 	if (!fu_logitech_bulkcontroller_device_clear_queue(self, error)) {
-		g_prefix_error(error, "failed to clear queue: ");
+		g_prefix_error_literal(error, "failed to clear queue: ");
 		return FALSE;
 	}
 
@@ -1326,26 +1327,26 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device,
 				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_CHECK_BUFFER_SIZE)) {
 		if (!fu_logitech_bulkcontroller_device_check_buffer_size(self, error)) {
-			g_prefix_error(error, "failed to check buffer size: ");
+			g_prefix_error_literal(error, "failed to check buffer size: ");
 			return FALSE;
 		}
 	}
 
 	/* device supports modes of Device (supported), Appliance and BYOD (both unsupported) */
 	if (!fu_logitech_bulkcontroller_device_transition_to_device_mode(self, error)) {
-		g_prefix_error(error, "failed to transition to device_mode: ");
+		g_prefix_error_literal(error, "failed to transition to device_mode: ");
 		return FALSE;
 	}
 
 	/* set device time */
 	if (!fu_logitech_bulkcontroller_device_set_time(self, error)) {
-		g_prefix_error(error, "failed to set time: ");
+		g_prefix_error_literal(error, "failed to set time: ");
 		return FALSE;
 	}
 
 	/* load current device data */
 	if (!fu_logitech_bulkcontroller_device_ensure_info(self, TRUE, error)) {
-		g_prefix_error(error, "failed to ensure info: ");
+		g_prefix_error_literal(error, "failed to ensure info: ");
 		return FALSE;
 	}
 

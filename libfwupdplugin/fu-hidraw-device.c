@@ -59,7 +59,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 			      5000,
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to get report descriptor size: ");
+		g_prefix_error_literal(error, "failed to get report descriptor size: ");
 		return NULL;
 	}
 
@@ -72,7 +72,7 @@ fu_hidraw_device_parse_descriptor(FuHidrawDevice *self, GError **error)
 			      5000,
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to get report descriptor: ");
+		g_prefix_error_literal(error, "failed to get report descriptor: ");
 		return NULL;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
@@ -140,7 +140,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 G_MAXUINT16,
 					 FU_INTEGER_BASE_16,
 					 error)) {
-				g_prefix_error(error, "failed to parse HID_ID: ");
+				g_prefix_error_literal(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
 			fu_device_set_vid(device, (guint16)val);
@@ -153,7 +153,7 @@ fu_hidraw_device_probe(FuDevice *device, GError **error)
 					 G_MAXUINT16,
 					 FU_INTEGER_BASE_16,
 					 error)) {
-				g_prefix_error(error, "failed to parse HID_ID: ");
+				g_prefix_error_literal(error, "failed to parse HID_ID: ");
 				return FALSE;
 			}
 			fu_device_set_pid(device, (guint16)val);

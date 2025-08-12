@@ -104,7 +104,7 @@ fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
 					  st_req->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
-		g_prefix_error(error, "failed to send packet to touch panel: ");
+		g_prefix_error_literal(error, "failed to send packet to touch panel: ");
 		return FALSE;
 	}
 	/* check if there is a corresponding get report request.
@@ -118,7 +118,8 @@ fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
 					  delay,
 					  buf_res,
 					  error)) {
-			g_prefix_error(error, "failed to receive packet from touch panel: ");
+			g_prefix_error_literal(error,
+					       "failed to receive packet from touch panel: ");
 			return FALSE;
 		}
 	}

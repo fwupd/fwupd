@@ -56,7 +56,7 @@ fu_ccgx_pure_hid_device_enter_flashing_mode(FuCcgxPureHidDevice *self, GError **
 					     FU_CCGX_PURE_HID_COMMAND_FLASH,
 					     FU_CCGX_PD_RESP_ENTER_FLASHING_MODE_CMD_SIG,
 					     error)) {
-		g_prefix_error(error, "flashing enable command error: ");
+		g_prefix_error_literal(error, "flashing enable command error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -82,7 +82,7 @@ fu_ccgx_pure_hid_device_magic_unlock(FuCcgxPureHidDevice *self, GError **error)
 				      FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error)) {
-		g_prefix_error(error, "magic enable command error: ");
+		g_prefix_error_literal(error, "magic enable command error: ");
 		return FALSE;
 	}
 
@@ -335,7 +335,7 @@ fu_ccgx_pure_hid_device_write_row(FuCcgxPureHidDevice *self,
 				      FU_CCGX_PURE_HID_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
-		g_prefix_error(error, "write row command error: ");
+		g_prefix_error_literal(error, "write row command error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -377,7 +377,7 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 					     FU_CCGX_PURE_HID_COMMAND_SET_BOOT,
 					     fw_mode,
 					     error)) {
-		g_prefix_error(error, "bootswitch command error: ");
+		g_prefix_error_literal(error, "bootswitch command error: ");
 		return FALSE;
 	}
 
@@ -385,7 +385,7 @@ fu_ccgx_pure_hid_device_write_firmware(FuDevice *device,
 					     FU_CCGX_PURE_HID_COMMAND_JUMP,
 					     FU_CCGX_PD_RESP_DEVICE_RESET_CMD_SIG,
 					     error)) {
-		g_prefix_error(error, "reset command error: ");
+		g_prefix_error_literal(error, "reset command error: ");
 		return FALSE;
 	}
 

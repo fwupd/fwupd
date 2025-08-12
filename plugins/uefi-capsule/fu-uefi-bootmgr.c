@@ -165,7 +165,8 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 		if (!fu_bytes_compare(loadopt_blob, loadopt_blob_old, NULL)) {
 			g_debug("%s: updating existing boot entry", name);
 			if (!fu_efivars_set_boot_data(efivars, boot_next, loadopt_blob, error)) {
-				g_prefix_error(error, "could not set boot variable active: ");
+				g_prefix_error_literal(error,
+						       "could not set boot variable active: ");
 				return FALSE;
 			}
 		} else {
@@ -257,7 +258,7 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 				     0x0,
 				     FU_FIRMWARE_PARSE_FLAG_NONE,
 				     error)) {
-		g_prefix_error(error, "failed to load SbatLevelRT: ");
+		g_prefix_error_literal(error, "failed to load SbatLevelRT: ");
 		return FALSE;
 	}
 

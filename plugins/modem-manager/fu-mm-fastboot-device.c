@@ -47,7 +47,7 @@ fu_mm_fastboot_device_detach(FuDevice *device, FuProgress *progress, GError **er
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT", TRUE, error))
 		return FALSE;
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), self->detach_at, has_response, error)) {
-		g_prefix_error(error, "rebooting into fastboot not supported: ");
+		g_prefix_error_literal(error, "rebooting into fastboot not supported: ");
 		return FALSE;
 	}
 

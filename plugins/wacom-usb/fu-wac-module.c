@@ -53,7 +53,7 @@ fu_wac_module_refresh(FuWacModule *self, GError **error)
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
-		g_prefix_error(error, "failed to refresh status: ");
+		g_prefix_error_literal(error, "failed to refresh status: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -152,7 +152,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 				    0x0, /* src */
 				    len,
 				    error)) {
-			g_prefix_error(error, "Submodule blob larger than buffer: ");
+			g_prefix_error_literal(error, "Submodule blob larger than buffer: ");
 			return FALSE;
 		}
 	}
@@ -178,7 +178,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					      error)) {
-		g_prefix_error(error, "failed to set module feature: ");
+		g_prefix_error_literal(error, "failed to set module feature: ");
 		return FALSE;
 	}
 

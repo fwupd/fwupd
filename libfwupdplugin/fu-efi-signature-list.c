@@ -179,7 +179,7 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 				       offset, /* seek */
 				       sizeof(guid),
 				       error)) {
-		g_prefix_error(error, "failed to read magic: ");
+		g_prefix_error_literal(error, "failed to read magic: ");
 		return FALSE;
 	}
 	sig_type = fwupd_guid_to_string(&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);

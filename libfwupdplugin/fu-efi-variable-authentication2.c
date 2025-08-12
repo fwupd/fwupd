@@ -100,7 +100,7 @@ fu_efi_variable_authentication2_add_content_info_prefix(GByteArray *buf, GError 
 
 	/* check is ASN.1 SEQUENCE */
 	if (!fu_memread_uint16_safe(buf->data, buf->len, 0x0, &sz, G_BIG_ENDIAN, error)) {
-		g_prefix_error(error, "not ASN.1 SEQUENCE: ");
+		g_prefix_error_literal(error, "not ASN.1 SEQUENCE: ");
 		return FALSE;
 	}
 	if (sz != 0x3082) {

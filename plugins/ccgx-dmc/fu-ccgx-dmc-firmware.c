@@ -299,7 +299,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 
 	/* create custom meta binary */
 	if (!fu_input_stream_read_u16(stream, hdr_size, &mdbufsz, G_LITTLE_ENDIAN, error)) {
-		g_prefix_error(error, "failed to read metadata size: ");
+		g_prefix_error_literal(error, "failed to read metadata size: ");
 		return FALSE;
 	}
 	if (mdbufsz > 0) {
