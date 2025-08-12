@@ -52,10 +52,10 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	/* dock type according to ec */
 	dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(ec_device));
 	if (dock_type == FU_DELL_DOCK_BASE_TYPE_UNKNOWN) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "can't read base dock type from EC");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "can't read base dock type from EC");
 		return FALSE;
 	}
 
@@ -188,10 +188,10 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
 		ec_dev = fu_dell_kestrel_ec_new(device, uod);
 		if (ec_dev == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "can't create EC V2 device");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "can't create EC V2 device");
 			return FALSE;
 		}
 

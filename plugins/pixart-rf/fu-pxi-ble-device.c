@@ -129,10 +129,10 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 			}
 		}
 	} else {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "The firmware is incompatible with the device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware is incompatible with the device");
 		return NULL;
 	}
 

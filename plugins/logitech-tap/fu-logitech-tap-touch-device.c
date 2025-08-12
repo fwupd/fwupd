@@ -69,7 +69,10 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 				   0x00U,
 				   &report_id,
 				   error)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to read report id: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to read report id: ");
 		return FALSE;
 	}
 	if (!ret) {

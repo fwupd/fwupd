@@ -283,7 +283,10 @@ fu_redfish_backend_create_session(FuRedfishBackend *self, GError **error)
 					     error))
 		return FALSE;
 	if (fu_redfish_backend_get_session_key(self) == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to get session key");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get session key");
 		return FALSE;
 	}
 

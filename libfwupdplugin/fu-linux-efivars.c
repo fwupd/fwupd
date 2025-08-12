@@ -452,10 +452,10 @@ fu_linux_efivars_space_free(FuEfivars *efivars, GError **error)
 	}
 #endif
 	if (total == 0 || total == G_MAXUINT64) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "getting efivars free space is not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "getting efivars free space is not supported");
 		return G_MAXUINT64;
 	}
 

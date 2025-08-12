@@ -122,7 +122,10 @@ fu_steelseries_fizz_hid_ensure_version(FuSteelseriesFizzHid *self, GError **erro
 		return FALSE;
 	version = fu_strsafe((const gchar *)st_buf->data, st_buf->len);
 	if (version == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "unable to read version");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "unable to read version");
 		return FALSE;
 	}
 	fu_device_set_version(FU_DEVICE(self), version);

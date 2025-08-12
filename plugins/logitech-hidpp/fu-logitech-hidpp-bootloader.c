@@ -103,11 +103,11 @@ fu_logitech_hidpp_bootloader_parse_requests(FuLogitechHidppBootloader *self,
 			if (!fu_firmware_strparse_uint16_safe(tmp, linesz, 0x09, &offset, error))
 				return NULL;
 			if (offset != 0x0000) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
-					    "extended linear addresses with offset different from "
-					    "0 are not supported");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "extended linear addresses with offset "
+						    "different from 0 are not supported");
 				return NULL;
 			}
 			continue;

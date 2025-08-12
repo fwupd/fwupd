@@ -597,7 +597,7 @@ fu_smbios_get_string(FuSmbios *self, guint8 type, guint8 length, guint8 offset, 
 		return NULL;
 	}
 	if (item->buf->data[offset] == 0x00) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no data available");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no data available");
 		return NULL;
 	}
 

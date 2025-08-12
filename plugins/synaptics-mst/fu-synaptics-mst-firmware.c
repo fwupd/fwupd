@@ -140,10 +140,10 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 		addr = ADDR_CUSTOMER_ID_CARRERA;
 		break;
 	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "unsupported chip family");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "unsupported chip family");
 		return NULL;
 	}
 	/* assumed header */

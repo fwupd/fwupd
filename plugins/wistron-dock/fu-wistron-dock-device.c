@@ -665,10 +665,10 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 	/* adding the MCU while flashing the device, ignore until it comes back in runtime mode */
 	if (self->update_phase == FU_WISTRON_DOCK_UPDATE_PHASE_DEPLOY &&
 	    self->status_code == FU_WISTRON_DOCK_STATUS_CODE_UPDATING) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "ignoring device in MCU mode");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "ignoring device in MCU mode");
 		return FALSE;
 	}
 

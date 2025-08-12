@@ -610,10 +610,9 @@ fu_genesys_gl32xx_device_prepare_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware size is [%" G_GSIZE_FORMAT
-			    "] bytes while expecting [%" G_GUINT64_FORMAT "] bytes",
-			    fu_firmware_get_size(firmware),
-			    fu_device_get_firmware_size_max(device));
+			    "firmware size 0x%x while expecting 0x%x bytes",
+			    (guint)fu_firmware_get_size(firmware),
+			    (guint)fu_device_get_firmware_size_max(device));
 		return NULL;
 	}
 

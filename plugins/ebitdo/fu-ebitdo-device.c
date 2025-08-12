@@ -48,7 +48,10 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 
 	/* check size */
 	if (in_len > 64 - 8) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "input buffer too large");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "input buffer too large");
 		return FALSE;
 	}
 
@@ -254,10 +257,10 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 	/* verify the vendor prefix against a allowlist */
 	ven = fu_device_get_vendor(FU_DEVICE(self));
 	if (ven == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "could not check vendor descriptor: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "could not check vendor descriptor");
 		return FALSE;
 	}
 	for (guint i = 0; allowlist[i] != NULL; i++) {

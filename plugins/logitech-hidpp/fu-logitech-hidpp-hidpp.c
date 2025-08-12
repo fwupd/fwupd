@@ -222,10 +222,10 @@ fu_logitech_hidpp_transfer(FuUdevDevice *udev_device, FuLogitechHidppHidppMsg *m
 
 		/* hardware not responding */
 		if (ignore_cnt++ > 10) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "too many messages to ignore");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "too many messages to ignore");
 			return FALSE;
 		}
 

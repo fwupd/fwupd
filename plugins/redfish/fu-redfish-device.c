@@ -264,7 +264,10 @@ fu_redfish_device_set_version_lenovo(FuRedfishDevice *self, const gchar *version
 
 	/* build is only one letter from A -> Z */
 	if (!g_ascii_isalpha(out_build[2])) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "build letter invalid");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "build letter invalid");
 		return FALSE;
 	}
 	priv->build = g_strndup(out_build + 2, 1);

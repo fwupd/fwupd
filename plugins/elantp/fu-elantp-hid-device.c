@@ -181,17 +181,17 @@ fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **e
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "forcetype cmd not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "forcetype cmd not supported");
 		return FALSE;
 	}
 	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "force type table not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "force type table not supported");
 		return FALSE;
 	}
 
@@ -214,16 +214,16 @@ fu_elantp_hid_device_read_haptic_enable(FuElantpHidDevice *self, GError **error)
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
 		return FALSE;
 	}
 
 	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
 	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "the haptic eeprom not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "the haptic eeprom not supported");
 		return FALSE;
 	}
 
@@ -493,10 +493,10 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
 	if (self->force_table_support != force_table_support) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware incompatible, forcetable incorrect.");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware incompatible, forcetable incorrect.");
 		return NULL;
 	}
 	if (self->force_table_support) {
@@ -658,10 +658,10 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 			bufsz,
 			fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware)),
 			error)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "filling forcetable failed");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "filling forcetable failed");
 			return FALSE;
 		}
 		chunks = fu_chunk_array_new(buf2 + iap_addr,

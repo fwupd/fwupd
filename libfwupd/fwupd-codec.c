@@ -256,7 +256,10 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 	json_generator_set_root(json_generator, json_root);
 	data = json_generator_to_data(json_generator, NULL);
 	if (data == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to convert to json");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to json");
 		return NULL;
 	}
 	return g_steal_pointer(&data);

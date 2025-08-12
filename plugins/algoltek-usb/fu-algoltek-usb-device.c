@@ -359,10 +359,10 @@ fu_algoltek_usb_device_status_check_cb(FuDevice *self, gpointer user_data, GErro
 		break;
 	case AG_UPDATE_FAIL:
 	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "update procedure is failed.");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "update procedure is failed");
 		return FALSE;
 	}
 	return TRUE;

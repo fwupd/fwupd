@@ -216,10 +216,10 @@ fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 
 	imgs = fu_firmware_get_images(FU_FIRMWARE(descriptor));
 	if (imgs->len != 4) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HID descriptor does not contain exactly 4 reports");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HID descriptor does not contain exactly 4 reports");
 		return FALSE;
 	}
 

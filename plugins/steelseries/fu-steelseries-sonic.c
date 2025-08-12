@@ -417,7 +417,10 @@ fu_steelseries_sonic_wait_for_connect_cb(FuDevice *device, gpointer user_data, G
 	}
 	g_debug("WirelessStatus: %s", fu_steelseries_sonic_wireless_status_to_string(*wl_status));
 	if (*wl_status != FU_STEELSERIES_SONIC_WIRELESS_STATUS_CONNECTED) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "device is unreachable");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "device is unreachable");
 		return FALSE;
 	}
 

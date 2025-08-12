@@ -591,10 +591,9 @@ fu_cros_ec_usb_device_transfer_section(FuCrosEcUsbDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "image and section sizes do not match: image = %" G_GSIZE_FORMAT
-			    " bytes vs section size = %" G_GSIZE_FORMAT " bytes",
-			    data_len,
-			    section->size);
+			    "image (0x%x bytes) and section (0x%x bytes) sizes do not match",
+			    (guint)data_len,
+			    (guint)section->size);
 		return FALSE;
 	}
 

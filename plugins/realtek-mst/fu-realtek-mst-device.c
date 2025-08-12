@@ -653,10 +653,10 @@ fu_realtek_mst_device_write_firmware(FuDevice *device,
 						    error))
 		return FALSE;
 	if (memcmp(g_bytes_get_data(firmware_bytes, NULL), readback_buf, FLASH_USER_SIZE) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "flash contents after write do not match firmware image");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "flash contents do not match firmware image");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

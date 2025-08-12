@@ -219,7 +219,10 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 
 	/* check if "card" is in the sysfs_path string */
 	if (g_strstr_len(sysfs_path, -1, "card") == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a DRM card device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not a DRM card device");
 		return FALSE;
 	}
 

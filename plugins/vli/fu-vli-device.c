@@ -150,7 +150,7 @@ fu_vli_device_spi_wait_finish(FuVliDevice *self, GError **error)
 		}
 		fu_device_sleep(FU_DEVICE(self), 500); /* ms */
 	}
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "failed to wait for SPI");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT, "failed to wait for SPI");
 	return FALSE;
 }
 

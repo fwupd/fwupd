@@ -255,7 +255,10 @@ fu_qsi_dock_mcu_device_checksum(FuQsiDockMcuDevice *self,
 
 	/* MCU Checksum Compare Result 0:Pass 1:Fail */
 	if (buf[2] != 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "checksum did not match");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "checksum did not match");
 		return FALSE;
 	}
 

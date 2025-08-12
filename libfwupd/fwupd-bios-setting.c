@@ -625,22 +625,22 @@ fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GE
 		if (!_fu_strtoull_simple(value, &tmp, error))
 			return FALSE;
 		if (tmp < priv->lower_bound) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too small (%" G_GUINT64_FORMAT
-				    "); expected at least %" G_GUINT64_FORMAT,
+				    ") expected at least %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->lower_bound);
 			return FALSE;
 		}
 		if (tmp > priv->upper_bound) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too big (%" G_GUINT64_FORMAT
-				    "); expected no more than %" G_GUINT64_FORMAT,
+				    ") expected no more than %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->upper_bound);
@@ -651,22 +651,22 @@ fwupd_bios_setting_validate_value(FwupdBiosSetting *self, const gchar *value, GE
 	if (priv->kind == FWUPD_BIOS_SETTING_KIND_STRING) {
 		gsize tmp = strlen(value);
 		if (tmp < priv->lower_bound) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too short (%" G_GSIZE_FORMAT
-				    "); expected at least %" G_GUINT64_FORMAT,
+				    ") expected at least %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->lower_bound);
 			return FALSE;
 		}
 		if (tmp > priv->upper_bound) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "%s is too long (%" G_GSIZE_FORMAT
-				    "); expected no more than %" G_GUINT64_FORMAT,
+				    ") expected no more than %" G_GUINT64_FORMAT,
 				    value,
 				    tmp,
 				    priv->upper_bound);

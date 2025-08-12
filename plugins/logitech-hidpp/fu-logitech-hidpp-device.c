@@ -1639,10 +1639,10 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx == 0x00) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no DFU feature available");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no DFU feature available");
 		return FALSE;
 	}
 
@@ -1767,10 +1767,10 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
 
 			/* too many soft restarts, let's fail everything */
 			if (retry++ > FU_LOGITECH_HIDPP_DEVICE_RDFU_MAX_RETRIES) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_WRITE,
-					    "too lot recover attempts");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_WRITE,
+						    "too lot recover attempts");
 				return FALSE;
 			}
 		}
@@ -1816,10 +1816,10 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 								   error);
 	}
 
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "no DFU or RDFU feature available");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no DFU or RDFU feature available");
 	return FALSE;
 }
 
@@ -1852,10 +1852,10 @@ fu_logitech_hidpp_device_attach(FuLogitechHidppDevice *self,
 		/* if we're in bootloader mode, we should be able to get this feature */
 		idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 		if (idx == 0x00) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no DFU feature available");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no DFU feature available");
 			return FALSE;
 		}
 

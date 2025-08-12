@@ -106,10 +106,10 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			if (prop_interface == NULL)
 				return FALSE;
 			if (g_strcmp0(prop_interface, "3/0/0") != 0) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "skipping hidraw device");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "skipping hidraw device");
 				return FALSE;
 			}
 			devid2 =

@@ -100,10 +100,10 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 			break;
 		}
 		if (number == G_MAXUINT64) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Could not find i2c bus number in sysfs path");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Could not find i2c bus number in sysfs path");
 			return FALSE;
 		}
 		fu_udev_device_set_number(FU_UDEV_DEVICE(self), number);
@@ -167,10 +167,10 @@ fu_i2c_device_set_address(FuI2cDevice *self, guint8 address, gboolean force, GEr
 	/* success */
 	return TRUE;
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <linux/i2c-dev.h> not found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as <linux/i2c-dev.h> not found");
 	return FALSE;
 #endif
 }

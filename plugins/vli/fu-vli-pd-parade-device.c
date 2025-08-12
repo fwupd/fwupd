@@ -47,7 +47,10 @@ fu_vli_pd_parade_device_i2c_read(FuVliPdParadeDevice *self,
 
 	/* sanity check */
 	if (bufsz > 0x40) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "request too large");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "request too large");
 		return FALSE;
 	}
 
@@ -257,10 +260,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to wait for SPI not BUSY");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to wait for SPI not BUSY");
 		return FALSE;
 	}
 
@@ -293,10 +296,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 			}
 		}
 		if (!ret2) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to wait for SPI CMD done");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "failed to wait for SPI CMD done");
 			return FALSE;
 		}
 
@@ -315,10 +318,10 @@ fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to wait for SPI status clear");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to wait for SPI status clear");
 		return FALSE;
 	}
 
@@ -395,7 +398,7 @@ fu_vli_pd_parade_device_block_erase(FuVliPdParadeDevice *self, guint8 block_idx,
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "Erase failed @0x%x",
+					    "erase failed @0x%x",
 					    addr);
 				return FALSE;
 			}

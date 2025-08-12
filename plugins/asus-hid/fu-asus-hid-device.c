@@ -265,10 +265,10 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 	g_autoptr(GPtrArray) blocks = NULL;
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "device is not in bootloader mode");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "device is not in bootloader mode");
 		return NULL;
 	}
 

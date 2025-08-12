@@ -170,11 +170,11 @@ fu_elantp_hid_haptic_device_ensure_eeprom_iap_ctrl(FuDevice *parent,
 	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 
 	if ((self->iap_ctrl & 0x800) != 0x800) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bit11 fail");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "bit11 fail");
 		return FALSE;
 	}
 	if ((self->iap_ctrl & 0x1000) == 0x1000) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "bit12 fail, resend");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "bit12 fail, resend");
 		return FALSE;
 	}
 
@@ -890,10 +890,10 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 
 	/* haptic EEPROM IAP process runs in the TP main code */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "in touchpad bootloader mode");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "in touchpad bootloader mode");
 		return FALSE;
 	}
 
@@ -1055,7 +1055,7 @@ fu_elantp_hid_haptic_device_attach(FuDevice *device, FuProgress *progress, GErro
 
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_READ, "in bootloader mode");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_READ, "in bootloader mode");
 		return FALSE;
 	}
 

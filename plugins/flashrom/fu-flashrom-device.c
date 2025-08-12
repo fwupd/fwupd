@@ -327,7 +327,7 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	if (flashrom_image_verify(self->flashctx, (void *)buf, sz)) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "image verify failed");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "image verify failed");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

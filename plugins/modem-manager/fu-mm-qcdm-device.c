@@ -44,10 +44,10 @@ fu_mm_qcdm_device_cmd(FuMmQcdmDevice *self, const guint8 *buf, gsize bufsz, GErr
 
 	/* command == response */
 	if (g_bytes_compare(qcdm_res, qcdm_req) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to read valid qcdm response");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to read valid qcdm response");
 		return FALSE;
 	}
 
