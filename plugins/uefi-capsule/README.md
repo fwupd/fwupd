@@ -8,9 +8,20 @@ The Unified Extensible Firmware Interface (UEFI) is a specification that
 defines the software interface between an OS and platform firmware.
 With the UpdateCapsule boot service it can be used to update system firmware.
 
-When this plugin is enabled, the companion UEFI binary may also be built from the [fwupd-efi](https://github.com/fwupd/fwupd-efi) project if not already present on the filesystem by using the meson option `-Defi_binary=true`.
+## Companion EFI application
+
+When this plugin is enabled, for it to work properly a UEFI binary must be available to flash capsules that have been staged.
+This can be satisfied either by the [fwupd-efi](https://github.com/fwupd/fwupd-efi) project or by a 3rd party bootloader.
+
+### fwupd-efi project
+
+The companion UEFI binary may be built from the [fwupd-efi](https://github.com/fwupd/fwupd-efi) project if not already present on the filesystem by using the meson option `-Defi_binary=true`.
 
 For this companion binary to work with secure boot, it will need to be signed by an authority trusted with shim and/or the host environment.
+
+### 3rd party bootloader
+
+If a 3rd party bootloader has implemented the fwupd UEFI capsule update protocol then it can create a 1 byte EFI variable ```BootloaderSupportsFwupd``` under the GUID namespace `0abba7dc-e516-4167-bbf5-4d9d1c739416`. fwupd will discover this at runtime and avoid the use of fwupd-efi.
 
 ## Lenovo Specific Behavior
 
