@@ -195,6 +195,20 @@ class Checker:
             return
         self._test_line_function_names_valid(func_name)
 
+    def _test_line_missing_literal_task_return_new(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_task_return_new_error(")
+        if idx == -1:
+            return
+        sections = line.split(",")
+        if len(sections) == 4:
+            self.add_failure(
+                f"missing literal, use g_task_return_new_error_literal() instead"
+            )
+
     def _test_line_enums(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:prefix"
@@ -616,6 +630,9 @@ class Checker:
 
             # test for invalid enum names
             self._test_line_enums(line)
+
+            # test for missing literals
+            self._test_line_missing_literal_task_return_new(line)
 
             # test for static variables
             self._test_static_vars(line)
