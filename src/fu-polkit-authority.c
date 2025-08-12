@@ -54,10 +54,10 @@ fu_polkit_authority_check_cb(GObject *source_object, GAsyncResult *res, gpointer
 
 	/* did not auth */
 	if (!polkit_authorization_result_get_is_authorized(auth)) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_AUTH_FAILED,
-					"Failed to obtain auth");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_AUTH_FAILED,
+						"Failed to obtain auth");
 		return;
 	}
 
@@ -104,10 +104,10 @@ fu_polkit_authority_check(FuPolkitAuthority *self,
 
 	/* fallback to the caller being euid=0 */
 	if ((flags & FU_POLKIT_AUTHORITY_CHECK_FLAG_USER_IS_TRUSTED) == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_AUTH_FAILED,
-					"Failed to obtain auth as not trusted user");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_AUTH_FAILED,
+						"Failed to obtain auth as not trusted user");
 		return;
 	}
 
