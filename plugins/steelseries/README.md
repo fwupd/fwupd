@@ -40,11 +40,11 @@ The device is a USB receiver.
 
 Since 1.8.1
 
-### SteelSeriesFizzInterface
+### SteelSeriesCmdInterface
 
 USB HID command interface number.
 
-Since 2.0.2
+Since 2.0.14
 
 ### SteelSeriesFizzProtocolRevision
 
