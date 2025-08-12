@@ -17,3 +17,7 @@
 #define G_GNUC_NON_NULL(params...)
 #endif
 #endif
+
+#if !GLIB_CHECK_VERSION(2, 80, 0)
+#define g_task_return_new_error_literal g_task_return_new_error
+#endif
