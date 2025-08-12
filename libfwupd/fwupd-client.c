@@ -3265,10 +3265,10 @@ fwupd_client_install_bytes_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Install CAB only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Install CAB only supported on Linux");
 #endif
 }
 
@@ -3350,10 +3350,10 @@ fwupd_client_install_async(FwupdClient *self,
 					  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Install CAB async only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Install CAB async only supported on Linux");
 #endif
 }
 
@@ -3525,10 +3525,10 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 	/* get the default release only until other parts of fwupd can cope */
 	locations = fwupd_release_get_locations(data->release);
 	if (locations->len == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"release missing URI");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"release missing URI");
 		return;
 	}
 	uri_tmp = g_ptr_array_index(locations, 0);
@@ -3588,10 +3588,10 @@ fwupd_client_install_release_remote_cb(GObject *source, GAsyncResult *res, gpoin
 		}
 	}
 	if (uris_built->len == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"No URIs to download");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"No URIs to download");
 		return;
 	}
 
@@ -3830,10 +3830,10 @@ fwupd_client_get_details_bytes_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Get Details only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Get Details only supported on Linux");
 #endif
 }
 
@@ -3899,10 +3899,10 @@ fwupd_client_get_details_async(FwupdClient *self,
 	fwupd_client_get_details_stream_async(self, istr, cancellable, callback, callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Get Details only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Get Details only supported on Linux");
 #endif
 }
 
@@ -4299,10 +4299,10 @@ fwupd_client_update_metadata_bytes_async(FwupdClient *self,
 						  callback_data);
 #else
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
-	g_task_return_new_error(task,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"Update metadata only supported on Linux");
+	g_task_return_new_error_literal(task,
+					FWUPD_ERROR,
+					FWUPD_ERROR_NOT_SUPPORTED,
+					"Update metadata only supported on Linux");
 #endif
 }
 
@@ -6056,10 +6056,10 @@ fwupd_client_upload_report_cb(GObject *source, GAsyncResult *res, gpointer user_
 
 	/* server returned nothing, and probably exploded in a ball of flames */
 	if (g_bytes_get_size(bytes) == 0) {
-		g_task_return_new_error(task,
-					FWUPD_ERROR,
-					FWUPD_ERROR_INVALID_FILE,
-					"failed to upload, zero length data");
+		g_task_return_new_error_literal(task,
+						FWUPD_ERROR,
+						FWUPD_ERROR_INVALID_FILE,
+						"failed to upload, zero length data");
 		return;
 	}
 
