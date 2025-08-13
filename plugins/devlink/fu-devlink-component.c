@@ -178,7 +178,6 @@ fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
 	device_id = g_strdup_printf("component-%s", component_name);
 	fu_device_set_logical_id(FU_DEVICE(self),
 				 component_name); /* use component name as logical ID */
-	fu_device_set_name(FU_DEVICE(self), component_name);
 
 	return FU_DEVICE(g_steal_pointer(&self));
 }

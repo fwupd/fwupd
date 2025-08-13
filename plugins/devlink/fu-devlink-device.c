@@ -404,11 +404,15 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 
 	component = fu_devlink_device_get_component(helper->device, name);
 	if (component == NULL) {
+		g_autofree gchar *component_device_name =
+		    g_strdup_printf("%s/%s", fu_device_get_name(helper->device), name);
+
 		component = fu_devlink_component_new(fu_device_get_context(helper->device), name);
 		fu_devlink_component_build_instance_id(component,
 						       helper->device,
 						       helper->driver_name,
 						       helper->version_table);
+		fu_device_set_name(component, component_device_name);
 		fu_device_set_version(component, version);
 		fu_device_add_child(helper->device, component);
 		g_debug("added component %s (version: %s)", name, version);
