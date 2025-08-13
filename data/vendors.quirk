@@ -16,6 +16,8 @@ Vendor = Synaptics
 Vendor = USI
 [USB\VID_1C7A]
 Vendor = Egistec
+[USB\VID_222A]
+Vendor = Ilitek
 [USB\VID_273F]
 Vendor = Hughski
 [USB\VID_27C6]
