@@ -1,0 +1,16 @@
+/*
+ * Copyright 2025 Joe hong <JoeHung@ilitek.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#pragma once
+
+#include <fwupdplugin.h>
+
+#define FU_TYPE_ILITEK_ITS_DEVICE (fu_ilitek_its_device_get_type())
+G_DECLARE_FINAL_TYPE(FuIlitekItsDevice,
+		     fu_ilitek_its_device,
+		     FU,
+		     ILITEK_ITS_DEVICE,
+		     FuHidrawDevice)

@@ -1,0 +1,3 @@
+[HIDRAW\VEN_222A]
+Plugin = ilitek_its
+GType = FuIlitekItsDevice
