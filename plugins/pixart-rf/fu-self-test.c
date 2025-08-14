@@ -36,7 +36,7 @@ fu_pxi_firmware_xml_func(void)
 	g_assert_nonnull(fw);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+	g_assert_cmpstr(csum1, ==, "61efee24b3fad7358ce64144300e9e004b825759");
 
 	/* ensure we can parse */
 	ret = fu_firmware_parse_bytes(firmware3, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, &error);
