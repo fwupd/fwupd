@@ -975,6 +975,30 @@ fu_context_hwids_dmi_func(void)
 }
 
 static void
+fu_context_hwids_unset_func(void)
+{
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *dump = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* ensure that we processed the ~hwid-test-flag */
+	g_assert_false(fu_context_has_hwid_flag(ctx, "hwid-test-flag"));
+}
+
+static void
 fu_context_hwids_fdt_func(void)
 {
 	gboolean ret;
@@ -7107,6 +7131,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
 	g_test_add_func("/fwupd/context{efivars}", fu_context_efivars_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
+	g_test_add_func("/fwupd/context{hwids-unset}", fu_context_hwids_unset_func);
 	g_test_add_func("/fwupd/context{hwids-fdt}", fu_context_hwids_fdt_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context{state}", fu_context_state_func);
