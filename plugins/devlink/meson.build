@@ -56,6 +56,7 @@ if get_option('tests')
     ],
     install: true,
     install_rpath: libdir_pkg,
+    install_tag: 'tests',
     install_dir: installed_test_bindir,
   )
   test('devlink-self-test', e, env: env)
