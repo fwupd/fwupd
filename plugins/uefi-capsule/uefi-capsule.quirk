@@ -20,7 +20,7 @@ Flags = ~md-set-vendor
 
 # Dell Inc.
 [85d38fda-fc0e-5c6f-808f-076984ae7978]
-Flags = modify-bootorder,cod-dell-recovery
+Flags = modify-bootorder
 
 # ASUSTeK COMPUTER INC.
 [65605ed1-09e2-57aa-bd0f-a26c1d35433f]
