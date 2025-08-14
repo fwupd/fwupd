@@ -1342,7 +1342,7 @@ fu_config_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1408,7 +1408,7 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 
 	/* load context */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

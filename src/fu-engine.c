@@ -8351,7 +8351,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		return FALSE;
 
 	/* read config file */
-	if (!fu_config_load(FU_CONFIG(self->config), error)) {
+	if (!fu_config_load(FU_CONFIG(self->config),
+			    FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS | FU_CONFIG_LOAD_FLAG_WATCH_FILES |
+				FU_CONFIG_LOAD_FLAG_MIGRATE_FILES,
+			    error)) {
 		g_prefix_error_literal(error, "failed to load config: ");
 		return FALSE;
 	}
@@ -8462,7 +8465,9 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx,
 					    fu_progress_get_child(progress),
-					    FU_CONTEXT_HWID_FLAG_LOAD_ALL,
+					    FU_CONTEXT_HWID_FLAG_LOAD_ALL |
+						FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS |
+						FU_CONTEXT_HWID_FLAG_WATCH_FILES,
 					    error))
 			return FALSE;
 	}

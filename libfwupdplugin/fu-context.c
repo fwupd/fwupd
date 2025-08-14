@@ -1123,6 +1123,7 @@ fu_context_load_hwinfo(FuContext *self,
 		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
@@ -1150,7 +1151,11 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
 
 	/* required always */
-	if (!fu_config_load(priv->config, error))
+	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_WATCH_FILES;
+	if (flags & FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
+	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
 
 	/* run all the HWID setup funcs */
