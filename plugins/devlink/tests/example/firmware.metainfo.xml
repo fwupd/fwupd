@@ -13,7 +13,7 @@
   <project_license>GPL-2.0+</project_license>
   <developer_name>Test Developer</developer_name>
   <releases>
-    <release urgency="high" version="10.20.40" date="2025-07-01">
+    <release urgency="high" version="10.20.30" date="2025-07-01">
       <description>
         <p>Test firmware release for netdevsim device</p>
       </description>
