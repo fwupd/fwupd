@@ -468,7 +468,8 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 			/* skip actual socket operations if emulated */
 			/* create dummy pipe for emulation */
 			if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
-				g_prefix_error(error, "failed to create pipe for emulation: ");
+				g_prefix_error_literal(error,
+						       "failed to create pipe for emulation: ");
 				return NULL;
 			}
 			nlg->is_emulated = TRUE;
@@ -522,7 +523,7 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 
 	/* resolve devlink family ID dynamically */
 	if (!fu_devlink_netlink_genl_family_get(nlg, DEVLINK_GENL_NAME, error)) {
-		g_prefix_error(error, "failed to resolve devlink family ID: ");
+		g_prefix_error_literal(error, "failed to resolve devlink family ID: ");
 		return NULL;
 	}
 

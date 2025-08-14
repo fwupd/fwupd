@@ -238,10 +238,10 @@ fu_devlink_device_flash(FuDevlinkDevice *self,
 					 fu_devlink_device_flash_send_thread,
 					 &flash_send_ctx);
 	if (flash_send_thread == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to create flash send thread");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to create flash send thread");
 		g_source_remove(watch_id);
 		return FALSE;
 	}
@@ -505,7 +505,7 @@ fu_devlink_device_get_info(FuDevice *device, GError **error)
 					      fu_devlink_device_info_cb,
 					      device,
 					      error)) {
-		g_prefix_error(error, "failed to get device info: ");
+		g_prefix_error_literal(error, "failed to get device info: ");
 		return FALSE;
 	}
 
@@ -528,10 +528,10 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 
 	/* check if device has been properly initialized */
 	if (self->bus_name == NULL || self->dev_name == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "devlink device not properly initialized");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "devlink device not properly initialized");
 		return FALSE;
 	}
 
@@ -560,7 +560,7 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 
 	/* send command and wait for response */
 	if (!fu_devlink_netlink_msg_send(self->nlg, nlh, error)) {
-		g_prefix_error(error, "failed to send devlink reload command: ");
+		g_prefix_error_literal(error, "failed to send devlink reload command: ");
 		return FALSE;
 	}
 
@@ -726,10 +726,10 @@ fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **
 	dev_name = json_object_get_string_member_with_default(json_object, "DevName", NULL);
 
 	if (bus_name == NULL || dev_name == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "BusName and DevName required for devlink device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "BusName and DevName required for devlink device");
 		return FALSE;
 	}
 

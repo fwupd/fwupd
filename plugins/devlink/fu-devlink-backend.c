@@ -55,7 +55,7 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 
 	/* ensure PCI device is probed to get vendor/device info */
 	if (!fu_device_probe(pci_device, error)) {
-		g_prefix_error(error, "failed to probe PCI device: ");
+		g_prefix_error_literal(error, "failed to probe PCI device: ");
 		return NULL;
 	}
 

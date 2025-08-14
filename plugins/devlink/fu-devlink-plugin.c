@@ -211,7 +211,7 @@ fu_devlink_plugin_enumerate_devices(FuDevlinkPlugin *self, GError **error)
 					      fu_devlink_plugin_enumerate_cb,
 					      self,
 					      error)) {
-		g_prefix_error(error, "failed to enumerate devlink devices: ");
+		g_prefix_error_literal(error, "failed to enumerate devlink devices: ");
 		return FALSE;
 	}
 
@@ -225,7 +225,7 @@ fu_devlink_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error
 
 	/* setup devlink netlink monitoring */
 	if (!fu_devlink_plugin_setup_netlink(self, error)) {
-		g_prefix_error(error, "failed to setup devlink netlink: ");
+		g_prefix_error_literal(error, "failed to setup devlink netlink: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -238,7 +238,7 @@ fu_devlink_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **erro
 
 	/* enumerate existing devlink devices */
 	if (!fu_devlink_plugin_enumerate_devices(self, error)) {
-		g_prefix_error(error, "failed to enumerate devlink devices: ");
+		g_prefix_error_literal(error, "failed to enumerate devlink devices: ");
 		return FALSE;
 	}
 
