@@ -1098,8 +1098,14 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	if (value != NULL) {
 		g_auto(GStrv) values = g_strsplit(value, ",", -1);
-		for (guint j = 0; values[j] != NULL; j++)
-			g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+		for (guint i = 0; values[i] != NULL; i++) {
+			const gchar *value_tmp = values[i];
+			if (g_str_has_prefix(value, "~")) {
+				g_hash_table_remove(priv->hwid_flags, value_tmp + 1);
+				continue;
+			}
+			g_hash_table_add(priv->hwid_flags, g_strdup(value_tmp));
+		}
 	}
 }
 

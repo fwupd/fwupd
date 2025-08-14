@@ -31,3 +31,9 @@ Plugin = one
 
 [MEI]
 Plugin = two
+
+# a HwID
+[c4e7b7b9-2520-5397-8040-8ac279f540d8]
+Flags = hwid-test-flag
+[c4e7b7b9-2520-5397-8040-8ac279f540d8]
+Flags = ~hwid-test-flag
