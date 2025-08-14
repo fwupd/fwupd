@@ -850,17 +850,26 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 		}
 	}
 
+	/* write */
+	if (klass->write != NULL) {
+		blob = fu_firmware_write(self, error);
+		if (blob == NULL)
+			return NULL;
+		return g_compute_checksum_for_bytes(csum_kind, blob);
+	}
+
 	/* internal data */
 	if (priv->bytes != NULL)
 		return g_compute_checksum_for_bytes(csum_kind, priv->bytes);
 	if (priv->stream != NULL)
 		return fu_input_stream_compute_checksum(priv->stream, csum_kind, error);
 
-	/* write */
-	blob = fu_firmware_write(self, error);
-	if (blob == NULL)
-		return NULL;
-	return g_compute_checksum_for_bytes(csum_kind, blob);
+	/* nothing to do */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no input data, as no FuFirmware->write, stream or bytes");
+	return NULL;
 }
 
 /**
