@@ -239,19 +239,9 @@ fu_config_migrate_keyfile(FuConfig *self)
 }
 
 static gboolean
-fu_config_reload(FuConfig *self, GError **error)
+fu_config_ensure_permissions(FuConfig *self, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GPtrArray) legacy_cfg_files = g_ptr_array_new_with_free_func(g_free);
-	const gchar *fn_merge[] = {"daemon.conf",
-				   "msr.conf",
-				   "redfish.conf",
-				   "thunderbolt.conf",
-				   "uefi_capsule.conf",
-				   NULL};
-
-#ifndef _WIN32
-	/* ensure mutable config files are set to the correct permissions */
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
 		guint32 st_mode;
@@ -292,43 +282,23 @@ fu_config_reload(FuConfig *self, GError **error)
 			}
 		}
 	}
-#endif
 
-	/* we have to copy each group/key from a temporary GKeyFile as g_key_file_load_from_file()
-	 * clears all keys before loading each file, and we want to allow the mutable version to be
-	 * incomplete and just *override* a specific option */
-	if (!g_key_file_load_from_data(priv->keyfile, "", -1, G_KEY_FILE_NONE, error))
-		return FALSE;
-	for (guint i = 0; i < priv->items->len; i++) {
-		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		g_autoptr(GError) error_load = NULL;
-		g_autoptr(GBytes) blob_item = NULL;
+	/* success */
+	return TRUE;
+}
 
-		g_debug("trying to load config values from %s", item->filename);
-		blob_item = fu_bytes_get_contents(item->filename, &error_load);
-		if (blob_item == NULL) {
-			if (g_error_matches(error_load,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_PERMISSION_DENIED)) {
-				g_debug("ignoring config file %s: ", error_load->message);
-				continue;
-			} else if (g_error_matches(error_load,
-						   FWUPD_ERROR,
-						   FWUPD_ERROR_INVALID_FILE)) {
-				g_debug("%s", error_load->message);
-				continue;
-			}
-			g_propagate_error(error, g_steal_pointer(&error_load));
-			g_prefix_error(error, "failed to read %s: ", item->filename);
-			return FALSE;
-		}
-		if (!fu_config_load_bytes_replace(self, blob_item, error)) {
-			g_prefix_error(error, "failed to load %s: ", item->filename);
-			return FALSE;
-		}
-	}
+static gboolean
+fu_config_migrate_keyfiles(FuConfig *self, GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) legacy_cfg_files = g_ptr_array_new_with_free_func(g_free);
+	const gchar *fn_merge[] = {"daemon.conf",
+				   "msr.conf",
+				   "redfish.conf",
+				   "thunderbolt.conf",
+				   "uefi_capsule.conf",
+				   NULL};
 
-	/* are any of the legacy files found in this location? */
 	for (guint i = 0; i < priv->items->len; i++) {
 		FuConfigItem *item = g_ptr_array_index(priv->items, i);
 		g_autofree gchar *dirname = g_path_get_dirname(item->filename);
@@ -396,6 +366,66 @@ fu_config_reload(FuConfig *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_config_reload(FuConfig *self, FuConfigLoadFlags flags, GError **error)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+
+#ifdef _WIN32
+	/* not relevant */
+	flags &= ~FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
+#endif
+
+	/* ensure mutable config files are set to the correct permissions */
+	if (flags & FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS) {
+		if (!fu_config_ensure_permissions(self, error))
+			return FALSE;
+	}
+
+	/* we have to copy each group/key from a temporary GKeyFile as g_key_file_load_from_file()
+	 * clears all keys before loading each file, and we want to allow the mutable version to be
+	 * incomplete and just *override* a specific option */
+	if (!g_key_file_load_from_data(priv->keyfile, "", -1, G_KEY_FILE_NONE, error))
+		return FALSE;
+	for (guint i = 0; i < priv->items->len; i++) {
+		FuConfigItem *item = g_ptr_array_index(priv->items, i);
+		g_autoptr(GError) error_load = NULL;
+		g_autoptr(GBytes) blob_item = NULL;
+
+		g_debug("trying to load config values from %s", item->filename);
+		blob_item = fu_bytes_get_contents(item->filename, &error_load);
+		if (blob_item == NULL) {
+			if (g_error_matches(error_load,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_PERMISSION_DENIED)) {
+				g_debug("ignoring config file %s: ", error_load->message);
+				continue;
+			} else if (g_error_matches(error_load,
+						   FWUPD_ERROR,
+						   FWUPD_ERROR_INVALID_FILE)) {
+				g_debug("%s", error_load->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_load));
+			g_prefix_error(error, "failed to read %s: ", item->filename);
+			return FALSE;
+		}
+		if (!fu_config_load_bytes_replace(self, blob_item, error)) {
+			g_prefix_error(error, "failed to load %s: ", item->filename);
+			return FALSE;
+		}
+	}
+
+	/* are any of the legacy files found in this location? */
+	if (flags & FU_CONFIG_LOAD_FLAG_MIGRATE_FILES) {
+		if (!fu_config_migrate_keyfiles(self, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_config_monitor_changed_cb(GFileMonitor *monitor,
 			     GFile *file,
@@ -415,7 +445,7 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
 
 	/* reload everything */
 	g_info("%s changed, reloading all configs", fn);
-	if (!fu_config_reload(self, &error))
+	if (!fu_config_reload(self, FU_CONFIG_LOAD_FLAG_NONE, &error))
 		g_warning("failed to rescan daemon config: %s", error->message);
 	fu_config_emit_changed(self);
 }
@@ -465,7 +495,7 @@ fu_config_save(FuConfig *self, GError **error)
 					      FU_CONFIG_FILE_MODE_SECURE, /* only for root */
 					      error))
 			return FALSE;
-		return fu_config_reload(self, error);
+		return fu_config_reload(self, FU_CONFIG_LOAD_FLAG_NONE, error);
 	}
 
 	/* failed */
@@ -714,6 +744,7 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable
 /**
  * fu_config_load:
  * @self: a #FuConfig
+ * @flags: some #FuConfigLoadFlags, typically %FU_CONFIG_LOAD_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Loads the configuration files from all possible locations.
@@ -723,7 +754,7 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable
  * Since: 1.9.1
  **/
 gboolean
-fu_config_load(FuConfig *self, GError **error)
+fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
 	g_autofree gchar *configdir_mut = fu_path_from_kind(FU_PATH_KIND_LOCALCONFDIR_PKG);
@@ -737,20 +768,22 @@ fu_config_load(FuConfig *self, GError **error)
 		return FALSE;
 	if (!fu_config_add_location(self, configdir_mut, TRUE, error))
 		return FALSE;
-	if (!fu_config_reload(self, error))
+	if (!fu_config_reload(self, flags, error))
 		return FALSE;
 
 	/* set up a notify watches */
-	for (guint i = 0; i < priv->items->len; i++) {
-		FuConfigItem *item = g_ptr_array_index(priv->items, i);
-		g_autoptr(GFile) file = g_file_new_for_path(item->filename);
-		item->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
-		if (item->monitor == NULL)
-			return FALSE;
-		g_signal_connect(G_FILE_MONITOR(item->monitor),
-				 "changed",
-				 G_CALLBACK(fu_config_monitor_changed_cb),
-				 self);
+	if (flags & FU_CONFIG_LOAD_FLAG_WATCH_FILES) {
+		for (guint i = 0; i < priv->items->len; i++) {
+			FuConfigItem *item = g_ptr_array_index(priv->items, i);
+			g_autoptr(GFile) file = g_file_new_for_path(item->filename);
+			item->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
+			if (item->monitor == NULL)
+				return FALSE;
+			g_signal_connect(G_FILE_MONITOR(item->monitor),
+					 "changed",
+					 G_CALLBACK(fu_config_monitor_changed_cb),
+					 self);
+		}
 	}
 
 	/* success */
