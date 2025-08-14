@@ -7099,7 +7099,7 @@ fu_config_migrate_1_9_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -7180,7 +7180,7 @@ fu_config_migrate_1_7_func(void)
 
 	/* we don't want to run all the plugins just to get the _init() defaults */
 	fu_config_set_plugin_defaults(config);
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_MIGRATE_FILES, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

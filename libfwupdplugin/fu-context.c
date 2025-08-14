@@ -1098,8 +1098,14 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	if (value != NULL) {
 		g_auto(GStrv) values = g_strsplit(value, ",", -1);
-		for (guint j = 0; values[j] != NULL; j++)
-			g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+		for (guint i = 0; values[i] != NULL; i++) {
+			const gchar *value_tmp = values[i];
+			if (g_str_has_prefix(value, "~")) {
+				g_hash_table_remove(priv->hwid_flags, value_tmp + 1);
+				continue;
+			}
+			g_hash_table_add(priv->hwid_flags, g_strdup(value_tmp));
+		}
 	}
 }
 
@@ -1123,6 +1129,7 @@ fu_context_load_hwinfo(FuContext *self,
 		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
@@ -1150,7 +1157,11 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
 
 	/* required always */
-	if (!fu_config_load(priv->config, error))
+	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_WATCH_FILES;
+	if (flags & FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
+	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
 
 	/* run all the HWID setup funcs */
