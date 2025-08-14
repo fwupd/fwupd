@@ -1,4 +1,6 @@
 <firmware gtype="FuUf2Firmware">
+  <id>test</id>
+  <version>1.2.3</version>
   <addr>0x0100</addr>
   <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
 </firmware>
