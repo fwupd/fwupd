@@ -58,7 +58,7 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 					    tx_data->timeout,
 					    NULL, /* cancellable */
 					    error)) {
-		g_prefix_error(error, "failed to write to device: ");
+		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -89,7 +89,7 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 					      rx_data->timeout,
 					      NULL, /* cancellable */
 					      error)) {
-		g_prefix_error(error, "failed to read from device: ");
+		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
 	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[3] == match_buf[3] &&
@@ -103,7 +103,7 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 						      rx_data->timeout,
 						      NULL, /* cancellable */
 						      error)) {
-			g_prefix_error(error, "failed to read from device: ");
+			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
 	}
@@ -116,7 +116,7 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 			   0,
 			   sizeof(rx_data->rxbuf),
 			   error)) {
-		g_prefix_error(error, "error reading from device: ");
+		g_prefix_error_literal(error, "error reading from device: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -234,7 +234,10 @@ fu_jabra_gnp_child_device_read_battery_level(FuJabraGnpChildDevice *self, GError
 	if (!fu_memread_uint8_safe(rx_data.rxbuf, FU_JABRA_GNP_BUF_SIZE, 8, &battery_level, error))
 		return FALSE;
 	if (battery_level == 0x00) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "battery level was 0");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "battery level was 0");
 		return FALSE;
 	}
 	fu_device_set_battery_level(FU_DEVICE(self), battery_level);
