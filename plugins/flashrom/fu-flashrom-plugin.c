@@ -291,6 +291,38 @@ fu_flashrom_plugin_find_guid(FuPlugin *plugin, GError **error)
 	return NULL;
 }
 
+static int
+fu_init_probe(FuFlashromPlugin *self, const gchar *prog, const gchar *args)
+{
+	if (flashrom_programmer_init(&self->flashprog, prog, args))
+		return FALSE;
+
+	return flashrom_flash_probe(&self->flashctx, self->flashprog, NULL);
+}
+
+static void
+report_probe_error(gint rc, GError **error)
+{
+        if (rc == 3) {
+                g_set_error_literal(error,
+                                    FWUPD_ERROR,
+                                    FWUPD_ERROR_NOT_SUPPORTED,
+                                    "flash probe failed: multiple chips were found");
+        }
+        if (rc == 2) {
+                g_set_error_literal(error,
+                                    FWUPD_ERROR,
+                                    FWUPD_ERROR_NOT_SUPPORTED,
+                                    "flash probe failed: no chip was found");
+        }
+        if (rc != 0) {
+                g_set_error_literal(error,
+                                    FWUPD_ERROR,
+                                    FWUPD_ERROR_NOT_SUPPORTED,
+                                    "flash probe failed: unknown error");
+        }
+}
+
 static gboolean
 fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
@@ -330,19 +362,37 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 
 	/* allow overriding from quirk file */
 	flashrom_prog = fu_context_lookup_quirk_by_id(ctx, guid, "FlashromProgrammer");
-	if (flashrom_prog == NULL)
-		flashrom_prog = "internal";
 	flashrom_args = fu_context_lookup_quirk_by_id(ctx, guid, "FlashromArgs");
-	g_debug("using programmer %s: %s", flashrom_prog, flashrom_args);
-	if (flashrom_programmer_init(&self->flashprog, flashrom_prog, flashrom_args)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "programmer initialization failed");
-		return FALSE;
+
+	if (flashrom_prog) {
+		g_debug("using quirk programmer %s: %s",
+			flashrom_prog, flashrom_args ? flashrom_args : "(none)");
+		rc = try_init_probe(self, flashrom_prog, flashrom_args);
+		if (rc < 0) {
+			report_probe_error(rc, error);
+			return FALSE;
+		}
+	} else {
+		flashrom_prog = "linux_mtd";
+		flashrom_args = "dev=0";
+		g_debug("trying MTD programmer %s: %s", flashrom_prog, flashrom_args);
+		rc = try_init_probe(self, flashrom_prog, flashrom_args);
+
+		if (rc != 0) {
+			report_probe_error(rc, NULL);
+			/* fall back to internal programmer */
+			g_debug("MTD failed (%d), falling back to internal", rc);
+			flashrom_prog = "internal";
+			flashrom_args = NULL;
+			g_debug("using fallback programmer %s", flashrom_prog);
+			rc = try_init_probe(self, flashrom_prog, flashrom_args);
+			if (rc < 0) {
+				report_probe_error(rc, error);
+				return FALSE;
+			}
+		}
 	}
 
-	rc = flashrom_flash_probe(&self->flashctx, self->flashprog, NULL);
 	if (rc == 3) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -364,6 +414,9 @@ fu_flashrom_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **erro
 				    "flash probe failed: unknown error");
 		return FALSE;
 	}
+
+	g_debug("successfully using programmer %s: %s",
+		flashrom_prog, flashrom_args ? flashrom_args : "(none)");
 	fu_progress_step_done(progress);
 
 	return TRUE;
