@@ -1,4 +1,4 @@
-// Copyright 2025 Joe hong <JoeHung@ilitek.com>
+// Copyright 2025 Joe Hong <JoeHung@ilitek.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
@@ -55,17 +55,17 @@ struct FuStructIlitekItsBlockInfo {
 struct FuStructIlitekItsMmInfo {
     mapping_ver: u24le,
     protocol_ver: u24le,
-    ic_name: [u8; 6],
+    ic_name: [char; 6],
 
     tuning_ver: u32le,
-	fw_ver: u32le,
+    fw_ver: u32le,
     _reserve_1: [u8; 24],
-	fwid: u16le,
+    fwid: u16le,
     _reserve_2: [u8; 34],
-	block_num: u8,
+    block_num: u8,
     _reserve_3: [u8; 3],
-	blocks: [FuStructIlitekItsBlockInfo; 10],
-	_reserve_4: [u8; 9],
-	end_addr: u24le,
-	_reserve_5: [u8; 2],
+    blocks: [FuStructIlitekItsBlockInfo; 10],
+    _reserve_4: [u8; 9],
+    end_addr: u24le,
+    _reserve_5: [u8; 2],
 }

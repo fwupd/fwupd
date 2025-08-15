@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Joe hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -18,13 +18,13 @@
 #define FU_ILITEK_ITS_BL_MODE 0x55 /* device in Bootloader mode */
 
 struct _FuIlitekItsDevice {
-	FuHidDevice parent_instance;
+	FuHidrawDevice parent_instance;
 	gchar *ic_name;
-
 	guint32 edid;
 
 	/* start/end addr of first block */
-	guint32 start_addr, end_addr;
+	guint32 start_addr;
+	guint32 end_addr;
 };
 
 G_DEFINE_TYPE(FuIlitekItsDevice, fu_ilitek_its_device, FU_TYPE_HIDRAW_DEVICE)
@@ -40,25 +40,17 @@ fu_ilitek_its_device_read_input_cb(FuDevice *device, gpointer data, GError **err
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
 	FuIlitekItsHidCmdHelper *helper = (FuIlitekItsHidCmdHelper *)data;
 	guint8 rbuf[64] = {0};
-	gboolean ret;
-	g_autoptr(GError) error_local = NULL;
 
-	ret = fu_udev_device_pread(FU_UDEV_DEVICE(self),
-				   0,
-				   rbuf,
-				   sizeof(rbuf),
-				   &error_local);
-
-	if (!ret || rbuf[0] != 0x03 || rbuf[1] != 0xA3 ||
-	    rbuf[2] != helper->cmd) {
-		g_propagate_prefixed_error(error,
-					   g_steal_pointer(&error_local),
-					   "failed to read report: ");
+	if (!fu_udev_device_pread(FU_UDEV_DEVICE(self), 0, rbuf, sizeof(rbuf), error)) {
+		g_prefix_error_literal(error, "failed to read report: ");
 		return FALSE;
 	}
 
 	fu_dump_raw(G_LOG_DOMAIN, "rbuf", rbuf, sizeof(rbuf));
-
+	if (rbuf[0] != 0x03 || rbuf[1] != 0xA3 || rbuf[2] != helper->cmd) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "buffer invalid: ");
+		return FALSE;
+	}
 	g_byte_array_append(helper->rbuf, rbuf, sizeof(rbuf));
 
 	/* success */
@@ -71,23 +63,16 @@ fu_ilitek_its_device_read_ack_cb(FuDevice *device, gpointer data, GError **error
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
 	FuIlitekItsHidCmdHelper *helper = (FuIlitekItsHidCmdHelper *)data;
 	guint8 rbuf[64] = {0};
-	gboolean ret;
-	g_autoptr(GError) error_local = NULL;
 
-	ret = fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self),
-				   rbuf,
-				   sizeof(rbuf), 0,
-				   &error_local);
-
-	if (!ret || rbuf[0] != 0x03 || rbuf[1] != 0xA3 ||
-	    rbuf[2] != helper->cmd || rbuf[4] != 0xac) {
-		g_propagate_prefixed_error(error,
-					   g_steal_pointer(&error_local),
-					   "failed to read report: ");
+	if (!fu_hidraw_device_get_report(FU_HIDRAW_DEVICE(self), rbuf, sizeof(rbuf), 0, error)) {
+		g_prefix_error_literal(error, "failed to read report: ");
 		return FALSE;
 	}
-
 	fu_dump_raw(G_LOG_DOMAIN, "ack", rbuf, sizeof(rbuf));
+	if (rbuf[0] != 0x03 || rbuf[1] != 0xA3 || rbuf[2] != helper->cmd || rbuf[4] != 0xac) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "buffer invalid: ");
+		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -104,24 +89,22 @@ fu_ilitek_its_device_send_cmd(FuIlitekItsDevice *self,
 	};
 
 	if (wbuf != NULL) {
-		if (wbuf->data[0] == 0x03) {
+		if (wbuf->data[0] == 0x03) { /* FIXME: magic value needs #define */
 			fu_byte_array_set_size(wbuf, 64, 0x0);
 			helper.cmd = wbuf->data[4];
 		} else {
 			fu_byte_array_set_size(wbuf, 1031, 0x0);
 			helper.cmd = wbuf->data[7];
 		}
-
 		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
 						  wbuf->data,
 						  wbuf->len,
 						  FU_IOCTL_FLAG_RETRY,
 						  error)) {
-			g_prefix_error(error, "failed to send hid cmd: ");
+			g_prefix_error_literal(error, "failed to send hid cmd: ");
 			return FALSE;
 		}
 	}
-
 	if (rbuf != NULL) {
 		fu_device_sleep(FU_DEVICE(self), 100);
 		if (!fu_device_retry_full(FU_DEVICE(self),
@@ -130,11 +113,12 @@ fu_ilitek_its_device_send_cmd(FuIlitekItsDevice *self,
 					  100,
 					  &helper,
 					  error)) {
-			g_prefix_error(error, "failed to recv hid packet: ");
+			g_prefix_error_literal(error, "failed to recv hid packet: ");
 			return FALSE;
 		}
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -147,7 +131,7 @@ fu_ilitek_its_device_send_cmd_then_wake_ack(FuIlitekItsDevice *self,
 	    .rbuf = NULL,
 	};
 
-	if (wbuf->data[0] == 0x03) {
+	if (wbuf->data[0] == 0x03) { /* FIXME: magic value needs #define */
 		helper.cmd = wbuf->data[4];
 	} else {
 		helper.cmd = wbuf->data[6];
@@ -162,7 +146,7 @@ fu_ilitek_its_device_send_cmd_then_wake_ack(FuIlitekItsDevice *self,
 					100,
 					&helper,
 					error)) {
-		g_prefix_error(error, "failed to recv ack: ");
+		g_prefix_error_literal(error, "failed to recv ack: ");
 		return FALSE;
 	}
 
@@ -225,8 +209,8 @@ fu_ilitek_its_device_flash_enable(FuIlitekItsDevice *self,
 	fu_struct_ilitek_its_hid_cmd_set_cmd(
 		wbuf,
 		FU_ILITEK_ITS_CMD_FLASH_ENABLE);
-	fu_byte_array_append_uint8(wbuf, 0x5A);
-	fu_byte_array_append_uint8(wbuf, 0xA5);
+	fu_byte_array_append_uint8(wbuf, 0x5A); /* FIXME: magic value needs #define */
+	fu_byte_array_append_uint8(wbuf, 0xA5); /* FIXME: magic value needs #define */
 
 	if (!in_ap) {
 		fu_byte_array_append_uint24(wbuf, start, G_LITTLE_ENDIAN);
@@ -238,8 +222,8 @@ fu_ilitek_its_device_flash_enable(FuIlitekItsDevice *self,
 
 static gboolean
 fu_ilitek_its_device_set_ctrl_mode(FuIlitekItsDevice *self,
-				 guint8 mode,
-				 GError **error)
+				   FuIlitekItsCtrlMode mode,
+				   GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 
@@ -253,16 +237,15 @@ fu_ilitek_its_device_set_ctrl_mode(FuIlitekItsDevice *self,
 	if (!fu_ilitek_its_device_send_cmd(self, wbuf, NULL, error))
 		return FALSE;
 
+	/* success */
 	fu_device_sleep(FU_DEVICE(self), 100);
-
 	return TRUE;
 }
 
 static gboolean
-fu_ilitek_its_device_get_fw_version(FuIlitekItsDevice *self,
-				 guint64 *version,
-				 GError **error)
+fu_ilitek_its_device_ensure_fw_version(FuIlitekItsDevice *self, GError **error)
 {
+	guint64 version;
 	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
@@ -275,14 +258,9 @@ fu_ilitek_its_device_get_fw_version(FuIlitekItsDevice *self,
 	if (!fu_ilitek_its_device_send_cmd(self, wbuf, rbuf, error))
 		return FALSE;
 
-	if (!fu_memread_uint64_safe(rbuf->data,
-				    rbuf->len,
-				    4,
-				    version,
-				    G_BIG_ENDIAN,
-				    error))
+	if (!fu_memread_uint64_safe(rbuf->data, rbuf->len, 4, &version, G_BIG_ENDIAN, error))
 		return FALSE;
-
+	fu_device_set_version_raw(FU_DEVICE(self), version);
 	return TRUE;
 }
 
@@ -311,13 +289,10 @@ fu_ilitek_its_device_get_ic_mode(FuIlitekItsDevice *self,
 }
 
 static gboolean
-fu_ilitek_its_device_get_ic_name(FuIlitekItsDevice *self,
-			      gchar **ic_name,
-			      GError **error)
+fu_ilitek_its_device_ensure_ic_name(FuIlitekItsDevice *self, GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
-	g_autoptr(GString) ic_name_str = NULL;
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(wbuf, 1);
 	fu_struct_ilitek_its_hid_cmd_set_read_len(wbuf, 32);
@@ -328,10 +303,11 @@ fu_ilitek_its_device_get_ic_name(FuIlitekItsDevice *self,
 	if (!fu_ilitek_its_device_send_cmd(self, wbuf, rbuf, error))
 		return FALSE;
 
-	ic_name_str = fu_strdup((const gchar *)rbuf->data, rbuf->len, 4);
-
-	*ic_name = g_strdup_printf("%s", (gchar *)ic_name_str->str);
-
+	g_free(self->ic_name);
+	self->ic_name = fu_memstrsafe(rbuf->data, rbuf->len, 0x0, 4, error);
+	if (self->ic_name == NULL)
+		return FALSE;
+	fu_device_set_name(FU_DEVICE(self), self->ic_name);
 	return TRUE;
 }
 
@@ -342,26 +318,23 @@ fu_ilitek_its_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 	guint8 ic_mode;
 
-	g_message("[%s] start", __func__);
-
 	if (!fu_ilitek_its_device_get_ic_mode(self, &ic_mode, error))
 		return FALSE;
-
 	if (ic_mode == FU_ILITEK_ITS_BL_MODE)
 		return TRUE;
 
 	if (!fu_ilitek_its_device_flash_enable(self, TRUE, 0, 0, error))
 		return FALSE;
-	
+
 	fu_struct_ilitek_its_hid_cmd_set_write_len(wbuf, 1);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(
 		wbuf,
 		FU_ILITEK_ITS_CMD_SET_BL_MODE);
 	if (!fu_ilitek_its_device_send_cmd(self, wbuf, NULL, error))
 		return FALSE;
-	
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -369,20 +342,17 @@ static gboolean
 fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
-	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 	guint8 ic_mode;
-
-	g_message("[%s] start", __func__);
+	g_autoptr(FuStructIlitekItsHidCmd) wbuf = fu_struct_ilitek_its_hid_cmd_new();
 
 	if (!fu_ilitek_its_device_get_ic_mode(self, &ic_mode, error))
 		return FALSE;
-
 	if (ic_mode == FU_ILITEK_ITS_AP_MODE)
 		return TRUE;
 
 	if (!fu_ilitek_its_device_flash_enable(self, FALSE, self->start_addr, self->end_addr, error))
 		return FALSE;
-	
+
 	fu_struct_ilitek_its_hid_cmd_set_write_len(wbuf, 1);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(
 		wbuf,
@@ -390,8 +360,8 @@ fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	if (!fu_ilitek_its_device_send_cmd(self, wbuf, NULL, error))
 		return FALSE;
 
+	/* success */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-
 	return TRUE;
 }
 
@@ -416,43 +386,39 @@ static gboolean
 fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 {
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
-	guint64 fw_ver;
-
 	GPtrArray *children = fu_device_get_children(device);
 
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
 		FuEdid *edid = fu_drm_device_get_edid(FU_DRM_DEVICE(child));
-		gchar *pnp_id = NULL;
+		const gchar *pnp_id = NULL;
+		gchar *pnp_id_mut = NULL;
 		guint16 manu_id;
-		
+
 		if (edid == NULL)
 			continue;
 
-		pnp_id = (gchar *)fu_edid_get_pnp_id(edid);
-		if (strlen(pnp_id) != 3)
+		pnp_id = fu_edid_get_pnp_id(edid);
+		if (pnp_id == NULL || strlen(pnp_id) != 3)
 			continue;
 
-		pnp_id[0] = pnp_id[0] - 'A' + 1;
-		pnp_id[1] = pnp_id[1] - 'A' + 1;
-		pnp_id[2] = pnp_id[2] - 'A' + 1;
-		manu_id =
-			((((pnp_id[1] & 0x7) << 5) + (pnp_id[2] & 0x1f)) << 8) +
-			((pnp_id[0] << 2) & 0x7c) + ((pnp_id[1] >> 3) & 0x3);
-		g_message("manu_id: 0x%04x, product_code: 0x%04x",
-			manu_id, fu_edid_get_product_code(edid));
+		pnp_id_mut[0] = pnp_id[0] - 'A' + 1;
+		pnp_id_mut[1] = pnp_id[1] - 'A' + 1;
+		pnp_id_mut[2] = pnp_id[2] - 'A' + 1;
+		manu_id = ((((pnp_id_mut[1] & 0x7) << 5) + (pnp_id_mut[2] & 0x1f)) << 8) +
+			  ((pnp_id_mut[0] << 2) & 0x7c) + ((pnp_id_mut[1] >> 3) & 0x3);
+		g_debug("manu_id: 0x%04x, product_code: 0x%04x",
+			manu_id,
+			fu_edid_get_product_code(edid));
 
 		self->edid = (manu_id << 16) + fu_edid_get_product_code(edid);
-
 		break;
 	}
 
-	g_free(self->ic_name);
-	fu_ilitek_its_device_get_ic_name(self, &self->ic_name, error);
-	fu_device_set_name(FU_DEVICE(self), self->ic_name);
-
-	fu_ilitek_its_device_get_fw_version(self, &fw_ver, error);
-	fu_device_set_version_raw(FU_DEVICE(self), fw_ver);
+	if (!fu_ilitek_its_device_ensure_ic_name(self, error))
+		return FALSE;
+	if (!fu_ilitek_its_device_ensure_fw_version(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -468,9 +434,7 @@ fu_ilitek_its_device_prepare_firmware(FuDevice *device,
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_ilitek_its_firmware_new();
 	g_autoptr(FuFirmware) block_img = NULL;
-	gchar *fw_ic_name;
-
-	g_message("[%s] start", __func__);
+	const gchar *fw_ic_name;
 
 	/* check is compatible with hardware */
 	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
@@ -488,11 +452,11 @@ fu_ilitek_its_device_prepare_firmware(FuDevice *device,
 
 	block_img = fu_firmware_get_image_by_idx(firmware, 0, error);
 	if (block_img == NULL)
-		return FALSE;
-
+		return NULL;
 	self->start_addr = fu_firmware_get_addr(block_img);
 	self->end_addr = self->start_addr + fu_firmware_get_size(block_img) - 1;
 
+	/* success */
 	return g_steal_pointer(&firmware);
 }
 
@@ -502,12 +466,13 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 				 FuProgress *progress,
 				 GError **error)
 {
-	guint32 start, end;
-	guint16 crc, fw_crc;
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(FuChunkArray) chunks = NULL;
-
+	guint16 crc;
+	guint16 fw_crc;
+	guint32 start;
+	guint32 end;
 	guint32 idx = fu_firmware_get_idx(block_img);
+	g_autoptr(FuChunkArray) chunks = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	start = fu_firmware_get_addr(block_img);
 	end = start + fu_firmware_get_size(block_img) - 1;
@@ -519,9 +484,13 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 	if (!fu_ilitek_its_device_get_block_crc(self, TRUE, start, end, &crc, error))
 		return FALSE;
 
-	g_message("block[%u]: start/end addr: 0x%x/0x%x, ic/file crc: 0x%x/0x%x, need update: %s",
-		  idx, start, end, crc, fw_crc,
-		  crc == fw_crc ? "no" : "yes");
+	g_debug("block[%u]: start/end addr: 0x%x/0x%x, ic/file crc: 0x%x/0x%x, need update: %s",
+		idx,
+		start,
+		end,
+		crc,
+		fw_crc,
+		crc == fw_crc ? "no" : "yes");
 
 	/* no need to upgrade block if crc matched */
 	if (crc == fw_crc)
@@ -530,23 +499,23 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 	blob = fu_firmware_get_bytes(block_img, error);
 	if (blob == NULL)
 		return FALSE;
-	
 	chunks = fu_chunk_array_new_from_bytes(blob, 0, 0, 1024);
 	if (chunks == NULL)
+		return FALSE;
+
+	if (!fu_ilitek_its_device_flash_enable(self, FALSE, start, end, error))
 		return FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	
-	if (!fu_ilitek_its_device_flash_enable(self, FALSE, start, end, error))
-		return FALSE;
-
 	for (guint32 i = 0; i < fu_chunk_array_length(chunks); i++) {
+		g_autoptr(FuChunk) chunk = NULL;
 		g_autoptr(FuStructIlitekItsLongHidCmd) wbuf = fu_struct_ilitek_its_long_hid_cmd_new();
-		g_autoptr(FuChunk) chunk = fu_chunk_array_index(chunks, i, error);
 		g_autoptr(GBytes) chunk_bytes = NULL;
+		g_autoptr(GBytes) chunk_bytes_padded = NULL;
 
+		chunk = fu_chunk_array_index(chunks, i, error);
 		if (chunk == NULL)
 			return FALSE;
 
@@ -556,8 +525,8 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 			FU_ILITEK_ITS_CMD_WRITE_DATA);
 
 		chunk_bytes = fu_chunk_get_bytes(chunk);
-		chunk_bytes = fu_bytes_pad(chunk_bytes, 1024, 0xff);
-		fu_byte_array_append_bytes(wbuf, chunk_bytes);
+		chunk_bytes_padded = fu_bytes_pad(chunk_bytes, 1024, 0xff);
+		fu_byte_array_append_bytes(wbuf, chunk_bytes_padded);
 
 		if (!fu_ilitek_its_device_send_cmd_then_wake_ack(self, wbuf, error))
 			return FALSE;
@@ -568,9 +537,13 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 	if (!fu_ilitek_its_device_get_block_crc(self, FALSE, 0, 0, &crc, error))
 		return FALSE;
 
-	g_message("block[%u]: start/end addr: 0x%x/0x%x, ic/file crc: 0x%x/0x%x %s",
-		  idx, start, end, crc, fw_crc,
-		  crc == fw_crc ? "matched" : "not matched");
+	g_debug("block[%u]: start/end addr: 0x%x/0x%x, ic/file crc: 0x%x/0x%x %s",
+		idx,
+		start,
+		end,
+		crc,
+		fw_crc,
+		crc == fw_crc ? "matched" : "not matched");
 
 	if (crc != fw_crc) {
 		g_set_error(error,
@@ -593,24 +566,22 @@ fu_ilitek_its_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
-	FuIlitekItsFirmware *ilitek_firmware = FU_ILITEK_ITS_FIRMWARE(firmware);
-	g_autoptr(FuFirmware) block_img = NULL;
 	guint8 block_num;
-
-	g_message("[%s] start", __func__);
 
 	if (!fu_ilitek_its_device_set_ctrl_mode(self, FU_ILITEK_ITS_CTRL_MODE_SUSPEND, error))
 		return FALSE;
 
-	block_num = fu_ilitek_its_firmware_get_block_num(ilitek_firmware);
+	block_num = fu_ilitek_its_firmware_get_block_num(FU_ILITEK_ITS_FIRMWARE(firmware));
 
+	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, block_num);
 	for (guint i = 0; i < block_num; i++) {
+		g_autoptr(FuFirmware) block_img = NULL;
+
 		block_img = fu_firmware_get_image_by_idx(firmware, i, error);
 		if (block_img == NULL)
 			return FALSE;
-
 		if (!fu_ilitek_its_device_write_block(self,
 						      block_img,
 						      fu_progress_get_child(progress),
@@ -659,7 +630,7 @@ fu_ilitek_its_device_init(FuIlitekItsDevice *self)
 
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
-	fu_device_add_icon(FU_DEVICE(self), "input-touchscreen");
+	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_add_protocol(FU_DEVICE(self), "com.ili.its");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 
@@ -669,9 +640,19 @@ fu_ilitek_its_device_init(FuIlitekItsDevice *self)
 }
 
 static void
+fu_ilitek_its_device_finalize(GObject *object)
+{
+	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(object);
+	g_free(self->ic_name);
+	G_OBJECT_CLASS(fu_ilitek_its_device_parent_class)->finalize(object);
+}
+
+static void
 fu_ilitek_its_device_class_init(FuIlitekItsDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_ilitek_its_device_finalize;
 	device_class->probe = fu_ilitek_its_device_probe;
 	device_class->setup = fu_ilitek_its_device_setup;
 	device_class->attach = fu_ilitek_its_device_attach;

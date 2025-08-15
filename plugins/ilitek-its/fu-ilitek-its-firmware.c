@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Joe hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -10,7 +10,7 @@
 #include "fu-ilitek-its-struct.h"
 
 struct _FuIlitekItsFirmware {
-	FuFirmware parent_instance;
+	FuIhexFirmware parent_instance;
 
 	guint32 mm_addr;
 	gchar *fw_ic_name;
@@ -38,7 +38,7 @@ fu_ilitek_its_firmware_validate(FuFirmware *firmware,
 			     gsize offset,
 			     GError **error)
 {
-	g_message("[%s] pass", __func__);
+	g_debug("[%s] pass", __func__);
 
 	return TRUE;
 }
@@ -77,18 +77,13 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	FuIlitekItsFirmware *self = FU_ILITEK_ITS_FIRMWARE(firmware);
 	GPtrArray *records = fu_ihex_firmware_get_records(FU_IHEX_FIRMWARE(firmware));
 	FuIhexFirmwareRecord *rcd = NULL;
-
 	guint32 mm_ver;
-	const guint8 *ic_name = NULL;
-
 	guint32 start_addr;
-	GByteArray *buf = g_byte_array_new();
-
-	g_autoptr(GBytes) hex_blob = NULL;
+	g_autofree gchar *ic_name = NULL;
+	g_autoptr(FuStructIlitekItsMmInfo) st_mm = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) blob = NULL;
-
-	g_autoptr(GByteArray) mm = NULL;
-
+	g_autoptr(GBytes) hex_blob = NULL;
 	const gchar *ap_end_tag =
 	    "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFFILITek AP CRC   ";
 	const gchar *block_end_tag =
@@ -103,7 +98,6 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 				    G_BIG_ENDIAN,
 				    error))
 		return FALSE;
-
 	g_ptr_array_remove_index(records, 0);
 
 	if (!klass->parse(firmware, stream, flags, error))
@@ -115,38 +109,33 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 
 	start_addr = fu_firmware_get_addr(firmware);
 
-	fu_byte_array_append_bytes(buf, fu_bytes_pad(g_bytes_new(NULL, 0), start_addr, 0xff));
+	fu_byte_array_append_bytes(buf, fu_bytes_pad(g_bytes_new(NULL, 0), start_addr, 0xFF));
 	fu_byte_array_append_bytes(buf, hex_blob);
 
-	blob = fu_bytes_pad(g_byte_array_free_to_bytes(buf), 256 * 1024, 0xff);
+	blob = fu_bytes_pad(g_byte_array_free_to_bytes(g_steal_pointer(&buf)),
+			    256 * 1024,
+			    0xFF); /* nocheck:blocked */
 
-	mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob,
-						   self->mm_addr,
-						   error);
-	if (mm == NULL)
+	st_mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob, self->mm_addr, error);
+	if (st_mm == NULL)
 		return FALSE;
-
-	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(mm);
-	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(mm, NULL);
-	g_message("mm ver: 0x%06x", mm_ver);
-	g_message("protocol ver: 0x%06x", fu_struct_ilitek_its_mm_info_get_protocol_ver(mm));
+	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(st_mm);
+	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm);
+	g_debug("mm ver: 0x%06x", mm_ver);
+	g_debug("protocol ver: 0x%06x", fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
 
 	g_free(self->fw_ic_name);
 	switch ((mm_ver >> 16) & 0xff) {
 	case 0x02:
-		self->fw_ic_name = g_strdup_printf("%s", (gchar *)ic_name);
+		self->fw_ic_name = g_strdup(ic_name);
 		break;
-	default:
 	case 0x01:
-		self->fw_ic_name = g_strdup_printf("%02x%02x", ic_name[1], ic_name[0]);
+	default:
+		self->fw_ic_name =
+		    g_strdup_printf("%02x%02x", (guint8)ic_name[1], (guint8)ic_name[0]);
 		break;
 	}
-
-	g_message("ic name: %s", self->fw_ic_name);
-
-	self->block_num = fu_struct_ilitek_its_mm_info_get_block_num(mm);
-
-	g_message("block_num: %u", self->block_num);
+	self->block_num = fu_struct_ilitek_its_mm_info_get_block_num(st_mm);
 	fu_firmware_set_images_max(firmware, self->block_num);
 
 	for (guint i = 0; i < self->block_num; i++) {
@@ -157,17 +146,24 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		guint32 start, end;
 		gsize offset;
 
-		block = fu_struct_ilitek_its_mm_info_get_blocks(mm, i);
+		block = fu_struct_ilitek_its_mm_info_get_blocks(st_mm, i);
 		start = fu_struct_ilitek_its_block_info_get_addr(block);
-		end = fu_struct_ilitek_its_mm_info_get_end_addr(mm);
+		end = fu_struct_ilitek_its_mm_info_get_end_addr(st_mm);
 
 		if ((i + 1) != self->block_num) {
-			block = fu_struct_ilitek_its_mm_info_get_blocks(mm, i + 1);
+			block = fu_struct_ilitek_its_mm_info_get_blocks(st_mm, i + 1);
 			end = fu_struct_ilitek_its_block_info_get_addr(block);
 		}
 
-		if (end < start)
+		if (end < start) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "start 0x%x > end 0x%x",
+				    start,
+				    end);
 			return FALSE;
+		}
 
 		block_bytes = fu_bytes_new_offset(blob, start, end - start + 1, error);
 		if (block_bytes == NULL)
@@ -185,8 +181,11 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 
 		self->block_crc[i] = fu_ilitek_its_firmware_get_crc(block_bytes);
 
-		g_message("block %u: start 0x%08x, end 0x%08x, crc: 0x%x",
-			i, start, end, self->block_crc[i]);
+		g_debug("block %u: start 0x%08x, end 0x%08x, crc: 0x%x",
+			i,
+			start,
+			end,
+			self->block_crc[i]);
 
 		fu_firmware_set_idx(block_img, i);
 		fu_firmware_set_parent(block_img, firmware);
@@ -214,6 +213,29 @@ fu_ilitek_its_firmware_convert_version(FuFirmware *firmware, guint64 version_raw
 			       (guint)((version_raw >> 0) & 0xFF));
 }
 
+const gchar *
+fu_ilitek_its_firmware_get_ic_name(FuIlitekItsFirmware *self)
+{
+	return self->fw_ic_name;
+}
+
+guint8
+fu_ilitek_its_firmware_get_block_num(FuIlitekItsFirmware *self)
+{
+	return self->block_num;
+}
+
+guint16
+fu_ilitek_its_firmware_get_block_crc(FuIlitekItsFirmware *self, guint8 block_num)
+{
+	if (block_num >= self->block_num) {
+		g_warning("block num %u is out of range, max is %u", block_num, self->block_num);
+		return 0;
+	}
+
+	return self->block_crc[block_num];
+}
+
 static void
 fu_ilitek_its_firmware_init(FuIlitekItsFirmware *self)
 {
@@ -235,28 +257,4 @@ FuFirmware *
 fu_ilitek_its_firmware_new(void)
 {
 	return FU_FIRMWARE(g_object_new(FU_TYPE_ILITEK_ITS_FIRMWARE, NULL));
-}
-
-gchar *
-fu_ilitek_its_firmware_get_ic_name(FuIlitekItsFirmware *self)
-{
-	return self->fw_ic_name;
-}
-
-guint8
-fu_ilitek_its_firmware_get_block_num(FuIlitekItsFirmware *self)
-{
-	return self->block_num;
-}
-
-guint16
-fu_ilitek_its_firmware_get_block_crc(FuIlitekItsFirmware *self, guint8 block_num)
-{
-	if (block_num >= self->block_num) {
-		g_warning("block num %u is out of range, max is %u",
-			block_num, self->block_num);
-		return 0;
-	}
-
-	return self->block_crc[block_num];
 }

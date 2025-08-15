@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Joe hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -18,7 +18,7 @@ G_DECLARE_FINAL_TYPE(FuIlitekItsFirmware,
 FuFirmware *
 fu_ilitek_its_firmware_new(void);
 
-gchar *
+const gchar *
 fu_ilitek_its_firmware_get_ic_name(FuIlitekItsFirmware *self);
 guint8
 fu_ilitek_its_firmware_get_block_num(FuIlitekItsFirmware *self);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Joe hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
