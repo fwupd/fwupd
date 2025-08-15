@@ -76,7 +76,7 @@ fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
 
 	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (ifaces == NULL) {
-		g_prefix_error(error, "update interface not found: ");
+		g_prefix_error_literal(error, "update interface not found: ");
 		return FALSE;
 	}
 
@@ -103,7 +103,7 @@ fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
 	self->iface_hid =
 	    _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self), FU_USB_CLASS_HID, error);
 	if (self->iface_hid == 0xFF) {
-		g_prefix_error(error, "cannot find HID interface: ");
+		g_prefix_error_literal(error, "cannot find HID interface: ");
 		return FALSE;
 	}
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface_hid);
@@ -184,7 +184,10 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 			   0,
 			   sizeof(rx_data->rxbuf),
 			   error)) {
-		g_set_error_literal(error, "error reading from device: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "error reading from device: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -304,9 +307,9 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 	/* no child device to respond properly */
 	if (rx_data.rxbuf[5] == 0xFE && (rx_data.rxbuf[6] == 0xF4 || rx_data.rxbuf[6] == 0xF3)) {
 		g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error: no child device responded");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "internal error: no child device responded");
 		return FALSE;
 	}
 
