@@ -22,7 +22,7 @@ struct _FuJabraGnpDevice {
 	guint dfu_pid;
 };
 
-G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_HID_DEVICE)
 
 guint8
 fu_jabra_gnp_device_get_iface_hid(FuJabraGnpDevice *self)
@@ -118,22 +118,107 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 	FuUsbDevice *target = self->address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 				  ? FU_USB_DEVICE(fu_device_get_parent(device))
 				  : FU_USB_DEVICE(self);
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
-					    FU_USB_DIRECTION_HOST_TO_DEVICE,
-					    FU_USB_REQUEST_TYPE_CLASS,
-					    FU_USB_RECIPIENT_INTERFACE,
-					    0x09,
-					    0x0200 | FU_JABRA_GNP_IFACE,
-					    self->iface_hid,
-					    tx_data->txbuf,
-					    FU_JABRA_GNP_BUF_SIZE,
-					    NULL,
-					    tx_data->timeout,
-					    NULL, /* cancellable */
-					    error)) {
+
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      0x0,
+				      tx_data->txbuf,
+				      FU_JABRA_GNP_BUF_SIZE,
+				      tx_data->timeout,
+				      FU_HID_DEVICE_FLAG_RETRY_FAILURE |
+					  FU_HID_DEVICE_FLAG_AUTODETECT_EPS,
+				      error)) {
 		g_prefix_error(error, "failed to write to device: ");
 		return FALSE;
 	}
+
+	// if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
+	// 				    FU_USB_DIRECTION_HOST_TO_DEVICE,
+	// 				    FU_USB_REQUEST_TYPE_CLASS,
+	// 				    FU_USB_RECIPIENT_INTERFACE,
+	// 				    0x09,
+	// 				    0x0200 | FU_JABRA_GNP_IFACE,
+	// 				    self->iface_hid,
+	// 				    tx_data->txbuf,
+	// 				    FU_JABRA_GNP_BUF_SIZE,
+	// 				    NULL,
+	// 				    tx_data->timeout,
+	// 				    NULL, /* cancellable */
+	// 				    error)) {
+	// 	g_prefix_error(error, "failed to write to device: ");
+	// 	return FALSE;
+	// }
+	// if (tx_data->txbuf[5] != 0x0F || tx_data->txbuf[6] != 0x1A)
+	g_info("sent: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+	       tx_data->txbuf[0],
+	       tx_data->txbuf[1],
+	       tx_data->txbuf[2],
+	       tx_data->txbuf[3],
+	       tx_data->txbuf[4],
+	       tx_data->txbuf[5],
+	       tx_data->txbuf[6],
+	       tx_data->txbuf[7],
+	       tx_data->txbuf[8],
+	       tx_data->txbuf[9],
+	       tx_data->txbuf[10],
+	       tx_data->txbuf[11],
+	       tx_data->txbuf[12],
+	       tx_data->txbuf[13],
+	       tx_data->txbuf[14],
+	       tx_data->txbuf[15],
+	       tx_data->txbuf[16],
+	       tx_data->txbuf[17],
+	       tx_data->txbuf[18],
+	       tx_data->txbuf[19],
+	       tx_data->txbuf[20],
+	       tx_data->txbuf[21],
+	       tx_data->txbuf[22],
+	       tx_data->txbuf[23],
+	       tx_data->txbuf[24],
+	       tx_data->txbuf[25],
+	       tx_data->txbuf[26],
+	       tx_data->txbuf[27],
+	       tx_data->txbuf[28],
+	       tx_data->txbuf[29],
+	       tx_data->txbuf[30],
+	       tx_data->txbuf[31],
+	       tx_data->txbuf[32],
+	       tx_data->txbuf[33],
+	       tx_data->txbuf[34],
+	       tx_data->txbuf[35],
+	       tx_data->txbuf[36],
+	       tx_data->txbuf[37],
+	       tx_data->txbuf[38],
+	       tx_data->txbuf[39],
+	       tx_data->txbuf[40],
+	       tx_data->txbuf[41],
+	       tx_data->txbuf[42],
+	       tx_data->txbuf[43],
+	       tx_data->txbuf[44],
+	       tx_data->txbuf[45],
+	       tx_data->txbuf[46],
+	       tx_data->txbuf[47],
+	       tx_data->txbuf[48],
+	       tx_data->txbuf[49],
+	       tx_data->txbuf[50],
+	       tx_data->txbuf[51],
+	       tx_data->txbuf[52],
+	       tx_data->txbuf[53],
+	       tx_data->txbuf[54],
+	       tx_data->txbuf[55],
+	       tx_data->txbuf[56],
+	       tx_data->txbuf[57],
+	       tx_data->txbuf[58],
+	       tx_data->txbuf[59],
+	       tx_data->txbuf[60],
+	       tx_data->txbuf[61],
+	       tx_data->txbuf[62],
+	       tx_data->txbuf[63]);
+
 	return TRUE;
 }
 
@@ -149,32 +234,127 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 				  ? FU_USB_DEVICE(fu_device_get_parent(device))
 				  : FU_USB_DEVICE(self);
 
-	if (!fu_usb_device_interrupt_transfer(target,
-					      self->epin,
-					      rx_data->rxbuf,
-					      FU_JABRA_GNP_BUF_SIZE,
-					      NULL,
-					      rx_data->timeout,
-					      NULL, /* cancellable */
-					      error)) {
-		g_prefix_error(error, "failed to read from device: ");
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      0x00,
+				      rx_data->rxbuf,
+				      FU_JABRA_GNP_BUF_SIZE,
+				      rx_data->timeout,
+				      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+					  FU_HID_DEVICE_FLAG_RETRY_FAILURE |
+					  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      error)) {
+		g_prefix_error(error, "failed to get payload response: ");
 		return FALSE;
 	}
-	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[5] == match_buf[5] &&
-	    rx_data->rxbuf[6] == match_buf[6]) {
+	// if (!fu_usb_device_interrupt_transfer(target,
+	// 				      self->epin,
+	// 				      rx_data->rxbuf,
+	// 				      FU_JABRA_GNP_BUF_SIZE,
+	// 				      NULL,
+	// 				      rx_data->timeout,
+	// 				      NULL, /* cancellable */
+	// 				      error)) {
+	// 	g_prefix_error(error, "failed to read from device: ");
+	// 	return FALSE;
+	// }
+	if (rx_data->rxbuf[5] == match_buf[5] && rx_data->rxbuf[6] == match_buf[6]) {
 		/* battery report, ignore and rx again */
-		if (!fu_usb_device_interrupt_transfer(target,
-						      0x81,
-						      rx_data->rxbuf,
-						      FU_JABRA_GNP_BUF_SIZE,
-						      NULL,
-						      rx_data->timeout,
-						      NULL, /* cancellable */
-						      error)) {
-			g_prefix_error(error, "failed to read from device: ");
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+					      0x00,
+					      rx_data->rxbuf,
+					      sizeof(rx_data->rxbuf) / sizeof(rx_data->rxbuf[0]),
+					      rx_data->timeout,
+					      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+						  FU_HID_DEVICE_FLAG_RETRY_FAILURE |
+						  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+					      error)) {
+			g_prefix_error(error, "failed to get payload response: ");
 			return FALSE;
 		}
+		// if (!fu_usb_device_interrupt_transfer(target,
+		// 				      self->epin,
+		// 				      rx_data->rxbuf,
+		// 				      FU_JABRA_GNP_BUF_SIZE,
+		// 				      NULL,
+		// 				      rx_data->timeout,
+		// 				      NULL, /* cancellable */
+		// 				      error)) {
+		// 	g_prefix_error(error, "failed to read from device: ");
+		// 	return FALSE;
+		// }
 	}
+	// if (rx_data->rxbuf[5] != 0x0F || rx_data->rxbuf[6] != 0x1B)
+	g_info("received: %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+	       "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+	       rx_data->rxbuf[0],
+	       rx_data->rxbuf[1],
+	       rx_data->rxbuf[2],
+	       rx_data->rxbuf[3],
+	       rx_data->rxbuf[4],
+	       rx_data->rxbuf[5],
+	       rx_data->rxbuf[6],
+	       rx_data->rxbuf[7],
+	       rx_data->rxbuf[8],
+	       rx_data->rxbuf[9],
+	       rx_data->rxbuf[10],
+	       rx_data->rxbuf[11],
+	       rx_data->rxbuf[12],
+	       rx_data->rxbuf[13],
+	       rx_data->rxbuf[14],
+	       rx_data->rxbuf[15],
+	       rx_data->rxbuf[16],
+	       rx_data->rxbuf[17],
+	       rx_data->rxbuf[18],
+	       rx_data->rxbuf[19],
+	       rx_data->rxbuf[20],
+	       rx_data->rxbuf[21],
+	       rx_data->rxbuf[22],
+	       rx_data->rxbuf[23],
+	       rx_data->rxbuf[24],
+	       rx_data->rxbuf[25],
+	       rx_data->rxbuf[26],
+	       rx_data->rxbuf[27],
+	       rx_data->rxbuf[28],
+	       rx_data->rxbuf[29],
+	       rx_data->rxbuf[30],
+	       rx_data->rxbuf[31],
+	       rx_data->rxbuf[32],
+	       rx_data->rxbuf[33],
+	       rx_data->rxbuf[34],
+	       rx_data->rxbuf[35],
+	       rx_data->rxbuf[36],
+	       rx_data->rxbuf[37],
+	       rx_data->rxbuf[38],
+	       rx_data->rxbuf[39],
+	       rx_data->rxbuf[40],
+	       rx_data->rxbuf[41],
+	       rx_data->rxbuf[42],
+	       rx_data->rxbuf[43],
+	       rx_data->rxbuf[44],
+	       rx_data->rxbuf[45],
+	       rx_data->rxbuf[46],
+	       rx_data->rxbuf[47],
+	       rx_data->rxbuf[48],
+	       rx_data->rxbuf[49],
+	       rx_data->rxbuf[50],
+	       rx_data->rxbuf[51],
+	       rx_data->rxbuf[52],
+	       rx_data->rxbuf[53],
+	       rx_data->rxbuf[54],
+	       rx_data->rxbuf[55],
+	       rx_data->rxbuf[56],
+	       rx_data->rxbuf[57],
+	       rx_data->rxbuf[58],
+	       rx_data->rxbuf[59],
+	       rx_data->rxbuf[60],
+	       rx_data->rxbuf[61],
+	       rx_data->rxbuf[62],
+	       rx_data->rxbuf[63]);
 
 	if (fu_memcmp_safe(rx_data->rxbuf,
 			   sizeof(rx_data->rxbuf),
@@ -657,10 +837,16 @@ fu_jabra_gnp_device_write_extended_crc(FuJabraGnpDevice *self,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 9, crc, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 10, crc >> 8, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 7, crc >> 16, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 8, crc >> 24, error);
 	fu_memwrite_uint16(tx_data.txbuf + 11, 0x00, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(tx_data.txbuf + 15, total_chunks, G_LITTLE_ENDIAN);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 15, total_chunks, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 16, total_chunks >> 8, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 17, total_chunks >> 16, error);
+	fu_memwrite_uint8_safe(tx_data.txbuf, 64, 18, total_chunks >> 24, error);
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_jabra_gnp_device_tx_cb,
@@ -735,6 +921,7 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 				 GError **error)
 {
 	gboolean failed_chunk = FALSE;
+	g_autoptr(FuChunk) ini_chk = NULL;
 
 	const guint8 match_buf[FU_JABRA_GNP_BUF_SIZE] = {
 	    FU_JABRA_GNP_IFACE,
@@ -753,7 +940,24 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
-	for (gint chunk_number = 0; (guint)chunk_number < fu_chunk_array_length(chunks);
+
+	ini_chk = fu_chunk_array_index(chunks, 0, error);
+	if (!fu_jabra_gnp_device_write_chunk(self,
+					     0,
+					     fu_chunk_get_data(ini_chk),
+					     fu_chunk_get_data_sz(ini_chk),
+					     error))
+		return FALSE;
+
+	if (!fu_device_retry_full(FU_DEVICE(self),
+				  fu_jabra_gnp_device_rx_cb,
+				  FU_JABRA_GNP_MAX_RETRIES,
+				  FU_JABRA_GNP_RETRY_DELAY,
+				  &rx_data,
+				  error))
+		return FALSE;
+
+	for (gint chunk_number = 1; (guint)chunk_number < fu_chunk_array_length(chunks);
 	     chunk_number++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -767,8 +971,7 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 						     fu_chunk_get_data_sz(chk),
 						     error))
 			return FALSE;
-		if (((chunk_number % FU_JABRA_GNP_PRELOAD_COUNT) == 0) ||
-		    (guint)chunk_number == fu_chunk_array_length(chunks) - 1) {
+		if (((chunk_number % FU_JABRA_GNP_PRELOAD_COUNT) == 0))
 			if (!fu_device_retry_full(FU_DEVICE(self),
 						  fu_jabra_gnp_device_rx_cb,
 						  FU_JABRA_GNP_MAX_RETRIES,
@@ -776,26 +979,21 @@ fu_jabra_gnp_device_write_chunks(FuJabraGnpDevice *self,
 						  &rx_data,
 						  error))
 				return FALSE;
-			if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "internal error, buf did not match");
+
+		if ((guint)chunk_number == fu_chunk_array_length(chunks) - 1)
+			if (!fu_device_retry_full(FU_DEVICE(self),
+						  fu_jabra_gnp_device_rx_cb,
+						  FU_JABRA_GNP_MAX_RETRIES,
+						  FU_JABRA_GNP_RETRY_DELAY,
+						  &rx_data,
+						  error))
 				return FALSE;
-			}
-			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) == chunk_number ||
-			    fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) ==
-				(chunk_number % 0xFFFF) - 1) {
-				failed_chunk = FALSE;
-			} else {
-				chunk_number--;
-				failed_chunk = TRUE;
-			}
-		}
+
 		if (!failed_chunk)
 			fu_progress_step_done(progress);
+		if (chunk_number % 100 == 0)
+			g_info("tx chunk: 0x%x", chunk_number);
 	}
-
 	/* success */
 	return TRUE;
 }
@@ -807,7 +1005,7 @@ fu_jabra_gnp_device_read_verify_status(FuJabraGnpDevice *self, GError **error)
 	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x06, 0x0F, 0x1C};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
-	    .timeout = FU_JABRA_GNP_LONG_RECEIVE_TIMEOUT,
+	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_jabra_gnp_device_rx_cb,
@@ -1199,6 +1397,8 @@ fu_jabra_gnp_device_init(FuJabraGnpDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.jabra.gnp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_JABRA_GNP_FIRMWARE);
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_RETRY_FAILURE);
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 }
 
 static void
