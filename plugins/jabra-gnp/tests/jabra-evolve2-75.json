@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "335f10696cd57ae74b2115a9e44a39a2c5208e7e090d1f4e72bb91bc65a7480d-jabra-evolve2-75-1.8.13.cab",
+      "emulation-url": "3b7aff78e1ae5cbd225144271b2022e895b6926da1a2c2f3a9d6da6867e2cdd7-ev2_ota.zip",
       "components": [
         {
           "version": "1.8.13",
