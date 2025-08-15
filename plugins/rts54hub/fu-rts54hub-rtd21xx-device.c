@@ -17,6 +17,8 @@ typedef struct {
 	guint8 register_addr_len;
 } FuRts54hubRtd21xxDevicePrivate;
 
+#define MAX_READ_WRITE_LENGTH_ONE_TIME 256
+
 G_DEFINE_TYPE_WITH_PRIVATE(FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_rts54hub_rtd21xx_device_get_instance_private(o))
 
@@ -129,6 +131,51 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 }
 
 gboolean
+fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
+				       guint8 target_addr,
+				       guint8 sub_addr,
+				       const guint8 *data,
+				       gsize datasz,
+				       GError **error)
+{
+	guint8 temp = 0;
+	guint8 buf_write[MAX_READ_WRITE_LENGTH_ONE_TIME + 4] = {0x00};
+	gsize i = 0;
+
+	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
+		g_prefix_error(error,
+			       "ddcci write length exceed max length:%d: ",
+			       MAX_READ_WRITE_LENGTH_ONE_TIME);
+		return FALSE;
+	}
+
+	temp = (guint8)datasz;
+	buf_write[0] = target_addr;
+	buf_write[1] = sub_addr;
+	buf_write[2] = temp | 0x80;
+
+	for (i = 0; i < datasz; i++) {
+		buf_write[i + 3] = data[i];
+	}
+
+	for (i = 0; i < (datasz + 3); i++) {
+		buf_write[3 + datasz] ^= buf_write[i];
+	}
+
+	if (!fu_rts54hub_rtd21xx_device_i2c_write(self,
+						  target_addr,
+						  sub_addr,
+						  buf_write + 2,
+						  (datasz + 2),
+						  error)) {
+		g_prefix_error(error, "failed to DDCCI write: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+gboolean
 fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    guint8 target_addr,
 				    guint8 sub_addr,
@@ -157,6 +204,56 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 		g_prefix_error_literal(error, "failed to read I2C: ");
 		return FALSE;
 	}
+	return TRUE;
+}
+
+gboolean
+fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
+				      guint8 target_addr,
+				      guint8 sub_addr,
+				      guint8 *data,
+				      gsize datasz,
+				      GError **error)
+{
+	guint8 checksum = 0x50;
+	guint8 buf_read[MAX_READ_WRITE_LENGTH_ONE_TIME] = {0x00};
+	gsize i = 0;
+
+	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
+		g_prefix_error(error,
+			       "ddcci read length exceed max length:%i: ",
+			       MAX_READ_WRITE_LENGTH_ONE_TIME);
+		return FALSE;
+	}
+
+	if (!fu_rts54hub_rtd21xx_device_i2c_read(self,
+						 target_addr,
+						 sub_addr,
+						 buf_read,
+						 datasz,
+						 error)) {
+		g_prefix_error(error, "failed to DDCCI read I2C: ");
+		return FALSE;
+	}
+
+	if (buf_read[0] != target_addr) {
+		g_prefix_error(error, "failed to DDCCI read I2C target addr invalid: ");
+		return FALSE;
+	}
+
+	for (i = 0; i < (gsize)((buf_read[1] & 0x7F) + 2); i++) {
+		checksum ^= buf_read[i];
+	}
+
+	if (checksum != buf_read[(buf_read[1] & 0x7F) + 2]) {
+		g_prefix_error(error, "failed to DDCCI read I2C checksum error: ");
+		return FALSE;
+	}
+
+	for (i = 0; i < (gsize)(buf_read[1] & 0x7f) + 3; i++) {
+		data[i] = buf_read[i];
+	}
+
 	return TRUE;
 }
 

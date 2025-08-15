@@ -115,3 +115,28 @@ GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x30000
 Rts54BlockSize = 0x100
+
+# HP Cypher
+[USB\VID_03F0&PID_AC4A]
+Plugin = rts54hub
+Name = HP Portable USB-C 4K HDMI Hub - USB Hub
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x30000
+Rts54BlockSize = 0x100
+Children = FuRts54hubRtd21xxBackground|USB\VID_03F0&PID_AB4A&I2C_01,FuRts54hubRtd21xxMergeinfo|USB\VID_03F0&PID_AB4A&I2C_02
+[USB\VID_03F0&PID_AB4A&I2C_01]
+Plugin = rts54hub
+Name = HP Portable USB-C 4K HDMI Hub - HDMI Converter
+FirmwareSize = 0x30000
+Rts54TargetAddr = 0x20
+Rts54I2cSpeed = 0x2
+Rts54RegisterAddrLen = 0x04
+[USB\VID_03F0&PID_AB4A&I2C_02]
+Plugin = rts54hub
+Name = HP Portable USB-C 4K HDMI Hub - Package Version
+FirmwareSize = 4
+Rts54TargetAddr = 0x20
+Rts54I2cSpeed = 0x2
+Rts54RegisterAddrLen = 0x04
+
