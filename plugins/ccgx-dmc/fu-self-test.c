@@ -31,7 +31,7 @@ fu_ccgx_dmc_firmware_xml_func(void)
 	g_assert_true(ret);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+	g_assert_cmpstr(csum1, ==, "8bfcf543805d54280164813d792581764bd4b48b");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);

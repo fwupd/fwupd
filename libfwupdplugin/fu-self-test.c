@@ -5281,13 +5281,13 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_SREC_FIRMWARE,
 		"srec.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"c8b405b7995d5934086c56b091a4c5df47b3b0d7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
 		FU_TYPE_IHEX_FIRMWARE,
 		"ihex.builder.xml",
-		"a8d74f767f3fc992b413e5ba801cedc80a4cf013",
+		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5323,13 +5323,13 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5365,7 +5365,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5401,7 +5401,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_OPROM_FIRMWARE,
 		"oprom.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"2e8387c1ef14ed4038e6bc637146b86b4d702fa8",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
