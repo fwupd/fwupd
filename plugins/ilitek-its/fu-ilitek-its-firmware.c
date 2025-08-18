@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-ilitek-its-common.h"
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
 
@@ -22,9 +23,7 @@ struct _FuIlitekItsFirmware {
 G_DEFINE_TYPE(FuIlitekItsFirmware, fu_ilitek_its_firmware, FU_TYPE_IHEX_FIRMWARE)
 
 static void
-fu_ilitek_its_firmware_export(FuFirmware *firmware,
-				   FuFirmwareExportFlags flags,
-				   XbBuilderNode *bn)
+fu_ilitek_its_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuIlitekItsFirmware *self = FU_ILITEK_ITS_FIRMWARE(firmware);
 	fu_xmlb_builder_insert_kv(bn, "fw_ic_name", self->fw_ic_name);
@@ -34,44 +33,20 @@ fu_ilitek_its_firmware_export(FuFirmware *firmware,
 
 static gboolean
 fu_ilitek_its_firmware_validate(FuFirmware *firmware,
-			     GInputStream *stream,
-			     gsize offset,
-			     GError **error)
+				GInputStream *stream,
+				gsize offset,
+				GError **error)
 {
 	g_debug("[%s] pass", __func__);
 
 	return TRUE;
 }
 
-static guint16
-fu_ilitek_its_firmware_get_crc(GBytes *blob)
-{
-	guint16 crc = 0;
-	const guint16 polynomial = 0x8408;
-	gsize sz = 0;
-	const guint8 *data = g_bytes_get_data(blob, &sz);
-
-	if (sz < 2)
-		return 0;
-
-	/* ignore last 2 bytes crc */
-	for (gsize i = 0; i < sz - 2; i++) {
-		crc ^= data[i];
-		for (guint8 idx = 0; idx < 8; idx++) {
-			if (crc & 0x01)
-				crc = (crc >> 1) ^ polynomial;
-			else
-				crc = crc >> 1;
-		}
-	}
-
-	return crc;
-}
-
 static gboolean
 fu_ilitek_its_firmware_parse(FuFirmware *firmware,
-			  GInputStream *stream, FuFirmwareParseFlags flags,
-			  GError **error)
+			     GInputStream *stream,
+			     FuFirmwareParseFlags flags,
+			     GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_CLASS(fu_ilitek_its_firmware_parent_class);
 	FuIlitekItsFirmware *self = FU_ILITEK_ITS_FIRMWARE(firmware);
@@ -79,9 +54,10 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	FuIhexFirmwareRecord *rcd = NULL;
 	guint32 mm_ver;
 	guint32 start_addr;
-	g_autofree gchar *ic_name = NULL;
+	const guint8 *ic_name = NULL;
 	g_autoptr(FuStructIlitekItsMmInfo) st_mm = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
+
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hex_blob = NULL;
 	const gchar *ap_end_tag =
@@ -112,27 +88,28 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	fu_byte_array_append_bytes(buf, fu_bytes_pad(g_bytes_new(NULL, 0), start_addr, 0xFF));
 	fu_byte_array_append_bytes(buf, hex_blob);
 
-	blob = fu_bytes_pad(g_byte_array_free_to_bytes(g_steal_pointer(&buf)),
-			    256 * 1024,
-			    0xFF); /* nocheck:blocked */
+	/* FIXME: define magic number */
+	blob = fu_bytes_pad(g_bytes_new(buf->data, buf->len), 256 * 1024, 0xff);
 
 	st_mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob, self->mm_addr, error);
 	if (st_mm == NULL)
 		return FALSE;
-	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(st_mm);
-	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm);
-	g_debug("mm ver: 0x%06x", mm_ver);
-	g_debug("protocol ver: 0x%06x", fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
 
+	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(st_mm);
+	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm, NULL);
+	g_debug("mm ver: 0x%06x, protocol ver: 0x%06x",
+		mm_ver, fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
+
+	//TODO: make sure u8 ic_name and fw_ic_name handled in the right way
 	g_free(self->fw_ic_name);
 	switch ((mm_ver >> 16) & 0xff) {
 	case 0x02:
-		self->fw_ic_name = g_strdup(ic_name);
+		self->fw_ic_name = g_strdup_printf("%s", (gchar *)ic_name);
 		break;
 	case 0x01:
 	default:
 		self->fw_ic_name =
-		    g_strdup_printf("%02x%02x", (guint8)ic_name[1], (guint8)ic_name[0]);
+		    g_strdup_printf("%02x%02x", ic_name[1], ic_name[0]);
 		break;
 	}
 	self->block_num = fu_struct_ilitek_its_mm_info_get_block_num(st_mm);
@@ -179,7 +156,8 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 							  offset, error);
 		}
 
-		self->block_crc[i] = fu_ilitek_its_firmware_get_crc(block_bytes);
+		self->block_crc[i] =
+		    fu_ilitek_its_get_crc(block_bytes, g_bytes_get_size(block_bytes) - 2);
 
 		g_debug("block %u: start 0x%08x, end 0x%08x, crc: 0x%x",
 			i,

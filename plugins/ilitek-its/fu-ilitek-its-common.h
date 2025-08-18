@@ -8,5 +8,5 @@
 
 #include <glib-object.h>
 
-const gchar *
-fu_ilitek_its_strerror(guint8 code);
+guint16
+fu_ilitek_its_get_crc(GBytes *blob, gsize count);
