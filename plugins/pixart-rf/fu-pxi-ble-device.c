@@ -7,11 +7,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_HIDRAW_H
-#include <linux/hidraw.h>
-#include <linux/input.h>
-#endif
-
 #include "fu-pxi-ble-device.h"
 #include "fu-pxi-common.h"
 #include "fu-pxi-firmware.h"
@@ -46,25 +41,6 @@ struct _FuPxiBleDevice {
 };
 
 G_DEFINE_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU_TYPE_HIDRAW_DEVICE)
-
-#ifdef HAVE_HIDRAW_H
-static gboolean
-fu_pxi_ble_device_get_raw_info(FuPxiBleDevice *self, struct hidraw_devinfo *info, GError **error)
-{
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRAWINFO,
-			      (guint8 *)info,
-			      sizeof(*info),
-			      NULL,
-			      FU_PXI_DEVICE_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
-			      error)) {
-		return FALSE;
-	}
-	return TRUE;
-}
-#endif
 
 static void
 fu_pxi_ble_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -139,7 +115,6 @@ fu_pxi_ble_device_prepare_firmware(FuDevice *device,
 	return g_steal_pointer(&firmware);
 }
 
-#ifdef HAVE_HIDRAW_H
 static gboolean
 fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **error)
 {
@@ -150,7 +125,6 @@ fu_pxi_ble_device_set_feature_cb(FuDevice *device, gpointer user_data, GError **
 					    FU_IOCTL_FLAG_NONE,
 					    error);
 }
-#endif
 
 static gboolean
 fu_pxi_ble_device_set_feature(FuPxiBleDevice *self, GByteArray *req, GError **error)
@@ -864,15 +838,11 @@ fu_pxi_ble_device_get_model_info(FuPxiBleDevice *self, GError **error)
 static gboolean
 fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 {
-#ifdef HAVE_HIDRAW_H
 	FuDevice *device = FU_DEVICE(self);
-	struct hidraw_devinfo hid_raw_info = {0x0};
 	g_autoptr(GString) dev_name = NULL;
 	g_autoptr(GString) model_name = NULL;
 
 	/* extra GUID with device name */
-	if (!fu_pxi_ble_device_get_raw_info(self, &hid_raw_info, error))
-		return FALSE;
 	dev_name = g_string_new(fu_device_get_name(device));
 	g_string_ascii_up(dev_name);
 	g_string_replace(dev_name, " ", "_", 0);
@@ -883,15 +853,14 @@ fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 	g_string_replace(model_name, " ", "_", 0);
 
 	/* generate IDs */
-	fu_device_add_instance_u16(device, "VEN", hid_raw_info.vendor);
-	fu_device_add_instance_u16(device, "DEV", hid_raw_info.product);
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(FU_DEVICE(self)));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(FU_DEVICE(self)));
 	fu_device_add_instance_str(device, "NAME", dev_name->str);
 	fu_device_add_instance_str(device, "MODEL", model_name->str);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "NAME", NULL))
 		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MODEL", NULL))
 		return FALSE;
-#endif
 	return TRUE;
 }
 
@@ -920,6 +889,11 @@ fu_pxi_ble_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to get model: ");
 		return FALSE;
 	}
+
+	/* FuHidrawDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_pxi_ble_device_parent_class)->setup(device, error))
+		return FALSE;
+
 	if (!fu_pxi_ble_device_setup_guid(self, error)) {
 		g_prefix_error_literal(error, "failed to setup GUID: ");
 		return FALSE;

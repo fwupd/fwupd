@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-hid-descriptor.h"
+#include "fu-hidraw-struct.h"
 #include "fu-udev-device.h"
 
 #define FU_TYPE_HIDRAW_DEVICE (fu_hidraw_device_get_type())
@@ -15,6 +16,9 @@ G_DECLARE_DERIVABLE_TYPE(FuHidrawDevice, fu_hidraw_device, FU, HIDRAW_DEVICE, Fu
 struct _FuHidrawDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
+
+FuHidrawBusType
+fu_hidraw_device_get_bus_type(FuHidrawDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_hidraw_device_set_feature(FuHidrawDevice *self,
