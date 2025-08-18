@@ -25,9 +25,44 @@
  * See also: #FuUdevDevice
  */
 
-G_DEFINE_TYPE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
+typedef struct {
+	FuHidrawBusType bus_type;
+} FuHidrawDevicePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE(FuHidrawDevice, fu_hidraw_device, FU_TYPE_UDEV_DEVICE)
+
+#define GET_PRIVATE(o) (fu_hidraw_device_get_instance_private(o))
 
 #define FU_HIDRAW_DEVICE_IOCTL_TIMEOUT 2500 /* ms */
+
+static void
+fu_hidraw_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append(str,
+				  idt,
+				  "BusType",
+				  fu_hidraw_bus_type_to_string(priv->bus_type));
+}
+
+/**
+ * fu_hidraw_device_get_bus_type:
+ * @self: a #FuHidrawDevice
+ *
+ * Gets the bus type.
+ *
+ * Returns: a #FuHidrawBusType, e.g. %FU_HIDRAW_BUS_TYPE_USB
+ *
+ * Since: 2.0.14
+ **/
+FuHidrawBusType
+fu_hidraw_device_get_bus_type(FuHidrawDevice *self)
+{
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_HIDRAW_DEVICE(self), FU_HIDRAW_BUS_TYPE_UNKNOWN);
+	return priv->bus_type;
+}
 
 /**
  * fu_hidraw_device_parse_descriptor:
@@ -106,6 +141,51 @@ fu_hidraw_device_probe_usb(FuHidrawDevice *self, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_hidraw_device_setup(FuDevice *device, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	FuHidrawDevice *self = FU_HIDRAW_DEVICE(device);
+	FuHidrawDevicePrivate *priv = GET_PRIVATE(self);
+	struct hidraw_devinfo hid_raw_info = {0x0};
+	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_ioctl_execute(ioctl,
+			      HIDIOCGRAWINFO,
+			      (guint8 *)&hid_raw_info,
+			      sizeof(hid_raw_info),
+			      NULL,
+			      FU_HIDRAW_DEVICE_IOCTL_TIMEOUT,
+			      FU_IOCTL_FLAG_NONE,
+			      &error_local)) {
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED) &&
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("ignoring missing emulation data: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	priv->bus_type = hid_raw_info.bustype;
+
+	/* fallback only */
+	if (fu_device_get_vid(device) == 0x0)
+		fu_device_set_vid(device, hid_raw_info.vendor);
+	if (fu_device_get_pid(device) == 0x0)
+		fu_device_set_pid(device, hid_raw_info.product);
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "<linux/hidraw.h> not available");
+	return FALSE;
+#endif
 }
 
 static gboolean
@@ -449,4 +529,6 @@ fu_hidraw_device_class_init(FuHidrawDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_hidraw_device_probe;
+	device_class->setup = fu_hidraw_device_setup;
+	device_class->to_string = fu_hidraw_device_to_string;
 }

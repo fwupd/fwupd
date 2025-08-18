@@ -6,12 +6,8 @@
 
 #include "config.h"
 
-#include <linux/types.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-#ifdef HAVE_IOCTL_H
-#include <linux/hidraw.h>
-#endif
 
 #include <string.h>
 
@@ -40,9 +36,6 @@
 #define FU_LOGITECH_TAP_TOUCH_MAX_FW_WRITE_RETRIES	 3
 
 #define FU_LOGITECH_TAP_TOUCH_SYSTEM_READY 0x50 /* wait and retry if device not ready */
-
-/* usb bus type */
-#define FU_LOGITECH_TAP_TOUCH_DEVICE_INFO_BUS_TYPE 0x03
 
 struct _FuLogitechTapTouchDevice {
 	FuHidrawDevice parent_instance;
@@ -451,27 +444,21 @@ static gboolean
 fu_logitech_tap_touch_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
-	struct hidraw_devinfo hid_raw_info = {0x0};
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuIoctl) ioctl = fu_udev_device_ioctl_new(FU_UDEV_DEVICE(self));
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		g_debug("entering in BL MODE");
-	if (!fu_ioctl_execute(ioctl,
-			      HIDIOCGRAWINFO,
-			      (guint8 *)&hid_raw_info,
-			      sizeof(hid_raw_info),
-			      NULL,
-			      FU_LOGITECH_TAP_TOUCH_IOCTL_TIMEOUT,
-			      FU_IOCTL_FLAG_NONE,
-			      error))
+
+	/* FuHidrawDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_logitech_tap_touch_device_parent_class)->setup(device, error))
 		return FALSE;
-	if (hid_raw_info.bustype != FU_LOGITECH_TAP_TOUCH_DEVICE_INFO_BUS_TYPE) {
+
+	if (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)) != FU_HIDRAW_BUS_TYPE_USB) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "incorrect bustype=0x%x, expected usb",
-			    hid_raw_info.bustype);
+			    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
 		return FALSE;
 	}
 
