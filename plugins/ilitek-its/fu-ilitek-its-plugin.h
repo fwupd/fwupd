@@ -8,8 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuIlitekItsPlugin,
-		     fu_ilitek_its_plugin,
-		     FU,
-		     ILITEK_ITS_PLUGIN,
-		     FuPlugin)
+G_DECLARE_FINAL_TYPE(FuIlitekItsPlugin, fu_ilitek_its_plugin, FU, ILITEK_ITS_PLUGIN, FuPlugin)

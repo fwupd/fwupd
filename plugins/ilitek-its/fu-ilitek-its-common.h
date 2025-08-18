@@ -10,3 +10,5 @@
 
 guint16
 fu_ilitek_its_get_crc(GBytes *blob, gsize count);
+gchar *
+fu_ilitek_its_convert_version(guint64 version_raw);

@@ -37,7 +37,7 @@ This plugin uses the following plugin-specific quirks:
 
 The bla bla bla.
 
-Since: 1.8.TODO
+Since: 2.0.14
 
 ## External Interface Access
 
@@ -45,7 +45,7 @@ This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `SET_VERSION_HERE`.
+This plugin has been available since fwupd version `2.0.14`.
 
 ## Owners
 

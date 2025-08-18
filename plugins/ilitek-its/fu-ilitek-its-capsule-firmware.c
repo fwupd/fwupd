@@ -48,25 +48,23 @@ fu_ilitek_its_capsule_firmware_validate(FuFirmware *firmware,
 					gsize offset,
 					GError **error)
 {
-	g_autoptr(GByteArray) capsule;
-	g_autoptr(FuStructIlitekItsLookupHeader) auth_header = NULL;
-	gsize streamsz;
-
-	g_autoptr(GBytes) bytes = NULL;
+	gsize streamsz = 0;
 	guint16 crc;
+	g_autoptr(FuStructIlitekItsLookupHeader) auth_header = NULL;
+	g_autoptr(GByteArray) capsule;
+	g_autoptr(GBytes) bytes = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-
 	if (!fu_struct_ilitek_its_capsule_header_validate_stream(stream, offset, error))
 		return FALSE;
-
-	capsule = fu_struct_ilitek_its_capsule_parse_stream(stream, 0, error);
+	capsule = fu_struct_ilitek_its_capsule_parse_stream(stream, 0, error); // FIXME offset?
 	if (capsule == NULL)
 		return FALSE;
 
 	auth_header = fu_struct_ilitek_its_capsule_get_auth(capsule);
 
+	// FIXME: this should use fu_input_stream_compute_crc16() instead
 	bytes = fu_input_stream_read_bytes(stream,
 					   FU_STRUCT_ILITEK_ITS_CAPSULE_OFFSET_LOOKUP,
 					   streamsz - FU_STRUCT_ILITEK_ITS_CAPSULE_OFFSET_LOOKUP,
@@ -76,7 +74,6 @@ fu_ilitek_its_capsule_firmware_validate(FuFirmware *firmware,
 		return FALSE;
 
 	crc = fu_ilitek_its_get_crc(bytes, g_bytes_get_size(bytes));
-
 	if (crc != fu_struct_ilitek_its_auth_header_get_crc(auth_header)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -97,12 +94,11 @@ fu_ilitek_its_capsule_firmware_parse(FuFirmware *firmware,
 				     GError **error)
 {
 	FuIlitekItsCapsuleFirmware *self = FU_ILITEK_ITS_CAPSULE_FIRMWARE(firmware);
+	gsize offset;
 	g_autoptr(FuStructIlitekItsCapsule) capsule = NULL;
 	g_autoptr(FuStructIlitekItsCapsule) capsule_header = NULL;
 	g_autoptr(FuStructIlitekItsLookupHeader) lookup_header = NULL;
 	g_autoptr(FuStructIlitekItsSkuHeader) sku_header = NULL;
-
-	gsize offset;
 
 	capsule = fu_struct_ilitek_its_capsule_parse_stream(stream, 0, error);
 	if (capsule == NULL)
@@ -141,7 +137,9 @@ fu_ilitek_its_capsule_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) hex_img = fu_firmware_new();
 		g_autoptr(FuStructIlitekItsSkuItem) sku = NULL;
 		g_autoptr(GInputStream) hex_stream = NULL;
-		guint fw_size, fw_ver, fwid;
+		guint fw_size;
+		guint fw_ver;
+		guint fwid;
 		g_autofree gchar *id = g_strdup_printf("sku:%u", i);
 
 		sku = fu_struct_ilitek_its_sku_item_parse_stream(stream, offset, error);
@@ -173,17 +171,7 @@ fu_ilitek_its_capsule_firmware_parse(FuFirmware *firmware,
 static gchar *
 fu_ilitek_its_capsule_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
-	/* convert 8 byte version in to human readable format. e.g. convert 0x0700000101020304 into
-	 * 0700.0001.0102.0304*/
-	return g_strdup_printf("%02x%02x.%02x%02x.%02x%02x.%02x%02x",
-			       (guint)((version_raw >> 56) & 0xFF),
-			       (guint)((version_raw >> 48) & 0xFF),
-			       (guint)((version_raw >> 40) & 0xFF),
-			       (guint)((version_raw >> 32) & 0xFF),
-			       (guint)((version_raw >> 24) & 0xFF),
-			       (guint)((version_raw >> 16) & 0xFF),
-			       (guint)((version_raw >> 8) & 0xFF),
-			       (guint)((version_raw >> 0) & 0xFF));
+	return fu_ilitek_its_convert_version(version_raw);
 }
 
 static void

@@ -38,7 +38,7 @@ fu_ilitek_its_firmware_validate(FuFirmware *firmware,
 				GError **error)
 {
 	g_debug("[%s] pass", __func__);
-
+	// FIXME -- delete this?
 	return TRUE;
 }
 
@@ -57,7 +57,6 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	const guint8 *ic_name = NULL;
 	g_autoptr(FuStructIlitekItsMmInfo) st_mm = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hex_blob = NULL;
 	const gchar *ap_end_tag =
@@ -89,7 +88,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	fu_byte_array_append_bytes(buf, hex_blob);
 
 	/* FIXME: define magic number */
-	blob = fu_bytes_pad(g_bytes_new(buf->data, buf->len), 256 * 1024, 0xff);
+	blob = fu_bytes_pad(g_bytes_new(buf->data, buf->len), 256 * 1024, 0xFF);
 
 	st_mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob, self->mm_addr, error);
 	if (st_mm == NULL)
@@ -98,9 +97,10 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 	mm_ver = fu_struct_ilitek_its_mm_info_get_mapping_ver(st_mm);
 	ic_name = fu_struct_ilitek_its_mm_info_get_ic_name(st_mm, NULL);
 	g_debug("mm ver: 0x%06x, protocol ver: 0x%06x",
-		mm_ver, fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
+		mm_ver,
+		fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
 
-	//TODO: make sure u8 ic_name and fw_ic_name handled in the right way
+	// TODO: make sure u8 ic_name and fw_ic_name handled in the right way
 	g_free(self->fw_ic_name);
 	switch ((mm_ver >> 16) & 0xff) {
 	case 0x02:
@@ -108,8 +108,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		break;
 	case 0x01:
 	default:
-		self->fw_ic_name =
-		    g_strdup_printf("%02x%02x", ic_name[1], ic_name[0]);
+		self->fw_ic_name = g_strdup_printf("%02x%02x", ic_name[1], ic_name[0]);
 		break;
 	}
 	self->block_num = fu_struct_ilitek_its_mm_info_get_block_num(st_mm);
@@ -148,14 +147,16 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 
 		if (fu_memmem_safe(g_bytes_get_data(block_bytes, NULL),
 				   g_bytes_get_size(block_bytes),
-				   (guint8 *)tag, strlen(tag),
-				   &offset, NULL)) {
+				   (guint8 *)tag,
+				   strlen(tag),
+				   &offset,
+				   NULL)) {
 			offset = offset + strlen(tag) + 2;
 			end = start + offset - 1;
-			block_bytes = fu_bytes_new_offset(blob, start,
-							  offset, error);
+			block_bytes = fu_bytes_new_offset(blob, start, offset, error);
 		}
 
+		// FIXME: this should use fu_crc16_bytes() instead
 		self->block_crc[i] =
 		    fu_ilitek_its_get_crc(block_bytes, g_bytes_get_size(block_bytes) - 2);
 
@@ -222,9 +223,19 @@ fu_ilitek_its_firmware_init(FuIlitekItsFirmware *self)
 }
 
 static void
+fu_ilitek_its_firmware_finalize(GObject *object)
+{
+	FuIlitekItsFirmware *self = FU_ILITEK_ITS_FIRMWARE(object);
+	g_free(self->fw_ic_name);
+	G_OBJECT_CLASS(fu_ilitek_its_firmware_parent_class)->finalize(object);
+}
+
+static void
 fu_ilitek_its_firmware_class_init(FuIlitekItsFirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_ilitek_its_firmware_finalize;
 	firmware_class->convert_version = fu_ilitek_its_firmware_convert_version;
 	firmware_class->validate = fu_ilitek_its_firmware_validate;
 	firmware_class->parse = fu_ilitek_its_firmware_parse;
