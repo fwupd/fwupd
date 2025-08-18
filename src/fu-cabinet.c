@@ -606,6 +606,7 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 	g_autoptr(XbBuilderFixup) fixup3 = NULL;
 	g_autoptr(XbBuilderFixup) fixup4 = NULL;
+	g_autoptr(XbNode) guid1 = NULL;
 
 	/* verbose profiling */
 	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
@@ -661,6 +662,23 @@ fu_cabinet_build_silo(FuCabinet *self, GError **error)
 	    xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT, NULL, error);
 	if (self->silo == NULL) {
 		fwupd_error_convert(error);
+		return FALSE;
+	}
+
+	/* verify there's at least one GUID */
+	guid1 = xb_silo_query_first(self->silo,
+				    "components/component[@type='firmware']/"
+				    "provides/firmware[@type='flashed']",
+				    error);
+	if (guid1 == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	if (xb_node_get_text(guid1) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no <firmware type='flashed'> data");
 		return FALSE;
 	}
 
