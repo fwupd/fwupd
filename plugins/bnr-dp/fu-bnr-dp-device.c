@@ -545,6 +545,11 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 
 	oui = g_strdup_printf("%06X", fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
 	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", oui);
+
+	if (!fu_device_build_instance_id(device, error, "DPAUX", "OUI", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "DPAUX", "OUI", "DEV", "VARIANT", NULL))
+		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
 					   "DPAUX",
