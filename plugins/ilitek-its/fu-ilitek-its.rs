@@ -26,7 +26,7 @@ enum FuIlitekItsCmd {
     SetCtrlMode = 0xF0,
 }
 
-#[derive(Validate, Getters, New, Default)]
+#[derive(Parse, Default)]
 struct FuStructIlitekItsHidRes {
     report_id: u8 == 0x03,
     res_size_supported_id: u8 == 0xA3,
@@ -35,7 +35,7 @@ struct FuStructIlitekItsHidRes {
     data: [u8; 60],
 }
 
-#[derive(New, Default)]
+#[derive(New, Getters, Default)]
 #[repr(C, packed)]
 struct FuStructIlitekItsHidCmd {
     report_id: u8 == 0x03,
