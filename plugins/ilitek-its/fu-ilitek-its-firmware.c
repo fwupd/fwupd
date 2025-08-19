@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <joe_hung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -9,6 +9,8 @@
 #include "fu-ilitek-its-common.h"
 #include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-struct.h"
+
+#define FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE (256 * 1024)
 
 struct _FuIlitekItsFirmware {
 	FuIhexFirmware parent_instance;
@@ -29,17 +31,6 @@ fu_ilitek_its_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags,
 	fu_xmlb_builder_insert_kv(bn, "fw_ic_name", self->fw_ic_name);
 	fu_xmlb_builder_insert_kx(bn, "mm_addr", self->mm_addr);
 	fu_xmlb_builder_insert_kx(bn, "block_num", self->block_num);
-}
-
-static gboolean
-fu_ilitek_its_firmware_validate(FuFirmware *firmware,
-				GInputStream *stream,
-				gsize offset,
-				GError **error)
-{
-	g_debug("[%s] pass", __func__);
-	// FIXME -- delete this?
-	return TRUE;
 }
 
 static gboolean
@@ -83,12 +74,12 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	start_addr = fu_firmware_get_addr(firmware);
-
+	/* fill 0xFF data before start address and after end address */
 	fu_byte_array_append_bytes(buf, fu_bytes_pad(g_bytes_new(NULL, 0), start_addr, 0xFF));
 	fu_byte_array_append_bytes(buf, hex_blob);
-
-	/* FIXME: define magic number */
-	blob = fu_bytes_pad(g_bytes_new(buf->data, buf->len), 256 * 1024, 0xFF);
+	blob = fu_bytes_pad(g_bytes_new(buf->data, buf->len),
+			    FU_ILITEK_ITS_FIRMWARE_MAX_BLOB_SIZE,
+			    0xFF);
 
 	st_mm = fu_struct_ilitek_its_mm_info_parse_bytes(blob, self->mm_addr, error);
 	if (st_mm == NULL)
@@ -100,7 +91,6 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		mm_ver,
 		fu_struct_ilitek_its_mm_info_get_protocol_ver(st_mm));
 
-	// TODO: make sure u8 ic_name and fw_ic_name handled in the right way
 	g_free(self->fw_ic_name);
 	switch ((mm_ver >> 16) & 0xff) {
 	case 0x02:
@@ -179,17 +169,7 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 static gchar *
 fu_ilitek_its_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
-	/* convert 8 byte version in to human readable format. e.g. convert 0x0700000101020304 into
-	 * 0700.0001.0102.0304*/
-	return g_strdup_printf("%02x%02x.%02x%02x.%02x%02x.%02x%02x",
-			       (guint)((version_raw >> 56) & 0xFF),
-			       (guint)((version_raw >> 48) & 0xFF),
-			       (guint)((version_raw >> 40) & 0xFF),
-			       (guint)((version_raw >> 32) & 0xFF),
-			       (guint)((version_raw >> 24) & 0xFF),
-			       (guint)((version_raw >> 16) & 0xFF),
-			       (guint)((version_raw >> 8) & 0xFF),
-			       (guint)((version_raw >> 0) & 0xFF));
+	return fu_ilitek_its_convert_version(version_raw);
 }
 
 const gchar *
@@ -237,7 +217,6 @@ fu_ilitek_its_firmware_class_init(FuIlitekItsFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_ilitek_its_firmware_finalize;
 	firmware_class->convert_version = fu_ilitek_its_firmware_convert_version;
-	firmware_class->validate = fu_ilitek_its_firmware_validate;
 	firmware_class->parse = fu_ilitek_its_firmware_parse;
 	firmware_class->export = fu_ilitek_its_firmware_export;
 }

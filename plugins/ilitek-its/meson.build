@@ -9,7 +9,6 @@ plugin_builtins += static_library('fu_plugin_ilitek_its',
   sources: [
     'fu-ilitek-its-common.c',
     'fu-ilitek-its-device.c',
-    'fu-ilitek-its-capsule-firmware.c',
     'fu-ilitek-its-firmware.c',
     'fu-ilitek-its-plugin.c',
   ],

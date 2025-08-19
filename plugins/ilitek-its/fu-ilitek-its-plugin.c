@@ -1,13 +1,13 @@
 /*
- * Copyright 2025 Joe Hong <JoeHung@ilitek.com>
+ * Copyright 2025 Joe Hong <joe_hung@ilitek.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "config.h"
 
-#include "fu-ilitek-its-capsule-firmware.h"
 #include "fu-ilitek-its-device.h"
+#include "fu-ilitek-its-firmware.h"
 #include "fu-ilitek-its-plugin.h"
 
 struct _FuIlitekItsPlugin {
@@ -46,7 +46,7 @@ fu_ilitek_its_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	fu_plugin_add_udev_subsystem(plugin, "hidraw");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_ILITEK_ITS_DEVICE);
-	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ILITEK_ITS_CAPSULE_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ILITEK_ITS_FIRMWARE);
 }
 
 static void
