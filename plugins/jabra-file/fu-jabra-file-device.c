@@ -656,10 +656,11 @@ fu_jabra_file_device_write_firmware(FuDevice *device,
 		if (!fu_jabra_file_device_file_checksum(self, firmware_checksum, &match, error))
 			return FALSE;
 		if (!match) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "error transferring file to device, checksum doesn't match");
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error transferring file to device, checksum does not match");
 			return FALSE;
 		}
 	} else {

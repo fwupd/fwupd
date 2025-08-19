@@ -147,9 +147,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "payload too small, expected %" G_GSIZE_FORMAT
-					    " got %u",
-					    out_len,
+					    "payload too small, expected 0x%x got 0x%x",
+					    (guint)out_len,
 					    fu_struct_ebitdo_pkt_get_payload_len(st_hdr));
 				return FALSE;
 			}
@@ -198,9 +197,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "outbuf size wrong, expected %" G_GSIZE_FORMAT
-					    " got %i",
-					    out_len,
+					    "outbuf size wrong, expected 0x%x got 0x%i",
+					    (guint)out_len,
 					    fu_struct_ebitdo_pkt_get_cmd_len(st_hdr));
 				return FALSE;
 			}

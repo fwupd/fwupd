@@ -34,6 +34,24 @@ def _find_func_name(line: str) -> Optional[str]:
     return func_name
 
 
+def _split_args(line: str) -> list[str]:
+    is_quoted: bool = False
+    split = []
+    last_idx = 0
+    for idx, char in enumerate(line):
+        if is_quoted and char == '"':
+            is_quoted = False
+            continue
+        if char == '"':
+            is_quoted = True
+            continue
+        if not is_quoted and char == ",":
+            split.append(line[last_idx:idx].strip())
+            last_idx = idx + 1
+    split.append(line[last_idx:].strip())
+    return split
+
+
 # make lines long again
 def _fix_newlines(lines: list[str]) -> list[str]:
     lines_fixed = []
@@ -214,7 +232,7 @@ class Checker:
         idx = line.find("g_task_return_new_error(")
         if idx == -1:
             return
-        sections = line.split(",")
+        sections = _split_args(line)
         if len(sections) == 4:
             self.add_failure(f"missing literal, use g_task_return_new_error() instead")
 
@@ -226,7 +244,7 @@ class Checker:
         idx = line.find("g_prefix_error(")
         if idx == -1:
             return
-        sections = line.split(",")
+        sections = _split_args(line)
         if len(sections) == 2:
             self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
 
@@ -242,9 +260,8 @@ class Checker:
             return
         if line.find("TRANSLATORS") != -1:
             return
-        sections = line.split(",")
+        sections = _split_args(line)
         if len(sections) == 4:
-            print(line)
             self.add_failure(f"missing literal, use g_set_error_literal() instead")
 
     def _test_line_enums(self, line: str) -> None:
