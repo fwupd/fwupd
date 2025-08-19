@@ -349,6 +349,13 @@ fu_efi_lz77_decompressor_read_pt_len(FuEfiLz77DecompressHelper *helper,
 		if (index == special_symbol) {
 			if (!fu_efi_lz77_decompressor_get_bits(helper, 2, &char_c, error))
 				return FALSE;
+			if (char_c == 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "bad table");
+				return FALSE;
+			}
 			while ((gint16)(--char_c) >= 0 && index < NPT) {
 				helper->pt_len[index++] = 0;
 			}
@@ -421,6 +428,13 @@ fu_efi_lz77_decompressor_read_c_len(FuEfiLz77DecompressHelper *helper, GError **
 								       error))
 					return FALSE;
 				char_c += 20;
+			}
+			if (char_c == 0) {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_DATA,
+						    "bad table");
+				return FALSE;
 			}
 			while ((gint16)(--char_c) >= 0 && index < NC)
 				helper->c_len[index++] = 0;
