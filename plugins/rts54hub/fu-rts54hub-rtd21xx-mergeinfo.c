@@ -10,6 +10,7 @@
 
 #include "fu-rts54hub-device.h"
 #include "fu-rts54hub-rtd21xx-mergeinfo.h"
+#include "fu-rts54hub-struct.h"
 
 struct _FuRts54hubRtd21xxMergeinfo {
 	FuRts54hubRtd21xxDevice parent_instance;
@@ -19,18 +20,13 @@ G_DEFINE_TYPE(FuRts54hubRtd21xxMergeinfo,
 	      fu_rts54hub_rtd21xx_mergeinfo,
 	      FU_TYPE_RTS54HUB_RTD21XX_DEVICE)
 
-#define DEBUG_TARGET_ADDR		0x6A
-#define DDCCI_TARGET_ADDR		0x6E
-#define CHANGE_TO_DDCCI_MODE_OPCODE	0x71
-#define DDCCI_COMM_SUB_ADDR		0x71
-#define CHECK_ACK_SUB_ADDR		0x23
-#define VERSION_NUMBER_COUNT		4
-#define DDCCI_COMM_FIRST_OPCODE		0x77
-#define DDCCI_CHECK_COMM_OPCODE		0x11
-#define DDCCI_CHECK_TARGET_VALUE	0x90
-#define DDCCI_GET_VERSION_OPCODE	0x99
-#define DDCCI_SET_VERSION_OPCODE	0xBB
-#define DDCCI_MODE_TO_DEBUG_MODE_OPCODE 0x55
+#define DEBUG_TARGET_ADDR	    0x6A
+#define DDCCI_TARGET_ADDR	    0x6E
+#define CHANGE_TO_DDCCI_MODE_OPCODE 0x71
+#define DDCCI_COMM_SUB_ADDR	    0x71
+#define CHECK_ACK_SUB_ADDR	    0x23
+#define VERSION_NUMBER_COUNT	    4
+#define DDCCI_CHECK_TARGET_VALUE    0x90
 
 static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(FuRts54hubRtd21xxMergeinfo *self, GError **error)
@@ -71,8 +67,8 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 	guint8 buf_request[2] = {0x00};
 
 	/* check DDC/CI communication */
-	buf_request[0] = DDCCI_COMM_FIRST_OPCODE;
-	buf_request[1] = DDCCI_CHECK_COMM_OPCODE;
+	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
+	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_COMMUNICATION;
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
@@ -112,8 +108,8 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 	g_autofree gchar *version = NULL;
 
 	/* read merge version */
-	buf_request[0] = DDCCI_COMM_FIRST_OPCODE;
-	buf_request[1] = DDCCI_GET_VERSION_OPCODE;
+	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
+	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION;
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
@@ -153,8 +149,8 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 	guint8 buf_request[2] = {0x00};
 
 	/* read merge version */
-	buf_request[0] = DDCCI_COMM_FIRST_OPCODE;
-	buf_request[1] = DDCCI_GET_VERSION_OPCODE;
+	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
+	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION;
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
@@ -210,8 +206,8 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 	}
 
 	/* write merge version */
-	buf_request[0] = DDCCI_COMM_FIRST_OPCODE;
-	buf_request[1] = DDCCI_SET_VERSION_OPCODE;
+	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
+	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_SET_VERSION;
 
 	if (!fu_memcpy_safe(buf_request,
 			    6,
@@ -244,8 +240,8 @@ fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GE
 	guint8 buf_request[2] = {0x00};
 	guint8 temp = 0;
 
-	buf_request[0] = DDCCI_COMM_FIRST_OPCODE;
-	buf_request[1] = DDCCI_MODE_TO_DEBUG_MODE_OPCODE;
+	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
+	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_DDCCI_TO_DEBUG;
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
@@ -265,7 +261,7 @@ fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GE
 						 &temp,
 						 1,
 						 error)) {
-		g_prefix_error_literal(error, "failed to change to debug slave: ");
+		g_prefix_error_literal(error, "failed to change to debug target addr: ");
 		return FALSE;
 	}
 
