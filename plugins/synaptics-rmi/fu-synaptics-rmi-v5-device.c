@@ -220,7 +220,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "RSA public key length did not match: %u != %u: ",
+			    "RSA public key length did not match: %u != %u",
 			    rsa_pubkey_len,
 			    pubkey_buf->len);
 		return FALSE;

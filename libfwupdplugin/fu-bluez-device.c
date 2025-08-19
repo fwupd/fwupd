@@ -279,7 +279,7 @@ fu_bluez_device_get_ble_property(const gchar *obj_path,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "property %s not found in %s: ",
+			    "property %s not found in %s",
 			    prop_name,
 			    obj_path);
 		return NULL;

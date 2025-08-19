@@ -618,7 +618,7 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 						 0,
 						 (guint8 *)&data,
 						 error)) {
-			g_prefix_error(error, "failed to erase sector: %d", i);
+			g_prefix_error(error, "failed to erase sector %d: ", i);
 			return FALSE;
 		}
 	}

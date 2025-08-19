@@ -131,7 +131,7 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "invalid HECI message response partition: 0x%x: ",
+			    "invalid HECI message response partition: 0x%x",
 			    fu_igsc_fwu_heci_version_res_get_partition(st_res));
 		return FALSE;
 	}

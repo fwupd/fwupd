@@ -749,7 +749,7 @@ fu_synaptics_rmi_ps2_device_open(FuDevice *device, GError **error)
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "failed to read 0xAA00, got 0x%02X%02X: ",
+				    "failed to read 0xAA00, got 0x%02X%02X",
 				    buf[0],
 				    buf[1]);
 			return FALSE;

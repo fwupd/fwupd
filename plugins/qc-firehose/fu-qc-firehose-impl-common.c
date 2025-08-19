@@ -48,7 +48,7 @@ fu_qc_firehose_impl_retry(FuQcFirehoseImpl *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "retry limit %u reached: ",
+				    "retry limit %u reached",
 				    retry_cnt);
 			return FALSE;
 		}

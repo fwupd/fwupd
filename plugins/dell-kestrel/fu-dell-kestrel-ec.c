@@ -473,8 +473,10 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			g_debug("ignoring: %s", error_local->message);
 		else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
-			g_prefix_error(error, "failed to %s", msg);
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "failed to %s: ",
+						   msg);
 			return FALSE;
 		}
 	}

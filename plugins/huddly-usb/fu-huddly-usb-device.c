@@ -368,7 +368,7 @@ fu_huddly_usb_device_hpk_done_cb(FuDevice *device, gpointer user_data, GError **
 		return FALSE;
 	err = fu_msgpack_item_get_integer(item_error);
 	if (err != 0) {
-		g_prefix_error(error, "received error %s", operation->str);
+		g_prefix_error(error, "received error %s: ", operation->str);
 		return FALSE;
 	}
 

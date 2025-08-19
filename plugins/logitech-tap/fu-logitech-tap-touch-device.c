@@ -667,7 +667,7 @@ fu_logitech_tap_touch_device_write_blocks(FuLogitechTapTouchDevice *self,
 				  5,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "failed to crc for %s, device busy", in_ap ? "AP" : "DF");
+		g_prefix_error(error, "failed to crc for %s, device busy: ", in_ap ? "AP" : "DF");
 		return FALSE;
 	}
 	if (!fu_logitech_tap_touch_device_get_crc(self, &device_checksum, 4, error))

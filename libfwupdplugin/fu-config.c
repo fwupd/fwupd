@@ -258,7 +258,7 @@ fu_config_ensure_permissions(FuConfig *self, GError **error)
 					 NULL,
 					 error);
 		if (info == NULL) {
-			g_prefix_error(error, "failed to query info about %s", item->filename);
+			g_prefix_error(error, "failed to query info about %s: ", item->filename);
 			return FALSE;
 		}
 		st_mode = g_file_info_get_attribute_uint32(info, G_FILE_ATTRIBUTE_UNIX_MODE) & 0777;

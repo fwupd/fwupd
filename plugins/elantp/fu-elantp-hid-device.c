@@ -552,7 +552,7 @@ fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "forcetable address wrong (%x,%x): ",
+			    "forcetable address wrong (0x%x, 0x%x)",
 			    force_table_addr,
 			    self->force_table_addr);
 		return FALSE;

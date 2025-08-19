@@ -868,7 +868,7 @@ fu_mm_qmi_device_write_firmware(FuDevice *device,
 							   &archive_context.error);
 		if (file_info->digest == NULL) {
 			g_prefix_error(&archive_context.error,
-				       "Failed to write file '%s':",
+				       "Failed to write file %s: ",
 				       file_info->filename);
 			break;
 		}
