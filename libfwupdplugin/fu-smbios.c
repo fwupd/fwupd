@@ -320,9 +320,8 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "invalid DMI data size, got %" G_GSIZE_FORMAT
-			    " bytes, expected %" G_GUINT32_FORMAT,
-			    sz,
+			    "invalid DMI data size, got 0x%x bytes, expected 0x%x",
+			    (guint)sz,
 			    self->structure_table_len);
 		return FALSE;
 	}

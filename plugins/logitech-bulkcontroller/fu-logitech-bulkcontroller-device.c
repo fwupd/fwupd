@@ -1252,7 +1252,10 @@ fu_logitech_bulkcontroller_device_clear_queue_cb(FuDevice *device,
 	}
 
 	/* failed */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "got valid data, so keep going");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "got valid data, so keep going");
 	return FALSE;
 }
 

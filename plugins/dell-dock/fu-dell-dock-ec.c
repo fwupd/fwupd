@@ -397,10 +397,10 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 
 	/* guard against EC not yet ready and fail init */
 	if (header->total_devices == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_SIGNATURE_INVALID,
-			    "No bridge devices detected, dock may be booting up");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_SIGNATURE_INVALID,
+				    "No bridge devices detected, dock may be booting up");
 		return FALSE;
 	}
 	g_info("%u devices [%u->%u]",

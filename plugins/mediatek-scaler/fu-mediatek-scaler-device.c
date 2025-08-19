@@ -458,9 +458,8 @@ fu_mediatek_scaler_device_prepare_update_cb(FuDevice *device, gpointer user_data
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "device nak the incoming filesize, requested: %" G_GSIZE_FORMAT
-			    ", ack: %u",
-			    fw_sz,
+			    "device nak the incoming filesize, requested: 0x%x, ack: %u",
+			    (guint)fw_sz,
 			    acksz);
 		return FALSE;
 	}
