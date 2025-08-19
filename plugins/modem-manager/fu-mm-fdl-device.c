@@ -250,7 +250,7 @@ fu_mm_fdl_device_write_firmware(FuDevice *device,
 					  10, /* ms */
 					  helper,
 					  error)) {
-			g_prefix_error(error, "could not write chunk %u", chunk);
+			g_prefix_error(error, "could not write chunk %u: ", chunk);
 			return FALSE;
 		}
 		if (chunk % 100 == 0)

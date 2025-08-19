@@ -369,7 +369,7 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading GPIO-Out Register 0x%02x%02x: ",
+			    "error reading GPIO-Out Register 0x%02x%02x",
 			    data_out[1],
 			    data_out[2]);
 		return FALSE;
@@ -452,7 +452,7 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading GPIO-Enable Register 0x%02x%02x: ",
+			    "error reading GPIO-Enable Register 0x%02x%02x",
 			    data_en[1],
 			    data_en[2]);
 		return FALSE;
@@ -548,7 +548,7 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading register 0x%02x%02x%02x%02x%02x: ",
+			    "error reading register 0x%02x%02x%02x%02x%02x",
 			    data[0],
 			    data[1],
 			    data[2],
@@ -1479,7 +1479,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "error dddci length too large, got 0x%x, expected <= 0x%zx: ",
+				    "error dddci length too large, got 0x%x, expected <= 0x%zx",
 				    (guint)len,
 				    sizeof(buf));
 			return FALSE;

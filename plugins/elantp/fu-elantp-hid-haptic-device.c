@@ -348,7 +348,7 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "failed to set haptic info (0x%04x): ",
+			    "failed to set haptic info (0x%04x)",
 			    value);
 		return FALSE;
 	}
@@ -391,7 +391,7 @@ fu_elantp_hid_haptic_device_write_checksum_cb(FuDevice *parent, gpointer user_da
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "eeprom checksum failed 0x%04x != 0x%04x : ",
+			    "eeprom checksum failed 0x%04x != 0x%04x",
 			    value,
 			    helper->checksum);
 		return FALSE;
@@ -901,7 +901,7 @@ fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GErro
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no support for EEPROM IAP 0x%x 0x%x: ",
+			    "no support for EEPROM IAP 0x%x 0x%x",
 			    (guint)self->driver_ic,
 			    (guint)self->iap_ver);
 		return FALSE;

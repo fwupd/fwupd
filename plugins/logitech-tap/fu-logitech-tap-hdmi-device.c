@@ -224,7 +224,7 @@ fu_logitech_tap_hdmi_device_ait_initiate_update(FuLogitechTapHdmiDevice *self, G
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "initiate query packet was too large at 0x%x bytes: ",
+			    "initiate query packet was too large at 0x%x bytes",
 			    data_len);
 		return FALSE;
 	}
@@ -443,7 +443,7 @@ fu_logitech_tap_hdmi_device_ensure_version(FuLogitechTapHdmiDevice *self, GError
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "version query packet was too large at 0x%x bytes: ",
+			    "version query packet was too large at 0x%x bytes",
 			    bufsz);
 		return FALSE;
 	}

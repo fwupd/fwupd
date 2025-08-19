@@ -556,7 +556,7 @@ fu_genesys_usbhub_device_set_isp_mode(FuGenesysUsbhubDevice *self,
 						    error)) {
 		g_prefix_error(error,
 			       "error setting isp mode - "
-			       "control transfer error (reg 0x%02x) ",
+			       "control transfer error (reg 0x%02x): ",
 			       self->vcs.req_switch);
 		return FALSE;
 	}
@@ -2240,7 +2240,7 @@ fu_genesys_usbhub_device_erase_flash(FuGenesysUsbhubDevice *self,
 							    NULL,
 							    error)) {
 			g_prefix_error(error,
-				       "error erasing flash at sector 0x%02x in block 0x%02x",
+				       "error erasing flash at sector 0x%02x in block 0x%02x: ",
 				       sectornum,
 				       blocknum);
 			return FALSE;

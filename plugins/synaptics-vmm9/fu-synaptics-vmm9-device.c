@@ -463,7 +463,7 @@ fu_synaptics_vmm9_device_write_blocks(FuSynapticsVmm9Device *self,
 						      FU_SYNAPTICS_VMM9_COMMAND_FLAG_NONE,
 						      error)) {
 			g_prefix_error(error,
-				       "failed at page %u, @0x%x",
+				       "failed at page %u, @0x%x: ",
 				       fu_chunk_get_idx(chk),
 				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
@@ -523,7 +523,7 @@ fu_synaptics_vmm9_device_read_firmware(FuDevice *device, FuProgress *progress, G
 						      FU_SYNAPTICS_VMM9_COMMAND_FLAG_NONE,
 						      error)) {
 			g_prefix_error(error,
-				       "failed at chunk %u, @0x%x",
+				       "failed at chunk %u, @0x%x: ",
 				       fu_chunk_get_idx(chk),
 				       (guint)fu_chunk_get_address(chk));
 			return NULL;

@@ -362,7 +362,7 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
-					    "failed to verify erase @0x%x: ",
+					    "failed to verify erase @0x%x",
 					    addr);
 				return FALSE;
 			}

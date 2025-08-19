@@ -305,7 +305,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 							    fu_chunk_get_address(chk),
 							    error)) {
 			g_prefix_error(error,
-				       "failed to set img address 0x%x",
+				       "failed to set img address 0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}
@@ -316,7 +316,7 @@ fu_wistron_dock_device_write_blocks(FuWistronDockDevice *self,
 							   fu_chunk_get_data_sz(chk),
 							   error)) {
 			g_prefix_error(error,
-				       "failed to write img data 0x%x",
+				       "failed to write img data 0x%x: ",
 				       (guint)fu_chunk_get_address(chk));
 			return FALSE;
 		}

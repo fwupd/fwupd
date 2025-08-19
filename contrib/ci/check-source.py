@@ -247,6 +247,8 @@ class Checker:
         sections = _split_args(line)
         if len(sections) == 2:
             self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
+        if len(sections) > 1 and not sections[1].endswith(': "'):
+            self.add_failure(f"missing ': ' suffix")
 
     def _test_line_missing_literal_set_error(self, line: str) -> None:
         # skip!
@@ -263,6 +265,8 @@ class Checker:
         sections = _split_args(line)
         if len(sections) == 4:
             self.add_failure(f"missing literal, use g_set_error_literal() instead")
+        if len(sections) > 3 and sections[3].endswith(': "'):
+            self.add_failure(f"extraneous ': ' suffix")
 
     def _test_line_enums(self, line: str) -> None:
         # skip!

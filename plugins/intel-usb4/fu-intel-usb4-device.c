@@ -345,7 +345,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Invalid NVM write offset 0x%x, must be DW aligned: ",
+			    "Invalid NVM write offset 0x%x, must be DW aligned",
 			    nvm_addr);
 		return FALSE;
 	}
@@ -353,7 +353,7 @@ fu_intel_usb4_device_nvm_write(FuIntelUsb4Device *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "Invalid NVM length 0x%x, must be 64 byte aligned: ",
+			    "Invalid NVM length 0x%x, must be 64 byte aligned",
 			    (guint)g_bytes_get_size(blob));
 		return FALSE;
 	}

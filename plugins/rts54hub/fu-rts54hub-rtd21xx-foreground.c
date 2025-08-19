@@ -293,7 +293,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
-			    "failed project ID with error 0x%02x: ",
+			    "failed project ID with error 0x%02x",
 			    read_buf[0]);
 		return FALSE;
 	}
