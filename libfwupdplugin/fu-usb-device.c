@@ -310,8 +310,8 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 		g_string_append_printf(hub, "%02X", data[0x0B]);
 		g_string_append_printf(hub, "%02X", data[0x0A]);
 	} else if (sz >= 9) {
-		guint8 numbytes = fu_common_align_up(data[2] + 1, 0x03) / 8;
-		for (guint i = 0; i < numbytes; i++) {
+		gsize numbytes = fu_common_align_up(data[2] + 1, 0x03) / 8;
+		for (gsize i = 0; i < numbytes; i++) {
 			guint8 tmp = 0x0;
 			if (!fu_memread_uint8_safe(data, sz, 7 + i, &tmp, error))
 				return FALSE;
