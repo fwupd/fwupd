@@ -158,6 +158,13 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 
 		/* read tag from aligned offset */
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
+		if (offset > G_MAXUINT32) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "offset bigger than 4GB");
+			return FALSE;
+		}
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &token, G_BIG_ENDIAN, error))
 			return FALSE;
 		offset += sizeof(guint32);
