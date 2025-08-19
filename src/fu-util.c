@@ -3405,7 +3405,7 @@ fu_util_downgrade(FuUtil *self, gchar **values, GError **error)
 		    /* TRANSLATORS: message letting the user know no device downgrade available
 		     * %1 is the device name */
 		    g_strdup_printf(_("No downgrades for %s"), fwupd_device_get_name(dev));
-		g_prefix_error(error, "%s: ", downgrade_str);
+		g_prefix_error(error, "%s: ", downgrade_str); /* nocheck:error */
 		return FALSE;
 	}
 

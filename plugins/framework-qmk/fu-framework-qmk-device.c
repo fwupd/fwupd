@@ -97,7 +97,7 @@ fu_framework_qmk_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", NULL);
+	device_usb = fu_device_get_backend_parent_with_subsystem(device, "usb:usb_device", error);
 	if (device_usb == NULL) {
 		g_prefix_error_literal(error, "no USB device: ");
 		return FALSE;

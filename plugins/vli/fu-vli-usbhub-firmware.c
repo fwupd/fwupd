@@ -257,7 +257,10 @@ fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 				self->device_kind = FU_VLI_DEVICE_KIND_VL819Q8;
 				break;
 			default:
-				g_prefix_error_literal(error, "failed to match Q5/Q7/Q8 fw type: ");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "failed to match Q5/Q7/Q8 fw type");
 				return FALSE;
 			}
 			/* VL820 */

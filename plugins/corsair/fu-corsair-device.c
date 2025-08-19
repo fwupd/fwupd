@@ -306,7 +306,10 @@ fu_corsair_device_reconnect_subdevice(FuDevice *device, GError **error)
 	FuDevice *parent = fu_device_get_parent(device);
 
 	if (parent == NULL) {
-		g_prefix_error_literal(error, "cannot get parent: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "cannot get parent: ");
 		return FALSE;
 	}
 
