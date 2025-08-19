@@ -214,9 +214,11 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	gsize length = 0;
 
 	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_prefix_error(error,
-			       "ddcci read length exceed max length:%i: ",
-			       MAX_READ_WRITE_LENGTH_ONE_TIME);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ddcci read length exceed max length:%i: ",
+			    MAX_READ_WRITE_LENGTH_ONE_TIME);
 		return FALSE;
 	}
 
@@ -238,9 +240,11 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	length = buf_read[1] & 0x7F;
 
 	if ((length + 3) > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_prefix_error(error,
-			       "ddcci read cmd length exceed max length:%i: ",
-			       MAX_READ_WRITE_LENGTH_ONE_TIME);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "ddcci read cmd length exceed max length:%i: ",
+			    MAX_READ_WRITE_LENGTH_ONE_TIME);
 	}
 
 	for (gsize i = 0; i < (length + 2); i++) {
@@ -248,7 +252,10 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	}
 
 	if (checksum != buf_read[length + 2]) {
-		g_prefix_error_literal(error, "failed to DDCCI read I2C checksum error: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to DDCCI read I2C checksum error: ");
 		return FALSE;
 	}
 

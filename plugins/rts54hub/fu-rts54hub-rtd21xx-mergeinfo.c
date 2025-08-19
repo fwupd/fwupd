@@ -137,8 +137,6 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 		return FALSE;
 	}
 
-	/* set merge version */
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	version =
 	    g_strdup_printf("%u.%u.%u.%u", buf_reply[4], buf_reply[5], buf_reply[6], buf_reply[7]);
 	fu_device_set_version(FU_DEVICE(self), version);
@@ -465,6 +463,8 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 static void
 fu_rts54hub_rtd21xx_mergeinfo_init(FuRts54hubRtd21xxMergeinfo *self)
 {
+	/* set merge version format*/
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
