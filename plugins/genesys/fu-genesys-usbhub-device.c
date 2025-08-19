@@ -2606,7 +2606,10 @@ fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
 
 	hash_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_hash(st_codesign, &hash_bufsz);
 	if (hash_buf == NULL) {
-		g_prefix_error_literal(error, "failed to get hash digest: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AUTH_FAILED,
+				    "failed to get hash digest");
 		return FALSE;
 	}
 
@@ -2712,7 +2715,10 @@ fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
 
 	sig_buf = fu_struct_genesys_fw_codesign_info_ecdsa_get_signature(st_codesign, &sig_bufsz);
 	if (sig_buf == NULL) {
-		g_prefix_error_literal(error, "failed to get signature: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AUTH_FAILED,
+				    "failed to get signature");
 		return FALSE;
 	}
 

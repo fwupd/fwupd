@@ -1355,10 +1355,10 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		/* ignore */
 		break;
 	case FU_DFU_STATUS_ERR_VENDOR:
-		g_prefix_error_literal(error, "read protection is active: ");
+		g_prefix_error_literal(error, "read protection is active: "); /* nocheck:error */
 		break;
 	default:
-		g_prefix_error(error,
+		g_prefix_error(error, /* nocheck:error */
 			       "[%s,%s]: ",
 			       fu_dfu_state_to_string(priv->state),
 			       fu_dfu_status_to_string(priv->status));

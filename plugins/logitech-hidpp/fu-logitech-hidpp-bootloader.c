@@ -248,7 +248,10 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GEr
 	minor = fu_logitech_hidpp_buffer_read_uint8((const gchar *)req->data + 6);
 	version = fu_logitech_hidpp_format_version("BOT", major, minor, build);
 	if (version == NULL) {
-		g_prefix_error_literal(error, "failed to format firmware version: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to format firmware version");
 		return FALSE;
 	}
 	fu_device_set_version_bootloader(FU_DEVICE(self), version);

@@ -52,6 +52,14 @@ def _split_args(line: str) -> list[str]:
     return split
 
 
+def _number_non_empty_lines(lines: list[str]) -> int:
+    cnt: int = 0
+    for line in lines:
+        if line not in ["\n", ""]:
+            cnt += 1
+    return cnt
+
+
 # make lines long again
 def _fix_newlines(lines: list[str]) -> list[str]:
     lines_fixed = []
@@ -469,6 +477,40 @@ class Checker:
                 self.add_failure("uses g_set_error() without returning FALSE")
                 continue
 
+    def _test_lines_gerror_not_set(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:error"
+
+        linecnt_g_set_error: int = 0
+        for linecnt, line in enumerate(lines):
+            if line.startswith("#define"):
+                continue
+            if line.find(self._current_nocheck) != -1:
+                continue
+            self._current_linecnt = linecnt + 1
+
+            # we're adding to the error
+            if line.find("g_prefix_error") != -1:
+                if not linecnt_g_set_error:
+                    self.add_failure("uses g_prefix_error() without setting error")
+                    continue
+                if _number_non_empty_lines(lines[linecnt_g_set_error:linecnt]) > 5:
+                    self.add_failure(
+                        "uses g_prefix_error() without setting error within 5 previous lines"
+                    )
+                continue
+
+            # are we "setting" the error
+            sections = _split_args(line)
+            for section in sections:
+                if (
+                    section.startswith("error")
+                    or section.startswith("&error")
+                    or section.startswith("GError")
+                    or section.find("(error)") != -1
+                ):
+                    linecnt_g_set_error = linecnt
+                    break
+
     def _test_lines_gerror(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error"
         linecnt_g_set_error: int = 0
@@ -706,6 +748,9 @@ class Checker:
 
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
+
+        # prefix with no set
+        self._test_lines_gerror_not_set(lines)
 
         # setting GError, not returning
         self._test_lines_gerror_false_returns(lines)
