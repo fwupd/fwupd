@@ -36,7 +36,7 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
-	fwupd_codec_string_append_hex(str, idt, "IsPciDevice", self->is_pci_device);
+	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", self->is_pci_device);
 }
 
 static gchar *
