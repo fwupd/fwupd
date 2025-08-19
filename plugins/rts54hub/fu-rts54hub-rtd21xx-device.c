@@ -162,7 +162,7 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 						  buf_write + 2,
 						  (datasz + 2),
 						  error)) {
-		g_prefix_error(error, "failed to DDCCI write: ");
+		g_prefix_error_literal(error, "failed to DDCCI write: ");
 		return FALSE;
 	}
 
@@ -245,6 +245,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "ddcci read cmd length exceed max length:%i: ",
 			    MAX_READ_WRITE_LENGTH_ONE_TIME);
+		return FALSE;
 	}
 
 	for (gsize i = 0; i < (length + 2); i++) {
