@@ -205,29 +205,34 @@ fu_devlink_netlink_event_id_msg_cb(const struct nlmsghdr *nlh, void *data)
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
 
 	/* extract attribute name and value based on type */
-	if (tb[DEVLINK_ATTR_BUS_NAME] != NULL)
+	if (tb[DEVLINK_ATTR_BUS_NAME] != NULL) {
 		g_strv_builder_add(
 		    tuples_builder,
 		    g_strdup_printf("bus_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_BUS_NAME])));
-	if (tb[DEVLINK_ATTR_DEV_NAME] != NULL)
+	}
+	if (tb[DEVLINK_ATTR_DEV_NAME] != NULL) {
 		g_strv_builder_add(
 		    tuples_builder,
 		    g_strdup_printf("dev_name=%s", mnl_attr_get_str(tb[DEVLINK_ATTR_DEV_NAME])));
-	if (tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME] != NULL)
+	}
+	if (tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME] != NULL) {
 		g_strv_builder_add(
 		    tuples_builder,
 		    g_strdup_printf("file_name=%s",
 				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME])));
-	if (tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT] != NULL)
+	}
+	if (tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT] != NULL) {
 		g_strv_builder_add(
 		    tuples_builder,
 		    g_strdup_printf("component=%s",
 				    mnl_attr_get_str(tb[DEVLINK_ATTR_FLASH_UPDATE_COMPONENT])));
-	if (tb[DEVLINK_ATTR_RELOAD_ACTION] != NULL)
+	}
+	if (tb[DEVLINK_ATTR_RELOAD_ACTION] != NULL) {
 		g_strv_builder_add(
 		    tuples_builder,
 		    g_strdup_printf("reload_action=%u",
 				    mnl_attr_get_u8(tb[DEVLINK_ATTR_RELOAD_ACTION])));
+	}
 
 	return MNL_CB_OK;
 }
