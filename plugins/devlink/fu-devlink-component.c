@@ -51,9 +51,11 @@ fu_devlink_component_write_firmware(FuDevice *device,
 static gboolean
 fu_devlink_component_probe(FuDevice *device, GError **error)
 {
-	/* optional */
+	/* component required, PSID optional */
+	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "COMPONENT", NULL))
+		return FALSE;
 	fu_device_build_instance_id(device, NULL, "PCI", "VEN", "DEV", "COMPONENT", "PSID", NULL);
-	return fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "COMPONENT", NULL);
+	return TRUE;
 }
 
 static gboolean
@@ -63,7 +65,6 @@ fu_devlink_component_reload(FuDevice *device, GError **error)
 	return fu_device_reload(proxy, error);
 }
 
-/* delegate firmware activation to proxy device */
 static gboolean
 fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **error)
 {

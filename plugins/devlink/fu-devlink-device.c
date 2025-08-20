@@ -43,10 +43,12 @@ static gint
 fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	FuDevlinkFlashMonHelper *helper = data;
+	const gchar *bus_name;
+	const gchar *dev_name;
+	guint64 done = 0;
+	guint64 total = 0;
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
-	const gchar *bus_name, *dev_name;
-	guint64 done = 0, total = 0;
 
 	/* only handle flash update status and end messages */
 	if (genl->cmd != DEVLINK_CMD_FLASH_UPDATE_STATUS &&
