@@ -145,9 +145,9 @@ fu_devlink_plugin_netlink_cb(GIOChannel *channel, GIOCondition condition, gpoint
 static gboolean
 fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 {
-	GIOChannel *channel;
 	gint fd;
 	guint watch_id;
+	g_autoptr(GIOChannel) channel = NULL;
 
 	/* open devlink netlink socket */
 	self->nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
@@ -172,8 +172,6 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 	self->netlink_source = g_main_context_find_source_by_id(NULL, watch_id);
 	if (self->netlink_source != NULL)
 		g_source_ref(self->netlink_source);
-
-	g_io_channel_unref(channel);
 
 	return TRUE;
 }
