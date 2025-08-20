@@ -788,6 +788,15 @@ fu_devlink_device_incorporate(FuDevice *device, FuDevice *donor_device)
 }
 
 static void
+fu_devlink_device_init(FuDevlinkDevice *self)
+{
+	fu_device_set_summary(FU_DEVICE(self), "Devlink device");
+	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_device_add_possible_plugin(FU_DEVICE(self), "devlink");
+}
+
+static void
 fu_devlink_device_finalize(GObject *object)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(object);
@@ -796,15 +805,6 @@ fu_devlink_device_finalize(GObject *object)
 	g_free(self->dev_name);
 
 	G_OBJECT_CLASS(fu_devlink_device_parent_class)->finalize(object);
-}
-
-static void
-fu_devlink_device_init(FuDevlinkDevice *self)
-{
-	fu_device_set_summary(FU_DEVICE(self), "Devlink device");
-	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
-	fu_device_add_possible_plugin(FU_DEVICE(self), "devlink");
 }
 
 static void

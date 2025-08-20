@@ -105,27 +105,6 @@ fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **e
 	return fu_device_activate(parent, progress, error);
 }
 
-static void
-fu_devlink_component_init(FuDevlinkComponent *self)
-{
-	fu_device_set_summary(FU_DEVICE(self), "Devlink component");
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
-}
-
-static void
-fu_devlink_component_finalize(GObject *object)
-{
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(object);
-	g_free(self->component_name);
-	G_OBJECT_CLASS(fu_devlink_component_parent_class)->finalize(object);
-}
-
 static gboolean
 fu_devlink_component_prepare(FuDevice *device,
 			     FuProgress *progress,
@@ -146,40 +125,6 @@ fu_devlink_component_cleanup(FuDevice *device,
 	FuDevice *parent = fu_device_get_parent(device);
 
 	return fu_device_cleanup(parent, progress, flags, error);
-}
-
-static void
-fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-
-	object_class->finalize = fu_devlink_component_finalize;
-	device_class->to_string = fu_devlink_component_to_string;
-	device_class->write_firmware = fu_devlink_component_write_firmware;
-	device_class->reload = fu_devlink_component_reload;
-	device_class->activate = fu_devlink_component_activate;
-	device_class->prepare = fu_devlink_component_prepare;
-	device_class->cleanup = fu_devlink_component_cleanup;
-}
-
-FuDevice *
-fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
-{
-	g_autofree gchar *device_id = NULL;
-	g_autoptr(FuDevlinkComponent) self = NULL;
-
-	g_return_val_if_fail(component_name, NULL);
-
-	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT, "context", ctx, NULL);
-	self->component_name = g_strdup(component_name);
-
-	/* set device properties */
-	device_id = g_strdup_printf("component-%s", component_name);
-	fu_device_set_logical_id(FU_DEVICE(self),
-				 component_name); /* use component name as logical ID */
-
-	return FU_DEVICE(g_steal_pointer(&self));
 }
 
 typedef struct {
@@ -255,4 +200,59 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 				error_local->message);
 		}
 	}
+}
+
+FuDevice *
+fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
+{
+	g_autofree gchar *device_id = NULL;
+	g_autoptr(FuDevlinkComponent) self = NULL;
+
+	g_return_val_if_fail(component_name, NULL);
+
+	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT, "context", ctx, NULL);
+	self->component_name = g_strdup(component_name);
+
+	/* set device properties */
+	device_id = g_strdup_printf("component-%s", component_name);
+	fu_device_set_logical_id(FU_DEVICE(self),
+				 component_name); /* use component name as logical ID */
+
+	return FU_DEVICE(g_steal_pointer(&self));
+}
+
+static void
+fu_devlink_component_init(FuDevlinkComponent *self)
+{
+	fu_device_set_summary(FU_DEVICE(self), "Devlink component");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
+}
+
+static void
+fu_devlink_component_finalize(GObject *object)
+{
+	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(object);
+	g_free(self->component_name);
+	G_OBJECT_CLASS(fu_devlink_component_parent_class)->finalize(object);
+}
+
+static void
+fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+
+	object_class->finalize = fu_devlink_component_finalize;
+	device_class->to_string = fu_devlink_component_to_string;
+	device_class->write_firmware = fu_devlink_component_write_firmware;
+	device_class->reload = fu_devlink_component_reload;
+	device_class->activate = fu_devlink_component_activate;
+	device_class->prepare = fu_devlink_component_prepare;
+	device_class->cleanup = fu_devlink_component_cleanup;
 }
