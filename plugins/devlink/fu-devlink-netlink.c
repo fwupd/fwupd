@@ -309,9 +309,8 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 			rc = response_len;
 		} else {
 			rc = mnl_socket_recvfrom(nlg->nl, nlg->buf, MNL_SOCKET_BUFFER_SIZE);
-			if (rc == 0) {
+			if (rc == 0)
 				return TRUE;
-			}
 			if (rc < 0) {
 				g_set_error(error,
 					    FWUPD_ERROR,
