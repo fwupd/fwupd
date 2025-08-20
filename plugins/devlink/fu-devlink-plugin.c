@@ -48,10 +48,10 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 
 	/* use backend to create device with proper hierarchy */
 	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error)) {
-		g_debug("failed to add devlink device %s/%s: %s",
-			bus_name,
-			dev_name,
-			error->message);
+		g_warning("failed to add devlink device %s/%s: %s",
+			  bus_name,
+			  dev_name,
+			  error->message);
 		return;
 	}
 }
