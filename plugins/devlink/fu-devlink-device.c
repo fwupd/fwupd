@@ -405,7 +405,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	component = fu_devlink_device_get_component(helper->device, name);
 	if (component == NULL) {
 		g_autofree gchar *component_device_name =
-		    g_strdup_printf("%s/%s", fu_device_get_name(helper->device), name);
+		    g_strdup_printf("%s - %s", fu_device_get_name(helper->device), name);
 
 		component = fu_devlink_component_new(fu_device_get_context(helper->device), name);
 		fu_devlink_component_build_instance_id(component,
@@ -533,6 +533,20 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* use quirk database for a better name */
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+	if (!fu_device_build_instance_id_full(device,
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "PCI",
+					      "VEN",
+					      "DEV",
+					      NULL)) {
+		g_prefix_error_literal(error, "failed to create PCI quirk for name: ");
+		return FALSE;
+	}
+
 	/* get device information and version */
 	return fu_devlink_device_get_info(device, error);
 }
@@ -596,7 +610,6 @@ fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_na
 
 	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
-	fu_device_set_name(FU_DEVICE(self), device_id);
 
 	return FU_DEVICE(g_steal_pointer(&self));
 }
