@@ -148,21 +148,18 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 	GIOChannel *channel;
 	gint fd;
 	guint watch_id;
-	g_autoptr(FuDevlinkGenSocket) nlg = NULL;
 
 	/* open devlink netlink socket */
-	nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
-	if (nlg == NULL)
+	self->nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
+	if (self->nlg == NULL)
 		return FALSE;
 
 	/* subscribe to devlink multicast notifications */
-	if (!fu_devlink_netlink_mcast_group_subscribe(nlg, error))
+	if (!fu_devlink_netlink_mcast_group_subscribe(self->nlg, error))
 		return FALSE;
 
-	self->nlg = nlg;
-
 	/* create GIOChannel for the netlink socket */
-	fd = fu_devlink_netlink_gen_socket_get_fd(nlg);
+	fd = fu_devlink_netlink_gen_socket_get_fd(self->nlg);
 	channel = g_io_channel_unix_new(fd);
 	g_io_channel_set_encoding(channel, NULL, NULL);
 	g_io_channel_set_buffered(channel, FALSE);
@@ -177,8 +174,6 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 		g_source_ref(self->netlink_source);
 
 	g_io_channel_unref(channel);
-
-	g_steal_pointer(&nlg);
 
 	return TRUE;
 }
