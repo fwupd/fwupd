@@ -24,7 +24,7 @@ This plugin supports the following protocol ID:
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
-* `FIXME\VID_273F&FIXUP_1001`
+* `PCI\VID_273F&FIXUP_1001`
 
 ### Device Identification
 
