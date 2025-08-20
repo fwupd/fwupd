@@ -41,7 +41,7 @@ typedef struct {
 } FuDevlinkFlashSendHelper;
 
 /* handle flash update status and end messages */
-static int
+static gint
 fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
 {
 	FuDevlinkFlashMonHelper *helper = data;
@@ -430,7 +430,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 }
 
 /* callback for parsing devlink dev info response */
-static int
+static gint
 fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
 {
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);

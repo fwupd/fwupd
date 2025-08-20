@@ -15,10 +15,10 @@
 
 static struct nlmsghdr *
 fu_devlink_netlink_msg_prepare(void *buf,
-			       uint32_t nlmsg_type,
+			       guint32 nlmsg_type,
 			       gboolean dump,
 			       void *extra_header,
-			       size_t extra_header_size)
+			       gsize extra_header_size)
 {
 	struct nlmsghdr *nlh;
 	void *eh;
@@ -37,11 +37,11 @@ fu_devlink_netlink_msg_prepare(void *buf,
 }
 
 /* attribute parser callback for netlink error attributes */
-static int
+static gint
 fu_devlink_netlink_nlmsgerr_attr_cb(const struct nlattr *attr, void *data)
 {
 	const struct nlattr **tb = data;
-	int type = mnl_attr_get_type(attr);
+	gint type = mnl_attr_get_type(attr);
 
 	if (mnl_attr_type_valid(attr, NLMSGERR_ATTR_MAX) < 0)
 		return MNL_CB_OK;
@@ -61,7 +61,7 @@ fu_devlink_netlink_error_cb_extack(const struct nlmsghdr *nlh, GError **error)
 {
 	const struct nlmsgerr *err = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[NLMSGERR_ATTR_MAX + 1] = {};
-	unsigned int hlen = sizeof(struct nlmsgerr);
+	guint hlen = sizeof(struct nlmsgerr);
 
 	if ((nlh->nlmsg_flags & NLM_F_ACK_TLVS) == 0)
 		return FALSE;
@@ -81,7 +81,7 @@ fu_devlink_netlink_error_cb_extack(const struct nlmsghdr *nlh, GError **error)
 }
 
 /* error callback parses extack messages */
-static int
+static gint
 fu_devlink_netlink_error_cb(const struct nlmsghdr *nlh, void *data)
 {
 	const struct nlmsgerr *err = mnl_nlmsg_get_payload(nlh);
@@ -101,20 +101,20 @@ fu_devlink_netlink_error_cb(const struct nlmsghdr *nlh, void *data)
 	return MNL_CB_ERROR;
 }
 
-static int
+static gint
 fu_devlink_netlink_noop_cb(const struct nlmsghdr *nlh, void *data)
 {
 	return MNL_CB_STOP;
 }
 
-static int
+static gint
 fu_devlink_netlink_done_cb(const struct nlmsghdr *nlh, void *data)
 {
 	return MNL_CB_STOP;
 }
 
 /* data callback wrapper that calls the user callback */
-static int
+static gint
 fu_devlink_netlink_data_cb(const struct nlmsghdr *nlh, void *data)
 {
 	FuDevlinkCbHelper *helper = data;
@@ -177,7 +177,7 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 }
 
 /* callback for extracting event_id from devlink messages */
-static int
+static gint
 fu_devlink_netlink_event_id_msg_cb(const struct nlmsghdr *nlh, void *data)
 {
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
@@ -366,11 +366,11 @@ fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GErro
 }
 
 /* generic netlink control attribute callback */
-static int
+static gint
 fu_devlink_netlink_genl_ctrl_attr_cb(const struct nlattr *attr, void *data)
 {
 	const struct nlattr **tb = data;
-	int type = mnl_attr_get_type(attr);
+	gint type = mnl_attr_get_type(attr);
 
 	if (mnl_attr_type_valid(attr, CTRL_ATTR_MAX) < 0)
 		return MNL_CB_OK;
@@ -379,11 +379,11 @@ fu_devlink_netlink_genl_ctrl_attr_cb(const struct nlattr *attr, void *data)
 	return MNL_CB_OK;
 }
 
-static int
+static gint
 fu_devlink_netlink_genl_mcast_group_attr_cb(const struct nlattr *attr, void *data)
 {
 	const struct nlattr **tb = data;
-	int type = mnl_attr_get_type(attr);
+	gint type = mnl_attr_get_type(attr);
 
 	if (mnl_attr_type_valid(attr, CTRL_ATTR_MCAST_GRP_MAX) < 0)
 		return MNL_CB_OK;
@@ -393,7 +393,7 @@ fu_devlink_netlink_genl_mcast_group_attr_cb(const struct nlattr *attr, void *dat
 }
 
 /* family resolution callback */
-static int
+static gint
 fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *nlh, void *data)
 {
 	FuDevlinkGenSocket *nlg = data;
@@ -611,12 +611,12 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error
 }
 
 /* simple attribute parser callback for devlink attributes */
-int
+gint
 fu_devlink_netlink_attr_cb(const struct nlattr *attr, void *data)
 {
 	const struct nlattr **tb = data;
-	int type = mnl_attr_get_type(attr);
-	int rc;
+	gint type = mnl_attr_get_type(attr);
+	gint rc;
 
 	rc = mnl_attr_type_valid(attr, DEVLINK_ATTR_MAX);
 	if (rc < 0)

@@ -68,7 +68,7 @@ gboolean
 fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error) G_GNUC_NON_NULL(1);
 
 /* attribute parsing callback */
-int
+gint
 fu_devlink_netlink_attr_cb(const struct nlattr *attr, void *data) G_GNUC_NON_NULL(1, 2);
 
 /* cleanup function for auto cleanup */
