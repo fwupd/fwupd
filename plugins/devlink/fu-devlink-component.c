@@ -21,17 +21,9 @@
 
 struct _FuDevlinkComponent {
 	FuDevice parent_instance;
-	gchar *component_name;
 };
 
 G_DEFINE_TYPE(FuDevlinkComponent, fu_devlink_component, FU_TYPE_DEVICE)
-
-static void
-fu_devlink_component_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	fwupd_codec_string_append(str, idt, "ComponentName", self->component_name);
-}
 
 /* delegate firmware writing to parent with component specification */
 static gboolean
@@ -53,12 +45,12 @@ fu_devlink_component_write_firmware(FuDevice *device,
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("flashing component '%s' via proxy device", self->component_name);
+	g_debug("flashing component '%s' via proxy device", fu_device_get_logical_id(device));
 
 	component_name =
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME)
 		? NULL
-		: self->component_name;
+		: fu_device_get_logical_id(device);
 
 	return fu_devlink_device_write_firmware_component(FU_DEVLINK_DEVICE(proxy),
 							  component_name,
@@ -71,7 +63,6 @@ fu_devlink_component_write_firmware(FuDevice *device,
 static gboolean
 fu_devlink_component_reload(FuDevice *device, GError **error)
 {
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -82,7 +73,8 @@ fu_devlink_component_reload(FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("reloading version for component '%s' via proxy device", self->component_name);
+	g_debug("reloading version for component '%s' via proxy device",
+		fu_device_get_logical_id(device));
 	return fu_device_reload(proxy, error);
 }
 
@@ -90,7 +82,6 @@ fu_devlink_component_reload(FuDevice *device, GError **error)
 static gboolean
 fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -101,7 +92,8 @@ fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **e
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("activating firmware for component '%s' via proxy device", self->component_name);
+	g_debug("activating firmware for component '%s' via proxy device",
+		fu_device_get_logical_id(device));
 	return fu_device_activate(proxy, progress, error);
 }
 
@@ -148,14 +140,13 @@ fu_devlink_component_instance_id_cb(gpointer key, gpointer value, gpointer user_
 void
 fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashTable *version_table)
 {
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	GError *error_local = NULL;
+	g_auto(GStrv) keys = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
 	FuDevlinkComponentInstanceIdHelper helper = {
 	    .device = device,
 	    .keys_builder = keys_builder,
 	};
-	g_auto(GStrv) keys = NULL;
 
 	/* append fixed versions to instance id */
 	g_strv_builder_add(keys_builder, "VEN");
@@ -163,7 +154,7 @@ fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashT
 	g_hash_table_foreach(version_table, fu_devlink_component_instance_id_cb, &helper);
 
 	g_strv_builder_add(keys_builder, "COMPONENT");
-	fu_device_add_instance_str(device, "COMPONENT", self->component_name);
+	fu_device_add_instance_str(device, "COMPONENT", fu_device_get_logical_id(device));
 
 	keys = g_strv_builder_end(keys_builder);
 	if (g_strv_length(keys) == 0) {
@@ -172,7 +163,7 @@ fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashT
 	}
 	if (!fu_device_build_instance_id_strv(device, "PCI", keys, &error_local)) {
 		g_debug("failed to build devlink info based instance id for component %s: %s",
-			self->component_name,
+			fu_device_get_logical_id(device),
 			error_local->message);
 	}
 
@@ -190,7 +181,7 @@ fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashT
 						 "COMPONENT",
 						 NULL)) {
 			g_debug("failed to build vid/pid instance id for component %s: %s",
-				self->component_name,
+				fu_device_get_logical_id(device),
 				error_local->message);
 		}
 	}
@@ -199,19 +190,16 @@ fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashT
 FuDevice *
 fu_devlink_component_new(FuDevice *proxy, const gchar *component_name)
 {
-	g_autofree gchar *device_id = NULL;
 	g_autoptr(FuDevlinkComponent) self = NULL;
 
 	g_return_val_if_fail(component_name, NULL);
 
-	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT, "proxy", proxy, NULL);
-	self->component_name = g_strdup(component_name);
-
-	/* set device properties */
-	device_id = g_strdup_printf("component-%s", component_name);
-	fu_device_set_logical_id(FU_DEVICE(self),
-				 component_name); /* use component name as logical ID */
-
+	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT,
+			    "proxy",
+			    proxy,
+			    "logical-id",
+			    component_name,
+			    NULL);
 	return FU_DEVICE(g_steal_pointer(&self));
 }
 
@@ -230,21 +218,9 @@ fu_devlink_component_init(FuDevlinkComponent *self)
 }
 
 static void
-fu_devlink_component_finalize(GObject *object)
-{
-	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(object);
-	g_free(self->component_name);
-	G_OBJECT_CLASS(fu_devlink_component_parent_class)->finalize(object);
-}
-
-static void
 fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-
-	object_class->finalize = fu_devlink_component_finalize;
-	device_class->to_string = fu_devlink_component_to_string;
 	device_class->write_firmware = fu_devlink_component_write_firmware;
 	device_class->reload = fu_devlink_component_reload;
 	device_class->activate = fu_devlink_component_activate;
