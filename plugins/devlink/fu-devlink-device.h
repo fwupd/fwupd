@@ -21,9 +21,3 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error) G_GNUC_NON_NULL(1, 3, 4);
-
-typedef struct {
-	gchar *fixed;
-	gchar *running;
-	gchar *stored;
-} FuDevlinkVersionInfo;

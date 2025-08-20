@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include "fu-context-private.h"
 #include "fu-devlink-component.h"
 #include "fu-devlink-device.h"

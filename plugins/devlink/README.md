@@ -22,9 +22,10 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use the standard USB DeviceInstanceId values, e.g.
+These devices use custom instance IDs consisting of the component name and the device PSID.
 
-* `PCI\VID_273F&FIXUP_1001`
+* `PCI\VEN_15B3&DEV_1021&COMPONENT_fw`
+* `PCI\VEN_15B3&DEV_1021&COMPONENT_fw&PSID_MT_0000001045`
 
 ### Device Identification
 

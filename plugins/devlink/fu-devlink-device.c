@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <fwupdplugin.h>
-
 #include <glib/gstdio.h>
 
 #include "fu-devlink-component.h"
@@ -118,11 +116,7 @@ fu_devlink_device_flash_send(FuDevlinkDevice *self,
 	mnl_attr_put_strz(nlh, DEVLINK_ATTR_FLASH_UPDATE_FILE_NAME, filename);
 
 	/* send flash update command - this will block until completion */
-	if (!fu_devlink_netlink_msg_send(self->nlg, nlh, error))
-		return FALSE;
-	g_debug("flash update command completed successfully");
-
-	return TRUE;
+	return fu_devlink_netlink_msg_send(self->nlg, nlh, error);
 }
 
 /* thread function that sends the flash update command and quits main loop */
@@ -183,6 +177,7 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 					&error))
 		g_warning("failed to process netlink message: %s", error->message);
 
+	/* success */
 	return TRUE;
 }
 
@@ -300,40 +295,33 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 	return ret;
 }
 
-static void
-fu_devlink_device_version_info_free(FuDevlinkVersionInfo *version_info)
+static gchar *
+fu_devlink_device_attr_type_to_key(struct nlattr *attr, const gchar *name)
 {
-	g_free(version_info->fixed);
-	g_free(version_info->running);
-	g_free(version_info->stored);
-	g_free(version_info);
+	if (mnl_attr_get_type(attr) == DEVLINK_ATTR_INFO_VERSION_STORED)
+		return g_strdup_printf("stored:%s", name);
+	return g_strdup(name);
 }
 
 static GHashTable *
-fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
+fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 {
-	FuDevlinkVersionInfo *version_info;
 	struct nlattr *attr;
-	g_autoptr(GHashTable) version_table = NULL;
+	g_autoptr(GHashTable) attrs_map = NULL;
 
-	version_table = g_hash_table_new_full(g_str_hash,
-					      g_str_equal,
-					      g_free,
-					      (GDestroyNotify)fu_devlink_device_version_info_free);
+	attrs_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
-		const gchar *name;
-		const gchar *value;
+		g_autofree gchar *name = NULL;
+		g_autofree gchar *value = NULL;
 
 		if (mnl_attr_get_type(attr) != DEVLINK_ATTR_INFO_VERSION_FIXED &&
 		    mnl_attr_get_type(attr) != DEVLINK_ATTR_INFO_VERSION_RUNNING &&
 		    mnl_attr_get_type(attr) != DEVLINK_ATTR_INFO_VERSION_STORED)
 			continue;
-
 		if (mnl_attr_parse_nested(attr, fu_devlink_netlink_attr_cb, ver_tb) != MNL_CB_OK)
 			continue;
-
 		if (ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME] == NULL ||
 		    ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE] == NULL)
 			continue;
@@ -342,40 +330,21 @@ fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 		    fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]), G_MAXSIZE);
 		value = fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]),
 				   G_MAXSIZE);
-
-		version_info = g_hash_table_lookup(version_table, name);
-		if (version_info == NULL) {
-			version_info = g_new0(FuDevlinkVersionInfo, 1);
-			g_hash_table_insert(version_table, g_strdup(name), version_info);
-		}
-
-		switch (mnl_attr_get_type(attr)) {
-		case DEVLINK_ATTR_INFO_VERSION_FIXED:
-			version_info->fixed = g_strdup(value);
-			break;
-		case DEVLINK_ATTR_INFO_VERSION_RUNNING:
-			version_info->running = g_strdup(value);
-			break;
-		case DEVLINK_ATTR_INFO_VERSION_STORED:
-			version_info->stored = g_strdup(value);
-			break;
-		default:
-			continue;
-		}
+		g_hash_table_insert(attrs_map,
+				    fu_devlink_device_attr_type_to_key(attr, name),
+				    g_strdup(value));
 	}
 
-	return g_steal_pointer(&version_table);
+	return g_steal_pointer(&attrs_map);
 }
 
 static FuDevice *
-fu_devlink_device_get_component(FuDevice *device, const gchar *name)
+fu_devlink_device_get_component_by_logical_id(FuDevice *device, const gchar *name)
 {
 	GPtrArray *children = fu_device_get_children(device);
-
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *component = g_ptr_array_index(children, i);
-
-		if (g_strcmp0(fu_device_get_name(component), name) == 0)
+		if (g_strcmp0(fu_device_get_logical_id(component), name) == 0)
 			return g_object_ref(component);
 	}
 	return NULL;
@@ -383,61 +352,59 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 
 typedef struct {
 	FuDevice *device;
-	GHashTable *version_table;
+	const gchar *psid;
+	const gchar *version_bootloader;
+	gboolean needs_activation;
 } FuDevlinkDeviceUpdateComponentHelper;
 
 static void
 fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer user_data)
 {
 	FuDevlinkDeviceUpdateComponentHelper *helper = user_data;
-	FuDevlinkVersionInfo *version_info = value;
-	const gchar *name = key;
-	const gchar *version;
+	const gchar *name = (const gchar *)key;
+	const gchar *version = (const gchar *)value;
+	g_autofree gchar *instance_id = g_strdup_printf("DEVLINK\\VERSION_%s", name);
 	g_autoptr(FuDevice) component = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	if (version_info->stored != NULL)
-		version = version_info->stored;
-	else if (version_info->running != NULL)
-		version = version_info->running;
-	else
-		return;
-
-	component = fu_devlink_device_get_component(helper->device, name);
-	if (component == NULL) {
-		g_autofree gchar *component_device_name =
-		    g_strdup_printf("%s - %s", fu_device_get_name(helper->device), name);
-
-		component = fu_devlink_component_new(helper->device, name);
-		fu_devlink_component_build_instance_id(component,
-						       helper->device,
-						       helper->version_table);
-		fu_device_set_name(component, component_device_name);
-		fu_device_set_version(component, version);
-		fu_device_add_child(helper->device, component);
-		g_debug("added component %s (version: %s)", name, version);
-	} else {
+	component = fu_devlink_device_get_component_by_logical_id(helper->device, name);
+	if (component != NULL) {
 		fu_device_set_version(component, version);
 		g_debug("updated component %s (version: %s)", name, version);
+		return;
 	}
 
-	if (version_info->stored != NULL && version_info->running != NULL) {
-		if (g_strcmp0(version_info->stored, version_info->running) != 0)
-			fu_device_add_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-		else
-			fu_device_remove_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	/* create new component and lookup quirk to added as a child */
+	component = fu_devlink_component_new(helper->device, name);
+	fu_device_add_instance_id_full(component, instance_id, FU_DEVICE_INSTANCE_FLAG_QUIRKS);
+	if (fu_device_get_name(component) == NULL) {
+		g_debug("ignoring %s", name);
+		return;
 	}
+	fu_device_add_instance_str(component, "PSID", helper->psid);
+	fu_device_set_version(component, version);
+	fu_device_set_version_bootloader(component, helper->version_bootloader);
+	if (!fu_device_probe(component, &error_local)) {
+		g_warning("failed to probe %s: %s", name, error_local->message);
+		return;
+	}
+	if (helper->needs_activation)
+		fu_device_add_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	else
+		fu_device_remove_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	fu_device_add_child(helper->device, component);
+	g_debug("added component %s (version: %s)", name, version);
 }
 
 /* callback for parsing devlink dev info response */
 static gint
 fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 {
+	FuDevice *device = FU_DEVICE(data);
+	FuDevlinkDeviceUpdateComponentHelper helper = {0};
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
-	FuDevice *device = FU_DEVICE(data);
-	GPtrArray *children = fu_device_get_children(device);
-	FuDevlinkDeviceUpdateComponentHelper helper;
-	g_autoptr(GHashTable) version_table = NULL;
+	g_autoptr(GHashTable) attrs_map = NULL;
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
@@ -451,24 +418,13 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 		fu_device_set_serial(device, serial_number);
 	}
 
-	version_table = fu_devlink_device_get_version_table(nlh);
-
-	/* remove components that are not in the version table */
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *component = g_ptr_array_index(children, children->len - i - 1);
-		const gchar *name = fu_device_get_name(component);
-		FuDevlinkVersionInfo *version_info = g_hash_table_lookup(version_table, name);
-
-		if (version_info == NULL ||
-		    (version_info->stored == NULL && version_info->running == NULL)) {
-			g_debug("removed component %s", name);
-			fu_device_remove_child(device, component);
-		}
-	}
-
+	attrs_map = fu_devlink_device_populate_attrs_map(nlh);
 	helper.device = device;
-	helper.version_table = version_table;
-	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &helper);
+	helper.psid = g_hash_table_lookup(attrs_map, "fw.psid");
+	helper.version_bootloader = g_hash_table_lookup(attrs_map, "fw.bootloader");
+	helper.needs_activation = g_strcmp0(g_hash_table_lookup(attrs_map, "stored:fw.version"),
+					    g_hash_table_lookup(attrs_map, "fw.version")) != 0;
+	g_hash_table_foreach(attrs_map, fu_devlink_device_update_component_cb, &helper);
 
 	return MNL_CB_OK;
 }
@@ -486,7 +442,6 @@ fu_devlink_device_get_info(FuDevice *device, GError **error)
 	mnl_attr_put_strz(nlh, DEVLINK_ATTR_DEV_NAME, self->dev_name);
 
 	/* send command and process response */
-	g_debug("getting device info for %s/%s", self->bus_name, self->dev_name);
 	if (!fu_devlink_netlink_msg_send_recv(self->nlg,
 					      nlh,
 					      fu_devlink_device_info_cb,
@@ -496,6 +451,7 @@ fu_devlink_device_get_info(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -565,6 +521,7 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 		return FALSE;
 	}
 
+	/* success */
 	g_debug("firmware activation completed for %s/%s", self->bus_name, self->dev_name);
 	return TRUE;
 }
@@ -613,6 +570,7 @@ fu_devlink_device_open(FuDevice *device, GError **error)
 	if (self->nlg == NULL)
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -641,7 +599,7 @@ fu_devlink_device_search_path_locker_new(FuDevlinkDevice *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "Failed to create '%s': %s",
+			    "failed to create '%s': %s",
 			    devlink_fw_dir,
 			    fwupd_strerror(errno));
 		return NULL;
@@ -665,6 +623,7 @@ fu_devlink_device_prepare(FuDevice *device,
 	if (self->search_path_locker == NULL)
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -755,6 +714,7 @@ fu_devlink_device_from_json(FuDevice *device, JsonObject *json_object, GError **
 		}
 	}
 
+	/* success */
 	return TRUE;
 }
 

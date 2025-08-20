@@ -12,9 +12,4 @@
 G_DECLARE_FINAL_TYPE(FuDevlinkComponent, fu_devlink_component, FU, DEVLINK_COMPONENT, FuDevice)
 
 FuDevice *
-fu_devlink_component_new(FuDevice *proxy, const gchar *component_name) G_GNUC_NON_NULL(1, 2);
-
-void
-fu_devlink_component_build_instance_id(FuDevice *device,
-				       FuDevice *parent,
-				       GHashTable *version_table) G_GNUC_NON_NULL(1, 2, 3);
+fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id) G_GNUC_NON_NULL(1, 2);

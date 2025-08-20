@@ -12,6 +12,7 @@ device_tests += files(
   'tests/devlink-netdevsim.json',
 )
 
+plugin_quirks += files('devlink.quirk')
 plugin_builtin_devlink = static_library('fu_plugin_devlink',
   sources: [
     'fu-devlink-plugin.c',

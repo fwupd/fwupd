@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <gio/gio.h>
-
 #include "fu-devlink-backend.h"
 #include "fu-devlink-device.h"
 #include "fu-devlink-netlink.h"

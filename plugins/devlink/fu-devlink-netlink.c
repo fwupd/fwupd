@@ -267,9 +267,9 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 {
 	FuDeviceEvent *event = NULL;
 	guint i = 0;
-	g_autofree gchar *event_id = NULL;
 	guint32 seq = nlh->nlmsg_seq;
 	gint rc;
+	g_autofree gchar *event_id = NULL;
 
 	/* generate event ID if device is available and we need emulation/recording */
 	if (nlg->is_emulated || nlg->save_events)
@@ -331,7 +331,8 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 		rc = fu_devlink_netlink_msg_cb_run(nlg, rc, seq, cb, data, error);
 	} while (rc > MNL_CB_STOP);
 
-	return rc == MNL_CB_STOP ? TRUE : FALSE;
+	/* success */
+	return TRUE;
 }
 
 /* send message and receive response */
@@ -607,6 +608,7 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error
 		return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
