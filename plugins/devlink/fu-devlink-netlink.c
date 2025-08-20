@@ -22,7 +22,6 @@ fu_devlink_netlink_msg_prepare(void *buf,
 {
 	struct nlmsghdr *nlh;
 	void *eh;
-	g_autoptr(GError) error = NULL;
 
 	nlh = mnl_nlmsg_put_header(buf);
 	nlh->nlmsg_type = nlmsg_type;
