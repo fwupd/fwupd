@@ -74,7 +74,7 @@ fu_devlink_netlink_error_cb_extack(const struct nlmsghdr *nlh, GError **error)
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "netlink error: %s (%s)",
+		    "netlink error: %s; %s",
 		    fwupd_strerror(-err->error),
 		    mnl_attr_get_str(tb[NLMSGERR_ATTR_MSG]));
 	return TRUE;
