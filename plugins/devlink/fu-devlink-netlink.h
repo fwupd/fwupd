@@ -33,14 +33,14 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 			   gsize len,
 			   guint32 seq,
 			   mnl_cb_t cb,
-			   void *data,
+			   gpointer data,
 			   GError **error) G_GNUC_NON_NULL(1, 4);
 
 gboolean
 fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 				 struct nlmsghdr *nlh,
 				 mnl_cb_t cb,
-				 void *data,
+				 gpointer data,
 				 GError **error) G_GNUC_NON_NULL(1, 2);
 
 gboolean
@@ -69,7 +69,7 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error
 
 /* attribute parsing callback */
 gint
-fu_devlink_netlink_attr_cb(const struct nlattr *attr, void *data) G_GNUC_NON_NULL(1, 2);
+fu_devlink_netlink_attr_cb(const struct nlattr *attr, gpointer data) G_GNUC_NON_NULL(1, 2);
 
 /* cleanup function for auto cleanup */
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDevlinkGenSocket, fu_devlink_netlink_gen_socket_close)

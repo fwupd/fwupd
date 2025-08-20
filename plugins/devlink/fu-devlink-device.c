@@ -42,7 +42,7 @@ typedef struct {
 
 /* handle flash update status and end messages */
 static gint
-fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, void *data)
+fu_devlink_device_flash_mon_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	FuDevlinkFlashMonHelper *helper = data;
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
@@ -431,7 +431,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 
 /* callback for parsing devlink dev info response */
 static gint
-fu_devlink_device_info_cb(const struct nlmsghdr *nlh, void *data)
+fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};

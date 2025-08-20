@@ -85,7 +85,7 @@ fu_devlink_plugin_device_removed_from_netlink(FuDevlinkPlugin *self, const struc
 
 /* callback for processing individual netlink messages */
 static gint
-fu_devlink_plugin_process_message_cb(const struct nlmsghdr *nlh, void *data)
+fu_devlink_plugin_process_message_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	FuDevlinkPlugin *self = FU_DEVLINK_PLUGIN(data);
 	struct genlmsghdr *genl;
@@ -180,7 +180,7 @@ fu_devlink_plugin_setup_netlink(FuDevlinkPlugin *self, GError **error)
 
 /* device enumeration callback */
 static gint
-fu_devlink_plugin_enumerate_cb(const struct nlmsghdr *nlh, void *data)
+fu_devlink_plugin_enumerate_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	FuDevlinkPlugin *self = FU_DEVLINK_PLUGIN(data);
 	struct genlmsghdr *genl;
