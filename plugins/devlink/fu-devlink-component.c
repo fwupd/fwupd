@@ -42,25 +42,25 @@ fu_devlink_component_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	const gchar *component_name;
 
-	g_return_val_if_fail(parent != NULL, FALSE);
+	g_return_val_if_fail(proxy != NULL, FALSE);
 
-	/* manually lock the parent device */
-	locker = fu_device_locker_new(parent, error);
+	/* manually lock the proxy device */
+	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("flashing component '%s' via parent device", self->component_name);
+	g_debug("flashing component '%s' via proxy device", self->component_name);
 
 	component_name =
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME)
 		? NULL
 		: self->component_name;
 
-	return fu_devlink_device_write_firmware_component(FU_DEVLINK_DEVICE(parent),
+	return fu_devlink_device_write_firmware_component(FU_DEVLINK_DEVICE(proxy),
 							  component_name,
 							  firmware,
 							  progress,
@@ -72,37 +72,37 @@ static gboolean
 fu_devlink_component_reload(FuDevice *device, GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	g_return_val_if_fail(parent != NULL, FALSE);
+	g_return_val_if_fail(proxy != NULL, FALSE);
 
-	/* manually lock the parent device */
-	locker = fu_device_locker_new(parent, error);
+	/* manually lock the proxy device */
+	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("reloading version for component '%s' via parent device", self->component_name);
-	return fu_device_reload(parent, error);
+	g_debug("reloading version for component '%s' via proxy device", self->component_name);
+	return fu_device_reload(proxy, error);
 }
 
-/* delegate firmware activation to parent device */
+/* delegate firmware activation to proxy device */
 static gboolean
 fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	g_return_val_if_fail(parent != NULL, FALSE);
+	g_return_val_if_fail(proxy != NULL, FALSE);
 
-	/* manually lock the parent device */
-	locker = fu_device_locker_new(parent, error);
+	/* manually lock the proxy device */
+	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
 
-	g_debug("activating firmware for component '%s' via parent device", self->component_name);
-	return fu_device_activate(parent, progress, error);
+	g_debug("activating firmware for component '%s' via proxy device", self->component_name);
+	return fu_device_activate(proxy, progress, error);
 }
 
 static gboolean
@@ -111,9 +111,9 @@ fu_devlink_component_prepare(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	return fu_device_prepare(parent, progress, flags, error);
+	return fu_device_prepare(proxy, progress, flags, error);
 }
 
 static gboolean
@@ -122,9 +122,9 @@ fu_devlink_component_cleanup(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	return fu_device_cleanup(parent, progress, flags, error);
+	return fu_device_cleanup(proxy, progress, flags, error);
 }
 
 typedef struct {
@@ -146,10 +146,7 @@ fu_devlink_component_instance_id_cb(gpointer key, gpointer value, gpointer user_
 }
 
 void
-fu_devlink_component_build_instance_id(FuDevice *device,
-				       FuDevice *parent,
-				       const gchar *driver_name,
-				       GHashTable *version_table)
+fu_devlink_component_build_instance_id(FuDevice *device, FuDevice *proxy, GHashTable *version_table)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
 	GError *error_local = NULL;
@@ -160,12 +157,9 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 	};
 	g_auto(GStrv) keys = NULL;
 
-	if (driver_name != NULL) {
-		fu_device_add_instance_str(device, "DRIVER", driver_name);
-		g_strv_builder_add(keys_builder, "DRIVER");
-	}
-
 	/* append fixed versions to instance id */
+	g_strv_builder_add(keys_builder, "VEN");
+	g_strv_builder_add(keys_builder, "DEV");
 	g_hash_table_foreach(version_table, fu_devlink_component_instance_id_cb, &helper);
 
 	g_strv_builder_add(keys_builder, "COMPONENT");
@@ -183,10 +177,10 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 	}
 
 	/* build additional instance ID based on vid and pid if available */
-	if (fu_device_get_vid(parent) != 0x0 && fu_device_get_pid(parent) != 0x0) {
-		/* add PCI vendor and product IDs from parent device */
-		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(parent));
-		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(parent));
+	if (fu_device_get_vid(proxy) != 0x0 && fu_device_get_pid(proxy) != 0x0) {
+		/* add PCI vendor and product IDs from proxy device */
+		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(proxy));
+		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(proxy));
 
 		if (!fu_device_build_instance_id(device,
 						 &error_local,
@@ -203,14 +197,14 @@ fu_devlink_component_build_instance_id(FuDevice *device,
 }
 
 FuDevice *
-fu_devlink_component_new(FuContext *ctx, const gchar *component_name)
+fu_devlink_component_new(FuDevice *proxy, const gchar *component_name)
 {
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(FuDevlinkComponent) self = NULL;
 
 	g_return_val_if_fail(component_name, NULL);
 
-	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT, "context", ctx, NULL);
+	self = g_object_new(FU_TYPE_DEVLINK_COMPONENT, "proxy", proxy, NULL);
 	self->component_name = g_strdup(component_name);
 
 	/* set device properties */
@@ -230,6 +224,7 @@ fu_devlink_component_init(FuDevlinkComponent *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 }

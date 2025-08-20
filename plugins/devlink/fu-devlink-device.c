@@ -323,7 +323,8 @@ fu_devlink_device_get_version_table(const struct nlmsghdr *nlh)
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
-		const gchar *name, *value;
+		const gchar *name;
+		const gchar *value;
 
 		if (mnl_attr_get_type(attr) != DEVLINK_ATTR_INFO_VERSION_FIXED &&
 		    mnl_attr_get_type(attr) != DEVLINK_ATTR_INFO_VERSION_RUNNING &&
@@ -383,7 +384,6 @@ fu_devlink_device_get_component(FuDevice *device, const gchar *name)
 typedef struct {
 	FuDevice *device;
 	GHashTable *version_table;
-	const gchar *driver_name;
 } FuDevlinkDeviceUpdateComponentHelper;
 
 static void
@@ -407,10 +407,9 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 		g_autofree gchar *component_device_name =
 		    g_strdup_printf("%s - %s", fu_device_get_name(helper->device), name);
 
-		component = fu_devlink_component_new(fu_device_get_context(helper->device), name);
+		component = fu_devlink_component_new(helper->device, name);
 		fu_devlink_component_build_instance_id(component,
 						       helper->device,
-						       helper->driver_name,
 						       helper->version_table);
 		fu_device_set_name(component, component_device_name);
 		fu_device_set_version(component, version);
@@ -439,20 +438,12 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	GPtrArray *children = fu_device_get_children(device);
 	FuDevlinkDeviceUpdateComponentHelper helper;
 	g_autoptr(GHashTable) version_table = NULL;
-	g_autofree gchar *driver_name = NULL;
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
 
 	/* parse main attributes */
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
-
-	/* parse driver name */
-	if (tb[DEVLINK_ATTR_INFO_DRIVER_NAME] != NULL) {
-		driver_name =
-		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_DRIVER_NAME]), G_MAXSIZE);
-		g_debug("device driver name: %s", driver_name);
-	}
 
 	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
 		g_autofree gchar *serial_number =
@@ -477,7 +468,6 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 
 	helper.device = device;
 	helper.version_table = version_table;
-	helper.driver_name = driver_name;
 	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &helper);
 
 	return MNL_CB_OK;
@@ -495,9 +485,8 @@ fu_devlink_device_get_info(FuDevice *device, GError **error)
 	mnl_attr_put_strz(nlh, DEVLINK_ATTR_BUS_NAME, self->bus_name);
 	mnl_attr_put_strz(nlh, DEVLINK_ATTR_DEV_NAME, self->dev_name);
 
-	g_debug("getting device info for %s/%s", self->bus_name, self->dev_name);
-
 	/* send command and process response */
+	g_debug("getting device info for %s/%s", self->bus_name, self->dev_name);
 	if (!fu_devlink_netlink_msg_send_recv(self->nlg,
 					      nlh,
 					      fu_devlink_device_info_cb,

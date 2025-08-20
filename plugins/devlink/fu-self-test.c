@@ -161,7 +161,7 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_true(ret);
 
 	/* create fw.mgmt component */
-	component = fu_devlink_component_new(ctx, "fw.mgmt");
+	component = fu_devlink_component_new(device, "fw.mgmt");
 	g_assert_nonnull(component);
 
 	/* set up parent-child relationship */
