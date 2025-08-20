@@ -439,7 +439,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	GPtrArray *children = fu_device_get_children(device);
 	FuDevlinkDeviceUpdateComponentHelper helper;
 	g_autoptr(GHashTable) version_table = NULL;
-	g_autofree const gchar *driver_name = NULL;
+	g_autofree gchar *driver_name = NULL;
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
@@ -455,10 +455,8 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	}
 
 	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
-		const gchar *serial_number =
+		g_autofree gchar *serial_number =
 		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]), G_MAXSIZE);
-
-		g_debug("device serial number: %s", serial_number);
 		fu_device_set_serial(device, serial_number);
 	}
 
