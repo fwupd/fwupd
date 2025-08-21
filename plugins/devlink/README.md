@@ -22,7 +22,7 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use custom instance IDs consisting of the component name and the device PSID.
+These devices use custom instance IDs consisting of the component name and optionally the device PSID.
 
 * `PCI\VEN_15B3&DEV_1021&COMPONENT_fw`
 * `PCI\VEN_15B3&DEV_1021&COMPONENT_fw&PSID_MT_0000001045`
