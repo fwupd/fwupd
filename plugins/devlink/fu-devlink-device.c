@@ -404,9 +404,11 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 {
 	FuDevice *device = FU_DEVICE(data);
 	FuDevlinkDeviceUpdateComponentHelper helper = {0};
+	GPtrArray *children = fu_device_get_children(device);
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	g_autoptr(GHashTable) attrs_map = NULL;
+	g_autoptr(GPtrArray) components_to_remove = g_ptr_array_new();
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
 		return MNL_CB_OK;
@@ -421,6 +423,22 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	}
 
 	attrs_map = fu_devlink_device_populate_attrs_map(nlh);
+
+	/* remove components that are not in the attrs map */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *component = g_ptr_array_index(children, i);
+		const gchar *logical_id = fu_device_get_logical_id(component);
+		const gchar *value = g_hash_table_lookup(attrs_map, logical_id);
+		if (value == NULL) {
+			g_debug("removed component %s", logical_id);
+			g_ptr_array_add(components_to_remove, component);
+		}
+	}
+	for (guint i = 0; i < components_to_remove->len; i++) {
+		FuDevice *component = g_ptr_array_index(components_to_remove, i);
+		fu_device_remove_child(device, component);
+	}
+
 	helper.device = device;
 	helper.psid = g_hash_table_lookup(attrs_map, "fw.psid");
 	helper.version_bootloader = g_hash_table_lookup(attrs_map, "fw.bootloader");
