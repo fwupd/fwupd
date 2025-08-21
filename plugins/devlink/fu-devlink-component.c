@@ -51,10 +51,21 @@ fu_devlink_component_write_firmware(FuDevice *device,
 static gboolean
 fu_devlink_component_probe(FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy(device);
+	g_autofree gchar *subsystem =
+	    g_ascii_strup(fu_devlink_device_get_bus_name(FU_DEVLINK_DEVICE(proxy)), -1);
+
 	/* component required, PSID optional */
-	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "COMPONENT", NULL))
+	if (!fu_device_build_instance_id(device, error, subsystem, "VEN", "DEV", "COMPONENT", NULL))
 		return FALSE;
-	fu_device_build_instance_id(device, NULL, "PCI", "VEN", "DEV", "COMPONENT", "PSID", NULL);
+	fu_device_build_instance_id(device,
+				    NULL,
+				    subsystem,
+				    "VEN",
+				    "DEV",
+				    "COMPONENT",
+				    "PSID",
+				    NULL);
 	return TRUE;
 }
 

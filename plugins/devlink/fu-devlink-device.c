@@ -470,6 +470,7 @@ static gboolean
 fu_devlink_device_setup(FuDevice *device, GError **error)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
+	g_autofree gchar *subsystem = NULL;
 
 	/* check if device has been properly initialized */
 	if (self->bus_name == NULL || self->dev_name == NULL) {
@@ -483,10 +484,11 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 	/* use quirk database for a better name */
 	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+	subsystem = g_ascii_strup(self->bus_name, -1);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
-					      "PCI",
+					      subsystem,
 					      "VEN",
 					      "DEV",
 					      NULL)) {
@@ -526,6 +528,12 @@ fu_devlink_device_activate(FuDevice *device, FuProgress *progress, GError **erro
 	/* success */
 	g_debug("firmware activation completed for %s/%s", self->bus_name, self->dev_name);
 	return TRUE;
+}
+
+const gchar *
+fu_devlink_device_get_bus_name(FuDevlinkDevice *self)
+{
+	return self->bus_name;
 }
 
 static void
