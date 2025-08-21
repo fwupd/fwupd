@@ -10,5 +10,3 @@ Name = UNDI
 Name = NCSI
 [DEVLINK\VERSION_fw.roce]
 Name = RoCE
-[DEVLINK\VERSION_fw.version]
-Name = FIXME
