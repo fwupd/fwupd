@@ -470,7 +470,7 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 	gint one = 1;
 	gint rc;
 
-	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
+	g_return_val_if_fail(FU_IS_DEVICE(device) || device == NULL, NULL);
 
 	/* allocate and initialize structure */
 	nlg = g_new0(FuDevlinkGenSocket, 1);
