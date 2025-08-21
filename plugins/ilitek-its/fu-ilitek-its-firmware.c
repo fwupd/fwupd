@@ -146,7 +146,6 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 			block_bytes = fu_bytes_new_offset(blob, start, offset, error);
 		}
 
-		// FIXME: this should use fu_crc16_bytes() instead
 		self->block_crc[i] =
 		    fu_ilitek_its_get_crc(block_bytes, g_bytes_get_size(block_bytes) - 2);
 

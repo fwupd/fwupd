@@ -46,7 +46,7 @@ struct FuStructIlitekItsHidCmd {
     data: [u8; 59],
 }
 
-#[derive(New, Default)]
+#[derive(New, Getters, Default)]
 #[repr(C, packed)]
 struct FuStructIlitekItsLongHidCmd {
     report_id: u8 == 0x08,

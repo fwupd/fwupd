@@ -25,14 +25,14 @@ These devices use the standard DeviceInstanceId values, e.g.
 
 Additional instance ID are added which corresponds to the FWID and/or sensor ID:
 
-* `HIDRAW\VEN_222A&DEV_0001&FWID_1234`
-* `HIDRAW\VEN_222A&DEV_0001&SENSORID_12`
+* `HIDRAW\VEN_222A&FWID_1234`
+* `HIDRAW\VEN_222A&SENSORID_12`
 
 Additional instance IDs are added which corresponds to the EDID PNP ID and product code:
 
-* `HIDRAW\VEN_ABC&DEV_1234&DEV_0001&PNPID_5678`
-* `HIDRAW\VEN_ABC&DEV_1234&DEV_0001&PNPID_5678&PCODE_12`
-* `HIDRAW\VEN_ABC&DEV_1234&DEV_0001&SENSORID_12&PNPID_5678&PCODE_12`
+* `HIDRAW\VEN_222A&PNPID_ABC`
+* `HIDRAW\VEN_222A&PNPID_ABC&PCODE_1234`
+* `HIDRAW\VEN_222A&SENSORID_12&PNPID_ABC&PCODE_1234`
 
 ## Update Behavior
 

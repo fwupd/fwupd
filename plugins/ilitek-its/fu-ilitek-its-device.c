@@ -59,7 +59,7 @@ fu_ilitek_its_device_read_cb(FuDevice *device, gpointer data, GError **error)
 				 FU_IO_CHANNEL_FLAG_NONE,
 				 error))
 		return FALSE;
-	st_res = fu_struct_ilitek_its_hid_res_parse(st_res->data, st_res->len, 0, error);
+	st_res = fu_struct_ilitek_its_hid_res_parse(buf, bufsz, 0, error);
 	if (st_res == NULL)
 		return FALSE;
 	if (fu_struct_ilitek_its_hid_res_get_cmd(st_res) != helper->cmd) {
@@ -140,6 +140,34 @@ fu_ilitek_its_device_send_cmd_then_wake_ack(FuIlitekItsDevice *self,
 
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, NULL, error))
 		return FALSE;
+
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_ilitek_its_device_read_cb,
+				    50,
+				    100,
+				    &helper,
+				    error);
+}
+
+static gboolean
+fu_ilitek_its_device_send_long_cmd_then_wake_ack(FuIlitekItsDevice *self,
+						 FuStructIlitekItsLongHidCmd *st_cmd,
+						 GError **error)
+{
+	FuIlitekItsHidCmdHelper helper = {
+	    .cmd = fu_struct_ilitek_its_long_hid_cmd_get_cmd(st_cmd),
+	    .rbuf = NULL,
+	    .is_ack = TRUE,
+	};
+
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  st_cmd->data,
+					  st_cmd->len,
+					  FU_IOCTL_FLAG_RETRY,
+					  error)) {
+		g_prefix_error_literal(error, "failed to send long HID cmd: ");
+		return FALSE;
+	}
 
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_ilitek_its_device_read_cb,
@@ -638,7 +666,7 @@ fu_ilitek_its_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 					 FuDrmDevice *drm_device,
 					 GError **error)
@@ -652,19 +680,13 @@ fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 
 	fu_device_add_instance_str(FU_DEVICE(self), "PNPID", fu_edid_get_pnp_id(edid));
 	fu_device_add_instance_u16(FU_DEVICE(self), "PCODE", fu_edid_get_product_code(edid));
-	if (!fu_device_build_instance_id(FU_DEVICE(self),
-					 error,
-					 "HIDRAW",
-					 "VEN",
-					 "DEV",
-					 "PNPID",
-					 NULL))
+	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VEN", "PNPID", NULL))
 		return FALSE;
+
 	if (!fu_device_build_instance_id(FU_DEVICE(self),
 					 error,
 					 "HIDRAW",
 					 "VEN",
-					 "DEV",
 					 "PNPID",
 					 "PCODE",
 					 NULL))
@@ -675,7 +697,6 @@ fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 					   error,
 					   "HIDRAW",
 					   "VEN",
-					   "DEV",
 					   "SENSORID",
 					   "PNPID",
 					   "PCODE",
@@ -689,6 +710,7 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	guint16 fwid;
 	guint8 sensor_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	GPtrArray *children = fu_device_get_children(device);
 
 	locker = fu_device_locker_new_full(FU_DEVICE(self),
 					   (FuDeviceLockerFunc)fu_ilitek_its_device_enable_tde,
@@ -712,15 +734,22 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	if (!fu_ilitek_its_device_get_sensor_id(self, &sensor_id, error))
 		return FALSE;
 
-	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device)); // FIXME is needed?
-	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device)); // FIXME is needed?
+	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u8(device, "SENSORID", sensor_id);
 	fu_device_add_instance_u16(device, "FWID", fwid);
 
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "FWID", NULL))
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "FWID", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "SENSORID", NULL))
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "SENSORID", NULL))
 		return FALSE;
+
+	for (guint i = 0; i < children->len; i++) {
+		FuDrmDevice *drm_device = FU_DRM_DEVICE(g_ptr_array_index(children, i));
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_ilitek_its_device_register_drm_device(self, drm_device, &error_local))
+			g_warning("ignoring: %s", error_local->message);
+	}
 
 	/* FuHidrawDevice->setup */
 	return FU_DEVICE_CLASS(fu_ilitek_its_device_parent_class)->setup(device, error);
@@ -832,7 +861,7 @@ fu_ilitek_its_device_write_block(FuIlitekItsDevice *self,
 								error))
 			return FALSE;
 
-		if (!fu_ilitek_its_device_send_cmd_then_wake_ack(self, st_cmd, error))
+		if (!fu_ilitek_its_device_send_long_cmd_then_wake_ack(self, st_cmd, error))
 			return FALSE;
 
 		fu_progress_step_done(progress);
