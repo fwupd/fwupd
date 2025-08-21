@@ -666,7 +666,7 @@ fu_ilitek_its_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 					 FuDrmDevice *drm_device,
 					 GError **error)
@@ -680,27 +680,25 @@ fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 
 	fu_device_add_instance_str(FU_DEVICE(self), "PNPID", fu_edid_get_pnp_id(edid));
 	fu_device_add_instance_u16(FU_DEVICE(self), "PCODE", fu_edid_get_product_code(edid));
-	if (!fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VEN", "PNPID", NULL))
-		return FALSE;
-
 	if (!fu_device_build_instance_id(FU_DEVICE(self),
 					 error,
 					 "HIDRAW",
 					 "VEN",
+					 "DEV",
 					 "PNPID",
-					 "PCODE",
 					 NULL))
 		return FALSE;
 
-	/* some SKU needs both EDID and sensor-id */
 	return fu_device_build_instance_id(FU_DEVICE(self),
 					   error,
 					   "HIDRAW",
 					   "VEN",
-					   "SENSORID",
+					   "DEV",
 					   "PNPID",
 					   "PCODE",
 					   NULL);
+
+	// TODO: some SKU needs both EDID and sensor-id
 }
 
 static gboolean
@@ -710,7 +708,6 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	guint16 fwid;
 	guint8 sensor_id;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	GPtrArray *children = fu_device_get_children(device);
 
 	locker = fu_device_locker_new_full(FU_DEVICE(self),
 					   (FuDeviceLockerFunc)fu_ilitek_its_device_enable_tde,
@@ -734,22 +731,13 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	if (!fu_ilitek_its_device_get_sensor_id(self, &sensor_id, error))
 		return FALSE;
 
-	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
 	fu_device_add_instance_u8(device, "SENSORID", sensor_id);
 	fu_device_add_instance_u16(device, "FWID", fwid);
 
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "FWID", NULL))
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "FWID", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "SENSORID", NULL))
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "SENSORID", NULL))
 		return FALSE;
-
-	for (guint i = 0; i < children->len; i++) {
-		FuDrmDevice *drm_device = FU_DRM_DEVICE(g_ptr_array_index(children, i));
-		g_autoptr(GError) error_local = NULL;
-
-		if (!fu_ilitek_its_device_register_drm_device(self, drm_device, &error_local))
-			g_warning("ignoring: %s", error_local->message);
-	}
 
 	/* FuHidrawDevice->setup */
 	return FU_DEVICE_CLASS(fu_ilitek_its_device_parent_class)->setup(device, error);

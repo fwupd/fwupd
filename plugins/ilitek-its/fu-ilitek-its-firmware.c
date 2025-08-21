@@ -146,8 +146,9 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 			block_bytes = fu_bytes_new_offset(blob, start, offset, error);
 		}
 
-		self->block_crc[i] =
-		    fu_ilitek_its_get_crc(block_bytes, g_bytes_get_size(block_bytes) - 2);
+		self->block_crc[i] = fu_crc16(FU_CRC_KIND_B16_KERMIT,
+					      g_bytes_get_data(block_bytes, NULL),
+					      g_bytes_get_size(block_bytes) - 2);
 
 		g_debug("block %u: start 0x%08x, end 0x%08x, crc: 0x%x",
 			i,
