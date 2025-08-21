@@ -173,6 +173,7 @@ fu_devlink_netlink_msg_run(FuDevlinkGenSocket *nlg,
 			   gpointer data,
 			   GError **error)
 {
+	g_return_val_if_fail(nlg != NULL, FALSE);
 	return fu_devlink_netlink_msg_cb_run(nlg, len, seq, cb, data, error) != MNL_CB_ERROR;
 }
 
@@ -345,6 +346,9 @@ fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 {
 	gint rc;
 
+	g_return_val_if_fail(nlg != NULL, FALSE);
+	g_return_val_if_fail(nlh != NULL, FALSE);
+
 	if (!nlg->is_emulated) {
 		/* send netlink message */
 		rc = mnl_socket_sendto(nlg->nl, nlh, nlh->nlmsg_len);
@@ -363,6 +367,7 @@ fu_devlink_netlink_msg_send_recv(FuDevlinkGenSocket *nlg,
 gboolean
 fu_devlink_netlink_msg_send(FuDevlinkGenSocket *nlg, struct nlmsghdr *nlh, GError **error)
 {
+	g_return_val_if_fail(nlg != NULL, FALSE);
 	return fu_devlink_netlink_msg_send_recv(nlg, nlh, NULL, NULL, error);
 }
 
@@ -401,6 +406,8 @@ fu_devlink_netlink_fu_devlink_netlink_genl_family_get_cb(const struct nlmsghdr *
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[CTRL_ATTR_MAX + 1] = {};
 	struct nlattr *mcgrp;
+
+	g_return_val_if_fail(nlh != NULL, MNL_CB_ERROR);
 
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_genl_ctrl_attr_cb, tb);
 	if (tb[CTRL_ATTR_FAMILY_ID] == NULL)
@@ -442,6 +449,9 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 	};
 	struct nlmsghdr *nlh;
 
+	g_return_val_if_fail(nlg != NULL, FALSE);
+	g_return_val_if_fail(family_name != NULL, FALSE);
+
 	nlh = fu_devlink_netlink_msg_prepare(nlg->buf, GENL_ID_CTRL, FALSE, &hdr, sizeof(hdr));
 	mnl_attr_put_strz(nlh, CTRL_ATTR_FAMILY_NAME, family_name);
 	return fu_devlink_netlink_msg_send_recv(
@@ -459,6 +469,8 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 	g_autoptr(FuDevlinkGenSocket) nlg = NULL;
 	gint one = 1;
 	gint rc;
+
+	g_return_val_if_fail(FU_IS_DEVICE(device), NULL);
 
 	/* allocate and initialize structure */
 	nlg = g_new0(FuDevlinkGenSocket, 1);
@@ -561,6 +573,8 @@ fu_devlink_netlink_gen_socket_close(FuDevlinkGenSocket *nlg)
 gint
 fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg)
 {
+	g_return_val_if_fail(nlg != NULL, -1);
+
 	/* return read side of pipe for emulated devices */
 	if (nlg->is_emulated)
 		return nlg->pipe_fds[0]; /* read end of the pipe */
@@ -570,6 +584,7 @@ fu_devlink_netlink_gen_socket_get_fd(FuDevlinkGenSocket *nlg)
 gchar *
 fu_devlink_netlink_gen_socket_get_buf(FuDevlinkGenSocket *nlg)
 {
+	g_return_val_if_fail(nlg != NULL, NULL);
 	return nlg->buf;
 }
 
@@ -582,6 +597,8 @@ fu_devlink_netlink_cmd_prepare(FuDevlinkGenSocket *nlg, guint8 cmd, gboolean dum
 	    .version = DEVLINK_GENL_VERSION,
 	};
 
+	g_return_val_if_fail(nlg != NULL, NULL);
+
 	return fu_devlink_netlink_msg_prepare(nlg->buf, nlg->family_id, dump, &hdr, sizeof(hdr));
 }
 
@@ -590,6 +607,8 @@ fu_devlink_netlink_mcast_group_subscribe(FuDevlinkGenSocket *nlg, GError **error
 {
 	guint32 devlink_config_grp = nlg->config_group_id;
 	gint rc;
+
+	g_return_val_if_fail(nlg != NULL, FALSE);
 
 	/* skip multicast subscription for emulated devices */
 	if (nlg->is_emulated)

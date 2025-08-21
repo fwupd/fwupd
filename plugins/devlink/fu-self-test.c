@@ -176,8 +176,9 @@ fu_devlink_plugin_flash_func(void)
 	/* create test netdevsim to set up netdevsim device */
 	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
 	if (ndsim == NULL) {
-		g_test_skip(
-		    "Failed to create netdevsim device (perhaps netdevsim module is not loaded)");
+		g_autofree gchar *msg =
+		    g_strdup_printf("failed to create netdevsim device: %s", error_local->message);
+		g_test_skip(msg);
 		return;
 	}
 
