@@ -176,8 +176,10 @@ fu_devlink_device_flash_mon_netlink_cb(GIOChannel *channel,
 					0,
 					fu_devlink_device_flash_mon_cb,
 					helper,
-					&error))
+					&error)) {
 		g_warning("failed to process netlink message: %s", error->message);
+		/* We should not return FALSE here, because we want to continue monitoring */
+	}
 
 	/* success */
 	return TRUE;
