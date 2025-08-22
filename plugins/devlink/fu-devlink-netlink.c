@@ -332,8 +332,7 @@ fu_devlink_netlink_msg_recv_run(FuDevlinkGenSocket *nlg,
 		rc = fu_devlink_netlink_msg_cb_run(nlg, rc, seq, cb, data, error);
 	} while (rc > MNL_CB_STOP);
 
-	/* success */
-	return TRUE;
+	return rc == MNL_CB_ERROR ? FALSE : TRUE;
 }
 
 /* send message and receive response */
