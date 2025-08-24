@@ -150,12 +150,26 @@ fu_devlink_plugin_flash_func(void)
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *instance_id = NULL;
 
+	/* create test netdevsim to set up netdevsim device */
+	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
+	if (ndsim == NULL) {
+		g_autofree gchar *msg =
+		    g_strdup_printf("failed to create netdevsim device: %s", error_local->message);
+		g_test_skip(msg);
+		return;
+	}
+
 	/* create device with valid bus and device names */
 	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
 	g_assert_nonnull(device);
 
 	/* probe device first */
 	ret = fu_device_probe(device, &error_local);
+	g_assert_true(ret);
+
+	/* open device */
+	ret = fu_device_open(device, &error_local);
+
 	g_assert_true(ret);
 
 	/* create fw.mgmt component */
@@ -172,15 +186,6 @@ fu_devlink_plugin_flash_func(void)
 	fw_data = g_bytes_new(fw_content, strlen(fw_content));
 	fu_firmware_set_bytes(firmware, fw_data);
 	fu_firmware_set_version(firmware, "2.0.0");
-
-	/* create test netdevsim to set up netdevsim device */
-	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);
-	if (ndsim == NULL) {
-		g_autofree gchar *msg =
-		    g_strdup_printf("failed to create netdevsim device: %s", error_local->message);
-		g_test_skip(msg);
-		return;
-	}
 
 	/* prepare the component */
 	ret = fu_device_prepare(component, progress, FWUPD_INSTALL_FLAG_NONE, &error_local);
