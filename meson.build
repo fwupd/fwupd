@@ -299,6 +299,7 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 zlib = dependency('zlib')
+libmnl = dependency('libmnl', required: false)
 
 fs = import('fs')
 

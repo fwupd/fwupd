@@ -1,0 +1,12 @@
+[DEVLINK\VERSION_fw]
+Name = Composite
+[DEVLINK\VERSION_fw.mgmt]
+Name = Management
+[DEVLINK\VERSION_fw.app]
+Name = Application
+[DEVLINK\VERSION_fw.undi]
+Name = UNDI
+[DEVLINK\VERSION_fw.ncsi]
+Name = NCSI
+[DEVLINK\VERSION_fw.roce]
+Name = RoCE
