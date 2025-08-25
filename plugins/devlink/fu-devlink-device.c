@@ -299,21 +299,32 @@ fu_devlink_device_write_firmware_component(FuDevlinkDevice *self,
 	return ret;
 }
 
-static gchar *
-fu_devlink_device_attr_type_to_key(struct nlattr *attr, const gchar *name)
+typedef struct {
+	gchar *fixed;
+	gchar *running;
+	gchar *stored;
+} FuDevlinkVersionInfo;
+
+static void
+fu_devlink_device_version_info_free(FuDevlinkVersionInfo *version_info)
 {
-	if (mnl_attr_get_type(attr) == DEVLINK_ATTR_INFO_VERSION_STORED)
-		return g_strdup_printf("stored:%s", name);
-	return g_strdup(name);
+	g_free(version_info->fixed);
+	g_free(version_info->running);
+	g_free(version_info->stored);
+	g_free(version_info);
 }
 
 static GHashTable *
 fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 {
+	FuDevlinkVersionInfo *version_info;
 	struct nlattr *attr;
-	g_autoptr(GHashTable) attrs_map = NULL;
+	g_autoptr(GHashTable) version_table = NULL;
 
-	attrs_map = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	version_table = g_hash_table_new_full(g_str_hash,
+					      g_str_equal,
+					      g_free,
+					      (GDestroyNotify)fu_devlink_device_version_info_free);
 	mnl_attr_for_each(attr, nlh, sizeof(struct genlmsghdr))
 	{
 		struct nlattr *ver_tb[DEVLINK_ATTR_MAX + 1] = {};
@@ -334,12 +345,32 @@ fu_devlink_device_populate_attrs_map(const struct nlmsghdr *nlh)
 		    fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_NAME]), G_MAXSIZE);
 		value = fu_strsafe(mnl_attr_get_str(ver_tb[DEVLINK_ATTR_INFO_VERSION_VALUE]),
 				   G_MAXSIZE);
-		g_hash_table_insert(attrs_map,
-				    fu_devlink_device_attr_type_to_key(attr, name),
-				    g_strdup(value));
+		version_info = g_hash_table_lookup(version_table, name);
+		if (version_info == NULL) {
+			version_info = g_new0(FuDevlinkVersionInfo, 1);
+			g_hash_table_insert(version_table, g_strdup(name), version_info);
+		}
+
+		/* There are three types of versions: "fixed", "running", "stored". When "running"
+		   and "stored" are tightly coupled and describe one component, "fixed" is
+		   a different beast. "fixed" is used for static device identification, like ASIC
+		   ID, ASIC revision, BOARD ID, etc. */
+		switch (mnl_attr_get_type(attr)) {
+		case DEVLINK_ATTR_INFO_VERSION_FIXED:
+			version_info->fixed = g_strdup(value);
+			break;
+		case DEVLINK_ATTR_INFO_VERSION_RUNNING:
+			version_info->running = g_strdup(value);
+			break;
+		case DEVLINK_ATTR_INFO_VERSION_STORED:
+			version_info->stored = g_strdup(value);
+			break;
+		default:
+			continue;
+		}
 	}
 
-	return g_steal_pointer(&attrs_map);
+	return g_steal_pointer(&version_table);
 }
 
 static FuDevice *
@@ -356,9 +387,8 @@ fu_devlink_device_get_component_by_logical_id(FuDevice *device, const gchar *nam
 
 typedef struct {
 	FuDevice *device;
+	GHashTable *version_table;
 	const gchar *psid;
-	const gchar *version_bootloader;
-	gboolean needs_activation;
 } FuDevlinkDeviceUpdateComponentHelper;
 
 static void
@@ -366,10 +396,25 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 {
 	FuDevlinkDeviceUpdateComponentHelper *helper = user_data;
 	const gchar *name = (const gchar *)key;
-	const gchar *version = (const gchar *)value;
+	FuDevlinkVersionInfo *version_info = value;
+	const gchar *version;
 	g_autofree gchar *instance_id = g_strdup_printf("DEVLINK\\VERSION_%s", name);
 	g_autoptr(FuDevice) component = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* "fw.bootloader" is a special case. If there is a fixed version of it present,
+	   set it as the bootloader version. */
+	if (g_strcmp0(name, "fw.bootloader") == 0)
+		fu_device_set_version_bootloader(component, version_info->fixed);
+
+	/* A component and running-stored tuple has 1:1 relationship. No guarantee
+	   that both are present, if either is present, try to create component. */
+	if (version_info->stored != NULL)
+		version = version_info->stored;
+	else if (version_info->running != NULL)
+		version = version_info->running;
+	else
+		return;
 
 	component = fu_devlink_device_get_component_by_logical_id(helper->device, name);
 	if (component != NULL) {
@@ -385,17 +430,17 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 		g_debug("ignoring %s", name);
 		return;
 	}
-	fu_device_add_instance_str(component, "PSID", helper->psid);
 	fu_device_set_version(component, version);
-	fu_device_set_version_bootloader(component, helper->version_bootloader);
 	if (!fu_device_probe(component, &error_local)) {
 		g_warning("failed to probe %s: %s", name, error_local->message);
 		return;
 	}
-	if (helper->needs_activation)
-		fu_device_add_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	else
-		fu_device_remove_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	if (version_info->stored != NULL && version_info->running != NULL) {
+		if (g_strcmp0(version_info->stored, version_info->running) != 0)
+			fu_device_add_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		else
+			fu_device_remove_flag(component, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	}
 	fu_device_add_child(helper->device, component);
 	g_debug("added component %s (version: %s)", name, version);
 }
@@ -409,7 +454,7 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	GPtrArray *children = fu_device_get_children(device);
 	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
-	g_autoptr(GHashTable) attrs_map = NULL;
+	g_autoptr(GHashTable) version_table = NULL;
 	g_autoptr(GPtrArray) components_to_remove = g_ptr_array_new();
 
 	if (genl->cmd != DEVLINK_CMD_INFO_GET)
@@ -424,14 +469,15 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 		fu_device_set_serial(device, serial_number);
 	}
 
-	attrs_map = fu_devlink_device_populate_attrs_map(nlh);
+	version_table = fu_devlink_device_populate_attrs_map(nlh);
 
 	/* remove components that are not in the attrs map */
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *component = g_ptr_array_index(children, i);
 		const gchar *logical_id = fu_device_get_logical_id(component);
-		const gchar *value = g_hash_table_lookup(attrs_map, logical_id);
-		if (value == NULL) {
+		FuDevlinkVersionInfo *version_info = g_hash_table_lookup(version_table, logical_id);
+
+		if (version_info == NULL) {
 			g_debug("removed component %s", logical_id);
 			g_ptr_array_add(components_to_remove, component);
 		}
@@ -442,11 +488,8 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	}
 
 	helper.device = device;
-	helper.psid = g_hash_table_lookup(attrs_map, "fw.psid");
-	helper.version_bootloader = g_hash_table_lookup(attrs_map, "fw.bootloader");
-	helper.needs_activation = g_strcmp0(g_hash_table_lookup(attrs_map, "stored:fw.version"),
-					    g_hash_table_lookup(attrs_map, "fw.version")) != 0;
-	g_hash_table_foreach(attrs_map, fu_devlink_device_update_component_cb, &helper);
+	helper.version_table = version_table;
+	g_hash_table_foreach(version_table, fu_devlink_device_update_component_cb, &helper);
 
 	return MNL_CB_OK;
 }
