@@ -12,6 +12,7 @@
 typedef struct {
 	FuMmDevice parent_instance;
 	MbimDevice *mbim_device;
+	GMainContext *main_ctx;
 } FuMmMbimDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuMmMbimDevice, fu_mm_mbim_device, FU_TYPE_MM_DEVICE)
@@ -106,6 +107,7 @@ typedef struct {
 	gboolean ret;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
+	GSource *timeout_source;
 	GCancellable *cancellable;
 	guint timeout_id;
 	MbimDevice *mbim_device;
@@ -123,15 +125,18 @@ fu_mm_mbim_device_helper_timeout_cb(gpointer user_data)
 }
 
 static FuMmMbimDeviceHelper *
-fu_mm_mbim_device_helper_helper_new(guint timeout_ms)
+fu_mm_mbim_device_helper_helper_new(GMainContext *main_ctx, guint timeout_ms)
 {
 	FuMmMbimDeviceHelper *helper = g_new0(FuMmMbimDeviceHelper, 1);
-	g_autoptr(GSource) source = g_timeout_source_new(timeout_ms);
+	helper->timeout_source = g_timeout_source_new(timeout_ms);
 	helper->cancellable = g_cancellable_new();
-	helper->main_ctx = g_main_context_new();
+	helper->main_ctx = g_main_context_ref(main_ctx);
 	helper->loop = g_main_loop_new(helper->main_ctx, FALSE);
-	g_source_set_callback(source, fu_mm_mbim_device_helper_timeout_cb, helper, NULL);
-	g_source_attach(source, helper->main_ctx);
+	g_source_set_callback(helper->timeout_source,
+			      fu_mm_mbim_device_helper_timeout_cb,
+			      helper,
+			      NULL);
+	g_source_attach(helper->timeout_source, helper->main_ctx);
 	g_main_context_push_thread_default(helper->main_ctx);
 	return helper;
 }
@@ -140,12 +145,14 @@ static void
 fu_mm_mbim_device_helper_free(FuMmMbimDeviceHelper *helper)
 {
 	g_main_context_pop_thread_default(helper->main_ctx);
+	g_source_destroy(helper->timeout_source);
 	if (helper->timeout_id != 0)
 		g_source_remove(helper->timeout_id);
 	if (helper->mbim_device != NULL)
 		g_object_unref(helper->mbim_device);
 	if (helper->mbim_message != NULL)
 		mbim_message_unref(helper->mbim_message);
+	g_source_unref(helper->timeout_source);
 	g_object_unref(helper->cancellable);
 	g_main_loop_unref(helper->loop);
 	g_main_context_unref(helper->main_ctx);
@@ -165,7 +172,9 @@ fu_mm_mbim_device_new_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 static MbimDevice *
 fu_mm_mbim_device_new_sync(FuMmMbimDevice *self, GFile *file, guint timeout_ms, GError **error)
 {
-	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuMmMbimDeviceHelper) helper =
+	    fu_mm_mbim_device_helper_helper_new(priv->main_ctx, timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 
@@ -222,7 +231,8 @@ static gboolean
 fu_mm_mbim_device_open_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
 {
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	g_autoptr(FuMmMbimDeviceHelper) helper =
+	    fu_mm_mbim_device_helper_helper_new(priv->main_ctx, timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 
@@ -280,7 +290,8 @@ static gboolean
 fu_mm_mbim_device_close_sync(FuMmMbimDevice *self, guint timeout_ms, GError **error)
 {
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	g_autoptr(FuMmMbimDeviceHelper) helper =
+	    fu_mm_mbim_device_helper_helper_new(priv->main_ctx, timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 
@@ -351,7 +362,8 @@ fu_mm_mbim_device_command_sync(FuMmMbimDevice *self,
 			       GError **error)
 {
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuMmMbimDeviceHelper) helper = fu_mm_mbim_device_helper_helper_new(timeout_ms);
+	g_autoptr(FuMmMbimDeviceHelper) helper =
+	    fu_mm_mbim_device_helper_helper_new(priv->main_ctx, timeout_ms);
 	FuDeviceEvent *event = NULL;
 	g_autofree gchar *event_id = NULL;
 
@@ -539,10 +551,14 @@ fu_mm_mbim_device_set_progress(FuDevice *device, FuProgress *progress)
 static void
 fu_mm_mbim_device_init(FuMmMbimDevice *self)
 {
+	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	/* we must only use one context per device because MBIM messages are only delivered to the
+	 * main context which the device is opened with */
+	priv->main_ctx = g_main_context_new();
 }
 
 static void
@@ -551,6 +567,7 @@ fu_mm_mbim_device_finalize(GObject *object)
 	FuMmMbimDevice *self = FU_MM_MBIM_DEVICE(object);
 	FuMmMbimDevicePrivate *priv = GET_PRIVATE(self);
 	g_warn_if_fail(priv->mbim_device == NULL);
+	g_main_context_unref(priv->main_ctx);
 	G_OBJECT_CLASS(fu_mm_mbim_device_parent_class)->finalize(object);
 }
 
