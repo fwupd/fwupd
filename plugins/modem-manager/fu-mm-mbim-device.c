@@ -109,7 +109,6 @@ typedef struct {
 	GMainLoop *loop;
 	GSource *timeout_source;
 	GCancellable *cancellable;
-	guint timeout_id;
 	MbimDevice *mbim_device;
 	MbimMessage *mbim_message;
 	GError *error;
@@ -120,7 +119,6 @@ fu_mm_mbim_device_helper_timeout_cb(gpointer user_data)
 {
 	FuMmMbimDeviceHelper *helper = (FuMmMbimDeviceHelper *)user_data;
 	g_cancellable_cancel(helper->cancellable);
-	helper->timeout_id = 0;
 	return G_SOURCE_REMOVE;
 }
 
@@ -146,8 +144,6 @@ fu_mm_mbim_device_helper_free(FuMmMbimDeviceHelper *helper)
 {
 	g_main_context_pop_thread_default(helper->main_ctx);
 	g_source_destroy(helper->timeout_source);
-	if (helper->timeout_id != 0)
-		g_source_remove(helper->timeout_id);
 	if (helper->mbim_device != NULL)
 		g_object_unref(helper->mbim_device);
 	if (helper->mbim_message != NULL)
