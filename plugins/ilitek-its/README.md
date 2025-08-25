@@ -20,19 +20,19 @@ This plugin supports the following protocol ID:
 
 These devices use the standard DeviceInstanceId values, e.g.
 
-* `HIDRAW\VEN_222A&DEV_0001`
-* `HIDRAW\VEN_222A&DEV_FF25`
+* `HIDRAW\VEN_222A&DEV_1234`
+* `HIDRAW\VEN_222A&DEV_FF29`
 
 Additional instance ID are added which corresponds to the FWID and/or sensor ID:
 
-* `HIDRAW\VEN_222A&FWID_1234`
-* `HIDRAW\VEN_222A&SENSORID_12`
+* `HIDRAW\VEN_222A&DEV_1234&FWID_1234`
+* `HIDRAW\VEN_222A&DEV_1234&SENSORID_12`
 
 Additional instance IDs are added which corresponds to the EDID PNP ID and product code:
 
-* `HIDRAW\VEN_222A&PNPID_ABC`
-* `HIDRAW\VEN_222A&PNPID_ABC&PCODE_1234`
-* `HIDRAW\VEN_222A&SENSORID_12&PNPID_ABC&PCODE_1234`
+* `HIDRAW\VEN_222A&DEV_1234&PNPID_ABC`
+* `HIDRAW\VEN_222A&DEV_1234&PNPID_ABC&PCODE_1234`
+* `HIDRAW\VEN_222A&DEV_1234&SENSORID_12&PNPID_ABC&PCODE_1234`
 
 ## Update Behavior
 
@@ -42,6 +42,16 @@ After a successful firmware update, device will switch back to normal runtime mo
 ## Vendor ID Security
 
 The vendor ID is set from the HID vendor, e.g. `HIDRAW:0x222A`
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### IlitekItsSensorIdMask
+
+The sensor id mask
+
+Since: 2.0.14
 
 ## External Interface Access
 

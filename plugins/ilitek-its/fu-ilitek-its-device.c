@@ -12,7 +12,7 @@
 #include "fu-ilitek-its-struct.h"
 
 #define FU_ILITEK_ITS_HID_RESPONSE_OFFSET 4 /* 4 bytes hid header */
-#define FU_ILITEK_ITS_HID_ACK_BYTE	  0xac
+#define FU_ILITEK_ITS_HID_ACK_BYTE	  0xAC
 
 #define FU_ILITEK_ITS_LOOKUP_TYPE_EDID	    0x1
 #define FU_ILITEK_ITS_LOOKUP_TYPE_SENSOR_ID 0x2
@@ -30,6 +30,8 @@
 struct _FuIlitekItsDevice {
 	FuHidrawDevice parent_instance;
 	guint32 protocol_ver;
+
+	guint8 sensor_id_mask;
 };
 
 G_DEFINE_TYPE(FuIlitekItsDevice, fu_ilitek_its_device, FU_TYPE_HIDRAW_DEVICE)
@@ -697,8 +699,6 @@ fu_ilitek_its_device_register_drm_device(FuIlitekItsDevice *self,
 					   "PNPID",
 					   "PCODE",
 					   NULL);
-
-	// TODO: some SKU needs both EDID and sensor-id
 }
 
 static gboolean
@@ -731,13 +731,24 @@ fu_ilitek_its_device_setup(FuDevice *device, GError **error)
 	if (!fu_ilitek_its_device_get_sensor_id(self, &sensor_id, error))
 		return FALSE;
 
-	fu_device_add_instance_u8(device, "SENSORID", sensor_id);
 	fu_device_add_instance_u16(device, "FWID", fwid);
-
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "FWID", NULL))
 		return FALSE;
+
+	fu_device_add_instance_u8(device, "SENSORID", sensor_id & self->sensor_id_mask);
 	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "SENSORID", NULL))
 		return FALSE;
+
+	/* some SKU needs both EDID and sensor-id */
+	fu_device_build_instance_id(device,
+				    NULL,
+				    "HIDRAW",
+				    "VEN",
+				    "DEV",
+				    "SENSORID",
+				    "PNPID",
+				    "PCODE",
+				    NULL);
 
 	/* FuHidrawDevice->setup */
 	return FU_DEVICE_CLASS(fu_ilitek_its_device_parent_class)->setup(device, error);
@@ -914,6 +925,29 @@ fu_ilitek_its_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_ilitek_its_device_set_quirk_kv(FuDevice *device,
+				  const gchar *key,
+				  const gchar *value,
+				  GError **error)
+{
+	FuIlitekItsDevice *self = FU_ILITEK_ITS_DEVICE(device);
+	guint64 tmp = 0;
+
+	if (g_strcmp0(key, "IlitekItsSensorIdMask") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->sensor_id_mask = (guint8)tmp;
+		return TRUE;
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_ilitek_its_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -958,6 +992,7 @@ fu_ilitek_its_device_class_init(FuIlitekItsDeviceClass *klass)
 	device_class->setup = fu_ilitek_its_device_setup;
 	device_class->attach = fu_ilitek_its_device_attach;
 	device_class->detach = fu_ilitek_its_device_detach;
+	device_class->set_quirk_kv = fu_ilitek_its_device_set_quirk_kv;
 	device_class->prepare_firmware = fu_ilitek_its_device_prepare_firmware;
 	device_class->write_firmware = fu_ilitek_its_device_write_firmware;
 	device_class->set_progress = fu_ilitek_its_device_set_progress;
