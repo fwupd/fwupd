@@ -511,10 +511,10 @@ fu_jabra_gnp_child_device_flash_erase_done(FuJabraGnpChildDevice *self, GError *
 				  error))
 		return FALSE;
 	if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error, buf did not match");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "internal error, buf did not match");
 		return FALSE;
 	}
 	return TRUE;
@@ -721,10 +721,10 @@ fu_jabra_gnp_child_device_write_chunks(FuJabraGnpChildDevice *self,
 						  error))
 				return FALSE;
 			if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "internal error, buf did not match");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INTERNAL,
+						    "internal error, buf did not match");
 				return FALSE;
 			}
 			if (fu_memread_uint16(rx_data.rxbuf + 7, G_LITTLE_ENDIAN) == chunk_number ||
@@ -769,10 +769,10 @@ fu_jabra_gnp_child_device_read_verify_status(FuJabraGnpChildDevice *self, GError
 				  error))
 		return FALSE;
 	if (rx_data.rxbuf[5] != match_buf[5] || rx_data.rxbuf[6] != match_buf[6]) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "internal error, buf did not match");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "internal error, buf did not match");
 		return FALSE;
 	}
 	return TRUE;
