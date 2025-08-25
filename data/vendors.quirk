@@ -14,6 +14,8 @@ Vendor = Elan
 Vendor = Synaptics
 [USB\VID_10AB]
 Vendor = USI
+[USB\VID_1C7A]
+Vendor = Egistec
 [USB\VID_273F]
 Vendor = Hughski
 [USB\VID_27C6]
