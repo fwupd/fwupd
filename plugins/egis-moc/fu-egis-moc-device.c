@@ -507,14 +507,15 @@ fu_egis_moc_device_convert_version(FuDevice *device, guint64 version_raw)
 static void
 fu_egis_moc_device_init(FuEgisMocDevice *self)
 {
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
-	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_set_vendor(FU_DEVICE(self), "Egistec");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 	fu_device_add_protocol(FU_DEVICE(self), "com.egistec.usb");
-	fu_device_set_summary(FU_DEVICE(self), "Fingerprint Sensor");
+	fu_device_set_summary(FU_DEVICE(self), "Fingerprint Device");
 	fu_device_set_install_duration(FU_DEVICE(self), 15);
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x20000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x50000);
