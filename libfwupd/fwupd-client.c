@@ -7187,6 +7187,8 @@ fwupd_client_build_report_security(FwupdClient *self,
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
+			continue;
 		json_builder_begin_object(builder);
 		fwupd_codec_to_json(FWUPD_CODEC(attr), builder, FWUPD_CODEC_FLAG_TRUSTED);
 		json_builder_end_object(builder);
