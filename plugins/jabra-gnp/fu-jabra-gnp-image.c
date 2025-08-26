@@ -67,6 +67,9 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 			g_prefix_error(error, "cannot parse crc of %s: ", crc_str);
 			return FALSE;
 		}
+	} else {
+		/* crc entry may not exist in the file */
+		g_clear_error(error);
 	}
 
 	/* get the partition number */
