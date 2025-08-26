@@ -79,7 +79,9 @@ The plugin supports the following private flags:
 
 When this flag is set, the plugin will not include the `DEVLINK_ATTR_FLASH_UPDATE_COMPONENT`
 attribute in the flash command.
-This is useful for devices that don't require or support component-specific updates.
+This is useful for devices that don't support component-specific updates. For such,
+passing `DEVLINK_ATTR_FLASH_UPDATE_COMPONENT` in flash netlink message
+would cause an error.
 
 **Usage in metainfo XML:**
 
