@@ -266,7 +266,7 @@ fu_devlink_plugin_constructed(GObject *obj)
 	/* create and add devlink backend */
 	self->backend = FU_DEVLINK_BACKEND(fu_devlink_backend_new(ctx));
 	fu_context_add_backend(ctx, FU_BACKEND(self->backend));
-
+	fu_context_add_quirk_key(ctx, "DevlinkFixedVersions");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DEVLINK_DEVICE);
 }
 

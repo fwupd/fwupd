@@ -18,6 +18,7 @@ struct _FuDevlinkDevice {
 	gchar *dev_name;
 	FuDevlinkGenSocket *nlg;
 	FuKernelSearchPathLocker *search_path_locker;
+	GPtrArray *fixed_versions;
 };
 
 G_DEFINE_TYPE(FuDevlinkDevice, fu_devlink_device, FU_TYPE_DEVICE)
@@ -388,8 +389,47 @@ fu_devlink_device_get_component_by_logical_id(FuDevice *device, const gchar *nam
 typedef struct {
 	FuDevice *device;
 	GHashTable *version_table;
-	const gchar *psid;
 } FuDevlinkDeviceUpdateComponentHelper;
+
+static void
+fu_devlink_device_add_component_instance_strs(FuDevice *component,
+					      FuDevlinkDeviceUpdateComponentHelper *helper)
+{
+	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(helper->device);
+
+	if (self->fixed_versions == NULL)
+		return;
+
+	/* There might me multiple arrays of fixed versions obtained from quirk file.
+	   Iterate over all of them and add instance strings to component device. */
+	for (guint i = 0; i < self->fixed_versions->len; i++) {
+		gboolean complete_set = TRUE;
+		const gchar **names = g_ptr_array_index(self->fixed_versions, i);
+		g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
+
+		for (guint j = 0; names[j] != NULL; j++) {
+			FuDevlinkVersionInfo *version_info =
+			    g_hash_table_lookup(helper->version_table, names[j]);
+			g_autofree gchar *key = NULL;
+
+			if (version_info == NULL || version_info->fixed == NULL) {
+				complete_set = FALSE;
+				continue;
+			}
+			key = g_ascii_strup(names[j], -1);
+			g_strv_builder_add(keys_builder, key);
+
+			/* avoid re-insertion of the same key */
+			if (fu_device_get_instance_str(component, key) == NULL)
+				fu_device_add_instance_str(component, key, version_info->fixed);
+		}
+		/* In case all keys are present in version table obtained from kernel,
+		   add the set to component to build instance id for it during probe. */
+		if (complete_set)
+			fu_devlink_component_add_instance_keys(component,
+							       g_strv_builder_end(keys_builder));
+	}
+}
 
 static void
 fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer user_data)
@@ -430,6 +470,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 		g_debug("ignoring %s", name);
 		return;
 	}
+	fu_devlink_device_add_component_instance_strs(component, helper);
 	fu_device_set_version(component, version);
 	if (!fu_device_probe(component, &error_local)) {
 		g_warning("failed to probe %s: %s", name, error_local->message);
@@ -810,6 +851,35 @@ fu_devlink_device_incorporate(FuDevice *device, FuDevice *donor_device)
 }
 
 static void
+fu_devlink_device_add_fixed_versions(FuDevlinkDevice *self, gchar **fixed_versions)
+{
+	if (self->fixed_versions == NULL)
+		self->fixed_versions = g_ptr_array_new_with_free_func((GDestroyNotify)g_strfreev);
+	g_ptr_array_add(self->fixed_versions, fixed_versions);
+}
+
+static gboolean
+fu_devlink_device_set_quirk_kv(FuDevice *device,
+			       const gchar *key,
+			       const gchar *value,
+			       GError **error)
+{
+	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
+
+	g_debug("key: %s, value: %s", key, value);
+	if (g_strcmp0(key, "DevlinkFixedVersions") == 0) {
+		fu_devlink_device_add_fixed_versions(self, g_strsplit(value, ",", -1));
+		return TRUE;
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
+static void
 fu_devlink_device_init(FuDevlinkDevice *self)
 {
 	fu_device_set_summary(FU_DEVICE(self), "Devlink device");
@@ -825,6 +895,8 @@ fu_devlink_device_finalize(GObject *object)
 
 	g_free(self->bus_name);
 	g_free(self->dev_name);
+	if (self->fixed_versions != NULL)
+		g_ptr_array_unref(self->fixed_versions);
 
 	G_OBJECT_CLASS(fu_devlink_device_parent_class)->finalize(object);
 }
@@ -847,4 +919,5 @@ fu_devlink_device_class_init(FuDevlinkDeviceClass *klass)
 	device_class->add_json = fu_devlink_device_add_json;
 	device_class->from_json = fu_devlink_device_from_json;
 	device_class->incorporate = fu_devlink_device_incorporate;
+	device_class->set_quirk_kv = fu_devlink_device_set_quirk_kv;
 }

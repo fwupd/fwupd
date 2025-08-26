@@ -22,10 +22,11 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use custom instance IDs consisting of the component name and optionally the device PSID.
+These devices use custom instance IDs consisting of the component name.
 
 * `PCI\VEN_15B3&DEV_1021&COMPONENT_fw`
-* `PCI\VEN_15B3&DEV_1021&COMPONENT_fw&PSID_MT_0000001045`
+
+Optionally, additional GUID might get generated as specified in the squirk file, see below.
 
 ### Device Identification
 
@@ -70,6 +71,25 @@ The plugin implements the devlink generic netlink protocol:
 6. **Status Monitoring**: Receives `DEVLINK_CMD_FLASH_UPDATE_STATUS` messages for progress
 7. **Completion**: Waits for `DEVLINK_CMD_FLASH_UPDATE_END` to confirm completion
 8. **Firmware Activation**: Sends `DEVLINK_CMD_RELOAD` with fw_activate action to activate updated firmware
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### DevlinkFixedVersions
+
+Specifies a comma-separated list of "fixed version" names that should be used
+to generate additional GUID instance IDs for component matching. This is useful to
+target specific device according to device IDs, like ASIC ID, Board ID, etc.
+
+**Example usage in quirk file:**
+
+```ini
+[PCI\VEN_15B3&DEV_1021]
+DevlinkFixedVersions = fw.psid
+```
+
+Since: 2.0.14
 
 ## Private Flags
 
