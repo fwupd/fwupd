@@ -128,10 +128,11 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 		return FALSE;
 	}
 
-	/* incorporate vendor information from parent device (without setting hierarchy) */
+	/* incorporate information from parent device (without setting hierarchy) */
 	fu_device_incorporate(devlink_device,
 			      parent_device,
-			      FU_DEVICE_INCORPORATE_FLAG_VENDOR |
+			      FU_DEVICE_INCORPORATE_FLAG_BASECLASS |
+				  FU_DEVICE_INCORPORATE_FLAG_VENDOR |
 				  FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
 				  FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID);
 

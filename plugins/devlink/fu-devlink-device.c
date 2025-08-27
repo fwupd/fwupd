@@ -585,19 +585,22 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* use quirk database for a better name */
-	fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
-	fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
 	subsystem = g_ascii_strup(self->bus_name, -1);
-	if (!fu_device_build_instance_id_full(device,
-					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
-					      error,
-					      subsystem,
-					      "VEN",
-					      "DEV",
-					      NULL)) {
-		g_prefix_error_literal(error, "failed to create PCI quirk for name: ");
-		return FALSE;
+
+	/* use quirk database for a better name */
+	if (fu_device_get_vid(device) != 0 && fu_device_get_pid(device) != 0) {
+		fu_device_add_instance_u16(device, "VEN", fu_device_get_vid(device));
+		fu_device_add_instance_u16(device, "DEV", fu_device_get_pid(device));
+		if (!fu_device_build_instance_id_full(device,
+						      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+						      error,
+						      subsystem,
+						      "VEN",
+						      "DEV",
+						      NULL)) {
+			g_prefix_error_literal(error, "failed to create quirk for name: ");
+			return FALSE;
+		}
 	}
 
 	/* get device information and version */

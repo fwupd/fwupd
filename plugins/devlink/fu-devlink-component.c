@@ -64,11 +64,24 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autofree gchar *subsystem =
-	    g_ascii_strup(fu_devlink_device_get_bus_name(FU_DEVLINK_DEVICE(proxy)), -1);
+	g_autofree gchar *subsystem = NULL;
+	g_autoptr(GStrvBuilder) basekeys_builder = NULL;
+	g_auto(GStrv) basekeys = NULL;
+
+	/* declare all variables at the beginning */
+	subsystem = g_ascii_strup(fu_devlink_device_get_bus_name(FU_DEVLINK_DEVICE(proxy)), -1);
+
+	basekeys_builder = g_strv_builder_new();
+	if (fu_device_get_instance_str(device, "VEN") != NULL &&
+	    fu_device_get_instance_str(device, "DEV") != NULL) {
+		g_strv_builder_add(basekeys_builder, "VEN");
+		g_strv_builder_add(basekeys_builder, "DEV");
+	}
+	g_strv_builder_add(basekeys_builder, "COMPONENT");
+	basekeys = g_strv_builder_end(basekeys_builder);
 
 	/* build instance id just for component name */
-	if (!fu_device_build_instance_id(device, error, subsystem, "VEN", "DEV", "COMPONENT", NULL))
+	if (!fu_device_build_instance_id_strv(device, subsystem, basekeys, error))
 		return FALSE;
 
 	if (self->instance_keys == NULL)
@@ -80,9 +93,7 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 		g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
 		g_auto(GStrv) keys = NULL;
 
-		g_strv_builder_add(keys_builder, "VEN");
-		g_strv_builder_add(keys_builder, "DEV");
-		g_strv_builder_add(keys_builder, "COMPONENT");
+		g_strv_builder_addv(keys_builder, (const char **)basekeys);
 		g_strv_builder_addv(keys_builder, g_ptr_array_index(self->instance_keys, i));
 		keys = g_strv_builder_end(keys_builder);
 		if (!fu_device_build_instance_id_strv(device, subsystem, keys, error))
