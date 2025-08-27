@@ -134,6 +134,42 @@ fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number)
 }
 
 /**
+ * fu_edid_get_product_name:
+ * @self: a #FuEdid
+ *
+ * Gets the product name.
+ *
+ * Returns: string value, or %NULL for unset
+ *
+ * Since: 1.9.6
+ **/
+const gchar *
+fu_edid_get_product_name(FuEdid *self)
+{
+	g_return_val_if_fail(FU_IS_EDID(self), NULL);
+	return self->product_name;
+}
+
+/**
+ * fu_edid_set_product_name:
+ * @self: a #FuEdid
+ * @product_name: (nullable): string value, or %NULL
+ *
+ * Sets the product name, e.g. `LG HDR WQHD`.
+ *
+ * Since: 2.0.14
+ **/
+void
+fu_edid_set_product_name(FuEdid *self, const gchar *product_name)
+{
+	g_return_if_fail(FU_IS_EDID(self));
+	if (g_strcmp0(self->product_name, product_name) == 0)
+		return;
+	g_free(self->product_name);
+	self->product_name = g_strdup(product_name);
+}
+
+/**
  * fu_edid_get_product_code:
  * @self: a #FuEdid
  *
