@@ -14,7 +14,7 @@
 
 #include "fu-bytes.h"
 #include "fu-common-struct.h"
-#include "fu-drm-device.h"
+#include "fu-drm-device-private.h"
 
 /**
  * FuDrmDevice
@@ -59,6 +59,10 @@ fu_drm_device_to_string(FuDevice *device, guint idt, GString *str)
 				  idt,
 				  "State",
 				  fu_display_state_to_string(priv->display_state));
+	if (priv->edid != NULL) {
+		g_autofree gchar *xml = fu_firmware_to_string(FU_FIRMWARE(priv->edid));
+		fwupd_codec_string_append(str, idt, "Edid", xml);
+	}
 }
 
 /**
@@ -205,6 +209,23 @@ fu_drm_device_get_edid(FuDrmDevice *self)
 	return priv->edid;
 }
 
+/**
+ * fu_drm_device_set_edid:
+ * @self: a #FuDrmDevice
+ * @edid: a #FuEdid, or %NULL
+ *
+ * Sets the cached EDID onto the DRM device.
+ *
+ * Since: 2.0.14
+ **/
+void
+fu_drm_device_set_edid(FuDrmDevice *self, FuEdid *edid)
+{
+	FuDrmDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DRM_DEVICE(self));
+	g_set_object(&priv->edid, edid);
+}
+
 static gboolean
 fu_drm_device_probe(FuDevice *device, GError **error)
 {
@@ -277,7 +298,7 @@ fu_drm_device_probe(FuDevice *device, GError **error)
 					     FU_FIRMWARE_PARSE_FLAG_NONE,
 					     error))
 			return FALSE;
-		g_set_object(&priv->edid, edid);
+		fu_drm_device_set_edid(self, edid);
 
 		/* add instance ID */
 		fu_device_add_instance_str(device, "VEN", fu_edid_get_pnp_id(edid));

@@ -23,6 +23,7 @@
 #include "fu-context-private.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-drm-device-private.h"
 #include "fu-efivars-private.h"
 #include "fu-engine-config.h"
 #include "fu-engine-helper.h"
@@ -1331,6 +1332,8 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	GPtrArray *plugins;
 	gboolean ret;
+	g_autoptr(FuDrmDevice) drm_device = g_object_new(FU_TYPE_DRM_DEVICE, NULL);
+	g_autoptr(FuEdid) edid = fu_edid_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
@@ -1426,6 +1429,18 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 								   &error_local))
 				g_debug("ignoring: %s", error_local->message);
 		}
+	}
+
+	/* register a DRM device as some plugins use these for quirks */
+	fu_edid_set_pnp_id(edid, "PNP");
+	fu_edid_set_eisa_id(edid, "IBM");
+	fu_edid_set_product_name(edid, "Display");
+	fu_edid_set_serial_number(edid, "123456");
+	fu_edid_set_product_code(edid, 0x1234);
+	fu_drm_device_set_edid(drm_device, edid);
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index(plugins, i);
+		fu_plugin_runner_device_register(plugin, FU_DEVICE(drm_device));
 	}
 
 	/* create each custom device with a context only */
