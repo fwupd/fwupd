@@ -41,6 +41,8 @@ G_DEFINE_TYPE(FuSynapticsRmiHidDevice, fu_synaptics_rmi_hid_device, FU_TYPE_SYNA
 #define HID_RMI4_ATTN_INTERRUPT_SOURCES 1
 #define HID_RMI4_ATTN_DATA		2
 
+#define HID_RMI4_REPORT_ID_SIZE	  1 /* Size of the report ID field */
+#define HID_RMI4_DATA_LENGTH_SIZE 1 /* Size of the data length field */
 /*
  * This bit disables whatever sleep mode may be selected by the sleep_mode
  * field and forces the device to run at full power without sleeping.
@@ -105,7 +107,8 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 		guint8 input_count_sz = 0;
 		g_autoptr(GByteArray) res = NULL;
 		res = fu_io_channel_read_byte_array(io_channel,
-						    req_sz,
+						    req_sz + HID_RMI4_REPORT_ID_SIZE +
+							HID_RMI4_DATA_LENGTH_SIZE,
 						    RMI_DEVICE_DEFAULT_TIMEOUT,
 						    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 						    error);
