@@ -76,7 +76,7 @@ fu_mm_qdu_mbim_device_write_chunks(FuMmQduMbimDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		chk = fu_chunk_array_index(chunks, 0, error);
+		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL) {
 			g_prefix_error_literal(error, "failed to get chunk: ");
 			return FALSE;
