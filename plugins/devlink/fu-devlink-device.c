@@ -866,7 +866,6 @@ fu_devlink_device_set_quirk_kv(FuDevice *device,
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 
-	g_debug("key: %s, value: %s", key, value);
 	if (g_strcmp0(key, "DevlinkFixedVersions") == 0) {
 		fu_devlink_device_add_fixed_versions(self, g_strsplit(value, ",", -1));
 		return TRUE;
