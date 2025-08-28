@@ -153,7 +153,7 @@ fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id)
 {
 	g_autoptr(FuDevlinkComponent) self = NULL;
 
-	g_return_val_if_fail(logical_id, NULL);
+	g_return_val_if_fail(logical_id != NULL, NULL);
 
 	self =
 	    g_object_new(FU_TYPE_DEVLINK_COMPONENT, "proxy", proxy, "logical-id", logical_id, NULL);

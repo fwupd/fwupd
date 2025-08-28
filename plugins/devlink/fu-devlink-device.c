@@ -668,8 +668,8 @@ fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_na
 	g_autoptr(FuDevlinkDevice) self = NULL;
 	g_autofree gchar *device_id = NULL;
 
-	g_return_val_if_fail(bus_name, NULL);
-	g_return_val_if_fail(dev_name, NULL);
+	g_return_val_if_fail(bus_name != NULL, NULL);
+	g_return_val_if_fail(dev_name != NULL, NULL);
 
 	/* create object and assign the strings */
 	self = g_object_new(FU_TYPE_DEVLINK_DEVICE, "context", ctx, NULL);
