@@ -59,6 +59,9 @@ logout or shutdown.
 
 ### USB4 Retimer
 
+**IMPORTANT NOTE:** The retimer devices will only appear when using `fwupd` (the daemon) and not
+`fwupdtool` (the standalone tool) as they need to be enabled and then added after a few seconds.
+
 To update the retimer userspace need to set the port offline (`echo 1 > offline`), and then
 rescan it (`echo 1 > rescan`).
 This will cause the retimer to be visible to the OS, it will be added to sysfs and thus a fwupd

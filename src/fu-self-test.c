@@ -7348,7 +7348,7 @@ fu_test_engine_fake_hidraw(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "pixart_rf");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7412,7 +7412,7 @@ fu_test_engine_fake_usb(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "hughski_colorhug");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7452,7 +7452,7 @@ fu_test_engine_fake_v4l(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "logitech_tap");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7499,7 +7499,6 @@ fu_test_engine_fake_nvme(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "nvme");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES |
 				 FU_ENGINE_LOAD_FLAG_READONLY | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     progress,
 			     &error);
@@ -7550,7 +7549,7 @@ fu_test_engine_fake_serio(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "synaptics_rmi");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7603,7 +7602,7 @@ fu_test_engine_fake_tpm(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "tpm");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7650,7 +7649,7 @@ fu_test_engine_fake_block(gconstpointer user_data)
 	fu_engine_add_plugin_filter(engine, "scsi");
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS |
-				 FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES | FU_ENGINE_LOAD_FLAG_READONLY,
+				 FU_ENGINE_LOAD_FLAG_READONLY,
 			     progress,
 			     &error);
 	g_assert_no_error(error);
@@ -7710,6 +7709,7 @@ main(int argc, char **argv)
 
 	/* do not save silo */
 	self->ctx = fu_context_new();
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	ret = fu_context_load_quirks(self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

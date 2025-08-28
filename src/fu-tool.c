@@ -237,7 +237,6 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 			g_info("failed to stop daemon: %s", error_local->message);
 	}
 #endif
-	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	if (!fu_engine_load(self->engine, flags, progress, error))
@@ -5829,6 +5828,7 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	self->ctx = fu_context_new();
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-request",
