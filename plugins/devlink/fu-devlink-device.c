@@ -438,7 +438,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	const gchar *name = (const gchar *)key;
 	FuDevlinkVersionInfo *version_info = value;
 	const gchar *version;
-	g_autofree gchar *instance_id = g_strdup_printf("DEVLINK\\VERSION_%s", name);
+	g_autofree gchar *instance_id = g_strdup_printf("DEVLINK\\COMPONENT_%s", name);
 	g_autoptr(FuDevice) component = NULL;
 	g_autoptr(GError) error_local = NULL;
 
