@@ -188,6 +188,14 @@ fu_thunderbolt_controller_set_port_online_cb(gpointer user_data)
 static gboolean
 fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+
+	/* it takes 5 seconds (!) before we can re-online the thunderbolt controller */
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES)) {
+		g_message("skipping usb4 setup as port needs to be onlined");
+		return TRUE;
+	}
+
 	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
 		return FALSE;
 	if (!fu_thunderbolt_udev_rescan_port(FU_UDEV_DEVICE(self), error))

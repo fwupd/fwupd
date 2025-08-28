@@ -8441,7 +8441,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* set up idle exit */
-	if ((flags & FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES) == 0)
+	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES))
 		fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(self->config));
 
 	/* on a read-only filesystem don't care about the cache GUID */
