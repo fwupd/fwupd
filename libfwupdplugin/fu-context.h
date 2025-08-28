@@ -11,6 +11,7 @@
 #include "fu-bios-settings.h"
 #include "fu-common-struct.h"
 #include "fu-common.h"
+#include "fu-context-struct.h"
 #include "fu-efi-hard-drive-device-path.h"
 #include "fu-efivars.h"
 #include "fu-firmware.h"
@@ -27,46 +28,6 @@ struct _FuContextClass {
 };
 
 /**
- * FuContextQuirkSource:
- *
- * The source of the quirk data, ordered by how good the data is.
- **/
-typedef enum {
-	/**
-	 * FU_CONTEXT_QUIRK_SOURCE_DEVICE:
-	 *
-	 * From the device itself, perhaps a USB descriptor.
-	 *
-	 * Since: 2.0.2
-	 **/
-	FU_CONTEXT_QUIRK_SOURCE_DEVICE,
-	/**
-	 * FU_CONTEXT_QUIRK_SOURCE_FILE:
-	 *
-	 * From an internal `.quirk` file.
-	 *
-	 * Since: 2.0.2
-	 **/
-	FU_CONTEXT_QUIRK_SOURCE_FILE,
-	/**
-	 * FU_CONTEXT_QUIRK_SOURCE_DB:
-	 *
-	 * From the database, populated from `usb.ids` and `pci.ids`.
-	 *
-	 * Since: 2.0.2
-	 **/
-	FU_CONTEXT_QUIRK_SOURCE_DB,
-	/**
-	 * FU_CONTEXT_QUIRK_SOURCE_FALLBACK:
-	 *
-	 * A good fallback, perhaps from the PCI class information.
-	 *
-	 * Since: 2.0.2
-	 **/
-	FU_CONTEXT_QUIRK_SOURCE_FALLBACK,
-} FuContextQuirkSource;
-
-/**
  * FuContextLookupIter:
  * @self: a #FuContext
  * @key: a key
@@ -81,103 +42,6 @@ typedef void (*FuContextLookupIter)(FuContext *self,
 				    const gchar *value,
 				    FuContextQuirkSource source,
 				    gpointer user_data);
-
-/**
- * FuContextFlags:
- *
- * The context flags.
- **/
-typedef enum {
-	/**
-	 * FU_CONTEXT_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 1.8.5
-	 **/
-	FU_CONTEXT_FLAG_NONE = 0,
-	/**
-	 * FU_CONTEXT_FLAG_SAVE_EVENTS:
-	 *
-	 * Save events so that they can be replayed to emulate devices.
-	 *
-	 * Since: 1.8.5
-	 **/
-	FU_CONTEXT_FLAG_SAVE_EVENTS = 1u << 0,
-	/**
-	 * FU_CONTEXT_FLAG_SYSTEM_INHIBIT:
-	 *
-	 * All devices are not updatable due to a system-wide inhibit.
-	 *
-	 * Since: 1.8.10
-	 **/
-	FU_CONTEXT_FLAG_SYSTEM_INHIBIT = 1u << 1,
-	/**
-	 * FU_CONTEXT_FLAG_LOADED_HWINFO:
-	 *
-	 * Hardware information has been loaded with a call to fu_context_load_hwinfo().
-	 *
-	 * Since: 1.9.10
-	 **/
-	FU_CONTEXT_FLAG_LOADED_HWINFO = 1u << 2,
-	/**
-	 * FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT:
-	 *
-	 * Do not allow mounting volumes, usually set in self tests.
-	 *
-	 * Since: 2.0.2
-	 **/
-	FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT = 1u << 3,
-	/**
-	 * FU_CONTEXT_FLAG_FDE_BITLOCKER:
-	 *
-	 * Bitlocker style full disk encryption is in use
-	 *
-	 * Since: 2.0.5
-	 **/
-	FU_CONTEXT_FLAG_FDE_BITLOCKER = 1u << 4,
-	/**
-	 * FU_CONTEXT_FLAG_FDE_SNAPD:
-	 *
-	 * Snapd style full disk encryption is in use
-	 *
-	 * Since: 2.0.5
-	 **/
-	FU_CONTEXT_FLAG_FDE_SNAPD = 1u << 5,
-	/**
-	 * FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE:
-	 *
-	 * Ignore the efivars free space requirement for db, dbx, KEK and PK updates.
-	 *
-	 * Since: 2.0.13
-	 **/
-	FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE = 1u << 6,
-	/**
-	 * FU_CONTEXT_FLAG_NO_IDLE_SOURCES:
-	 *
-	 * Do not use idle or timeout sources for device cleanup or enumeration.
-	 *
-	 * Since: 2.0.14
-	 **/
-	FU_CONTEXT_FLAG_NO_IDLE_SOURCES = 1u << 7,
-	/**
-	 * FU_CONTEXT_FLAG_INSECURE_UEFI:
-	 *
-	 * An insecured UEFI implementation was found
-	 *
-	 * Since: 2.0.17
-	 **/
-	FU_CONTEXT_FLAG_INSECURE_UEFI = 1u << 8,
-
-	/**
-	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:
-	 *
-	 * Unknown flag value.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_FLAG_LOADED_UNKNOWN = G_MAXUINT64,
-} G_GNUC_FLAG_ENUM FuContextFlags;
 
 void
 fu_context_add_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);
@@ -289,54 +153,6 @@ fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
     G_GNUC_NON_NULL(1);
-
-/**
- * FuContextEspFileFlags:
- *
- * The flags to use when loading files in the ESP.
- **/
-typedef enum {
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_NONE:
-	 *
-	 * No flags set.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_NONE = 0,
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE:
-	 *
-	 * Include 1st stage bootloaders like shim.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_FIRST_STAGE = 1 << 0,
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE:
-	 *
-	 * Include 2nd stage bootloaders like shim.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_SECOND_STAGE = 1 << 1,
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS:
-	 *
-	 * Include revokcations, for example the `revocations.efi` file used by shim.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_INCLUDE_REVOCATIONS = 1 << 2,
-	/**
-	 * FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN:
-	 *
-	 * Unknown flag value.
-	 *
-	 * Since: 2.0.0
-	 **/
-	FU_CONTEXT_ESP_FILE_FLAG_UNKNOWN = G_MAXUINT64,
-} FuContextEspFileFlags;
 
 GPtrArray *
 fu_context_get_esp_files(FuContext *self, FuContextEspFileFlags flags, GError **error)

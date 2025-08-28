@@ -13,18 +13,6 @@
 #include "fu-quirks.h"
 #include "fu-volume.h"
 
-typedef enum {
-	FU_CONTEXT_HWID_FLAG_NONE = 0,
-	FU_CONTEXT_HWID_FLAG_LOAD_CONFIG = 1 << 0,
-	FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS = 1 << 1,
-	FU_CONTEXT_HWID_FLAG_LOAD_FDT = 1 << 2,
-	FU_CONTEXT_HWID_FLAG_LOAD_DMI = 1 << 3,
-	FU_CONTEXT_HWID_FLAG_LOAD_KENV = 1 << 4,
-	FU_CONTEXT_HWID_FLAG_LOAD_DARWIN = 1 << 5,
-	FU_CONTEXT_HWID_FLAG_WATCH_FILES = 1 << 6,
-	FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS = 1 << 7,
-} G_GNUC_FLAG_ENUM FuContextHwidFlags;
-
 #define FU_CONTEXT_HWID_FLAG_LOAD_ALL                                                              \
 	(FU_CONTEXT_HWID_FLAG_LOAD_CONFIG | FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS |                     \
 	 FU_CONTEXT_HWID_FLAG_LOAD_FDT | FU_CONTEXT_HWID_FLAG_LOAD_DMI |                           \
