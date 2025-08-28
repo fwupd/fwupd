@@ -111,15 +111,13 @@ fu_ilitek_its_device_send_cmd(FuIlitekItsDevice *self,
 	    .is_ack = FALSE,
 	};
 
-	if (st_cmd != NULL) {
-		if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-						  st_cmd->data,
-						  st_cmd->len,
-						  FU_IOCTL_FLAG_RETRY,
-						  error)) {
-			g_prefix_error_literal(error, "failed to send HID cmd: ");
-			return FALSE;
-		}
+	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
+					  st_cmd->data,
+					  st_cmd->len,
+					  FU_IOCTL_FLAG_RETRY,
+					  error)) {
+		g_prefix_error_literal(error, "failed to send HID cmd: ");
+		return FALSE;
 	}
 	if (rbuf != NULL) {
 		fu_device_sleep(FU_DEVICE(self), 100);
