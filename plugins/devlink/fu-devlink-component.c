@@ -90,11 +90,17 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 	/* Build instance id for each fixed versions array from quirk file for which
 	   kernel provides all fixed version values. */
 	for (guint i = 0; i < self->instance_keys->len; i++) {
+		GStrv instance_keys = g_ptr_array_index(self->instance_keys, i);
+		guint j;
 		g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
 		g_auto(GStrv) keys = NULL;
 
-		g_strv_builder_addv(keys_builder, (const char **)basekeys);
-		g_strv_builder_addv(keys_builder, g_ptr_array_index(self->instance_keys, i));
+		/* Future optimization: use g_strv_builder_addv() when available on all supported
+		   platforms. */
+		for (j = 0; basekeys[j] != NULL; j++)
+			g_strv_builder_add(keys_builder, basekeys[j]);
+		for (j = 0; instance_keys[j] != NULL; j++)
+			g_strv_builder_add(keys_builder, instance_keys[j]);
 		keys = g_strv_builder_end(keys_builder);
 		if (!fu_device_build_instance_id_strv(device, subsystem, keys, error))
 			return FALSE;
