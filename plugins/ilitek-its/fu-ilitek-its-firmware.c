@@ -147,6 +147,8 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 			offset = offset + strlen(tag) + 2;
 			end = start + offset - 1;
 			block_fw_fixed = fu_bytes_new_offset(blob, start, offset, error);
+			if (block_fw_fixed == NULL)
+				return FALSE;
 		} else {
 			block_fw_fixed = g_bytes_ref(block_fw);
 		}
