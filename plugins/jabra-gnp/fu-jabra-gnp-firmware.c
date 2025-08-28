@@ -11,12 +11,6 @@
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
 
-struct _FuJabraGnpFirmware {
-	FuFirmware parent_instance;
-	guint16 dfu_pid;
-	FuJabraGnpVersionData version_data;
-};
-
 G_DEFINE_TYPE(FuJabraGnpFirmware, fu_jabra_gnp_firmware, FU_TYPE_FIRMWARE)
 
 static void

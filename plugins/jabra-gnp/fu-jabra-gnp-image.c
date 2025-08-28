@@ -57,13 +57,19 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 
 	/* get the CRC */
 	crc_str = xb_node_query_text(n, "crc", error);
-	if (crc_str == NULL) {
-		fwupd_error_convert(error);
-		return FALSE;
-	}
-	if (!fu_strtoull(crc_str, &crc_expected, 0x0, 0xFFFFFFFF, FU_INTEGER_BASE_AUTO, error)) {
-		g_prefix_error(error, "cannot parse crc of %s: ", crc_str);
-		return FALSE;
+	if (crc_str != NULL) {
+		if (!fu_strtoull(crc_str,
+				 &crc_expected,
+				 0x0,
+				 0xFFFFFFFF,
+				 FU_INTEGER_BASE_AUTO,
+				 error)) {
+			g_prefix_error(error, "cannot parse crc of %s: ", crc_str);
+			return FALSE;
+		}
+	} else {
+		/* crc entry may not exist in the file */
+		g_clear_error(error);
 	}
 
 	/* get the partition number */
@@ -99,7 +105,7 @@ fu_jabra_gnp_image_parse(FuJabraGnpImage *self,
 
 	/* verify the CRC */
 	self->crc32 = fu_jabra_gnp_calculate_crc(blob);
-	if (self->crc32 != (guint32)crc_expected) {
+	if (crc_str != NULL && self->crc32 != (guint32)crc_expected) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
