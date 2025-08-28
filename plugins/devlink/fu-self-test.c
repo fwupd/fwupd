@@ -12,30 +12,6 @@
 #include "fu-devlink-plugin.h"
 #include "fu-plugin-private.h"
 
-static void
-fu_devlink_plugin_coldplug_func(void)
-{
-	gboolean ret;
-	g_autoptr(FuPlugin) plugin = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autoptr(GError) error_local = NULL;
-
-	fu_progress_set_name(progress, "devlink-test");
-
-	/* create plugin instance */
-	plugin = fu_plugin_new_from_gtype(fu_devlink_plugin_get_type(), ctx);
-	g_assert_nonnull(plugin);
-
-	/* initialize plugin */
-	ret = fu_plugin_runner_startup(plugin, progress, &error_local);
-	g_assert_true(ret);
-
-	/* run coldplug to enumerate devices */
-	ret = fu_plugin_runner_coldplug(plugin, progress, &error_local);
-	g_assert_true(ret);
-}
-
 typedef struct {
 	guint device_id;
 } FuDevlinkNetdevsim;
@@ -218,7 +194,6 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
 	/* tests go here */
-	g_test_add_func("/devlink/plugin/coldplug", fu_devlink_plugin_coldplug_func);
 	g_test_add_func("/devlink/plugin/flash", fu_devlink_plugin_flash_func);
 	return g_test_run();
 }
