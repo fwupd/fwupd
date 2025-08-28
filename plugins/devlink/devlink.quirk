@@ -2,3 +2,7 @@
 Name = Composite
 [DEVLINK\COMPONENT_fw.mgmt]
 Name = Management
+
+# NVIDIA ConnectX-7
+[PCI\VEN_15B3&DEV_1021]
+DevlinkFixedVersions = fw.psid
