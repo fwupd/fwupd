@@ -575,6 +575,7 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 {
 	FuDevlinkDevice *self = FU_DEVLINK_DEVICE(device);
 	g_autofree gchar *subsystem = NULL;
+	g_autofree gchar *summary = NULL;
 
 	/* check if device has been properly initialized */
 	if (self->bus_name == NULL || self->dev_name == NULL) {
@@ -586,6 +587,10 @@ fu_devlink_device_setup(FuDevice *device, GError **error)
 	}
 
 	subsystem = g_ascii_strup(self->bus_name, -1);
+
+	/* set summary with devlink handle for better user visibility */
+	summary = g_strdup_printf("Devlink device (%s/%s)", self->bus_name, self->dev_name);
+	fu_device_set_summary(device, summary);
 
 	/* use quirk database for a better name */
 	if (fu_device_get_vid(device) != 0 && fu_device_get_pid(device) != 0) {
@@ -884,7 +889,6 @@ fu_devlink_device_set_quirk_kv(FuDevice *device,
 static void
 fu_devlink_device_init(FuDevlinkDevice *self)
 {
-	fu_device_set_summary(FU_DEVICE(self), "Devlink device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_possible_plugin(FU_DEVICE(self), "devlink");
