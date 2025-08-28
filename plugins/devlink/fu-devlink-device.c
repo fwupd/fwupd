@@ -445,7 +445,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 	/* "fw.bootloader" is a special case. If there is a fixed version of it present,
 	   set it as the bootloader version. */
 	if (g_strcmp0(name, "fw.bootloader") == 0)
-		fu_device_set_version_bootloader(component, version_info->fixed);
+		fu_device_set_version_bootloader(helper->device, version_info->fixed);
 
 	/* A component and running-stored tuple has 1:1 relationship. No guarantee
 	   that both are present, if either is present, try to create component. */
