@@ -25,7 +25,11 @@ rename_branch()
 
 setup_deps()
 {
-    read -p "Install build dependencies? (y/N) " question
+    if [ -z "$CI" ]; then
+        read -p "Install build dependencies? (y/N) " question
+    else
+        question=y
+    fi
     if [ "$question" = "y" ]; then
         python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
