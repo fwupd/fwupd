@@ -274,6 +274,10 @@ msgstr "حدّث معلومات التحقق من الجهاز المخزن"
 msgid "Updating %s…"
 msgstr "جارِ تحديث %s…"
 
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "النُسخة"
+
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "تحذير"

@@ -570,10 +570,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FILENAME DEVICE-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 

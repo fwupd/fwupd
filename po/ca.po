@@ -1227,10 +1227,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NOM_FITXER CERTIFICAT CLAU_PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NOM_FITXER ID_DISPOSITIU"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NOM_FITXER DESPLAÇAMENT DADES [TIPUS_MICROPROGRAMARI]"
 
@@ -1557,7 +1553,6 @@ msgid "Host Security Events"
 msgstr "Esdeveniments de seguretat a l'amfitrió"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "L'ID de seguretat de l'amfitrió (HSI) no està admès"
 

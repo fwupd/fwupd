@@ -857,10 +857,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "ගොනු නාම සහතිකය පුද්ගලික යතුර"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FILENAME උපාංගය-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FILENAME OFFSET දත්ත [FIRMWARE-TYPE]"
 

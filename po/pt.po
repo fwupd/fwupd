@@ -765,10 +765,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NOME-DE-FICHEIRO CERTIFICADO CHAVE-PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NOME-DE-FICHEIRO ID-DISPOSITIVO"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "NOME-DE-FICHEIRO [ID-DISPOSITIVO|GUID]"
 

@@ -1226,10 +1226,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "TIEDOSTONIMI SERTIFIKAATTI YKSITYINEN AVAIN"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "TIEDOSTONIMI LAITETUNNUS"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "TIEDOSTONIMI SIIRTYMÄ DATA [LAITEOHJELMISTON-TYYPPI]"
 
@@ -1552,7 +1548,6 @@ msgid "Host Security Events"
 msgstr "Koneen suojaustapahtumat"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Host Security ID (HSI) ei ole tuettu"
 

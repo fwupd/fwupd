@@ -1244,8 +1244,8 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "НАЗВА-ФАЙЛА СЕРТИФІКАТ ЗАКРИТИЙ-КЛЮЧ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "НАЗВА_ФАЙЛА ІД_ПРИСТРОЮ"
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "НАЗВА_ФАЙЛА ІД_ПРИСТРОЮ [ВЕРСІЯ]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
@@ -1578,7 +1578,6 @@ msgid "Host Security Events"
 msgstr "Події захисту вузла"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Підтримки Host Security ID (HSI) не передбачено"
 
@@ -2286,6 +2285,10 @@ msgstr "Будь ласка, введіть %s або %s: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Не встановлено залежності додатка"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Нумерування додатків може змінити стан пристрою"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"

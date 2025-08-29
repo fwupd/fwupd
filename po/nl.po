@@ -650,10 +650,6 @@ msgid "FILENAME"
 msgstr "BESTANDSNAAM"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "BESTANDSNAAM APPARAAT-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "BESTANDSNAAM [APPARAAT-ID|GUID]"
 
@@ -804,7 +800,6 @@ msgid "Host Security Events"
 msgstr "Host-beveiligingsgebeurtenissen"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Host-beveiligings-ID (HSI) wordt niet ondersteund"
 

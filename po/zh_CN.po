@@ -744,10 +744,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "文件名称 证书 私钥"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "文件名 设备ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "文件名 [设备ID|GUID]"
 

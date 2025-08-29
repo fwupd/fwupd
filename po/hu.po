@@ -1067,10 +1067,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FÁJLNÉV TANÚSÍTVÁNY SZEMÉLYES-KULCS"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FÁJLNÉV ESZKÖZAZONOSÍTÓ"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FÁJLNÉV ELTOLÁS ADATOK [BELSŐVEZÉRLŐPROGRAM-TÍPUS]"
 
@@ -1362,7 +1358,6 @@ msgid "Host Security Events"
 msgstr "A gép biztonsági eseményei"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "A kiszolgálóbiztonsági azonosító (HSI) nem támogatott"
 

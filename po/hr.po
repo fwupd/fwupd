@@ -1038,10 +1038,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "PRIVATNI-KLJUČ NAZIV DATOTEKE VJERODAJNICE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NAZIV DATOTEKE ID-UREĐAJA"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NAZIV DATOTEKE POMAKA PODATAKA [FIRMVER-VRSTA]"
 
@@ -1327,7 +1323,6 @@ msgid "Host Security Events"
 msgstr "Događaji sigurnosti računala"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "ID sigurnosti sustava (HSI) nije podržan"
 

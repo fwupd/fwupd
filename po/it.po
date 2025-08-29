@@ -1040,10 +1040,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NOMEFILE CERTIFICATO CHIAVE-PRIVATA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NOMEFILE ID-DISPOSITIVO"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "FILENAME OFFSET DATA [TIPO-FIRMWARE]"
 

@@ -1240,10 +1240,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NOME-DE-ARQUIVO CERTIFICADO CHAVE-PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NOME-DE-ARQUIVO ID-DISPOSITIVO"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "NOME-DE-ARQUIVO DESLOCAMENTO DADOS [TIPO-DO-FIRMWARE]"
 
@@ -1572,7 +1568,6 @@ msgid "Host Security Events"
 msgstr "Eventos de segurança do host"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "ID de segurança do host (HSI) não suportado"
 

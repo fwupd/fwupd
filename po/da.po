@@ -730,10 +730,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILNAVN CERTIFIKAT PRIVAT-NØGLE"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FILNAVN ENHEDS-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "FILNAVN [ENHEDS-ID|GUID]"
 

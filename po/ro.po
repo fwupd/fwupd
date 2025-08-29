@@ -1235,8 +1235,8 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "NUME_FIȘIER CERTIFICAT CHEIE-PRIVATĂ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "NUME_FIȘIER ID-DISPOZITIV"
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "NUME_FIȘIER ID-DISPOZITIV [VERSIUNE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
@@ -1567,7 +1567,6 @@ msgid "Host Security Events"
 msgstr "Evenimente de securitate ale gazdei"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "ID-ul de securitate al gazdei (HSI) nu este acceptat"
 
@@ -2274,6 +2273,10 @@ msgstr "Introduceți %s sau %s: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Lipsesc dependențele modulului"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Enumerarea modulelor de extensie poate modifica starea dispozitivului"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
