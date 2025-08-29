@@ -197,4 +197,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
           file_glob: true
-          file: dist/setup/*.msi
+          file: fwupd*.msi
