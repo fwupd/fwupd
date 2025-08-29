@@ -116,6 +116,18 @@ fu_remote_load_from_filename(FwupdRemote *self,
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Password", NULL);
 		fwupd_remote_set_password(self, tmp);
 	}
+	if (g_key_file_has_key(kf, group, "AwsAccessKey", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "AwsAccessKey", NULL);
+		fwupd_remote_set_aws_access_key(self, tmp);
+	}
+	if (g_key_file_has_key(kf, group, "AwsSecretKey", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "AwsSecretKey", NULL);
+		fwupd_remote_set_aws_secret_key(self, tmp);
+	}
+	if (g_key_file_has_key(kf, group, "AwsRegion", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "AwsRegion", NULL);
+		fwupd_remote_set_aws_region(self, tmp);
+	}
 	if (g_key_file_has_key(kf, group, "FirmwareBaseURI", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "FirmwareBaseURI", NULL);
 		fwupd_remote_set_firmware_base_uri(self, tmp);
@@ -201,6 +213,12 @@ fu_remote_save_to_filename(FwupdRemote *self,
 		g_key_file_set_string(kf, group, "Username", fwupd_remote_get_username(self));
 	if (fwupd_remote_get_password(self) != NULL)
 		g_key_file_set_string(kf, group, "Password", fwupd_remote_get_password(self));
+	if (fwupd_remote_get_aws_access_key(self) != NULL)
+		g_key_file_set_string(kf, group, "AwsAccessKey", fwupd_remote_get_aws_access_key(self));
+	if (fwupd_remote_get_aws_secret_key(self) != NULL)
+		g_key_file_set_string(kf, group, "AwsSecretKey", fwupd_remote_get_aws_secret_key(self));
+	if (fwupd_remote_get_aws_region(self) != NULL)
+		g_key_file_set_string(kf, group, "AwsRegion", fwupd_remote_get_aws_region(self));
 	if (fwupd_remote_get_firmware_base_uri(self) != NULL)
 		g_key_file_set_string(kf,
 				      group,

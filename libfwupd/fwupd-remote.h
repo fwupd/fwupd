@@ -155,6 +155,12 @@ fwupd_remote_get_username(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_password(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
+fwupd_remote_get_aws_access_key(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_remote_get_aws_secret_key(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_remote_get_aws_region(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
 fwupd_remote_get_filename_cache(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_filename_cache_sig(FwupdRemote *self) G_GNUC_NON_NULL(1);

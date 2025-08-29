@@ -19,6 +19,14 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 				   GCancellable *cancellable,
 				   GAsyncReadyCallback callback,
 				   gpointer callback_data) G_GNUC_NON_NULL(1, 2);
+void
+fwupd_client_download_bytes_with_remote_async(FwupdClient *self,
+					      const gchar *url,
+					      FwupdRemote *remote,
+					      FwupdClientDownloadFlags flags,
+					      GCancellable *cancellable,
+					      GAsyncReadyCallback callback,
+					      gpointer callback_data) G_GNUC_NON_NULL(1, 2);
 
 #ifdef HAVE_GIO_UNIX
 void

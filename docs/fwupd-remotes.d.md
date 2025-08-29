@@ -106,6 +106,18 @@ The `[fwupd Remote]` section can contain the following parameters:
   The password (although, in practice this will be a user *token*) to use for BASIC authentication
   when downloading both metadata and firmware from this remote, and for uploading success reports.
 
+**AwsAccessKey=**
+
+  The AWS access key for S3 authentication.
+
+**AwsSecretKey=**
+
+  The AWS secret key for S3 authentication.
+
+**AwsRegion=**
+
+  The AWS region for S3 authentication (e.g., `us-east-1`).
+
 **RefreshInterval={{FWUPD_REMOTE_CONFIG_DEFAULT_REFRESH_INTERVAL}}**
 
   The time in seconds after which the front end tools should re-download the metadata signature,

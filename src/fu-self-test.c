@@ -6929,6 +6929,7 @@ fu_remote_auth_func(void)
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
+	g_print("%s\n", json);
 	ret =
 	    g_strcmp0(
 		json,
