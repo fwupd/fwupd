@@ -2319,13 +2319,31 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 	 * about available firmware on the remote server */
 	g_string_append(str, _("Successfully downloaded new metadata: "));
 
-	g_string_append_printf(str,
-			       /* TRANSLATORS: how many local devices can expect updates now */
-			       ngettext("Updates have been published for %u local device",
-					"Updates have been published for %u of %u local devices",
-					devices_supported_cnt),
-			       devices_supported_cnt,
-			       devices_updatable_cnt);
+	if (devices_updatable_cnt == 0) {
+		/* TRANSLATORS: nothing can be updated */
+		g_string_append_printf(str, "%s", _("No devices are updatable"));
+	} else {
+		g_string_append_printf(
+		    str,
+		    /* TRANSLATORS: how many devices could be updated in theory */
+		    ngettext("%u device supports firmware updating",
+			     "%u devices support firmware updating",
+			     devices_updatable_cnt),
+		    devices_updatable_cnt);
+		g_string_append(str, ", ");
+		if (devices_supported_cnt == 0) {
+			/* TRANSLATORS: there are no fw on the LVFS that match this hardware */
+			g_string_append_printf(str, "%s", _("no devices have published updates"));
+		} else {
+			g_string_append_printf(
+			    str,
+			    /* TRANSLATORS: how many of these devices have at least one update */
+			    ngettext("%u is supported in the enabled remotes",
+				     "%u are supported in the enabled remotes",
+				     devices_supported_cnt),
+			    devices_supported_cnt);
+		}
+	}
 	fu_console_print_literal(self->console, str->str);
 
 	/* auto-upload any reports */
