@@ -547,6 +547,9 @@ fu_console_print_full(FuConsole *self, FuConsolePrintFlags flags, const gchar *f
 	g_string_append_vprintf(str, format, args);
 	va_end(args);
 
+	if (flags & FU_CONSOLE_PRINT_FLAG_LIST_ITEM)
+		g_string_prepend(str, " • ");
+
 	if (flags & FU_CONSOLE_PRINT_FLAG_WARNING) {
 		/* TRANSLATORS: this is a prefix on the console */
 		g_autofree gchar *fmt = fu_console_color_format(_("WARNING"), FU_CONSOLE_COLOR_RED);
@@ -554,6 +557,9 @@ fu_console_print_full(FuConsole *self, FuConsolePrintFlags flags, const gchar *f
 		g_string_prepend(str, fmt);
 		flags |= FU_CONSOLE_PRINT_FLAG_STDERR;
 	}
+
+	if (flags & FU_CONSOLE_PRINT_FLAG_NEWLINE)
+		g_string_append(str, "\n");
 
 	fu_console_reset_line(self);
 	if (flags & FU_CONSOLE_PRINT_FLAG_STDERR) {
