@@ -471,6 +471,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 		return;
 	}
 	fu_devlink_device_add_component_instance_strs(component, helper);
+	fu_device_set_version_format(component, fu_version_guess_format(version));
 	fu_device_set_version(component, version);
 	if (!fu_device_probe(component, &error_local)) {
 		g_warning("failed to probe %s: %s", name, error_local->message);
