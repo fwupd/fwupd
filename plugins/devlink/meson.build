@@ -4,14 +4,6 @@ libmnl.found() or subdir_done()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDevlink"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
-enumeration_data += files(
-  'tests/devlink-netdevsim-setup.json',
-)
-
-device_tests += files(
-  'tests/devlink-netdevsim.json',
-)
-
 plugin_quirks += files('devlink.quirk')
 plugin_builtin_devlink = static_library('fu_plugin_devlink',
   sources: [
@@ -34,6 +26,10 @@ plugin_builtin_devlink = static_library('fu_plugin_devlink',
   ],
 )
 plugin_builtins += plugin_builtin_devlink
+
+device_tests += files(
+  'tests/devlink-netdevsim.json',
+)
 
 if get_option('tests')
   env = environment()

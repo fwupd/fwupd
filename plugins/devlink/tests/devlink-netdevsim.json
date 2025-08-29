@@ -3,7 +3,8 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/devlink-netdevsim-setup.json",
+      "url": "fbdca7ac3b80f7df24b1a1b435963a46aee19b987ba55b5cff7dddb4de158664-netdevsim_test_firmware_new.cab",
+      "emulation-url": "def54dc305e6d84bafcc8d8fe551efcd31c314b89f54ec5b76734ee954f2032a-netdevsim_setup_install_record_new.zip",
       "components": [
         {
           "name": "fw.mgmt",
