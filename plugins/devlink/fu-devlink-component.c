@@ -36,8 +36,6 @@ fu_devlink_component_write_firmware(FuDevice *device,
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
 	FuDevice *proxy = fu_device_get_proxy(device);
 	const gchar *component_name;
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(proxy, error);
-	g_return_val_if_fail(locker != NULL, FALSE);
 
 	component_name =
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME)
@@ -114,8 +112,6 @@ static gboolean
 fu_devlink_component_reload(FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(proxy, error);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	return fu_device_reload(proxy, error);
 }
 
@@ -123,8 +119,6 @@ static gboolean
 fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(device);
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(proxy, error);
-	g_return_val_if_fail(locker != NULL, FALSE);
 	return fu_device_activate(proxy, progress, error);
 }
 
@@ -173,6 +167,7 @@ fu_devlink_component_init(FuDevlinkComponent *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.kernel.devlink");
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 }
