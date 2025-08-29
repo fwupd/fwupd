@@ -2240,7 +2240,6 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GError) error_local = NULL;
 
 	remotes = fwupd_client_get_remotes(self->client, self->cancellable, error);
@@ -2317,16 +2316,37 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 
 	/* TRANSLATORS: success message -- where 'metadata' is information
 	 * about available firmware on the remote server */
-	g_string_append(str, _("Successfully downloaded new metadata: "));
+	fu_console_print_literal(self->console, _("Successfully downloaded new metadata:"));
 
-	g_string_append_printf(str,
-			       /* TRANSLATORS: how many local devices can expect updates now */
-			       ngettext("Updates have been published for %u local device",
-					"Updates have been published for %u of %u local devices",
-					devices_supported_cnt),
-			       devices_supported_cnt,
-			       devices_updatable_cnt);
-	fu_console_print_literal(self->console, str->str);
+	if (devices_updatable_cnt == 0) {
+		fu_console_print_full(
+		    self->console,
+		    FU_CONSOLE_PRINT_FLAG_LIST_ITEM | FU_CONSOLE_PRINT_FLAG_NEWLINE,
+		    "%s",
+		    /* TRANSLATORS: no devices that can be upgraded with new firmware */
+		    _("No devices are updatable"));
+	} else {
+		fu_console_print_full(self->console,
+				      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
+					  FU_CONSOLE_PRINT_FLAG_NEWLINE,
+				      /* TRANSLATORS: how many devices could be updated in theory if
+					 we had the firmware locally */
+				      ngettext("%u device is updatable",
+					       "%u device are updatable",
+					       devices_updatable_cnt),
+				      devices_updatable_cnt);
+		fu_console_print_full(self->console,
+				      FU_CONSOLE_PRINT_FLAG_LIST_ITEM |
+					  FU_CONSOLE_PRINT_FLAG_NEWLINE,
+				      /* TRANSLATORS: how many devices have published updates on
+					 something like the LVFS */
+				      ngettext("%u device is supported in the enabled remotes (an "
+					       "update has been published)",
+					       "%u devices are supported in the enabled remotes "
+					       "(an update has been published)",
+					       devices_supported_cnt),
+				      devices_supported_cnt);
+	}
 
 	/* auto-upload any reports */
 	if (!fu_util_report_history_full(self, TRUE, &error_local)) {
