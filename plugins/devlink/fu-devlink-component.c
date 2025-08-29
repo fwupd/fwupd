@@ -142,6 +142,18 @@ fu_devlink_component_cleanup(FuDevice *device,
 	return fu_device_cleanup(proxy, progress, flags, error);
 }
 
+static void
+fu_devlink_component_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 57, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 43, "reload");
+}
+
 FuDevice *
 fu_devlink_component_new(FuDevice *proxy, const gchar *logical_id)
 {
@@ -191,6 +203,7 @@ fu_devlink_component_class_init(FuDevlinkComponentClass *klass)
 
 	object_class->finalize = fu_devlink_component_finalize;
 	device_class->write_firmware = fu_devlink_component_write_firmware;
+	device_class->set_progress = fu_devlink_component_set_progress;
 	device_class->probe = fu_devlink_component_probe;
 	device_class->reload = fu_devlink_component_reload;
 	device_class->activate = fu_devlink_component_activate;
