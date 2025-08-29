@@ -15,7 +15,7 @@
  * Do not set the DEVLINK_ATTR_FLASH_UPDATE_COMPONENT attribute when flashing firmware.
  * This allows for firmware updates without specifying a specific component name.
  *
- * Since: 2.0.14
+ * Since: 2.0.15
  */
 #define FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME "omit-component-name"
 

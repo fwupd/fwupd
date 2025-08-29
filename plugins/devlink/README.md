@@ -89,7 +89,7 @@ target specific device according to device IDs, like ASIC ID, Board ID, etc.
 DevlinkFixedVersions = fw.psid
 ```
 
-Since: 2.0.14
+Since: 2.0.15
 
 ## Private Flags
 
@@ -110,6 +110,8 @@ would cause an error.
   <value key="LVFS::DeviceFlags">omit-component-name</value>
 </custom>
 ```
+
+Since: 2.0.15
 
 ### Error Handling
 
@@ -137,7 +139,7 @@ This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `2.0.13`.
+This plugin has been available since fwupd version `2.0.15`.
 
 ## Owners
 
