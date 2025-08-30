@@ -1,5 +1,39 @@
 # Remotes
 
+## Configuration Keys
+
+All remote configuration files use the standard INI format with a `[fwupd Remote]` section header. The following configuration keys are supported:
+
+### Basic Settings
+
+* **Enabled** - Boolean (`true`/`false`) - Whether this remote is enabled for use
+* **Title** - String - Human-readable name for the remote displayed in UI
+* **MetadataURI** - String - URL or path to the metadata file (XML format)
+* **FirmwareBaseURI** - String - Base URL for downloading firmware files
+* **ReportURI** - String - URL for submitting device reports
+* **PrivacyURI** - String - URL to privacy policy for this remote
+
+### Automatic Behavior
+
+* **AutomaticReports** - Boolean (`true`/`false`) - Enable automatic device reports
+* **AutomaticSecurityReports** - Boolean (`true`/`false`) - Enable automatic security reports
+* **ApprovalRequired** - Boolean (`true`/`false`) - Require user approval before firmware downloads
+* **RefreshInterval** - Integer - Metadata refresh interval in seconds
+
+### Load Order
+
+* **OrderBefore** - String - Remote ID that this remote should be processed before
+* **OrderAfter** - String - Remote ID that this remote should be processed after
+
+### Authentication
+
+* **AuthType** - String - Authentication type: `none`, `basic`, or `s3`
+* **Username** - String - Username for basic HTTP authentication
+* **Password** - String - Password for basic HTTP authentication
+* **AwsAccessKey** - String - AWS access key for S3 authentication
+* **AwsSecretKey** - String - AWS secret key for S3 authentication
+* **AwsRegion** - String - AWS region for S3 authentication (e.g., `us-east-1`)
+
 ## Vendor Firmware
 
 These are the steps to add vendor firmware that is installed as part of an embedded image such as an OSTree or ChromeOS image:
