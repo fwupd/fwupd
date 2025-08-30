@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 
-from typing import Generator
+from typing import Iterator
 
 
 # see https://github.com/mesonbuild/meson/pull/14890
@@ -21,14 +21,14 @@ def old_meson_missing_vapi_deps_tag() -> bool:
         ["meson", "--version"],
         text=True,
     )
-    version_split = list(map(int, version_str.strip().split(".")))
+    version_split = [int(x) for x in version_str.strip().split(".")]
     major = version_split[0]
     minor = version_split[1]
 
     return major < 1 or (major == 1 and minor < 9)
 
 
-def objects_with_tag(obj) -> Generator[dict]:
+def objects_with_tag(obj) -> Iterator[dict]:
     match obj:
         case dict(d):
             if "tag" in d:
@@ -46,7 +46,7 @@ def collect_tags(install_plan) -> list[str]:
     for obj in objects_with_tag(install_plan):
         tags.add(obj["tag"])
 
-    return sorted(map(lambda i: "null" if i is None else i, tags))
+    return sorted(["null" if t is None else t for t in tags])
 
 
 def collect_files(install_plan, tag) -> list[str]:
@@ -92,7 +92,7 @@ def check(install_plan):
             exit_code = 1
 
     # Check for incorrect test file tags
-    for tag in filter(lambda t: t != "tests", tags):
+    for tag in [t for t in tags if t != "tests"]:
         files = collect_files(install_plan, tag)
         files = [f for f in files if "installed-tests" in f]
         for f in files:
