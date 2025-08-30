@@ -7,8 +7,8 @@ fwupd is a Linux firmware update daemon built with Meson, written in C with GLib
 ## Working Effectively
 
 ### CRITICAL: Setup and Build Process
-- **CONTAINER REQUIRED**: Use pre-built container `ghcr.io/fwupd/fwupd/fwupd-ubuntu-x86_64:latest` for consistent development environment
-- Setup script: `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
+- **CONTAINER REQUIRED**: Use pre-built container `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent development environment
+- Setup script: `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` (inside container) -- takes 30+ minutes for dependency installation. NEVER CANCEL.
 - Build command: `build-fwupd` (in venv) -- takes 45+ minutes. NEVER CANCEL. Set timeout to 60+ minutes.
 - Test command: `test-fwupd` (in venv) -- takes 15+ minutes. NEVER CANCEL. Set timeout to 30+ minutes.
 
@@ -16,16 +16,16 @@ fwupd is a Linux firmware update daemon built with Meson, written in C with GLib
 
 **Container-based development (REQUIRED for automation)**
 ```bash
-# Use the pre-built fwupd container for consistent Ubuntu environment
-# Container: https://github.com/fwupd/fwupd/pkgs/container/fwupd%2Ffwupd-ubuntu-x86_64
-docker pull ghcr.io/fwupd/fwupd/fwupd-ubuntu-x86_64:latest
+# Use the pre-built fwupd container for consistent Debian environment
+# Container: https://github.com/fwupd/fwupd/pkgs/container/fwupd%2Ffwupd-debian-x86_64
+docker pull ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest
 
 # Run container with source mounted
-docker run -it --privileged -v $(pwd):/workspace ghcr.io/fwupd/fwupd/fwupd-ubuntu-x86_64:latest
+docker run -it --privileged -v $(pwd):/workspace ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest
 
 # Inside container - install dependencies first
 cd /workspace
-./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes
 
 # Create virtual environment
 python3 -m venv venv --system-site-packages --prompt fwupd
@@ -210,9 +210,9 @@ meson setup build -Dplugin_uefi_capsule=enabled # enable specific plugin
 ## Troubleshooting
 
 ### Build Issues
-- **CONTAINER REQUIRED**: Use `ghcr.io/fwupd/fwupd/fwupd-ubuntu-x86_64:latest` for consistent Ubuntu environment
-- **Dependency Installation**: Run `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes` inside container
-- **APT Lock Issues**: If you see "Could not get lock /var/lib/dpkg/lock-frontend", wait for other apt processes to complete
+- **CONTAINER REQUIRED**: Use `ghcr.io/fwupd/fwupd/fwupd-debian-x86_64:latest` for consistent Debian environment
+- **Dependency Installation**: Run `./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes` inside container
+- **Git Ownership**: If you see "detected dubious ownership", run `git config --global --add safe.directory /workspace` inside container
 - Check Meson version: `./contrib/ci/fwupd_setup_helpers.py test-meson`
 - Verify venv setup: `source venv/bin/activate` should show `(fwupd)` prompt
 - **Python venv**: Use `python3 -m venv venv --system-site-packages` after dependency installation
