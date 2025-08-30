@@ -1,0 +1,13 @@
+[DEVLINK\COMPONENT_fw]
+Name = Composite
+[DEVLINK\COMPONENT_fw.mgmt]
+Name = Management
+
+# emulated device is owned by the Linux Foundation
+[NETDEVSIM\COMPONENT_fw.mgmt]
+Vendor = Linux Foundation
+VendorId = PCI:0x1D6B
+
+# NVIDIA ConnectX-7
+[PCI\VEN_15B3&DEV_1021]
+DevlinkFixedVersions = fw.psid
