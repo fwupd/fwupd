@@ -3339,7 +3339,7 @@ msgstr "指定されたデバイスを最新ファームウェアバージョン
 #, c-format
 msgid "Updates have been published for %u local device"
 msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "ローカルデバイス %u 台中 %u 台でアップデートが公開されました"
+msgstr[0] "ローカルデバイス %2$u 台中 %1$u 台でアップデートが公開されました"
 
 msgid "Updating"
 msgstr "アップデート中"
