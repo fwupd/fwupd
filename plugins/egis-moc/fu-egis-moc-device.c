@@ -322,7 +322,9 @@ fu_egis_moc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version(FU_DEVICE(self), "0.0.0.1");
+		fu_device_set_version(FU_DEVICE(self), fu_version_from_uint16(
+					fu_usb_device_get_release(FU_USB_DEVICE(self)),
+					FWUPD_VERSION_FORMAT_QUAD));
 	} else {
 		if (!fu_egis_moc_device_ensure_version(self, error)) {
 			g_prefix_error_literal(error, "failed to get firmware version: ");
