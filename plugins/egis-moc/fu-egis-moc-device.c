@@ -322,9 +322,16 @@ fu_egis_moc_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version(FU_DEVICE(self), fu_version_from_uint16(
-					fu_usb_device_get_release(FU_USB_DEVICE(self)),
-					FWUPD_VERSION_FORMAT_QUAD));
+		/* set bootloader version raw */
+		fu_device_set_version_bootloader_raw(FU_DEVICE(self),
+				fu_usb_device_get_release(FU_USB_DEVICE(self)));
+
+		/* set bootloader version in summary to explict display */
+		fu_device_set_summary(FU_DEVICE(self), g_strdup_printf("Fingerprint Device(%s)",
+				fu_version_from_uint16(fu_device_get_version_bootloader_raw(self),
+					FWUPD_VERSION_FORMAT_QUAD)));
+		/* set runtime version */
+		fu_device_set_version_raw(FU_DEVICE(self), 0x1);
 	} else {
 		if (!fu_egis_moc_device_ensure_version(self, error)) {
 			g_prefix_error_literal(error, "failed to get firmware version: ");
