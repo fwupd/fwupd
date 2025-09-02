@@ -40,11 +40,6 @@
 %global have_msr 1
 %endif
 
-# Until we actually have seen it outside x86
-%ifarch i686 x86_64
-%global have_thunderbolt 1
-%endif
-
 # only available recently
 %if 0%{?fedora} >= 30
 %global have_modem_manager 1
