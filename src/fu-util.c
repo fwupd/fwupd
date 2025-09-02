@@ -2332,7 +2332,7 @@ fu_util_download_metadata(FuUtil *self, GError **error)
 				      /* TRANSLATORS: how many devices could be updated in theory if
 					 we had the firmware locally */
 				      ngettext("%u device is updatable",
-					       "%u device are updatable",
+					       "%u devices are updatable",
 					       devices_updatable_cnt),
 				      devices_updatable_cnt);
 		fu_console_print_full(self->console,
