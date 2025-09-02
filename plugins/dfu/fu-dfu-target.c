@@ -44,6 +44,7 @@ fu_dfu_target_init(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	priv->sectors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
 static void

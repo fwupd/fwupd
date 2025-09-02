@@ -33,7 +33,6 @@ static gboolean
 fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autofree gchar *name = NULL;
 
 	/* from the self tests */
 	if (parent == NULL) {
@@ -43,10 +42,6 @@ fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 				    "no parent FuIgscDevice");
 		return FALSE;
 	}
-
-	/* fix name */
-	name = g_strdup_printf("%s Data", fu_device_get_name(parent));
-	fu_device_set_name(device, name);
 
 	/* add extra instance IDs */
 	fu_device_add_instance_str(device,
@@ -205,9 +200,11 @@ fu_igsc_aux_device_init(FuIgscAuxDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 	fu_device_set_logical_id(FU_DEVICE(self), "fw-data");
+	fu_device_set_name(FU_DEVICE(self), "Data");
 }
 
 static void

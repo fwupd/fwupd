@@ -639,8 +639,6 @@ fu_wac_device_write_firmware(FuDevice *device,
 static gboolean
 fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 {
-	g_autofree gchar *name = NULL;
-	g_autofree gchar *name_id6 = NULL;
 	g_autoptr(FuWacModule) module = NULL;
 	g_autoptr(FuWacModule) module_id6 = NULL;
 	guint16 fw_ver;
@@ -669,17 +667,14 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	 * Initialize both and rely on the firmware update containing the appropriate
 	 * package.
 	 */
-	name = g_strdup_printf("%s [Legacy Bluetooth Module]", fu_device_get_name(FU_DEVICE(self)));
 	module = fu_wac_module_bluetooth_new(FU_DEVICE(self));
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-	fu_device_set_name(FU_DEVICE(module), name);
+	fu_device_set_name(FU_DEVICE(module), "Legacy Bluetooth Module");
 	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
 
-	name_id6 = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
-				   fu_device_get_name(FU_DEVICE(self)));
 	module_id6 = fu_wac_module_bluetooth_id6_new(FU_DEVICE(self));
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module_id6));
-	fu_device_set_name(FU_DEVICE(module_id6), name_id6);
+	fu_device_set_name(FU_DEVICE(module_id6), "Legacy Bluetooth Module ID6");
 	fu_device_set_version_raw(FU_DEVICE(module_id6), fw_ver);
 	return TRUE;
 }
@@ -804,7 +799,6 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		guint32 ver;
 		guint16 ver2;
 		FuWacModuleFwType fw_type;
-		g_autofree gchar *name = NULL;
 		g_autoptr(FuStructModuleItem) st_item = NULL;
 		g_autoptr(FuWacModule) module = NULL;
 
@@ -828,61 +822,47 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
 			module = fu_wac_module_touch_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Touch Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Touch Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_TOUCH_ID7:
 			module = fu_wac_module_touch_id7_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Touch Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Touch Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID7");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Bluetooth Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
 			module = fu_wac_module_bluetooth_id6_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Bluetooth Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID6");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_SCALER:
 			module = fu_wac_module_scaler_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Scaler Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Scaler Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID9:
 			module = fu_wac_module_bluetooth_id9_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Bluetooth Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Bluetooth Module");
 			fu_device_set_summary(FU_DEVICE(module), "ID9");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_SUB_CPU:
 			module = fu_wac_module_sub_cpu_new(FU_DEVICE(self));
-			name = g_strdup_printf("%s [Sub CPU Module]",
-					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_name(FU_DEVICE(module), "Sub CPU Module");
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:

@@ -55,10 +55,7 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 			? "OPROMCODE_RECOVERY"
 			: "OPROMCODE");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-code");
-		if (parent != NULL) {
-			name = g_strdup_printf("%s OptionROM Code", fu_device_get_name(parent));
-			fu_device_set_name(FU_DEVICE(self), name);
-		}
+		fu_device_set_name(FU_DEVICE(self), "OptionROM Code");
 	} else if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
 		self->partition_version = FU_IGSC_FWU_HECI_PARTITION_VERSION_OPROM_DATA;
 		fu_device_add_instance_str(
@@ -68,10 +65,7 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 			? "OPROMDATA_RECOVERY"
 			: "OPROMDATA");
 		fu_device_set_logical_id(FU_DEVICE(self), "oprom-data");
-		if (parent != NULL) {
-			name = g_strdup_printf("%s OptionROM Data", fu_device_get_name(parent));
-			fu_device_set_name(FU_DEVICE(self), name);
-		}
+		fu_device_set_name(FU_DEVICE(self), "OptionROM Data");
 	}
 
 	/* add extra instance IDs */
@@ -275,6 +269,7 @@ fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 }

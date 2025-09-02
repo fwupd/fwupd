@@ -316,6 +316,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_EMULATED_REQUIRE_SETUP,
 	    FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
+	    FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -1720,6 +1721,26 @@ fu_device_get_children(FuDevice *self)
 	return fwupd_device_get_children(FWUPD_DEVICE(self));
 }
 
+static void
+fu_device_ensure_name_prefix(FuDevice *self)
+{
+	FuDevice *parent = fu_device_get_parent(self);
+	g_autofree gchar *name_parent = NULL;
+
+	if (!fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX))
+		return;
+	if (fu_device_get_name(self) == NULL)
+		return;
+	if (parent == NULL)
+		return;
+	if (fu_device_get_name(parent) == NULL)
+		return;
+	name_parent =
+	    g_strdup_printf("%s (%s)", fu_device_get_name(parent), fu_device_get_name(self));
+	fu_device_remove_private_flag(self, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_name(self, name_parent);
+}
+
 /**
  * fu_device_add_child:
  * @self: a #FuDevice
@@ -1810,6 +1831,9 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent(child, self);
+
+	/* fix the child name */
+	fu_device_ensure_name_prefix(child);
 
 	/* signal to the plugin in case this is done after setup */
 	g_signal_emit(self, signals[SIGNAL_CHILD_ADDED], 0, child);
@@ -3251,6 +3275,7 @@ fu_device_set_name(FuDevice *self, const gchar *value)
 
 	fwupd_device_set_name(FWUPD_DEVICE(self), value_safe);
 	fu_device_fixup_vendor_name(self);
+	fu_device_ensure_name_prefix(self);
 }
 
 /**
