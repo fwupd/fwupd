@@ -96,6 +96,7 @@ fu_logitech_hidpp_radio_init(FuLogitechHidppRadio *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 270);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 }

@@ -66,6 +66,7 @@ fu_elan_kbd_runtime_init(FuElanKbdRuntime *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_KEYBOARD);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELAN_KBD_FIRMWARE);
 	fu_device_add_instance_id_full(FU_DEVICE(self),

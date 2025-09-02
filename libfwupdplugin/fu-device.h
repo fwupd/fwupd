@@ -846,6 +846,14 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.12
  */
 #define FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE "md-set-required-free"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX:
+ *
+ * Use the parent device as the name prefix.
+ *
+ * Since: 2.0.15
+ */
+#define FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX "parent-name-prefix"
 
 /* standard icons */
 

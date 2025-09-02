@@ -80,6 +80,7 @@ static void
 fu_usi_dock_child_device_init(FuUsiDockChildDevice *self)
 {
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 }
 
 static void

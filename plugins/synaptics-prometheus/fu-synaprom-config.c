@@ -214,9 +214,10 @@ fu_synaprom_config_init(FuSynapromConfig *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id(FU_DEVICE(self), "cfg");
-	fu_device_set_name(FU_DEVICE(self), "Prometheus IOTA Config");
+	fu_device_set_name(FU_DEVICE(self), "IOTA Config");
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader config");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_AUTH_FINGERPRINT);
 }

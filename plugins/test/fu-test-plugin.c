@@ -68,6 +68,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_flag(child1, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(child1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_add_private_flag(child1, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
+		fu_device_add_private_flag(child1, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 		fu_plugin_device_add(plugin, child1);
 
 		child2 = fu_device_new(ctx);
@@ -83,6 +84,7 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 		fu_device_add_flag(child2, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(child2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_add_private_flag(child2, FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
+		fu_device_add_private_flag(child2, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 		fu_plugin_device_add(plugin, child2);
 	}
 
