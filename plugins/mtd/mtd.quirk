@@ -19,5 +19,5 @@ Name = Internal SPI Controller
 
 # B&R Industrial Automation GmbH 5ACCIFM0.FCAN-000
 [MTD\VEN_1677&DEV_28A4]
-Flags = usable-during-update,unsigned-payload
+Flags = ~needs-reboot,needs-shutdown,usable-during-update,unsigned-payload
 VersionFormat = pair
