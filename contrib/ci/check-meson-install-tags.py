@@ -24,8 +24,9 @@ def old_meson_missing_vapi_deps_tag() -> bool:
     version_split = [int(x) for x in version_str.strip().split(".")]
     major = version_split[0]
     minor = version_split[1]
+    patch = version_split[2]
 
-    return major < 1 or (major == 1 and minor < 9)
+    return major < 1 or (major == 1 and minor <= 9 and patch == 0)
 
 
 def objects_with_tag(obj) -> Iterator[dict]:
