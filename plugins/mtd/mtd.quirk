@@ -16,6 +16,8 @@ Flags = no-probe
 [MTD\NAME_BIOS]
 Name = Internal SPI Controller
 #FirmwareGType = FuIfdFirmware
+[MTD\NAME_0000:00:1f.5]
+Name = PCH SPI Controller
 
 # B&R Industrial Automation GmbH 5ACCIFM0.FCAN-000
 [MTD\VEN_1677&DEV_28A4]
