@@ -95,6 +95,27 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
 }
 
 /**
+ * Callback used to placate `-fsanitize=function`; passed so we can avoid casts of
+ * `fu_device_open` to this function's signature.
+ */
+static gboolean
+fu_device_open_callback(GObject *device, GError **error)
+{
+	return fu_device_open((FuDevice *)device, error);
+}
+
+/**
+ * Callback used to placate `-fsanitize=function`; passed so we can avoid casts of
+ * `fu_device_close` to this function's signature.
+ */
+static gboolean
+fu_device_close_callback(GObject *device, GError **error)
+{
+	return fu_device_close((FuDevice *)device, error);
+}
+
+
+/**
  * fu_device_locker_new:
  * @device: a #GObject
  * @error: (nullable): optional return location for an error
@@ -126,8 +147,8 @@ fu_device_locker_new(gpointer device, GError **error)
 	/* FuDevice */
 	if (FU_IS_DEVICE(device)) {
 		return fu_device_locker_new_full(device,
-						 (FuDeviceLockerFunc)fu_device_open,
-						 (FuDeviceLockerFunc)fu_device_close,
+						 fu_device_open_callback,
+						 fu_device_close_callback,
 						 error);
 	}
 	g_set_error_literal(error,

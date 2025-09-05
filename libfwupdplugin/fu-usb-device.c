@@ -557,6 +557,16 @@ fu_usb_device_open(FuDevice *device, GError **error)
 }
 
 /**
+ * Callback used to placate `-fsanitize=function`; passed so we can avoid casts of
+ * `fu_usb_device_open` to this function's signature.
+ */
+static gboolean
+fu_usb_device_open_callback(GObject *device, GError **error)
+{
+	return fu_usb_device_open((FuDevice *)device, error);
+}
+
+/**
  * fu_usb_device_get_bus:
  * @self: a #FuUsbDevice
  *
@@ -826,6 +836,16 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	return FU_DEVICE_CLASS(fu_usb_device_parent_class)->close(device, error);
 }
 
+/**
+ * Callback used to placate `-fsanitize=function`; passed so we can avoid casts of
+ * `fu_usb_device_close` to this function's signature.
+ */
+static gboolean
+fu_usb_device_close_callback(GObject *device, GError **error)
+{
+	return fu_usb_device_close((FuDevice *)device, error);
+}
+
 static gboolean
 fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, GError **error)
 {
@@ -859,8 +879,8 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 
 	/* set the quirks onto the device */
 	usb_locker = fu_device_locker_new_full(self,
-					       (FuDeviceLockerFunc)fu_usb_device_open,
-					       (FuDeviceLockerFunc)fu_usb_device_close,
+					       fu_usb_device_open_callback,
+					       fu_usb_device_close_callback,
 					       error);
 	if (usb_locker == NULL)
 		return FALSE;

@@ -2070,16 +2070,22 @@ fu_device_locker_func(void)
 }
 
 static gboolean
-fu_test_fail_open_cb(FuDevice *device, GError **error)
+fu_test_fail_open_cb(GObject *raw_device, GError **error)
 {
+	/* NOTE: `raw_device` is taken as `GObject *` to match how this callback is invoked. Taking
+	 * `FuDevice *` leads to undefined behavior, flagged by `-fsanitize=function`. */
+	FuDevice *device = (FuDevice *)raw_device;
 	fu_device_set_metadata_boolean(device, "Test::Open", TRUE);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "fail");
 	return FALSE;
 }
 
 static gboolean
-fu_test_fail_close_cb(FuDevice *device, GError **error)
+fu_test_fail_close_cb(GObject *raw_device, GError **error)
 {
+	/* NOTE: `raw_device` is taken as `GObject *` to match how this callback is invoked. Taking
+	 * `FuDevice *` leads to undefined behavior, flagged by `-fsanitize=function`. */
+	FuDevice *device = (FuDevice *)raw_device;
 	fu_device_set_metadata_boolean(device, "Test::Close", TRUE);
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "busy");
 	return FALSE;
@@ -2092,8 +2098,8 @@ fu_device_locker_fail_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_test_fail_open_cb,
-					   (FuDeviceLockerFunc)fu_test_fail_close_cb,
+					   fu_test_fail_open_cb,
+					   fu_test_fail_close_cb,
 					   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_null(locker);
