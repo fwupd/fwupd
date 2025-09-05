@@ -7884,6 +7884,7 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 		FuDeviceEvent *event = g_ptr_array_index(priv->events, i);
 		if (g_strcmp0(fu_device_event_get_id(event), id_hash) == 0) {
 			priv->event_idx = i + 1;
+			g_debug("found event with ID %s [%s]", id, id_hash);
 			return event;
 		}
 	}
@@ -7903,7 +7904,12 @@ fu_device_load_event(FuDevice *self, const gchar *id, GError **error)
 	}
 
 	/* nothing found */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no event with ID %s", id);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no event with ID %s [%s]",
+		    id,
+		    id_hash);
 	return NULL;
 }
 
