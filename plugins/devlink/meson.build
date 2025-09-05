@@ -1,5 +1,6 @@
 host_machine.system() == 'linux' or subdir_done()
 libmnl.found() or subdir_done()
+cc.has_header_symbol('linux/devlink.h', 'DEVLINK_ATTR_RELOAD_ACTION', required: false) or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDevlink"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
