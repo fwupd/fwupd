@@ -88,7 +88,7 @@ fu_tpm_device_2_0_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
-	const gchar *tpm_server_running = g_getenv("TPM_SERVER_RUNNING");
+	const gchar *tpm_server_running = g_getenv("TPM2TOOLS_TCTI");
 	(void)g_setenv("FWUPD_FORCE_TPM2", "1", TRUE);
 
 #ifdef HAVE_GETUID
