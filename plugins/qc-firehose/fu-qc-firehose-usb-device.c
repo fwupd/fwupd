@@ -127,8 +127,9 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "only wrote %" G_GSIZE_FORMAT "bytes",
-				    actual_len);
+				    "only wrote 0x%x of 0x%x bytes",
+				    (guint)actual_len,
+				    (guint)fu_chunk_get_data_sz(chk));
 			return FALSE;
 		}
 	}
