@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <stdio.h>
+
 #include "fu-rts54hub-device.h"
 #include "fu-rts54hub-rtd21xx-mergeinfo.h"
 #include "fu-rts54hub-struct.h"
@@ -385,6 +387,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
 	guint8 read_buf[VERSION_NUMBER_COUNT] = {0x0};
 	guint8 merge_version[VERSION_NUMBER_COUNT] = {0x00};
+	const gchar *version_str = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -400,20 +403,27 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	if (locker == NULL)
 		return FALSE;
 
-	/* simple image */
-	stream = fu_firmware_get_stream(firmware, error);
-	if (stream == NULL)
-		return FALSE;
+	// get version x.x.x.x
+	version_str = fu_firmware_get_version(firmware);
 
-	/* get merge version */
-	if (!fu_input_stream_read_safe(stream,
-				       merge_version,
-				       sizeof(merge_version),
-				       0, /* dst */
-				       0, /* src */
-				       VERSION_NUMBER_COUNT,
-				       error)) {
-		g_prefix_error_literal(error, "failed to get merge version info: ");
+	// convert x.x.x.x to merge_version
+	if (version_str != NULL) {
+		if (fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_QUAD) {
+			if (sscanf(version_str,
+				   "%hhu.%hhu.%hhu.%hhu",
+				   &merge_version[0],
+				   &merge_version[1],
+				   &merge_version[2],
+				   &merge_version[3])) {
+				g_prefix_error_literal(error, "failed to parse version str: ");
+				return FALSE;
+			};
+		} else {
+			g_prefix_error_literal(error, "failed to get version format: ");
+			return FALSE;
+		}
+	} else {
+		g_prefix_error_literal(error, "get version in write firmware fail: ");
 		return FALSE;
 	}
 
