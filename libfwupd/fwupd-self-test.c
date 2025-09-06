@@ -88,6 +88,11 @@ fwupd_enums_func(void)
 		g_assert_cmpstr(tmp, !=, NULL);
 		g_assert_cmpint(fwupd_remote_kind_from_string(tmp), ==, i);
 	}
+	for (guint i = 1; i < FWUPD_REMOTE_AUTH_TYPE_LAST; i++) {
+		const gchar *tmp = fwupd_remote_auth_type_to_string(i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_remote_auth_type_from_string(tmp), ==, i);
+	}
 
 	/* bitfield */
 	for (guint64 i = 1; i <= FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK; i *= 2) {
@@ -396,9 +401,11 @@ fwupd_remote_func(void)
 	g_autofree gchar *uri1 = NULL;
 	g_autofree gchar *uri2 = NULL;
 	g_autofree gchar *uri3 = NULL;
+	g_autofree gchar *auth_header = NULL;
 	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 
+	/* Test basic URI building */
 	uri1 = fwupd_remote_build_firmware_uri(remote,
 					       "https://example.org/downloads/foo.cab",
 					       &error);
@@ -418,6 +425,128 @@ fwupd_remote_func(void)
 					       &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(uri3, ==, "https://admin@example.org/mirror/foo.cab/auth");
+
+	/* Test S3 authentication type setter/getter */
+	g_assert_cmpint(fwupd_remote_get_auth_type(remote), ==, FWUPD_REMOTE_AUTH_TYPE_NONE);
+	fwupd_remote_set_auth_type(remote, FWUPD_REMOTE_AUTH_TYPE_S3);
+	g_assert_cmpint(fwupd_remote_get_auth_type(remote), ==, FWUPD_REMOTE_AUTH_TYPE_S3);
+
+	/* Test AWS access key setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_access_key(remote), ==, NULL);
+	fwupd_remote_set_aws_access_key(remote, "test-access-key");
+	g_assert_cmpstr(fwupd_remote_get_aws_access_key(remote), ==, "test-access-key");
+
+	/* Test AWS secret key setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_secret_key(remote), ==, NULL);
+	fwupd_remote_set_aws_secret_key(remote, "test-secret-key");
+	g_assert_cmpstr(fwupd_remote_get_aws_secret_key(remote), ==, "test-secret-key");
+
+	/* Test AWS region setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_region(remote), ==, NULL);
+	fwupd_remote_set_aws_region(remote, "us-east-1");
+	g_assert_cmpstr(fwupd_remote_get_aws_region(remote), ==, "us-east-1");
+
+	/* Test S3 authentication header generation with basic parameters */
+	auth_header = fwupd_remote_get_auth_header(remote,
+						   "GET",
+						   "https://test-bucket.s3.us-east-1.amazonaws.com/firmware.cab",
+						   &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header);
+	g_assert_true(g_str_has_prefix(auth_header, "AWS4-HMAC-SHA256"));
+
+	/* Test auth type enum string conversion */
+	g_assert_cmpstr(fwupd_remote_auth_type_to_string(FWUPD_REMOTE_AUTH_TYPE_NONE), ==, "none");
+	g_assert_cmpstr(fwupd_remote_auth_type_to_string(FWUPD_REMOTE_AUTH_TYPE_BASIC), ==, "basic");
+	g_assert_cmpstr(fwupd_remote_auth_type_to_string(FWUPD_REMOTE_AUTH_TYPE_S3), ==, "s3");
+	g_assert_cmpint(fwupd_remote_auth_type_from_string("none"), ==, FWUPD_REMOTE_AUTH_TYPE_NONE);
+	g_assert_cmpint(fwupd_remote_auth_type_from_string("basic"), ==, FWUPD_REMOTE_AUTH_TYPE_BASIC);
+	g_assert_cmpint(fwupd_remote_auth_type_from_string("s3"), ==, FWUPD_REMOTE_AUTH_TYPE_S3);
+
+	/* Test basic authentication mode */
+	fwupd_remote_set_auth_type(remote, FWUPD_REMOTE_AUTH_TYPE_BASIC);
+	g_assert_cmpint(fwupd_remote_get_auth_type(remote), ==, FWUPD_REMOTE_AUTH_TYPE_BASIC);
+
+	/* Test auth header for non-S3 URLs returns NULL */
+	g_clear_pointer(&auth_header, g_free);
+	auth_header =
+	    fwupd_remote_get_auth_header(remote, "GET", "https://example.org/firmware.cab", &error);
+	g_assert_no_error(error);
+	g_assert_null(auth_header);
+}
+
+static void
+fwupd_remote_s3_func(void)
+{
+	g_autofree gchar *auth_header1 = NULL;
+	g_autofree gchar *auth_header2 = NULL;
+	g_autofree gchar *auth_header3 = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	/* Set up S3 authentication */
+	fwupd_remote_set_auth_type(remote, FWUPD_REMOTE_AUTH_TYPE_S3);
+	fwupd_remote_set_aws_access_key(remote, "AKIAIOSFODNN7EXAMPLE");
+	fwupd_remote_set_aws_secret_key(remote, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+	fwupd_remote_set_aws_region(remote, "us-west-2");
+
+	/* Test S3 auth header for different HTTP methods */
+	auth_header1 = fwupd_remote_get_auth_header(remote,
+						    "GET",
+						    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware/device.cab",
+						    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header1);
+	g_assert_true(g_str_has_prefix(auth_header1, "AWS4-HMAC-SHA256"));
+	g_assert_true(g_strstr_len(auth_header1, -1, "Credential=AKIAIOSFODNN7EXAMPLE") != NULL);
+	g_assert_true(g_strstr_len(auth_header1, -1, "SignedHeaders=host;x-amz-date") != NULL);
+
+	auth_header2 = fwupd_remote_get_auth_header(remote,
+						    "HEAD",
+						    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware/device.cab",
+						    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header2);
+	g_assert_true(g_str_has_prefix(auth_header2, "AWS4-HMAC-SHA256"));
+
+	/* Test different S3 URL formats */
+	auth_header3 = fwupd_remote_get_auth_header(remote,
+						    "GET",
+						    "https://s3.us-west-2.amazonaws.com/examplebucket/firmware/device.cab",
+						    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header3);
+	g_assert_true(g_str_has_prefix(auth_header3, "AWS4-HMAC-SHA256"));
+
+	/* Test non-S3 URL returns NULL */
+	g_clear_pointer(&auth_header1, g_free);
+	auth_header1 = fwupd_remote_get_auth_header(remote,
+						    "GET",
+						    "https://example.com/firmware.cab",
+						    &error);
+	g_assert_no_error(error);
+	g_assert_null(auth_header1);
+
+	/* Test invalid auth type */
+	fwupd_remote_set_auth_type(remote, FWUPD_REMOTE_AUTH_TYPE_BASIC);
+	g_clear_pointer(&auth_header2, g_free);
+	auth_header2 = fwupd_remote_get_auth_header(remote,
+						    "GET",
+						    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware.cab",
+						    &error);
+	g_assert_no_error(error);
+	g_assert_null(auth_header2);
+
+	/* Test missing credentials */
+	fwupd_remote_set_auth_type(remote, FWUPD_REMOTE_AUTH_TYPE_S3);
+	fwupd_remote_set_aws_access_key(remote, NULL);
+	g_clear_pointer(&auth_header3, g_free);
+	auth_header3 = fwupd_remote_get_auth_header(remote,
+						    "GET",
+						    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware.cab",
+						    &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(auth_header3);
 }
 
 static void
@@ -1479,6 +1608,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/report", fwupd_report_func);
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
 	g_test_add_func("/fwupd/remote", fwupd_remote_func);
+	g_test_add_func("/fwupd/remote{s3}", fwupd_remote_s3_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
 	g_test_add_func("/fwupd/device{filter}", fwupd_device_filter_func);

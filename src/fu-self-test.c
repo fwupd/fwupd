@@ -6935,6 +6935,7 @@ fu_remote_auth_func(void)
 	json = fwupd_codec_to_json_string(FWUPD_CODEC(remote2), FWUPD_CODEC_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
+	g_print("%s\n", json);
 	ret =
 	    g_strcmp0(
 		json,
@@ -6947,6 +6948,7 @@ fu_remote_auth_func(void)
 		"  \"FirmwareBaseUri\" : \"https://my.fancy.cdn/\",\n"
 		"  \"Username\" : \"user\",\n"
 		"  \"Password\" : \"pass\",\n"
+		"  \"AuthType\" : \"none\",\n"
 		"  \"ChecksumSig\" : "
 		"\"dd1b4fd2a59bb0e4d9ea760c658ac3cf9336c7b6729357bab443485b5cf071b2\",\n"
 		"  \"FilenameCache\" : \"./libfwupd/tests/auth/firmware.xml.gz\",\n"
@@ -7076,6 +7078,7 @@ fu_remote_local_func(void)
 		  "{\n"
 		  "  \"Id\" : \"dell-esrt\",\n"
 		  "  \"Kind\" : \"local\",\n"
+		  "  \"AuthType\" : \"none\",\n"
 		  "  \"Title\" : \"Enable UEFI capsule updates on Dell systems\",\n"
 		  "  \"FilenameCache\" : \"@datadir@/fwupd/remotes.d/dell-esrt/firmware.xml\",\n"
 		  "  \"Flags\" : 1,\n"

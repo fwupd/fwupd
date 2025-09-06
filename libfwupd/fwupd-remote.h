@@ -125,6 +125,34 @@ typedef enum {
 	FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE = 1 << 5,
 } FwupdRemoteFlags;
 
+/**
+ * FwupdRemoteAuthType:
+ *
+ * The authentication type for the remote.
+ **/
+typedef enum {
+	/**
+	 * FWUPD_REMOTE_AUTH_TYPE_NONE:
+	 *
+	 * No authentication.
+	 */
+	FWUPD_REMOTE_AUTH_TYPE_NONE,
+	/**
+	 * FWUPD_REMOTE_AUTH_TYPE_BASIC:
+	 *
+	 * Basic HTTP authentication using username and password.
+	 */
+	FWUPD_REMOTE_AUTH_TYPE_BASIC,
+	/**
+	 * FWUPD_REMOTE_AUTH_TYPE_S3:
+	 *
+	 * AWS S3 authentication using access key and secret key.
+	 */
+	FWUPD_REMOTE_AUTH_TYPE_S3,
+	/*< private >*/
+	FWUPD_REMOTE_AUTH_TYPE_LAST
+} FwupdRemoteAuthType;
+
 FwupdRemoteKind
 fwupd_remote_kind_from_string(const gchar *kind);
 const gchar *
@@ -133,6 +161,10 @@ const gchar *
 fwupd_remote_flag_to_string(FwupdRemoteFlags flag);
 FwupdRemoteFlags
 fwupd_remote_flag_from_string(const gchar *flag);
+FwupdRemoteAuthType
+fwupd_remote_auth_type_from_string(const gchar *auth_type);
+const gchar *
+fwupd_remote_auth_type_to_string(FwupdRemoteAuthType auth_type);
 
 FwupdRemote *
 fwupd_remote_new(void);
@@ -154,6 +186,14 @@ const gchar *
 fwupd_remote_get_username(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_password(FwupdRemote *self) G_GNUC_NON_NULL(1);
+FwupdRemoteAuthType
+fwupd_remote_get_auth_type(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_remote_get_aws_access_key(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_remote_get_aws_secret_key(FwupdRemote *self) G_GNUC_NON_NULL(1);
+const gchar *
+fwupd_remote_get_aws_region(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *
 fwupd_remote_get_filename_cache(FwupdRemote *self) G_GNUC_NON_NULL(1);
 const gchar *

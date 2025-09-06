@@ -48,6 +48,14 @@ fwupd_remote_set_username(FwupdRemote *self, const gchar *username) G_GNUC_NON_N
 void
 fwupd_remote_set_password(FwupdRemote *self, const gchar *password) G_GNUC_NON_NULL(1);
 void
+fwupd_remote_set_auth_type(FwupdRemote *self, FwupdRemoteAuthType auth_type) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_aws_access_key(FwupdRemote *self, const gchar *access_key) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_aws_secret_key(FwupdRemote *self, const gchar *secret_key) G_GNUC_NON_NULL(1);
+void
+fwupd_remote_set_aws_region(FwupdRemote *self, const gchar *region) G_GNUC_NON_NULL(1);
+void
 fwupd_remote_set_report_uri(FwupdRemote *self, const gchar *report_uri) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_firmware_base_uri(FwupdRemote *self, const gchar *firmware_base_uri)
@@ -64,5 +72,10 @@ gchar *
 fwupd_remote_build_metadata_sig_uri(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 gchar *
 fwupd_remote_build_metadata_uri(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
+gchar *
+fwupd_remote_get_auth_header(FwupdRemote *self,
+			     const gchar *method,
+			     const gchar *url,
+			     GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 G_END_DECLS
