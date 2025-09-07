@@ -6,6 +6,10 @@ Flags = force-align,needs-shutdown
 [NVME\VEN_2646]
 Flags = needs-shutdown
 
+# Micron
+[NVME\VEN_1344]
+Flags = needs-shutdown
+
 # KIOXIA
 [NVME\VEN_1179]
 Flags = signed-payload
