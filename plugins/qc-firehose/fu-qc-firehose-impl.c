@@ -449,7 +449,9 @@ fu_qc_firehose_impl_erase(FuQcFirehoseImpl *self,
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
-	g_autoptr(GHashTable) xn_attrs = NULL;
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
 #else
 	const gchar *names[] = {
 	    "PAGES_PER_BLOCK",
@@ -477,15 +479,9 @@ fu_qc_firehose_impl_erase(FuQcFirehoseImpl *self,
 
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
 	/* copy over all attributes */
-	xn_attrs = xb_node_get_attrs(xn);
-	if (g_hash_table_size(xn_attrs) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "erase with no attributes is not supported");
-		return FALSE;
-	}
-	xb_builder_node_set_attrs(bc, xn_attrs);
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
 #else
 	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
@@ -565,7 +561,9 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
-	g_autoptr(GHashTable) xn_attrs = NULL;
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
 #else
 	const gchar *names[] = {
 	    "PAGES_PER_BLOCK",
@@ -597,15 +595,9 @@ fu_qc_firehose_impl_program(FuQcFirehoseImpl *self,
 
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
 	/* copy over all attributes */
-	xn_attrs = xb_node_get_attrs(xn);
-	if (g_hash_table_size(xn_attrs) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "program with no attributes is not supported");
-		return FALSE;
-	}
-	xb_builder_node_set_attrs(bc, xn_attrs);
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
 #else
 	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
@@ -674,7 +666,9 @@ fu_qc_firehose_impl_apply_patch(FuQcFirehoseImpl *self,
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, xb_node_get_element(xn), NULL);
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
-	g_autoptr(GHashTable) xn_attrs = NULL;
+	XbNodeAttrIter xn_iter;
+	const gchar *attr_name = NULL;
+	const gchar *attr_value = NULL;
 #else
 	const gchar *names[] = {
 	    "SECTOR_SIZE_IN_BYTES",
@@ -698,15 +692,9 @@ fu_qc_firehose_impl_apply_patch(FuQcFirehoseImpl *self,
 
 #if LIBXMLB_CHECK_VERSION(0, 3, 24)
 	/* copy over all attributes */
-	xn_attrs = xb_node_get_attrs(xn);
-	if (g_hash_table_size(xn_attrs) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "patch with no attributes is not supported");
-		return FALSE;
-	}
-	xb_builder_node_set_attrs(bc, xn_attrs);
+	xb_node_attr_iter_init(&xn_iter, xn);
+	while (xb_node_attr_iter_next(&xn_iter, &attr_name, &attr_value))
+		xb_builder_node_set_attr(bc, attr_name, attr_value);
 #else
 	/* copy over all *known* attributes */
 	for (guint i = 0; i < G_N_ELEMENTS(names); i++) {
