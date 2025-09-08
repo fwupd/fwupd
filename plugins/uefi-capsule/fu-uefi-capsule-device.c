@@ -15,7 +15,7 @@
 
 typedef struct {
 	FuVolume *esp;
-	FuDeviceLocker *esp_locker;
+	FuVolumeLocker *esp_locker;
 	gchar *fw_class;
 	FuUefiCapsuleDeviceKind kind;
 	guint32 capsule_flags;
@@ -491,7 +491,7 @@ fu_uefi_capsule_device_prepare(FuDevice *device,
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* mount if required */
-	priv->esp_locker = fu_volume_locker(priv->esp, error);
+	priv->esp_locker = fu_volume_locker_new(priv->esp, error);
 	if (priv->esp_locker == NULL)
 		return FALSE;
 
@@ -508,7 +508,7 @@ fu_uefi_capsule_device_cleanup(FuDevice *device,
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* unmount ESP if we opened it */
-	if (!fu_device_locker_close(priv->esp_locker, error))
+	if (!fu_volume_locker_close(priv->esp_locker, error))
 		return FALSE;
 	g_clear_object(&priv->esp_locker);
 

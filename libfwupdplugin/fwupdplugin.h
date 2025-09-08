@@ -117,6 +117,7 @@
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-bos-descriptor.h>
 #include <libfwupdplugin/fu-v4l-device.h>
+#include <libfwupdplugin/fu-volume-locker.h>
 #include <libfwupdplugin/fu-x509-certificate.h>
 // #include <libfwupdplugin/fu-usb-common.h>
 #include <libfwupdplugin/fu-uefi-device.h>
