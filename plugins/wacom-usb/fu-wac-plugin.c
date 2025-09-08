@@ -77,7 +77,8 @@ fu_wac_plugin_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **err
 
 	/* reset */
 	if (main_device != NULL) {
-		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(main_device, error);
+		g_autoptr(FuDeviceLocker) locker =
+		    fu_device_locker_new(FU_DEVICE(main_device), error);
 		if (locker == NULL)
 			return FALSE;
 		g_info("resetting main device");

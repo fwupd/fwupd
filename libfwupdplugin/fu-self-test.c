@@ -2039,18 +2039,18 @@ fu_common_kernel_search_func(void)
 }
 
 static gboolean
-fu_test_open_cb(GObject *device, GError **error)
+fu_test_open_cb(FuDevice *device, GError **error)
 {
-	g_assert_cmpstr(g_object_get_data(device, "state"), ==, "closed");
-	g_object_set_data(device, "state", (gpointer) "opened");
+	g_assert_cmpstr(g_object_get_data(G_OBJECT(device), "state"), ==, "closed");
+	g_object_set_data(G_OBJECT(device), "state", (gpointer) "opened");
 	return TRUE;
 }
 
 static gboolean
-fu_test_close_cb(GObject *device, GError **error)
+fu_test_close_cb(FuDevice *device, GError **error)
 {
-	g_assert_cmpstr(g_object_get_data(device, "state"), ==, "opened");
-	g_object_set_data(device, "state", (gpointer) "closed-on-unref");
+	g_assert_cmpstr(g_object_get_data(G_OBJECT(device), "state"), ==, "opened");
+	g_object_set_data(G_OBJECT(device), "state", (gpointer) "closed-on-unref");
 	return TRUE;
 }
 
@@ -2059,14 +2059,14 @@ fu_device_locker_func(void)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GObject) device = g_object_new(G_TYPE_OBJECT, NULL);
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
 
-	g_object_set_data(device, "state", (gpointer) "closed");
+	g_object_set_data(G_OBJECT(device), "state", (gpointer) "closed");
 	locker = fu_device_locker_new_full(device, fu_test_open_cb, fu_test_close_cb, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
 	g_clear_object(&locker);
-	g_assert_cmpstr(g_object_get_data(device, "state"), ==, "closed-on-unref");
+	g_assert_cmpstr(g_object_get_data(G_OBJECT(device), "state"), ==, "closed-on-unref");
 }
 
 static gboolean

@@ -1227,18 +1227,16 @@ fu_device_query_file_exists(FuDevice *self, const gchar *filename, gboolean *exi
 }
 
 static gboolean
-fu_device_poll_locker_open_cb(GObject *device, GError **error)
+fu_device_poll_locker_open_cb(FuDevice *self, GError **error)
 {
-	FuDevice *self = FU_DEVICE(device);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_atomic_int_inc(&priv->poll_locker_cnt);
 	return TRUE;
 }
 
 static gboolean
-fu_device_poll_locker_close_cb(GObject *device, GError **error)
+fu_device_poll_locker_close_cb(FuDevice *self, GError **error)
 {
-	FuDevice *self = FU_DEVICE(device);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_atomic_int_dec_and_test(&priv->poll_locker_cnt);
 	return TRUE;

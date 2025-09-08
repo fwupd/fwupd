@@ -1279,7 +1279,7 @@ fu_ccgx_hpi_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, "leave-flash");
 
 	/* enter flash mode */
-	locker = fu_device_locker_new_full(self,
+	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)fu_ccgx_hpi_device_enter_flash_mode,
 					   (FuDeviceLockerFunc)fu_ccgx_hpi_device_leave_flash_mode,
 					   error);

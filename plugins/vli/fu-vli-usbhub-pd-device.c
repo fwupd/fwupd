@@ -145,7 +145,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_pd_device_reload(FuDevice *device, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open parent device */
@@ -188,7 +188,7 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 static GBytes *
 fu_vli_usbhub_pd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -214,7 +214,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	gsize bufsz = 0;
 	const guint8 *buf;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -273,11 +273,9 @@ fu_vli_usbhub_pd_device_attach(FuDevice *device, FuProgress *progress, GError **
 static gboolean
 fu_vli_usbhub_pd_device_probe(FuDevice *device, GError **error)
 {
-	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	if (parent != NULL) {
-		fu_device_incorporate(device,
-				      FU_DEVICE(parent),
-				      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+		fu_device_incorporate(device, parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	}
 	return TRUE;
 }

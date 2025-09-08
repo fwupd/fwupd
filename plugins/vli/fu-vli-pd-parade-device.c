@@ -465,7 +465,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	guint8 buf[0x20] = {0};
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -649,7 +649,7 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 static GBytes *
 fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
+	FuDevice *parent = fu_device_get_parent(device);
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) fw = g_byte_array_new();
