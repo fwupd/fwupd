@@ -38,6 +38,18 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.32" date="2025-09-08">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Disable time checks when verifying firmware</li>
+          <li>Enforce a requirement for the default PS5512 devboard</li>
+          <li>Ensure Lexar NVMe drives use a valid version</li>
+          <li>Remove HwID match for Dell capsule-on-disk hardware</li>
+          <li>Require a full system shutdown for Micron NVMe drives</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.31" date="2025-07-10">
       <description>
         <p>
