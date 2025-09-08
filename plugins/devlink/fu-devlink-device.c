@@ -577,6 +577,7 @@ fu_devlink_device_update_component_cb(gpointer key, gpointer value, gpointer use
 		g_debug("ignoring %s", name);
 		return;
 	}
+	fu_device_incorporate(component, helper->device, FU_DEVICE_INCORPORATE_FLAG_INSTANCE_KEYS);
 	fu_devlink_device_add_component_instance_strs(component, helper);
 	fu_device_set_version_format(component, fu_version_guess_format(version));
 	fu_device_set_version(component, version);
