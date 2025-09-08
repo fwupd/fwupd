@@ -10,7 +10,6 @@
 
 #include "fu-context.h"
 #include "fu-device-event.h"
-#include "fu-device-locker.h"
 #include "fu-device-struct.h"
 #include "fu-firmware.h"
 #include "fu-progress.h"
@@ -1488,8 +1487,6 @@ void
 fu_device_build_vendor_id(FuDevice *self, const gchar *prefix, const gchar *value);
 void
 fu_device_build_vendor_id_u16(FuDevice *self, const gchar *prefix, guint16 value);
-FuDeviceLocker *
-fu_device_poll_locker_new(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 
 FuDeviceEvent *
 fu_device_save_event(FuDevice *self, const gchar *id);
