@@ -1166,14 +1166,14 @@ fu_uefi_capsule_plugin_cleanup_esp(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *pattern = NULL;
-	g_autoptr(FuDeviceLocker) esp_locker = NULL;
+	g_autoptr(FuVolumeLocker) esp_locker = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
 	if (self->esp == NULL)
 		return TRUE;
 
 	/* delete any files matching the glob in the ESP */
-	esp_locker = fu_volume_locker(self->esp, error);
+	esp_locker = fu_volume_locker_new(self->esp, error);
 	if (esp_locker == NULL)
 		return FALSE;
 	esp_path = fu_volume_get_mount_point(self->esp);

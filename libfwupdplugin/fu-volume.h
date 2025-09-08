@@ -66,8 +66,6 @@ gboolean
 fu_volume_mount(FuVolume *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_volume_unmount(FuVolume *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
-FuDeviceLocker *
-fu_volume_locker(FuVolume *self, GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_volume_is_internal(FuVolume *self) G_GNUC_NON_NULL(1);
 gchar *

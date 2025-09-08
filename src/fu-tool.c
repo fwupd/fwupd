@@ -3991,7 +3991,7 @@ static gboolean
 fu_util_esp_list(FuUtil *self, gchar **values, GError **error)
 {
 	g_autofree gchar *mount_point = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuVolumeLocker) locker = NULL;
 	g_autoptr(FuVolume) volume = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
@@ -4003,7 +4003,7 @@ fu_util_esp_list(FuUtil *self, gchar **values, GError **error)
 	volume = fu_util_prompt_for_volume(self, error);
 	if (volume == NULL)
 		return FALSE;
-	locker = fu_volume_locker(volume, error);
+	locker = fu_volume_locker_new(volume, error);
 	if (locker == NULL)
 		return FALSE;
 	mount_point = fu_volume_get_mount_point(volume);
