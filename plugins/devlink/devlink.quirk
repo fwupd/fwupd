@@ -8,6 +8,22 @@ Name = Management
 Vendor = Linux Foundation
 VendorId = PCI:0x1D6B
 
+# NVIDIA ConnectX-6
+[PCI\VEN_15B3&DEV_101B]
+DevlinkFixedVersions = fw.psid
+
+# NVIDIA ConnectX-6 Dx
+[PCI\VEN_15B3&DEV_101D]
+DevlinkFixedVersions = fw.psid
+
+# NVIDIA ConnectX-6 Lx
+[PCI\VEN_15B3&DEV_101F]
+DevlinkFixedVersions = fw.psid
+
 # NVIDIA ConnectX-7
 [PCI\VEN_15B3&DEV_1021]
+DevlinkFixedVersions = fw.psid
+
+# NVIDIA ConnectX-8
+[PCI\VEN_15B3&DEV_1023]
 DevlinkFixedVersions = fw.psid
