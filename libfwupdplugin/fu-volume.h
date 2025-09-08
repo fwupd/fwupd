@@ -9,8 +9,6 @@
 
 #include <fwupd.h>
 
-#include "fu-device-locker.h"
-
 #define FU_TYPE_VOLUME (fu_volume_get_type())
 
 G_DECLARE_FINAL_TYPE(FuVolume, fu_volume, FU, VOLUME, GObject)

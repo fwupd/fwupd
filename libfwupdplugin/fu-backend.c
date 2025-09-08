@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-device-locker.h"
 #include "fu-device-private.h"
 
 /**

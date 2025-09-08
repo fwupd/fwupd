@@ -104,7 +104,7 @@ fu_kinetic_dp_plugin_backend_device_added(FuPlugin *plugin,
 	dev = fu_kinetic_dp_plugin_create_device(FU_DPAUX_DEVICE(device), error);
 	if (dev == NULL)
 		return FALSE;
-	locker = fu_device_locker_new(dev, error);
+	locker = fu_device_locker_new(FU_DEVICE(dev), error);
 	if (locker == NULL)
 		return FALSE;
 	fu_plugin_device_add(FU_PLUGIN(self), FU_DEVICE(dev));

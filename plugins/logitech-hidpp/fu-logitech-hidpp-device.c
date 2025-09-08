@@ -205,7 +205,7 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
-	locker = fu_device_locker_new(self, error);
+	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
 

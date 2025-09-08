@@ -1450,7 +1450,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	/* enable remote control and disable on exit */
 	if (!fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART)) {
 		locker =
-		    fu_device_locker_new_full(self,
+		    fu_device_locker_new_full(device,
 					      (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					      (FuDeviceLockerFunc)fu_synaptics_mst_device_restart,
 					      error);
@@ -1458,7 +1458,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		fu_device_set_remove_delay(FU_DEVICE(self), 10000); /* a long time */
 	} else {
 		locker = fu_device_locker_new_full(
-		    self,
+		    device,
 		    (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 		    (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
 		    error);
@@ -1663,7 +1663,7 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full(self,
+	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_enable_rc,
 					   (FuDeviceLockerFunc)fu_synaptics_mst_device_disable_rc,
 					   &error_local);

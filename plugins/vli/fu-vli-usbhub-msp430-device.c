@@ -153,7 +153,7 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 	};
 
 	/* open device */
-	locker = fu_device_locker_new(parent, error);
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_vli_usbhub_msp430_device_i2c_write_data(parent, 0, 0, buf, sizeof(buf), error))
@@ -229,7 +229,7 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
-	locker = fu_device_locker_new(parent, error);
+	locker = fu_device_locker_new(FU_DEVICE(parent), error);
 	if (locker == NULL)
 		return FALSE;
 
