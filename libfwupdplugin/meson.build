@@ -239,6 +239,7 @@ fwupdplugin_headers = [
   'fu-device-event.h',
   'fu-device-locker.h',
   'fu-device-metadata.h',
+  'fu-device-poll-locker.h',
   'fu-device-private.h',
   'fu-device-progress.h',
   'fu-dfu-firmware.h',

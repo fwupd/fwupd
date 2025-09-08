@@ -39,6 +39,7 @@
 #include <libfwupdplugin/fu-device-event.h>
 #include <libfwupdplugin/fu-device-locker.h>
 #include <libfwupdplugin/fu-device-metadata.h>
+#include <libfwupdplugin/fu-device-poll-locker.h>
 #include <libfwupdplugin/fu-device.h>
 #include <libfwupdplugin/fu-dfu-firmware.h>
 #include <libfwupdplugin/fu-dfuse-firmware.h>
