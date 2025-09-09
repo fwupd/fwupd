@@ -89,6 +89,7 @@
 #include <libfwupdplugin/fu-intel-thunderbolt-nvm.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-ioctl.h>
+#include <libfwupdplugin/fu-kenv.h>
 #include <libfwupdplugin/fu-kernel-search-path.h>
 #include <libfwupdplugin/fu-kernel.h>
 #include <libfwupdplugin/fu-linear-firmware.h>
