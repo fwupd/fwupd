@@ -210,7 +210,7 @@ detect_os "$@"
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora|darwin)
+        debian|ubuntu|arch|fedora|darwin|freebsd)
             setup_deps
             ;;
     esac
