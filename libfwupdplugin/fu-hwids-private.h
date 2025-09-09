@@ -8,6 +8,7 @@
 
 #include "fu-context.h"
 #include "fu-hwids.h"
+#include "fu-kenv.h"
 
 FuHwids *
 fu_hwids_new(void);
