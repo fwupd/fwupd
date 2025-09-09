@@ -157,10 +157,9 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,
-			  GInputStream *stream,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
-			  GError **error) G_GNUC_NON_NULL(1, 2, 3, 4);
+			  GError **error) G_GNUC_NON_NULL(1, 2, 3);
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,

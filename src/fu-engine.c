@@ -2370,17 +2370,8 @@ fu_engine_install_releases(FuEngine *self,
 	fu_progress_set_steps(progress, releases->len);
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		GInputStream *stream = fu_release_get_stream(release);
-		if (stream == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no stream for release");
-			return FALSE;
-		}
 		if (!fu_engine_install_release(self,
 					       release,
-					       stream,
 					       fu_progress_get_child(progress),
 					       flags,
 					       error)) {
@@ -2574,7 +2565,6 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
  * fu_engine_install_release:
  * @self: a #FuEngine
  * @release: a #FuRelease
- * @stream: the #GInputStream of the .cab file
  * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_OLDER
  * @error: (nullable): optional return location for an error
@@ -2590,7 +2580,6 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 gboolean
 fu_engine_install_release(FuEngine *self,
 			  FuRelease *release,
-			  GInputStream *stream,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  GError **error)
@@ -2599,6 +2588,7 @@ fu_engine_install_release(FuEngine *self,
 	FuEngineRequest *request = fu_release_get_request(release);
 	FuPlugin *plugin;
 	FwupdFeatureFlags feature_flags = FWUPD_FEATURE_FLAG_NONE;
+	GInputStream *stream = fu_release_get_stream(release);
 	const gchar *tmp;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -2607,8 +2597,16 @@ fu_engine_install_release(FuEngine *self,
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_RELEASE(release), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
-	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (stream == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no stream for release");
+		return FALSE;
+	}
 
 	/* optional for tests */
 	if (request != NULL)
