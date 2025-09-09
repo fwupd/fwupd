@@ -2064,7 +2064,7 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		g_hash_table_insert(hash, g_strdup("KernelVersion"), g_strdup(name_tmp.release));
 	}
 #endif
-#ifdef HAVE_AUXV_H
+#if defined(HAVE_AUXV_H) && !defined(__FreeBSD__)
 	/* this is the architecture of the userspace, e.g. i686 would be returned for
 	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
 	g_hash_table_insert(hash,
