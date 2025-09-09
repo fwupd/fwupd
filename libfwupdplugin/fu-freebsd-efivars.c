@@ -209,7 +209,6 @@ fu_freebsd_efivars_class_init(FuFreebsdEfivarsClass *klass)
 	efivars_class->supported = fu_freebsd_efivars_supported;
 	efivars_class->space_used = fu_freebsd_efivars_space_used;
 	efivars_class->exists = fu_freebsd_efivars_exists;
-	efivars_class->get_monitor = fu_freebsd_efivars_get_monitor;
 	efivars_class->get_data = fu_freebsd_efivars_get_data;
 	efivars_class->set_data = fu_freebsd_efivars_set_data;
 	efivars_class->delete = fu_freebsd_efivars_delete;
