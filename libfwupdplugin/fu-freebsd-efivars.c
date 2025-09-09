@@ -96,16 +96,6 @@ fu_freebsd_efivars_exists_guid(const gchar *guid)
 }
 
 static gboolean
-fu_freebsd_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
-{
-	/* any name */
-	if (name == NULL)
-		return fu_freebsd_efivars_exists_guid(guid);
-
-	return fu_freebsd_efivars_get_data(efivars, guid, name, NULL, NULL, NULL, NULL);
-}
-
-static gboolean
 fu_freebsd_efivars_get_data(FuEfivars *efivars,
 			    const gchar *guid,
 			    const gchar *name,
@@ -117,6 +107,16 @@ fu_freebsd_efivars_get_data(FuEfivars *efivars,
 	efi_guid_t guidt;
 	efi_str_to_guid(guid, &guidt);
 	return (efi_get_variable(guidt, name, data, data_sz, attr) != 0);
+}
+
+static gboolean
+fu_freebsd_efivars_exists(FuEfivars *efivars, const gchar *guid, const gchar *name)
+{
+	/* any name */
+	if (name == NULL)
+		return fu_freebsd_efivars_exists_guid(guid);
+
+	return fu_freebsd_efivars_get_data(efivars, guid, name, NULL, NULL, NULL, NULL);
 }
 
 static GPtrArray *
@@ -137,11 +137,11 @@ fu_freebsd_efivars_get_names(FuEfivars *efivars, const gchar *guid, GError **err
 
 	/* nothing found */
 	if (names->len == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "no names for GUID %s",
-				    guid);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "no names for GUID %s",
+			    guid);
 		return NULL;
 	}
 
