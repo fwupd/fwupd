@@ -15,18 +15,17 @@ import sys
 from typing import Iterator
 
 
+def parse_version(ver):
+    return tuple(map(int, ver.split(".")))
+
+
 # see https://github.com/mesonbuild/meson/pull/14890
 def old_meson_missing_vapi_deps_tag() -> bool:
     version_str = subprocess.check_output(
         ["meson", "--version"],
         text=True,
     )
-    version_split = [int(x) for x in version_str.strip().split(".")]
-    major = version_split[0]
-    minor = version_split[1]
-    patch = version_split[2]
-
-    return major < 1 or (major == 1 and minor <= 9 and patch == 0)
+    return parse_version(version_str.strip()) < parse_version("1.9.0")
 
 
 def objects_with_tag(obj) -> Iterator[dict]:
