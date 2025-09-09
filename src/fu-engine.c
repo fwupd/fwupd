@@ -5030,7 +5030,10 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 	csums = fwupd_release_get_checksums(release);
 	for (guint j = 0; j < csums->len; j++) {
 		const gchar *csum = g_ptr_array_index(csums, j);
-		g_autoptr(XbNode) rel = fu_engine_get_release_for_checksum(self, csum);
+		g_autoptr(XbNode) rel = NULL;
+
+		g_debug("finding release checksum %s", csum);
+		rel = fu_engine_get_release_for_checksum(self, csum);
 		if (rel != NULL) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(XbNode) component = NULL;
