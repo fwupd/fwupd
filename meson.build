@@ -254,6 +254,9 @@ endif
 if cc.has_header_symbol('libusb.h', 'libusb_get_parent', dependencies: libusb)
   conf.set('HAVE_LIBUSB_GET_PARENT', '1')
 endif
+if cc.has_header_symbol('libusb.h', 'libusb_wrap_sys_device', dependencies: libusb)
+  conf.set('HAVE_LIBUSB_WRAP_SYS_DEVICE', '1')
+endif
 
 readline = dependency('readline', required: get_option('readline'))
 if readline.found() and get_option('readline').allowed()
