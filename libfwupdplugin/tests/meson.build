@@ -1,25 +1,21 @@
 subdir('colorhug')
 subdir('efi')
 
-installed_firmware_zip = custom_target('installed-firmware-zip',
-  input: [
-    'colorhug/firmware.txt',
-    'colorhug/firmware.txt.asc',
-  ],
+installed_firmware_zip = custom_target(
+  'installed-firmware-zip',
+  input: ['colorhug/firmware.txt', 'colorhug/firmware.txt.asc'],
   output: 'firmware.zip',
-  command: [
-    python3, '-m', 'zipfile', '-c', '@OUTPUT@', '@INPUT@',
-  ],
+  command: [python3, '-m', 'zipfile', '-c', '@OUTPUT@', '@INPUT@'],
   install: true,
   install_dir: join_paths(installed_test_datadir, 'tests'),
 )
 
-install_data([
-    'America/New_York',
-  ],
+install_data(
+  ['America/New_York'],
   install_dir: join_paths(installed_test_datadir, 'tests/America'),
 )
-install_data([
+install_data(
+  [
     'cpuinfo',
     'cab.builder.xml',
     'cab-compressed.builder.xml',
@@ -72,43 +68,39 @@ install_data([
   follow_symlinks: true,
 )
 
-install_data([
-    'oui.txt',
-    'pci.ids',
-    'pnp.ids',
-    'usb.ids',
-    'uevent',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'tests')
+install_data(
+  ['oui.txt', 'pci.ids', 'pnp.ids', 'usb.ids', 'uevent'],
+  install_dir: join_paths(installed_test_datadir, 'tests'),
 )
 
-install_data([
-    'lockdown/locked/lockdown',
-  ],
+install_data(
+  ['lockdown/locked/lockdown'],
   install_dir: join_paths(installed_test_datadir, 'tests/lockdown/locked'),
 )
-install_data([
-    'lockdown/none/lockdown',
-  ],
+install_data(
+  ['lockdown/none/lockdown'],
   install_dir: join_paths(installed_test_datadir, 'tests/lockdown/none'),
 )
-install_data([
-    'quirks.d/tests.quirk',
-  ],
+install_data(
+  ['quirks.d/tests.quirk'],
   install_dir: join_paths(installed_test_datadir, 'tests/quirks.d'),
 )
-install_symlink('localtime',
+install_symlink(
+  'localtime',
   install_dir: join_paths(installed_test_datadir, 'tests'),
   pointing_to: join_paths('America', 'New_York'),
 )
 
-install_data([
-    'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/pending_reboot',
-  ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes'),
+install_data(
+  ['bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/pending_reboot'],
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes',
+  ),
   follow_symlinks: true,
 )
-install_data([
+install_data(
+  [
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/current_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/default_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/dell_modifier',
@@ -118,11 +110,15 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/possible_values',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/type',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense'),
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense',
+  ),
   follow_symlinks: true,
 )
 
-install_data([
+install_data(
+  [
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/current_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/default_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/dell_modifier',
@@ -133,11 +129,15 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/scalar_increment',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/type',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop'),
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop',
+  ),
   follow_symlinks: true,
 )
 
-install_data([
+install_data(
+  [
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/current_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/default_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/dell_modifier',
@@ -147,12 +147,15 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/min_length',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/max_length',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset'),
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset',
+  ),
   follow_symlinks: true,
 )
 
-install_data([
-
+install_data(
+  [
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/current_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/default_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/dell_modifier',
@@ -162,11 +165,15 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/possible_values',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/type',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd'),
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd',
+  ),
   follow_symlinks: true,
 )
 
-install_data([
+install_data(
+  [
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/current_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/default_value',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/dell_modifier',
@@ -176,6 +183,9 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/possible_values',
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/type',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot'),
+  install_dir: join_paths(
+    installed_test_datadir,
+    'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot',
+  ),
   follow_symlinks: true,
 )

@@ -54,7 +54,8 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
-install_data([
+install_data(
+  [
     'build-certs.py',
     'fakedevice124.bin',
     'fakedevice124.jcat',
@@ -97,29 +98,19 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
-custom_target('installed-cab123',
-  input: [
-    'fakedevice123.bin',
-    'fakedevice123.jcat',
-    'fakedevice123.metainfo.xml',
-  ],
+custom_target(
+  'installed-cab123',
+  input: ['fakedevice123.bin', 'fakedevice123.jcat', 'fakedevice123.metainfo.xml'],
   output: 'fakedevice123.cab',
-  command: [
-    gcab, '--create', '@OUTPUT@', '@INPUT@',
-  ],
+  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
   install: true,
   install_dir: installed_test_datadir,
 )
-custom_target('installed-cab124',
-  input: [
-    'fakedevice124.bin',
-    'fakedevice124.jcat',
-    'fakedevice124.metainfo.xml',
-  ],
+custom_target(
+  'installed-cab124',
+  input: ['fakedevice124.bin', 'fakedevice124.jcat', 'fakedevice124.metainfo.xml'],
   output: 'fakedevice124.cab',
-  command: [
-    gcab, '--create', '@OUTPUT@', '@INPUT@',
-  ],
+  command: [gcab, '--create', '@OUTPUT@', '@INPUT@'],
   install: true,
   install_dir: installed_test_datadir,
 )
@@ -136,18 +127,26 @@ configure_file(
 
 if umockdev_integration_tests.allowed()
   fwupd_mockdev_tests = files('fwupd_test.py')
-  r = run_command(unittest_inspector, fwupd_mockdev_tests, check: true)
+  r = run_command(
+    unittest_inspector,
+    fwupd_mockdev_tests,
+    check: true,
+  )
   unit_tests = r.stdout().strip().split('\n')
-  foreach ut: unit_tests
-      test(ut, python3, args: [fwupd_mockdev_tests, ut], is_parallel: false,
-          env: {
-            'CACHE_DIRECTORY': join_paths(meson.project_build_root(), 'cache'),
-            'DAEMON_BUILDDIR': join_paths(meson.project_build_root(), 'src'),
-            'GI_TYPELIB_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
-            'LD_LIBRARY_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
-            'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state')
-          },
-          )
+  foreach ut : unit_tests
+    test(
+      ut,
+      python3,
+      args: [fwupd_mockdev_tests, ut],
+      is_parallel: false,
+      env: {
+        'CACHE_DIRECTORY': join_paths(meson.project_build_root(), 'cache'),
+        'DAEMON_BUILDDIR': join_paths(meson.project_build_root(), 'src'),
+        'GI_TYPELIB_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
+        'LD_LIBRARY_PATH': join_paths(meson.project_build_root(), 'libfwupd'),
+        'STATE_DIRECTORY': join_paths(meson.project_build_root(), 'state'),
+      },
+    )
   endforeach
   configure_file(
     input: fwupd_mockdev_tests,
@@ -155,7 +154,10 @@ if umockdev_integration_tests.allowed()
     configuration: {
       'LIBEXECDIR': daemon_dir,
     },
-    install_dir: installed_test_datadir
+    install_dir: installed_test_datadir,
   )
-  install_data('fwupd_ioc.py', install_dir: installed_test_datadir)
+  install_data(
+    'fwupd_ioc.py',
+    install_dir: installed_test_datadir,
+  )
 endif
