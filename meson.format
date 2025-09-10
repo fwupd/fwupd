@@ -1,0 +1,6 @@
+max_line_length = 100
+indent_by = '  '
+tab_width = 2
+kwargs_force_multiline = true
+no_single_comma_function = true
+indent_before_comments = ' '

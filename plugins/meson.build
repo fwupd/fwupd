@@ -121,7 +121,7 @@ plugins = {
   'synaptics-vmm9': false,
   'system76-launch': false,
   'test': false,
-  'telink-dfu':false,
+  'telink-dfu': false,
   'thelio-io': false,
   'thunderbolt': false,
   'ti-tps6598x': false,
@@ -148,7 +148,7 @@ umockdev_tests = []
 umockdev_ioctls = []
 device_tests = []
 enumeration_data = []
-foreach plugin, enabled: plugins
+foreach plugin, enabled : plugins
   subdir(plugin)
 endforeach
 
@@ -162,19 +162,31 @@ if umockdev_integration_tests.allowed()
   envs.set('PYTHONPATH', join_paths(meson.project_source_root(), 'data', 'tests'))
   envs.set('STATE_DIRECTORY', join_paths(meson.project_build_root(), 'state'))
 
-  foreach suite: umockdev_tests
-    r = run_command(unittest_inspector, suite,
-                    check: true, env: envs)
+  foreach suite : umockdev_tests
+    r = run_command(
+      unittest_inspector,
+      suite,
+      check: true,
+      env: envs,
+    )
     unit_tests = r.stdout().strip().split('\n')
-    foreach ut: unit_tests
-        test(ut, python3, args: [suite, ut], is_parallel: false, env: envs)
+    foreach ut : unit_tests
+      test(
+        ut,
+        python3,
+        args: [suite, ut],
+        is_parallel: false,
+        env: envs,
+      )
     endforeach
-    install_data(suite,
+    install_data(
+      suite,
       install_dir: installed_test_datadir,
     )
   endforeach
-  foreach ioctl: umockdev_ioctls
-    install_data(ioctl,
+  foreach ioctl : umockdev_ioctls
+    install_data(
+      ioctl,
       install_dir: installed_test_datadir,
     )
   endforeach

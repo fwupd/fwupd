@@ -12,11 +12,11 @@ if get_option('fish_completion')
 endif
 
 if get_option('tests')
-subdir('device-tests')
+  subdir('device-tests')
 endif
 
 if build_daemon
-subdir('motd')
+  subdir('motd')
 endif
 
 if get_option('tests')
@@ -26,42 +26,37 @@ if get_option('tests')
 endif
 
 if build_standalone
-  install_data(['fwupd.conf'],
+  install_data(
+    ['fwupd.conf'],
     install_tag: 'runtime',
     install_dir: join_paths(sysconfdir, 'fwupd'),
     install_mode: 'rw-r-----',
   )
-  plugin_quirks += files([
-    'ds20.quirk',
-    'power.quirk',
-    'cfi.quirk',
-    'vendors.quirk',
-  ])
+  plugin_quirks += files('cfi.quirk', 'ds20.quirk', 'power.quirk', 'vendors.quirk')
 endif
 
 if get_option('metainfo')
-  custom_target('metainfo',
+  custom_target(
+    'metainfo',
     input: 'org.freedesktop.fwupd.metainfo.xml',
     output: 'org.freedesktop.fwupd.metainfo.xml',
-    command: [
-      generate_metainfo,
-      '@INPUT@',
-      '@OUTPUT@',
-    ],
+    command: [generate_metainfo, '@INPUT@', '@OUTPUT@'],
     install: true,
     install_tag: 'doc',
     install_dir: join_paths(datadir, 'metainfo'),
   )
-  install_data(['org.freedesktop.fwupd.svg'],
+  install_data(
+    ['org.freedesktop.fwupd.svg'],
     install_tag: 'doc',
-    install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+    install_dir: join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps'),
   )
 endif
 
 if build_daemon
-  install_data(['org.freedesktop.fwupd.conf'],
+  install_data(
+    ['org.freedesktop.fwupd.conf'],
     install_tag: 'runtime',
-    install_dir: join_paths(datadir, 'dbus-1', 'system.d')
+    install_dir: join_paths(datadir, 'dbus-1', 'system.d'),
   )
 
   build_conf = configuration_data()
@@ -113,7 +108,10 @@ if build_daemon
     if allow_flashrom
       device_allows += ['char-mem']
     endif
-    if cc.has_header('linux/nvme_ioctl.h', required: false)
+    if cc.has_header(
+      'linux/nvme_ioctl.h',
+      required: false,
+    )
       device_allows += ['char-nvme']
     endif
     if allow_uefi
@@ -123,7 +121,7 @@ if build_daemon
     if get_option('plugin_modem_manager').allowed()
       device_allows += ['char-wwan_port']
     endif
-    foreach device_allow: device_allows
+    foreach device_allow : device_allows
       dynamic_options += ['DeviceAllow=' + device_allow + ' rw']
     endforeach
 
@@ -136,16 +134,18 @@ if build_daemon
       '@network-io',
       '@process',
       '@sync',
-      '@signal',  # for g_local_file_monitor_new
-      '@timer',   # for usbi_create_timer
-      '@chown',   # for sqlite3Step
+      '@signal', # for g_local_file_monitor_new
+      '@timer', # for usbi_create_timer
+      '@chown', # for sqlite3Step
       'ioctl',
       'uname',
       'fadvise64',
-      'sysinfo',  # for sysconf
-      'madvise',  # for mtrim
-      'mremap',   # for g_realloc
-      'splice', 'vmsplice', 'copy_file_range', # for g_file_copy
+      'sysinfo', # for sysconf
+      'madvise', # for mtrim
+      'mremap', # for g_realloc
+      'splice',
+      'vmsplice',
+      'copy_file_range', # for g_file_copy
     ]
     if allow_flashrom
       syscall_filter += ['@raw-io']
@@ -176,7 +176,8 @@ if build_daemon
     )
 
     # for various plugins
-    install_data(['fwupd-i2c.conf'],
+    install_data(
+      ['fwupd-i2c.conf'],
       install_tag: 'runtime',
       install_dir: systemd_modules_load_dir,
     )

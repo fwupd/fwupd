@@ -7,6 +7,9 @@ generate_man = [python3, files('generate-man.py')]
 generate_index = [python3, files('generate-index.py')]
 fix_translations = [python3, files('fix_translations.py')]
 if umockdev_integration_tests.allowed()
-    unittest_inspector = [python3, files('unittest_inspector.py')]
-    install_data(files('unittest_inspector.py'), install_dir: installed_test_datadir)
+  unittest_inspector = [python3, files('unittest_inspector.py')]
+  install_data(
+    files('unittest_inspector.py'),
+    install_dir: installed_test_datadir,
+  )
 endif
