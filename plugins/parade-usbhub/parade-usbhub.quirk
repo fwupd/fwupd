@@ -14,6 +14,12 @@ Flags = enforce-requires
 Plugin = parade_usbhub
 Flags = enforce-requires
 
+# PS5512 - Dell
+[USB\VID_413C&PID_1020]
+Plugin = parade_usbhub
+[USB\VID_413C&PID_1021]
+Plugin = parade_usbhub
+
 # PS188
 [USB\VID_1DA0&PID_0188]
 Plugin = parade_usbhub
