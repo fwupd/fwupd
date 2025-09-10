@@ -308,6 +308,22 @@ msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u enhet har inte den mest kända konfigurationen."
 msgstr[1] "%u enheter har inte den mest kända konfigurationen."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u enhet stöds i de aktiverade fjärrarna (en uppdatering har publicerats)"
+msgstr[1] "%u enheter stöds i de aktiverade fjärrarna (en uppdatering har publicerats)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u enhet kan uppdateras"
+msgstr[1] "%u enheter kan uppdateras"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -2094,6 +2110,10 @@ msgstr "Ny version"
 msgid "No action specified!"
 msgstr "Ingen åtgärd angiven!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Inga enheter kan uppdateras"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2761,8 +2781,8 @@ msgstr "Lyckades inaktivera testenheter"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Hämtade framgångsrikt ny metadata: "
+msgid "Successfully downloaded new metadata:"
+msgstr "Hämtade nya metadata:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3357,13 +3377,6 @@ msgstr "Uppdatera lagrad metadata med aktuellt innehåll"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Uppdaterar alla angivna enheter till senaste version av fast programvara, eller alla enheter om ej angivet"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Uppdateringar har publicerats för %u lokal enhet"
-msgstr[1] "Uppdateringar har publicerats för %u av %u lokala enheter"
 
 msgid "Updating"
 msgstr "Uppdaterar"

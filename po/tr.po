@@ -1344,11 +1344,6 @@ msgstr "dbx veri tabanı dosyasını belirt"
 msgid "Successfully activated all devices"
 msgstr "Tüm aygıtlar başarıyla etkinleştirildi"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Yeni üst veri başarıyla indirildi:"
-
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
 msgstr "Donanım yazılımı başarıyla kuruldu"

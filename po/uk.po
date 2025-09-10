@@ -310,6 +310,26 @@ msgstr[1] "%u пристрої не є найкращою відомою кон�
 msgstr[2] "%u пристрої не є найкращою відомою конфігурацією."
 msgstr[3] "%u пристрій не є найкращою відомою конфігурацією."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "в увімкнених віддалених сховищах передбачено підтримку %u пристрою (оприлюднено оновлення)"
+msgstr[1] "в увімкнених віддалених сховищах передбачено підтримку %u пристроїв (оприлюднено оновлення)"
+msgstr[2] "в увімкнених віддалених сховищах передбачено підтримку %u пристроїв (оприлюднено оновлення)"
+msgstr[3] "в увімкнених віддалених сховищах передбачено підтримку %u пристрою (оприлюднено оновлення)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "до оновлення придатний %u пристрій"
+msgstr[1] "до оновлення придатні %u пристрої"
+msgstr[2] "до оновлення придатні %u пристроїв"
+msgstr[3] "до оновлення придатний %u пристрій"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -2112,6 +2132,10 @@ msgstr "Нова версія"
 msgid "No action specified!"
 msgstr "Не вказано дії!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Немає придатних до оновлення пристроїв"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2779,7 +2803,7 @@ msgstr "Успішно вимкнено тестові пристрої"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
+msgid "Successfully downloaded new metadata:"
 msgstr "Успішно отримано нові метадані:"
 
 #. TRANSLATORS: success message
@@ -3379,15 +3403,6 @@ msgstr "Оновити збережені метадані поточними д
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Оновлює усі вказані пристрої до найсвіжішої версії мікропрограми. Якщо пристрої не вказано, оновлює усі пристрої."
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Оприлюднено оновлення для %u локального пристрою"
-msgstr[1] "Оприлюднено оновлення для %u з %u локальних пристроїв"
-msgstr[2] "Оприлюднено оновлення для %u з %u локальних пристроїв"
-msgstr[3] "Оприлюднено оновлення для %u з %u локального пристрою"
 
 msgid "Updating"
 msgstr "Оновлення"

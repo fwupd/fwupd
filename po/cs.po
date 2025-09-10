@@ -313,6 +313,26 @@ msgstr[1] "Firmware na %u zařízeních není na verzi, která by byla osvědče
 msgstr[2] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
 msgstr[3] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u zařízení je podporováno v zapnutých repozitářích (byla vydána aktualizace)"
+msgstr[1] "%u zařízení jsou podporována v zapnutých repozitářích (byla vydána aktualizace)"
+msgstr[2] "%u zařízení je podporováno v zapnutých repozitářích (byla vydána aktualizace)"
+msgstr[3] "%u zařízení jsou podporována v zapnutých repozitářích (byla vydána aktualizace)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u zařízení je aktualizovatelné"
+msgstr[1] "%u zařízení jsou aktualizovatelná"
+msgstr[2] "%u zařízení je aktualizovatelných"
+msgstr[3] "%u zařízení jsou aktualizovatelná"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -1247,6 +1267,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "SOUBOR CERTIFIKÁT SOUKROMÝ-KLÍČ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "SOUBOR IDENTIFIKATOR-ZARIZENI [VERZE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "SOUBOR POSUN DATA [TYP-FIRMWARE]"
 
@@ -2111,6 +2135,10 @@ msgstr "Nová verze"
 msgid "No action specified!"
 msgstr "Není zadána žádné akce!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Nejsou aktualizovatelná žádná zařízení"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2284,6 +2312,10 @@ msgstr "Zadejte buď %s nebo %s: "
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Chybí komponenty, na kterých zásuvný modul závisí"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Může se stát, že vyčíslení zásuvného modulu změní stav zařízení"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
@@ -2774,8 +2806,8 @@ msgstr "Testovací zařízení úspěšně zakázány"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Nová metadata úspěšně stažena:"
+msgid "Successfully downloaded new metadata:"
+msgstr "Úspěšně stažena nová metadata:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3374,15 +3406,6 @@ msgstr "Aktualizovat uložená metadata stávajícím obsahem"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Aktualizuje firmware veškerých zadaných zařízení na nejnovější verzi, případně na všech zařízeních, pokud nejsou žádná vyjmenována"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Pro %u lokální zařízení byly vydány aktualizace"
-msgstr[1] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
-msgstr[2] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
-msgstr[3] "Pro %u z %u lokálních zařízení byly vydány aktualizace"
 
 msgid "Updating"
 msgstr "Aktualizuje se"

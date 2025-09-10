@@ -1232,6 +1232,10 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "DATEINAME ZERTIFIKAT PRIVATER-SCHLÜSSEL"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "DATEINAME GERÄTEKENNUNG [VERSION]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "DATEINAME ADRESSABSTAND DATEN [FIRMWARE-TYP]"
 
@@ -2264,6 +2268,10 @@ msgstr "Bitte geben Sie entweder %s oder %s ein: "
 msgid "Plugin dependencies missing"
 msgstr "Fehlende Plugin-Abhängigkeiten"
 
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Plugin-Aufzählung kann den Gerätestatus ändern"
+
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"
 msgstr "Plugin ist nur zum Testen"
@@ -2750,11 +2758,6 @@ msgstr "Erfolgreich deaktivierte Gegenstelle"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Prüfgeräte erfolgreich deaktiviert"
-
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Neue Metadaten wurden erfolgreich heruntergeladen: "
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3349,13 +3352,6 @@ msgstr "Die gespeicherten Metadaten mit dem aktuellen Inhalt aktualisieren"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Aktualisiert alle angegebenen Geräte auf die neueste Firmware-Version, oder alle Geräte, wenn nicht angegeben"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Es wurden Aktualisierungen für %u lokales Gerät veröffentlicht"
-msgstr[1] "Es wurden Aktualisierungen für %u von %u der lokalen Geräte veröffentlicht"
 
 msgid "Updating"
 msgstr "Wird aktualisiert"

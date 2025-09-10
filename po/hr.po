@@ -2270,11 +2270,6 @@ msgstr "Svi uređaji su uspješno aktivirani"
 msgid "Successfully disabled remote"
 msgstr "Udaljena lokacija je uspješno onemogućena"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Novi metapodaci su uspješno preuzeti: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Udaljena lokacija je uspješno omogućena i provjerena"

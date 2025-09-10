@@ -2477,11 +2477,6 @@ msgstr "सभी उपकरण सफलतापूर्वक सक्र
 msgid "Successfully disabled remote"
 msgstr "रिमोट सफलतापूर्वक अक्षम किया गया"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "नया मेटाडेटा सफलतापूर्वक डाउनलोड किया गया: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "रिमोट को सफलतापूर्वक सक्षम और ताजा किया गया"

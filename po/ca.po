@@ -2746,11 +2746,6 @@ msgstr "El remot s'ha inhabilitat correctament"
 msgid "Successfully disabled test devices"
 msgstr "Els dispositius de prova s'han inhabilitat amb èxit"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "S'han baixat les metadades noves amb èxit:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "S'ha habilitat i refrescat el remot amb èxit"
@@ -3344,13 +3339,6 @@ msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Actualitza tots els dispositius especificats a la versió més recent del microprogramari o tots els dispositius sense especificar"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "S'han publicat les actualitzacions per a %u dispositiu local"
-msgstr[1] "S'han publicat les actualitzacions de %u per a %u dispositius locals"
 
 msgid "Updating"
 msgstr "S'està actualitzant"

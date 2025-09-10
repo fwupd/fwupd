@@ -755,11 +755,6 @@ msgstr "Gailu guztiak ongi aktibatu dira"
 msgid "Successfully disabled remote"
 msgstr "Urrunekoa ongi desgaitu da"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Metadatu berriak ongi deskargatu dira:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Urrunekoa ongi gaitu eta freskatu da"

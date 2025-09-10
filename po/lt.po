@@ -1419,11 +1419,6 @@ msgstr "Pavyko"
 msgid "Successfully activated all devices"
 msgstr "Sėkmingai aktyvuoti visi įrenginiai"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Sėkmingai atsisiųsti nauji metaduomenys: "
-
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
 msgstr "Aparatinė programinė įranga sėkmingai įdiegta"

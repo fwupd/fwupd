@@ -2729,11 +2729,6 @@ msgstr "Lähteen poistaminen onnistui"
 msgid "Successfully disabled test devices"
 msgstr "Testilaitteiden käytöstä poistaminen onnistui"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Uusien metatietojen lataus onnistui: "
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Lähteen käyttöönotto ja päivitys onnistui"
@@ -3327,13 +3322,6 @@ msgstr "Päivitä tallennetut metatiedot nykyisellä sisällöllä"
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
 msgstr "Päivittää kaikki määritetyt laitteet uusimpaan laiteohjelmistoversioon - tai kaikki laitteet, jos määritystä ei ole annettu"
-
-#. TRANSLATORS: how many local devices can expect updates now
-#, c-format
-msgid "Updates have been published for %u local device"
-msgid_plural "Updates have been published for %u of %u local devices"
-msgstr[0] "Päivitykset on julkaistu %u paikalliselle laitteelle"
-msgstr[1] "Päivityksiä on julkaistu %u paikallisesta laitteesta %u"
 
 msgid "Updating"
 msgstr "Päivitetään"

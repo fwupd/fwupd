@@ -1415,11 +1415,6 @@ msgstr "Все устройства успешно активированы"
 msgid "Successfully disabled remote"
 msgstr "Удалённый репозиторий успешно отключен"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "Успешно загружены новые метаданные:"
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Удалённый репозиторий успешно подключен и обновлён"

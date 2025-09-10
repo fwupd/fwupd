@@ -1562,11 +1562,6 @@ msgstr "激活所有设备成功"
 msgid "Successfully disabled remote"
 msgstr "禁用远程源成功"
 
-#. TRANSLATORS: success message -- where 'metadata' is information
-#. * about available firmware on the remote server
-msgid "Successfully downloaded new metadata: "
-msgstr "已成功下载新元数据："
-
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "已成功启用和刷新远程库"
