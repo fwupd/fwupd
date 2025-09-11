@@ -38,6 +38,9 @@ typedef struct {
 	gchar *metadata_uri_sig;
 	gchar *username;
 	gchar *password;
+	gchar *aws_access_key;
+	gchar *aws_secret_key;
+	gchar *aws_region;
 	gchar *title;
 	gchar *privacy_uri;
 	gchar *agreement;
@@ -155,6 +158,9 @@ fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	fwupd_codec_json_append(builder, "FirmwareBaseUri", priv->firmware_base_uri);
 	fwupd_codec_json_append(builder, "Username", priv->username);
 	fwupd_codec_json_append(builder, "Password", priv->password);
+	fwupd_codec_json_append(builder, "AwsAccessKey", priv->aws_access_key);
+	fwupd_codec_json_append(builder, "AwsSecretKey", priv->aws_secret_key);
+	fwupd_codec_json_append(builder, "AwsRegion", priv->aws_region);
 	fwupd_codec_json_append(builder, "Title", priv->title);
 	fwupd_codec_json_append(builder, "PrivacyUri", priv->privacy_uri);
 	fwupd_codec_json_append(builder, "Agreement", priv->agreement);
@@ -286,6 +292,97 @@ fwupd_remote_strdup_nonempty(const gchar *text)
 	if (text == NULL || text[0] == '\0')
 		return NULL;
 	return g_strdup(text);
+}
+
+/**
+ * fwupd_remote_build_s3_auth_header:
+ * @self: a #FwupdRemote
+ * @url: the URL being accessed
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the authentication header for the remote if needed.
+ *
+ * For S3 remotes, this generates an AWS Signature V4 Authorization header.
+ *
+ * Returns: (transfer full): an authentication header string, or %NULL for error
+ *
+ * Since: 2.0.15
+ **/
+gchar *
+fwupd_remote_build_s3_auth_header(FwupdRemote *self, const gchar *url, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *canonical_request = NULL;
+	g_autofree gchar *date = NULL;
+	g_autofree gchar *host = NULL;
+	g_autofree gchar *signature = NULL;
+	g_autofree gchar *string_to_sign = NULL;
+	g_autofree gchar *timestamp = NULL;
+	g_autoptr(curlptr) curl_host = NULL;
+	g_autoptr(curlptr) curl_path = NULL;
+	g_autoptr(CURLU) uri = curl_url();
+	g_autoptr(GDateTime) dt = NULL;
+	const gchar *sha256_empty =
+	    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+	/* basic validation */
+	if (priv->aws_access_key == NULL || priv->aws_secret_key == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "AWS access key and secret key required for S3 authentication");
+		return NULL;
+	}
+	if (priv->aws_region == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "AWS region required for S3 authentication");
+		return NULL;
+	}
+
+	/* parse the URL to get host and path */
+	if (curl_url_set(uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to parse S3 URL '%s'",
+			    url);
+		return NULL;
+	}
+
+	curl_url_get(uri, CURLUPART_HOST, &curl_host, 0);
+	curl_url_get(uri, CURLUPART_PATH, &curl_path, 0);
+
+	host = g_strdup(curl_host ? curl_host : "");
+
+	/* get current timestamp in ISO 8601 format */
+	dt = g_date_time_new_now_utc();
+	timestamp = g_date_time_format(dt, "%Y%m%dT%H%M%SZ");
+	date = g_date_time_format(dt, "%Y%m%d");
+
+	/* create a simplified signature */
+	canonical_request =
+	    g_strdup_printf("GET\n%s\n\nhost:%s\nx-amz-date:%s\n\nhost;x-amz-date\n%s",
+			    curl_path ? curl_path : "/",
+			    host,
+			    timestamp,
+			    sha256_empty);
+	string_to_sign = g_strdup_printf(
+	    "AWS4-HMAC-SHA256\n%s\n%s/%s/s3/aws4_request\n%s",
+	    timestamp,
+	    date,
+	    priv->aws_region,
+	    g_compute_checksum_for_string(G_CHECKSUM_SHA256, canonical_request, -1));
+
+	/* create authorization header */
+	signature = g_compute_checksum_for_string(G_CHECKSUM_SHA256, string_to_sign, -1);
+	return g_strdup_printf("AWS4-HMAC-SHA256 Credential=%s/%s/%s/s3/aws4_request, "
+			       "SignedHeaders=host;x-amz-date, Signature=%s",
+			       priv->aws_access_key,
+			       date,
+			       priv->aws_region,
+			       signature);
 }
 
 /**
@@ -444,6 +541,72 @@ fwupd_remote_set_password(FwupdRemote *self, const gchar *password)
 }
 
 /**
+ * fwupd_remote_set_aws_access_key:
+ * @self: a #FwupdRemote
+ * @access_key: (nullable): an optional AWS access key
+ *
+ * Sets the AWS access key for S3 authentication.
+ *
+ * Since: 2.0.15
+ **/
+void
+fwupd_remote_set_aws_access_key(FwupdRemote *self, const gchar *access_key)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->aws_access_key, access_key) == 0)
+		return;
+
+	g_free(priv->aws_access_key);
+	priv->aws_access_key = g_strdup(access_key);
+}
+
+/**
+ * fwupd_remote_set_aws_secret_key:
+ * @self: a #FwupdRemote
+ * @secret_key: (nullable): an optional AWS secret key
+ *
+ * Sets the AWS secret key for S3 authentication.
+ *
+ * Since: 2.0.15
+ **/
+void
+fwupd_remote_set_aws_secret_key(FwupdRemote *self, const gchar *secret_key)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->aws_secret_key, secret_key) == 0)
+		return;
+
+	g_free(priv->aws_secret_key);
+	priv->aws_secret_key = g_strdup(secret_key);
+}
+
+/**
+ * fwupd_remote_set_aws_region:
+ * @self: a #FwupdRemote
+ * @region: (nullable): an optional AWS region
+ *
+ * Sets the AWS region for S3 authentication.
+ *
+ * Since: 2.0.15
+ **/
+void
+fwupd_remote_set_aws_region(FwupdRemote *self, const gchar *region)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	/* not changed */
+	if (g_strcmp0(priv->aws_region, region) == 0)
+		return;
+
+	g_free(priv->aws_region);
+	priv->aws_region = g_strdup(region);
+}
+
+/**
  * fwupd_remote_set_kind:
  * @self: a #FwupdRemote
  * @kind: a #FwupdRemoteKind, e.g. #FWUPD_REMOTE_KIND_LOCAL
@@ -581,12 +744,13 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		}
 	}
 
-	/* set the escaped username and password */
-	if (priv->username != NULL) {
+	/* for AWS do not add basic auth credentials to the URL as S3 uses signature-based
+	 * authentication in headers */
+	if (priv->aws_access_key == NULL && priv->username != NULL) {
 		g_autofree gchar *user_escaped = g_uri_escape_string(priv->username, NULL, FALSE);
 		(void)curl_url_set(uri, CURLUPART_USER, user_escaped, 0);
 	}
-	if (priv->password != NULL) {
+	if (priv->aws_access_key == NULL && priv->password != NULL) {
 		g_autofree gchar *pass_escaped = g_uri_escape_string(priv->password, NULL, FALSE);
 		(void)curl_url_set(uri, CURLUPART_PASSWORD, pass_escaped, 0);
 	}
@@ -1151,6 +1315,60 @@ fwupd_remote_get_password(FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_aws_access_key:
+ * @self: a #FwupdRemote
+ *
+ * Gets the AWS access key configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 2.0.15
+ **/
+const gchar *
+fwupd_remote_get_aws_access_key(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->aws_access_key;
+}
+
+/**
+ * fwupd_remote_get_aws_secret_key:
+ * @self: a #FwupdRemote
+ *
+ * Gets the AWS secret key configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 2.0.15
+ **/
+const gchar *
+fwupd_remote_get_aws_secret_key(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->aws_secret_key;
+}
+
+/**
+ * fwupd_remote_get_aws_region:
+ * @self: a #FwupdRemote
+ *
+ * Gets the AWS region configured for the remote.
+ *
+ * Returns: a string, or %NULL for unset
+ *
+ * Since: 2.0.15
+ **/
+const gchar *
+fwupd_remote_get_aws_region(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), NULL);
+	return priv->aws_region;
+}
+
+/**
  * fwupd_remote_get_title:
  * @self: a #FwupdRemote
  *
@@ -1598,6 +1816,12 @@ fwupd_remote_from_variant_iter(FwupdCodec *codec, GVariantIter *iter)
 			fwupd_remote_set_username(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Password") == 0) {
 			fwupd_remote_set_password(self, g_variant_get_string(value, NULL));
+		} else if (g_strcmp0(key, "AwsAccessKey") == 0) {
+			fwupd_remote_set_aws_access_key(self, g_variant_get_string(value, NULL));
+		} else if (g_strcmp0(key, "AwsSecretKey") == 0) {
+			fwupd_remote_set_aws_secret_key(self, g_variant_get_string(value, NULL));
+		} else if (g_strcmp0(key, "AwsRegion") == 0) {
+			fwupd_remote_set_aws_region(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Title") == 0) {
 			fwupd_remote_set_title(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "PrivacyUri") == 0) {
@@ -1662,6 +1886,24 @@ fwupd_remote_add_variant(FwupdCodec *codec, GVariantBuilder *builder, FwupdCodec
 				      "{sv}",
 				      "Password",
 				      g_variant_new_string(priv->password));
+	}
+	if (priv->aws_access_key != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      "AwsAccessKey",
+				      g_variant_new_string(priv->aws_access_key));
+	}
+	if (priv->aws_secret_key != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      "AwsSecretKey",
+				      g_variant_new_string(priv->aws_secret_key));
+	}
+	if (priv->aws_region != NULL) {
+		g_variant_builder_add(builder,
+				      "{sv}",
+				      "AwsRegion",
+				      g_variant_new_string(priv->aws_region));
 	}
 	if (priv->title != NULL) {
 		g_variant_builder_add(builder, "{sv}", "Title", g_variant_new_string(priv->title));
@@ -1959,6 +2201,9 @@ fwupd_remote_finalize(GObject *obj)
 	g_free(priv->report_uri);
 	g_free(priv->username);
 	g_free(priv->password);
+	g_free(priv->aws_access_key);
+	g_free(priv->aws_secret_key);
+	g_free(priv->aws_region);
 	g_free(priv->title);
 	g_free(priv->privacy_uri);
 	g_free(priv->agreement);

@@ -1027,3 +1027,15 @@ LIBFWUPD_2.0.11 {
     fwupd_strerror;
   local: *;
 } LIBFWUPD_2.0.10;
+
+LIBFWUPD_2.0.15 {
+  global:
+    fwupd_remote_build_s3_auth_header;
+    fwupd_remote_get_aws_access_key;
+    fwupd_remote_get_aws_region;
+    fwupd_remote_get_aws_secret_key;
+    fwupd_remote_set_aws_access_key;
+    fwupd_remote_set_aws_region;
+    fwupd_remote_set_aws_secret_key;
+  local: *;
+} LIBFWUPD_2.0.11;

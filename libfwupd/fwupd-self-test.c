@@ -396,9 +396,11 @@ fwupd_remote_func(void)
 	g_autofree gchar *uri1 = NULL;
 	g_autofree gchar *uri2 = NULL;
 	g_autofree gchar *uri3 = NULL;
+	g_autofree gchar *auth_header = NULL;
 	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
 	g_autoptr(GError) error = NULL;
 
+	/* Test basic URI building */
 	uri1 = fwupd_remote_build_firmware_uri(remote,
 					       "https://example.org/downloads/foo.cab",
 					       &error);
@@ -418,6 +420,83 @@ fwupd_remote_func(void)
 					       &error);
 	g_assert_no_error(error);
 	g_assert_cmpstr(uri3, ==, "https://admin@example.org/mirror/foo.cab/auth");
+
+	/* AWS access key setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_access_key(remote), ==, NULL);
+	fwupd_remote_set_aws_access_key(remote, "test-access-key");
+	g_assert_cmpstr(fwupd_remote_get_aws_access_key(remote), ==, "test-access-key");
+
+	/* AWS secret key setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_secret_key(remote), ==, NULL);
+	fwupd_remote_set_aws_secret_key(remote, "test-secret-key");
+	g_assert_cmpstr(fwupd_remote_get_aws_secret_key(remote), ==, "test-secret-key");
+
+	/* AWS region setter/getter */
+	g_assert_cmpstr(fwupd_remote_get_aws_region(remote), ==, NULL);
+	fwupd_remote_set_aws_region(remote, "us-east-1");
+	g_assert_cmpstr(fwupd_remote_get_aws_region(remote), ==, "us-east-1");
+
+	/* S3 authentication header generation with basic parameters */
+	auth_header = fwupd_remote_build_s3_auth_header(
+	    remote,
+	    "https://test-bucket.s3.us-east-1.amazonaws.com/firmware.cab",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header);
+	g_assert_true(g_str_has_prefix(auth_header, "AWS4-HMAC-SHA256"));
+}
+
+static void
+fwupd_remote_s3_func(void)
+{
+	g_autofree gchar *auth_header1 = NULL;
+	g_autofree gchar *auth_header2 = NULL;
+	g_autofree gchar *auth_header3 = NULL;
+	g_autofree gchar *auth_header4 = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+
+	/* set up S3 authentication */
+	fwupd_remote_set_aws_access_key(remote, "AKIAIOSFODNN7EXAMPLE");
+	fwupd_remote_set_aws_secret_key(remote, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY");
+	fwupd_remote_set_aws_region(remote, "us-west-2");
+
+	/* S3 auth header for different HTTP methods */
+	auth_header1 = fwupd_remote_build_s3_auth_header(
+	    remote,
+	    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware/device.cab",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header1);
+	g_assert_true(g_str_has_prefix(auth_header1, "AWS4-HMAC-SHA256"));
+	g_assert_true(g_strstr_len(auth_header1, -1, "Credential=AKIAIOSFODNN7EXAMPLE") != NULL);
+	g_assert_true(g_strstr_len(auth_header1, -1, "SignedHeaders=host;x-amz-date") != NULL);
+
+	auth_header2 = fwupd_remote_build_s3_auth_header(
+	    remote,
+	    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware/device.cab",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header2);
+	g_assert_true(g_str_has_prefix(auth_header2, "AWS4-HMAC-SHA256"));
+
+	/* different S3 URL formats */
+	auth_header3 = fwupd_remote_build_s3_auth_header(
+	    remote,
+	    "https://s3.us-west-2.amazonaws.com/examplebucket/firmware/device.cab",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(auth_header3);
+	g_assert_true(g_str_has_prefix(auth_header3, "AWS4-HMAC-SHA256"));
+
+	/* missing credentials */
+	fwupd_remote_set_aws_access_key(remote, NULL);
+	auth_header4 = fwupd_remote_build_s3_auth_header(
+	    remote,
+	    "https://examplebucket.s3.us-west-2.amazonaws.com/firmware.cab",
+	    &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_null(auth_header4);
 }
 
 static void
@@ -1479,6 +1558,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/report", fwupd_report_func);
 	g_test_add_func("/fwupd/plugin", fwupd_plugin_func);
 	g_test_add_func("/fwupd/remote", fwupd_remote_func);
+	g_test_add_func("/fwupd/remote{s3}", fwupd_remote_s3_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
 	g_test_add_func("/fwupd/device{filter}", fwupd_device_filter_func);

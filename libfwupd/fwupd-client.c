@@ -4548,12 +4548,14 @@ fwupd_client_refresh_remote_async(FwupdClient *self,
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
-	fwupd_client_download_bytes_async(self,
-					  uri,
-					  download_flags & ~FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P,
-					  cancellable,
-					  fwupd_client_refresh_remote_signature_cb,
-					  g_steal_pointer(&task));
+	fwupd_client_download_bytes_with_remote_async(self,
+						      uri,
+						      remote,
+						      download_flags &
+							  ~FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_P2P,
+						      cancellable,
+						      fwupd_client_refresh_remote_signature_cb,
+						      g_steal_pointer(&task));
 }
 
 /**
@@ -5875,6 +5877,73 @@ fwupd_client_download_bytes_finish(FwupdClient *self, GAsyncResult *res, GError 
 	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+/**
+ * fwupd_client_download_bytes_with_remote_async:
+ * @self: a #FwupdClient
+ * @url: (not nullable): the remote URL
+ * @remote: (nullable): a #FwupdRemote for authentication context
+ * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: (scope async) (closure callback_data): the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Downloads data from a remote server with authentication context.
+ * This function supports S3 authentication when a remote with S3 credentials is provided.
+ *
+ * Since: 2.0.15
+ **/
+void
+fwupd_client_download_bytes_with_remote_async(FwupdClient *self,
+					      const gchar *url,
+					      FwupdRemote *remote,
+					      FwupdClientDownloadFlags flags,
+					      GCancellable *cancellable,
+					      GAsyncReadyCallback callback,
+					      gpointer callback_data)
+{
+	g_autoptr(GTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdCurlHelper) helper = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(url != NULL);
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+
+	/* ensure networking set up */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	helper = fwupd_client_curl_new(self, &error);
+	if (helper == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* add S3 authentication headers if needed */
+	if (remote != NULL && fwupd_remote_get_aws_access_key(remote) != NULL) {
+		g_autofree gchar *auth_header = NULL;
+		g_autofree gchar *header_string = NULL;
+
+		auth_header = fwupd_remote_build_s3_auth_header(remote, url, &error);
+		if (auth_header == NULL) {
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
+		header_string = g_strdup_printf("Authorization: %s", auth_header);
+		helper->headers = curl_slist_append(helper->headers, header_string);
+		(void)curl_easy_setopt(helper->curl, CURLOPT_HTTPHEADER, helper->headers);
+	}
+
+	/* set up URLs */
+	helper->urls = g_ptr_array_new_with_free_func(g_free);
+	g_ptr_array_add(helper->urls, g_strdup(url));
+
+	g_task_set_task_data(task,
+			     g_steal_pointer(&helper),
+			     (GDestroyNotify)fwupd_client_curl_helper_free);
+
+	/* download data */
+	g_task_run_in_thread(task, fwupd_client_download_bytes_thread_cb);
 }
 
 static void
