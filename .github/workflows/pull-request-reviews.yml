@@ -3,11 +3,10 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: read # to fetch code (actions/checkout)
-
 jobs:
   pre-commit:
+    permissions:
+      contents: read
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
