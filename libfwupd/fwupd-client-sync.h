@@ -36,6 +36,11 @@ fwupd_client_get_releases(FwupdClient *self,
 			  GCancellable *cancellable,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 GPtrArray *
+fwupd_client_search(FwupdClient *self,
+		    const gchar *token,
+		    GCancellable *cancellable,
+		    GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+GPtrArray *
 fwupd_client_get_downgrades(FwupdClient *self,
 			    const gchar *device_id,
 			    GCancellable *cancellable,

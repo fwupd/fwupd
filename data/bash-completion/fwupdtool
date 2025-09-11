@@ -50,6 +50,7 @@ _fwupdtool_cmd_list=(
 	'modify-remote'
 	'monitor'
 	'reinstall'
+	'search'
 	'security'
 	'security-fix'
 	'security-undo'

@@ -40,6 +40,7 @@ _fwupdmgr_cmd_list=(
 	'report-devices'
 	'report-history'
 	'report-export'
+	'search'
 	'security'
 	'security-fix'
 	'security-undo'
