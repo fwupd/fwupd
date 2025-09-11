@@ -54,6 +54,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         report-export 'Export firmware history for manual upload' \
         report-history 'Share firmware history with the developers' \
         reset-config 'Resets a daemon configuration section' \
+        search 'Finds firmware releases from the metadata' \
         security 'Gets the host security attributes' \
         security-fix 'Fix a specific host security attribute' \
         security-undo 'Undo the host security attribute fix' \

@@ -113,6 +113,7 @@ struct _FuEngine {
 	XbQuery *query_container_checksum1; /* container checksum -> release */
 	XbQuery *query_container_checksum2; /* artifact checksum -> release */
 	XbQuery *query_tag_by_guid_version;
+	GPtrArray *search_queries; /* (element-type XbQuery) */
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
@@ -3759,6 +3760,71 @@ fu_engine_get_item_by_id_fallback_history(FuEngine *self, const gchar *id, GErro
 }
 
 static gboolean
+fu_engine_search_query_append(FuEngine *self, const gchar *xpath, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbQuery) query = NULL;
+
+	/* prepare tag query with bound GUID parameter */
+	query = xb_query_new_full(self->silo, xpath, XB_QUERY_FLAG_OPTIMIZE, &error_local);
+	if (query == NULL) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_debug("ignoring prepared query %s: %s", xpath, error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	g_ptr_array_add(self->search_queries, g_steal_pointer(&query));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_search_query_create(FuEngine *self, GError **error)
+{
+	/* invalidate everything */
+	g_ptr_array_set_size(self->search_queries, 0);
+
+	/* we get one for free, add build the others */
+	g_ptr_array_add(self->search_queries, g_object_ref(self->query_component_by_guid));
+	if (!fu_engine_search_query_append(self, "components/component/id[text()=?]/..", error))
+		return FALSE;
+	if (!fu_engine_search_query_append(self, "components/component/name[text()~=?]/..", error))
+		return FALSE;
+	if (!fu_engine_search_query_append(self,
+					   "components/component/developer_name[text()~=?]/..",
+					   error))
+		return FALSE;
+	if (!fu_engine_search_query_append(self,
+					   "components/component/releases/release/artifacts/"
+					   "artifact/filename[text()=?]/../../../../..",
+					   error))
+		return FALSE;
+	if (!fu_engine_search_query_append(self,
+					   "components/component/releases/release/artifacts/"
+					   "artifact/checksum[text()=?]/../../../../..",
+					   error))
+		return FALSE;
+	if (!fu_engine_search_query_append(
+		self,
+		"components/component/releases/release/issues/issue[text()=?]/../../../..",
+		error))
+		return FALSE;
+	if (!fu_engine_search_query_append(
+		self,
+		"components/component/custom/value[@key='LVFS::UpdateProtocol'][text()=?]/../..",
+		error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_create_silo_index(FuEngine *self, GError **error)
 {
 	g_autoptr(GPtrArray) components = NULL;
@@ -3846,6 +3912,10 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 			      &error_tag_by_guid_version);
 	if (self->query_tag_by_guid_version == NULL)
 		g_debug("ignoring prepared query: %s", error_tag_by_guid_version->message);
+
+	/* build all the search queries */
+	if (!fu_engine_search_query_create(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -5495,6 +5565,62 @@ fu_engine_get_releases_for_device(FuEngine *self,
 				    "No releases found");
 		return NULL;
 	}
+	return g_steal_pointer(&releases);
+}
+
+/**
+ * fu_engine_search:
+ * @self: a #FuEngine
+ * @token: a search term
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets all the releases that match a specific token.
+ *
+ * Returns: (transfer container) (element-type FwupdResult): results
+ **/
+GPtrArray *
+fu_engine_search(FuEngine *self, const gchar *token, GError **error)
+{
+	g_autoptr(GPtrArray) releases =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	g_return_val_if_fail(token != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* bind search token and then query */
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, token, NULL);
+	for (guint i = 0; i < self->search_queries->len; i++) {
+		XbQuery *query_tmp = g_ptr_array_index(self->search_queries, i);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) components = NULL;
+
+		components =
+		    xb_silo_query_with_context(self->silo, query_tmp, &context, &error_local);
+		if (components == NULL) {
+			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+				continue;
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			fwupd_error_convert(error);
+			return NULL;
+		}
+		for (guint j = 0; j < components->len; j++) {
+			g_autoptr(FuRelease) rel = fu_release_new();
+			XbNode *component = g_ptr_array_index(components, j);
+			if (!fu_release_load(rel,
+					     NULL,
+					     component,
+					     NULL,
+					     FWUPD_INSTALL_FLAG_FORCE,
+					     error))
+				return NULL;
+			g_ptr_array_add(releases, g_steal_pointer(&rel));
+		}
+	}
+
+	/* success */
 	return g_steal_pointer(&releases);
 }
 
@@ -9092,6 +9218,7 @@ fu_engine_init(FuEngine *self)
 	self->plugin_filter = g_ptr_array_new_with_free_func(g_free);
 	self->host_security_attrs = fu_security_attrs_new();
 	self->local_monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->search_queries = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	self->acquiesce_loop = g_main_loop_new(NULL, FALSE);
 	self->device_changed_allowlist =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -9149,6 +9276,7 @@ fu_engine_finalize(GObject *obj)
 	g_object_unref(self->jcat_context);
 	g_ptr_array_unref(self->plugin_filter);
 	g_ptr_array_unref(self->local_monitors);
+	g_ptr_array_unref(self->search_queries);
 	g_hash_table_unref(self->device_changed_allowlist);
 	g_object_unref(self->plugin_list);
 

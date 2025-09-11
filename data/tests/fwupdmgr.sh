@@ -209,6 +209,14 @@ if [ -n "$CI_NETWORK" ]; then
     echo "Refreshing from the LVFS (requires network access)..."
     fwupdmgr --download-retries=5 refresh
     rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # check we can search for known tokens
+    fwupdmgr search CVE-2022-21894
+    rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+    # check we do not find a random search result
+    fwupdmgr search DOESNOTEXIST
+    rc=$?; if [ $rc != 3 ]; then error $rc; fi
 else
         echo "Skipping network tests due to CI_NETWORK not being set"
 fi

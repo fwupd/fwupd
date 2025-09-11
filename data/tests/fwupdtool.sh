@@ -280,3 +280,17 @@ fi
 echo "Refresh remotes"
 run refresh --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# check we can search for known tokens
+run search --json CVE-2022-21894
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+run search --json KEK
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+run search --json org.uefi.dbx
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+run search --json linux
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# check we do not find a random search result
+run search --json DOESNOTEXIST
+rc=$?; if [ $rc != 3 ]; then error $rc; fi

@@ -2475,6 +2475,61 @@ fu_util_get_releases(FuUtil *self, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_search(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* sanity check */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected WORD");
+		return FALSE;
+	}
+
+	/* get the releases for this device */
+	rels = fwupd_client_search(self->client, values[0], self->cancellable, error);
+	if (rels == NULL)
+		return FALSE;
+
+	/* not for human consumption */
+	if (self->as_json)
+		return fu_util_get_releases_as_json(self, rels, error);
+
+	if (rels->len == 0) {
+		/* TRANSLATORS: no repositories to download from */
+		fu_console_print_literal(self->console, _("No matching releases for search token"));
+		return TRUE;
+	}
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, i);
+			g_autofree gchar *tmp = NULL;
+			if (!fwupd_release_match_flags(rel,
+						       self->filter_release_include,
+						       self->filter_release_exclude))
+				continue;
+			tmp = fwupd_codec_to_string(FWUPD_CODEC(rel));
+			fu_console_print_literal(self->console, tmp);
+		}
+	} else {
+		g_autoptr(FuUtilNode) root = g_node_new(NULL);
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index(rels, i);
+			if (!fwupd_release_match_flags(rel,
+						       self->filter_release_include,
+						       self->filter_release_exclude))
+				continue;
+			g_node_append_data(root, g_object_ref(rel));
+		}
+		fu_util_print_node(self->console, self->client, root);
+	}
+
+	return TRUE;
+}
+
 static FwupdRelease *
 fu_util_prompt_for_release(FuUtil *self, GPtrArray *rels_unfiltered, GError **error)
 {
@@ -5460,6 +5515,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Gets the releases for a device"),
 			      fu_util_get_releases);
+	fu_util_cmd_array_add(cmd_array,
+			      "search",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("WORD"),
+			      /* TRANSLATORS: command description */
+			      _("Finds firmware releases from the metadata"),
+			      fu_util_search);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-remotes",
 			      NULL,

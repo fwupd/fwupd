@@ -857,7 +857,7 @@ fu_release_get_priority(FuRelease *self)
 /**
  * fu_release_load:
  * @self: a #FuRelease
- * @cabinet: a #FuCabinet
+ * @cabinet: (nullable): a #FuCabinet
  * @component: (not nullable): a #XbNode
  * @rel_optional: (nullable): a #XbNode
  * @install_flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE

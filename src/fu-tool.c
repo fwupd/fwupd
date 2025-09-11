@@ -2326,6 +2326,53 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_search(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(FuUtilNode) root = g_node_new(NULL);
+
+	/* sanity check */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected WORD");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
+		return FALSE;
+
+	/* get search results */
+	rels = fu_engine_search(self->engine, values[0], error);
+	if (rels == NULL)
+		return FALSE;
+	if (rels->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "No matching releases for search token");
+		return FALSE;
+	}
+	if (self->as_json) {
+		g_autoptr(JsonBuilder) builder = json_builder_new();
+		json_builder_begin_object(builder);
+		fwupd_codec_array_to_json(rels, "Releases", builder, FWUPD_CODEC_FLAG_TRUSTED);
+		json_builder_end_object(builder);
+		return fu_util_print_builder(self->console, builder, error);
+	}
+	for (guint i = 0; i < rels->len; i++) {
+		FuRelease *rel = g_ptr_array_index(rels, i);
+		g_node_append_data(root, g_object_ref(rel));
+	}
+	fu_util_print_node(self->console, self->client, root);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_vercmp(FuUtil *self, gchar **values, GError **error)
 {
 	FwupdVersionFormat verfmt = FWUPD_VERSION_FORMAT_UNKNOWN;
@@ -5712,6 +5759,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Compares two versions for equality"),
 			      fu_util_vercmp);
+	fu_util_cmd_array_add(cmd_array,
+			      "search",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("WORD"),
+			      /* TRANSLATORS: command description */
+			      _("Finds firmware releases from the metadata"),
+			      fu_util_search);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
