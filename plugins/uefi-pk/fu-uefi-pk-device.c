@@ -78,6 +78,12 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 			return FALSE;
 	}
 
+
+	if (self->has_pk_test_key) {
+		fu_context_add_flag(fu_device_get_context(FU_DEVICE(self)), FU_CONTEXT_FLAG_INSECURE_UEFI);
+		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
+	}
+
 	/* the O= key may not exist */
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "VENDOR", subject_vendor);
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", subject_name);
