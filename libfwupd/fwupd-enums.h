@@ -720,6 +720,15 @@ typedef enum {
 	 */
 	FWUPD_DEVICE_PROBLEM_LOWER_PRIORITY = 1ull << 12,
 	/**
+	 * FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM:
+	 *
+	 * The device is signed with an insecure key
+	 *
+	 * Since: 2.0.17
+	 */
+	FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM = 1ull << 13,
+
+	/**
 	 * FWUPD_DEVICE_PROBLEM_UNKNOWN:
 	 *
 	 * This problem is not defined, this typically will happen from mismatched
