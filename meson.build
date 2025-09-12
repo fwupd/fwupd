@@ -413,7 +413,7 @@ libm = cc.find_library(
 zlib = dependency('zlib')
 libmnl = dependency(
   'libmnl',
-  required: false,
+  required: get_option('libmnl'),
 )
 
 fs = import('fs')

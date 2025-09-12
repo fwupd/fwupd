@@ -78,6 +78,10 @@ option('libdrm',
   type: 'feature',
   description: 'libdrm support',
 )
+option('libmnl',
+  type: 'feature',
+  description: 'libmnl support'
+)
 option('valgrind',
   type: 'feature',
   description: 'valgrind support',
