@@ -1,198 +1,226 @@
-option('bash_completion',
+option(
+  'bash_completion',
   type: 'boolean',
   value: true,
   description: 'enable bash completion',
 )
-option('blkid',
+option(
+  'blkid',
   type: 'feature',
   description: 'libblkid support',
 )
-option('bluez',
+option(
+  'bluez',
   type: 'feature',
   description: 'BlueZ support',
 )
-option('build',
+option(
+  'build',
   type: 'combo',
-  choices: [
-    'all',
-    'standalone',
-    'library',
-  ],
+  choices: ['all', 'standalone', 'library'],
   value: 'all',
   description: 'build type',
 )
-option('cbor',
+option(
+  'cbor',
   type: 'feature',
   description: 'CBOR support for coSWID and uSWID',
 )
-option('dbus_socket_address',
+option(
+  'dbus_socket_address',
   type: 'string',
   value: '',
   description: 'D-Bus socket address to use for p2p mode',
 )
-option('docs',
+option(
+  'docs',
   type: 'feature',
   description: 'Build developer documentation',
 )
-option('efi_binary',
+option(
+  'efi_binary',
   type: 'boolean',
   value: false,
   description: 'generate uefi binary if missing',
 )
-option('efi_os_dir',
+option(
+  'efi_os_dir',
   type: 'string',
   description: 'the hardcoded name of OS directory in ESP, e.g. fedora',
 )
-option('firmware-packager',
+option(
+  'firmware-packager',
   type: 'boolean',
   value: true,
   description: 'enable firmware-packager installation',
 )
-option('fish_completion',
+option(
+  'fish_completion',
   type: 'boolean',
   value: true,
   description: 'enable fish completion',
 )
-option('gnutls',
+option(
+  'gnutls',
   type: 'feature',
   description: 'GnuTLS support',
 )
-option('hsi',
+option(
+  'hsi',
   type: 'feature',
   description: 'Host Security Information',
 )
-option('introspection',
+option(
+  'introspection',
   type: 'feature',
   description: 'generate GObject Introspection data',
 )
-option('launchd_agent_dir',
+option(
+  'launchd_agent_dir',
   type: 'string',
   value: '/Library/LaunchAgents',
   description: 'Directory to put the launchd agent',
 )
-option('libarchive',
+option(
+  'libarchive',
   type: 'feature',
   description: 'libarchive support',
 )
-option('libdrm',
+option(
+  'libdrm',
   type: 'feature',
   description: 'libdrm support',
 )
-option('libmnl',
+option(
+  'libmnl',
   type: 'feature',
-  description: 'libmnl support'
+  description: 'libmnl support',
 )
-option('lvfs',
+option(
+  'lvfs',
   type: 'combo',
-  choices: [
-    'true',
-    'false',
-    'disabled',
-  ],
+  choices: ['true', 'false', 'disabled'],
   value: 'true',
   description: 'install LVFS remotes',
 )
-option('man',
+option(
+  'man',
   type: 'boolean',
   value: true,
   description: 'enable man pages',
 )
-option('metainfo',
+option(
+  'metainfo',
   type: 'boolean',
   value: true,
   description: 'install the project metainfo.xml information',
 )
-option('p2p_policy',
+option(
+  'p2p_policy',
   type: 'combo',
-  choices: [
-    'none',
-    'metadata',
-    'firmware',
-    'metadata,firmware',
-  ],
+  choices: ['none', 'metadata', 'firmware', 'metadata,firmware'],
   value: 'metadata',
   description: 'Default P2P sharing policy',
 )
-option('passim',
+option(
+  'passim',
   type: 'feature',
   description: 'Passim support',
 )
-option('plugin_flashrom',
+option(
+  'plugin_flashrom',
   type: 'feature',
   description: 'flashrom support',
 )
-option('plugin_modem_manager',
+option(
+  'plugin_modem_manager',
   type: 'feature',
   description: 'ModemManager support',
 )
-option('plugin_uefi_capsule_splash',
+option(
+  'plugin_uefi_capsule_splash',
   type: 'boolean',
   value: true,
   description: 'enable UEFI capsule splash support',
 )
-option('polkit',
+option(
+  'polkit',
   type: 'feature',
   description: 'PolKit support in daemon',
 )
-option('protobuf',
+option(
+  'protobuf',
   type: 'feature',
   description: 'protobuf support',
 )
-option('python',
+option(
+  'python',
   type: 'string',
   description: 'the absolute path of the python3 binary',
 )
-option('qubes',
+option(
+  'qubes',
   type: 'boolean',
   value: false,
   description: 'build packages for Qubes OS',
 )
-option('readline',
+option(
+  'readline',
   type: 'feature',
   description: 'readline support',
 )
-option('static_analysis',
+option(
+  'static_analysis',
   type: 'boolean',
   value: false,
   description: 'enable GCC static analysis support',
 )
-option('supported_build',
+option(
+  'supported_build',
   type: 'feature',
   description: 'distribution package with upstream support',
 )
-option('systemd',
+option(
+  'systemd',
   type: 'feature',
   description: 'systemd support',
 )
-option('systemd_root_prefix',
+option(
+  'systemd_root_prefix',
   type: 'string',
   value: '',
   description: 'Directory to base systemd’s installation directories on',
 )
-option('systemd_unit_user',
+option(
+  'systemd_unit_user',
   type: 'string',
   value: 'fwupd-refresh',
   description: 'User account to use for fwupd-refresh.service (empty for DynamicUser)',
 )
-option('tests',
+option(
+  'tests',
   type: 'boolean',
   value: true,
   description: 'enable tests',
 )
-option('umockdev_tests',
+option(
+  'umockdev_tests',
   type: 'feature',
   description: 'umockdev tests',
 )
-option('valgrind',
+option(
+  'valgrind',
   type: 'feature',
   description: 'valgrind support',
 )
-option('vendor_ids_dir',
+option(
+  'vendor_ids_dir',
   type: 'string',
   value: '',
   description: 'Directory for usb.ids, pci.ids etc.',
 )
-option('vendor_metadata',
+option(
+  'vendor_metadata',
   type: 'boolean',
   value: false,
   description: 'install OS vendor provided metadata',
