@@ -59,7 +59,7 @@ option('gnutls',
 )
 option('hsi',
   type: 'feature',
-  description: ' Host Security Information',
+  description: 'Host Security Information',
 )
 option('introspection',
   type: 'feature',
