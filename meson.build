@@ -1,7 +1,7 @@
 project(
   'fwupd',
   'c',
-  version: '2.0.16',
+  version: '2.0.17',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
