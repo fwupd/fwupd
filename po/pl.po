@@ -310,6 +310,26 @@ msgstr[1] "%u urządzenia nie mają najlepszej znanej konfiguracji."
 msgstr[2] "%u urządzeń nie ma najlepszej znanej konfiguracji."
 msgstr[3] "%u urządzeń nie ma najlepszej znanej konfiguracji."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u urządzenie jest obsługiwane we włączonych repozytoriach (aktualizacja została opublikowana)"
+msgstr[1] "%u urządzenia są obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
+msgstr[2] "%u urządzeń jest obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
+msgstr[3] "%u urządzeń jest obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u urządzenie można aktualizować"
+msgstr[1] "%u urządzenia można aktualizować"
+msgstr[2] "%u urządzeń można aktualizować"
+msgstr[3] "%u urządzeń można aktualizować"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -2041,6 +2061,10 @@ msgstr "Nowa wersja"
 msgid "No action specified!"
 msgstr "Nie podano działania."
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Nie ma urządzeń, które można aktualizować"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2693,6 +2717,11 @@ msgstr "Pomyślnie wyłączono repozytorium"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Pomyślnie wyłączono urządzenia testowe"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "Pomyślnie pobrano nowe metadane:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"

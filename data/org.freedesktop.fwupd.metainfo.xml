@@ -38,6 +38,21 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="2.0.16" date="2025-09-12">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a 'search' feature to fwupdtool and fwupdmgr</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix missing release locations when loading from artifact</li>
+          <li>Fix remaining issues to make updates on FreeBSD work</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.15" date="2025-09-10">
       <description>
         <p>
