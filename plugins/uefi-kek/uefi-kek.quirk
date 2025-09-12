@@ -1,2 +1,11 @@
 [UEFI\GUID_8be4df61-93ca-11d2-aa0d-00e098032b8c&NAME_KEK]
 Plugin = uefi_kek
+
+# MSI MS-7885 with AMI Test PK (PKFail vulnerability)
+# Manufacturer=MSI
+# ProductName=MS-7885
+# BiosVendor=American Megatrends Inc.
+# BiosVersion=1.D0
+# Uses Manufacturer&ProductName HWID to catch all BIOS versions
+[3cf9413d-067c-5a0d-bae5-421d6ce9c7ee]
+Flags = no-kek-updates
