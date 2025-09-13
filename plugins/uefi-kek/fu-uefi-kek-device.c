@@ -51,6 +51,12 @@ fu_uefi_kek_device_probe(FuDevice *device, GError **error)
 		fu_device_add_child(device, FU_DEVICE(x509_device));
 	}
 
+	if (fu_context_get_insecure_uefi(fu_device_get_context(device))) {
+		fu_device_inhibit(FU_DEVICE(device),
+				  "test-pk",
+				  "system has invalid test Platform Key");
+	}
+
 	/* success */
 	return TRUE;
 }
