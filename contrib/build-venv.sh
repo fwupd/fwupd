@@ -17,7 +17,7 @@ ninja -C ${BUILD} install
 # check whether we have an existing fwupd EFI binary in the host system to use
 EFI_PREFIX=$(pkg-config fwupd-efi --variable=prefix 2>/dev/null || echo "/usr")
 EFI_DIR=libexec/fwupd/efi
-BINARIES=$(find "${EFI_PREFIX}/${EFI_DIR}" -name "*.efi*" -type f -print)
+BINARIES=$(find "${EFI_PREFIX}/${EFI_DIR}" -name "*.efi*" -type f -print || true)
 if [ -n "${BINARIES}" ]; then
         mkdir -p ${DIST}/${EFI_DIR}
         for i in ${BINARIES}; do
