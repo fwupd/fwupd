@@ -1934,4 +1934,9 @@
       <package variant="mingw64">msitools</package>
     </distro>
   </dependency>
+  <dependency id="libinotify">
+    <distro id="freebsd">
+      <package variant="amd64" />
+    </distro>
+  </dependency>
 </dependencies>
