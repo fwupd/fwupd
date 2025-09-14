@@ -1089,6 +1089,27 @@
           <doc:summary>
             <doc:para>
               A search term.
+
+              Examples:
+
+              Search for the full GUID of a device, get all firmware for that single device.
+              Example: fwupdmgr search eb68dbae-3aef-5077-92ae-9016d1f0c856
+
+              Search for full the Appstream of a device, get all firmware for that single device.
+              Example: fwupdmgr search work.frame.Desktop.RyzenAIMax300.BIOS.firmware
+
+              Search for the name (full or subset) of a firmware update.
+              Example: fwupdmgr search 'Desktop Ryzen AI MAX 300'
+
+              Search for the name (full or subset) of a firmware update.
+              Example: fwupdmgr search 'Framework'
+
+              Search for the filename used by the update - TODO - this is the .cab file?
+              Search for the checksum of the file used by the update - TODO.
+              Search for the issue text of the release - TODO.
+
+              Search for the full protocol of a firmware update.
+              Example: fwupdmgr search org.uefi.capsule
             </doc:para>
           </doc:summary>
         </doc:doc>
