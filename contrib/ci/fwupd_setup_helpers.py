@@ -284,6 +284,8 @@ if __name__ == "__main__":
     elif command == "install-pip":
         if args.os == "darwin":
             install_packages(args.os, args.variant, args.yes, args.debug, ["python"])
+        elif args.os == "freebsd":
+            install_packages(args.os, args.variant, args.yes, args.debug, ["py311-pip"])
         else:
             install_packages(
                 args.os, args.variant, args.yes, args.debug, ["python3-pip"]
