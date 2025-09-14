@@ -125,8 +125,12 @@ setup_precommit()
 
 setup_prepush()
 {
-    echo ""
-    read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
+    if [ -z "$CI" ]; then
+        echo ""
+        read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
+    else
+        question=y
+    fi
     if [ "$question" = "y" ]; then
         pre-commit install -t pre-push
     else
