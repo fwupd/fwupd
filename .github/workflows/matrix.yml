@@ -161,13 +161,14 @@ jobs:
       uses: vmactions/freebsd-vm@v1
       env:
         CI: true
+        CC: gcc
       with:
         usesh: true
         mem: 8192
         sync: rsync
-        envs: 'CI'
+        envs: 'CI CC'
         prepare: |
-          pkg install -y bash python3 git cmake pkgconf efivar
+          pkg install -y bash python3 git cmake pkgconf efivar gcc
         run: |
           ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
           ./contrib/setup
