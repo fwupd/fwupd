@@ -181,11 +181,6 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 }
 
 static void
-fu_uefi_capsule_backend_freebsd_set_device_gtype(FuBackend *backend, GType device_gtype)
-{
-}
-
-static void
 fu_uefi_capsule_backend_freebsd_init(FuUefiCapsuleBackendFreebsd *self)
 {
 }
