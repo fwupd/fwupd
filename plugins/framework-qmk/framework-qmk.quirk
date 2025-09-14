@@ -22,3 +22,8 @@ CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
 [HIDRAW\VEN_32AC&DEV_0019]
 Plugin = framework_qmk
 CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
+
+# Laptop 16 Keyboard Module - ANSI Copilot
+[HIDRAW\VEN_32AC&DEV_0030]
+Plugin = framework_qmk
+CounterpartGuid = BLOCK\VEN_2E8A&DEV_0003
