@@ -1158,6 +1158,9 @@
     <distro id="fedora">
       <package variant="mingw64">mingw64-pkg-config</package>
     </distro>
+    <distro id="freebsd">
+      <package>pkgconf</package>
+    </distro>
   </dependency>
   <dependency id="polkitd">
     <distro id="arch">
