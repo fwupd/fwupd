@@ -71,8 +71,10 @@ setup_vscode()
 
 setup_git()
 {
-    echo "Configuring git environment"
-    git config include.path ../.gitconfig
+    if [ -z "$CI" ]; then
+        echo "Configuring git environment"
+        git config include.path ../.gitconfig
+    fi
 }
 
 install_pip()
