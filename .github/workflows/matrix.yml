@@ -149,6 +149,31 @@ jobs:
         path: |
           ${{ github.workspace }}/dist/setup/*.msi
 
+  build-freebsd:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.publish }}
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Build
+      id: test
+      uses: vmactions/freebsd-vm@v1
+      env:
+        CI: true
+      with:
+        release: "15.0"
+        usesh: true
+        mem: 8192
+        sync: rsync
+        envs: 'CI'
+        prepare: |
+          pkg install -y bash python3 git cmake pkgconf efivar
+        run: |
+          ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o freebsd --yes
+          ./contrib/setup
+          bash -c "source ./venv/bin/activate && build-fwupd"
+
   publish-docs:
     permissions:
       contents: read
