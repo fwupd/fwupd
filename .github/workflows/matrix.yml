@@ -162,7 +162,6 @@ jobs:
       env:
         CI: true
       with:
-        release: "15.0"
         usesh: true
         mem: 8192
         sync: rsync
