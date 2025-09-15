@@ -10,6 +10,8 @@
 #include "fu-uefi-capsule-device.h"
 #include "fu-uefi-common.h"
 
+static gboolean fu_uefi_get_os_paths(gchar **os_release_id_out, gchar **id_like_out);
+
 static const gchar *
 fu_uefi_bootmgr_get_suffix(GError **error)
 {
@@ -60,16 +62,109 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 	return NULL;
 }
 
+/**
+ * fu_uefi_get_os_paths:
+ * @os_release_id_out: (out) (optional): Output for the OS release ID
+ * @id_like_out: (out) (optional): Output for the ID_LIKE value
+ *
+ * Helper function to get OS identification information from /etc/os-release.
+ *
+ * Returns: %TRUE if at least one identifier was found, %FALSE otherwise
+ */
+static gboolean
+fu_uefi_get_os_paths(gchar **os_release_id_out, gchar **id_like_out)
+{
+	g_autofree gchar *os_release_id = NULL;
+	g_autofree gchar *id_like = NULL;
+
+	/* try to lookup /etc/os-release ID key */
+	os_release_id = g_get_os_info(G_OS_INFO_KEY_ID);
+
+	/* try ID_LIKE if available */
+	id_like = g_get_os_info("ID_LIKE");
+
+	if (os_release_id_out != NULL)
+		*os_release_id_out = g_steal_pointer(&os_release_id);
+	if (id_like_out != NULL)
+		*id_like_out = g_steal_pointer(&id_like);
+
+	return os_release_id != NULL || id_like != NULL;
+}
+
+/**
+ * fu_uefi_find_esp_path_for_shim:
+ * @esp_base: The base path of the EFI System Partition (ESP).
+ * @filename: The shim filename to search for (e.g., "shimx64.efi").
+ *
+ * Searches for a shim file across multiple possible ESP directories.
+ * This is needed because when systemd-boot is in use, the shim may be
+ * in a distro-specific directory rather than the systemd directory.
+ *
+ * Returns: (transfer full): A newly allocated string containing the directory
+ * structure within the ESP where the shim was found, or %NULL if not found.
+ */
+static gchar *
+fu_uefi_find_esp_path_for_shim(const gchar *esp_base, const gchar *filename)
+{
+	g_autofree gchar *os_release_id = NULL;
+	g_autofree gchar *id_like = NULL;
+	const gchar *search_paths[] = {NULL,
+				       NULL,
+				       NULL,
+				       NULL}; /* systemd, os_id, id_like paths, NULL terminator */
+	guint search_idx = 0;
+
+	/* first try systemd directory */
+	search_paths[search_idx++] = "systemd";
+
+	/* get OS identification info */
+	fu_uefi_get_os_paths(&os_release_id, &id_like);
+	if (os_release_id != NULL)
+		search_paths[search_idx++] = os_release_id;
+
+	if (id_like != NULL) {
+		/* only check the first ID_LIKE entry for simplicity */
+		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
+		if (split[0] != NULL)
+			search_paths[search_idx++] = split[0];
+	}
+
+	/* search in each directory for the shim file */
+	for (guint i = 0; search_paths[i] != NULL; i++) {
+		g_autofree gchar *esp_path = g_build_filename("EFI", search_paths[i], NULL);
+		g_autofree gchar *full_dir_path = g_build_filename(esp_base, esp_path, NULL);
+		g_autofree gchar *full_file_path = g_build_filename(full_dir_path, filename, NULL);
+
+		if (g_file_test(full_file_path, G_FILE_TEST_IS_REGULAR)) {
+			g_debug("found shim at %s", full_file_path);
+			return g_steal_pointer(&esp_path);
+		}
+	}
+
+	return NULL;
+}
+
 /* return without the ESP dir prepended */
 gchar *
 fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
 	g_autofree gchar *base = NULL;
+	g_autofree gchar *filename = NULL;
 	if (suffix == NULL)
 		return NULL;
+
+	filename = g_strdup_printf("%s%s.efi", cmd, suffix);
+
+	/* special case for shim: search across multiple directories when systemd-boot is present */
+	if (g_strcmp0(cmd, "shim") == 0) {
+		base = fu_uefi_find_esp_path_for_shim(esp_path, filename);
+		if (base != NULL)
+			return g_strdup_printf("%s/%s", base, filename);
+	}
+
 	base = fu_uefi_get_esp_path_for_os(esp_path);
-	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
+	return g_strdup_printf("%s/%s", base, filename);
 }
 
 /**
@@ -202,8 +297,8 @@ fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 	if (g_file_test(full_systemd_path, G_FILE_TEST_IS_DIR))
 		return g_steal_pointer(&systemd_path);
 
-	/* try to lookup /etc/os-release ID key */
-	os_release_id = g_get_os_info(G_OS_INFO_KEY_ID);
+	/* get OS identification info */
+	fu_uefi_get_os_paths(&os_release_id, &id_like);
 	if (os_release_id == NULL)
 		os_release_id = g_strdup("unknown");
 
@@ -214,7 +309,6 @@ fu_uefi_get_esp_path_for_os(const gchar *esp_base)
 		return g_steal_pointer(&esp_path);
 
 	/* if ID key doesn't exist, try ID_LIKE */
-	id_like = g_get_os_info("ID_LIKE");
 	if (id_like != NULL) {
 		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
