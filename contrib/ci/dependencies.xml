@@ -1468,16 +1468,7 @@
     </distro>
   </dependency>
   <dependency id="python3-toml">
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
     <distro id="fedora">
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-    <distro id="ubuntu">
       <package variant="x86_64" />
       <package variant="aarch64" />
     </distro>
