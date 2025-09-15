@@ -120,9 +120,11 @@ EOF
 
 setup_precommit()
 {
-    echo "Configuring pre-commit hooks"
-    install_pip pre-commit
-    pre-commit install
+    if [ -z "$CI" ]; then
+        echo "Configuring pre-commit hooks"
+        install_pip pre-commit
+        pre-commit install
+    fi
 }
 
 setup_prepush()
