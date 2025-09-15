@@ -439,6 +439,9 @@ if vendor_ids_dir == ''
     vendor_ids_dir = '/usr/local/var/homebrew/linked/usb.ids/share/misc'
   endif
   if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
+    vendor_ids_dir = '/opt/homebrew/share/misc'
+  endif
+  if not fs.is_file(join_paths(vendor_ids_dir, 'usb.ids'))
     error('could not auto-detect -Dvendor_ids_dir=')
   endif
 endif
