@@ -403,10 +403,12 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	if (locker == NULL)
 		return FALSE;
 
-	// get version x.x.x.x
+	/* get version x.x.x.x */
 	version_str = fu_firmware_get_version(firmware);
 
-	// convert x.x.x.x to merge_version
+	g_debug("Merge Version from fu_firmware_get_version: %s\n", version_str);
+
+	/* convert x.x.x.x to merge_version */
 	if (version_str != NULL) {
 		if (fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_QUAD) {
 			if (sscanf(version_str,
