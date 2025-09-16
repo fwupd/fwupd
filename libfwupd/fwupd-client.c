@@ -80,6 +80,8 @@ typedef struct {
 	gchar *user_agent;
 	GHashTable *hints;		/* str:str */
 	GHashTable *immediate_requests; /* str:FwupdRequest */
+	GStrv hwid_keys;
+	GStrv hwid_values;
 } FwupdClientPrivate;
 
 typedef struct {
@@ -971,6 +973,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GVariant) val9 = NULL;
 	g_autoptr(GVariant) val10 = NULL;
+	g_autoptr(GVariant) val_hwids = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish(res, &error);
@@ -1031,6 +1034,20 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
 	if (val9 != NULL)
 		priv->only_trusted = g_variant_get_boolean(val9);
+
+	val_hwids = g_dbus_proxy_get_cached_property(priv->proxy, "Hwids");
+	if (val_hwids != NULL) {
+		guint size = g_variant_n_children(val_hwids);
+		priv->hwid_keys = g_new0(gchar *, size + 1);
+		priv->hwid_values = g_new0(gchar *, size + 1);
+		for (guint i = 0; i < size; i++) {
+			const gchar *hwid_value;
+			const gchar *hwid_key;
+			g_variant_get_child(val_hwids, i, "(&s&s)", &hwid_key, &hwid_value);
+			priv->hwid_keys[i] = g_strdup(hwid_key);
+			priv->hwid_values[i] = g_strdup(hwid_value);
+		}
+	}
 
 	/* build client hints */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
@@ -4138,6 +4155,27 @@ fwupd_client_get_host_security_id(FwupdClient *self)
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	return priv->host_security_id;
+}
+
+/**
+ * fwupd_client_get_hwids:
+ * @self: a #FwupdClient
+ * @keys: (out) (optional): CHID keys
+ * @values: (out) (optional): CHID values
+ *
+ * Gets the daemon hardware IDs, sometimes called CHIDs.
+ *
+ * Since: 2.0.17
+ **/
+void
+fwupd_client_get_hwids(FwupdClient *self, GStrv *keys, GStrv *values)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	if (keys != NULL)
+		*keys = g_strdupv(priv->hwid_keys);
+	if (values != NULL)
+		*values = g_strdupv(priv->hwid_values);
 }
 
 /**
@@ -7751,6 +7789,8 @@ fwupd_client_finalize(GObject *object)
 	FwupdClient *self = FWUPD_CLIENT(object);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
 
+	g_strfreev(priv->hwid_keys);
+	g_strfreev(priv->hwid_values);
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->package_name);
