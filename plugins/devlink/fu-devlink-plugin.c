@@ -26,7 +26,7 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
-	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* parse netlink attributes using libmnl */
 	mnl_attr_parse(nlh, sizeof(struct genlmsghdr), fu_devlink_netlink_attr_cb, tb);
@@ -45,11 +45,18 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	g_debug("devlink device added: %s/%s", bus_name, dev_name);
 
 	/* use backend to create device with proper hierarchy */
-	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error)) {
-		g_warning("failed to add devlink device %s/%s: %s",
-			  bus_name,
-			  dev_name,
-			  error->message);
+	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("failed to add devlink device %s/%s: %s",
+				bus_name,
+				dev_name,
+				error_local->message);
+		} else {
+			g_warning("failed to add devlink device %s/%s: %s",
+				  bus_name,
+				  dev_name,
+				  error_local->message);
+		}
 		return;
 	}
 }
