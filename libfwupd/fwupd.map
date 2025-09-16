@@ -1035,3 +1035,9 @@ LIBFWUPD_2.0.16 {
     fwupd_client_search_finish;
   local: *;
 } LIBFWUPD_2.0.11;
+
+LIBFWUPD_2.0.17 {
+  global:
+    fwupd_client_get_hwids;
+  local: *;
+} LIBFWUPD_2.0.16;

@@ -2725,10 +2725,6 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 		g_auto(GStrv) keysv = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		/* filter */
-		if (!g_str_has_prefix(key, "HardwareID"))
-			continue;
-
 		/* get the GUID */
 		keys = fu_hwids_get_replace_keys(hwids, key);
 		guid = fu_hwids_get_guid(hwids, key, &error_local);
@@ -2743,35 +2739,7 @@ fu_util_hwids(FuUtil *self, gchar **values, GError **error)
 		fu_console_print(self->console, "{%s}   <- %s", guid, keys_str);
 	}
 
-	/* show extra GUIDs */
-	fu_console_print_literal(self->console, "Extra Hardware IDs");
-	fu_console_print_literal(self->console, "------------------");
-	for (guint i = 0; i < chid_keys->len; i++) {
-		const gchar *key = g_ptr_array_index(chid_keys, i);
-		const gchar *keys = NULL;
-		g_autofree gchar *guid = NULL;
-		g_autofree gchar *keys_str = NULL;
-		g_auto(GStrv) keysv = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* filter */
-		if (g_str_has_prefix(key, "HardwareID"))
-			continue;
-
-		/* get the GUID */
-		keys = fu_hwids_get_replace_keys(hwids, key);
-		guid = fu_hwids_get_guid(hwids, key, &error_local);
-		if (guid == NULL) {
-			fu_console_print_literal(self->console, error_local->message);
-			continue;
-		}
-
-		/* show what makes up the GUID */
-		keysv = g_strsplit(keys, "&", -1);
-		keys_str = g_strjoinv(" + ", keysv);
-		fu_console_print(self->console, "{%s}   <- %s", guid, keys_str);
-	}
-
+	/* success */
 	return TRUE;
 }
 

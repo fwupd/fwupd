@@ -4912,6 +4912,55 @@ fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_hwids_as_json(FuUtil *self, GStrv hwids_keys, GStrv hwids_values, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	for (guint i = 0; hwids_keys[i] != NULL; i++) {
+		json_builder_set_member_name(builder, hwids_keys[i]);
+		json_builder_add_string_value(builder, hwids_values[i]);
+	}
+	json_builder_end_object(builder);
+	return fu_util_print_builder(self->console, builder, error);
+}
+
+static gboolean
+fu_util_hwids(FuUtil *self, gchar **values, GError **error)
+{
+	g_auto(GStrv) hwids_keys = NULL;
+	g_auto(GStrv) hwids_values = NULL;
+
+	fwupd_client_get_hwids(self->client, &hwids_keys, &hwids_values);
+	if (self->as_json)
+		return fu_util_hwids_as_json(self, hwids_keys, hwids_values, error);
+
+	/* show debug output */
+	fu_console_print_literal(self->console, "Computer Information");
+	fu_console_print_literal(self->console, "--------------------");
+	for (guint i = 0; hwids_keys[i] != NULL; i++) {
+		if (fwupd_guid_is_valid(hwids_values[i]))
+			continue;
+		fu_console_print(self->console, "%s: %s", hwids_keys[i], hwids_values[i]);
+	}
+
+	/* show GUIDs */
+	fu_console_print_literal(self->console, "Hardware IDs");
+	fu_console_print_literal(self->console, "------------");
+	for (guint i = 0; hwids_keys[i] != NULL; i++) {
+		g_autofree gchar *hwids_keys_real = NULL;
+		g_auto(GStrv) hwids_keys_strv = NULL;
+		if (!fwupd_guid_is_valid(hwids_values[i]))
+			continue;
+		hwids_keys_strv = g_strsplit(hwids_keys[i], "&", -1);
+		hwids_keys_real = g_strjoinv(" + ", hwids_keys_strv);
+		fu_console_print(self->console, "{%s}   <- %s", hwids_values[i], hwids_keys_real);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_report_devices(FuUtil *self, gchar **values, GError **error)
 {
 	g_autofree gchar *data = NULL;
@@ -5767,6 +5816,12 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Upload the list of updatable devices to a remote server"),
 			      fu_util_report_devices);
+	fu_util_cmd_array_add(cmd_array,
+			      "hwids",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Return all the hardware IDs for the machine"),
+			      fu_util_hwids);
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();

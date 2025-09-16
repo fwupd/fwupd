@@ -19,6 +19,7 @@
 #include "fwupd-enums-private.h"
 
 #include "fu-client-list.h"
+#include "fu-context-private.h"
 #include "fu-dbus-daemon.h"
 #include "fu-device-private.h"
 #include "fu-engine-helper.h"
@@ -2520,6 +2521,43 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 }
 
 static GVariant *
+fu_dbus_daemon_get_property_hwids(FuDbusDaemon *self)
+{
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
+	FuHwids *hwids = fu_context_get_hwids(ctx);
+	GVariantBuilder builder;
+	g_autoptr(GPtrArray) chid_keys = fu_hwids_get_chid_keys(hwids);
+	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys(hwids);
+
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a(ss)"));
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index(hwid_keys, i);
+		const gchar *value = fu_hwids_get_value(hwids, hwid_key);
+		if (value == NULL)
+			continue;
+		g_variant_builder_add(&builder, "(ss)", hwid_key, value);
+	}
+	for (guint i = 0; i < chid_keys->len; i++) {
+		const gchar *key = g_ptr_array_index(chid_keys, i);
+		const gchar *keys = NULL;
+		g_autofree gchar *guid = NULL;
+
+		/* get the GUID */
+		keys = fu_hwids_get_replace_keys(hwids, key);
+		if (keys == NULL)
+			continue;
+		guid = fu_hwids_get_guid(hwids, key, NULL);
+		if (guid == NULL)
+			continue;
+		g_variant_builder_add(&builder, "(ss)", keys, guid);
+	}
+
+	/* done */
+	return g_variant_builder_end(&builder);
+}
+
+static GVariant *
 fu_dbus_daemon_get_property(GDBusConnection *connection_,
 			    const gchar *sender,
 			    const gchar *object_path,
@@ -2599,6 +2637,8 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return g_variant_new_boolean(
 		    fu_engine_config_get_only_trusted(fu_engine_get_config(engine)));
 	}
+	if (g_strcmp0(property_name, "Hwids") == 0)
+		return fu_dbus_daemon_get_property_hwids(self);
 
 	/* return an error */
 	g_set_error(error,

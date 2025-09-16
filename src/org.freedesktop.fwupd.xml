@@ -156,6 +156,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='Hwids' type='a(ss)' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The daemon hardware IDs, sometimes called CHIDs.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <method name='GetDevices'>
       <doc:doc>
         <doc:description>
