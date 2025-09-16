@@ -132,6 +132,15 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 		return FALSE;
 	}
 
+	/* only add one device for the PCI card -- it does not matter which one we find first */
+	if (parent_device != NULL) {
+		g_autofree gchar *backend_id = g_strdup(fu_device_get_backend_id(parent_device));
+		gchar *tok = g_strrstr(backend_id, ".");
+		if (tok != NULL)
+			*tok = '\0';
+		fu_device_set_backend_id(devlink_device, backend_id);
+	}
+
 	/* incorporate information from parent device (without setting hierarchy) */
 	fu_device_incorporate(devlink_device,
 			      parent_device,
