@@ -24,6 +24,7 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
 	FuBackend *udev_backend = NULL;
 	g_autofree gchar *pci_sysfs_path = NULL;
+	g_autofree gchar *pci_sysfs_real = NULL;
 	g_autoptr(FuDevice) pci_device = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -40,9 +41,12 @@ fu_devlink_backend_create_pci_parent(FuDevlinkBackend *self,
 
 	/* construct PCI sysfs path from bus_name (e.g., "pci/0000:01:00.0") */
 	pci_sysfs_path = g_strdup_printf("/sys/bus/pci/devices/%s", dev_name);
+	pci_sysfs_real = fu_path_make_absolute(pci_sysfs_path, error);
+	if (pci_sysfs_real == NULL)
+		return NULL;
 
 	/* create PCI device from sysfs path */
-	pci_device = fu_backend_create_device(udev_backend, pci_sysfs_path, &error_local);
+	pci_device = fu_backend_create_device(udev_backend, pci_sysfs_real, &error_local);
 	if (pci_device == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
