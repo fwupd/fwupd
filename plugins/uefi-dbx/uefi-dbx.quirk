@@ -71,6 +71,60 @@ Vendor = Microsoft
 [UEFI\CRT_2128ED80A17DA1DE2A9C8CC7AADE9D44A80182B15B57A08681DC7E2EFBEC848D]
 Vendor = Microsoft
 
+# Framework Laptop 12 Intel Core 13th Gen KEK
+[UEFI\CRT_1114BC1CFF44E31CF564AD37F33524C3FDE190C6]
+Vendor = Framework
+# Framework Laptop 12 Intel Core 13th Gen DB
+[UEFI\CRT_92F6D304EB1B6A7456441039759036B85B3C9637]
+Vendor = Framework
+
+# Framework Laptop 13 Intel Core 11th Gen KEK
+[UEFI\CRT_210C4030B80543635790E4BDA46A00FD27834CDB]
+Vendor = Framework
+# Framework Laptop 13 Intel Core 11th Gen DB
+[UEFI\CRT_19F679938822703CD791AC7856334CA319C82BFD]
+Vendor = Framework
+
+# Framework Laptop 13 Intel Core 12th Gen KEK
+# Framework Laptop 13 Intel Core 13th Gen KEK
+[UEFI\CRT_DE95199137A93F8550755E024B0E6A748928E075]
+Vendor = Framework
+# Framework Laptop 13 Intel Core 12th Gen DB
+# Framework Laptop 13 Intel Core 13th Gen DB
+[UEFI\CRT_601B0AD982DA21E29DF4E3DF3213DF382B2DF359]
+Vendor = Framework
+
+# Framework Laptop 13 Intel Core Ultra Series 1 KEK
+[UEFI\CRT_DE95199137A93F8550755E024B0E6A748928E075]
+Vendor = Framework
+# Framework Laptop 13 Intel Core Ultra Series 1 DB
+[UEFI\CRT_601B0AD982DA21E29DF4E3DF3213DF382B2DF359]
+Vendor = Framework
+
+# Framework Laptop 13 AMD Ryzen AI 300 Series KEK
+[UEFI\CRT_466E3BB31CA82A0D1579FB7DC35CF8460C80B912]
+Vendor = Framework
+# Framework Laptop 13 AMD Ryzen AI 300 Series DB
+[UEFI\CRT_92F6D304EB1B6A7456441039759036B85B3C9637]
+Vendor = Framework
+
+# Framework Laptop 13 AMD Ryzen 7040 Series KEK
+# Framework Laptop 16 AMD Ryzen 7040 Series KEK
+[UEFI\CRT_1114BC1CFF44E31CF564AD37F33524C3FDE190C6]
+Vendor = Framework
+# Framework Laptop 13 AMD Ryzen 7040 Series DB
+# Framework Laptop 16 AMD Ryzen 7040 Series DB
+[UEFI\CRT_92F6D304EB1B6A7456441039759036B85B3C9637]
+Vendor = Framework
+
+# Framework Laptop 16 AMD Ryzen AI 300 Series KEK
+[UEFI\CRT_92F6D304EB1B6A7456441039759036B85B3C9637]
+Vendor = Framework
+
+# Framework Desktop AMD Ryzen AI 300 Series KEK
+[UEFI\CRT_1114BC1CFF44E31CF564AD37F33524C3FDE190C6]
+Vendor = Framework
+
 # Manufacturer=AiStone
 # BaseboardManufacturer=AiStone
 # BaseboardProduct=X5KK4NAG
