@@ -5725,6 +5725,14 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	res = curl_easy_perform(curl);
 	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
 	fwupd_client_set_percentage(self, 100);
+	if (res == CURLE_SEND_ERROR || res == CURLE_RECV_ERROR) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_TIMED_OUT,
+			    "transient failure: %s",
+			    errbuf);
+		return NULL;
+	}
 	if (res != CURLE_OK) {
 		if (errbuf[0] != '\0') {
 			g_set_error(error,
