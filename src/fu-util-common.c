@@ -473,6 +473,7 @@ fu_util_cmd_array_add(GPtrArray *array,
 		} else {
 			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
 			item->description = g_strdup_printf(_("Alias to %s"), names[0]);
+			item->flags |= FU_UTIL_CMD_FLAG_IS_ALIAS;
 		}
 		item->arguments = g_strdup(arguments);
 		item->callback = callback;
@@ -494,6 +495,17 @@ fu_util_cmd_array_run(GPtrArray *array,
 		if (g_strcmp0(values[i], "{") == 0) /* nocheck:depth */
 			break;
 		values_copy[i] = g_strdup(values[i]);
+	}
+
+	/* return all possible actions */
+	if (g_strcmp0(command, "get-actions") == 0) {
+		for (guint i = 0; i < array->len; i++) {
+			FuUtilCmd *item = g_ptr_array_index(array, i);
+			if (item->flags & FU_UTIL_CMD_FLAG_IS_ALIAS)
+				continue;
+			g_print("%s\n", item->name); /* nocheck:print */
+		}
+		return TRUE;
 	}
 
 	/* find command */

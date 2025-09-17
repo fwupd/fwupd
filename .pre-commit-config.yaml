@@ -106,6 +106,10 @@ repos:
       language: script
       entry: ./contrib/reformat-code.py
       types: [c]
+    - id: check-cli-actions
+      name: check cli actions
+      language: script
+      entry: ./contrib/ci/check-cli-actions.py
     - id: check-license
       name: Check license header
       types_or: [shell, c, python]

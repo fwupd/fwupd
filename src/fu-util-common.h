@@ -20,12 +20,18 @@
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
+typedef enum {
+	FU_UTIL_CMD_FLAG_NONE = 0,
+	FU_UTIL_CMD_FLAG_IS_ALIAS = 1 << 0,
+} FuUtilCmdFlags;
+
 typedef struct FuUtil FuUtil;
 typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
 	gchar *arguments;
 	gchar *description;
+	FuUtilCmdFlags flags;
 	FuUtilCmdFunc callback;
 } FuUtilCmd;
 
