@@ -526,10 +526,6 @@ fu_dfu_target_use_alt_setting(FuDfuTarget *self, GError **error)
 	g_return_val_if_fail(FU_IS_DFU_TARGET(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(device, error))
-		return FALSE;
-
 	/* use the correct setting */
 	if (fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_usb_device_set_interface_alt(FU_USB_DEVICE(device),
