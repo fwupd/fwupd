@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux'
+if host_machine.system() in ['linux', 'android']
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
