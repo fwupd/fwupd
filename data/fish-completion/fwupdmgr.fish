@@ -42,6 +42,7 @@ function __fish_fwupdmgr_subcommands --description 'Get fwupdmgr subcommands'
         get-remotes 'Gets the configured remotes' \
         get-results 'Gets the results from the last update' \
         get-updates 'Gets the list of updates for connected hardware' \
+        hwids 'Return all the hardware IDs for the machine' \
         inhibit 'Inhibit the system to prevent upgrades' \
         install 'Install a specific firmware file on all devices that match' \
         local-install 'Install a firmware file in cabinet format on this hardware' \
