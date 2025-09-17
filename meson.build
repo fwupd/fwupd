@@ -218,7 +218,7 @@ if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
 gmodule = dependency('gmodule-2.0')
-if host_machine.system() == 'linux'
+if host_machine.system() == 'linux' or host_machine.system() == 'android'
   conf.set('HAVE_UDEV', '1')
 endif
 if build_standalone

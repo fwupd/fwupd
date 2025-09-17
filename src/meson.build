@@ -66,7 +66,7 @@ fwupd_engine_src = [
 if giounix.found()
   fwupd_engine_src += 'fu-unix-seekable-input-stream.c'
 endif
-if host_machine.system() == 'linux'
+if host_machine.system() == 'linux' or host_machine.system() == 'android'
   fwupd_engine_src += 'fu-udev-backend.c'
 endif
 if bluez.allowed()
