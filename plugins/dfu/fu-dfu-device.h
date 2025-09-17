@@ -45,5 +45,3 @@ void
 fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error);
 guint
 fu_dfu_device_get_download_timeout(FuDfuDevice *self);
-gboolean
-fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error);

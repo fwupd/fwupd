@@ -52,7 +52,6 @@ typedef struct {
 	FuDfuStatus status;
 	GPtrArray *targets;
 	gboolean done_upload_or_download;
-	gboolean claimed_interface;
 	gchar *chip_id;
 	guint16 version;
 	guint16 force_version;
@@ -83,7 +82,6 @@ fu_dfu_device_to_string(FuDevice *device, guint idt, GString *str)
 				       idt,
 				       "DoneUploadOrDownload",
 				       priv->done_upload_or_download);
-	fwupd_codec_string_append_bool(str, idt, "ClaimedInterface", priv->claimed_interface);
 	fwupd_codec_string_append(str, idt, "ChipId", priv->chip_id);
 	fwupd_codec_string_append_hex(str, idt, "Version", priv->version);
 	if (priv->force_version != G_MAXUINT16)
@@ -358,6 +356,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 
 		/* add target */
 		priv->iface_number = fu_usb_interface_get_number(iface);
+		fu_usb_device_add_interface(FU_USB_DEVICE(self), priv->iface_number);
 		g_ptr_array_add(priv->targets, target);
 		fu_dfu_device_guess_state_from_iface(self, iface);
 	}
@@ -514,39 +513,6 @@ fu_dfu_device_set_status(FuDfuDevice *self, FuDfuStatus status)
 	priv->status = status;
 }
 
-gboolean
-fu_dfu_device_ensure_interface(FuDfuDevice *self, GError **error)
-{
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GError) error_local = NULL;
-
-	/* already done */
-	if (priv->claimed_interface)
-		return TRUE;
-
-	/* nothing set */
-	if (priv->iface_number == 0xff)
-		return TRUE;
-
-	/* claim, without detaching kernel driver */
-	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self),
-					   (gint)priv->iface_number,
-					   FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER,
-					   &error_local)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot claim interface %i: %s",
-			    priv->iface_number,
-			    error_local->message);
-		return FALSE;
-	}
-
-	/* success */
-	priv->claimed_interface = TRUE;
-	return TRUE;
-}
-
 static gboolean
 fu_dfu_device_refresh_and_clear(FuDfuDevice *self, GError **error)
 {
@@ -601,10 +567,6 @@ fu_dfu_device_refresh(FuDfuDevice *self, guint timeout_ms, GError **error)
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME))
 		return TRUE;
-
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return FALSE;
 
 	/* Device that cannot communicate via the USB after the
 	 * Manifestation phase indicated this limitation to the
@@ -739,10 +701,6 @@ fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME))
 		return TRUE;
 
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return FALSE;
-
 	/* inform UI there's going to be a detach:attach */
 	if (!fu_dfu_device_request_detach(self, progress, error))
 		return FALSE;
@@ -788,10 +746,6 @@ fu_dfu_device_abort(FuDfuDevice *self, GError **error)
 		return FALSE;
 	}
 
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return FALSE;
-
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -833,10 +787,6 @@ fu_dfu_device_clear_status(FuDfuDevice *self, GError **error)
 				    "not supported as no DFU runtime");
 		return FALSE;
 	}
-
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return FALSE;
 
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
@@ -950,39 +900,6 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-/**
- * fu_dfu_device_close:
- * @self: a #FuDfuDevice
- * @error: (nullable): optional return location for an error
- *
- * Closes a DFU device.
- *
- * Returns: %TRUE for success
- **/
-static gboolean
-fu_dfu_device_close(FuDevice *device, GError **error)
-{
-	FuDfuDevice *self = FU_DFU_DEVICE(device);
-	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* release interface */
-	if (priv->claimed_interface) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_usb_device_release_interface(FU_USB_DEVICE(device),
-						     (gint)priv->iface_number,
-						     0,
-						     &error_local)) {
-			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-				g_warning("failed to release interface: %s", error_local->message);
-			}
-		}
-		priv->claimed_interface = FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_dfu_device_parent_class)->close(device, error);
 }
 
 static gboolean
@@ -1113,10 +1030,6 @@ fu_dfu_device_upload(FuDfuDevice *self,
 	gboolean use_dfuse = FALSE;
 	g_autoptr(FuFirmware) firmware = NULL;
 
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return NULL;
-
 	/* choose the most appropriate type */
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
@@ -1207,10 +1120,6 @@ fu_dfu_device_download(FuDfuDevice *self,
 	g_autoptr(GPtrArray) images = NULL;
 	guint16 firmware_pid = 0xffff;
 	guint16 firmware_vid = 0xffff;
-
-	/* ensure interface is claimed */
-	if (!fu_dfu_device_ensure_interface(self, error))
-		return FALSE;
 
 	/* firmware supports footer? */
 	if (FU_IS_DFU_FIRMWARE(firmware)) {
@@ -1511,7 +1420,6 @@ fu_dfu_device_class_init(FuDfuDeviceClass *klass)
 	device_class->detach = fu_dfu_device_detach;
 	device_class->reload = fu_dfu_device_reload;
 	device_class->open = fu_dfu_device_open;
-	device_class->close = fu_dfu_device_close;
 	device_class->probe = fu_dfu_device_probe;
 	device_class->set_progress = fu_dfu_device_set_progress;
 	object_class->dispose = fu_dfu_device_dispose;
