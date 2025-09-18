@@ -34,7 +34,7 @@ def _find_func_name(line: str) -> Optional[str]:
     return func_name
 
 
-def _split_args(line: str) -> list[str]:
+def _split_args(line: str, delimiters=[","]) -> list[str]:
     is_quoted: bool = False
     split = []
     last_idx = 0
@@ -45,7 +45,7 @@ def _split_args(line: str) -> list[str]:
         if char == '"':
             is_quoted = True
             continue
-        if not is_quoted and char == ",":
+        if not is_quoted and char in delimiters:
             split.append(line[last_idx:idx].strip())
             last_idx = idx + 1
     split.append(line[last_idx:].strip())
@@ -452,6 +452,45 @@ class Checker:
                 f"limit of {magic_inlines_limit}"
             )
 
+    def _test_lines_gerror_prefix_not_set(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:error"
+
+        # ignore headers
+        if self._current_fn.endswith(".h"):
+            return
+
+        found_gerror_linecnt: int = 0
+        for linecnt, line in enumerate(lines):
+            self._current_linecnt = linecnt + 1
+
+            if line.find(self._current_nocheck) != -1:
+                continue
+
+            # block ended
+            if line.endswith("}"):
+                found_gerror_linecnt = 0
+                continue
+
+            # prefixed nothing!
+            sections = _split_args(line, delimiters=[",", "(", ")"])
+            if sections[0].startswith("g_prefix_error") and not found_gerror_linecnt:
+                self.add_failure("uses g_prefix_error() without setting GError")
+                continue
+
+            if line.find("error") != -1:
+                for section in sections:
+                    if section.find(" ") != -1:
+                        continue
+                    if section.find("->") != -1:
+                        continue
+                    if section.startswith("g_"):
+                        continue
+                    if section.startswith("&") or section.startswith("*"):
+                        section = section[1:]
+                    if section.startswith("error") or section.endswith("error"):
+                        found_gerror_linecnt = linecnt
+                        break
+
     def _test_lines_gerror_false_returns(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error-false-return"
 
@@ -754,6 +793,9 @@ class Checker:
 
         # setting GError, not returning
         self._test_lines_gerror_false_returns(lines)
+
+        # prefixing a GError without setting
+        self._test_lines_gerror_prefix_not_set(lines)
 
         # not nesting too deep
         self._test_lines_depth(lines)
