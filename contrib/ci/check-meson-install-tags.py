@@ -25,7 +25,7 @@ def old_meson_missing_vapi_deps_tag() -> bool:
         ["meson", "--version"],
         text=True,
     )
-    return parse_version(version_str.strip()) < parse_version("1.9.0")
+    return parse_version(version_str.strip()) <= parse_version("1.9.0")
 
 
 def objects_with_tag(obj) -> Iterator[dict]:
@@ -82,7 +82,7 @@ def check(install_plan):
     exit_code = 0
     tags = collect_tags(install_plan)
 
-    # Check for files missing install tag
+    # check for files missing install tag
     ignore_vapi_deps = old_meson_missing_vapi_deps_tag()
     for null_file in collect_files(install_plan, None):
         if ignore_vapi_deps and null_file.endswith("fwupd.deps"):
@@ -91,7 +91,7 @@ def check(install_plan):
             logging.error(f"missing meson install tag: {null_file}")
             exit_code = 1
 
-    # Check for incorrect test file tags
+    # check for incorrect test file tags
     for tag in [t for t in tags if t != "tests"]:
         files = collect_files(install_plan, tag)
         files = [f for f in files if "installed-tests" in f]
