@@ -120,7 +120,7 @@ Rts54BlockSize = 0x100
 [USB\VID_03F0&PID_AC4A]
 Plugin = rts54hub
 Name = HP Portable USB-C 4K HDMI Hub - USB Hub
-GType = FuRts54HubDevice
+GType = FuRts54hubDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x30000
 Rts54BlockSize = 0x100
