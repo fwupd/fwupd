@@ -680,7 +680,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 			    fu_efi_lz77_decompressor_version_to_string(decompressor_versions[i]));
 			continue;
 		}
-		g_prefix_error(&error_all,
+		g_prefix_error(&error_all, /* nocheck:error */
 			       "failed to parse %s: %s: ",
 			       fu_efi_lz77_decompressor_version_to_string(decompressor_versions[i]),
 			       error_local->message);
