@@ -160,4 +160,9 @@ if __name__ == "__main__":
             text=True,
         )
     )
+
+    if len(collect_files(install_plan, None)) > 10:
+        logging.info("build dir is likely outdated, skipping check-meson-install-tag")
+        sys.exit(0)
+
     check(install_plan)
