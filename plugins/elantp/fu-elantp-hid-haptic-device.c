@@ -846,8 +846,8 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 				  3,
 				  ELANTP_DELAY_WRITE_BLOCK,
 				  &helper,
-				  &error_local)) {
-		g_prefix_error(error, "write device checksum fail (%s): ", error_local->message);
+				  error)) {
+		g_prefix_error_literal(error, "writing checksum failed: ");
 		return FALSE;
 	}
 
