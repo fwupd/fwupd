@@ -60,6 +60,7 @@ fu_block_partition_set_fs_type(FuBlockPartition *self, const gchar *fs_type, gsi
 	g_free(priv->fs_type);
 	priv->fs_type = fu_strsafe(fs_type, fs_typelen);
 }
+#endif
 
 static void
 fu_block_partition_set_fs_uuid(FuBlockPartition *self, const gchar *fs_uuid, gsize fs_uuidlen)
@@ -86,7 +87,6 @@ fu_block_partition_set_fs_label(FuBlockPartition *self, const gchar *fs_label, g
 	g_free(priv->fs_label);
 	priv->fs_label = fu_strsafe(fs_label, fs_labellen);
 }
-#endif
 
 static void
 fu_block_partition_incorporate(FuDevice *self, FuDevice *donor)
@@ -240,10 +240,13 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 	FuBlockPartitionPrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
 	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(device));
+	g_autofree gchar *attr_partname = NULL;
+	g_autofree gchar *attr_partuuid = NULL;
 	g_autofree gchar *event_id = NULL;
 #ifdef HAVE_BLKID
 	gint rc;
 	const gchar *data;
+	gint superblocks_flags = BLKID_SUBLKS_TYPE;
 	gsize datalen = 0;
 	g_auto(blkid_probe) pr = NULL;
 #endif
@@ -277,6 +280,12 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* use uevent as a free data source */
+	attr_partname = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "PARTNAME", NULL);
+	fu_block_partition_set_fs_label(self, attr_partname, G_MAXSIZE);
+	attr_partuuid = fu_udev_device_read_property(FU_UDEV_DEVICE(self), "PARTUUID", NULL);
+	fu_block_partition_set_fs_uuid(self, attr_partuuid, G_MAXSIZE);
+
 #ifdef HAVE_BLKID
 	/* probe */
 	pr = blkid_new_probe();
@@ -287,9 +296,11 @@ fu_block_partition_setup(FuDevice *device, GError **error)
 				    "failed to create blkid prober");
 		return FALSE;
 	}
-	blkid_probe_set_superblocks_flags(pr,
-					  BLKID_SUBLKS_UUID | BLKID_SUBLKS_TYPE |
-					      BLKID_SUBLKS_LABEL);
+	if (priv->fs_uuid == NULL)
+		superblocks_flags |= BLKID_SUBLKS_UUID;
+	if (priv->fs_label == NULL)
+		superblocks_flags |= BLKID_SUBLKS_LABEL;
+	blkid_probe_set_superblocks_flags(pr, superblocks_flags);
 	rc = blkid_probe_set_device(pr, fu_io_channel_unix_get_fd(io_channel), 0x0, 0x0);
 	if (rc < 0) {
 		g_set_error(error,
