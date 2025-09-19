@@ -173,6 +173,14 @@ fu_uefi_dbx_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpoint
 	fu_device_set_version_lowest(device, fu_device_get_version(device));
 }
 
+static void
+fu_uefi_dbx_device_vendor_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	const gchar *subject_vendor = fu_device_get_vendor(device);
+	if (subject_vendor != NULL)
+		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
+}
+
 static FuFirmware *
 fu_uefi_dbx_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
@@ -304,6 +312,10 @@ fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::version",
 			 G_CALLBACK(fu_uefi_dbx_device_version_notify_cb),
+			 NULL);
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vendor",
+			 G_CALLBACK(fu_uefi_dbx_device_vendor_notify_cb),
 			 NULL);
 }
 

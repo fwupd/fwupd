@@ -49,7 +49,12 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "NAME", subject_name);
 	fu_device_build_instance_id(device, NULL, "UEFI", "VENDOR", "NAME", NULL);
 	fu_device_set_name(device, subject_name != NULL ? subject_name : "Unknown");
-	fu_device_set_vendor(device, subject_vendor != NULL ? subject_vendor : "Unknown");
+	if (subject_vendor != NULL) {
+		/* build this here as well as from notify::vendor to ensure
+		 * we get the "from hardware" and "quirk simplified" values */
+		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
+		fu_device_set_vendor(device, subject_vendor);
+	}
 	fu_device_set_version_raw(device, fu_firmware_get_version_raw(FU_FIRMWARE(priv->sig)));
 
 	/* the device ID (and thus the logical ID) needs to stay the same between versions */
@@ -58,12 +63,17 @@ fu_efi_x509_device_probe(FuDevice *device, GError **error)
 				     subject_vendor != NULL ? subject_vendor : "UNKNOWN");
 	fu_device_set_logical_id(device, logical_id);
 
-	if (subject_vendor != NULL)
-		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
-
 	/* success */
 	fu_device_add_instance_strup(device, "CRT", fu_firmware_get_id(FU_FIRMWARE(priv->sig)));
 	return fu_device_build_instance_id(device, error, "UEFI", "CRT", NULL);
+}
+
+static void
+fu_efi_x509_device_vendor_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	const gchar *subject_vendor = fu_device_get_vendor(device);
+	if (subject_vendor != NULL)
+		fu_device_build_vendor_id(device, "UEFI", subject_vendor);
 }
 
 static gchar *
@@ -166,6 +176,10 @@ fu_efi_x509_device_init(FuEfiX509Device *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_icon(FU_DEVICE(self), "application-certificate");
+	g_signal_connect(FU_DEVICE(self),
+			 "notify::vendor",
+			 G_CALLBACK(fu_efi_x509_device_vendor_notify_cb),
+			 NULL);
 }
 
 static void
