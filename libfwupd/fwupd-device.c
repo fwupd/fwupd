@@ -85,6 +85,7 @@ enum {
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
 	PROP_PROBLEMS,
+	PROP_VENDOR,
 	PROP_LAST
 };
 
@@ -1026,6 +1027,7 @@ fwupd_device_set_vendor(FwupdDevice *self, const gchar *vendor)
 
 	g_free(priv->vendor);
 	priv->vendor = g_strdup(vendor);
+	g_object_notify(G_OBJECT(self), "vendor");
 }
 
 static void
@@ -3600,6 +3602,9 @@ fwupd_device_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_VERSION:
 		g_value_set_string(value, priv->version);
 		break;
+	case PROP_VENDOR:
+		g_value_set_string(value, priv->vendor);
+		break;
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint(value, priv->version_format);
 		break;
@@ -3646,6 +3651,9 @@ fwupd_device_set_property(GObject *object, guint prop_id, const GValue *value, G
 	switch (prop_id) {
 	case PROP_VERSION:
 		fwupd_device_set_version(self, g_value_get_string(value));
+		break;
+	case PROP_VENDOR:
+		fwupd_device_set_vendor(self, g_value_get_string(value));
 		break;
 	case PROP_ID:
 		fwupd_device_set_id(self, g_value_get_string(value));
@@ -3712,6 +3720,20 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_VERSION, pspec);
+
+	/**
+	 * FwupdDevice:vendor:
+	 *
+	 * The device vendor.
+	 *
+	 * Since: 2.0.17
+	 */
+	pspec = g_param_spec_string("vendor",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_VENDOR, pspec);
 
 	/**
 	 * FwupdDevice:id:
