@@ -15,14 +15,75 @@
 #include "fu-kernel.h"
 #include "fu-path.h"
 
-#define UDISKS_DBUS_PATH	      "/org/freedesktop/UDisks2/Manager"
+#define UDISKS_DBUS_PATH	      "/org/freedesktop/UDisks2"
+#define UDISKS_DBUS_MANAGER_PATH      "/org/freedesktop/UDisks2/Manager"
 #define UDISKS_DBUS_MANAGER_INTERFACE "org.freedesktop.UDisks2.Manager"
+
+/* required for udisks <= 2.1.7 */
+static GPtrArray *
+fu_common_get_block_devices_legacy(GError **error)
+{
+	g_autolist(GDBusObject) dbus_objects = NULL;
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GDBusObjectManager) dbus_object_manager = NULL;
+	g_autoptr(GPtrArray) devices =
+	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+
+	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL) {
+		g_prefix_error_literal(error, "failed to get system bus: ");
+		return NULL;
+	}
+	dbus_object_manager =
+	    g_dbus_object_manager_client_new_sync(connection,
+						  G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+						  UDISKS_DBUS_SERVICE,
+						  UDISKS_DBUS_PATH,
+						  NULL,
+						  NULL,
+						  NULL,
+						  NULL,
+						  error);
+	if (dbus_object_manager == NULL)
+		return NULL;
+	dbus_objects = g_dbus_object_manager_get_objects(dbus_object_manager);
+	for (GList *l = dbus_objects; l != NULL; l = l->next) {
+		GDBusObject *dbus_object = G_DBUS_OBJECT(l->data);
+		const gchar *obj = g_dbus_object_get_object_path(dbus_object);
+		g_autoptr(GDBusInterface) dbus_iface_blk = NULL;
+		g_autoptr(GDBusProxy) proxy_blk = NULL;
+
+		dbus_iface_blk =
+		    g_dbus_object_get_interface(dbus_object, UDISKS_DBUS_INTERFACE_BLOCK);
+		if (dbus_iface_blk == NULL) {
+			g_debug("skipping %s as has no block interface", obj);
+			continue;
+		}
+		proxy_blk = g_dbus_proxy_new_sync(connection,
+						  G_DBUS_PROXY_FLAGS_NONE,
+						  NULL,
+						  UDISKS_DBUS_SERVICE,
+						  obj,
+						  UDISKS_DBUS_INTERFACE_BLOCK,
+						  NULL,
+						  error);
+		if (proxy_blk == NULL) {
+			g_prefix_error(error, "failed to initialize d-bus proxy for %s: ", obj);
+			return NULL;
+		}
+		g_ptr_array_add(devices, g_steal_pointer(&proxy_blk));
+	}
+
+	/* success */
+	return g_steal_pointer(&devices);
+}
 
 GPtrArray *
 fu_common_get_block_devices(GError **error)
 {
 	GVariantBuilder builder;
 	const gchar *obj;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GVariant) output = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -38,7 +99,7 @@ fu_common_get_block_devices(GError **error)
 				      G_DBUS_PROXY_FLAGS_NONE,
 				      NULL,
 				      UDISKS_DBUS_SERVICE,
-				      UDISKS_DBUS_PATH,
+				      UDISKS_DBUS_MANAGER_PATH,
 				      UDISKS_DBUS_MANAGER_INTERFACE,
 				      NULL,
 				      error);
@@ -55,14 +116,18 @@ fu_common_get_block_devices(GError **error)
 					G_DBUS_CALL_FLAGS_NONE,
 					-1,
 					NULL,
-					error);
+					&error_local);
 	if (output == NULL) {
-		if (error != NULL)
-			g_dbus_error_strip_remote_error(*error);
-		g_prefix_error(error,
-			       "failed to call %s.%s(): ",
-			       UDISKS_DBUS_MANAGER_INTERFACE,
-			       "GetBlockDevices");
+		if (g_error_matches(error_local, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_METHOD)) {
+			g_debug("ignoring %s, trying fallback", error_local->message);
+			return fu_common_get_block_devices_legacy(error);
+		}
+		g_dbus_error_strip_remote_error(error_local);
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "failed to call %s.%s(): ",
+					   UDISKS_DBUS_MANAGER_INTERFACE,
+					   "GetBlockDevices");
 		return NULL;
 	}
 
