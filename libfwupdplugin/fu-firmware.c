@@ -1013,6 +1013,8 @@ fu_firmware_parse_stream(FuFirmware *self,
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(GInputStream) seekable_stream = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), FALSE);
@@ -1027,8 +1029,18 @@ fu_firmware_parse_stream(FuFirmware *self,
 		return FALSE;
 	}
 
+	/* ensure the stream is seekable */
+	if (!G_IS_SEEKABLE(stream) || !g_seekable_can_seek(G_SEEKABLE(stream))) {
+		blob = fu_input_stream_read_bytes(stream, offset, G_MAXUINT32, NULL, error);
+		if (blob == NULL)
+			return FALSE;
+		seekable_stream = g_memory_input_stream_new_from_bytes(blob);
+	} else {
+		seekable_stream = g_object_ref(stream);
+	}
+
 	/* check size */
-	if (!fu_input_stream_size(stream, &streamsz, error))
+	if (!fu_input_stream_size(seekable_stream, &streamsz, error))
 		return FALSE;
 	if (streamsz <= offset) {
 		g_set_error(error,
@@ -1041,7 +1053,7 @@ fu_firmware_parse_stream(FuFirmware *self,
 	}
 
 	/* optional */
-	if (!fu_firmware_validate_for_offset(self, stream, &offset, flags, error))
+	if (!fu_firmware_validate_for_offset(self, seekable_stream, &offset, flags, error))
 		return FALSE;
 
 	/* save stream size */
@@ -1075,9 +1087,10 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* save stream */
 	if (offset == 0) {
-		partial_stream = g_object_ref(stream);
+		partial_stream = g_object_ref(seekable_stream);
 	} else {
-		partial_stream = fu_partial_input_stream_new(stream, offset, priv->streamsz, error);
+		partial_stream =
+		    fu_partial_input_stream_new(seekable_stream, offset, priv->streamsz, error);
 		if (partial_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut firmware: ");
 			return FALSE;
@@ -1086,10 +1099,15 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* cache */
 	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB) {
-		g_autoptr(GBytes) blob = NULL;
-		blob = fu_input_stream_read_bytes(partial_stream, 0x0, priv->streamsz, NULL, error);
-		if (blob == NULL)
-			return FALSE;
+		if (blob == NULL) {
+			blob = fu_input_stream_read_bytes(partial_stream,
+							  0x0,
+							  priv->streamsz,
+							  NULL,
+							  error);
+			if (blob == NULL)
+				return FALSE;
+		}
 		fu_firmware_set_bytes(self, blob);
 	}
 	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM) {
