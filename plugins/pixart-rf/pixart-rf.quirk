@@ -38,6 +38,11 @@ GType = FuPxiReceiverDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
+# Primax Ryder Mouse 2
+[HIDRAW\VEN_0461&DEV_4F31]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
 # Primax Mouse
 [HIDRAW\VEN_0461&DEV_4EEF]
 Plugin = pixart_rf
