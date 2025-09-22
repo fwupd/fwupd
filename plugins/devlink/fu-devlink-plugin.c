@@ -26,7 +26,9 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
+	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *cache_id = NULL;
 
 	/* parse netlink attributes using libmnl */
 	mnl_attr_parse(nlh, sizeof(struct genlmsghdr), fu_devlink_netlink_attr_cb, tb);
@@ -45,7 +47,9 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	g_debug("devlink device added: %s/%s", bus_name, dev_name);
 
 	/* use backend to create device with proper hierarchy */
-	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error_local)) {
+	devlink_device =
+	    fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error_local);
+	if (devlink_device == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_debug("failed to add devlink device %s/%s: %s",
@@ -60,6 +64,8 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 		}
 		return;
 	}
+	cache_id = g_strdup_printf("%s/%s", bus_name, dev_name);
+	fu_plugin_cache_add(FU_PLUGIN(self), cache_id, devlink_device);
 }
 
 static void
@@ -68,6 +74,8 @@ fu_devlink_plugin_device_removed_from_netlink(FuDevlinkPlugin *self, const struc
 	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
 	const gchar *bus_name = NULL;
 	const gchar *dev_name = NULL;
+	g_autofree gchar *cache_id = NULL;
+	FuDevice *devlink_device = NULL;
 
 	/* parse netlink attributes using libmnl */
 	mnl_attr_parse(nlh, sizeof(struct genlmsghdr), fu_devlink_netlink_attr_cb, tb);
@@ -85,8 +93,12 @@ fu_devlink_plugin_device_removed_from_netlink(FuDevlinkPlugin *self, const struc
 
 	g_debug("devlink device removed: %s/%s", bus_name, dev_name);
 
-	/* use backend to remove device */
-	fu_devlink_backend_device_removed(self->backend, bus_name, dev_name);
+	cache_id = g_strdup_printf("%s/%s", bus_name, dev_name);
+	devlink_device = fu_plugin_cache_lookup(FU_PLUGIN(self), cache_id);
+	if (devlink_device == NULL)
+		return;
+	fu_devlink_backend_device_removed(self->backend, devlink_device);
+	fu_plugin_cache_remove(FU_PLUGIN(self), cache_id);
 }
 
 /* callback for processing individual netlink messages */
