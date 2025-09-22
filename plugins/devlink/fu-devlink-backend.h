@@ -18,6 +18,7 @@ FuDevice *
 fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				const gchar *bus_name,
 				const gchar *dev_name,
+				const gchar *serial_number,
 				GError **error) G_GNUC_NON_NULL(1, 2, 3);
 
 void

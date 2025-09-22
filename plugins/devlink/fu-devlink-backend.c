@@ -91,6 +91,7 @@ FuDevice *
 fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				const gchar *bus_name,
 				const gchar *dev_name,
+				const gchar *serial_number,
 				GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
@@ -124,7 +125,7 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 	}
 
 	/* create devlink device */
-	devlink_device = fu_devlink_device_new(ctx, bus_name, dev_name);
+	devlink_device = fu_devlink_device_new(ctx, bus_name, dev_name, serial_number);
 	if (devlink_device == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -133,14 +134,9 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 		return NULL;
 	}
 
-	/* only add one device for the PCI card -- it does not matter which one we find first */
-	if (parent_device != NULL) {
-		g_autofree gchar *backend_id = g_strdup(fu_device_get_backend_id(parent_device));
-		gchar *tok = g_strrstr(backend_id, ".");
-		if (tok != NULL)
-			*tok = '\0';
-		fu_device_set_backend_id(devlink_device, backend_id);
-	}
+	/* only add one device for the PCI card, use serial number as backend id */
+	if (serial_number != NULL)
+		fu_device_set_backend_id(devlink_device, serial_number);
 
 	/* in case the device with the same backend id already exists, skip this one */
 	old_devlink_device =

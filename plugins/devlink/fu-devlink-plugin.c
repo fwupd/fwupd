@@ -20,6 +20,57 @@ struct _FuDevlinkPlugin {
 
 G_DEFINE_TYPE(FuDevlinkPlugin, fu_devlink_plugin, FU_TYPE_PLUGIN)
 
+static gint
+fu_devlink_plugin_get_serial_number_cb(const struct nlmsghdr *nlh, gpointer data)
+{
+	struct genlmsghdr *genl = mnl_nlmsg_get_payload(nlh);
+	struct nlattr *tb[DEVLINK_ATTR_MAX + 1] = {};
+	gchar **serial_number = data;
+
+	if (genl->cmd != DEVLINK_CMD_INFO_GET)
+		return MNL_CB_OK;
+
+	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
+
+	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL)
+		*serial_number =
+		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]), G_MAXSIZE);
+
+	return MNL_CB_OK;
+}
+
+static gboolean
+fu_devlink_plugin_get_serial_number(const gchar *bus_name,
+				    const gchar *dev_name,
+				    gchar **serial_number,
+				    GError **error)
+{
+	struct nlmsghdr *nlh;
+	g_autoptr(FuDevlinkGenSocket) nlg = NULL;
+
+	nlg = fu_devlink_netlink_gen_socket_open(NULL, error);
+	if (nlg == NULL)
+		return FALSE;
+
+	/* prepare dev info command */
+	nlh = fu_devlink_netlink_cmd_prepare(nlg, DEVLINK_CMD_INFO_GET, FALSE);
+	mnl_attr_put_strz(nlh, DEVLINK_ATTR_BUS_NAME, bus_name);
+	mnl_attr_put_strz(nlh, DEVLINK_ATTR_DEV_NAME, dev_name);
+
+	/* send command and process response */
+	if (!fu_devlink_netlink_msg_send_recv(nlg,
+					      nlh,
+					      fu_devlink_plugin_get_serial_number_cb,
+					      serial_number,
+					      error)) {
+		g_prefix_error_literal(error, "failed to get device info: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct nlmsghdr *nlh)
 {
@@ -28,6 +79,7 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 	const gchar *dev_name = NULL;
 	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *serial_number = NULL;
 	g_autofree gchar *cache_id = NULL;
 
 	/* parse netlink attributes using libmnl */
@@ -46,9 +98,23 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 
 	g_debug("devlink device added: %s/%s", bus_name, dev_name);
 
+	if (!fu_devlink_plugin_get_serial_number(bus_name,
+						 dev_name,
+						 &serial_number,
+						 &error_local)) {
+		g_warning("failed to get serial number for devlink device %s/%s: %s",
+			  bus_name,
+			  dev_name,
+			  error_local->message);
+		return;
+	}
+
 	/* use backend to create device with proper hierarchy */
-	devlink_device =
-	    fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error_local);
+	devlink_device = fu_devlink_backend_device_added(self->backend,
+							 bus_name,
+							 dev_name,
+							 serial_number,
+							 &error_local);
 	if (devlink_device == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {

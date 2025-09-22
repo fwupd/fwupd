@@ -12,7 +12,7 @@
 G_DECLARE_FINAL_TYPE(FuDevlinkDevice, fu_devlink_device, FU, DEVLINK_DEVICE, FuDevice)
 
 FuDevice *
-fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name) G_GNUC_NON_NULL(1, 2, 3);
+fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name, const gchar *serial_number) G_GNUC_NON_NULL(1, 2, 3);
 
 const gchar *
 fu_devlink_device_get_bus_name(FuDevlinkDevice *self) G_GNUC_NON_NULL(1);
