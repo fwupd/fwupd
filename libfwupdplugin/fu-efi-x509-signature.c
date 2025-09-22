@@ -254,6 +254,15 @@ fu_efi_x509_signature_parse(FuFirmware *firmware,
 		}
 	}
 
+	/* set something plausible */
+	if (fu_firmware_get_filename(firmware) == NULL &&
+	    fu_x509_certificate_get_subject(crt) != NULL) {
+		g_autofree gchar *filename = g_strdup_printf("%s_%s.der",
+							     fu_firmware_get_id(FU_FIRMWARE(crt)),
+							     fu_x509_certificate_get_subject(crt));
+		fu_firmware_set_filename(firmware, filename);
+	}
+
 	/* success */
 	return TRUE;
 }
