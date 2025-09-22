@@ -136,7 +136,7 @@ fu_devlink_plugin_flash_func(void)
 	}
 
 	/* create device with valid bus and device names */
-	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
+	device = fu_devlink_device_new(ctx, "netdevsim", FU_DEVLINK_NETDEVSIM_DEVICE_NAME, NULL);
 	g_assert_nonnull(device);
 
 	/* probe device first */

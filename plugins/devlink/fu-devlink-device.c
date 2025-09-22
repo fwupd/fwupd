@@ -607,12 +607,6 @@ fu_devlink_device_info_cb(const struct nlmsghdr *nlh, gpointer data)
 	/* parse main attributes */
 	mnl_attr_parse(nlh, sizeof(*genl), fu_devlink_netlink_attr_cb, tb);
 
-	if (tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER] != NULL) {
-		g_autofree gchar *serial_number =
-		    fu_strsafe(mnl_attr_get_str(tb[DEVLINK_ATTR_INFO_SERIAL_NUMBER]), G_MAXSIZE);
-		fu_device_set_serial(device, serial_number);
-	}
-
 	version_table = fu_devlink_device_populate_attrs_map(nlh);
 
 	/* remove components that are not in the attrs map */
@@ -736,7 +730,10 @@ fu_devlink_device_set_dev_name(FuDevlinkDevice *self, const gchar *dev_name)
 }
 
 FuDevice *
-fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_name)
+fu_devlink_device_new(FuContext *ctx,
+		      const gchar *bus_name,
+		      const gchar *dev_name,
+		      const gchar *serial_number)
 {
 	g_autoptr(FuDevlinkDevice) self = NULL;
 	g_autofree gchar *device_id = NULL;
@@ -751,6 +748,8 @@ fu_devlink_device_new(FuContext *ctx, const gchar *bus_name, const gchar *dev_na
 
 	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
 	fu_device_set_physical_id(FU_DEVICE(self), device_id);
+	if (serial_number != NULL)
+		fu_device_set_serial(FU_DEVICE(self), serial_number);
 
 	return FU_DEVICE(g_steal_pointer(&self));
 }
