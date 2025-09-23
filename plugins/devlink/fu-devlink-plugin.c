@@ -46,7 +46,8 @@ fu_devlink_plugin_device_added_from_netlink(FuDevlinkPlugin *self, const struct 
 
 	/* use backend to create device with proper hierarchy */
 	if (!fu_devlink_backend_device_added(self->backend, bus_name, dev_name, &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_debug("failed to add devlink device %s/%s: %s",
 				bus_name,
 				dev_name,

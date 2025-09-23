@@ -94,6 +94,7 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 				GError **error)
 {
 	FuContext *ctx = fu_backend_get_context(FU_BACKEND(self));
+	FuDevice *old_devlink_device;
 	g_autoptr(FuDevice) devlink_device = NULL;
 	g_autoptr(FuDevice) parent_device = NULL;
 
@@ -139,6 +140,18 @@ fu_devlink_backend_device_added(FuDevlinkBackend *self,
 		if (tok != NULL)
 			*tok = '\0';
 		fu_device_set_backend_id(devlink_device, backend_id);
+	}
+
+	/* in case the device with the same backend id already exists, skip this one */
+	old_devlink_device =
+	    fu_backend_lookup_by_id(FU_BACKEND(self), fu_device_get_backend_id(devlink_device));
+	if (old_devlink_device != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "device with the same backend id already exists: %s",
+			    fu_device_get_backend_id(devlink_device));
+		return FALSE;
 	}
 
 	/* incorporate information from parent device (without setting hierarchy) */
