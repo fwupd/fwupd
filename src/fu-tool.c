@@ -3150,6 +3150,66 @@ fu_util_firmware_export(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_firmware_extract_image(FuUtil *self,
+			       FuFirmware *firmware,
+			       const gchar *idxstr,
+			       GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* get raw image without generated header, footer or crc */
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL) {
+		g_prefix_error(error,
+			       "failed to get bytes for image %s: ",
+			       fu_firmware_get_id(firmware));
+		return FALSE;
+	}
+	if (g_bytes_get_size(blob) == 0)
+		return TRUE;
+
+	/* use suitable filename */
+	if (fu_firmware_get_filename(firmware) != NULL) {
+		fn = g_strdup(fu_firmware_get_filename(firmware));
+	} else if (fu_firmware_get_id(firmware) != NULL) {
+		fn = g_strdup_printf("id-%s.fw", fu_firmware_get_id(firmware));
+	} else if (fu_firmware_get_idx(firmware) != 0x0) {
+		fn = g_strdup_printf("idx-0x%x.fw", (guint)fu_firmware_get_idx(firmware));
+	} else {
+		fn = g_strdup_printf("img-%s.fw", idxstr);
+	}
+
+	/* TRANSLATORS: decompressing images from a container firmware */
+	fu_console_print(self->console, "%s : %s", _("Writing file:"), fn);
+	return fu_bytes_set_contents(fn, blob, error);
+}
+
+static gboolean
+fu_util_firmware_extract_images(FuUtil *self,
+				FuFirmware *firmware,
+				const gchar *idxstr,
+				GError **error)
+{
+	g_autoptr(GPtrArray) images = NULL;
+
+	images = fu_firmware_get_images(firmware);
+	if (images->len == 0)
+		return fu_util_firmware_extract_image(self, firmware, idxstr, error);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(images, i);
+		g_autofree gchar *idxstr_new = idxstr != NULL
+						   ? g_strdup_printf("%s:0x%x", idxstr, i)
+						   : g_strdup_printf("0x%x", i);
+		if (!fu_util_firmware_extract_images(self, img, idxstr_new, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_firmware_extract(FuUtil *self, gchar **values, GError **error)
 {
 	FuContext *ctx = fu_engine_get_context(self->engine);
@@ -3158,7 +3218,6 @@ fu_util_firmware_extract(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GPtrArray) images = NULL;
 
 	/* check args */
 	if (g_strv_length(values) == 0 || g_strv_length(values) > 2) {
@@ -3201,37 +3260,7 @@ fu_util_firmware_extract(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	str = fu_firmware_to_string(firmware);
 	fu_console_print_literal(self->console, str);
-	images = fu_firmware_get_images(firmware);
-	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autofree gchar *fn = NULL;
-		g_autoptr(GBytes) blob_img = NULL;
-
-		/* get raw image without generated header, footer or crc */
-		blob_img = fu_firmware_get_bytes(img, error);
-		if (blob_img == NULL)
-			return FALSE;
-		if (g_bytes_get_size(blob_img) == 0)
-			continue;
-
-		/* use suitable filename */
-		if (fu_firmware_get_filename(img) != NULL) {
-			fn = g_strdup(fu_firmware_get_filename(img));
-		} else if (fu_firmware_get_id(img) != NULL) {
-			fn = g_strdup_printf("id-%s.fw", fu_firmware_get_id(img));
-		} else if (fu_firmware_get_idx(img) != 0x0) {
-			fn = g_strdup_printf("idx-0x%x.fw", (guint)fu_firmware_get_idx(img));
-		} else {
-			fn = g_strdup_printf("img-0x%x.fw", i);
-		}
-		/* TRANSLATORS: decompressing images from a container firmware */
-		fu_console_print(self->console, "%s : %s", _("Writing file:"), fn);
-		if (!fu_bytes_set_contents(fn, blob_img, error))
-			return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_util_firmware_extract_images(self, firmware, NULL, error);
 }
 
 static gboolean
