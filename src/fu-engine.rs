@@ -28,7 +28,7 @@ enum FuEngineEmulatorPhase {
     CompositeCleanup,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuEngineRequestFlags {
     None = 0,
     NoRequirements = 1 << 0,
@@ -50,7 +50,7 @@ enum FuEngineLoadFlags {
     Ready = 1 << 11,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuIdleInhibit {
     None = 0,
     Timeout = 1 << 0,

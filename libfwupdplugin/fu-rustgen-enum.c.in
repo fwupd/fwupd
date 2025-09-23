@@ -1,19 +1,6 @@
-
 {%- set export = obj.export('ToString') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-{{export.value}}const gchar *
-{{obj.c_method('ToString')}}({{obj.c_type}} val)
-{
-{%- for item in obj.items %}
-    if (val == {{item.c_define}})
-        return "{{item.value}}";
-{%- endfor %}
-    return NULL;
-}
-{%- endif %}
-
-{%- set export = obj.export('ToBitString') %}
-{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+{%- if obj.is_bitfield %}
 {{export.value}}gchar *
 {{obj.c_method('ToString')}}({{obj.c_type}} val)
 {
@@ -27,6 +14,17 @@
 {%- endfor %}
     return g_strjoinv(",", (gchar **)data);
 }
+{%- else %}
+{{export.value}}const gchar *
+{{obj.c_method('ToString')}}({{obj.c_type}} val)
+{
+{%- for item in obj.items %}
+    if (val == {{item.c_define}})
+        return "{{item.value}}";
+{%- endfor %}
+    return NULL;
+}
+{%- endif %}
 {%- endif %}
 
 {%- set export = obj.export('FromString') %}
@@ -34,10 +32,26 @@
 {{export.value}}{{obj.c_type}}
 {{obj.c_method('FromString')}}(const gchar *val)
 {
+{%- if obj.is_bitfield %}
+    {{obj.c_type}} value = 0;
+    g_auto(GStrv) split = NULL;
+    g_return_val_if_fail(val != NULL, 0);
+    split = g_strsplit(val, ",", -1);
+    for (guint i = 0; split[i] != NULL; i++) {
+{%- for item in obj.items %}
+        if (g_strcmp0(split[i], "{{item.value}}") == 0) {
+            value |= {{item.c_define}};
+            continue;
+        }
+{%- endfor %}
+    }
+    return value;
+{%- else %}
 {%- for item in obj.items %}
     if (g_strcmp0(val, "{{item.value}}") == 0)
         return {{item.c_define}};
 {%- endfor %}
     return {{obj.items[0].c_define}};
+{%- endif %}
 }
 {%- endif %}

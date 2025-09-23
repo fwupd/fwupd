@@ -77,7 +77,7 @@ enum FuWacModuleStatus {
     ErrWrongImage,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuWacDeviceStatus {
     Unknown = 0,
     Writing = 1 << 0,
