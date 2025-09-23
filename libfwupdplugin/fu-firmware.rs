@@ -16,7 +16,7 @@ enum FuFirmwareParseFlags {
     CacheBlob = 1 << 11,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuFirmwareFlags {
     None = 0,
     DedupeId = 1 << 0,

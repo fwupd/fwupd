@@ -71,9 +71,9 @@ class EnumObj:
         self.items: List[EnumItem] = []
         self._exports: Dict[str, Export] = {
             "ToString": Export.NONE,
-            "ToBitString": Export.NONE,
             "FromString": Export.NONE,
         }
+        self._is_bitfield = False
 
     def c_method(self, suffix: str):
         return f"{_camel_to_snake(self.name)}_{_camel_to_snake(suffix)}"
@@ -92,6 +92,13 @@ class EnumObj:
             if item.default:
                 return True
         return False
+
+    @property
+    def is_bitfield(self) -> bool:
+        for item in self.items:
+            if item.is_bitfield:
+                return True
+        return self._is_bitfield
 
     def check(self):
         # check we're prefixed with something sane
@@ -119,6 +126,9 @@ class EnumObj:
         self._exports[derive] = Export.PRIVATE
 
     def add_public_export(self, derive: str) -> None:
+        if derive == "Bitfield":
+            self._is_bitfield = True
+            return
         self.add_private_export(derive)
         self._exports[derive] = Export.PUBLIC
 
@@ -134,6 +144,7 @@ class EnumItem:
         self.obj: EnumObj = obj
         self.name: str = ""
         self.default: Optional[str] = None
+        self.is_bitfield = False
 
     @property
     def c_define(self) -> str:
@@ -149,6 +160,8 @@ class EnumItem:
             "u16::MAX": "G_MAXUINT16",
             "u8::MAX": "G_MAXUINT8",
         }.get(val, val)
+        if val.find("<<") != -1:
+            self.is_bitfield = True
         if val.startswith("0x") or val.startswith("0b"):
             val = val.replace("_", "")
         if val.startswith("0b"):

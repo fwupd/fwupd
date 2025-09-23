@@ -62,7 +62,7 @@ enum FuDfuState {
     DfuError,
 }
 
-#[derive(ToBitString)]
+#[derive(ToString)]
 enum FuDfuSectorCap {
     None = 0, // No operations possible
     Readable = 1 << 0,
