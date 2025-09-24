@@ -318,6 +318,22 @@ enum FuEfiVariableStoreState {
 }
 
 #[repr(u8)]
+enum FuEfiVariableStoreFormat {
+    Formatted = 0x5A,
+}
+
+#[derive(ParseStream, ValidateStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructEfiVss2VariableStoreHeader {
+    signature: Guid == "aaf32c78-947b-439a-a180-2e144ec37792",
+    size: u32le, // size of variable store, including store header
+    format: FuEfiVariableStoreFormat == Formatted,
+    state: FuEfiVariableStoreState == Healthy,
+    _reserved: u16le,
+    _reserved1: u32le,
+}
+
+#[repr(u8)]
 #[derive(ToString, FromString)]
 enum FuEfiVariableState {
     Unset                       = 0x00,

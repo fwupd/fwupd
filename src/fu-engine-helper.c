@@ -55,6 +55,9 @@ fu_engine_add_firmware_gtypes(FuEngine *self)
 	fu_context_add_firmware_gtype(ctx, "efi-section", FU_TYPE_EFI_SECTION);
 	fu_context_add_firmware_gtype(ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
 	fu_context_add_firmware_gtype(ctx, "efi-ftw-store", FU_TYPE_EFI_FTW_STORE);
+	fu_context_add_firmware_gtype(ctx,
+				      "efi-vss2-variable-store",
+				      FU_TYPE_EFI_VSS2_VARIABLE_STORE);
 	fu_context_add_firmware_gtype(ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "cfu-offer", FU_TYPE_CFU_OFFER);

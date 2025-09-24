@@ -110,6 +110,7 @@ fwupdplugin_src = [
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efi-variable-authentication2.c',
+  'fu-efi-vss2-variable-store.c',
   'fu-efi-vss-auth-variable.c',
   'fu-efi-ftw-store.c',
   'fu-efivars.c', # fuzzing
@@ -265,6 +266,7 @@ fwupdplugin_headers = [
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efi-variable-authentication2.h',
+  'fu-efi-vss2-variable-store.h',
   'fu-efi-vss-auth-variable.h',
   'fu-efi-ftw-store.h',
   'fu-efivars.h',

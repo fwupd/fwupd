@@ -5399,6 +5399,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_VSS2_VARIABLE_STORE,
+		"efi-vss2-variable-store.builder.xml",
+		"7706fdd6b56f155616a4a0aa5cf43cede8bb4bec",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
 		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
