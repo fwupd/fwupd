@@ -8,6 +8,6 @@ if [ "$1" = remove ]; then
 	if [ "$CI" = "true" ]; then
 		fwupdtool disable-test-devices
 	else
-		echo "To disable test suite, run `fwupdtool disable-test-devices`"
+		echo "To disable test suite, run \`fwupdtool disable-test-devices\`"
 	fi
 fi
