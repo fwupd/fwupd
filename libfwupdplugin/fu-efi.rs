@@ -308,6 +308,24 @@ struct FuStructEfiHardDriveDevicePath {
     signature_type: FuEfiHardDriveDevicePathSignatureType = Guid,
 }
 
+#[repr(u8)]
+#[derive(ToString, FromString)]
+enum FuEfiVariableStoreState {
+    Unset   = 0x00,
+    Healthy = 0xFE,
+    Empty   = 0xFF,
+}
+
+#[derive(ParseStream, ValidateStream, Default, New)]
+#[repr(C, packed)]
+struct FuStructEfiFaultTolerantWorkingBlockHeader64 {
+    signature: Guid == "9e58292b-7c68-497d-a0ce-6500fd9f1b95",
+    crc: u32le = 0xFFFFFFFF,
+    state: FuEfiVariableStoreState = Empty,
+    reserved: [u8; 3] = [0xFF; 3],
+    write_queue_size: u64le,
+}
+
 #[derive(ParseStream, New, Default)]
 #[repr(C, packed)]
 struct FuStructShimHive {

@@ -52,6 +52,7 @@
 #include <libfwupdplugin/fu-efi-file-path-device-path.h>
 #include <libfwupdplugin/fu-efi-file.h>
 #include <libfwupdplugin/fu-efi-filesystem.h>
+#include <libfwupdplugin/fu-efi-ftw-store.h>
 #include <libfwupdplugin/fu-efi-hard-drive-device-path.h>
 #include <libfwupdplugin/fu-efi-load-option.h>
 #include <libfwupdplugin/fu-efi-section.h>
