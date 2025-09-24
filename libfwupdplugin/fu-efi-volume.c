@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-filesystem.h"
@@ -314,6 +315,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	fwupd_guid_t guid = {0x0};
 	guint32 hdr_length = 0x48;
 	guint64 fv_length;
+	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
@@ -383,8 +385,12 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_volume_set_hdr_len(buf, hdr_length);
 
 	/* blockmap */
-	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, fv_length);
-	fu_struct_efi_volume_block_map_set_length(st_blk, 0x1);
+	chunks = fu_chunk_array_new_virtual(fv_length,
+					    FU_CHUNK_ADDR_OFFSET_NONE,
+					    FU_CHUNK_PAGESZ_NONE,
+					    0x1000);
+	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, fu_chunk_array_length(chunks));
+	fu_struct_efi_volume_block_map_set_length(st_blk, 0x1000);
 	g_byte_array_append(buf, st_blk->data, st_blk->len);
 	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, 0x0);
 	fu_struct_efi_volume_block_map_set_length(st_blk, 0x0);
