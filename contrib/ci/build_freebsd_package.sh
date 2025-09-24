@@ -7,27 +7,27 @@ GITHUB_TAG=
 
 while [ -n "$1" ]; do
     case $1 in
-        --GITHUB_SHA=*)
-            GITHUB_SHA=${1#--GITHUB_SHA=}
-            ;;
-        --GITHUB_REPOSITORY=*)
-            GITHUB_REPOSITORY=${1#--GITHUB_REPOSITORY=}
-            ;;
-        --GITHUB_REPOSITORY_OWNER=*)
-            GITHUB_REPOSITORY_OWNER=${1#--GITHUB_REPOSITORY_OWNER=}
-            ;;
-        --GITHUB_TAG=*)
-            GITHUB_TAG=${1#--GITHUB_TAG=}
-            ;;
-        *)
-            echo "Command $1 unknown. exiting..."
-            exit 1
-            ;;
+    --GITHUB_SHA=*)
+        GITHUB_SHA=${1#--GITHUB_SHA=}
+        ;;
+    --GITHUB_REPOSITORY=*)
+        GITHUB_REPOSITORY=${1#--GITHUB_REPOSITORY=}
+        ;;
+    --GITHUB_REPOSITORY_OWNER=*)
+        GITHUB_REPOSITORY_OWNER=${1#--GITHUB_REPOSITORY_OWNER=}
+        ;;
+    --GITHUB_TAG=*)
+        GITHUB_TAG=${1#--GITHUB_TAG=}
+        ;;
+    *)
+        echo "Command $1 unknown. exiting..."
+        exit 1
+        ;;
     esac
     shift
 done
 
-if [ -z "$GITHUB_SHA" ] || [ -z "$GITHUB_REPOSITORY" ] || \
+if [ -z "$GITHUB_SHA" ] || [ -z "$GITHUB_REPOSITORY" ] ||
     [ -z "$GITHUB_REPOSITORY_OWNER" ] || [ -z "$GITHUB_TAG" ]; then
     exit 1
 fi
@@ -41,7 +41,7 @@ mkdir -p /usr/local/etc/pkg/repos/
 cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
 # Use latest pkg repo instead of quarterly https://wiki.freebsd.org/Ports/QuarterlyBranch
 sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' \
-/usr/local/etc/pkg/repos/FreeBSD.conf
+    /usr/local/etc/pkg/repos/FreeBSD.conf
 pkg install -y meson efivar
 pkg upgrade -y meson
 cd /usr
@@ -58,7 +58,7 @@ make makesum
 make clean
 make
 # Generate current list of files in the pkg-plist
-make makeplist > pkg-plist
+make makeplist >pkg-plist
 sed -i "" "1d" pkg-plist
 sed -i "" "s/%%PORTDOCS%%%%DOCSDIR%%/%%DOCSDIR%%/g" pkg-plist
 # Build artifact
@@ -66,4 +66,4 @@ make clean
 make package
 make install
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.pkg \
-~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg || exit 1
+    ~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg || exit 1

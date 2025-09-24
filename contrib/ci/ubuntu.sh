@@ -33,12 +33,12 @@ root=$(pwd)
 export BUILD=${root}/build
 rm -rf ${BUILD}
 chown -R nobody ${root}
-sudo -u nobody meson ${BUILD}               \
-                    -Db_coverage=true       \
-                    -Dman=false             \
-                    -Ddocs=enabled          \
-                    -Dlibxmlb:gtkdoc=false  \
-                    --prefix=${root}/target
+sudo -u nobody meson ${BUILD} \
+    -Db_coverage=true \
+    -Dman=false \
+    -Ddocs=enabled \
+    -Dlibxmlb:gtkdoc=false \
+    --prefix=${root}/target
 #build with clang
 sudo -u nobody ninja -C ${BUILD} -v
 sudo -u nobody meson test -C ${BUILD} --print-errorlogs --verbose
@@ -57,7 +57,7 @@ ninja -C ${BUILD} install -v
 # check the daemon aborts
 set +e
 FWUPD_SYSCALL_FILTER=systemd ${BUILD}/src/fwupd --immediate-exit
-if [ $? -ne 1 ] ; then
+if [ $? -ne 1 ]; then
     echo "failed to detect missing syscall filtering"
     exit 1
 fi

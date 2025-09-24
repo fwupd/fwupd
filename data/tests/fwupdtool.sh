@@ -11,11 +11,10 @@ INPUT="@installedtestsdir@/fakedevice124.bin \
        @installedtestsdir@/fakedevice124.metainfo.xml"
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
 
-error()
-{
-       rc=$1
-       cat fwupdtool.txt
-       exit $rc
+error() {
+    rc=$1
+    cat fwupdtool.txt
+    exit $rc
 }
 
 expect_rc() {
@@ -25,11 +24,10 @@ expect_rc() {
     [ "$expected" -eq "$rc" ] || error "$rc"
 }
 
-run()
-{
-       cmd="fwupdtool -v $*"
-       echo "cmd: $cmd" >fwupdtool.txt
-       $cmd 1>>fwupdtool.txt 2>&1
+run() {
+    cmd="fwupdtool -v $*"
+    echo "cmd: $cmd" >fwupdtool.txt
+    $cmd 1>>fwupdtool.txt 2>&1
 }
 
 # ---
@@ -54,9 +52,9 @@ expect_rc 0
 
 UNAME=$(uname -m)
 if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "x86" ]; then
-       EXPECTED=0
+    EXPECTED=0
 else
-       EXPECTED=1
+    EXPECTED=1
 fi
 # ---
 echo "Showing security"
@@ -219,68 +217,68 @@ expect_rc 0
 
 BASEDIR=@installedtestsdir@/tests/bios-attrs/dell-xps13-9310/
 if [ -d $BASEDIR ]; then
-       WORKDIR="$(mktemp -d)"
-       cp $BASEDIR $WORKDIR -r
-       export FWUPD_SYSFSFWATTRIBDIR=$WORKDIR/dell-xps13-9310/
-       # ---
-       echo "Get BIOS settings..."
-       run get-bios-settings --json
-       expect_rc 0
+    WORKDIR="$(mktemp -d)"
+    cp $BASEDIR $WORKDIR -r
+    export FWUPD_SYSFSFWATTRIBDIR=$WORKDIR/dell-xps13-9310/
+    # ---
+    echo "Get BIOS settings..."
+    run get-bios-settings --json
+    expect_rc 0
 
-       # ---
-       echo "Get BIOS setting as json..."
-       run get-bios-settings WlanAutoSense --json
-       expect_rc 0
+    # ---
+    echo "Get BIOS setting as json..."
+    run get-bios-settings WlanAutoSense --json
+    expect_rc 0
 
-       # ---
-       echo "Get BIOS setting as a string..."
-       run get-bios-settings WlanAutoSense
-       expect_rc 0
+    # ---
+    echo "Get BIOS setting as a string..."
+    run get-bios-settings WlanAutoSense
+    expect_rc 0
 
-       # ---
-       echo "Modify BIOS setting to different value..."
-       run set-bios-setting WlanAutoSense Enabled  --no-reboot-check
-       expect_rc 0
+    # ---
+    echo "Modify BIOS setting to different value..."
+    run set-bios-setting WlanAutoSense Enabled --no-reboot-check
+    expect_rc 0
 
-       # ---
-       echo "Modify BIOS setting back to default..."
-       run set-bios-setting WlanAutoSense Disabled  --no-reboot-check
-       expect_rc 0
+    # ---
+    echo "Modify BIOS setting back to default..."
+    run set-bios-setting WlanAutoSense Disabled --no-reboot-check
+    expect_rc 0
 
-       # ---
-       echo "Modify BIOS setting to bad value (should fail)..."
-       run set-bios-setting WlanAutoSense foo  --no-reboot-check
-       expect_rc 1
+    # ---
+    echo "Modify BIOS setting to bad value (should fail)..."
+    run set-bios-setting WlanAutoSense foo --no-reboot-check
+    expect_rc 1
 
-       # ---
-       echo "Modify Unknown BIOS setting (should fail)..."
-       run set-bios-setting foo bar  --no-reboot-check
-       expect_rc 3
+    # ---
+    echo "Modify Unknown BIOS setting (should fail)..."
+    run set-bios-setting foo bar --no-reboot-check
+    expect_rc 3
 fi
 
 if [ -x /usr/bin/certtool ]; then
 
-       # ---
-       echo "Building unsigned ${CAB}..."
-       INPUT="@installedtestsdir@/fakedevice124.bin \
+    # ---
+    echo "Building unsigned ${CAB}..."
+    INPUT="@installedtestsdir@/fakedevice124.bin \
               @installedtestsdir@/fakedevice124.metainfo.xml"
-       run build-cabinet ${CAB} ${INPUT} --force
-       expect_rc 0
+    run build-cabinet ${CAB} ${INPUT} --force
+    expect_rc 0
 
-       # ---
-       echo "Sign ${CAB}"
-       @installedtestsdir@/build-certs.py /tmp
-       run firmware-sign ${CAB} /tmp/testuser.pem /tmp/testuser.key --json
-       expect_rc 0
+    # ---
+    echo "Sign ${CAB}"
+    @installedtestsdir@/build-certs.py /tmp
+    run firmware-sign ${CAB} /tmp/testuser.pem /tmp/testuser.key --json
+    expect_rc 0
 
-       # ---
-       echo "Cleaning self-signed ${CAB}..."
-       rm -f ${CAB}
+    # ---
+    echo "Cleaning self-signed ${CAB}..."
+    rm -f ${CAB}
 fi
 
 if [ -z "$CI_NETWORK" ]; then
-        echo "Skipping remaining tests due to CI_NETWORK not being set"
-        exit 0
+    echo "Skipping remaining tests due to CI_NETWORK not being set"
+    exit 0
 fi
 
 # ---

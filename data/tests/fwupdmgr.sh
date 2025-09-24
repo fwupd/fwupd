@@ -8,8 +8,7 @@ device=08d460be0f1f9f128413f816022a6439e0078018
 
 CAB="@installedtestsdir@/fakedevice123.cab"
 
-error()
-{
+error() {
     rc=$1
     if [ -f "fwupd.txt" ]; then
         cat fwupd.txt
@@ -29,7 +28,8 @@ expect_rc() {
 # ---
 echo "Verify test device is present"
 fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
-rc=$?; if [ $rc != 0 ]; then
+rc=$?
+if [ $rc != 0 ]; then
     echo "Enable test device"
     fwupdtool enable-test-devices
     expect_rc 0
@@ -152,7 +152,8 @@ expect_rc 0
 # ---
 echo "Check if anything was tagged for emulation"
 fwupdmgr get-devices --json --filter emulation-tag | jq -e '(.Devices | length) > 0'
-rc=$?; if [ $rc = 0 ]; then
+rc=$?
+if [ $rc = 0 ]; then
     echo "Save device emulation"
     fwupdmgr emulation-save /dev/null
     expect_rc 0
@@ -225,7 +226,7 @@ if [ -n "$CI_NETWORK" ]; then
     fwupdmgr search DOESNOTEXIST
     expect_rc 3
 else
-        echo "Skipping network tests due to CI_NETWORK not being set"
+    echo "Skipping network tests due to CI_NETWORK not being set"
 fi
 
 # ---
@@ -285,9 +286,9 @@ expect_rc 0
 
 UNAME=$(uname -m)
 if [ "${UNAME}" = "x86_64" ] || [ "${UNAME}" = "x86" ]; then
-       EXPECTED=0
+    EXPECTED=0
 else
-       EXPECTED=1
+    EXPECTED=1
 fi
 # ---
 echo "Run security tests..."

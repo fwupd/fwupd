@@ -5,8 +5,7 @@ exec 2>&1
 # only run as root, possibly only in CI
 if [ "$(id -u)" -ne 0 ]; then exit 0; fi
 
-error()
-{
+error() {
     rc=$1
     if [ -f "fwupd.txt" ]; then
         cat fwupd.txt

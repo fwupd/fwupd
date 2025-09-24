@@ -18,10 +18,10 @@ cp /var/cache/*.tar.* $HOME/rpmbuild/SOURCES/
 mkdir -p build
 sed "s,#VERSION#,$RPMVERSION,;
      s,#BUILD#,1,;
-     s,#LONGDATE#,`date '+%a %b %d %Y'`,;
+     s,#LONGDATE#,$(date '+%a %b %d %Y'),;
      s,#ALPHATAG#,alpha,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	contrib/fwupd.spec.in > build/fwupd.spec
+    contrib/fwupd.spec.in >build/fwupd.spec
 rpmbuild -ba build/fwupd.spec --with=libfwupdcompat
 
 # copy as artifact
