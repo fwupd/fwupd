@@ -12,8 +12,10 @@
 #include "fu-common.h"
 #include "fu-efi-common.h"
 #include "fu-efi-filesystem.h"
+#include "fu-efi-ftw-store.h"
 #include "fu-efi-struct.h"
 #include "fu-efi-volume.h"
+#include "fu-efi-vss2-variable-store.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-sum.h"
@@ -50,6 +52,70 @@ static gboolean
 fu_efi_volume_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, GError **error)
 {
 	return fu_struct_efi_volume_validate_stream(stream, offset, error);
+}
+
+static gboolean
+fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
+			       GInputStream *stream,
+			       gsize offset,
+			       FuFirmwareParseFlags flags,
+			       GError **error)
+{
+	gsize streamsz = 0;
+	guint found_cnt = 0;
+
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	while (offset < streamsz) {
+		g_autoptr(FuFirmware) img = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* try to find a NVRAM store */
+		img = fu_firmware_new_from_gtypes(stream,
+						  offset,
+						  flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
+						  &error_local,
+						  FU_TYPE_EFI_VSS2_VARIABLE_STORE,
+						  FU_TYPE_EFI_FTW_STORE,
+						  G_TYPE_INVALID);
+		if (img == NULL) {
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
+				g_debug("ignoring EFI NVRAM @0x%x: %s",
+					(guint)offset,
+					error_local->message);
+			}
+			offset += 0x1000;
+			continue;
+		}
+
+		/* sanity check */
+		if (fu_firmware_get_size(img) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "NVRAM store entry has zero size");
+			return FALSE;
+		}
+
+		/* we found something */
+		fu_firmware_set_offset(img, offset);
+		fu_firmware_add_image(FU_FIRMWARE(self), img);
+		offset += fu_firmware_get_size(img);
+		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4K);
+		found_cnt += 1;
+	}
+
+	/* we found nothing */
+	if (found_cnt == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no NVRAM stores found");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -189,9 +255,19 @@ fu_efi_volume_parse(FuFirmware *firmware,
 		fu_firmware_add_image(firmware, img);
 	} else if (g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA) == 0 ||
 		   g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA2) == 0) {
-		g_debug("ignoring %s [%s] EFI FV", guid_str, fu_efi_guid_to_name(guid_str));
-		if (!fu_firmware_set_stream(firmware, partial_stream, error))
-			return FALSE;
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_efi_volume_parse_nvram_evsa(self,
+						    stream,
+						    hdr_length,
+						    flags,
+						    &error_local)) {
+			g_debug("ignoring %s [%s] EFI FV: %s",
+				guid_str,
+				fu_efi_guid_to_name(guid_str),
+				error_local->message);
+			if (!fu_firmware_set_stream(firmware, partial_stream, error))
+				return FALSE;
+		}
 	} else {
 		g_warning("no idea how to parse %s [%s] EFI volume",
 			  guid_str,

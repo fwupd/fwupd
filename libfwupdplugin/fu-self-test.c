@@ -5407,7 +5407,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
-		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
+		"f9dfe85865801446fcd1732c9479e00b1a6edcd2",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
