@@ -60,6 +60,7 @@
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-variable-authentication2.h>
 #include <libfwupdplugin/fu-efi-volume.h>
+#include <libfwupdplugin/fu-efi-vss-auth-variable.h>
 #include <libfwupdplugin/fu-efi-x509-device.h>
 #include <libfwupdplugin/fu-efi-x509-signature.h>
 #include <libfwupdplugin/fu-efivars.h>

@@ -131,3 +131,63 @@ fu_efi_parse_sections(FuFirmware *firmware,
 	/* success */
 	return TRUE;
 }
+
+/**
+ * fu_efi_timestamp_export:
+ * @st: a #FuStructEfiTime
+ * @bn: a #XbBuilderNode
+ *
+ * Exports an `EFI_TIME` to XML.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_efi_timestamp_export(FuStructEfiTime *st, XbBuilderNode *bn)
+{
+	if (fu_struct_efi_time_get_year(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "year", fu_struct_efi_time_get_year(st));
+	if (fu_struct_efi_time_get_month(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "month", fu_struct_efi_time_get_month(st));
+	if (fu_struct_efi_time_get_day(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "day", fu_struct_efi_time_get_day(st));
+	if (fu_struct_efi_time_get_hour(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "hour", fu_struct_efi_time_get_hour(st));
+	if (fu_struct_efi_time_get_minute(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "minute", fu_struct_efi_time_get_minute(st));
+	if (fu_struct_efi_time_get_second(st) != 0)
+		fu_xmlb_builder_insert_kx(bn, "second", fu_struct_efi_time_get_second(st));
+}
+
+/**
+ * fu_efi_timestamp_build:
+ * @st: a #FuStructEfiTime
+ * @n: a #XbNode
+ *
+ * Imports an `EFI_TIME` from XML.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_efi_timestamp_build(FuStructEfiTime *st, XbNode *n)
+{
+	guint64 tmp;
+
+	tmp = xb_node_query_text_as_uint(n, "year", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_year(st, tmp);
+	tmp = xb_node_query_text_as_uint(n, "month", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_month(st, tmp);
+	tmp = xb_node_query_text_as_uint(n, "day", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_day(st, tmp);
+	tmp = xb_node_query_text_as_uint(n, "hour", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_hour(st, tmp);
+	tmp = xb_node_query_text_as_uint(n, "minute", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_minute(st, tmp);
+	tmp = xb_node_query_text_as_uint(n, "second", NULL);
+	if (tmp != G_MAXUINT64)
+		fu_struct_efi_time_set_second(st, tmp);
+}

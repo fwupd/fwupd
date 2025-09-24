@@ -36,6 +36,7 @@ install_data(
     'efi-signature-list.builder.xml',
     'efi-variable-authentication2.builder.xml',
     'efi-volume.builder.xml',
+    'efi-vss-auth-variable.builder.xml',
     'efi-ftw-store.builder.xml',
     'elf.builder.xml',
     'fdt.builder.xml',

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-efi-struct.h"
 #include "fu-firmware.h"
 
 #define FU_EFI_VOLUME_GUID_FFS1	       "7a9354d9-0468-444a-81ce-0bf617d890df"
@@ -38,3 +39,7 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error) G_GNUC_NON_NULL(1, 2);
+void
+fu_efi_timestamp_export(FuStructEfiTime *st, XbBuilderNode *bn) G_GNUC_NON_NULL(1, 2);
+void
+fu_efi_timestamp_build(FuStructEfiTime *st, XbNode *n) G_GNUC_NON_NULL(1, 2);
