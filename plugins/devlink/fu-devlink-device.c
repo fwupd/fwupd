@@ -746,10 +746,13 @@ fu_devlink_device_new(FuContext *ctx,
 	fu_devlink_device_set_bus_name(self, bus_name);
 	fu_devlink_device_set_dev_name(self, dev_name);
 
-	device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
-	fu_device_set_physical_id(FU_DEVICE(self), device_id);
-	if (serial_number != NULL)
+	if (serial_number != NULL) {
 		fu_device_set_serial(FU_DEVICE(self), serial_number);
+		fu_device_set_physical_id(FU_DEVICE(self), serial_number);
+	} else {
+		device_id = g_strdup_printf("%s/%s", bus_name, dev_name);
+		fu_device_set_physical_id(FU_DEVICE(self), device_id);
+	}
 
 	return FU_DEVICE(g_steal_pointer(&self));
 }
