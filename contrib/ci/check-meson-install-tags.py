@@ -99,6 +99,10 @@ def check(install_plan) -> int:
             logging.error(f"file should have 'tests' tag: {f}")
             exit_code = 1
 
+    if exit_code != 0:
+        logging.warning(
+            "meson build directory may be outdated which requires full wipe and new `meson setup`"
+        )
     return exit_code
 
 
