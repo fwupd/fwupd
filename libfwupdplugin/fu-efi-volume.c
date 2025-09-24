@@ -291,6 +291,15 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_volume_set_guid(buf, &guid);
 	fv_length = fu_common_align_up(hdr_length + g_bytes_get_size(img_blob),
 				       fu_firmware_get_alignment(firmware));
+
+	/* we want a minimum size of volume */
+	if (fu_firmware_get_size(firmware) > fv_length) {
+		g_debug("padding FV from 0x%x to 0x%x",
+			(guint)fv_length,
+			(guint)fu_firmware_get_size(firmware));
+		fv_length = fu_firmware_get_size(firmware);
+	}
+
 	fu_struct_efi_volume_set_length(buf, fv_length);
 	fu_struct_efi_volume_set_attrs(buf,
 				       priv->attrs |
