@@ -239,7 +239,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	guint32 hdr_length = 0x48;
 	guint64 fv_length;
 	g_autoptr(GBytes) img_blob = NULL;
-	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 
 	/* sanity check */
 	if (fu_firmware_get_alignment(firmware) > FU_FIRMWARE_ALIGNMENT_1M) {
@@ -263,19 +263,28 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* length */
-	img = fu_firmware_get_image_by_id(firmware, NULL, NULL);
-	if (img != NULL) {
-		img_blob = fu_firmware_write(img, error);
-		if (img_blob == NULL) {
-			g_prefix_error_literal(error, "no EFI FV child payload: ");
-			return NULL;
-		}
-	} else {
+	images = fu_firmware_get_images(firmware);
+	if (images->len == 0) {
 		img_blob = fu_firmware_get_bytes_with_patches(firmware, error);
 		if (img_blob == NULL) {
 			g_prefix_error_literal(error, "no EFI FV payload: ");
 			return NULL;
 		}
+	} else {
+		g_autoptr(GByteArray) buf_tmp = g_byte_array_new();
+		for (guint i = 0; i < images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(images, i);
+			g_autoptr(GBytes) img_blob_tmp = NULL;
+
+			img_blob_tmp = fu_firmware_write(img, error);
+			if (img_blob_tmp == NULL) {
+				g_prefix_error_literal(error, "no EFI FV child payload: ");
+				return NULL;
+			}
+			fu_byte_array_append_bytes(buf_tmp, img_blob_tmp);
+		}
+		img_blob =
+		    g_byte_array_free_to_bytes(g_steal_pointer(&buf_tmp)); /* nocheck:blocked */
 	}
 
 	/* pack */
