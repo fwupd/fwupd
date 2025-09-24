@@ -487,7 +487,10 @@ if get_option('default_library') != 'static'
   endif
   if host_machine.system() == 'freebsd'
     platform_deps += dependency('efivar')
-    platform_deps += dependency('libinotify', required: false)
+    platform_deps += dependency(
+      'libinotify',
+      required: false,
+    )
   endif
 endif
 
