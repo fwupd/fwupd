@@ -5407,19 +5407,19 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
-		"f9dfe85865801446fcd1732c9479e00b1a6edcd2",
+		"b191f6c74e1fb69cecea27711cd72c520c9afa0c",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume-sized.builder.xml",
-		"8044433881a9390ed8a72956eb4eb57ec162dea4",
+		"d7087ea16218d700b9175a9cd0c27bd56b07a6d4",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_IFD_FIRMWARE,
 		"ifd.builder.xml",
-		"06ae066ea53cefe43fed2f1ca4fc7d8cccdbcf1e",
+		"494e7be6a72e743e6738c0ecdbdcddbf27d1dbd7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
