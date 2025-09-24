@@ -15,18 +15,17 @@ mkdir -p build
 cp contrib/ci/s390x_cross.txt build/
 cd build
 meson setup .. \
-	--cross-file s390x_cross.txt \
-	--werror \
-	-Dplugin_flashrom=disabled \
-	-Dplugin_modem_manager=disabled \
-	-Dintrospection=false \
-	-Dlibxmlb:introspection=false \
-	-Dlibxmlb:gtkdoc=false \
-	-Dman=false
+    --cross-file s390x_cross.txt \
+    --werror \
+    -Dplugin_flashrom=disabled \
+    -Dplugin_modem_manager=disabled \
+    -Dintrospection=false \
+    -Dlibxmlb:introspection=false \
+    -Dlibxmlb:gtkdoc=false \
+    -Dman=false
 ninja -v
 ninja test -v
 cd ..
-
 
 #test for missing translation files
 ./contrib/ci/check_missing_translations.sh

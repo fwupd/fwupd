@@ -10,62 +10,62 @@ export FWUPD_HOSTFS_ROOT=/var/lib/snapd/hostfs
 
 #determine architecture
 if [ "$SNAP_ARCH" = "amd64" ]; then
-  ARCH="x86_64-linux-gnu"
+    ARCH="x86_64-linux-gnu"
 elif [ "$SNAP_ARCH" = "armhf" ]; then
-  ARCH="arm-linux-gnueabihf"
+    ARCH="arm-linux-gnueabihf"
 elif [ "$SNAP_ARCH" = "arm64" ]; then
-  ARCH="aarch64-linux-gnu"
+    ARCH="aarch64-linux-gnu"
 else
-  ARCH="$SNAP_ARCH-linux-gnu"
+    ARCH="$SNAP_ARCH-linux-gnu"
 fi
 
 # re-generate gio modules in local cache
 needs_update=true
 if [ -f $SNAP_USER_DATA/.last_revision ]; then
-  # shellcheck source=/dev/null
-  . $SNAP_USER_DATA/.last_revision 2>/dev/null
+    # shellcheck source=/dev/null
+    . $SNAP_USER_DATA/.last_revision 2>/dev/null
 fi
 if [ "$SNAP_DESKTOP_LAST_REVISION" = "$SNAP_REVISION" ]; then
-  needs_update=false
+    needs_update=false
 fi
 if [ $needs_update = true ]; then
-  if [ -f $SNAP/usr/lib/$ARCH/glib-2.0/gio-querymodules ]; then
-    rm -rf $GIO_MODULE_DIR
-    mkdir -p $GIO_MODULE_DIR
-    ln -s $SNAP/usr/lib/$ARCH/gio/modules/*.so $GIO_MODULE_DIR
-    $SNAP/usr/lib/$ARCH/glib-2.0/gio-querymodules $GIO_MODULE_DIR
-  fi
-  echo "SNAP_DESKTOP_LAST_REVISION=$SNAP_REVISION" > $SNAP_USER_DATA/.last_revision
+    if [ -f $SNAP/usr/lib/$ARCH/glib-2.0/gio-querymodules ]; then
+        rm -rf $GIO_MODULE_DIR
+        mkdir -p $GIO_MODULE_DIR
+        ln -s $SNAP/usr/lib/$ARCH/gio/modules/*.so $GIO_MODULE_DIR
+        $SNAP/usr/lib/$ARCH/glib-2.0/gio-querymodules $GIO_MODULE_DIR
+    fi
+    echo "SNAP_DESKTOP_LAST_REVISION=$SNAP_REVISION" >$SNAP_USER_DATA/.last_revision
 fi
 
 # Setup directory structures if command was run as root
 if [ "$(id -u)" = "0" ]; then
-  CONF_DIR="${SNAP_COMMON}/var/etc/fwupd"
-  REMOTE_DIR="${SNAP_COMMON}/var/lib/fwupd/remotes.d"
-  SHARE_DIR="${SNAP_COMMON}/share/fwupd/remotes.d/vendor/firmware"
-  mkdir -p ${CONF_DIR} ${REMOTE_DIR} ${SHARE_DIR}
+    CONF_DIR="${SNAP_COMMON}/var/etc/fwupd"
+    REMOTE_DIR="${SNAP_COMMON}/var/lib/fwupd/remotes.d"
+    SHARE_DIR="${SNAP_COMMON}/share/fwupd/remotes.d/vendor/firmware"
+    mkdir -p ${CONF_DIR} ${REMOTE_DIR} ${SHARE_DIR}
 
-  # copy a writable fwupd.conf for users to use
-  if [ ! -f "${CONF_DIR}/fwupd.conf" ]; then
-    cp "$SNAP/etc/fwupd/fwupd.conf" "${CONF_DIR}/fwupd.conf"
-  fi
-
-  # Migrate remotes from "old" snap guidance and from immutable directory
-  for BASE in "${SNAP}/etc/fwupd/remotes.d" "${SNAP_USER_DATA}/etc/fwupd/remotes.d/"; do
-    if [ ! -d "${BASE}" ]; then
-      continue
+    # copy a writable fwupd.conf for users to use
+    if [ ! -f "${CONF_DIR}/fwupd.conf" ]; then
+        cp "$SNAP/etc/fwupd/fwupd.conf" "${CONF_DIR}/fwupd.conf"
     fi
-    for P in ${BASE}/*.conf; do
-      REMOTE=$(basename $P)
-      # vendor.conf doesn't make sense in snap
-      if [ "${REMOTE}" = "vendor.conf" ]; then
-          continue
-      fi
-      if [ ! -f "${REMOTE_DIR}/${REMOTE}" ]; then
-          cp ${P} "${REMOTE_DIR}"
-      fi
+
+    # Migrate remotes from "old" snap guidance and from immutable directory
+    for BASE in "${SNAP}/etc/fwupd/remotes.d" "${SNAP_USER_DATA}/etc/fwupd/remotes.d/"; do
+        if [ ! -d "${BASE}" ]; then
+            continue
+        fi
+        for P in ${BASE}/*.conf; do
+            REMOTE=$(basename $P)
+            # vendor.conf doesn't make sense in snap
+            if [ "${REMOTE}" = "vendor.conf" ]; then
+                continue
+            fi
+            if [ ! -f "${REMOTE_DIR}/${REMOTE}" ]; then
+                cp ${P} "${REMOTE_DIR}"
+            fi
+        done
     done
-  done
 fi
 
 exec "$@"

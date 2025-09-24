@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HOME_DIR=`getent passwd user | awk '{ split($$0,a,":"); print a[6]}'`
+HOME_DIR=$(getent passwd user | awk '{ split($$0,a,":"); print a[6]}')
 
 if [ -z "$HOME_DIR" ]; then
     echo "Default user does not exist!!" >&2

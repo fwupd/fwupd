@@ -5,7 +5,7 @@
 
 # activate firmware when we have a read-only filesystem
 if ! @bindir@/fwupdtool activate; then
-        ret=$?
-        [ "$ret" -eq "2" ] && exit 0
-        exit $ret
+    ret=$?
+    [ "$ret" -eq "2" ] && exit 0
+    exit $ret
 fi

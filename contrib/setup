@@ -6,12 +6,11 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS="-y"
 
-rename_branch()
-{
+rename_branch() {
     OLD=master
     NEW=main
     if git log $OLD >/dev/null 2>&1 &&
-       git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
+        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
         echo ""
         read -p "Rename existing $OLD branch to $NEW? (y/N) " question
         if [ "$question" = "y" ]; then
@@ -23,8 +22,7 @@ rename_branch()
     fi
 }
 
-setup_deps()
-{
+setup_deps() {
     if [ -z "$CI" ]; then
         read -p "Install build dependencies? (y/N) " question
     else
@@ -35,8 +33,7 @@ setup_deps()
     fi
 }
 
-setup_run_wrappers()
-{
+setup_run_wrappers() {
     BASE=../../contrib/
     BIN=venv/bin/
     TEMPLATE=${BASE}/launch-venv.sh
@@ -52,8 +49,7 @@ setup_run_wrappers()
     ln -s ${BASE}/test-venv.sh ${BIN}/test-fwupd
 }
 
-setup_vscode()
-{
+setup_vscode() {
     # Add default vscode settings and debug launcher
     SOURCED=./contrib/vscode
     TARGETD=./.vscode
@@ -69,16 +65,14 @@ setup_vscode()
     done
 }
 
-setup_git()
-{
+setup_git() {
     if [ -z "$CI" ]; then
         echo "Configuring git environment"
         git config include.path ../.gitconfig
     fi
 }
 
-install_pip()
-{
+install_pip() {
     package=$1
     args=$2
     if ! python3 -m pip install $package $args; then
@@ -88,15 +82,14 @@ install_pip()
     python3 -m pip install $package
 }
 
-setup_virtualenv()
-{
+setup_virtualenv() {
     echo "Setting up virtualenv"
     if ! which virtualenv >/dev/null 2>&1; then
         install_pip virtualenv
     fi
     virtualenv --system-site-packages venv --prompt fwupd
     source venv/bin/activate
-    cat >> venv/bin/activate << EOF
+    cat >>venv/bin/activate <<EOF
 echo "To build or rebuild fwupd within development environment run:"
 echo ""
 echo "# build-fwupd"
@@ -118,8 +111,7 @@ export MANPATH=./venv/dist/share/man:
 EOF
 }
 
-setup_precommit()
-{
+setup_precommit() {
     if [ -z "$CI" ]; then
         echo "Configuring pre-commit hooks"
         install_pip pre-commit
@@ -127,8 +119,7 @@ setup_precommit()
     fi
 }
 
-setup_prepush()
-{
+setup_prepush() {
     if [ -z "$CI" ]; then
         echo ""
         read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
@@ -142,35 +133,30 @@ setup_prepush()
     fi
 }
 
-check_markdown()
-{
+check_markdown() {
     python3 $HELPER test-markdown
 }
 
-check_jinja2()
-{
+check_jinja2() {
     python3 $HELPER test-jinja2
 }
 
-check_meson()
-{
+check_meson() {
     python3 $HELPER test-meson
 }
 
-detect_os()
-{
+detect_os() {
     for i in "$@"; do
         case $i in
-            --os=*)
-                OS="${i#*=}"
-                shift
-                ;;
-            --debug)
-                DEBUG=1
-                shift
-                ;;
-            *)
-                ;;
+        --os=*)
+            OS="${i#*=}"
+            shift
+            ;;
+        --debug)
+            DEBUG=1
+            shift
+            ;;
+        *) ;;
         esac
     done
     if [ -z $OS ]; then
@@ -181,7 +167,7 @@ detect_os()
         fi
         echo "Using OS profile $OS to setup"
     fi
-    if [ -n "$OS" ];then
+    if [ -n "$OS" ]; then
         HELPER_ARGS="$HELPER_ARGS --os $OS"
     fi
     if [ -n "$DEBUG" ]; then
@@ -190,8 +176,7 @@ detect_os()
     fi
 }
 
-howto()
-{
+howto() {
     echo ""
     echo "To enter fwupd development environment run:"
     echo ""
@@ -218,9 +203,9 @@ detect_os "$@"
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
-        debian|ubuntu|arch|fedora|darwin|freebsd)
-            setup_deps
-            ;;
+    debian | ubuntu | arch | fedora | darwin | freebsd)
+        setup_deps
+        ;;
     esac
     rename_branch
 fi

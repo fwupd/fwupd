@@ -15,11 +15,10 @@ export FWUPD_UEFI_ESP_PATH=${TMPDIR}/mnt
 mkdir -p ${FWUPD_SYSFSFWDIR}/efi/efivars
 mkdir -p ${FWUPD_UEFI_ESP_PATH}
 
-error()
-{
-       rc=$1
-       cat fwupdtool.txt
-       exit $rc
+error() {
+    rc=$1
+    cat fwupdtool.txt
+    exit $rc
 }
 
 expect_rc() {
@@ -29,11 +28,10 @@ expect_rc() {
     [ "$expected" -eq "$rc" ] || error "$rc"
 }
 
-run()
-{
-       cmd="fwupdtool -v $*"
-       echo "cmd: $cmd" >fwupdtool.txt
-       $cmd 1>>fwupdtool.txt 2>&1
+run() {
+    cmd="fwupdtool -v $*"
+    echo "cmd: $cmd" >fwupdtool.txt
+    $cmd 1>>fwupdtool.txt 2>&1
 }
 
 # ---

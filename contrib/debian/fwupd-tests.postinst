@@ -5,9 +5,9 @@ set -e
 
 #only enable on installation not upgrade
 if [ "$1" = configure ] && [ -z "$2" ]; then
-	if [ "$CI" = "true" ]; then
-		fwupdtool enable-test-devices
-	else
-		echo "To enable test suite, run \`fwupdtool enable-test-devices\`"
-	fi
+    if [ "$CI" = "true" ]; then
+        fwupdtool enable-test-devices
+    else
+        echo "To enable test suite, run \`fwupdtool enable-test-devices\`"
+    fi
 fi
