@@ -5411,6 +5411,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_VOLUME,
+		"efi-volume-sized.builder.xml",
+		"8044433881a9390ed8a72956eb4eb57ec162dea4",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_IFD_FIRMWARE,
 		"ifd.builder.xml",
 		"06ae066ea53cefe43fed2f1ca4fc7d8cccdbcf1e",
