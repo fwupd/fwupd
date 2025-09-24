@@ -86,17 +86,17 @@ if [ -f ${CAB} ]; then
     # ---
     echo "Examining ${CAB}..."
     fwupdmgr get-details ${CAB}
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    expect_rc 0
 
     # ---
     echo "Examining ${CAB} (json)..."
     fwupdmgr get-details ${CAB} --json
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    expect_rc 0
 
     # ---
     echo "Installing ${CAB} cabinet..."
     fwupdmgr install ${CAB} --no-reboot-check
-    rc=$?; if [ $rc != 0 ]; then exit $rc; fi
+    expect_rc 0
 fi
 
 # ---
@@ -189,7 +189,7 @@ expect_rc 0
 # ---
 echo "Getting history (should be none)..."
 fwupdmgr get-history
-rc=$?; if [ $rc != 2 ]; then exit $rc; fi
+expect_rc 2
 
 if [ -n "$CI_NETWORK" ]; then
     # ---
