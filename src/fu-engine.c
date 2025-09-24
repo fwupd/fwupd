@@ -62,8 +62,6 @@
 #include "fu-udev-device-private.h"
 #include "fu-uefi-backend.h"
 #include "fu-usb-backend.h"
-#include "fu-usb-device-fw-ds20.h"
-#include "fu-usb-device-ms-ds20.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -8612,57 +8610,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		return FALSE;
 
 	/* add the "built-in" firmware types */
-	fu_context_add_firmware_gtype(self->ctx, "raw", FU_TYPE_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "cab", FU_TYPE_CAB_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "fdt", FU_TYPE_FDT_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "csv", FU_TYPE_CSV_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "fit", FU_TYPE_FIT_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "dfuse", FU_TYPE_DFUSE_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "ifwi-cpd", FU_TYPE_IFWI_CPD_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "ifwi-fpt", FU_TYPE_IFWI_FPT_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "oprom", FU_TYPE_OPROM_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "fmap", FU_TYPE_FMAP_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "linear", FU_TYPE_LINEAR_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "hid-descriptor", FU_TYPE_HID_DESCRIPTOR);
-	fu_context_add_firmware_gtype(self->ctx, "archive", FU_TYPE_ARCHIVE_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
-	fu_context_add_firmware_gtype(self->ctx, "acpi-table", FU_TYPE_ACPI_TABLE);
-	fu_context_add_firmware_gtype(self->ctx, "sbatlevel", FU_TYPE_SBATLEVEL_SECTION);
-	fu_context_add_firmware_gtype(self->ctx, "edid", FU_TYPE_EDID);
-	fu_context_add_firmware_gtype(self->ctx, "efi-file", FU_TYPE_EFI_FILE);
-	fu_context_add_firmware_gtype(self->ctx, "efi-signature", FU_TYPE_EFI_SIGNATURE);
-	fu_context_add_firmware_gtype(self->ctx, "efi-signature-list", FU_TYPE_EFI_SIGNATURE_LIST);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-variable-authentication2",
-				      FU_TYPE_EFI_VARIABLE_AUTHENTICATION2);
-	fu_context_add_firmware_gtype(self->ctx, "efi-load-option", FU_TYPE_EFI_LOAD_OPTION);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "efi-device-path-list",
-				      FU_TYPE_EFI_DEVICE_PATH_LIST);
-	fu_context_add_firmware_gtype(self->ctx, "efi-filesystem", FU_TYPE_EFI_FILESYSTEM);
-	fu_context_add_firmware_gtype(self->ctx, "efi-section", FU_TYPE_EFI_SECTION);
-	fu_context_add_firmware_gtype(self->ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
-	fu_context_add_firmware_gtype(self->ctx, "efi-ftw-store", FU_TYPE_EFI_FTW_STORE);
-	fu_context_add_firmware_gtype(self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
-	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
-	fu_context_add_firmware_gtype(self->ctx, "cfu-payload", FU_TYPE_CFU_PAYLOAD);
-	fu_context_add_firmware_gtype(self->ctx, "uswid", FU_TYPE_USWID_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "coswid", FU_TYPE_COSWID_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "pefile", FU_TYPE_PEFILE_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "elf", FU_TYPE_ELF_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx, "x509-certificate", FU_TYPE_X509_CERTIFICATE);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "intel-thunderbolt",
-				      FU_TYPE_INTEL_THUNDERBOLT_FIRMWARE);
-	fu_context_add_firmware_gtype(self->ctx,
-				      "intel-thunderbolt-nvm",
-				      FU_TYPE_INTEL_THUNDERBOLT_NVM);
-	fu_context_add_firmware_gtype(self->ctx, "usb-device-fw-ds20", FU_TYPE_USB_DEVICE_FW_DS20);
-	fu_context_add_firmware_gtype(self->ctx, "usb-device-ms-ds20", FU_TYPE_USB_DEVICE_MS_DS20);
+	fu_engine_add_firmware_gtypes(self);
 
 	/* we are emulating a different host */
 	if (host_emulate != NULL) {
