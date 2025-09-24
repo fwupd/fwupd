@@ -8645,6 +8645,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	fu_context_add_firmware_gtype(self->ctx, "efi-filesystem", FU_TYPE_EFI_FILESYSTEM);
 	fu_context_add_firmware_gtype(self->ctx, "efi-section", FU_TYPE_EFI_SECTION);
 	fu_context_add_firmware_gtype(self->ctx, "efi-volume", FU_TYPE_EFI_VOLUME);
+	fu_context_add_firmware_gtype(self->ctx, "efi-ftw-store", FU_TYPE_EFI_FTW_STORE);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);

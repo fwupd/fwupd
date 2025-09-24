@@ -1,0 +1,4 @@
+<firmware gtype="FuEfiFtwStore">
+  <size>0x1000</size>
+  <state>healthy</state>
+</firmware>

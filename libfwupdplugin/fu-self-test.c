@@ -5387,6 +5387,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_FTW_STORE,
+		"efi-ftw-store.builder.xml",
+		"9bdb363e31e00d7fb0b42eacdc95771a3795b7ec",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
 		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
