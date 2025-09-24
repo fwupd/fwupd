@@ -78,7 +78,7 @@ def print_all(install_plan):
             print(f"{tag}: {file}")
 
 
-def check(install_plan):
+def check(install_plan) -> int:
     exit_code = 0
     tags = collect_tags(install_plan)
 
@@ -99,10 +99,10 @@ def check(install_plan):
             logging.error(f"file should have 'tests' tag: {f}")
             exit_code = 1
 
-    sys.exit(exit_code)
+    return exit_code
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="Meson install tag helper")
     parser.add_argument(
         "-C", dest="working_directory", default=".", help="Meson build directory"
@@ -128,9 +128,10 @@ def main():
         )
     )
 
+    exit_code = 0
     match args.command:
         case "check":
-            check(install_plan)
+            exit_code = check(install_plan)
         case "list":
             print_all(install_plan)
         case "list-files":
@@ -138,7 +139,7 @@ def main():
         case "list-tags":
             print_tags(install_plan)
 
-    sys.exit(0)
+    return exit_code
 
 
 if __name__ == "__main__":
@@ -147,7 +148,7 @@ if __name__ == "__main__":
     )
 
     if "PRE_COMMIT" not in os.environ:
-        main()
+        sys.exit(main())
 
     if not os.path.exists("venv/build"):
         logging.info("no configured build directory, skipping check-meson-install-tag")
@@ -166,3 +167,4 @@ if __name__ == "__main__":
         sys.exit(0)
 
     check(install_plan)
+    sys.exit(0)
