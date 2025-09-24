@@ -233,8 +233,8 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = fu_struct_efi_volume_new();
-	g_autoptr(GByteArray) st_blk = fu_struct_efi_volume_block_map_new();
+	g_autoptr(FuStructEfiVolume) buf = fu_struct_efi_volume_new();
+	g_autoptr(FuStructEfiVolumeBlockMap) st_blk = fu_struct_efi_volume_block_map_new();
 	fwupd_guid_t guid = {0x0};
 	guint32 hdr_length = 0x48;
 	guint64 fv_length;
