@@ -2568,7 +2568,7 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 		g_autoptr(FuFirmware) firmware = g_object_new(gtype, NULL);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_firmware_parse_stream(firmware, stream, offset, flags, &error_local)) {
-			g_debug("%s", error_local->message);
+			g_debug("@0x%x %s", (guint)offset, error_local->message);
 			if (error_all == NULL) {
 				g_propagate_error(&error_all, g_steal_pointer(&error_local));
 			} else {
