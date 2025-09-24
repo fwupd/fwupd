@@ -5393,6 +5393,12 @@ fu_firmware_builder_round_trip_func(void)
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
+		FU_TYPE_EFI_VSS_AUTH_VARIABLE,
+		"efi-vss-auth-variable.builder.xml",
+		"de6391f8b09653859b4ff93a7d5004c52c35d5c2",
+		FU_FIRMWARE_BUILDER_FLAG_NONE,
+	    },
+	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
 		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
