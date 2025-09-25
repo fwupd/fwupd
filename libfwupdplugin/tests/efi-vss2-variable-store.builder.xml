@@ -2,6 +2,7 @@
   <size>0xdfd4</size> <!-- 0xDF9C is 0xE000−0x2C -->
   <firmware gtype="FuEfiVssAuthVariable">
     <id>CustomMode</id>
+    <state>variable-added</state>
     <data>aGVsbG8gd29ybGQ=</data>
     <vendor_guid>c076ec0c-7028-4399-a072-71ee5c448b9f</vendor_guid>
     <attributes>non-volatile,bootservice-access</attributes>

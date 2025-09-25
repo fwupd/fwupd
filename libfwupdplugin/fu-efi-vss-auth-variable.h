@@ -15,5 +15,8 @@ G_DECLARE_FINAL_TYPE(FuEfiVssAuthVariable,
 		     EFI_VSS_AUTH_VARIABLE,
 		     FuFirmware)
 
+FuEfiVariableState
+fu_efi_vss_auth_variable_get_state(FuEfiVssAuthVariable *self) G_GNUC_NON_NULL(1);
+
 FuFirmware *
 fu_efi_vss_auth_variable_new(void);

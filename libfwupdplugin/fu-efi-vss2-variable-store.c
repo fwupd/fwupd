@@ -69,8 +69,11 @@ fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 					    "VSS2 store entry has zero size");
 			return FALSE;
 		}
-		fu_firmware_set_offset(img, offset);
-		fu_firmware_add_image(firmware, img);
+		if (fu_efi_vss_auth_variable_get_state(FU_EFI_VSS_AUTH_VARIABLE(img)) ==
+		    FU_EFI_VARIABLE_STATE_VARIABLE_ADDED) {
+			fu_firmware_set_offset(img, offset);
+			fu_firmware_add_image(firmware, img);
+		}
 		offset += fu_firmware_get_size(img);
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4);
 	}
@@ -131,6 +134,7 @@ static void
 fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 {
 	g_type_ensure(FU_TYPE_EFI_VSS_AUTH_VARIABLE);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 }
 
 static void
