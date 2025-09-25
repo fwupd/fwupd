@@ -1,4 +1,4 @@
 <firmware gtype="FuEfiFtwStore">
-  <size>0x1000</size>
   <state>healthy</state>
+  <data size="0xFE0" />
 </firmware>

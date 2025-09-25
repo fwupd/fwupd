@@ -15,7 +15,7 @@
     <data type="GBytes" size="0x1000" />
   </firmware>
   <firmware gtype="FuEfiFtwStore">
-    <size>0x1000</size>
+    <data size="0xFE0" />
     <state>healthy</state>
   </firmware>
 </firmware>
