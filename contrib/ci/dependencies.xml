@@ -1832,6 +1832,17 @@
       <package variant="x86_64">ShellCheck</package>
     </distro>
   </dependency>
+  <dependency id="shfmt">
+    <distro id="fedora">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency id="libprotobuf-c-dev">
     <distro id="arch">
       <package variant="x86_64">protobuf-c</package>
