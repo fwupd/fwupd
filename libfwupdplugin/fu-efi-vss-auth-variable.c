@@ -230,6 +230,7 @@ fu_efi_vss_auth_variable_build(FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_efi_vss_auth_variable_init(FuEfiVssAuthVariable *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
 }
 
 static void
