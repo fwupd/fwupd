@@ -33,6 +33,23 @@ struct _FuEfiVssAuthVariable {
 
 G_DEFINE_TYPE(FuEfiVssAuthVariable, fu_efi_vss_auth_variable, FU_TYPE_FIRMWARE)
 
+/**
+ * fu_efi_vss_auth_variable_get_state:
+ * @self: #FuEfiVssAuthVariable
+ *
+ * Gets the VSS variable state.
+ *
+ * Returns: a #FuEfiVariableState, e.g. %FU_EFI_VARIABLE_STATE_VARIABLE_ADDED
+ *
+ * Since: 2.0.17
+ **/
+FuEfiVariableState
+fu_efi_vss_auth_variable_get_state(FuEfiVssAuthVariable *self)
+{
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FU_EFI_VARIABLE_STATE_UNSET);
+	return self->state;
+}
+
 static void
 fu_efi_vss_auth_variable_export(FuFirmware *firmware,
 				FuFirmwareExportFlags flags,
@@ -107,6 +124,7 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	if (name == NULL)
 		return FALSE;
 	fu_firmware_set_id(firmware, name);
+	g_debug("added %s: %s", self->vendor_guid, name);
 
 	/* read data */
 	offset += fu_struct_efi_vss_auth_variable_header_get_name_size(st);
