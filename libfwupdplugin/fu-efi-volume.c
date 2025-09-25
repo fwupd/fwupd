@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-chunk-array.h"
 #include "fu-common.h"
 #include "fu-efi-common.h"
@@ -64,6 +65,7 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 {
 	gsize streamsz = 0;
 	guint found_cnt = 0;
+	gsize offset_last = offset;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
@@ -98,12 +100,24 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 			return FALSE;
 		}
 
+		/* preserve the exact padding between EVSA stores */
+		if (offset != offset_last) {
+			g_autoptr(GBytes) blob = g_bytes_new(NULL, 0);
+			g_autoptr(GBytes) blob_padded =
+			    fu_bytes_pad(blob, offset - offset_last, 0xFF);
+			g_autoptr(FuFirmware) img_padded = fu_firmware_new_from_bytes(blob_padded);
+			fu_firmware_add_image(FU_FIRMWARE(self), img_padded);
+		}
+
 		/* we found something */
 		fu_firmware_set_offset(img, offset);
 		fu_firmware_add_image(FU_FIRMWARE(self), img);
 		offset += fu_firmware_get_size(img);
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4K);
 		found_cnt += 1;
+
+		/* the last thing we found */
+		offset_last = offset;
 	}
 
 	/* we found nothing */

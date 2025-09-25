@@ -11,6 +11,9 @@
       <attributes>non-volatile,bootservice-access</attributes>
     </firmware>
   </firmware>
+  <firmware>
+    <data type="GBytes" size="0x1000" />
+  </firmware>
   <firmware gtype="FuEfiFtwStore">
     <size>0x1000</size>
     <state>healthy</state>
