@@ -110,9 +110,9 @@ fwupdplugin_src = [
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efi-variable-authentication2.c',
-  'fu-efi-vss2-variable-store.c',
-  'fu-efi-vss-auth-variable.c',
-  'fu-efi-ftw-store.c',
+  'fu-efi-vss2-variable-store.c', # fuzzing
+  'fu-efi-vss-auth-variable.c', # fuzzing
+  'fu-efi-ftw-store.c', # fuzzing
   'fu-efivars.c', # fuzzing
   'fu-efi-x509-device.c',
   'fu-efi-x509-signature.c',
