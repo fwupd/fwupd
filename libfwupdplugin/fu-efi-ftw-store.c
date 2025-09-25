@@ -54,6 +54,7 @@ fu_efi_ftw_store_parse(FuFirmware *firmware,
 {
 	FuEfiFtwStore *self = FU_EFI_FTW_STORE(firmware);
 	g_autoptr(FuStructEfiFaultTolerantWorkingBlockHeader64) st = NULL;
+	g_autoptr(GBytes) blob = NULL;
 
 	st = fu_struct_efi_fault_tolerant_working_block_header64_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -61,9 +62,18 @@ fu_efi_ftw_store_parse(FuFirmware *firmware,
 
 	/* attributes we care about */
 	self->state = fu_struct_efi_fault_tolerant_working_block_header64_get_state(st);
-	fu_firmware_set_size(
-	    firmware,
-	    st->len + fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st));
+
+	/* data area */
+	blob = fu_input_stream_read_bytes(
+	    stream,
+	    st->len,
+	    fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st),
+	    NULL,
+	    error);
+	if (blob == NULL)
+		return FALSE;
+	fu_firmware_set_bytes(firmware, blob);
+	fu_firmware_set_size(firmware, st->len + g_bytes_get_size(blob));
 
 	/* success */
 	return TRUE;
@@ -75,29 +85,24 @@ fu_efi_ftw_store_write(FuFirmware *firmware, GError **error)
 	FuEfiFtwStore *self = FU_EFI_FTW_STORE(firmware);
 	g_autoptr(FuStructEfiFaultTolerantWorkingBlockHeader64) st =
 	    fu_struct_efi_fault_tolerant_working_block_header64_new();
+	g_autoptr(GBytes) blob = NULL;
 
-	/* sanity check */
-	if (fu_firmware_get_size(firmware) < st->len) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "FTW store has zero size");
+	/* get blob */
+	blob = fu_firmware_get_bytes(firmware, error);
+	if (blob == NULL)
 		return NULL;
-	}
 
 	/* CRC32 */
 	fu_struct_efi_fault_tolerant_working_block_header64_set_write_queue_size(
 	    st,
-	    fu_firmware_get_size(firmware) - st->len);
+	    g_bytes_get_size(blob));
 	fu_struct_efi_fault_tolerant_working_block_header64_set_crc(
 	    st,
 	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->data, st->len));
 
-	/* attrs */
+	/* attrs + data area */
 	fu_struct_efi_fault_tolerant_working_block_header64_set_state(st, self->state);
-
-	/* data area */
-	fu_byte_array_set_size(st, fu_firmware_get_size(firmware), 0xFF);
+	fu_byte_array_append_bytes(st, blob);
 
 	/* success */
 	return g_steal_pointer(&st);
