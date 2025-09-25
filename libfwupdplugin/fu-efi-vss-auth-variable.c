@@ -11,8 +11,11 @@
 #include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-efi-common.h"
+#include "fu-efi-signature-list.h"
 #include "fu-efi-struct.h"
 #include "fu-efi-vss-auth-variable.h"
+#include "fu-efivars.h"
+#include "fu-partial-input-stream.h"
 #include "fu-string.h"
 
 /**
@@ -71,6 +74,27 @@ fu_efi_vss_auth_variable_export(FuFirmware *firmware,
 	}
 }
 
+static GType
+fu_efi_vss_auth_variable_lookup_image_gtype(FuEfiVssAuthVariable *self)
+{
+	struct {
+		const gchar *guid;
+		const gchar *name;
+		GType gtype;
+	} gtypes[] = {
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "PK", FU_TYPE_EFI_SIGNATURE_LIST},
+	    {FU_EFIVARS_GUID_EFI_GLOBAL, "KEK", FU_TYPE_EFI_SIGNATURE_LIST},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "db", FU_TYPE_EFI_SIGNATURE_LIST},
+	    {FU_EFIVARS_GUID_SECURITY_DATABASE, "dbx", FU_TYPE_EFI_SIGNATURE_LIST},
+	};
+	for (guint i = 0; i < G_N_ELEMENTS(gtypes); i++) {
+		if (g_strcmp0(gtypes[i].guid, self->vendor_guid) == 0 &&
+		    g_strcmp0(gtypes[i].name, fu_firmware_get_id(FU_FIRMWARE(self))) == 0)
+			return gtypes[i].gtype;
+	}
+	return G_TYPE_INVALID;
+}
+
 static gboolean
 fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 			       GInputStream *stream,
@@ -79,9 +103,9 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 {
 	FuEfiVssAuthVariable *self = FU_EFI_VSS_AUTH_VARIABLE(firmware);
 	gsize offset = 0x0;
+	GType img_gtype;
 	g_autoptr(FuStructEfiVssAuthVariableHeader) st = NULL;
 	g_autoptr(GByteArray) buf_name = NULL;
-	g_autoptr(GBytes) data = NULL;
 	g_autofree gchar *name = NULL;
 
 	st = fu_struct_efi_vss_auth_variable_header_parse_stream(stream, offset, error);
@@ -128,14 +152,34 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 
 	/* read data */
 	offset += fu_struct_efi_vss_auth_variable_header_get_name_size(st);
-	data = fu_input_stream_read_bytes(stream,
-					  offset,
-					  fu_struct_efi_vss_auth_variable_header_get_data_size(st),
-					  NULL,
-					  error);
-	if (data == NULL)
-		return FALSE;
-	fu_firmware_set_bytes(firmware, data);
+
+	/* if this is a well known key then parse it as a child type */
+	img_gtype = fu_efi_vss_auth_variable_lookup_image_gtype(self);
+	if (img_gtype != G_TYPE_INVALID) {
+		g_autoptr(FuFirmware) img = g_object_new(img_gtype, NULL);
+		g_autoptr(GInputStream) partial_stream = NULL;
+		partial_stream = fu_partial_input_stream_new(
+		    stream,
+		    offset,
+		    fu_struct_efi_vss_auth_variable_header_get_data_size(st),
+		    error);
+		if (partial_stream == NULL)
+			return FALSE;
+		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
+			return FALSE;
+		fu_firmware_add_image(firmware, img);
+	} else {
+		g_autoptr(GBytes) data = NULL;
+		data = fu_input_stream_read_bytes(
+		    stream,
+		    offset,
+		    fu_struct_efi_vss_auth_variable_header_get_data_size(st),
+		    NULL,
+		    error);
+		if (data == NULL)
+			return FALSE;
+		fu_firmware_set_bytes(firmware, data);
+	}
 
 	/* next header */
 	offset += fu_struct_efi_vss_auth_variable_header_get_data_size(st);
@@ -174,9 +218,12 @@ fu_efi_vss_auth_variable_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_vss_auth_variable_header_set_name_size(st, g_bytes_get_size(name));
 
 	/* data */
-	blob = fu_firmware_get_bytes(firmware, error);
-	if (blob == NULL)
-		return NULL;
+	blob = fu_firmware_get_image_by_id_bytes(firmware, NULL, NULL);
+	if (blob == NULL) {
+		blob = fu_firmware_get_bytes(firmware, error);
+		if (blob == NULL)
+			return NULL;
+	}
 	fu_struct_efi_vss_auth_variable_header_set_data_size(st, g_bytes_get_size(blob));
 
 	/* guid */
