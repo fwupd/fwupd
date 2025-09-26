@@ -1598,6 +1598,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* parse vendor support tool string */
 	if (self->tool_string_version >= FU_GENESYS_TS_VERSION_VENDOR_SUPPORT) {
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GBytes) vendor_buf = fu_usb_device_get_string_descriptor_bytes_full(
 		    FU_USB_DEVICE(device),
 		    GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX,
@@ -1610,13 +1611,16 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			    "failed to get vendor support tool info from device: ");
 			return FALSE;
 		}
-		if (!fu_genesys_usbhub_device_get_descriptor_data(vendor_buf, buf, bufsz, error)) {
-			g_prefix_error_literal(
-			    error,
-			    "failed to get vendor support tool info from device: ");
-			return FALSE;
-		}
-		if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self, buf, bufsz, error))
+		if (!fu_genesys_usbhub_device_get_descriptor_data(vendor_buf,
+								  buf,
+								  bufsz,
+								  &error_local)) {
+			g_debug("ignoring vendor support tool info: %s", error_local->message);
+			self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
+		} else if (!fu_genesys_usbhub_device_get_info_from_vendor_ts(self,
+									     buf,
+									     bufsz,
+									     error))
 			return FALSE;
 	} else {
 		self->st_vendor_ts = fu_struct_genesys_ts_vendor_support_new();
