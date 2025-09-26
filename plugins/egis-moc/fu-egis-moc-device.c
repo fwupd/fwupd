@@ -330,6 +330,9 @@ fu_egis_moc_device_setup(FuDevice *device, GError **error)
 		}
 	}
 
+	/* delay for 500ms for usb setup */
+	fu_device_sleep(device, 500);
+
 	/* success */
 	return TRUE;
 }
