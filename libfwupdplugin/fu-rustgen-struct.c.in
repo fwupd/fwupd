@@ -289,7 +289,11 @@
 
 {%- if item.enum_obj %}
     {
+{%- if item.is_bitfield %}
+        g_autofree gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
+{%- else %}
         const gchar *tmp = {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st));
+{%- endif %}
         if (tmp != NULL) {
             g_string_append_printf(str, "  {{item.element_id}}: 0x%x [%s]\n", (guint) {{item.c_getter}}(st), tmp);
         } else {
