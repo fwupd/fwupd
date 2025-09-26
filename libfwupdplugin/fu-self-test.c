@@ -3213,6 +3213,58 @@ fu_chunk_func(void)
 }
 
 static void
+fu_chunk_array_null_func(void)
+{
+	g_autofree gchar *chunked1_str = NULL;
+	g_autofree gchar *chunked2_str = NULL;
+	g_autoptr(GPtrArray) chunked1 = NULL;
+	g_autoptr(GPtrArray) chunked2 = NULL;
+
+	chunked1 = fu_chunk_array_new(NULL, 0x100, 0, 0x100, 0x80);
+	g_assert_cmpint(chunked1->len, ==, 2);
+	chunked1_str = fu_chunk_array_to_string(chunked1);
+	g_assert_cmpstr(chunked1_str,
+			==,
+			"<chunks>\n"
+			"  <chunk>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"  <chunk>\n"
+			"    <idx>0x1</idx>\n"
+			"    <addr>0x80</addr>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"</chunks>\n");
+
+	chunked2 = fu_chunk_array_new(NULL, 0x200, 0, 0x100, 0x80);
+	g_assert_cmpint(chunked2->len, ==, 4);
+	chunked2_str = fu_chunk_array_to_string(chunked2);
+	g_assert_cmpstr(chunked2_str,
+			==,
+			"<chunks>\n"
+			"  <chunk>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"  <chunk>\n"
+			"    <idx>0x1</idx>\n"
+			"    <addr>0x80</addr>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"  <chunk>\n"
+			"    <idx>0x2</idx>\n"
+			"    <page>0x1</page>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"  <chunk>\n"
+			"    <idx>0x3</idx>\n"
+			"    <page>0x1</page>\n"
+			"    <addr>0x80</addr>\n"
+			"    <size>0x80</size>\n"
+			"  </chunk>\n"
+			"</chunks>\n");
+}
+
+static void
 fu_strstrip_func(void)
 {
 	struct {
@@ -7115,6 +7167,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/backend", fu_backend_func);
 	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func("/fwupd/chunk-null", fu_chunk_array_null_func);
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
 	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);

@@ -311,6 +311,8 @@ fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 			datastr = g_base64_encode(self->data, self->data_sz);
 		}
 		xb_builder_node_insert_text(bn, "data", datastr, "size", dataszstr, NULL);
+	} else {
+		fu_xmlb_builder_insert_kx(bn, "size", self->data_sz);
 	}
 }
 
@@ -438,11 +440,17 @@ fu_chunk_array_new(const guint8 *data,
 		}
 
 		/* cut the packet so it does not straddle multiple blocks */
-		if (page_sz != packet_sz && page_sz > 0)
-			chunksz = MIN(chunksz, (offset + packet_sz) % page_sz);
-		g_ptr_array_add(
-		    chunks,
-		    fu_chunk_new(chunks->len, page, address_offset, data + offset, chunksz));
+		if (page_sz != packet_sz && page_sz > 0) {
+			gsize chunksz_tmp = MIN(chunksz, (offset + packet_sz) % page_sz);
+			if (chunksz_tmp != 0)
+				chunksz = chunksz_tmp;
+		}
+		g_ptr_array_add(chunks,
+				fu_chunk_new(chunks->len,
+					     page,
+					     address_offset,
+					     data != NULL ? data + offset : NULL,
+					     chunksz));
 		offset += chunksz;
 	}
 
