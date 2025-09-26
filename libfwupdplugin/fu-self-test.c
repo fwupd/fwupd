@@ -3999,6 +3999,76 @@ fu_firmware_fmap_func(void)
 }
 
 static void
+fu_firmware_sorted_func(void)
+{
+	g_autofree gchar *xml1 = NULL;
+	g_autofree gchar *xml2 = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware2 = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware3 = fu_firmware_new();
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_set_id(firmware1, "zzz");
+	fu_firmware_set_id(firmware2, "aaa");
+	fu_firmware_set_id(firmware3, "bbb");
+
+	fu_firmware_set_idx(firmware1, 0x999);
+	fu_firmware_set_idx(firmware2, 0x200);
+	fu_firmware_set_idx(firmware3, 0x100);
+
+	fu_firmware_add_image(firmware, firmware1);
+	fu_firmware_add_image(firmware, firmware2);
+	fu_firmware_add_image(firmware, firmware3);
+
+	/* by idx */
+	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
+	xml1 = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
+	g_assert_no_error(error);
+	g_debug("%s", xml1);
+	g_assert_cmpstr(xml1,
+			==,
+			"<firmware>\n"
+			"  <flags>dedupe-idx</flags>\n"
+			"  <firmware>\n"
+			"    <id>bbb</id>\n"
+			"    <idx>0x100</idx>\n"
+			"  </firmware>\n"
+			"  <firmware>\n"
+			"    <id>aaa</id>\n"
+			"    <idx>0x200</idx>\n"
+			"  </firmware>\n"
+			"  <firmware>\n"
+			"    <id>zzz</id>\n"
+			"    <idx>0x999</idx>\n"
+			"  </firmware>\n"
+			"</firmware>\n");
+
+	/* now by both, here using id as it is last */
+	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
+	xml2 = fu_firmware_export_to_xml(firmware, FU_FIRMWARE_EXPORT_FLAG_SORTED, &error);
+	g_assert_no_error(error);
+	g_debug("%s", xml2);
+	g_assert_cmpstr(xml2,
+			==,
+			"<firmware>\n"
+			"  <flags>dedupe-id,dedupe-idx</flags>\n"
+			"  <firmware>\n"
+			"    <id>aaa</id>\n"
+			"    <idx>0x200</idx>\n"
+			"  </firmware>\n"
+			"  <firmware>\n"
+			"    <id>bbb</id>\n"
+			"    <idx>0x100</idx>\n"
+			"  </firmware>\n"
+			"  <firmware>\n"
+			"    <id>zzz</id>\n"
+			"    <idx>0x999</idx>\n"
+			"  </firmware>\n"
+			"</firmware>\n");
+}
+
+static void
 fu_firmware_new_from_gtypes_func(void)
 {
 	gboolean ret;
@@ -7245,6 +7315,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{builder-round-trip}", fu_firmware_builder_round_trip_func);
 	g_test_add_func("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
 	g_test_add_func("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
+	g_test_add_func("/fwupd/firmware{sorted}", fu_firmware_sorted_func);
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
