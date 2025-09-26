@@ -107,15 +107,15 @@ fwupdplugin_src = [
   'fu-efi-lz77-decompressor.c', # fuzzing
   'fu-efi-hard-drive-device-path.c', # fuzzing
   'fu-efi-load-option.c', # fuzzing
-  'fu-efi-signature.c',
-  'fu-efi-signature-list.c',
+  'fu-efi-signature.c', # fuzzing
+  'fu-efi-signature-list.c', # fuzzing
   'fu-efi-variable-authentication2.c',
   'fu-efi-vss2-variable-store.c', # fuzzing
   'fu-efi-vss-auth-variable.c', # fuzzing
   'fu-efi-ftw-store.c', # fuzzing
   'fu-efivars.c', # fuzzing
   'fu-efi-x509-device.c',
-  'fu-efi-x509-signature.c',
+  'fu-efi-x509-signature.c', # fuzzing
   'fu-elf-firmware.c', # fuzzing
   'fu-fdt-firmware.c', # fuzzing
   'fu-fdt-image.c', # fuzzing
@@ -193,7 +193,7 @@ fwupdplugin_src = [
   'fu-v4l-device.c',
   'fu-volume.c', # fuzzing
   'fu-volume-locker.c', # fuzzing
-  'fu-x509-certificate.c',
+  'fu-x509-certificate.c', # fuzzing
 ]
 
 if host_machine.system() in ['linux', 'android']
