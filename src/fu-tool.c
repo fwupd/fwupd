@@ -3142,7 +3142,7 @@ fu_util_firmware_export(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	if (self->show_all)
 		flags |= FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG;
-	str = fu_firmware_export_to_xml(firmware, flags, error);
+	str = fu_firmware_export_to_xml(firmware, flags | FU_FIRMWARE_EXPORT_FLAG_SORTED, error);
 	if (str == NULL)
 		return FALSE;
 	fu_console_print_literal(self->console, str);

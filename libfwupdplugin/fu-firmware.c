@@ -2233,6 +2233,40 @@ fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
 	return NULL;
 }
 
+static gint
+fu_firmware_sort_by_id_cb(gconstpointer a, gconstpointer b)
+{
+	FuFirmware *firmware1 = *((FuFirmware **)a);
+	FuFirmware *firmware2 = *((FuFirmware **)b);
+	return g_strcmp0(fu_firmware_get_id(firmware1), fu_firmware_get_id(firmware2));
+}
+
+static gint
+fu_firmware_sort_by_idx_cb(gconstpointer a, gconstpointer b)
+{
+	FuFirmware *firmware1 = *((FuFirmware **)a);
+	FuFirmware *firmware2 = *((FuFirmware **)b);
+	guint64 idx1 = fu_firmware_get_idx(firmware1);
+	guint64 idx2 = fu_firmware_get_idx(firmware2);
+	if (idx1 < idx2)
+		return -1;
+	if (idx1 > idx2)
+		return 1;
+	return 0;
+}
+
+static GPtrArray *
+fu_firmware_get_images_sorted(FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GPtrArray) images = g_ptr_array_copy(priv->images, (GCopyFunc)g_object_ref, NULL);
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX)
+		g_ptr_array_sort(images, fu_firmware_sort_by_idx_cb);
+	if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID)
+		g_ptr_array_sort(images, fu_firmware_sort_by_id_cb);
+	return g_steal_pointer(&images);
+}
+
 /**
  * fu_firmware_export:
  * @self: a #FuFirmware
@@ -2240,6 +2274,10 @@ fu_firmware_get_image_by_gtype(FuFirmware *self, GType gtype, GError **error)
  * @bn: a Xmlb builder node
  *
  * This allows us to build an XML object for the nested firmware.
+ *
+ * The image children will have a predictable order if the firmware has
+ * %FU_FIRMWARE_FLAG_DEDUPE_ID or %FU_FIRMWARE_FLAG_DEDUPE_IDX and
+ * %FU_FIRMWARE_EXPORT_FLAG_SORTED is also used in @flags.
  *
  * Since: 1.6.0
  **/
@@ -2341,8 +2379,11 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 
 	/* children */
 	if (priv->images->len > 0) {
-		for (guint i = 0; i < priv->images->len; i++) {
-			FuFirmware *img = g_ptr_array_index(priv->images, i);
+		g_autoptr(GPtrArray) images = flags & FU_FIRMWARE_EXPORT_FLAG_SORTED
+						  ? fu_firmware_get_images_sorted(self)
+						  : g_ptr_array_ref(priv->images);
+		for (guint i = 0; i < images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(images, i);
 			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert(bn, "firmware", NULL);
 			fu_firmware_export(img, flags, bc);
 		}
