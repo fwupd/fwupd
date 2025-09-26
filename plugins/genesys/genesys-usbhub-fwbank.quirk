@@ -1,0 +1,11 @@
+[GENESYS_USBHUB\IC_352530]
+GenesysHubBank1Addr = 0x0
+GenesysHubBank2Addr = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysDevBank1Addr = 0x20000
+GenesysDevBank2Addr = 0x30000
+GenesysDevBankCapacity = 0x8000
+GenesysPdBank1Addr = 0x40000
+GenesysPdBank2Addr = 0x60000
+GenesysPdBankCapacity = 0x20000
+GenesysFwDataMaxCount = 0x80000

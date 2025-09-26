@@ -1120,13 +1120,13 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3521:
 		self->spec.support_dual_bank = FALSE;
 		self->spec.support_code_size = FALSE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0;
 		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x5000;
 		self->spec.fw_data_max_count = 0x5000;
 		break;
 	case ISP_MODEL_HUB_GL3523:
 		self->spec.support_dual_bank = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0x8000;
 
 		if (self->spec.chip.revision == 50) {
@@ -1147,7 +1147,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3523PLUS:
 		self->spec.support_dual_bank = TRUE;
 		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0x10000;
 		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x10000;
 		self->spec.fw_data_max_count = 0x20000;
@@ -1155,7 +1155,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3590:
 		self->spec.support_dual_bank = TRUE;
 		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0x10000;
 		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x20000;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x30000;
@@ -1169,7 +1169,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	case ISP_MODEL_HUB_GL3525:
 		self->spec.support_dual_bank = TRUE;
 		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0xB000;
 		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_PD] = 0x16000;
 		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_PD] = 0x23000;
@@ -1189,6 +1189,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 
 	/* add IC product instance */
 	fu_device_add_instance_str(FU_DEVICE(self), "IC", project_ic_type);
+	fu_device_build_instance_id(FU_DEVICE(self), error, "GENESYS_USBHUB", "IC", NULL);
 
 	/* success */
 	return TRUE;
@@ -1784,6 +1785,11 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 					  "CFI",
 					  fu_device_get_name(FU_DEVICE(self->cfi_device)));
 	}
+
+	fwupd_codec_string_append_hex(str,
+				      idt_detail,
+				      "FlashCapacity",
+				      fu_cfi_device_get_size(self->cfi_device));
 	fwupd_codec_string_append_int(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
 	fwupd_codec_string_append_int(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
 	fwupd_codec_string_append_hex(str, idt_detail, "FlashBlockSize", self->flash_block_size);
@@ -3071,6 +3077,87 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vcs.req_write = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	/* fw bank */
+	if (g_strcmp0(key, "GenesysHubBank1Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysHubBank2Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysHubBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBank1Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBank2Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBank1Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBank2Addr") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysFwDataMaxCount") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_data_max_count = tmp;
 
 		/* success */
 		return TRUE;
