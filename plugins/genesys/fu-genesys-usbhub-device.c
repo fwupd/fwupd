@@ -1697,13 +1697,31 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* add specific product info */
 	if (self->running_bank != FU_GENESYS_FW_STATUS_MASK) {
-		const gchar *vendor = fwupd_device_get_vendor(FWUPD_DEVICE(device));
+		const guint idx = fu_usb_device_get_manufacturer_index(FU_USB_DEVICE(device));
 		g_autofree gchar *guid = NULL;
+
+		if (idx != 0x00) {
+			/* get manufacturer */
+			g_autofree gchar *tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
+			tmp = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(device),
+								  idx,
+								  &error_local);
+			if (tmp != NULL)
+				fu_device_add_instance_strup(device, "VENDOR", g_strchomp(tmp));
+			else
+				g_debug("failed to load manufacturer string: %s",
+					error_local->message);
+		} else {
+			/* use default vendor */
+			fu_device_add_instance_strup(device,
+						     "VENDOR",
+						     fu_device_get_vendor(device));
+		}
 
 		guid = fwupd_guid_hash_data(self->st_vendor_ts->data,
 					    self->st_vendor_ts->len,
 					    FWUPD_GUID_FLAG_NONE);
-		fu_device_add_instance_strup(device, "VENDOR", vendor);
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
