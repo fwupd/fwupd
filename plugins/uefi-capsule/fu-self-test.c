@@ -1002,6 +1002,109 @@ fu_uefi_update_info_func(void)
 			"/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
+static void
+fu_uefi_shim_detection_func(void)
+{
+	g_autofree gchar *shim_path = NULL;
+	g_autofree gchar *tmpdir = NULL;
+	g_autofree gchar *os_dir = NULL;
+	g_autofree gchar *systemd_dir = NULL;
+	g_autofree gchar *os_shim_file = NULL;
+	g_autofree gchar *os_id = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* get the current OS ID */
+	os_id = g_get_os_info(G_OS_INFO_KEY_ID);
+	if (os_id == NULL) {
+		os_id = g_strdup("unknown");
+	}
+
+	/* create a temporary ESP structure that matches the issue description */
+	tmpdir = g_dir_make_tmp("fwupd-uefi-shim-test-XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+
+	/* create EFI/systemd directory (systemd-boot is present but no shim) */
+	systemd_dir = g_build_filename(tmpdir, "EFI", "systemd", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(systemd_dir, 0755), ==, 0);
+
+	/* create EFI/{OS_ID} directory with shim (whatever OS we're running on) */
+	os_dir = g_build_filename(tmpdir, "EFI", os_id, NULL);
+	g_assert_cmpint(g_mkdir_with_parents(os_dir, 0755), ==, 0);
+
+	/* test on x64 architecture - if it's not x64, skip the test */
+#if defined(__x86_64__)
+	/* create shimx64.efi in os directory */
+	os_shim_file = g_build_filename(os_dir, "shimx64.efi", NULL);
+	g_assert_true(g_file_set_contents(os_shim_file, "fake shim", -1, &error));
+	g_assert_no_error(error);
+
+	/* test that shim path is found correctly */
+	shim_path = fu_uefi_get_esp_app_path(tmpdir, "shim", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(shim_path);
+
+	/* verify that it found the shim in OS directory (not systemd) */
+	g_assert_true(g_str_has_prefix(shim_path, "EFI/"));
+	g_assert_true(g_str_has_suffix(shim_path, "/shimx64.efi"));
+	/* it should be EFI/{OS_ID}/shimx64.efi, not EFI/systemd/shimx64.efi */
+	g_assert_false(g_str_has_prefix(shim_path, "EFI/systemd/"));
+#else
+	g_test_skip("test only runs on x86_64 architecture");
+#endif
+
+	/* cleanup */
+	{
+		gboolean ret = fu_path_rmtree(tmpdir, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+}
+
+static void
+fu_uefi_shim_detection_systemd_func(void)
+{
+	g_autofree gchar *shim_path = NULL;
+	g_autofree gchar *tmpdir = NULL;
+	g_autofree gchar *systemd_dir = NULL;
+	g_autofree gchar *systemd_shim_file = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create a temporary ESP structure where shim is in systemd directory */
+	tmpdir = g_dir_make_tmp("fwupd-uefi-shim-systemd-test-XXXXXX", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(tmpdir);
+
+	/* create EFI/systemd directory with shim */
+	systemd_dir = g_build_filename(tmpdir, "EFI", "systemd", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(systemd_dir, 0755), ==, 0);
+
+	/* test on x64 architecture - if it's not x64, skip the test */
+#if defined(__x86_64__)
+	/* create shimx64.efi in systemd directory */
+	systemd_shim_file = g_build_filename(systemd_dir, "shimx64.efi", NULL);
+	g_assert_true(g_file_set_contents(systemd_shim_file, "fake shim", -1, &error));
+	g_assert_no_error(error);
+
+	/* test that shim path is found correctly */
+	shim_path = fu_uefi_get_esp_app_path(tmpdir, "shim", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(shim_path);
+
+	/* verify that it found the shim in systemd directory */
+	g_assert_cmpstr(shim_path, ==, "EFI/systemd/shimx64.efi");
+#else
+	g_test_skip("test only runs on x86_64 architecture");
+#endif
+
+	/* cleanup */
+	{
+		gboolean ret = fu_path_rmtree(tmpdir, &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1046,5 +1149,7 @@ main(int argc, char **argv)
 	g_test_add_func("/uefi/plugin{cod}", fu_uefi_plugin_cod_func);
 	g_test_add_func("/uefi/plugin{no-cod}", fu_uefi_plugin_no_cod_func);
 	g_test_add_func("/uefi/plugin{grub}", fu_uefi_plugin_grub_func);
+	g_test_add_func("/uefi/shim-detection", fu_uefi_shim_detection_func);
+	g_test_add_func("/uefi/shim-detection-systemd", fu_uefi_shim_detection_systemd_func);
 	return g_test_run();
 }
