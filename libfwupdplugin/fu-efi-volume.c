@@ -173,7 +173,15 @@ fu_efi_volume_parse(FuFirmware *firmware,
 				    "invalid volume length");
 		return FALSE;
 	}
-	fu_firmware_set_size(firmware, fv_length);
+	if (fv_length > fu_firmware_get_size_max(firmware)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "volume length larger than max size: 0x%x > 0x%x",
+			    (guint)fv_length,
+			    (guint)fu_firmware_get_size_max(firmware));
+		return FALSE;
+	}
 	attrs = fu_struct_efi_volume_get_attrs(st_hdr);
 	alignment = (attrs & 0x00ff0000) >> 16;
 	if (alignment > FU_FIRMWARE_ALIGNMENT_2G) {
@@ -428,6 +436,7 @@ fu_efi_volume_init(FuEfiVolume *self)
 {
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	priv->attrs = 0xfeff;
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x10000000); /* 256MB */
 	g_type_ensure(FU_TYPE_EFI_FILESYSTEM);
 	g_type_ensure(FU_TYPE_EFI_VSS2_VARIABLE_STORE);
 	g_type_ensure(FU_TYPE_EFI_FTW_STORE);
