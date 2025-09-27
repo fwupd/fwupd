@@ -290,8 +290,11 @@ fu_hid_descriptor_init(FuHidDescriptor *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 64 * 1024);
-	fu_firmware_set_images_max(FU_FIRMWARE(self),
-				   g_getenv("FWUPD_FUZZER_RUNNING") != NULL ? 10 : 1024);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+#else
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
+#endif
 	g_type_ensure(FU_TYPE_HID_REPORT);
 	g_type_ensure(FU_TYPE_HID_REPORT_ITEM);
 }

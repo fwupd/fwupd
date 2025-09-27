@@ -127,11 +127,13 @@ fu_efi_filesystem_write(FuFirmware *firmware, GError **error)
 static void
 fu_efi_filesystem_init(FuEfiFilesystem *self)
 {
+#ifdef HAVE_FUZZER
 	/* if fuzzing, artificially limit the number of files to avoid using large amounts of RSS
 	 * when printing the FuEfiFilesystem XML output */
-	fu_firmware_set_images_max(
-	    FU_FIRMWARE(self),
-	    g_getenv("FWUPD_FUZZER_RUNNING") == NULL ? FU_EFI_FILESYSTEM_FILES_MAX : 50);
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 50);
+#else
+	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_EFI_FILESYSTEM_FILES_MAX);
+#endif
 	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 	g_type_ensure(FU_TYPE_EFI_FILE);
 }

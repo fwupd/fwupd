@@ -366,6 +366,7 @@ def _build(bld: Builder) -> None:
             "FWUPD_LIBDIR_PKG": "/tmp",
             "FWUPD_SYSCONFDIR": "/tmp",
             "FWUPD_LIBEXECDIR": "/tmp",
+            "HAVE_FUZZER": None,
             "HAVE_CBOR": None,
             "HAVE_CBOR_SET_ALLOCS": None,
             "HAVE_REALPATH": None,
