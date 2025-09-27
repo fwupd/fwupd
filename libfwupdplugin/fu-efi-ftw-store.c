@@ -141,7 +141,11 @@ static void
 fu_efi_ftw_store_init(FuEfiFtwStore *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000); /* 4KB */
+#else
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
+#endif
 }
 
 static void
