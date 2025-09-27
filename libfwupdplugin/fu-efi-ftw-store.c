@@ -60,6 +60,20 @@ fu_efi_ftw_store_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 
+	/* sanity check */
+	if (fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st) >
+	    fu_firmware_get_size_max(firmware)) {
+		g_set_error(
+		    error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_INTERNAL,
+		    "FTW store larger than max size: 0x%x > 0x%x",
+		    (guint)fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(
+			st),
+		    (guint)fu_firmware_get_size_max(firmware));
+		return FALSE;
+	}
+
 	/* attributes we care about */
 	self->state = fu_struct_efi_fault_tolerant_working_block_header64_get_state(st);
 
@@ -127,6 +141,7 @@ static void
 fu_efi_ftw_store_init(FuEfiFtwStore *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
 }
 
 static void
