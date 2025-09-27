@@ -148,8 +148,13 @@ fu_efi_vss2_variable_store_init(FuEfiVss2VariableStore *self)
 	g_type_ensure(FU_TYPE_EFI_VSS_AUTH_VARIABLE);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_STORED_SIZE);
+#ifdef HAVE_FUZZER
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
+	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000); /* 4KB */
+#else
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 10000);
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x1000000); /* 16MB */
+#endif
 }
 
 static void
