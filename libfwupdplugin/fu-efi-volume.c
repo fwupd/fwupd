@@ -438,8 +438,10 @@ fu_efi_volume_init(FuEfiVolume *self)
 	priv->attrs = 0xfeff;
 #ifdef HAVE_FUZZER
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x100000); /* 1MB */
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 10);
 #else
 	fu_firmware_set_size_max(FU_FIRMWARE(self), 0x10000000); /* 256MB */
+	fu_firmware_set_images_max(FU_FIRMWARE(self), 1000);
 #endif
 	g_type_ensure(FU_TYPE_EFI_FILESYSTEM);
 	g_type_ensure(FU_TYPE_EFI_VSS2_VARIABLE_STORE);
