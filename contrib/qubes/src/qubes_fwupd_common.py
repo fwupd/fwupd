@@ -37,7 +37,6 @@ def create_dirs(*args):
 
 
 class LooseVersion:
-
     """Version numbering for anarchists and software realists.
     Implements the standard interface for version number classes as
     described above.  A version number consists of a series of numbers,

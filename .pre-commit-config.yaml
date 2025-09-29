@@ -1,12 +1,11 @@
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, main, --pattern, 1_.*_X]
     -   id: check-added-large-files
-    -   id: check-byte-order-marker
     -   id: check-executables-have-shebangs
     -   id: forbid-new-submodules
     -   id: check-yaml
@@ -30,7 +29,7 @@ repos:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 23.12.1
+    rev: 25.9.0
     hooks:
     - id: black
 -   repo: local
@@ -105,7 +104,7 @@ repos:
       name: run tests before pushing
       language: system
       entry: "test-fwupd"
-      stages: [push]
+      stages: [pre-push]
     - id: clang-format
       name: clang-format
       language: script
@@ -125,11 +124,11 @@ repos:
       language: script
       entry: ./contrib/ci/check-meson-install-tags.py
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+    rev: v0.45.0
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']
 -   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.3
+    rev: v8.28.0
     hooks:
     -   id: gitleaks
