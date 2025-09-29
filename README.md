@@ -77,7 +77,7 @@ If updates are available for any devices on the system, they'll be displayed.
 This will download and apply all updates for your system.
 
 - Updates that can be applied live will be done immediately.
-- Updates that run at bootup will be staged for the next reboot.
+- Updates that run at boot-up will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
 users section of the [fwupd website](https://fwupd.org).
