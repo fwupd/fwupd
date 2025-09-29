@@ -48,7 +48,7 @@ Worldwide Risk
 --------------
 
 Companies typically propose that NDAs are subject to governing laws and jurisdictions which are most
-favourable to them, or relate to where in the world they have a presence.
+favorable to them, or relate to where in the world they have a presence.
 
 The complexity and cost of reviewing an NDA under a governing law unfamiliar to us is significant.
 
