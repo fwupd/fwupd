@@ -15,6 +15,7 @@ enum FuFirmwareParseFlags {
     NoSearch = 1 << 8, // no heuristics
     CacheStream = 1 << 10,
     CacheBlob = 1 << 11,
+    OnlyTrustPqSignatures = 1 << 12,
 }
 
 #[derive(ToString)]

@@ -4419,6 +4419,9 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(JcatItem) jcat_item = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new();
+	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
+				     JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+				     JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
 
 	blob = fu_bytes_get_contents(fwupd_remote_get_filename_cache(remote), error);
 	if (blob == NULL)
@@ -4435,13 +4438,20 @@ fu_engine_get_system_jcat_result(FuEngine *self, FwupdRemote *remote, GError **e
 		fwupd_error_convert(error);
 		return NULL;
 	}
-	results = jcat_context_verify_item(self->jcat_context,
-					   blob,
-					   jcat_item,
-					   JCAT_VERIFY_FLAG_DISABLE_TIME_CHECKS |
-					       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-					       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-					   error);
+
+	/* distrusting RSA? */
+	if (fu_engine_config_get_only_trust_pq_signatures(self->config)) {
+#if JCAT_CHECK_VERSION(0, 2, 4)
+		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only trusting PQ signatures requires libjcat >= 0.2.4");
+		return NULL;
+#endif
+	}
+	results = jcat_context_verify_item(self->jcat_context, blob, jcat_item, jcat_flags, error);
 	if (results == NULL) {
 		fwupd_error_convert(error);
 		return NULL;
@@ -4512,6 +4522,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_autoptr(JcatItem) jcat_item = NULL;
 	g_autoptr(JcatResult) jcat_result = NULL;
 	g_autoptr(JcatResult) jcat_result_old = NULL;
+	JcatVerifyFlags jcat_flags =
+	    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM | JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(remote_id != NULL, FALSE);
@@ -4543,16 +4555,25 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	if (!jcat_file_import_stream(jcat_file, istream, JCAT_IMPORT_FLAG_NONE, NULL, error))
 		return FALSE;
 
+	/* distrusting RSA? */
+	if (fu_engine_config_get_only_trust_pq_signatures(self->config)) {
+#if JCAT_CHECK_VERSION(0, 2, 4)
+		jcat_flags |= JCAT_VERIFY_FLAG_ONLY_PQ;
+#else
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "only trusting PQ signatures requires libjcat >= 0.2.4");
+		return FALSE;
+#endif
+	}
+
 	/* this should only be signing one thing */
 	jcat_item = jcat_file_get_item_default(jcat_file, error);
 	if (jcat_item == NULL)
 		return FALSE;
-	results = jcat_context_verify_item(self->jcat_context,
-					   bytes_raw,
-					   jcat_item,
-					   JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE |
-					       JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM,
-					   error);
+	results =
+	    jcat_context_verify_item(self->jcat_context, bytes_raw, jcat_item, jcat_flags, error);
 	if (results == NULL)
 		return FALSE;
 
@@ -4699,21 +4720,22 @@ FuCabinet *
 fu_engine_build_cabinet_from_stream(FuEngine *self, GInputStream *stream, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
+	FuFirmwareParseFlags flags = FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* distrusting RSA? */
+	if (fu_engine_config_get_only_trust_pq_signatures(self->config))
+		flags |= FU_FIRMWARE_PARSE_FLAG_ONLY_TRUST_PQ_SIGNATURES;
 
 	/* load file */
 	fu_engine_set_status(self, FWUPD_STATUS_DECOMPRESSING);
 	fu_firmware_set_size_max(FU_FIRMWARE(cabinet),
 				 fu_engine_config_get_archive_size_max(self->config));
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
-	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet),
-				      stream,
-				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-				      error))
+	if (!fu_firmware_parse_stream(FU_FIRMWARE(cabinet), stream, 0x0, flags, error))
 		return NULL;
 	return g_steal_pointer(&cabinet);
 }
