@@ -708,7 +708,7 @@
         <p>This release fixes the following bugs:</p>
         <ul>
           <li>Add support for capsule on disk for Dell systems</li>
-          <li>Do not re-use the connection cache to fix Redfish BMC restart</li>
+          <li>Do not reuse the connection cache to fix Redfish BMC restart</li>
           <li>Exclude known recovery partitions when choosing an ESP volume</li>
           <li>Fix the VLI usb3 private flag registration</li>
         </ul>
@@ -3478,7 +3478,7 @@
           <li>Make the error message clearer when sans fonts are missing</li>
           <li>Support devices with truncated DFU interface data</li>
           <li>
-            Use the correct remote-specified username and passord when using
+            Use the correct remote-specified username and password when using
             fwupdmgr
           </li>
           <li>Use the correct wDetachTimeOut when writing DFU firmware</li>

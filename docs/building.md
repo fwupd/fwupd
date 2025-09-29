@@ -2,7 +2,7 @@
 title: Building & Debugging fwupd
 ---
 
-These instructons below can either be used by the silicon vendor, or the consulting company to debug existing and new plugins. Sometimes new hardware is only supported in the development version of fwupd which may not even be available as a Snap or Flatpak yet.
+These instructions below can either be used by the silicon vendor, or the consulting company to debug existing and new plugins. Sometimes new hardware is only supported in the development version of fwupd which may not even be available as a Snap or Flatpak yet.
 
 ## Prerequisites
 
