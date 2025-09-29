@@ -5754,6 +5754,15 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
 	g_info("status-code was %ld", status_code);
 	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup((const gchar *)buf->data, MIN(buf->len, 4000));
+		if (g_str_is_ascii(str)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "Failed to download due to server limit: %s",
+				    str);
+			return NULL;
+		}
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
