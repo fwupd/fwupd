@@ -281,6 +281,10 @@ fu_context_get_efivars(FuContext *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error)
     G_GNUC_NON_NULL(1);
+void
+fu_context_set_insecure_uefi(FuContext *self, gboolean insecure) G_GNUC_NON_NULL(1);
+gboolean
+fu_context_get_insecure_uefi(FuContext *self) G_GNUC_NON_NULL(1);
 
 /**
  * FuContextEspFileFlags:

@@ -54,6 +54,7 @@ typedef struct {
 	FuBiosSettings *host_bios_settings;
 	FuFirmware *fdt; /* optional */
 	gchar *esp_location;
+	gboolean insecure_uefi;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_HOUSEKEEPING, SIGNAL_LAST };
@@ -1541,6 +1542,40 @@ fu_context_add_esp_volume(FuContext *self, FuVolume *volume)
 
 	/* add */
 	g_ptr_array_add(priv->esp_volumes, g_object_ref(volume));
+}
+
+/**
+ * fu_context_set_insecure_uefi:
+ * @self: a FuContext instance
+ * @insecure: TRUE if insecure UEFI, FALSE otherwise
+ *
+ * Sets whether the current context is using an insecure UEFI implementation.
+ * */
+void
+fu_context_set_insecure_uefi(FuContext *self, gboolean insecure)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	if (priv->insecure_uefi == insecure)
+		return;
+	priv->insecure_uefi = insecure;
+	g_object_notify(G_OBJECT(self), "insecure-uefi");
+}
+
+/**
+ * fu_context_get_insecure_uefi:
+ * @self: a FuContext instance
+ *
+ * Checks whether the current context is using an insecure UEFI implementation.
+ *
+ * Returns: TRUE if insecure UEFI, FALSE otherwise.
+ */
+gboolean
+fu_context_get_insecure_uefi(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	return priv->insecure_uefi;
 }
 
 /**
