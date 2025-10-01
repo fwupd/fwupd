@@ -248,17 +248,23 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 						      page_ack_time,
 						      &error_local)) {
 			/* A buggy device may fail to send an acknowledgment receipt
-			   after the last page write, resulting in a timeout error.
-
-			   This is a known issue so waive it for now.
+			   after the last page write, resulting in a timeout error or a pipe
+			   error on reading. This is a known issue so waive it for now.
 			*/
 			if (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_LAN &&
-			    j == fu_chunk_array_length(pages) - 1 &&
-			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
-				g_debug("ignored error: %s", error_local->message);
-				fu_progress_step_done(progress);
-				continue;
+			    j == fu_chunk_array_length(pages) - 1) {
+				if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+				    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BUSY) ||
+				    g_error_matches(error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_TIMED_OUT)) {
+					g_debug("ignored error: %s", error_local->message);
+					fu_progress_step_done(progress);
+					continue;
+				}
 			}
+
+			/* propagate error as usual */
 			g_propagate_prefixed_error(error,
 						   g_steal_pointer(&error_local),
 						   "%s failed to write page: ",
