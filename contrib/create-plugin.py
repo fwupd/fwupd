@@ -72,6 +72,10 @@ if __name__ == "__main__":
             subst[key.lower()] = value.lower()
             subst[key.upper()] = value.upper()
 
+        # overwrite author and email so they appear as entered
+        subst["Author"] = args.author
+        subst["Email"] = args.email
+
     except NotImplementedError as e:
         print(e)
         sys.exit(1)
