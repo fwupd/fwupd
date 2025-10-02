@@ -1073,6 +1073,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 						 GError **error)
 {
 	g_autofree gchar *project_ic_type = NULL;
+	g_autofree gchar *project_ic = NULL;
 
 	self->st_static_ts = fu_struct_genesys_ts_static_parse(buf, bufsz, 0, error);
 	if (self->st_static_ts == NULL) {
@@ -1083,6 +1084,8 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 	project_ic_type = fu_struct_genesys_ts_static_get_mask_project_ic_type(self->st_static_ts);
 
 	/* verify chip model and revision */
+	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+
 	if (memcmp(project_ic_type, "3521", 4) == 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1092,6 +1095,7 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 		return FALSE;
 	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
 		self->spec.chip.model = ISP_MODEL_HUB_GL3523;
+		self->is_gl352350 = self->spec.chip.revision == 50;
 	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
 		self->spec.chip.model = ISP_MODEL_HUB_GL3590;
 	} else if (memcmp(project_ic_type, "3525", 4) == 0) {
@@ -1105,78 +1109,29 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 		return FALSE;
 	}
 
-	self->spec.chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
-
 	/* convert tool string version */
 	self->tool_string_version =
 	    fu_struct_genesys_ts_static_get_tool_string_version(self->st_static_ts);
 
-	/* setup firmware parameters */
-	switch (self->spec.chip.model) {
-	case ISP_MODEL_HUB_GL3521:
-		self->spec.support_dual_bank = FALSE;
-		self->spec.support_code_size = FALSE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x5000;
-		self->spec.fw_data_max_count = 0x5000;
-		break;
-	case ISP_MODEL_HUB_GL3523:
-		self->spec.support_dual_bank = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0x8000;
+	/* add IC product instance and load quirk kv */
+	project_ic = g_strndup(project_ic_type, 4);
+	fu_device_add_instance_str(FU_DEVICE(self), "IC", project_ic);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "GENESYS_USBHUB",
+					      "IC",
+					      NULL))
+		return FALSE;
 
-		if (self->spec.chip.revision == 50) {
-			self->is_gl352350 = TRUE;
-			self->spec.support_code_size = TRUE;
-			self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN] = 0x7C00;
-			self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN] = 0xFC00;
-			self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x8000;
-		} else {
-			self->spec.support_code_size = FALSE;
-			self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN] = 0x6000;
-			self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN] = 0xE000;
-			self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x6000;
-		}
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_CODESIGN] = 0x400;
-		self->spec.fw_data_max_count = 0x10000;
-		break;
-	case ISP_MODEL_HUB_GL3590:
-		self->spec.support_dual_bank = TRUE;
-		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0x10000;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x20000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x30000;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN] = 0xFF00;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN] = 0x1FF00;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0x10000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x10000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_CODESIGN] = 0x100;
-		self->spec.fw_data_max_count = 0x40000;
-		break;
-	case ISP_MODEL_HUB_GL3525:
-		self->spec.support_dual_bank = TRUE;
-		self->spec.support_code_size = TRUE;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = 0x0000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = 0xB000;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_PD] = 0x16000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_PD] = 0x23000;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x30000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x38000;
-		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN] = 0x16000;
-		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN] = 0x17000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = 0xB000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_PD] = 0xD000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_DEV_BRIDGE] = 0x8000;
-		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_CODESIGN] = 0x1000;
-		self->spec.fw_data_max_count = 0x40000;
-		break;
-	default:
-		break;
-	}
-
-	/* add IC product instance */
 	fu_device_add_instance_str(FU_DEVICE(self), "IC", project_ic_type);
+	if (!fu_device_build_instance_id_full(FU_DEVICE(self),
+					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
+					      error,
+					      "GENESYS_USBHUB",
+					      "IC",
+					      NULL))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -1801,6 +1756,10 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 					  idt,
 					  "CFI",
 					  fu_device_get_name(FU_DEVICE(self->cfi_device)));
+		fwupd_codec_string_append_hex(str,
+					      idt_detail,
+					      "FlashCapacity",
+					      fu_cfi_device_get_size(self->cfi_device));
 	}
 	fwupd_codec_string_append_int(str, idt_detail, "FlashEraseDelay", self->flash_erase_delay);
 	fwupd_codec_string_append_int(str, idt_detail, "FlashWriteDelay", self->flash_write_delay);
@@ -3089,6 +3048,125 @@ fu_genesys_usbhub_device_set_quirk_kv(FuDevice *device,
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->vcs.req_write = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	/* fw bank */
+	if (g_strcmp0(key, "GenesysSupportDualBank") == 0) {
+		if (!fu_strtobool(value, &self->spec.support_dual_bank, error))
+			return FALSE;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysSupportCodeSize") == 0) {
+		if (!fu_strtobool(value, &self->spec.support_code_size, error))
+			return FALSE;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysHubBank1Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysHubBank2Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysHubBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_HUB] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBank1Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBank2Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysDevBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_DEV_BRIDGE] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBank1Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBank2Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysPdBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_PD] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysCodesignBank1Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysCodesignBank2Address") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysCodesignBankCapacity") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_bank_capacity[FU_GENESYS_FW_TYPE_CODESIGN] = tmp;
+
+		/* success */
+		return TRUE;
+	}
+	if (g_strcmp0(key, "GenesysFwDataMaxCount") == 0) {
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->spec.fw_data_max_count = tmp;
 
 		/* success */
 		return TRUE;
