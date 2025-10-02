@@ -50,7 +50,6 @@ fu_mei_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "ProtocolVer", priv->protocol_version);
 }
 
-#ifdef HAVE_MEI_H
 static gboolean
 fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 {
@@ -61,7 +60,20 @@ fu_mei_device_set_uuid(FuMeiDevice *self, const gchar *uuid)
 	priv->uuid = g_strdup(uuid);
 	return TRUE;
 }
-#endif
+
+static gboolean
+fu_mei_device_close(FuDevice *device, GError **error)
+{
+	FuMeiDevice *self = FU_MEI_DEVICE(device);
+
+	/* FuUdevDevice->close */
+	if (!FU_DEVICE_CLASS(fu_mei_device_parent_class)->close(device, error))
+		return FALSE;
+
+	/* this is no longer valid */
+	fu_mei_device_disconnect(self);
+	return TRUE;
+}
 
 static gboolean
 fu_mei_device_pci_probe(FuMeiDevice *self, GError **error)
@@ -334,6 +346,21 @@ fu_mei_device_connect(FuMeiDevice *self,
 }
 
 /**
+ * fu_mei_device_disconnect:
+ * @self: a #FuMeiDevice
+ *
+ * Disconnects from the MEI device.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_mei_device_disconnect(FuMeiDevice *self)
+{
+	g_return_if_fail(FU_IS_MEI_DEVICE(self));
+	fu_mei_device_set_uuid(self, NULL);
+}
+
+/**
  * fu_mei_device_read:
  * @self: a #FuMeiDevice
  * @buf: (out): data
@@ -439,6 +466,7 @@ fu_mei_device_class_init(FuMeiDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_mei_device_finalize;
 	device_class->probe = fu_mei_device_probe;
+	device_class->close = fu_mei_device_close;
 	device_class->to_string = fu_mei_device_to_string;
 	device_class->incorporate = fu_mei_device_incorporate;
 }
