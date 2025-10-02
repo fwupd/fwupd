@@ -35,6 +35,8 @@ struct _FuIgscDevice {
 #define HECI1_CSE_FS_MODE_MASK 0x3
 #define HECI1_CSE_FS_CP_MODE   0x3
 
+#define HECI1_CSE_FS_BACKGROUND_OPERATION_NEEDED_BIT (1 << 13)
+
 G_DEFINE_TYPE(FuIgscDevice, fu_igsc_device, FU_TYPE_HECI_DEVICE)
 
 #define GSC_FWU_GET_CONFIG_FORMAT_VERSION 0x1
@@ -614,10 +616,11 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 
 /* the expectation is that it will fail eventually */
 static gboolean
-fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
+fu_igsc_device_wait_for_version(FuIgscDevice *self, GError **error)
 {
 	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
 	for (guint i = 0; i < 20; i++) {
+		fu_mei_device_disconnect(FU_MEI_DEVICE(self));
 		if (!fu_igsc_device_get_version_raw(self,
 						    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
 						    fw_code_version->data,
@@ -633,7 +636,28 @@ fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 static gboolean
 fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
 {
+	fu_mei_device_disconnect(FU_MEI_DEVICE(self));
 	return fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
+}
+
+static gboolean
+fu_igsc_device_wait_heci_finish_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuIgscDevice *self = FU_IGSC_DEVICE(device);
+	guint32 fw_status = 0;
+
+	if (!fu_igsc_device_get_fw_status(self, 5, &fw_status, error))
+		return FALSE;
+	if (fw_status & HECI1_CSE_FS_BACKGROUND_OPERATION_NEEDED_BIT) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "FWSTS5 is 0x%x",
+			    fw_status);
+		return FALSE;
+	}
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -657,7 +681,6 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write-chunks");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 46, "reconnect");
 	} else {
 		fu_progress_set_id(progress, G_STRLOC);
@@ -665,7 +688,6 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-start");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96, "write-chunks");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "update-end");
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "wait-for-reboot");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reconnect");
 	}
 
@@ -701,18 +723,10 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	}
 	fu_progress_step_done(progress);
 
-	/* detect a firmware reboot */
-	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
-	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
-		if (!fu_igsc_device_wait_for_reset(self, error))
-			return FALSE;
-	}
-	fu_progress_step_done(progress);
-
 	/* after Gfx FW update there is a FW reset so driver reconnect is needed */
 	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
 		if (cp_mode) {
-			if (!fu_igsc_device_wait_for_reset(self, error))
+			if (!fu_igsc_device_wait_for_version(self, error))
 				return FALSE;
 		}
 		if (!fu_device_retry_full(FU_DEVICE(self),
@@ -720,13 +734,27 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 					  200,
 					  300 /* ms */,
 					  NULL,
-					  error))
+					  error)) {
+			g_prefix_error_literal(error, "failed to wait for reconnect: ");
 			return FALSE;
+		}
 		if (!fu_igsc_device_no_update(self, error)) {
 			g_prefix_error_literal(error, "failed to send no-update: ");
 			return FALSE;
 		}
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_igsc_device_wait_heci_finish_cb,
+					  600,
+					  500 /* ms */,
+					  NULL,
+					  error)) {
+			g_prefix_error_literal(error, "failed to wait for reconnect: ");
+			return FALSE;
+		}
+		if (cp_mode) {
+			if (!fu_igsc_device_wait_for_version(self, error))
+				return FALSE;
+		}
 	}
 	fu_progress_step_done(progress);
 
