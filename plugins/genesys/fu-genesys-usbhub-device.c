@@ -1313,6 +1313,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	portnum = ss_port_number << 4 | hs_port_number;
 
 	/* add specific product info */
+	fu_device_add_instance_str(FU_DEVICE(self), "RUNMODE", rm_st);
 	fu_device_add_instance_u8(FU_DEVICE(self), "PORTNUM", portnum);
 	fu_device_add_instance_u8(FU_DEVICE(self), "BONDING", self->bonding);
 
@@ -1725,9 +1726,17 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
-	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "IC", NULL))
-		return FALSE;
 	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "IC", "BONDING", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device,
+					 error,
+					 "USB",
+					 "VID",
+					 "PID",
+					 "IC",
+					 "BONDING",
+					 "RUNMODE",
+					 NULL))
 		return FALSE;
 	fu_device_build_instance_id(device,
 				    NULL,
