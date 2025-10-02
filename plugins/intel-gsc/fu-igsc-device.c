@@ -116,6 +116,12 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 	g_autoptr(FuIgscFwuHeciVersionReq) st_req = fu_igsc_fwu_heci_version_req_new();
 	g_autoptr(FuIgscFwuHeciVersionRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	res_buf = g_malloc0(res_bufsz);
 	fu_igsc_fwu_heci_version_req_set_partition(st_req, partition);
 	if (!fu_igsc_device_command(self, st_req->data, st_req->len, res_buf, res_bufsz, error)) {
@@ -163,6 +169,12 @@ fu_igsc_device_get_aux_version(FuIgscDevice *self,
 	g_autoptr(FuIgscFwDataHeciVersionReq) st_req = fu_igsc_fw_data_heci_version_req_new();
 	g_autoptr(FuIgscFwDataHeciVersionRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_igsc_device_command(self,
 				    st_req->data,
 				    st_req->len,
@@ -194,6 +206,12 @@ fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 	    fu_igsc_fwu_heci_get_subsystem_ids_req_new();
 	g_autoptr(FuIgscFwuHeciGetSubsystemIdsRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_igsc_device_command(self,
 				    st_req->data,
 				    st_req->len,
@@ -220,6 +238,12 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 	guint8 res_buf[FU_IGSC_FWU_HECI_GET_CONFIG_RES_SIZE] = {0};
 	g_autoptr(FuIgscFwuHeciGetConfigReq) st_req = fu_igsc_fwu_heci_get_config_req_new();
 	g_autoptr(FuIgscFwuHeciGetConfigRes) st_res = NULL;
+
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
 
 	if (!fu_igsc_device_command(self,
 				    st_req->data,
@@ -250,7 +274,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
 
-	/* connect to MCA interface */
+	/* connect to interface */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_MCHI2, 0, error)) {
 		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
@@ -261,14 +285,6 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 					      &self->svn_min_allowed,
 					      error)) {
 		g_prefix_error_literal(error, "failed to get ARBH SVN: ");
-		return FALSE;
-	}
-	if (!fu_udev_device_reopen(FU_UDEV_DEVICE(self), error))
-		return FALSE;
-
-	/* now connect to fwupdate interface */
-	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
-		g_prefix_error_literal(error, "failed to connect: ");
 		return FALSE;
 	}
 
@@ -474,6 +490,12 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 {
 	g_autoptr(FuIgscFwuHeciEndReq) st_req = fu_igsc_fwu_heci_end_req_new();
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	/* we are not expecting a reply */
 	fu_dump_raw(G_LOG_DOMAIN, "MEI-write", st_req->data, st_req->len);
 	return fu_mei_device_write(FU_MEI_DEVICE(self),
@@ -517,6 +539,12 @@ fu_igsc_device_update_start(FuIgscDevice *self,
 	g_autoptr(FuIgscFwuHeciStartReq) st_req = fu_igsc_fwu_heci_start_req_new();
 	g_autoptr(FuIgscFwuHeciStartRes) st_res = NULL;
 
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	if (!fu_input_stream_size(fw, &streamsz, error))
 		return FALSE;
 	fu_igsc_fwu_heci_start_req_set_update_img_length(st_req, streamsz);
@@ -554,6 +582,12 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 			    FuProgress *progress,
 			    GError **error)
 {
+	/* connect to interface */
+	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error)) {
+		g_prefix_error_literal(error, "failed to connect: ");
+		return FALSE;
+	}
+
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {

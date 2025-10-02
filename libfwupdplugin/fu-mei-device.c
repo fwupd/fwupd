@@ -308,6 +308,10 @@ fu_mei_device_connect(FuMeiDevice *self,
 	if (!fu_mei_device_set_uuid(self, uuid))
 		return TRUE;
 
+	/* MEI is weird in that you have to close() and re-open() it to do the ioctl */
+	if (!fu_udev_device_reopen(FU_UDEV_DEVICE(self), error))
+		return FALSE;
+
 	if (!fwupd_guid_from_string(priv->uuid, &guid_le, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
 	memcpy(&data.in_client_uuid, &guid_le, sizeof(guid_le)); /* nocheck:blocked */
