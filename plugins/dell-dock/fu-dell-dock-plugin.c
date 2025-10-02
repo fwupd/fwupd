@@ -322,6 +322,8 @@ fu_dell_dock_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "DellDockUnlockTarget");
 	fu_context_add_quirk_key(ctx, "DellDockVersionLowest");
 
+	fu_plugin_add_udev_subsystem(plugin, "usb");
+
 	/* allow these to be built by quirks */
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_STATUS);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DELL_DOCK_MST);

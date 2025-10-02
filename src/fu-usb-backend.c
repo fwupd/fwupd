@@ -303,7 +303,6 @@ fu_usb_backend_setup(FuBackend *backend,
 	libusb_set_debug(self->ctx, log_level);
 #endif
 	fu_context_set_data(ctx, "libusb_context", self->ctx);
-	fu_context_add_udev_subsystem(ctx, "usb", NULL);
 
 	/* no hotplug required, probably in tests */
 	if ((flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) == 0)
