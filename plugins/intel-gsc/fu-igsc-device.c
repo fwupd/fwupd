@@ -791,7 +791,6 @@ fu_igsc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* restart */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	return TRUE;
 }
 
@@ -849,6 +848,8 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");
