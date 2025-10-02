@@ -1094,8 +1094,12 @@ fu_genesys_usbhub_device_get_info_from_static_ts(FuGenesysUsbhubDevice *self,
 			    project_ic_type);
 		return FALSE;
 	} else if (memcmp(project_ic_type, "3523", 4) == 0) {
-		self->spec.chip.model = ISP_MODEL_HUB_GL3523;
-		self->is_gl352350 = self->spec.chip.revision == 50;
+		if (self->spec.chip.revision >= 60) {
+			self->spec.chip.model = ISP_MODEL_HUB_GL3523PLUS;
+		} else {
+			self->spec.chip.model = ISP_MODEL_HUB_GL3523;
+			self->is_gl352350 = self->spec.chip.revision == 50;
+		}
 	} else if (memcmp(project_ic_type, "3590", 4) == 0) {
 		self->spec.chip.model = ISP_MODEL_HUB_GL3590;
 	} else if (memcmp(project_ic_type, "3525", 4) == 0) {
@@ -1167,6 +1171,7 @@ fu_genesys_usbhub_device_get_info_from_dynamic_ts(FuGenesysUsbhubDevice *self,
 	/* get running mode, portnum, bonding and flash dump location bit */
 	switch (self->spec.chip.model) {
 	case ISP_MODEL_HUB_GL3523:
+	case ISP_MODEL_HUB_GL3523PLUS:
 		self->st_dynamic_ts =
 		    fu_struct_genesys_ts_dynamic_gl3523_parse(buf, bufsz, 0, error);
 		if (self->st_dynamic_ts == NULL) {
