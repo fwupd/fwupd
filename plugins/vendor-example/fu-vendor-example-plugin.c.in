@@ -28,6 +28,11 @@ fu_{{vendor_example}}_plugin_constructed(GObject *obj)
 	FuPlugin *plugin = FU_PLUGIN(obj);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "{{VendorExample}}StartAddr");
+{%- if Parent == 'Usb' %}
+	fu_plugin_add_udev_subsystem(plugin, "usb");
+{%- elif Parent == 'Hid' %}
+	fu_plugin_add_udev_subsystem(plugin, "hidraw");
+{%- endif %}
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_{{VENDOR_EXAMPLE}}_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_{{VENDOR_EXAMPLE}}_FIRMWARE);
 }

@@ -28,6 +28,7 @@ fu_dfu_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "DfuAltName");
 	fu_context_add_quirk_key(ctx, "DfuForceTimeout");
 	fu_context_add_quirk_key(ctx, "DfuForceVersion");
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_DFU_DEVICE);
 }
 

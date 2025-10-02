@@ -244,6 +244,8 @@ fu_dell_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
 
+	fu_plugin_add_udev_subsystem(plugin, "usb");
+
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 }

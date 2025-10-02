@@ -25,6 +25,7 @@ static void
 fu_hpi_cfu_plugin_constructed(GObject *obj)
 {
 	FuPlugin *plugin = FU_PLUGIN(obj);
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HPI_CFU_DEVICE);
 }
 

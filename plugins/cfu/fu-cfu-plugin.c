@@ -31,6 +31,7 @@ fu_cfu_plugin_constructed(GObject *obj)
 	fu_context_add_quirk_key(ctx, "CfuOfferGetReport");
 	fu_context_add_quirk_key(ctx, "CfuContentSetReport");
 	fu_context_add_quirk_key(ctx, "CfuContentGetReport");
+	fu_plugin_add_udev_subsystem(plugin, "usb");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_CFU_DEVICE);
 }
 
