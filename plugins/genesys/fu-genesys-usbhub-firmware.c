@@ -53,6 +53,24 @@ fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
 		return TRUE;
 	}
 
+	/* recognize GL3523PLUS */
+	if (!fu_input_stream_read_safe(
+		stream,
+		project_ic_type,
+		sizeof(project_ic_type),
+		0, /* dst */
+		GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523PLUS +
+		    FU_STRUCT_GENESYS_TS_STATIC_OFFSET_MASK_PROJECT_IC_TYPE, /* src */
+		sizeof(project_ic_type),
+		error))
+		return FALSE;
+
+	if (memcmp(project_ic_type, "3523", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3523PLUS;
+		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		return TRUE;
+	}
+
 	/* recognize GL3590 */
 	if (!fu_input_stream_read_safe(
 		stream,
@@ -240,6 +258,9 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	case ISP_MODEL_HUB_GL3523:
 		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523;
 		break;
+	case ISP_MODEL_HUB_GL3523PLUS:
+		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523PLUS;
+		break;
 	case ISP_MODEL_HUB_GL3590:
 		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590;
 		break;
@@ -277,6 +298,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		}
 		break;
 	}
+	case ISP_MODEL_HUB_GL3523PLUS:
 	case ISP_MODEL_HUB_GL3590:
 	case ISP_MODEL_HUB_GL3525: {
 		if (!fu_genesys_usbhub_firmware_calculate_size(stream, &code_size, error))

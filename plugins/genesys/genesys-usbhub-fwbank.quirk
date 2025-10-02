@@ -18,6 +18,15 @@ GenesysHubBankCapacity = 0x8000
 GenesysCodesignBank1Address = 0x7c00
 GenesysCodesignBank2Address = 0xfc00
 
+# 352360(3523plus) changes:
+# hub supports flexible code size
+# hub code capacity and bank2 address
+[GENESYS_USBHUB\IC_352360]
+GenesysSupportCodeSize = true
+GenesysHubBank2Address = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysFwDataMaxCount = 0x20000
+
 # GL3525
 [GENESYS_USBHUB\IC_3525]
 GenesysSupportDualBank = true
