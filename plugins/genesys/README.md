@@ -100,18 +100,6 @@ USB Hub Write Request value.
 
 Since 1.7.6.
 
-### use-i2c-ch0
-
-Scalar uses I²C channel 0.
-
-Since 1.7.6.
-
-### pause-r2-cpu
-
-Scalar pause R2 CPU.
-
-Since 1.7.6.
-
 ### GenesysScalerDeviceTransferSize
 
 Scaler Block size to use for transfers.
@@ -152,6 +140,78 @@ CFI Flash Id.
 * HP M27fd USB-C Monitor: `0xC84016`
 
 Since 1.8.2.
+
+## Firmware Bank Quirk Use
+
+These parameters are used to configure and manage Genesys firmware banks.
+
+This plugin uses the following plugin-specific quirks to indicate firmware bank detail:
+
+### GenesysSupportDualBank
+
+Indicates if dual-bank support is enabled.
+
+Since 2.0.17
+
+### GenesysSupportCodeSize
+
+Indicatess if code size support is enabled.
+
+Since 2.0.17
+
+### GenesysHubBank1Address / GenesysHubBank2Address
+
+Memory addresses for Hub bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysHubBankCapacity
+
+Capacity of the Hub bank.
+
+Since 2.0.17
+
+### GenesysDevBank1Address / GenesysDevBank2Address
+
+Memory addresses for Device bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysDevBankCapacity
+
+Capacity of the Device bank.
+
+Since 2.0.17
+
+### GenesysPdBank1Address / GenesysPdBank2Address
+
+Memory addresses for PD bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysPdBankCapacity
+
+Capacity of the PD bank.
+
+Since 2.0.17
+
+### GenesysCodesignBank1Address / GenesysCodesignBank2Address
+
+Memory addresses for Codesign bank 1 and 2.
+
+Since 2.0.17
+
+### GenesysCodesignBankCapacity
+
+Capacity of the Codesign bank.
+
+Since 2.0.17
+
+### GenesysFwDataMaxCount
+
+Maximum count of firmware data.
+
+Since 2.0.17
 
 ## Update Behavior
 
