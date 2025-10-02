@@ -472,21 +472,15 @@ fu_igsc_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 {
-	guint8 res_buf[FU_IGSC_FWU_HECI_END_RES_SIZE] = {0};
 	g_autoptr(FuIgscFwuHeciEndReq) st_req = fu_igsc_fwu_heci_end_req_new();
-	g_autoptr(FuIgscFwuHeciEndRes) st_res = NULL;
 
-	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
-				    res_buf,
-				    sizeof(res_buf),
-				    error))
-		return FALSE;
-	st_res = fu_igsc_fwu_heci_end_res_parse(res_buf, sizeof(res_buf), 0x0, error);
-	if (st_res == NULL)
-		return FALSE;
-	return fu_igsc_heci_check_status(fu_igsc_fwu_heci_end_res_get_status(st_res), error);
+	/* we are not expecting a reply */
+	fu_dump_raw(G_LOG_DOMAIN, "MEI-write", st_req->data, st_req->len);
+	return fu_mei_device_write(FU_MEI_DEVICE(self),
+				   st_req->data,
+				   st_req->len,
+				   FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT,
+				   error);
 }
 
 static gboolean
