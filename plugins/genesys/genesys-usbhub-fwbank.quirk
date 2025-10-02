@@ -35,6 +35,20 @@ GenesysCodesignBank2Address = 0x17000
 GenesysCodesignBankCapacity = 0x1000
 GenesysFwDataMaxCount = 0x40000
 
+# 352530 changes:
+# hub code capacity and bank2 address
+# dev bank addresses
+# pd code capacity and bank addresses
+[GENESYS_USBHUB\IC_352530]
+GenesysHubBank2Address = 0x10000
+GenesysHubBankCapacity = 0x10000
+GenesysDevBank1Address = 0x20000
+GenesysDevBank2Address = 0x30000
+GenesysPdBank1Address = 0x40000
+GenesysPdBank2Address = 0x60000
+GenesysPdBankCapacity = 0x20000
+GenesyswDataMaxCount = 0x80000
+
 # GL3590
 [GENESYS_USBHUB\IC_3590]
 GenesysSupportDualBank = true
