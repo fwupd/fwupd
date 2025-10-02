@@ -623,8 +623,7 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 {
 	gboolean cp_mode;
 	guint32 sts5 = 0;
-	gsize payloadsz =
-	    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) - FU_IGSC_FWU_HECI_DATA_REQ_SIZE;
+	gsize payloadsz;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* progress */
@@ -660,6 +659,17 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 	fu_progress_step_done(progress);
 
 	/* data */
+	if (fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) <
+	    FU_IGSC_FWU_HECI_DATA_REQ_SIZE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "mei device max msg length invalid: 0x%x",
+			    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)));
+		return FALSE;
+	}
+	payloadsz =
+	    fu_mei_device_get_max_msg_length(FU_MEI_DEVICE(self)) - FU_IGSC_FWU_HECI_DATA_REQ_SIZE;
 	chunks = fu_chunk_array_new_from_stream(fw,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
