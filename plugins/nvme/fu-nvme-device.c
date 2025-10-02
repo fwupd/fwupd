@@ -243,8 +243,30 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	/* get sanitized string from CNS -- see the following doc for offsets:
 	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
 	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
-	if (sn != NULL)
+	if (sn != NULL) {
+		g_autofree gchar *guid_seed = NULL;
+		g_autofree gchar *sn_suffix_norm = NULL;
+		gsize suffix_len;
+		gsize sn_len;
+
+		/* create deterministic GUID from the tail of the serial number */
+		sn_len = strlen(sn);
 		fu_device_set_serial(FU_DEVICE(self), sn);
+		if (sn_len > 0) {
+			suffix_len = MIN(sn_len, (gsize)5);
+			sn_suffix_norm =
+			    g_ascii_strup(sn + sn_len - suffix_len, (gssize)suffix_len);
+			if (sn_suffix_norm != NULL) {
+				for (gchar *c = sn_suffix_norm; *c != '\0'; c++) {
+					if (!g_ascii_isalnum((guchar)*c))
+						*c = '-';
+				}
+				guid_seed = g_strdup_printf("NVME-SN-LAST5-%s", sn_suffix_norm);
+			}
+			if (guid_seed != NULL)
+				fu_device_add_instance_id(FU_DEVICE(self), guid_seed);
+		}
+	}
 	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
 	if (mn != NULL)
 		fu_device_set_name(FU_DEVICE(self), mn);
