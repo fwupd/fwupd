@@ -65,21 +65,24 @@ G_DEFINE_TYPE_EXTENDED(FuDeviceList,
 static void
 fu_device_list_emit_device_added(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::added %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::added %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_ADDED], 0, device);
 }
 
 static void
 fu_device_list_emit_device_removed(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::removed %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::removed %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_REMOVED], 0, device);
 }
 
 static void
 fu_device_list_emit_device_changed(FuDeviceList *self, FuDevice *device)
 {
-	g_info("::changed %s [%s]", fu_device_get_id(device), fu_device_get_name(device));
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
+	g_info("::changed %s", id_display);
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0, device);
 }
 
@@ -513,11 +516,12 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 static void
 fu_device_list_remove_with_delay(FuDeviceItem *item)
 {
+	g_autofree gchar *id_display = fu_device_get_id_display(item->device);
 	/* give the hardware time to re-enumerate or the user time to
 	 * re-insert the device with a magic button pressed */
 	g_info("waiting %ums for %s device removal",
 	       fu_device_get_remove_delay(item->device),
-	       fu_device_get_name(item->device));
+	       id_display);
 	item->remove_id = g_timeout_add(fu_device_get_remove_delay(item->device),
 					fu_device_list_device_delayed_remove_cb,
 					item);

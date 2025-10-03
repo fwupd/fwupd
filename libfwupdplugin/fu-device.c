@@ -1558,11 +1558,9 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 
 	/* debug */
 	if (parent != NULL) {
-		g_info("setting parent of %s [%s] to be %s [%s]",
-		       fu_device_get_name(self),
-		       fu_device_get_id(self),
-		       fu_device_get_name(parent),
-		       fu_device_get_id(parent));
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_autofree gchar *id_display_parent = fu_device_get_id_display(parent);
+		g_info("setting parent of %s to be %s", id_display, id_display_parent);
 	}
 
 	/* set the composite ID on the children and grandchildren */
@@ -3160,9 +3158,8 @@ fu_device_fixup_vendor_name(FuDevice *self)
 		g_autofree gchar *vendor_up = g_utf8_strup(vendor, -1);
 		if (g_strcmp0(name_up, vendor_up) == 0) {
 #ifndef SUPPORTED_BUILD
-			g_warning("name and vendor are the same for %s [%s]",
-				  fu_device_get_name(self),
-				  fu_device_get_id(self));
+			g_autofree gchar *id_display = fu_device_get_id_display(self);
+			g_warning("name and vendor are the same for %s", id_display);
 #endif
 			return;
 		}
@@ -5337,6 +5334,42 @@ fu_device_to_string(FuDevice *self)
 }
 
 /**
+ * fu_device_get_id_display:
+ * @self: a #FuDevice
+ *
+ * This gets the device ID suffixed with the name if set.
+ *
+ * Returns: a string value, or %NULL for invalid.
+ *
+ * Since: 2.0.17
+ **/
+gchar *
+fu_device_get_id_display(FuDevice *self)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+
+	if (!fu_device_ensure_id(self, &error_local))
+		g_debug("ignoring: %s", error_local->message);
+	if (fu_device_get_id(self) != NULL)
+		g_string_append(str, fu_device_get_id(self));
+	if (fu_device_get_name(self) != NULL) {
+		if (str->len > 0)
+			g_string_append(str, " ");
+		g_string_append_printf(str, "[%s]", fu_device_get_name(self));
+	} else if (fu_device_get_plugin(self) != NULL) {
+		if (str->len > 0)
+			g_string_append(str, " ");
+		g_string_append_printf(str, "{%s}", fu_device_get_plugin(self));
+	}
+	if (str->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+/**
  * fu_device_set_context:
  * @self: a #FuDevice
  * @ctx: (nullable): optional #FuContext
@@ -5356,9 +5389,8 @@ fu_device_set_context(FuDevice *self, FuContext *ctx)
 
 #ifndef SUPPORTED_BUILD
 	if (priv->ctx != NULL && ctx == NULL) {
-		g_critical("clearing device context for %s [%s]",
-			   fu_device_get_name(self),
-			   fu_device_get_id(self));
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
+		g_critical("clearing device context for %s", id_display);
 		return;
 	}
 #endif
@@ -7260,26 +7292,26 @@ fu_device_emit_request(FuDevice *self, FwupdRequest *request, FuProgress *progre
 	/* nag the developer */
 	if (fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
 	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "request %s emitted but device %s [%s] does not set "
+			    "request %s emitted but device %s does not set "
 			    "FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE",
 			    fwupd_request_get_id(request),
-			    fu_device_get_id(self),
-			    fu_device_get_plugin(self));
+			    id_display);
 		return FALSE;
 	}
 	if (!fwupd_request_has_flag(request, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE) &&
 	    !fu_device_has_request_flag(self, FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "request %s is not a GENERIC_MESSAGE and device %s [%s] does not set "
+			    "request %s is not a GENERIC_MESSAGE and device %s does not set "
 			    "FWUPD_REQUEST_FLAG_NON_GENERIC_MESSAGE",
 			    fwupd_request_get_id(request),
-			    fu_device_get_id(self),
-			    fu_device_get_plugin(self));
+			    id_display);
 		return FALSE;
 	}
 #endif

@@ -1644,6 +1644,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 		g_autoptr(GString) checksums_metadata = g_string_new(NULL);
 		g_autoptr(GPtrArray) csums = NULL;
 		g_autoptr(GString) xpath = g_string_new(NULL);
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
 
 		/* get all checksums to display a useful error */
 		xb_string_append_union(xpath, "checksum[@target='device']");
@@ -1668,7 +1669,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_FOUND,
 			    "For %s %s expected %s, got %s",
-			    fu_device_get_name(device),
+			    id_display,
 			    fu_device_get_version(device),
 			    checksums_metadata->str,
 			    checksums_device);
@@ -3629,6 +3630,7 @@ fu_engine_install_blob(FuEngine *self,
 {
 	gboolean write_complete = FALSE;
 	g_autofree gchar *device_id = NULL;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(FuDeviceProgress) device_progress = fu_device_progress_new(device, progress);
 
@@ -3695,9 +3697,7 @@ fu_engine_install_blob(FuEngine *self,
 
 	/* make the UI update */
 	fu_engine_emit_device_changed(self, device_id);
-	g_info("Updating %s took %f seconds",
-	       fu_device_get_name(device),
-	       g_timer_elapsed(timer, NULL));
+	g_info("Updating %s took %f seconds", id_display, g_timer_elapsed(timer, NULL));
 	return TRUE;
 }
 
@@ -4076,9 +4076,8 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	if (releases == NULL) {
 		if (!g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO) &&
 		    !g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_warning("failed to get releases for %s: %s",
-				  fu_device_get_name(device),
-				  error->message);
+			g_autofree gchar *id_display = fu_device_get_id_display(device);
+			g_warning("failed to get releases for %s: %s", id_display, error->message);
 		}
 	} else {
 		if (releases->len > 0)
@@ -6143,12 +6142,12 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 
 	/* the notification has already been shown to the user */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NOTIFIED)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
-			    "User has already been notified about %s [%s]",
-			    fu_device_get_name(device),
-			    fu_device_get_id(device));
+			    "User has already been notified about %s",
+			    id_display);
 		return NULL;
 	}
 
@@ -6505,8 +6504,9 @@ fu_engine_device_inherit_history(FuEngine *self, FuDevice *device)
 		if (fu_version_compare(fu_device_get_version(device),
 				       fwupd_release_get_version(release),
 				       fu_device_get_version_format(device)) != 0) {
+			g_autofree gchar *id_display = fu_device_get_id_display(device);
 			g_info("inheriting needs-activation for %s as version %s != %s",
-			       fu_device_get_name(device),
+			       id_display,
 			       fu_device_get_version(device),
 			       fwupd_release_get_version(release));
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
@@ -6547,9 +6547,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* device still has no GUIDs set! */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) && device_guids->len == 0 &&
 	    fu_device_get_children(device)->len == 0) {
-		g_warning("no GUIDs for device %s [%s]",
-			  fu_device_get_name(device),
-			  fu_device_get_id(device));
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_warning("no GUIDs for device %s", id_display);
 		return;
 	}
 
@@ -6560,9 +6559,9 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 		for (guint j = 0; j < device_guids->len; j++) {
 			const gchar *device_guid = g_ptr_array_index(device_guids, j);
 			if (g_strcmp0(disabled_guid, device_guid) == 0) {
-				g_info("%s [%s] is disabled [%s], ignoring from %s",
-				       fu_device_get_name(device),
-				       fu_device_get_id(device),
+				g_autofree gchar *id_display = fu_device_get_id_display(device);
+				g_info("%s is disabled [%s], ignoring from %s",
+				       id_display,
 				       device_guid,
 				       fu_device_get_plugin(device));
 				return;
@@ -6573,9 +6572,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	/* does the device not have an assigned protocol */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    fu_device_get_protocols(device)->len == 0) {
-		g_warning("device %s [%s] does not define an update protocol",
-			  fu_device_get_id(device),
-			  fu_device_get_name(device));
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_warning("device %s does not define an update protocol", id_display);
 	}
 
 	/* if this device is locked get some metadata from AppStream */
@@ -6647,10 +6645,10 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
 	    !fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED)) {
-		g_critical("%s [%s] does not declare signed/unsigned payload -- perhaps add "
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_critical("%s does not declare signed/unsigned payload -- perhaps add "
 			   "fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);",
-			   fu_device_get_plugin(device),
-			   fu_device_get_id(device));
+			   id_display);
 	}
 #endif
 
@@ -7753,11 +7751,11 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
 			FuPlugin *plugin;
+			g_autofree gchar *id_display = fu_device_get_id_display(device_tmp);
 			if (fu_device_has_private_flag(device_tmp,
 						       FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
-				g_info("not auto-removing backend device %s [%s] due to flags",
-				       fu_device_get_name(device_tmp),
-				       fu_device_get_id(device_tmp));
+				g_info("not auto-removing backend device %s due to flags",
+				       id_display);
 				continue;
 			}
 			plugin = fu_plugin_list_find_by_name(self->plugin_list,
@@ -7765,9 +7763,7 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 							     NULL);
 			if (plugin == NULL)
 				continue;
-			g_info("auto-removing backend device %s [%s]",
-			       fu_device_get_name(device_tmp),
-			       fu_device_get_id(device_tmp));
+			g_info("auto-removing backend device %s", id_display);
 			fu_plugin_device_remove(plugin, device_tmp);
 		}
 	}
@@ -8055,7 +8051,8 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 
 		/* if it needed reboot then, it also needs it now... */
 		if (fu_device_get_update_state(dev_history) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-			g_info("inheriting needs-reboot for %s", fu_device_get_name(dev));
+			g_autofree gchar *id_display = fu_device_get_id_display(dev);
+			g_info("inheriting needs-reboot for %s", id_display);
 			fu_device_set_update_state(dev, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 		}
 		return TRUE;

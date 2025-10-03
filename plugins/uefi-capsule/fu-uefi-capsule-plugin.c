@@ -989,6 +989,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 {
 	FuDevice *device = FU_DEVICE(object);
 	GPtrArray *devices;
+	g_autofree gchar *id_display = fu_device_get_id_display(device);
 	g_autofree gchar *msg = NULL;
 
 	/* device is not in needs-reboot state */
@@ -1000,9 +1001,7 @@ fu_uefi_capsule_plugin_update_state_notify_cb(GObject *object, GParamSpec *pspec
 		return;
 
 	/* mark every other device for this plugin as non-updatable */
-	msg = g_strdup_printf("Cannot update as %s [%s] needs reboot",
-			      fu_device_get_name(device),
-			      fu_device_get_id(device));
+	msg = g_strdup_printf("Cannot update as %s needs reboot", id_display);
 	devices = fu_plugin_get_devices(plugin);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
