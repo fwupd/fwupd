@@ -50,6 +50,8 @@ gchar *
 fu_strjoin(const gchar *separator, GPtrArray *array) G_GNUC_NON_NULL(1, 2);
 GString *
 fu_strdup(const gchar *str, gsize bufsz, gsize offset) G_GNUC_NON_NULL(1);
+void
+fu_string_strip(GString *str) G_GNUC_NON_NULL(1);
 
 /**
  * FuStrsplitFunc:
