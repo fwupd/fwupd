@@ -49,11 +49,11 @@ fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 				   fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
 				       ? "FWDATA_RECOVERY"
 				       : "FWDATA");
-	if (!fu_device_build_instance_id(device, error, "MEI", "VEN", "DEV", "PART", NULL))
+	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
-					   "MEI",
+					   "PCI",
 					   "VEN",
 					   "DEV",
 					   "SUBSYS",
