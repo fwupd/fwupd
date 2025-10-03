@@ -410,6 +410,7 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		g_autoptr(FuDevice) device_tmp = NULL;
 		const gchar *device_gtypestr;
 		GType device_gtype;
+		g_autofree gchar *id_display = NULL;
 
 		/* sanity check */
 		if (!JSON_NODE_HOLDS_OBJECT(node_tmp)) {
@@ -451,6 +452,7 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 				    device_gtypestr);
 			return FALSE;
 		}
+		id_display = fu_device_get_id_display(device_tmp);
 
 		/* does a device with this platform ID [and the same created date] already exist */
 		device_old = fu_backend_lookup_by_id(self, fu_device_get_backend_id(device_tmp));
@@ -464,23 +466,20 @@ fu_backend_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
 		if (device_old != NULL && fu_device_get_created_usec(device_old) ==
 					      fu_device_get_created_usec(device_tmp)) {
 			GPtrArray *events = fu_device_get_events(device_tmp);
+
 			fu_device_clear_events(device_old);
 			for (guint j = 0; j < events->len; j++) {
 				FuDeviceEvent *event = g_ptr_array_index(events, j);
 				fu_device_add_event(device_old, event);
 			}
-			g_debug("changed %s [%s]",
-				fu_device_get_name(device_tmp),
-				fu_device_get_backend_id(device_tmp));
+			g_debug("changed %s", id_display);
 			fu_backend_device_changed(self, device_old);
 			g_ptr_array_remove(devices_remove, device_old);
 			continue;
 		}
 
 		/* new to us! */
-		g_debug("not found %s [%s], adding",
-			fu_device_get_name(device_tmp),
-			fu_device_get_backend_id(device_tmp));
+		g_debug("not found %s, adding", id_display);
 		g_ptr_array_add(devices_added, g_object_ref(device_tmp));
 	}
 

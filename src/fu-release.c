@@ -669,12 +669,14 @@ fu_release_check_requirements(FuRelease *self,
 	    !fu_device_has_protocol(self->device, protocol) &&
 	    (install_flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_autofree gchar *str = NULL;
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
+
 		str = fu_strjoin("|", fu_device_get_protocols(self->device));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "Device %s does not support %s, only %s",
-			    fu_device_get_name(self->device),
+			    id_display,
 			    protocol,
 			    str);
 		return FALSE;
@@ -682,12 +684,12 @@ fu_release_check_requirements(FuRelease *self,
 
 	/* check the device is not locked */
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_LOCKED)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] is locked",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
+			    "Device %s is locked",
+			    id_display);
 		return FALSE;
 	}
 
@@ -696,12 +698,12 @@ fu_release_check_requirements(FuRelease *self,
 	branch_old = fu_device_get_branch(self->device);
 	if ((install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0 &&
 	    g_strcmp0(branch_old, branch_new) != 0) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device %s [%s] would switch firmware branch from %s to %s",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device),
+			    "Device %s would switch firmware branch from %s to %s",
+			    id_display,
 			    branch_old != NULL ? branch_old : "default",
 			    branch_new != NULL ? branch_new : "default");
 		return FALSE;
@@ -710,11 +712,11 @@ fu_release_check_requirements(FuRelease *self,
 	/* no update abilities */
 	if (!fu_engine_request_has_feature_flag(self->request, FWUPD_FEATURE_FLAG_SHOW_PROBLEMS) &&
 	    !fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_autoptr(GString) str = g_string_new(NULL);
 		g_string_append_printf(str,
-				       "Device %s [%s] does not currently allow updates",
-				       fu_device_get_name(self->device),
-				       fu_device_get_id(self->device));
+				       "Device %s does not currently allow updates",
+				       id_display);
 		if (fu_device_get_update_error(self->device) != NULL) {
 			g_string_append_printf(str,
 					       ": %s",
@@ -765,12 +767,12 @@ fu_release_check_version(FuRelease *self,
 	/* ensure device has a version */
 	version = fu_device_get_version(self->device);
 	if (version == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(self->device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "Device %s [%s] has no firmware version",
-			    fu_device_get_name(self->device),
-			    fu_device_get_id(self->device));
+			    "Device %s has no firmware version",
+			    id_display);
 		return FALSE;
 	}
 

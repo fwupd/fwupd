@@ -6675,6 +6675,31 @@ fu_plugin_efi_signature_list_func(void)
 }
 
 static void
+fu_device_id_display_func(void)
+{
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autofree gchar *id1 = NULL;
+	g_autofree gchar *id2 = NULL;
+	g_autofree gchar *id3 = NULL;
+	g_autofree gchar *id4 = NULL;
+
+	id1 = fu_device_get_id_display(device);
+	g_assert_cmpstr(id1, ==, NULL);
+
+	fu_device_set_id(device, "362301da643102b9f38477387e2193e57abaa590");
+	id2 = fu_device_get_id_display(device);
+	g_assert_cmpstr(id2, ==, "362301da643102b9f38477387e2193e57abaa590");
+
+	fu_device_set_plugin(device, "uefi_dbx");
+	id3 = fu_device_get_id_display(device);
+	g_assert_cmpstr(id3, ==, "362301da643102b9f38477387e2193e57abaa590 {uefi_dbx}");
+
+	fu_device_set_name(device, "UEFI dbx");
+	id4 = fu_device_get_id_display(device);
+	g_assert_cmpstr(id4, ==, "362301da643102b9f38477387e2193e57abaa590 [UEFI dbx]");
+}
+
+static void
 fu_device_udev_func(void)
 {
 	g_autofree gchar *prop = NULL;
@@ -7324,6 +7349,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
+	g_test_add_func("/fwupd/device{id-for-display}", fu_device_id_display_func);
 	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
 	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);
