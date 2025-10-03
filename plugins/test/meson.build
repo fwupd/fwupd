@@ -7,6 +7,7 @@ endif
 
 plugin_builtins += static_library('fu_plugin_test',
   sources: [
+    'fu-test-device.c',
     'fu-test-plugin.c',
   ],
   include_directories: plugin_incdirs,
