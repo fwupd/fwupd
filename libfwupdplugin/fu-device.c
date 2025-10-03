@@ -3227,6 +3227,8 @@ fu_device_sanitize_name(const gchar *value)
 		}
 	}
 	g_string_truncate(new, last_non_space);
+	g_string_replace(new, "[", "(", 0);
+	g_string_replace(new, "]", ")", 0);
 	g_string_replace(new, "(TM)", "™", 0);
 	g_string_replace(new, "(R)", "", 0);
 	if (new->len == 0)
