@@ -121,10 +121,8 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 
 	child = fu_logitech_hidpp_runtime_bolt_find_paired_device(FU_DEVICE(self), hidpp_pid);
 	if (child != NULL) {
-		g_debug("%s [%s] is reachable:%i",
-			fu_device_get_name(FU_DEVICE(child)),
-			fu_device_get_name(FU_DEVICE(child)),
-			reachable);
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(child));
+		g_debug("%s is reachable:%i", id_display, reachable);
 		if (reachable) {
 			g_autoptr(FuDeviceLocker) locker = NULL;
 

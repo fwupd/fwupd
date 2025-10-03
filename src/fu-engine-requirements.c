@@ -170,12 +170,14 @@ fu_engine_requirements_check_not_child(FuEngine *self,
 		FuDevice *child = g_ptr_array_index(children, i);
 		const gchar *version = fu_device_get_version(child);
 		if (version == NULL) {
+			g_autofree gchar *id_display = fu_device_get_id_display(device);
+			g_autofree gchar *id_display_child = fu_device_get_id_display(child);
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "no version provided by %s, child of %s",
-				    fu_device_get_name(child),
-				    fu_device_get_name(device));
+				    id_display_child,
+				    id_display);
 			return FALSE;
 		}
 		if (fu_engine_requirements_require_vercmp(req,
@@ -279,12 +281,14 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		for (gint64 i = 0; i < depth; i++) {
 			FuDevice *device_tmp = fu_device_get_parent(device_actual);
 			if (device_tmp == NULL) {
+				g_autofree gchar *id_display =
+				    fu_device_get_id_display(device_actual);
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No parent device for %s "
 					    "(%" G_GINT64_FORMAT "/%" G_GINT64_FORMAT ")",
-					    fu_device_get_name(device_actual),
+					    id_display,
 					    i,
 					    depth);
 				return FALSE;
@@ -438,12 +442,14 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		/* no parent, so look for GUIDs on this device */
 		if (parent == NULL) {
 			if (!_fu_device_has_guids_any(device_actual, guids)) {
+				g_autofree gchar *id_display =
+				    fu_device_get_id_display(device_actual);
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No GUID of %s on device %s",
 					    xb_node_get_text(req),
-					    fu_device_get_name(device_actual));
+					    id_display);
 				return FALSE;
 			}
 			return TRUE;
@@ -468,12 +474,13 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 		/* verify the parent device has the GUID */
 	} else {
 		if (!_fu_device_has_guids_any(device_actual, guids)) {
+			g_autofree gchar *id_display = fu_device_get_id_display(device_actual);
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "No GUID of %s on parent device %s",
 				    xb_node_get_text(req),
-				    fu_device_get_name(device_actual));
+				    id_display);
 			return FALSE;
 		}
 	}
@@ -854,12 +861,12 @@ fu_engine_requirements_check(FuEngine *self,
 	/* sanity check */
 	if (device != NULL && !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "%s [%s] is not updatable",
-			    fu_device_get_name(device),
-			    fu_device_get_id(device));
+			    "%s is not updatable",
+			    id_display);
 		return FALSE;
 	}
 

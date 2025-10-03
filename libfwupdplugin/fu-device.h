@@ -1113,6 +1113,8 @@ gchar *
 fu_device_to_string(FuDevice *self) G_GNUC_NON_NULL(1);
 void
 fu_device_add_string(FuDevice *self, guint idt, GString *str) G_GNUC_NON_NULL(1, 3);
+gchar *
+fu_device_get_id_display(FuDevice *self) G_GNUC_NON_NULL(1);
 const gchar *
 fu_device_get_equivalent_id(FuDevice *self) G_GNUC_NON_NULL(1);
 void
