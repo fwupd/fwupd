@@ -1,0 +1,32 @@
+{
+  "name": "Google Servo Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "93a82341d4668b64857ca1b90c344221eb72556818b2228a19d8eafc9a283ae1-GenesysLogic_GL3590_64.17.cab",
+      "emulation-url": "c1e1a58150362abcdcb13b50c555fe96c12cb5e65ed2995146cbc5a6f8a3a7a3-servo_gl359010_emu.zip",
+      "components": [
+        {
+          "name": "GL359010",
+          "version": "64.17",
+          "guids": [
+            "5e16db46-912c-54f6-84ce-73841f287847"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "93a82341d4668b64857ca1b90c344221eb72556818b2228a19d8eafc9a283ae1-GenesysLogic_GL3590_64.17.cab",
+      "emulation-url": "0dde236f88e129e7fd4b3de96cbaf4fd48558b17112236fa23e193a11345b3b3-servo_gl359020_emu.zip",
+      "components": [
+        {
+          "name": "GL359020",
+          "version": "64.17",
+          "guids": [
+            "5e16db46-912c-54f6-84ce-73841f287847"
+          ]
+        }
+      ]
+    }
+  ]
+}

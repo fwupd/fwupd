@@ -22,3 +22,10 @@ plugin_builtins += static_library('fu_plugin_genesys',
   c_args: cargs,
   dependencies: plugin_deps,
 )
+
+device_tests += files(
+  'tests/evb.json',
+#  'tests/evb-failure.json', # cannot emulate two devices(usb hub + child hid).
+  'tests/servo-dock.json',
+  'tests/zdn-chromebook.json',
+)
