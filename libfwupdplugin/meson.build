@@ -453,7 +453,7 @@ if get_option('tests')
     'fwupdplugin-self-test',
     installed_firmware_zip,
     rustgen.process('fu-self-test.rs'),
-    sources: ['fu-test-device.c', 'fu-self-test.c'],
+    sources: ['fu-self-test-device.c', 'fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir],
     dependencies: [library_deps, fwupdplugin_rs_dep],
     link_with: [fwupd, fwupdplugin],
