@@ -317,9 +317,9 @@ fu_scsi_device_setup(FuDevice *device, GError **error)
 		fu_device_set_version(device, revision);
 
 	/* add GUIDs */
-	fu_device_add_instance_str(device, "VEN", vendor);
-	fu_device_add_instance_str(device, "DEV", model);
-	fu_device_add_instance_str(device, "REV", revision);
+	fu_device_add_instance_strsafe(device, "VEN", vendor);
+	fu_device_add_instance_strsafe(device, "DEV", model);
+	fu_device_add_instance_strsafe(device, "REV", revision);
 	if (!fu_device_build_instance_id_full(device,
 					      FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					      error,
