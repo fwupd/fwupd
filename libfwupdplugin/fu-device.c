@@ -6264,6 +6264,9 @@ fu_common_instance_id_strsafe(const gchar *str)
 	if (tmp->len > 0 && tmp->str[tmp->len - 1] == '-')
 		g_string_truncate(tmp, tmp->len - 1);
 
+	/* trim both ends */
+	fu_string_strip(tmp);
+
 	/* nothing left! */
 	if (tmp->len == 0)
 		return NULL;
