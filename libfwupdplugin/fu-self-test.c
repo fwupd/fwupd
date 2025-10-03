@@ -3280,6 +3280,11 @@ fu_strstrip_func(void)
 		g_autofree gchar *tmp = fu_strstrip(map[i].old);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
+	for (guint i = 0; map[i].old != NULL; i++) {
+		g_autoptr(GString) str = g_string_new(map[i].old);
+		fu_string_strip(str);
+		g_assert_cmpstr(str->str, ==, map[i].new);
+	}
 }
 
 static void
