@@ -12,16 +12,16 @@ INPUT="@installedtestsdir@/fakedevice124.bin \
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
 
 error() {
-    rc=$1
     cat fwupdtool.txt
-    exit $rc
+    echo "exit code was ${1} and expected ${2}"
+    exit 1
 }
 
 expect_rc() {
-    expected=$1
     rc=$?
+    expected=$1
 
-    [ "$expected" -eq "$rc" ] || error "$rc"
+    [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
 run() {
@@ -89,16 +89,6 @@ expect_rc 0
 # ---
 echo "Checking firmware-types"
 run get-firmware-types
-expect_rc 0
-
-# ---
-echo "Checking for updates"
-run get-updates
-expect_rc 0
-
-# ---
-echo "Checking for updates"
-run get-updates --json
 expect_rc 0
 
 # ---
@@ -282,11 +272,42 @@ if [ -z "$CI_NETWORK" ]; then
 fi
 
 # ---
-echo "Refresh remotes"
-run refresh --json
+echo "Refresh remotes (forced)"
+run refresh --json --force --verbose
 expect_rc 0
 
-# check we can search for known tokens
+# ---
+echo "Showing remote ages..."
+run get-remotes --json --verbose
+expect_rc 0
+
+# ---
+echo "Refresh remotes (already up to date)"
+run refresh --json --verbose
+expect_rc 2
+
+# ---
+echo "Enabling test device..."
+run enable-test-devices
+expect_rc 0
+
+# ---
+echo "Checking for updates"
+run get-updates
+expect_rc 0
+
+# ---
+echo "Checking for updates"
+run get-updates --json
+expect_rc 0
+
+# ---
+echo "Disabling test device..."
+run disable-test-devices
+expect_rc 0
+
+# ---
+echo "Search for known tokens..."
 run search --json CVE-2022-21894
 expect_rc 0
 run search --json KEK
@@ -296,6 +317,7 @@ expect_rc 0
 run search --json linux
 expect_rc 0
 
-# check we do not find a random search result
+# ---
+echo "Search for random search result..."
 run search --json DOESNOTEXIST
 expect_rc 3

@@ -16,16 +16,16 @@ mkdir -p ${FWUPD_SYSFSFWDIR}/efi/efivars
 mkdir -p ${FWUPD_UEFI_ESP_PATH}
 
 error() {
-    rc=$1
     cat fwupdtool.txt
-    exit $rc
+    echo "exit code was ${1} and expected ${2}"
+    exit 1
 }
 
 expect_rc() {
-    expected=$1
     rc=$?
+    expected=$1
 
-    [ "$expected" -eq "$rc" ] || error "$rc"
+    [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
 run() {

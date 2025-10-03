@@ -6,20 +6,20 @@ exec 2>&1
 if [ "$(id -u)" -ne 0 ]; then exit 0; fi
 
 error() {
-    rc=$1
     if [ -f "fwupd.txt" ]; then
         cat fwupd.txt
     else
         journalctl -u fwupd -b || true
     fi
-    exit $rc
+    echo "exit code was ${1} and expected ${2}"
+    exit 1
 }
 
 expect_rc() {
-    expected=$1
     rc=$?
+    expected=$1
 
-    [ "$expected" -eq "$rc" ] || error "$rc"
+    [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
 # ---
