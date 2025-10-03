@@ -43,6 +43,8 @@ Vendor = Micron
 Vendor = Sandisk
 [PCI\VEN_144D]
 Vendor = Samsung
+[PCI\VEN_15B3]
+Vendor = Mellanox
 [PCI\VEN_15B7]
 Vendor = Sandisk
 [PCI\VEN_17CB]
