@@ -131,14 +131,6 @@ echo "Getting updates (should be none)..."
 fwupdmgr --no-unreported-check --no-metadata-check get-updates
 expect_rc 2
 
-# check we can search for known tokens
-fwupdmgr search CVE-2022-21894
-expect_rc 0
-
-# check we do not find a random search result
-fwupdmgr search DOESNOTEXIST
-expect_rc 3
-
 # ---
 echo "Check reboot behavior"
 fwupdmgr quit
@@ -149,6 +141,19 @@ expect_rc 0
 fwupdmgr check-reboot-needed $device --json
 expect_rc 0
 fwupdtool modify-config test NeedsReboot false
+
+# ---
+echo "Resetting config..."
+fwupdmgr reset-config test
+expect_rc 0
+
+# check we can search for known tokens
+fwupdmgr search CVE-2022-21894
+expect_rc 0
+
+# check we do not find a random search result
+fwupdmgr search DOESNOTEXIST
+expect_rc 3
 
 # success!
 exit 0

@@ -307,6 +307,11 @@ run disable-test-devices
 expect_rc 0
 
 # ---
+echo "Resetting config..."
+run reset-config test
+expect_rc 0
+
+# ---
 echo "Search for known tokens..."
 run search --json CVE-2022-21894
 expect_rc 0
