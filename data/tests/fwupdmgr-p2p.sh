@@ -1,5 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh
 
+exec 0>/dev/null
 exec 2>&1
 
 # only run as root, possibly only in CI
