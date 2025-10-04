@@ -1,25 +1,26 @@
-#!/bin/sh -e
+#!/bin/sh
 
+exec 0>/dev/null
 exec 2>&1
 
 # only run as root, possibly only in CI
 if [ "$(id -u)" -ne 0 ]; then exit 0; fi
 
 error() {
-    rc=$1
     if [ -f "fwupd.txt" ]; then
         cat fwupd.txt
     else
         journalctl -u fwupd -b || true
     fi
-    exit $rc
+    echo "exit code was ${1} and expected ${2}"
+    exit 1
 }
 
 expect_rc() {
-    expected=$1
     rc=$?
+    expected=$1
 
-    [ "$expected" -eq "$rc" ] || error "$rc"
+    [ "$expected" -eq "$rc" ] || error "$rc" "$expected"
 }
 
 # ---
@@ -37,6 +38,7 @@ expect_rc 0
 # ---
 echo "Shutting down P2P daemon..."
 fwupdmgr quit
+expect_rc 0
 
 # success!
 exit 0

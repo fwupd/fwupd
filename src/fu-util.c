@@ -2493,9 +2493,12 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 		return fu_util_get_releases_as_json(self, rels, error);
 
 	if (rels->len == 0) {
-		/* TRANSLATORS: no repositories to download from */
-		fu_console_print_literal(self->console, _("No matching releases for search token"));
-		return TRUE;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    /* TRANSLATORS: no repositories to download from */
+				    _("No matching releases for search token"));
+		return FALSE;
 	}
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		for (guint i = 0; i < rels->len; i++) {

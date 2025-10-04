@@ -15,6 +15,14 @@ configure_file(
 )
 
 configure_file(
+  input: 'fwupdmgr-online.test.in',
+  output: 'fwupdmgr-online.test',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
   input: 'fwupdmgr-p2p.test.in',
   output: 'fwupdmgr-p2p.test',
   configuration: con2,
@@ -69,6 +77,14 @@ install_data(
 configure_file(
   input: 'fwupdmgr.sh',
   output: 'fwupdmgr.sh',
+  configuration: con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
+configure_file(
+  input: 'fwupdmgr-online.sh',
+  output: 'fwupdmgr-online.sh',
   configuration: con2,
   install: true,
   install_dir: installed_test_datadir,

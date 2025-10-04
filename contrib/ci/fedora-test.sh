@@ -7,6 +7,10 @@ export FORCE_COLUMNS=100
 dnf install -y dist/*.rpm
 dnf install -y gcovr
 
+# use libjcat from the COPR
+dnf copr enable rhughes/fwupd -y
+dnf update libjcat -y
+
 fwupdtool enable-test-devices
 
 # set up enough PolicyKit and D-Bus to run the daemon
