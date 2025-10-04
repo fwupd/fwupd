@@ -38,6 +38,7 @@ expect_rc 0
 # ---
 echo "Shutting down P2P daemon..."
 fwupdmgr quit
+expect_rc 0
 
 # success!
 exit 0
