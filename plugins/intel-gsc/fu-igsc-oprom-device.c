@@ -69,11 +69,11 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add extra instance IDs */
-	if (!fu_device_build_instance_id(device, error, "MEI", "VEN", "DEV", "PART", NULL))
+	if (!fu_device_build_instance_id(device, error, "PCI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
-					   "MEI",
+					   "PCI",
 					   "VEN",
 					   "DEV",
 					   "SUBSYS",

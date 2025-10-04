@@ -3,11 +3,12 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/intel-gsc-setup.json",
+      "url": "36a8744d139b95bf73d0ac8df46afde4c3e4472ede3ad8aa37adb300550f4301-intel-arc-b580-test-21.1161.cab",
+      "emulation-url": "514063b961b72b590902a85b4ca301a52dbac92e7955be87616d06e64455de3a-emulation.zip",
       "components": [
         {
           "protocol": "com.intel.gsc",
-          "version": "21.1137",
+          "version": "21.1161",
           "guids": [
             "c3808bdf-c31b-5c03-905f-6f223848cae0"
           ]
