@@ -13,6 +13,7 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
@@ -25,6 +26,7 @@ fu_engine_add_firmware_gtypes(FuEngine *self)
 	FuContext *ctx = fu_engine_get_context(self);
 	fu_context_add_firmware_gtype(ctx, "raw", FU_TYPE_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "cab", FU_TYPE_CAB_FIRMWARE);
+	fu_context_add_firmware_gtype(ctx, "cabinet", FU_TYPE_CABINET);
 	fu_context_add_firmware_gtype(ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "fdt", FU_TYPE_FDT_FIRMWARE);
 	fu_context_add_firmware_gtype(ctx, "csv", FU_TYPE_CSV_FIRMWARE);
