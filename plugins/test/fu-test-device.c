@@ -38,7 +38,6 @@ fu_test_device_init(FuTestDevice *self)
 	fu_device_set_id(FU_DEVICE(self), "FakeDevice");
 	fu_device_set_name(FU_DEVICE(self), "Integrated_Webcam(TM)");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_WEB_CAMERA);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
