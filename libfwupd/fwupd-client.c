@@ -1145,9 +1145,13 @@ fwupd_client_quit_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 
 	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 	if (val == NULL) {
-		fwupd_client_fixup_dbus_error(error);
-		g_task_return_error(task, g_steal_pointer(&error));
-		return;
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CLOSED)) {
+			g_debug("ignoring: %s", error->message);
+		} else {
+			fwupd_client_fixup_dbus_error(error);
+			g_task_return_error(task, g_steal_pointer(&error));
+			return;
+		}
 	}
 
 	/* success */
