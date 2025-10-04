@@ -3331,6 +3331,7 @@ fu_util_refresh_remote(FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 static gboolean
 fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* load engine */
@@ -3359,7 +3360,22 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 		if (!fu_util_refresh_remote(priv, remote, error))
 			return FALSE;
+		refresh_cnt++;
 	}
+
+	/* metadata refreshed recently */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && refresh_cnt == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    /* TRANSLATORS: error message for a user who ran fwupdmgr
+			     * refresh recently -- %1 is '--force' */
+			    _("Metadata is up to date; use %s to refresh again."),
+			    "--force");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
