@@ -2,6 +2,10 @@
 set -e
 set -x
 
+# use libjcat from the COPR
+dnf copr enable rhughes/fwupd -y
+dnf update libjcat -y
+
 #get any missing deps from the container
 ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
