@@ -2341,7 +2341,7 @@ fu_util_search(FuUtil *self, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_READONLY, self->progress, error))
+	if (!fu_engine_load(self->engine, FU_ENGINE_LOAD_FLAG_REMOTES, self->progress, error))
 		return FALSE;
 
 	/* get search results */
