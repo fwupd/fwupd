@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-test-device.h"
 #include "fu-test-plugin.h"
 
 struct _FuTestPlugin {
@@ -18,27 +19,10 @@ static gboolean
 fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	g_autoptr(FuDevice) device = NULL;
-	device = fu_device_new(ctx);
-	fu_device_set_id(device, "FakeDevice");
-	fu_device_add_instance_id(device, "b585990a-003e-5270-89d5-3705a17f9a43");
-	fu_device_set_name(device, "Integrated_Webcam(TM)");
-	fu_device_add_icon(device, FU_DEVICE_ICON_WEB_CAMERA);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
-	fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	fu_device_add_protocol(device, "com.acme.test");
-	fu_device_set_summary(device, "Fake webcam");
-	fu_device_set_vendor(device, "ACME Corp.");
-	fu_device_build_vendor_id_u16(device, "USB", 0x046D);
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_version_bootloader(device, "0.1.2");
-	fu_device_set_version(device, "1.2.2");
-	fu_device_set_version_lowest(device, "1.2.0");
+	g_autoptr(FuDevice) device = fu_test_device_new(ctx);
 
+	if (!fu_device_setup(device, error))
+		return FALSE;
 	if (fu_plugin_get_config_value_boolean(plugin, "RegistrationSupported")) {
 		fu_plugin_device_register(plugin, device);
 		if (fu_device_get_metadata(device, "BestDevice") == NULL) {
@@ -304,6 +288,10 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		g_autofree gchar *ver = NULL;
 		g_autoptr(GBytes) blob_fw = NULL;
 		g_autoptr(GInputStream) stream = NULL;
+
+		/* live update */
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
 		stream = fu_firmware_get_stream(firmware, error);
 		if (stream == NULL)

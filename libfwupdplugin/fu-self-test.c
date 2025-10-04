@@ -32,9 +32,9 @@
 #include "fu-plugin-private.h"
 #include "fu-progress-private.h"
 #include "fu-security-attrs-private.h"
+#include "fu-self-test-device.h"
 #include "fu-self-test-struct.h"
 #include "fu-smbios-private.h"
-#include "fu-test-device.h"
 #include "fu-udev-device-private.h"
 #include "fu-volume-private.h"
 
@@ -1844,12 +1844,12 @@ fu_plugin_device_gtype_func(void)
 	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_DEVICE);
 
 	/* now there's no explicit default */
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_TEST_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SELF_TEST_DEVICE);
 	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, G_TYPE_INVALID);
 
 	/* make it explicit */
-	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_TEST_DEVICE);
-	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_TEST_DEVICE);
+	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_SELF_TEST_DEVICE);
+	g_assert_cmpint(fu_plugin_get_device_gtype_default(plugin), ==, FU_TYPE_SELF_TEST_DEVICE);
 }
 
 static void
@@ -1905,7 +1905,7 @@ fu_plugin_backend_proxy_device_func(void)
 			 &device_new);
 
 	fu_device_set_specialized_gtype(device, FU_TYPE_DEVICE);
-	fu_device_set_proxy_gtype(device, FU_TYPE_TEST_DEVICE);
+	fu_device_set_proxy_gtype(device, FU_TYPE_SELF_TEST_DEVICE);
 	ret = fu_plugin_runner_backend_device_added(plugin, device, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1917,7 +1917,7 @@ fu_plugin_backend_proxy_device_func(void)
 	/* check proxy was constructed */
 	proxy = fu_device_get_proxy(device_new);
 	g_assert_nonnull(proxy);
-	g_assert_true(FU_IS_TEST_DEVICE(proxy));
+	g_assert_true(FU_IS_SELF_TEST_DEVICE(proxy));
 }
 
 static void
@@ -2700,17 +2700,17 @@ fu_device_incorporate_descendant_func(void)
 {
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = fu_device_new(ctx);
-	g_autoptr(FuTestDevice) test_device = g_object_new(FU_TYPE_TEST_DEVICE, NULL);
+	g_autoptr(FuSelfTestDevice) test_device = g_object_new(FU_TYPE_SELF_TEST_DEVICE, NULL);
 
 	fu_device_set_name(device, "FuDevice");
-	fu_device_set_summary(FU_DEVICE(test_device), "FuTestDevice");
+	fu_device_set_summary(FU_DEVICE(test_device), "FuSelfTestDevice");
 
 	fu_device_incorporate(FU_DEVICE(test_device), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
 	g_assert_cmpstr(fu_device_get_name(FU_DEVICE(test_device)), ==, "FuDevice");
 
 	/* this won't explode as device_class->incorporate is checking types */
 	fu_device_incorporate(device, FU_DEVICE(test_device), FU_DEVICE_INCORPORATE_FLAG_ALL);
-	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuTestDevice");
+	g_assert_cmpstr(fu_device_get_summary(device), ==, "FuSelfTestDevice");
 }
 
 static void
