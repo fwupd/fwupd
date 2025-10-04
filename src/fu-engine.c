@@ -4600,6 +4600,8 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	/* save XML and signature to remotes.d */
 	if (!fu_bytes_set_contents(fwupd_remote_get_filename_cache(remote), bytes_raw, error))
 		return FALSE;
+	if (!fwupd_remote_ensure_mtime(remote, error))
+		return FALSE;
 
 #ifdef HAVE_PASSIM
 	/* lazy load */

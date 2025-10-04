@@ -1080,6 +1080,52 @@ fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime)
 }
 
 /**
+ * fwupd_remote_ensure_mtime:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Calculates the mtime of the remote using the filename cache.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.17
+ **/
+gboolean
+fwupd_remote_ensure_mtime(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInfo) info = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->filename_cache == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no filename cache set");
+		return FALSE;
+	}
+	file = g_file_new_for_path(priv->filename_cache);
+	if (!g_file_query_exists(file, NULL)) {
+		priv->mtime = G_MAXUINT64;
+		return TRUE;
+	}
+	info = g_file_query_info(file,
+				 G_FILE_ATTRIBUTE_TIME_MODIFIED,
+				 G_FILE_QUERY_INFO_NONE,
+				 NULL,
+				 error);
+	if (info == NULL) {
+		fwupd_error_convert(error);
+		return FALSE;
+	}
+	priv->mtime = g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
+	return TRUE;
+}
+
+/**
  * fwupd_remote_get_refresh_interval:
  * @self: a #FwupdRemote
  *

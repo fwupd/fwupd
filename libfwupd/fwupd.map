@@ -1039,5 +1039,6 @@ LIBFWUPD_2.0.16 {
 LIBFWUPD_2.0.17 {
   global:
     fwupd_client_get_hwids;
+    fwupd_remote_ensure_mtime;
   local: *;
 } LIBFWUPD_2.0.16;
