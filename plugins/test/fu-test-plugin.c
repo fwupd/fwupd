@@ -289,6 +289,10 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 		g_autoptr(GBytes) blob_fw = NULL;
 		g_autoptr(GInputStream) stream = NULL;
 
+		/* live update */
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
 		stream = fu_firmware_get_stream(firmware, error);
 		if (stream == NULL)
 			return FALSE;
