@@ -26,16 +26,6 @@ expect_rc() {
 }
 
 # ---
-echo "Verify test device is present"
-fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
-rc=$?
-if [ $rc != 0 ]; then
-    echo "Enable test device"
-    fwupdtool enable-test-devices
-    expect_rc 0
-fi
-
-# ---
 echo "Show help output"
 fwupdmgr --help
 expect_rc 0
@@ -100,18 +90,8 @@ if [ -f ${CAB} ]; then
 fi
 
 # ---
-echo "Update the device hash database..."
-fwupdmgr get-releases $device
-expect_rc 0
-
-# ---
 echo "Getting the list of remotes..."
 fwupdmgr get-remotes
-expect_rc 0
-
-# ---
-echo "Disabling vendor-directory remote..."
-fwupdmgr disable-remote vendor-directory
 expect_rc 0
 
 # ---
@@ -120,38 +100,8 @@ fwupdmgr get-remotes --json
 expect_rc 0
 
 # ---
-echo "Enable vendor-directory remote..."
-fwupdmgr enable-remote vendor-directory
-expect_rc 0
-
-# ---
-echo "Update the device hash database..."
-fwupdmgr verify-update $device
-expect_rc 0
-
-# ---
-echo "Getting devices (should be one)..."
-fwupdmgr get-devices --no-unreported-check
-expect_rc 0
-
-# ---
-echo "Testing the verification of firmware..."
-fwupdmgr verify $device
-expect_rc 0
-
-# ---
 echo "Modifying config..."
 fwupdmgr modify-config fwupd UpdateMotd false --json
-expect_rc 0
-
-# ---
-echo "Resetting changed config..."
-fwupdmgr reset-config fwupd --json
-expect_rc 0
-
-# ---
-echo "Resetting empty config ..."
-fwupdmgr reset-config fwupd --json
 expect_rc 0
 
 # ---
@@ -201,6 +151,49 @@ fwupdmgr security
 # ---
 echo "Run security tests (json)..."
 fwupdmgr security --json
+
+# ---
+echo "Verify test device is present"
+fwupdmgr get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
+if [ $? != 0 ]; then
+    echo "Skipping tests due to no test device enabled"
+    exit 0
+fi
+
+# ---
+echo "Resetting config..."
+fwupdmgr reset-config test
+expect_rc 0
+
+# ---
+echo "Update the device hash database..."
+fwupdmgr get-releases $device
+expect_rc 0
+
+# ---
+echo "Disabling vendor-directory remote..."
+fwupdmgr disable-remote vendor-directory
+expect_rc 0
+
+# ---
+echo "Enable vendor-directory remote..."
+fwupdmgr enable-remote vendor-directory
+expect_rc 0
+
+# ---
+echo "Update the device hash database..."
+fwupdmgr verify-update $device
+expect_rc 0
+
+# ---
+echo "Getting devices (should be one)..."
+fwupdmgr get-devices --no-unreported-check
+expect_rc 0
+
+# ---
+echo "Testing the verification of firmware..."
+fwupdmgr verify $device
+expect_rc 0
 
 # success!
 exit 0

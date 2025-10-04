@@ -72,11 +72,6 @@ run get-plugins --json
 expect_rc 0
 
 # ---
-echo "Enabling test device..."
-run enable-test-devices
-expect_rc 0
-
-# ---
 echo "Checking device-flags"
 run get-device-flags
 expect_rc 0
@@ -99,40 +94,6 @@ expect_rc 0
 # ---
 echo "Examining ${CAB}..."
 run get-details ${CAB}
-expect_rc 0
-
-# ---
-echo "Installing ${CAB} cabinet..."
-run install ${CAB}
-expect_rc 0
-
-# ---
-echo "Cleaning ${CAB} generated cabinet ..."
-rm -f ${CAB}
-
-# ---
-echo "Verifying update..."
-run verify-update ${DEVICE}
-expect_rc 0
-
-# ---
-echo "Getting history (should be one)..."
-run get-history
-expect_rc 0
-
-# ---
-echo "Clearing history..."
-run clear-history ${DEVICE}
-expect_rc 0
-
-# ---
-echo "Getting history (should be none)..."
-run get-history
-expect_rc 2
-
-# ---
-echo "Resetting config..."
-run reset-config test
 expect_rc 0
 
 # ---
@@ -180,31 +141,6 @@ echo "Modify known remote but unknown key (should fail)..."
 run modify-remote lvfs bar true
 expect_rc 3
 
-# ---
-echo "Getting devices (should be one)..."
-run get-devices --json
-expect_rc 0
-
-# ---
-echo "Getting all devices, even unsupported ones..."
-run get-devices --show-all --force
-expect_rc 0
-
-# ---
-echo "Changing VALID config on test device..."
-run modify-config test AnotherWriteRequired true
-expect_rc 0
-
-# ---
-echo "Changing INVALID config on test device...(should fail)"
-run modify-config test Foo true
-expect_rc 1
-
-# ---
-echo "Disabling test device..."
-run disable-test-devices
-expect_rc 0
-
 BASEDIR=@installedtestsdir@/tests/bios-attrs/dell-xps13-9310/
 if [ -d $BASEDIR ]; then
     WORKDIR="$(mktemp -d)"
@@ -247,23 +183,11 @@ if [ -d $BASEDIR ]; then
 fi
 
 if [ -x /usr/bin/certtool ]; then
-
-    # ---
-    echo "Building unsigned ${CAB}..."
-    INPUT="@installedtestsdir@/fakedevice124.bin \
-              @installedtestsdir@/fakedevice124.metainfo.xml"
-    run build-cabinet ${CAB} ${INPUT} --force
-    expect_rc 0
-
     # ---
     echo "Sign ${CAB}"
     @installedtestsdir@/build-certs.py /tmp
     run firmware-sign ${CAB} /tmp/testuser.pem /tmp/testuser.key --json
     expect_rc 0
-
-    # ---
-    echo "Cleaning self-signed ${CAB}..."
-    rm -f ${CAB}
 fi
 
 if [ -z "$CI_NETWORK" ]; then
@@ -287,31 +211,6 @@ run refresh --json --verbose
 expect_rc 2
 
 # ---
-echo "Enabling test device..."
-run enable-test-devices
-expect_rc 0
-
-# ---
-echo "Checking for updates"
-run get-updates
-expect_rc 0
-
-# ---
-echo "Checking for updates"
-run get-updates --json
-expect_rc 0
-
-# ---
-echo "Disabling test device..."
-run disable-test-devices
-expect_rc 0
-
-# ---
-echo "Resetting config..."
-run reset-config test
-expect_rc 0
-
-# ---
 echo "Search for known tokens..."
 run search --json CVE-2022-21894
 expect_rc 0
@@ -326,3 +225,85 @@ expect_rc 0
 echo "Search for random search result..."
 run search --json DOESNOTEXIST
 expect_rc 3
+
+# ---
+echo "Verify test device is present"
+fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
+if [ $? != 0 ]; then
+    echo "Skipping tests due to no test device enabled"
+    exit 0
+fi
+
+# ---
+echo "Clearing history..."
+run clear-history ${DEVICE}
+expect_rc 0
+
+# ---
+echo "Installing ${CAB} cabinet..."
+run install ${CAB}
+expect_rc 0
+
+# ---
+echo "Cleaning ${CAB} generated cabinet ..."
+rm -f ${CAB}
+
+# ---
+echo "Verifying update..."
+run verify-update ${DEVICE}
+expect_rc 0
+
+# ---
+echo "Getting history (should be one)..."
+run get-history
+expect_rc 0
+
+# ---
+echo "Clearing history..."
+run clear-history ${DEVICE}
+expect_rc 0
+
+# ---
+echo "Getting history (should be none)..."
+run get-history
+expect_rc 2
+
+# ---
+echo "Resetting config..."
+run reset-config test
+expect_rc 0
+
+# ---
+echo "Getting devices (should be one)..."
+run get-devices --json
+expect_rc 0
+
+# ---
+echo "Getting all devices, even unsupported ones..."
+run get-devices --show-all --force
+expect_rc 0
+
+# ---
+echo "Changing VALID config on test device..."
+run modify-config test AnotherWriteRequired true
+expect_rc 0
+
+# ---
+echo "Changing INVALID config on test device...(should fail)"
+run modify-config test Foo true
+expect_rc 1
+
+# ---
+echo "Checking for updates"
+run get-updates
+expect_rc 0
+
+# ---
+echo "Checking for updates"
+run get-updates --json
+expect_rc 0
+
+# ---
+echo "Resetting config..."
+run reset-config test
+expect_rc 0

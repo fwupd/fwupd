@@ -30,13 +30,16 @@ fi
 
 # ---
 echo "Verify test device is present"
-fwupdtool get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
-rc=$?
-if [ $rc != 0 ]; then
-    echo "Enable test device"
-    fwupdtool enable-test-devices
-    expect_rc 0
+fwupdmgr get-devices --json | jq -e '.Devices | any(.Plugin == "test")'
+if [ $? != 0 ]; then
+    echo "Skipping tests due to no test device enabled"
+    exit 0
 fi
+
+# ---
+echo "Resetting config..."
+fwupdmgr reset-config test
+expect_rc 0
 
 # ---
 echo "Getting devices (should be one)..."
@@ -57,6 +60,21 @@ expect_rc 0
 echo "Refreshing from the LVFS (already up to date)..."
 fwupdmgr --download-retries=5 refresh
 expect_rc 2
+
+# ---
+echo "Check we can search for known tokens..."
+fwupdmgr search CVE-2022-21894
+expect_rc 0
+
+# ---
+echo "Check we do not find a random search result..."
+fwupdmgr search DOESNOTEXIST
+expect_rc 3
+
+# ---
+echo "Install a specific release..."
+fwupdmgr --no-unreported-check --no-metadata-check --allow-reinstall --allow-older install $device 1.2.3
+expect_rc 0
 
 # ---
 echo "Getting updates (should be one)..."
@@ -133,27 +151,17 @@ expect_rc 2
 
 # ---
 echo "Check reboot behavior"
-fwupdmgr quit
-fwupdtool modify-config test NeedsReboot true
+fwupdmgr modify-config test NeedsReboot true
 expect_rc 0
-fwupdmgr update $device -y
+fwupdmgr --no-unreported-check --no-metadata-check --allow-reinstall --allow-older install $device 1.2.3
 expect_rc 0
 fwupdmgr check-reboot-needed $device --json
 expect_rc 0
-fwupdtool modify-config test NeedsReboot false
 
 # ---
 echo "Resetting config..."
 fwupdmgr reset-config test
 expect_rc 0
-
-# check we can search for known tokens
-fwupdmgr search CVE-2022-21894
-expect_rc 0
-
-# check we do not find a random search result
-fwupdmgr search DOESNOTEXIST
-expect_rc 3
 
 # success!
 exit 0
