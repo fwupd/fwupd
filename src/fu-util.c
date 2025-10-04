@@ -541,17 +541,11 @@ fu_util_check_reboot_needed(FuUtil *self, gchar **values, GError **error)
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 		}
 	} else {
-		for (guint idx = 0; idx < g_strv_length(values); idx++) {
-			FwupdDevice *device = fu_util_get_device_by_id(self, values[idx], error);
-
-			if (device == NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_ARGS,
-					    "'%s' is not a valid GUID nor DEVICE-ID",
-					    values[idx]);
+		for (guint i = 0; values[i] != NULL; i++) {
+			g_autoptr(FwupdDevice) device = NULL;
+			device = fu_util_get_device_by_id(self, values[i], error);
+			if (device == NULL)
 				return FALSE;
-			}
 			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 				self->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 			if (fwupd_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
