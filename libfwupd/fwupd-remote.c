@@ -878,7 +878,7 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
  * fwupd_remote_get_order_after:
  * @self: a #FwupdRemote
  *
- * Gets the list of remotes this plugin should be ordered after.
+ * Gets the list of remotes this remote should be ordered after.
  *
  * Returns: (transfer none): an array
  *
@@ -896,7 +896,7 @@ fwupd_remote_get_order_after(FwupdRemote *self)
  * fwupd_remote_get_order_before:
  * @self: a #FwupdRemote
  *
- * Gets the list of remotes this plugin should be ordered before.
+ * Gets the list of remotes this remote should be ordered before.
  *
  * Returns: (transfer none): an array
  *
@@ -1050,7 +1050,7 @@ fwupd_remote_set_remotes_dir(FwupdRemote *self, const gchar *directory)
  * @self: a #FwupdRemote
  * @priority: an integer, where 1 is better
  *
- * Sets the plugin priority.
+ * Sets the remote priority.
  *
  * Since: 0.9.5
  **/
@@ -1067,7 +1067,7 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority)
  * @self: a #FwupdRemote
  * @mtime: a UNIX timestamp
  *
- * Sets the plugin modification time.
+ * Sets the remote modification time.
  *
  * Since: 0.9.5
  **/
@@ -1129,7 +1129,7 @@ fwupd_remote_ensure_mtime(FwupdRemote *self, GError **error)
  * fwupd_remote_get_refresh_interval:
  * @self: a #FwupdRemote
  *
- * Gets the plugin refresh interval in seconds.
+ * Gets the remote refresh interval in seconds.
  *
  * Returns: value in seconds
  *
@@ -1148,7 +1148,7 @@ fwupd_remote_get_refresh_interval(FwupdRemote *self)
  * @self: a #FwupdRemote
  * @refresh_interval: value in seconds
  *
- * Sets the plugin refresh interval in seconds.
+ * Sets the remote refresh interval in seconds.
  *
  * Since: 2.0.0
  **/
