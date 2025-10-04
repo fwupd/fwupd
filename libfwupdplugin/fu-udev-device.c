@@ -1080,10 +1080,10 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	 * could add more flags, or set the flags back to NONE -- detect and fixup */
 	if (priv->device_file != NULL && priv->open_flags == FU_IO_CHANNEL_OPEN_FLAG_NONE) {
 #ifndef SUPPORTED_BUILD
-		g_critical("%s [%s] forgot to call fu_udev_device_add_open_flag() with "
+		g_autofree gchar *id_display = fu_device_get_id_display(device);
+		g_critical("%s forgot to call fu_udev_device_add_open_flag() with "
 			   "FU_IO_CHANNEL_OPEN_FLAG_READ and/or FU_IO_CHANNEL_OPEN_FLAG_WRITE",
-			   fu_device_get_name(device),
-			   fu_device_get_id(device));
+			   id_display);
 #endif
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -1194,12 +1194,12 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1306,12 +1306,12 @@ fu_udev_device_pread(FuUdevDevice *self, goffset port, guint8 *buf, gsize bufsz,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1370,12 +1370,12 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	return fu_io_channel_seek(priv->io_channel, offset, error);
@@ -1443,12 +1443,12 @@ fu_udev_device_pwrite(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 
@@ -1542,12 +1542,12 @@ fu_udev_device_read(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	if (!fu_io_channel_read_raw(priv->io_channel,
@@ -1658,12 +1658,12 @@ fu_udev_device_write(FuUdevDevice *self,
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
+		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "%s [%s] has not been opened",
-			    fu_device_get_id(FU_DEVICE(self)),
-			    fu_device_get_name(FU_DEVICE(self)));
+			    "%s has not been opened",
+			    id_display);
 		return FALSE;
 	}
 	if (!fu_io_channel_write_raw(priv->io_channel, buf, bufsz, timeout_ms, flags, error))

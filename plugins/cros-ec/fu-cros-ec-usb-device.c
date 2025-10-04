@@ -51,6 +51,7 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 	FuCrosEcUsbDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 index;
 	g_autofree gchar *configuration = NULL;
+	g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(self));
 
 	index = fu_usb_device_get_configuration_index(FU_USB_DEVICE(self), error);
 	if (index == 0x0)
@@ -58,10 +59,7 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 	configuration = fu_usb_device_get_string_descriptor(FU_USB_DEVICE(self), index, error);
 	if (configuration == NULL)
 		return FALSE;
-	g_debug("%s(%s): raw configuration read: %s",
-		fu_device_get_id(FU_DEVICE(self)),
-		fu_device_get_name(FU_DEVICE(self)),
-		configuration);
+	g_debug("%s raw configuration read: %s", id_display, configuration);
 
 	if (g_strlcpy(priv->configuration,
 		      configuration,
