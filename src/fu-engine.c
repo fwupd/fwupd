@@ -2695,7 +2695,11 @@ fu_engine_install_release(FuEngine *self,
 	/* update state (which updates the database if required) */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
-		fu_device_set_update_state(device_orig, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+		if (g_strcmp0(fu_device_get_plugin(device), "test") == 0) {
+			g_debug("not setting needs-reboot for test device");
+		} else {
+			fu_device_set_update_state(device_orig, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+		}
 		return TRUE;
 	}
 
@@ -8052,8 +8056,12 @@ fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **
 		/* if it needed reboot then, it also needs it now... */
 		if (fu_device_get_update_state(dev_history) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
 			g_autofree gchar *id_display = fu_device_get_id_display(dev);
-			g_info("inheriting needs-reboot for %s", id_display);
-			fu_device_set_update_state(dev, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+			if (g_strcmp0(fu_device_get_plugin(dev_history), "test") == 0) {
+				g_debug("ignoring needs-reboot for %s", id_display);
+			} else {
+				g_info("inheriting needs-reboot for %s", id_display);
+				fu_device_set_update_state(dev, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+			}
 		}
 		return TRUE;
 	}
