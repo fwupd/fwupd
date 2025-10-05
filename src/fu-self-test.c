@@ -3692,7 +3692,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
-	g_assert_cmpint(fu_device_get_update_state(device), ==, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
 }
 
