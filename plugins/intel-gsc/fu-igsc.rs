@@ -91,6 +91,7 @@ enum FuIgscFwuHeciPartitionVersion {
     OpromCode,
 }
 
+#[repr(u32le)]
 enum FuIgscFwuHeciPayloadType {
     Invalid,
     GfxFw,
@@ -293,7 +294,7 @@ struct FuIgscFwuHeciStartReq {
     hdr_flags: FuIgscFwuHeciHdrFlags == None,
     _hdr_reserved: [u8; 2],
     update_img_length: u32le,
-    payload_type: u32le,
+    payload_type: FuIgscFwuHeciPayloadType,
     flags: FuIgscFwuHeciStartFlags,
     _reserved: [u32le; 8],
 }
