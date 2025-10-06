@@ -275,6 +275,17 @@ fu_igsc_oprom_device_cleanup(FuDevice *device,
 }
 
 static void
+fu_igsc_oprom_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
+}
+
+static void
 fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -290,6 +301,7 @@ static void
 fu_igsc_oprom_device_class_init(FuIgscOpromDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->set_progress = fu_igsc_oprom_device_set_progress;
 	device_class->to_string = fu_igsc_oprom_device_to_string;
 	device_class->probe = fu_igsc_oprom_device_probe;
 	device_class->setup = fu_igsc_oprom_device_setup;
