@@ -36,4 +36,4 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelRtshub,
 #define DELL_KESTREL_RTSHUB_TRANSFER_BLOCK_SIZE 128
 
 FuDellKestrelRtshub *
-fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type);
+fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type, gboolean uod);
