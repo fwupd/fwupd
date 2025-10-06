@@ -131,20 +131,29 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	guint16 pid = fu_device_get_pid(FU_DEVICE(igsc_parent));
 	guint16 subsys_vendor_id = fu_igsc_device_get_ssvid(igsc_parent);
 	guint16 subsys_device_id = fu_igsc_device_get_ssvid(igsc_parent);
-	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_IGSC_OPROM_FIRMWARE);
+	g_autoptr(GInputStream) stream_igsc = NULL;
+	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
+	g_autoptr(FuFirmware) firmware_oprom = NULL;
+	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
 
 	/* parse container */
 	if (!fu_firmware_parse_stream(fw_linear, stream, 0x0, flags, error))
 		return NULL;
 
 	/* get correct image */
-	firmware = fu_firmware_get_image_by_idx(
+	firmware_oprom = fu_firmware_get_image_by_idx(
 	    fw_linear,
 	    self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE ? FU_IGSC_OPROM_IDX_CODE
 									   : FU_IGSC_OPROM_IDX_DATA,
 	    error);
-	if (firmware == NULL)
+	if (firmware_oprom == NULL)
+		return NULL;
+
+	/* reparse with more specific requirements */
+	stream_igsc = fu_firmware_get_stream(firmware_oprom, error);
+	if (stream_igsc == NULL)
+		return NULL;
+	if (!fu_firmware_parse_stream(firmware_igsc, stream_igsc, 0x0, flags, error))
 		return NULL;
 
 	/* If oprom_code_devid_enforcement is set to True:
@@ -155,16 +164,17 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	 */
 	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE) {
 		if (fu_igsc_device_get_oprom_code_devid_enforcement(igsc_parent)) {
-			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
-								 vid,
-								 pid,
-								 subsys_vendor_id,
-								 subsys_device_id,
-								 error))
+			if (!fu_igsc_oprom_firmware_match_device(
+				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
+				vid,
+				pid,
+				subsys_vendor_id,
+				subsys_device_id,
+				error))
 				return NULL;
 		} else {
 			if (fu_igsc_oprom_firmware_has_allowlist(
-				FU_IGSC_OPROM_FIRMWARE(firmware))) {
+				FU_IGSC_OPROM_FIRMWARE(firmware_igsc))) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_SUPPORTED,
@@ -182,13 +192,14 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	 *    The update is accepted only if the card's SSVID and SSDID are zero.
 	 */
 	if (self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_DATA) {
-		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware))) {
-			if (!fu_igsc_oprom_firmware_match_device(FU_IGSC_OPROM_FIRMWARE(firmware),
-								 vid,
-								 pid,
-								 subsys_vendor_id,
-								 subsys_device_id,
-								 error))
+		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware_igsc))) {
+			if (!fu_igsc_oprom_firmware_match_device(
+				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
+				vid,
+				pid,
+				subsys_vendor_id,
+				subsys_device_id,
+				error))
 				return NULL;
 		} else {
 			if (subsys_vendor_id != 0x0 || subsys_device_id != 0x0) {
@@ -203,7 +214,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return g_steal_pointer(&fw_linear);
 }
 
 static gboolean
@@ -215,18 +226,23 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	g_autoptr(GInputStream) stream_payload = NULL;
+	g_autoptr(GInputStream) partial_stream = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
-	/* get image */
-	stream_payload = fu_firmware_get_stream(firmware, error);
-	if (stream_payload == NULL)
+	/* get image, with no padding bytes */
+	stream = fu_firmware_get_stream(firmware, error);
+	if (stream == NULL)
+		return FALSE;
+	partial_stream =
+	    fu_partial_input_stream_new(stream, 0x0, fu_firmware_get_size(firmware), error);
+	if (partial_stream == NULL)
 		return FALSE;
 
 	/* OPROM image doesn't require metadata */
 	return fu_igsc_device_write_blob(igsc_parent,
 					 self->payload_type,
 					 NULL,
-					 stream_payload,
+					 partial_stream,
 					 progress,
 					 error);
 }
