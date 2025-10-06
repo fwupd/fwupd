@@ -105,8 +105,8 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 
 	/* search the device list for a match */
 	if (!fu_igsc_aux_firmware_match_device(firmware,
-					       self->major_version,
-					       self->major_vcn,
+					       fu_device_get_vid(FU_DEVICE(igsc_parent)),
+					       fu_device_get_pid(FU_DEVICE(igsc_parent)),
 					       fu_igsc_device_get_ssvid(igsc_parent),
 					       fu_igsc_device_get_ssdid(igsc_parent),
 					       error))
@@ -197,7 +197,6 @@ static void
 fu_igsc_aux_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "detach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100, "write");
