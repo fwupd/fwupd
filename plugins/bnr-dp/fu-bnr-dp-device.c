@@ -409,7 +409,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 	return TRUE;
 }
 
-static FuStructBnrDpPayloadHeader *
+static FuStructBnrDpFactoryData *
 fu_bnr_dp_device_factory_data(FuBnrDpDevice *self,
 			      FuBnrDpModuleNumber module_number,
 			      GError **error)
