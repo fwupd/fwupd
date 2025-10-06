@@ -130,7 +130,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	guint16 vid = fu_device_get_vid(FU_DEVICE(igsc_parent));
 	guint16 pid = fu_device_get_pid(FU_DEVICE(igsc_parent));
 	guint16 subsys_vendor_id = fu_igsc_device_get_ssvid(igsc_parent);
-	guint16 subsys_device_id = fu_igsc_device_get_ssvid(igsc_parent);
+	guint16 subsys_device_id = fu_igsc_device_get_ssdid(igsc_parent);
 	g_autoptr(GInputStream) stream_igsc = NULL;
 	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
 	g_autoptr(FuFirmware) firmware_oprom = NULL;
