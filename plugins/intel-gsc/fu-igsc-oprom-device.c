@@ -147,21 +147,6 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 	if (firmware == NULL)
 		return NULL;
 
-	/* major numbers must be the same, unless the device's major is zero,
-	 * because some platforms may come originally with 0 major number */
-	if (fu_igsc_oprom_firmware_get_major_version(FU_IGSC_OPROM_FIRMWARE(firmware)) !=
-		self->major_version &&
-	    self->major_version != 0) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "image major version is not compatible, got 0x%x, expected 0x%x",
-		    fu_igsc_oprom_firmware_get_major_version(FU_IGSC_OPROM_FIRMWARE(firmware)),
-		    self->major_version);
-		return NULL;
-	}
-
 	/* If oprom_code_devid_enforcement is set to True:
 	 *    The update is accepted only if the update file contains a Device IDs allowlist
 	 *    and the card's {VID, DID, SSVID, SSDID} is in the update file's Device IDs allowlist.
