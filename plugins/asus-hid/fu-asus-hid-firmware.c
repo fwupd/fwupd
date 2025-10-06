@@ -37,7 +37,7 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 			   GError **error)
 {
 	FuAsusHidFirmware *self = FU_ASUS_HID_FIRMWARE(firmware);
-	g_autoptr(GByteArray) desc = NULL;
+	g_autoptr(FuStructAsusHidDesc) desc = NULL;
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -62,6 +62,7 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 static void
 fu_asus_hid_firmware_init(FuAsusHidFirmware *self)
 {
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void
