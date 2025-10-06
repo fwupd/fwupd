@@ -102,8 +102,12 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	    pid == DELL_KESTREL_USB_RTS5_G2_PID) {
 		g_autoptr(FuDellKestrelRtshub) hub_device = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
+		gboolean uod = FALSE;
 
-		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type);
+		uod = fu_plugin_get_config_value_boolean(plugin,
+							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
+
+		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type, uod);
 		if (hub_device == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
