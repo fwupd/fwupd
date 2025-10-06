@@ -226,6 +226,8 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	g_autoptr(FuStructIgscFwuHeciImageMetadata) st_md = NULL;
+	g_autoptr(GBytes) fw_info = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -238,10 +240,15 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 	if (partial_stream == NULL)
 		return FALSE;
 
+	/* weirdly, this is just empty data */
+	st_md = fu_struct_igsc_fwu_heci_image_metadata_new();
+	fu_struct_igsc_fwu_heci_image_metadata_set_version_format(st_md, 0x0);
+	fw_info = g_bytes_new(st_md->data, st_md->len);
+
 	/* OPROM image doesn't require metadata */
 	return fu_igsc_device_write_blob(igsc_parent,
 					 self->payload_type,
-					 NULL,
+					 fw_info,
 					 partial_stream,
 					 progress,
 					 error);

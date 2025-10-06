@@ -67,7 +67,7 @@ struct FuStructIgscFwuIupData {
     vcn: u32le,
 }
 
-#[derive(Getters, Default)]
+#[derive(Getters, Default, New)]
 #[repr(C, packed)]
 struct FuStructIgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
