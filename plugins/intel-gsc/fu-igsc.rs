@@ -99,6 +99,12 @@ enum FuIgscFwuHeciPayloadType {
     Fwdata = 5,
 }
 
+enum FuIgscOpromIdx {
+    Unknown = 0x0,
+    Data    = 0xF0,
+    Code    = 0xF1,
+}
+
 #[repr(u8)]
 enum FuIgscFwuHeciCommandId {
     Invalid,

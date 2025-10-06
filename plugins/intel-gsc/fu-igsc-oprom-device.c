@@ -139,7 +139,11 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* get correct image */
-	firmware = fu_firmware_get_image_by_idx(fw_linear, self->payload_type, error);
+	firmware = fu_firmware_get_image_by_idx(
+	    fw_linear,
+	    self->payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_OPROM_CODE ? FU_IGSC_OPROM_IDX_CODE
+									   : FU_IGSC_OPROM_IDX_DATA,
+	    error);
 	if (firmware == NULL)
 		return NULL;
 
