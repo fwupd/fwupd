@@ -119,13 +119,16 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		if (!fu_firmware_add_image_full(firmware, img, error))
 			return FALSE;
 
+		/* next! */
+		offset += fu_firmware_get_size(img);
+
 		/* skip any padding */
 		if (fu_firmware_has_flag(img, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))
 			break;
-
-		/* next! */
-		offset += fu_firmware_get_size(img);
 	}
+
+	/* this might be less than streamsz if padded */
+	fu_firmware_set_size(firmware, offset);
 
 	/* success */
 	return TRUE;
