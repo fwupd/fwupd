@@ -178,7 +178,6 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
-	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 
@@ -245,7 +244,7 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* non-uod: reset the device immediately */
-	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		/* rts5g2 only */
 		if (fu_device_get_pid(device) == DELL_KESTREL_USB_RTS5_G2_PID) {
 			if (!fu_dell_kestrel_rtshub_reset_device(self, error)) {
@@ -370,19 +369,6 @@ fu_dell_kestrel_rtshub_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_dell_kestrel_rtshub_open(FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent(device);
-
-	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rtshub_parent_class)->open(device, error))
-		return FALSE;
-
-	if (parent != NULL)
-		return fu_device_open(parent, error);
-	return TRUE;
-}
-
 static void
 fu_dell_kestrel_rtshub_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -419,15 +405,17 @@ fu_dell_kestrel_rtshub_class_init(FuDellKestrelRtshubClass *klass)
 	device_class->probe = fu_dell_kestrel_rtshub_probe;
 	device_class->write_firmware = fu_dell_kestrel_rtshub_write_firmware;
 	device_class->set_progress = fu_dell_kestrel_rtshub_set_progress;
-	device_class->open = fu_dell_kestrel_rtshub_open;
 }
 
 FuDellKestrelRtshub *
-fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type)
+fu_dell_kestrel_rtshub_new(FuUsbDevice *device, FuDellDockBaseType dock_type, gboolean uod)
 {
 	FuDellKestrelRtshub *self = g_object_new(FU_TYPE_DELL_KESTREL_RTSHUB, NULL);
 
 	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device), FU_DEVICE_INCORPORATE_FLAG_ALL);
 	self->dock_type = dock_type;
+
+	if (uod)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	return self;
 }
