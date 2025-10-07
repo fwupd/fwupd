@@ -20,7 +20,7 @@ struct FuStructDellKestrelHidCmdBuffer {
     bufferlen: u16le,
     parameters: [u8; 3] = 0xEC0180, // addr, length, speed
     extended_cmdarea: [u8; 53],
-    databytes: [u8; 192],
+    databytes: [u8; 128],
 }
 
 #[derive(New, Setters)]
