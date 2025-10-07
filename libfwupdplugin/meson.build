@@ -452,6 +452,7 @@ if get_option('tests')
   e = executable(
     'fwupdplugin-self-test',
     installed_firmware_zip,
+    colorhug_test_firmware,
     rustgen.process('fu-self-test.rs'),
     sources: ['fu-self-test-device.c', 'fu-self-test.c'],
     include_directories: [root_incdir, fwupd_incdir],
