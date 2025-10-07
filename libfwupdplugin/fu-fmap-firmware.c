@@ -70,7 +70,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    "number of areas invalid");
 		return FALSE;
 	}
-	offset += st_hdr->len;
+	offset += st_hdr->buf->len;
 	for (gsize i = 0; i < nareas; i++) {
 		guint32 area_offset;
 		guint32 area_size;
@@ -111,7 +111,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 						  fu_struct_fmap_get_ver_minor(st_hdr));
 			fu_firmware_set_version(img, version);
 		}
-		offset += st_area->len;
+		offset += st_area->buf->len;
 	}
 
 	/* success */
@@ -132,7 +132,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 		fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware), 0x00);
 
 	/* add header */
-	total_sz = offset = st_hdr->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
+	total_sz = offset = st_hdr->buf->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
@@ -145,7 +145,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_fmap_set_base(st_hdr, fu_firmware_get_addr(firmware));
 	fu_struct_fmap_set_nareas(st_hdr, images->len);
 	fu_struct_fmap_set_size(st_hdr, fu_firmware_get_offset(firmware) + total_sz);
-	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
 
 	/* add each area */
 	for (guint i = 0; i < images->len; i++) {
@@ -158,7 +158,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 			if (!fu_struct_fmap_area_set_name(st_area, fu_firmware_get_id(img), error))
 				return NULL;
 		}
-		g_byte_array_append(buf, st_area->data, st_area->len);
+		fu_byte_array_append_array(buf, st_area->buf);
 		offset += g_bytes_get_size(fw);
 	}
 

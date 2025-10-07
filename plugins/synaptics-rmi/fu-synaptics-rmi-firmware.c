@@ -147,7 +147,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		g_prefix_error_literal(error, "RmiContainerDescriptor invalid: ");
 		return FALSE;
 	}
-	if (bufsz < sizeof(guint32) + st_dsc->len) {
+	if (bufsz < sizeof(guint32) + st_dsc->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
@@ -165,7 +165,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		return FALSE;
 	}
 	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
-	if (offset > bufsz - sizeof(guint32) - st_dsc->len) {
+	if (offset > bufsz - sizeof(guint32) - st_dsc->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -541,7 +541,7 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	fu_struct_rmi_img_set_product_info(st_img, 0x1234);
 	fu_struct_rmi_img_set_image_size(st_img, bufsz);
 	fu_struct_rmi_img_set_config_size(st_img, bufsz);
-	g_byte_array_append(buf, st_img->data, st_img->len);
+	fu_byte_array_append_array(buf, st_img->buf);
 	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x4 + bufsz, 0x00);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET, 0xDEAD, G_LITTLE_ENDIAN); /* img */
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + bufsz,
@@ -564,17 +564,18 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(FuStructRmiContainerDescriptor) desc_hdr =
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 =
 	    fu_struct_rmi_container_descriptor_new();
-	g_autoptr(FuStructRmiContainerDescriptor) desc = fu_struct_rmi_container_descriptor_new();
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = fu_struct_rmi_container_descriptor_new();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
 	 *        \0x0       \0x20          \0x24  \0x44          |0x48 */
 	guint32 offset_table[] = {/* offset to first descriptor */
 				  GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* nocheck:blocked */
-	fu_struct_rmi_container_descriptor_set_container_id(desc, FU_RMI_CONTAINER_ID_FLASH_CONFIG);
-	fu_struct_rmi_container_descriptor_set_content_address(desc, RMI_IMG_FW_OFFSET + 0x44);
+	fu_struct_rmi_container_descriptor_set_container_id(st_dsc,
+							    FU_RMI_CONTAINER_ID_FLASH_CONFIG);
+	fu_struct_rmi_container_descriptor_set_content_address(st_dsc, RMI_IMG_FW_OFFSET + 0x44);
 
 	/* default image */
 	img = fu_firmware_get_image_by_id(firmware, "ui", error);
@@ -584,7 +585,7 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size(buf_blob);
-	fu_struct_rmi_container_descriptor_set_content_length(desc, bufsz);
+	fu_struct_rmi_container_descriptor_set_content_length(st_dsc, bufsz);
 
 	/* create empty block */
 	fu_byte_array_set_size(buf, RMI_IMG_FW_OFFSET + 0x48, 0x00);
@@ -620,21 +621,20 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 			   G_LITTLE_ENDIAN);
 
 	/* hierarchical section */
-	fu_struct_rmi_container_descriptor_set_container_id(desc_hdr,
-							    FU_RMI_CONTAINER_ID_TOP_LEVEL);
-	fu_struct_rmi_container_descriptor_set_content_length(desc_hdr, 0x1 * 4); /* bytes */
-	fu_struct_rmi_container_descriptor_set_content_address(desc_hdr,
+	fu_struct_rmi_container_descriptor_set_container_id(st_dsc2, FU_RMI_CONTAINER_ID_TOP_LEVEL);
+	fu_struct_rmi_container_descriptor_set_content_length(st_dsc2, 0x1 * 4); /* bytes */
+	fu_struct_rmi_container_descriptor_set_content_address(st_dsc2,
 							       RMI_IMG_FW_OFFSET +
 								   0x20); /* offset to table */
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x00,			  /* nocheck:blocked */
-	       desc_hdr->data,
-	       desc_hdr->len);
+	       st_dsc2->buf->data,
+	       st_dsc2->buf->len);
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x20, /* nocheck:blocked */
 	       offset_table,
 	       sizeof(offset_table));
 	memcpy(buf->data + RMI_IMG_FW_OFFSET + 0x24, /* nocheck:blocked */
-	       desc->data,
-	       desc->len);
+	       st_dsc->buf->data,
+	       st_dsc->buf->len);
 	fu_memwrite_uint32(buf->data + RMI_IMG_FW_OFFSET + 0x44,
 			   0xfeed,
 			   G_LITTLE_ENDIAN); /* flash_config */

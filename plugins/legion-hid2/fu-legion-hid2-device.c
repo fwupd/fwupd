@@ -62,12 +62,12 @@ fu_legion_hid2_device_convert_version(FuDevice *device, guint64 version_raw)
 static gboolean
 fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 {
-	g_autoptr(FuStructLegionGetVersion) cmd = fu_struct_legion_get_version_new();
-	g_autoptr(FuStructLegionVersion) result = fu_struct_legion_version_new();
+	g_autoptr(FuStructLegionGetVersion) st_cmd = fu_struct_legion_get_version_new();
+	g_autoptr(FuStructLegionVersion) st_res = fu_struct_legion_version_new();
 
-	if (!fu_legion_hid2_device_transfer(self, cmd, result, error))
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_res->buf, error))
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(self), fu_struct_legion_version_get_version(result));
+	fu_device_set_version_raw(FU_DEVICE(self), fu_struct_legion_version_get_version(st_res));
 
 	return TRUE;
 }
@@ -79,19 +79,19 @@ fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 static void
 fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 {
-	g_autoptr(FuStructLegionGetPlTest) cmd = fu_struct_legion_get_pl_test_new();
-	g_autoptr(FuStructLegionGetPlTestResult) tp_man = fu_struct_legion_get_pl_test_result_new();
-	g_autoptr(FuStructLegionGetPlTestResult) tp_ver = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTest) st_cmd = fu_struct_legion_get_pl_test_new();
+	g_autoptr(FuStructLegionGetPlTestResult) st_man = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTestResult) st_ver = fu_struct_legion_get_pl_test_result_new();
 	g_autoptr(FuDevice) child = NULL;
 	g_autoptr(GError) error_child = NULL;
 
 	/* determine which vendor touchpad */
-	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_MANUFACTURER);
-	if (!fu_legion_hid2_device_transfer(self, cmd, tp_man, &error_child)) {
+	fu_struct_legion_get_pl_test_set_index(st_cmd, FU_LEGION_HID2_PL_TEST_TP_MANUFACTURER);
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_man->buf, &error_child)) {
 		g_debug("failed to get touchpad manufacturer: %s", error_child->message);
 		return;
 	}
-	switch (fu_struct_legion_get_pl_test_result_get_content(tp_man)) {
+	switch (fu_struct_legion_get_pl_test_result_get_content(st_man)) {
 	case FU_LEGION_HID2_TP_MAN_BETTER_LIFE:
 		child = fu_legion_hid2_bl_device_new(FU_DEVICE(self));
 		break;
@@ -105,13 +105,13 @@ fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 	}
 
 	/* lookup firmware from MCU (*NOT* from touchpad directly) */
-	fu_struct_legion_get_pl_test_set_index(cmd, FU_LEGION_HID2_PL_TEST_TP_VERSION);
-	if (!fu_legion_hid2_device_transfer(self, cmd, tp_ver, &error_child)) {
+	fu_struct_legion_get_pl_test_set_index(st_cmd, FU_LEGION_HID2_PL_TEST_TP_VERSION);
+	if (!fu_legion_hid2_device_transfer(self, st_cmd->buf, st_ver->buf, &error_child)) {
 		g_debug("failed to get touchpad version: %s", error_child->message);
 		return;
 	}
 
-	fu_device_set_version_raw(child, fu_struct_legion_get_pl_test_result_get_content(tp_ver));
+	fu_device_set_version_raw(child, fu_struct_legion_get_pl_test_result_get_content(st_ver));
 
 	fu_device_add_child(FU_DEVICE(self), child);
 }
@@ -274,16 +274,16 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_legion_hid2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(FuStructLegionStartIap) cmd = NULL;
-	g_autoptr(FuStructLegionIapResult) result = NULL;
+	g_autoptr(FuStructLegionStartIap) st_cmd = NULL;
+	g_autoptr(FuStructLegionIapResult) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	cmd = fu_struct_legion_start_iap_new();
-	result = fu_struct_legion_iap_result_new();
+	st_cmd = fu_struct_legion_start_iap_new();
+	st_res = fu_struct_legion_iap_result_new();
 
 	if (!fu_legion_hid2_device_transfer(FU_LEGION_HID2_DEVICE(device),
-					    cmd,
-					    result,
+					    st_cmd->buf,
+					    st_res->buf,
 					    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {

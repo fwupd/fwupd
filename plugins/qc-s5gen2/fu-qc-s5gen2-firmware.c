@@ -62,25 +62,25 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 	gsize config_offset = 26;
 	guint16 config_ver;
 	g_autofree gchar *ver_str = NULL;
-	g_autoptr(FuStructQcFwUpdateHdr) hdr = NULL;
+	g_autoptr(FuStructQcFwUpdateHdr) st = NULL;
 
 	/* FIXME: deal with encrypted? */
-	hdr = fu_struct_qc_fw_update_hdr_parse_stream(stream, 0x0, error);
-	if (hdr == NULL)
+	st = fu_struct_qc_fw_update_hdr_parse_stream(stream, 0x0, error);
+	if (st == NULL)
 		return FALSE;
 
 	/* protocol version */
-	self->protocol_ver = fu_struct_qc_fw_update_hdr_get_protocol(hdr) - '0';
-	device_variant = fu_struct_qc_fw_update_hdr_get_dev_variant(hdr, NULL);
+	self->protocol_ver = fu_struct_qc_fw_update_hdr_get_protocol(st) - '0';
+	device_variant = fu_struct_qc_fw_update_hdr_get_dev_variant(st, NULL);
 	self->device_variant = fu_strsafe((const gchar *)device_variant, 8);
 
-	config_offset += fu_struct_qc_fw_update_hdr_get_upgrades(hdr) * 4;
+	config_offset += fu_struct_qc_fw_update_hdr_get_upgrades(st) * 4;
 	if (!fu_input_stream_read_u16(stream, config_offset, &config_ver, G_BIG_ENDIAN, error))
 		return FALSE;
 
 	ver_str = g_strdup_printf("%u.%u.%u",
-				  fu_struct_qc_fw_update_hdr_get_major(hdr),
-				  fu_struct_qc_fw_update_hdr_get_minor(hdr),
+				  fu_struct_qc_fw_update_hdr_get_major(st),
+				  fu_struct_qc_fw_update_hdr_get_minor(st),
 				  config_ver);
 	fu_firmware_set_version(firmware, ver_str);
 

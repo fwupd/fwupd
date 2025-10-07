@@ -38,24 +38,24 @@ fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 	guint8 board_offset;
 	const guint8 *buf;
 	gsize bufsz = 0;
-	g_autoptr(FuStructIpmiCommon) common = NULL;
-	g_autoptr(FuStructBoardInfo) board = NULL;
+	g_autoptr(FuStructIpmiCommon) st_common = NULL;
+	g_autoptr(FuStructBoardInfo) st_board = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* parse IPMI common header */
-	common = fu_struct_ipmi_common_parse_stream(stream, 0x0, error);
-	if (common == NULL)
+	st_common = fu_struct_ipmi_common_parse_stream(stream, 0x0, error);
+	if (st_common == NULL)
 		return FALSE;
-	board_offset = fu_struct_ipmi_common_get_board_offset(common) * 8;
+	board_offset = fu_struct_ipmi_common_get_board_offset(st_common) * 8;
 
 	/* parse board info area */
-	board = fu_struct_board_info_parse_stream(stream, board_offset, error);
-	if (board == NULL)
+	st_board = fu_struct_board_info_parse_stream(stream, board_offset, error);
+	if (st_board == NULL)
 		return FALSE;
 
 	fw = fu_input_stream_read_bytes(stream,
 					board_offset,
-					fu_struct_board_info_get_length(board) * 8,
+					fu_struct_board_info_get_length(st_board) * 8,
 					NULL,
 					error);
 	if (fw == NULL)

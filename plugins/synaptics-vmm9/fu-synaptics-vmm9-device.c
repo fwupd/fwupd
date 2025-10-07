@@ -163,24 +163,28 @@ fu_synaptics_vmm9_device_command(FuSynapticsVmm9Device *self,
 	fu_struct_hid_set_command_set_size(st, FU_STRUCT_HID_PAYLOAD_OFFSET_FIFO + src_bufsz);
 	if (!fu_struct_hid_set_command_set_payload(st, st_payload, error))
 		return FALSE;
-	checksum = 0x100 - fu_sum8(st->data + 1, st->len - 1);
+	checksum = 0x100 - fu_sum8(st->buf->data + 1, st->buf->len - 1);
 	if (flags & FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER) {
 		fu_struct_hid_set_command_set_checksum(st, checksum);
 	} else {
 		goffset offset_checksum = FU_STRUCT_HID_SET_COMMAND_OFFSET_PAYLOAD +
 					  FU_STRUCT_HID_PAYLOAD_OFFSET_FIFO + src_bufsz;
-		if (!fu_memwrite_uint8_safe(st->data, st->len, offset_checksum, checksum, error))
+		if (!fu_memwrite_uint8_safe(st->buf->data,
+					    st->buf->len,
+					    offset_checksum,
+					    checksum,
+					    error))
 			return FALSE;
 	}
-	fu_byte_array_set_size(st, FU_SYNAPTICS_VMM9_DEVICE_REPORT_SIZE, 0x0);
+	fu_byte_array_set_size(st->buf, FU_SYNAPTICS_VMM9_DEVICE_REPORT_SIZE, 0x0);
 
 	/* set */
 	str = fu_struct_hid_set_command_to_string(st);
 	g_debug("%s", str);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      FU_STRUCT_HID_SET_COMMAND_DEFAULT_ID,
-				      st->data,
-				      st->len,
+				      st->buf->data,
+				      st->buf->len,
 				      FU_SYNAPTICS_VMM9_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {

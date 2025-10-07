@@ -168,15 +168,15 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 	if (buf != NULL) {
 		fu_struct_logitech_bulkcontroller_send_sync_req_set_payload_length(st_req,
 										   buf->len);
-		g_byte_array_append(st_req, buf->data, buf->len);
+		g_byte_array_append(st_req->buf, buf->data, buf->len);
 	}
 	str = fu_struct_logitech_bulkcontroller_send_sync_req_to_string(st_req);
 	g_debug("sending: %s", str);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 self->sync_ep[EP_OUT],
-					 st_req->data,
-					 st_req->len,
+					 st_req->buf->data,
+					 st_req->buf->len,
 					 NULL, /* transferred */
 					 timeout,
 					 NULL,
@@ -243,7 +243,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 	response->cmd = fu_struct_logitech_bulkcontroller_send_sync_res_get_cmd(st);
 	response->sequence_id = fu_struct_logitech_bulkcontroller_send_sync_res_get_sequence_id(st);
 	g_byte_array_append(response->data,
-			    buf + st->len,
+			    buf + st->buf->len,
 			    fu_struct_logitech_bulkcontroller_send_sync_res_get_payload_length(st));
 	/* no payload for UninitBuffer, skip check */
 	if ((response->cmd != FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER) &&
@@ -564,24 +564,23 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 {
 	gsize actual_length = 0;
 	g_autofree guint8 *buf_tmp = g_malloc0(self->transfer_bufsz);
-	FuStructLogitechBulkcontrollerUpdateRes buf_ack = {.data = buf_tmp,
-							   .len = self->transfer_bufsz};
-	g_autoptr(FuStructLogitechBulkcontrollerUpdateReq) buf_pkt =
+	g_autoptr(FuStructLogitechBulkcontrollerUpdateRes) st_res = NULL;
+	g_autoptr(FuStructLogitechBulkcontrollerUpdateReq) st_pkt =
 	    fu_struct_logitech_bulkcontroller_update_req_new();
 
-	fu_struct_logitech_bulkcontroller_update_req_set_cmd(buf_pkt, cmd);
+	fu_struct_logitech_bulkcontroller_update_req_set_cmd(st_pkt, cmd);
 	if (buf != NULL) {
 		fu_struct_logitech_bulkcontroller_update_req_set_payload_length(
-		    buf_pkt,
+		    st_pkt,
 		    g_bytes_get_size(buf));
-		fu_byte_array_append_bytes(buf_pkt, buf);
+		fu_byte_array_append_bytes(st_pkt->buf, buf);
 	}
 
-	fu_dump_raw(G_LOG_DOMAIN, "request", buf_pkt->data, MIN(buf_pkt->len, 12));
+	fu_dump_raw(G_LOG_DOMAIN, "request", st_pkt->buf->data, MIN(st_pkt->buf->len, 12));
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 self->update_ep[EP_OUT],
-					 buf_pkt->data,
-					 buf_pkt->len,
+					 st_pkt->buf->data,
+					 st_pkt->buf->len,
 					 NULL, /* transferred */
 					 BULK_TRANSFER_TIMEOUT,
 					 NULL,
@@ -605,25 +604,30 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "response", buf_tmp, MIN(actual_length, 12));
 
-	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd(&buf_ack) !=
+	st_res = fu_struct_logitech_bulkcontroller_update_res_parse(buf_tmp,
+								    self->transfer_bufsz,
+								    0x0,
+								    error);
+	if (st_res == NULL)
+		return FALSE;
+	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd(st_res) !=
 	    FU_LOGITECH_BULKCONTROLLER_CMD_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "not CMD_ACK, got %s",
 			    fu_logitech_bulkcontroller_cmd_to_string(
-				fu_struct_logitech_bulkcontroller_update_res_get_cmd(&buf_ack)));
+				fu_struct_logitech_bulkcontroller_update_res_get_cmd(st_res)));
 		return FALSE;
 	}
-	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd_req(&buf_ack) != cmd) {
-		g_set_error(
-		    error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_INVALID_DATA,
-		    "invalid upd message received, expected %s, got %s",
-		    fu_logitech_bulkcontroller_cmd_to_string(cmd),
-		    fu_logitech_bulkcontroller_cmd_to_string(
-			fu_struct_logitech_bulkcontroller_update_res_get_cmd_req(&buf_ack)));
+	if (fu_struct_logitech_bulkcontroller_update_res_get_cmd_req(st_res) != cmd) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_DATA,
+			    "invalid upd message received, expected %s, got %s",
+			    fu_logitech_bulkcontroller_cmd_to_string(cmd),
+			    fu_logitech_bulkcontroller_cmd_to_string(
+				fu_struct_logitech_bulkcontroller_update_res_get_cmd_req(st_res)));
 		return FALSE;
 	}
 	return TRUE;

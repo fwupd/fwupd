@@ -58,7 +58,10 @@ fu_algoltek_usbcr_device_write_reg(FuAlgoltekUsbcrDevice *self,
 	fu_struct_ag_usbcr_reg_cdb_set_addr(st, addr);
 	fu_struct_ag_usbcr_reg_cdb_set_val(st, value);
 
-	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), st->data, st->len, error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self),
+					      st->buf->data,
+					      st->buf->len,
+					      error);
 }
 
 static gboolean
@@ -77,8 +80,8 @@ fu_algoltek_usbcr_device_read_reg(FuAlgoltekUsbcrDevice *self,
 	fu_struct_ag_usbcr_reg_cdb_set_addr(st, addr);
 
 	return fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
-					      st->data,
-					      st->len,
+					      st->buf->data,
+					      st->buf->len,
 					      buf,
 					      bufsz,
 					      error);
@@ -100,8 +103,8 @@ fu_algoltek_usbcr_device_send_spi_cmd(FuAlgoltekUsbcrDevice *self, guint8 cmd, G
 	fu_struct_ag_usbcr_spi_cdb_set_spicmd(st, cmd);
 
 	return fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
-					       st->data,
-					       st->len,
+					       st->buf->data,
+					       st->buf->len,
 					       buf,
 					       sizeof(buf),
 					       error);
@@ -127,8 +130,8 @@ fu_algoltek_usbcr_device_do_write_spi(FuAlgoltekUsbcrDevice *self,
 	fu_struct_ag_usbcr_spi_cdb_set_valid(st, FU_AG_SPIFLASH_VALID);
 
 	return fu_block_device_sg_io_cmd_write(FU_BLOCK_DEVICE(self),
-					       st->data,
-					       st->len,
+					       st->buf->data,
+					       st->buf->len,
 					       buf,
 					       bufsz,
 					       error);
@@ -150,8 +153,8 @@ fu_algoltek_usbcr_device_do_read_spi(FuAlgoltekUsbcrDevice *self,
 	fu_struct_ag_usbcr_spi_cdb_set_valid(st, FU_AG_SPIFLASH_VALID);
 
 	return fu_block_device_sg_io_cmd_read(FU_BLOCK_DEVICE(self),
-					      st->data,
-					      st->len,
+					      st->buf->data,
+					      st->buf->len,
 					      buf,
 					      bufsz,
 					      error);
@@ -381,7 +384,10 @@ fu_algoltek_usbcr_device_set_clear_soft_reset_flag(FuAlgoltekUsbcrDevice *self,
 	fu_struct_ag_usbcr_reset_cdb_set_val(st, 0x78);
 	fu_struct_ag_usbcr_reset_cdb_set_val2(st, val);
 
-	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), st->data, st->len, error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self),
+					      st->buf->data,
+					      st->buf->len,
+					      error);
 }
 
 static gboolean
@@ -393,7 +399,10 @@ fu_algoltek_usbcr_device_reset_chip(FuAlgoltekUsbcrDevice *self, GError **error)
 	fu_struct_ag_usbcr_reset_cdb_set_subcmd(st, 0x95);
 	fu_struct_ag_usbcr_reset_cdb_set_val(st, 0x23);
 
-	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self), st->data, st->len, error);
+	return fu_block_device_sg_io_cmd_none(FU_BLOCK_DEVICE(self),
+					      st->buf->data,
+					      st->buf->len,
+					      error);
 }
 
 static gboolean

@@ -60,31 +60,31 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 	guint8 command = full_erase ? FU_WAC_MODULE_BLUETOOTH_ID9_CMD_FULLERASE
 				    : FU_WAC_MODULE_BLUETOOTH_ID9_CMD_NORMAL;
 	guint32 crc = ~0;
-	g_autoptr(FuStructId9LoaderCmd) loader_cmd = fu_struct_id9_loader_cmd_new();
-	g_autoptr(FuStructId9SpiCmd) spi_cmd = fu_struct_id9_spi_cmd_new();
-	g_autoptr(FuStructId9UnknownCmd) unknown_cmd = fu_struct_id9_unknown_cmd_new();
+	g_autoptr(FuStructId9LoaderCmd) st_loader = fu_struct_id9_loader_cmd_new();
+	g_autoptr(FuStructId9SpiCmd) st_spi = fu_struct_id9_spi_cmd_new();
+	g_autoptr(FuStructId9UnknownCmd) st_unknown = fu_struct_id9_unknown_cmd_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return NULL;
-	fu_struct_id9_unknown_cmd_set_size(unknown_cmd, streamsz);
+	fu_struct_id9_unknown_cmd_set_size(st_unknown, streamsz);
 
-	fu_struct_id9_spi_cmd_set_size(spi_cmd, streamsz + FU_STRUCT_ID9_UNKNOWN_CMD_SIZE);
-	if (!fu_struct_id9_spi_cmd_set_data(spi_cmd, unknown_cmd, error))
+	fu_struct_id9_spi_cmd_set_size(st_spi, streamsz + FU_STRUCT_ID9_UNKNOWN_CMD_SIZE);
+	if (!fu_struct_id9_spi_cmd_set_data(st_spi, st_unknown, error))
 		return NULL;
 
-	fu_struct_id9_loader_cmd_set_command(loader_cmd, command);
-	fu_struct_id9_loader_cmd_set_size(loader_cmd, streamsz + FU_STRUCT_ID9_SPI_CMD_SIZE);
-	if (!fu_wac_module_bluetooth_id9_calculate_crc32(spi_cmd, stream, &crc, error))
+	fu_struct_id9_loader_cmd_set_command(st_loader, command);
+	fu_struct_id9_loader_cmd_set_size(st_loader, streamsz + FU_STRUCT_ID9_SPI_CMD_SIZE);
+	if (!fu_wac_module_bluetooth_id9_calculate_crc32(st_spi->buf, stream, &crc, error))
 		return NULL;
-	fu_struct_id9_loader_cmd_set_crc(loader_cmd, crc);
-	if (!fu_struct_id9_loader_cmd_set_data(loader_cmd, spi_cmd, error))
-		return NULL;
-
-	if (!fu_struct_id9_loader_cmd_validate(loader_cmd->data, loader_cmd->len, 0, error))
+	fu_struct_id9_loader_cmd_set_crc(st_loader, crc);
+	if (!fu_struct_id9_loader_cmd_set_data(st_loader, st_spi, error))
 		return NULL;
 
-	blob = fu_struct_id9_loader_cmd_to_bytes(loader_cmd);
+	if (!fu_struct_id9_loader_cmd_validate(st_loader->buf->data, st_loader->buf->len, 0, error))
+		return NULL;
+
+	blob = fu_struct_id9_loader_cmd_to_bytes(st_loader);
 	return fu_chunk_bytes_new(blob);
 }
 

@@ -118,7 +118,12 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 
 	res_buf = g_malloc0(res_bufsz);
 	fu_igsc_fwu_heci_version_req_set_partition(st_req, partition);
-	if (!fu_igsc_device_command(self, st_req->data, st_req->len, res_buf, res_bufsz, error)) {
+	if (!fu_igsc_device_command(self,
+				    st_req->buf->data,
+				    st_req->buf->len,
+				    res_buf,
+				    res_bufsz,
+				    error)) {
 		g_prefix_error_literal(error, "invalid HECI message response: ");
 		return FALSE;
 	}
@@ -141,7 +146,7 @@ fu_igsc_device_get_version_raw(FuIgscDevice *self,
 				    0x0, /* dst */
 				    res_buf,
 				    res_bufsz,
-				    st_res->len, /* src */
+				    st_res->buf->len, /* src */
 				    fu_igsc_fwu_heci_version_res_get_version_length(st_res),
 				    error)) {
 			return FALSE;
@@ -164,8 +169,8 @@ fu_igsc_device_get_aux_version(FuIgscDevice *self,
 	g_autoptr(FuIgscFwDataHeciVersionRes) st_res = NULL;
 
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -195,8 +200,8 @@ fu_igsc_device_get_subsystem_ids(FuIgscDevice *self, GError **error)
 	g_autoptr(FuIgscFwuHeciGetSubsystemIdsRes) st_res = NULL;
 
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -222,8 +227,8 @@ fu_igsc_device_get_config(FuIgscDevice *self, GError **error)
 	g_autoptr(FuIgscFwuHeciGetConfigRes) st_res = NULL;
 
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -248,7 +253,7 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	FuIgscDevice *self = FU_IGSC_DEVICE(device);
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
+	g_autoptr(FuStructIgscFwVersion) st_fwversion = fu_struct_igsc_fw_version_new();
 
 	/* connect to MCA interface */
 	if (!fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_MCHI2, 0, error)) {
@@ -275,19 +280,19 @@ fu_igsc_device_setup(FuDevice *device, GError **error)
 	/* get current version */
 	if (!fu_igsc_device_get_version_raw(self,
 					    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
-					    fw_code_version->data,
-					    fw_code_version->len,
+					    st_fwversion->buf->data,
+					    st_fwversion->buf->len,
 					    error)) {
 		g_prefix_error_literal(error, "cannot get fw version: ");
 		return FALSE;
 	}
-	self->project = fu_struct_igsc_fw_version_get_project(fw_code_version);
+	self->project = fu_struct_igsc_fw_version_get_project(st_fwversion);
 	if (fu_device_has_private_flag(device, FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
 		version = g_strdup_printf("%u.%u",
-					  fu_struct_igsc_fw_version_get_hotfix(fw_code_version),
-					  fu_struct_igsc_fw_version_get_build(fw_code_version));
+					  fu_struct_igsc_fw_version_get_hotfix(st_fwversion),
+					  fu_struct_igsc_fw_version_get_build(st_fwversion));
 	}
 	fu_device_set_version(device, version);
 
@@ -477,8 +482,8 @@ fu_igsc_device_update_end(FuIgscDevice *self, GError **error)
 	g_autoptr(FuIgscFwuHeciEndRes) st_res = NULL;
 
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -497,10 +502,10 @@ fu_igsc_device_update_data(FuIgscDevice *self, const guint8 *data, gsize length,
 	g_autoptr(FuIgscFwuHeciDataRes) st_res = NULL;
 
 	fu_igsc_fwu_heci_data_req_set_data_length(st_req, length);
-	g_byte_array_append(st_req, data, length);
+	g_byte_array_append(st_req->buf, data, length);
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -529,10 +534,10 @@ fu_igsc_device_update_start(FuIgscDevice *self,
 	fu_igsc_fwu_heci_start_req_set_payload_type(st_req, payload_type);
 	fu_igsc_fwu_heci_start_req_set_flags(st_req, FU_IGSC_FWU_HECI_START_FLAG_NONE);
 	if (fw_info != NULL)
-		fu_byte_array_append_bytes(st_req, fw_info);
+		fu_byte_array_append_bytes(st_req->buf, fw_info);
 	if (!fu_igsc_device_command(self,
-				    st_req->data,
-				    st_req->len,
+				    st_req->buf->data,
+				    st_req->buf->len,
 				    res_buf,
 				    sizeof(res_buf),
 				    error))
@@ -548,8 +553,8 @@ fu_igsc_device_no_update(FuIgscDevice *self, GError **error)
 {
 	g_autoptr(FuIgscFwuHeciNoUpdateReq) st_req = fu_igsc_fwu_heci_no_update_req_new();
 	return fu_mei_device_write(FU_MEI_DEVICE(self),
-				   st_req->data,
-				   st_req->len,
+				   st_req->buf->data,
+				   st_req->buf->len,
 				   FU_IGSC_DEVICE_MEI_WRITE_TIMEOUT,
 				   error);
 }
@@ -588,12 +593,12 @@ fu_igsc_device_write_chunks(FuIgscDevice *self,
 static gboolean
 fu_igsc_device_wait_for_reset(FuIgscDevice *self, GError **error)
 {
-	g_autoptr(FuStructIgscFwVersion) fw_code_version = fu_struct_igsc_fw_version_new();
+	g_autoptr(FuStructIgscFwVersion) st_fwversion = fu_struct_igsc_fw_version_new();
 	for (guint i = 0; i < 20; i++) {
 		if (!fu_igsc_device_get_version_raw(self,
 						    FU_IGSC_FWU_HECI_PARTITION_VERSION_GFX_FW,
-						    fw_code_version->data,
-						    fw_code_version->len,
+						    st_fwversion->buf->data,
+						    st_fwversion->buf->len,
 						    NULL))
 			return TRUE;
 		fu_device_sleep(FU_DEVICE(self), 100);

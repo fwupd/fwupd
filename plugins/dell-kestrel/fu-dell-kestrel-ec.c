@@ -25,39 +25,37 @@ fu_dell_kestrel_ec_dev_entry(FuDellKestrelEc *self,
 			     FuDellKestrelEcDevSubtype subtype,
 			     FuDellKestrelEcDevInstance instance)
 {
-	g_autoptr(FuStructDellKestrelDockInfoHeader) hdr = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoHeader) st = NULL;
 	guint num = 0;
 
-	hdr = fu_struct_dell_kestrel_dock_info_get_header(self->dock_info);
-	num = fu_struct_dell_kestrel_dock_info_header_get_total_devices(hdr);
+	st = fu_struct_dell_kestrel_dock_info_get_header(self->dock_info);
+	num = fu_struct_dell_kestrel_dock_info_header_get_total_devices(st);
 	if (num < 1) {
-		g_debug("no device found in dock info hdr");
+		g_debug("no device found in dock info st");
 		return NULL;
 	}
 
 	for (guint i = 0; i < num; i++) {
-		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) comp_dev = NULL;
-		g_autoptr(FuStructDellKestrelDockInfoEcAddrMap) comp_info = NULL;
+		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_dev = NULL;
+		g_autoptr(FuStructDellKestrelDockInfoEcAddrMap) st_info = NULL;
 
-		comp_dev = fu_struct_dell_kestrel_dock_info_get_devices(self->dock_info, i);
-		comp_info =
-		    fu_struct_dell_kestrel_dock_info_ec_query_entry_get_ec_addr_map(comp_dev);
+		st_dev = fu_struct_dell_kestrel_dock_info_get_devices(self->dock_info, i);
+		st_info = fu_struct_dell_kestrel_dock_info_ec_query_entry_get_ec_addr_map(st_dev);
 
 		if (dev_type !=
-		    fu_struct_dell_kestrel_dock_info_ec_addr_map_get_device_type(comp_info))
+		    fu_struct_dell_kestrel_dock_info_ec_addr_map_get_device_type(st_info))
 			continue;
 
 		if (subtype != 0 &&
-		    subtype != fu_struct_dell_kestrel_dock_info_ec_addr_map_get_subtype(comp_info))
+		    subtype != fu_struct_dell_kestrel_dock_info_ec_addr_map_get_subtype(st_info))
 			continue;
 
 		/* vary by instance index */
 		if (dev_type == FU_DELL_KESTREL_EC_DEV_TYPE_PD &&
-		    instance !=
-			fu_struct_dell_kestrel_dock_info_ec_addr_map_get_instance(comp_info))
+		    instance != fu_struct_dell_kestrel_dock_info_ec_addr_map_get_instance(st_info))
 			continue;
 
-		return g_steal_pointer(&comp_dev);
+		return g_steal_pointer(&st_dev);
 	}
 	return NULL;
 }
@@ -68,9 +66,9 @@ fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevSubtype subtype,
 				  FuDellKestrelEcDevInstance instance)
 {
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
-	return dev_entry != NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
+	return st != NULL;
 }
 
 gboolean
@@ -213,10 +211,10 @@ fu_dell_kestrel_ec_probe_pd(FuDellKestrelEc *self,
 			    GError **error)
 {
 	g_autoptr(FuDellKestrelPd) pd_dev = NULL;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
-	if (dev_entry == NULL)
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
+	if (st == NULL)
 		return TRUE;
 
 	pd_dev = fu_dell_kestrel_pd_new(FU_DEVICE(self), subtype, instance);
@@ -226,9 +224,9 @@ fu_dell_kestrel_ec_probe_pd(FuDellKestrelEc *self,
 static gboolean
 fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 {
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_ilan = NULL;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_dpmux = NULL;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry_wt = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_ilan = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_dpmux = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_wt = NULL;
 
 	/* Package */
 	if (!fu_dell_kestrel_ec_probe_package(self, error))
@@ -259,9 +257,8 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 		return FALSE;
 
 	/* DP MUX | Retimer */
-	dev_entry_dpmux =
-	    fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX, 0, 0);
-	if (dev_entry_dpmux != NULL) {
+	st_dpmux = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX, 0, 0);
+	if (st_dpmux != NULL) {
 		g_autoptr(FuDellKestrelDpmux) dpmux_device = NULL;
 
 		dpmux_device = fu_dell_kestrel_dpmux_new(FU_DEVICE(self));
@@ -270,8 +267,8 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 	}
 
 	/* WT PD */
-	dev_entry_wt = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_WTPD, 0, 0);
-	if (dev_entry_wt != NULL) {
+	st_wt = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_WTPD, 0, 0);
+	if (st_wt != NULL) {
 		g_autoptr(FuDellKestrelWtpd) wt_dev = NULL;
 
 		wt_dev = fu_dell_kestrel_wtpd_new(FU_DEVICE(self));
@@ -280,8 +277,8 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 	}
 
 	/* LAN */
-	dev_entry_ilan = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_LAN, 0, 0);
-	if (dev_entry_ilan != NULL) {
+	st_ilan = fu_dell_kestrel_ec_dev_entry(self, FU_DELL_KESTREL_EC_DEV_TYPE_LAN, 0, 0);
+	if (st_ilan != NULL) {
 		g_autoptr(FuDellKestrelIlan) ilan_device = NULL;
 
 		ilan_device = fu_dell_kestrel_ilan_new(FU_DEVICE(self));
@@ -350,14 +347,15 @@ static gboolean
 fu_dell_kestrel_ec_dock_info_cmd(FuDellKestrelEc *self, GError **error)
 {
 	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_INFO;
-	g_autoptr(FuStructDellKestrelDockInfo) res = fu_struct_dell_kestrel_dock_info_new();
+	g_autoptr(FuStructDellKestrelDockInfo) st_res = fu_struct_dell_kestrel_dock_info_new();
 
 	/* get dock info over HID */
-	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
+	if (!fu_dell_kestrel_ec_read(self, cmd, st_res->buf, error)) {
 		g_prefix_error_literal(error, "failed to query dock info: ");
 		return FALSE;
 	}
-	self->dock_info = fu_struct_dell_kestrel_dock_info_parse(res->data, res->len, 0, error);
+	self->dock_info =
+	    fu_struct_dell_kestrel_dock_info_parse(st_res->buf->data, st_res->buf->len, 0, error);
 	return TRUE;
 }
 
@@ -387,17 +385,18 @@ static gboolean
 fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 {
 	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_DATA;
-	g_autoptr(FuStructDellKestrelDockData) res = fu_struct_dell_kestrel_dock_data_new();
+	g_autoptr(FuStructDellKestrelDockData) st = fu_struct_dell_kestrel_dock_data_new();
 
 	/* get dock data over HID */
-	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
+	if (!fu_dell_kestrel_ec_read(self, cmd, st->buf, error)) {
 		g_prefix_error_literal(error, "failed to query dock data: ");
 		return FALSE;
 	}
 
 	if (self->dock_data != NULL)
 		fu_struct_dell_kestrel_dock_data_unref(self->dock_data);
-	self->dock_data = fu_struct_dell_kestrel_dock_data_parse(res->data, res->len, 0, error);
+	self->dock_data =
+	    fu_struct_dell_kestrel_dock_data_parse(st->buf->data, st->buf->len, 0, error);
 	if (self->dock_data == NULL)
 		return FALSE;
 	if (!fu_dell_kestrel_ec_dock_data_extract(self, error))
@@ -470,7 +469,7 @@ fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error
 		return FALSE;
 
 	fu_device_sleep(FU_DEVICE(self), 1000);
-	if (!fu_dell_kestrel_ec_write(self, st_req, &error_local)) {
+	if (!fu_dell_kestrel_ec_write(self, st_req->buf, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
 			g_debug("ignoring: %s", error_local->message);
 		else {
@@ -505,7 +504,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 
 	for (guint i = 1; i <= max_tries; i++) {
 		g_debug("register passive update (uod) flow (%u/%u)", i, max_tries);
-		if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
+		if (!fu_dell_kestrel_ec_write(self, st_req->buf, error)) {
 			g_prefix_error_literal(error, "failed to register uod flow: ");
 			return FALSE;
 		}
@@ -518,22 +517,22 @@ static gboolean
 fu_dell_kestrel_ec_set_dock_sku(FuDellKestrelEc *self, GError **error)
 {
 	if (self->base_type == FU_DELL_DOCK_BASE_TYPE_KESTREL) {
-		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
 		/* TBT type yet available, do workaround */
-		dev_entry = fu_dell_kestrel_ec_dev_entry(self,
-							 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
-							 FU_DELL_KESTREL_EC_DEV_SUBTYPE_BR,
-							 0);
-		if (dev_entry != NULL) {
+		st = fu_dell_kestrel_ec_dev_entry(self,
+						  FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
+						  FU_DELL_KESTREL_EC_DEV_SUBTYPE_BR,
+						  0);
+		if (st != NULL) {
 			self->base_sku = FU_DELL_KESTREL_DOCK_SKU_T5;
 			return TRUE;
 		}
-		dev_entry = fu_dell_kestrel_ec_dev_entry(self,
-							 FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
-							 FU_DELL_KESTREL_EC_DEV_SUBTYPE_GR,
-							 0);
-		if (dev_entry != NULL) {
+		st = fu_dell_kestrel_ec_dev_entry(self,
+						  FU_DELL_KESTREL_EC_DEV_TYPE_TBT,
+						  FU_DELL_KESTREL_EC_DEV_SUBTYPE_GR,
+						  0);
+		if (st != NULL) {
 			self->base_sku = FU_DELL_KESTREL_DOCK_SKU_T4;
 			return TRUE;
 		}
@@ -554,72 +553,66 @@ fu_dell_kestrel_ec_get_pd_version(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevInstance instance)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_PD;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, subtype, instance);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 guint32
 fu_dell_kestrel_ec_get_ilan_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_LAN;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 guint32
 fu_dell_kestrel_ec_get_wtpd_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_WTPD;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 guint32
 fu_dell_kestrel_ec_get_dpmux_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_DP_MUX;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 guint32
 fu_dell_kestrel_ec_get_rmm_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_RMM;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 static guint32
 fu_dell_kestrel_ec_get_ec_version(FuDellKestrelEc *self)
 {
 	FuDellKestrelEcDevType dev_type = FU_DELL_KESTREL_EC_DEV_TYPE_MAIN_EC;
-	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) dev_entry = NULL;
+	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
 
-	dev_entry = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
-	return (dev_entry == NULL)
-		   ? 0
-		   : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(dev_entry);
+	st = fu_dell_kestrel_ec_dev_entry(self, dev_type, 0, 0);
+	return (st == NULL) ? 0
+			    : fu_struct_dell_kestrel_dock_info_ec_query_entry_get_version_32(st);
 }
 
 guint32
@@ -661,9 +654,9 @@ fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, G
 	if (!fu_struct_dell_kestrel_ec_databytes_set_data(st_req, buf->data, buf->len, error))
 		return FALSE;
 
-	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "->PACKAGE", st_req->buf->data, st_req->buf->len);
 
-	if (!fu_dell_kestrel_ec_write(self, st_req, error)) {
+	if (!fu_dell_kestrel_ec_write(self, st_req->buf, error)) {
 		g_prefix_error_literal(error, "failed to commit package: ");
 		return FALSE;
 	}

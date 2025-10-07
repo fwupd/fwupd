@@ -448,7 +448,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 	/* check that the current CRC was correct */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       st_header->data,
+		       st_header->buf->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
 	if (fu_struct_bnr_dp_payload_header_get_crc(st_header) != crc) {
 		g_set_error(
@@ -473,7 +473,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 	/* update checksum */
 	crc = fu_crc16(FU_CRC_KIND_B16_BNR,
-		       st_header->data,
+		       st_header->buf->data,
 		       FU_STRUCT_BNR_DP_PAYLOAD_HEADER_SIZE - sizeof(crc));
 
 	fu_struct_bnr_dp_payload_header_set_crc(st_header, crc);

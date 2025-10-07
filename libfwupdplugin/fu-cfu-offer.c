@@ -482,7 +482,7 @@ fu_cfu_offer_write(FuFirmware *firmware, GError **error)
 	fu_struct_cfu_offer_set_product_id(st, priv->product_id);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

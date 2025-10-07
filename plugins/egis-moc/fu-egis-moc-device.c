@@ -95,15 +95,16 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 	fu_struct_egis_moc_pkg_header_set_sync(st_hdr, 0x45474953);
 	fu_struct_egis_moc_pkg_header_set_id(st_hdr, 0x00000001);
 	fu_struct_egis_moc_pkg_header_set_len(st_hdr, req->len);
-	g_byte_array_append(st_hdr, req->data, req->len);
-	fu_struct_egis_moc_pkg_header_set_chksum(st_hdr,
-						 fu_egis_moc_device_pkg_header_checksum(st_hdr));
+	g_byte_array_append(st_hdr->buf, req->data, req->len);
+	fu_struct_egis_moc_pkg_header_set_chksum(
+	    st_hdr,
+	    fu_egis_moc_device_pkg_header_checksum(st_hdr->buf));
 
 	/* send data */
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_EGIS_MOC_USB_BULK_EP_OUT,
-					 st_hdr->data,
-					 st_hdr->len,
+					 st_hdr->buf->data,
+					 st_hdr->buf->len,
 					 &actual_len,
 					 FU_EGIS_MOC_USB_TRANSFER_TIMEOUT,
 					 NULL,
@@ -111,7 +112,7 @@ fu_egis_moc_device_cmd_send(FuEgisMocDevice *self, GByteArray *req, GError **err
 		g_prefix_error_literal(error, "failed to req: ");
 		return FALSE;
 	}
-	if (actual_len != st_hdr->len) {
+	if (actual_len != st_hdr->buf->len) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid length");
 		return FALSE;
 	}
@@ -204,7 +205,7 @@ fu_egis_moc_device_fw_cmd(FuEgisMocDevice *device,
 	FuEgisMocDevice *self = FU_EGIS_MOC_DEVICE(device);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	if (!fu_egis_moc_device_cmd_send(self, st_req, error))
+	if (!fu_egis_moc_device_cmd_send(self, st_req->buf, error))
 		return NULL;
 	fu_byte_array_set_size(buf, bufsz, 0x00);
 	if (!fu_device_retry(FU_DEVICE(self), fu_egis_moc_device_cmd_recv_cb, 10, buf, error))

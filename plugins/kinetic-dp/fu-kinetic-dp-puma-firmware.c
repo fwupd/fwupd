@@ -127,7 +127,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	st = fu_struct_kinetic_dp_puma_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	offset += st->len;
+	offset += st->buf->len;
 	code_size += FU_STRUCT_KINETIC_DP_PUMA_HEADER_SIZE;
 	for (guint i = 0; i < FU_STRUCT_KINETIC_DP_PUMA_HEADER_DEFAULT_OBJECT_COUNT; i++) {
 		g_autoptr(FuStructKineticDpPumaHeaderInfo) st_obj =
@@ -136,7 +136,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 			return FALSE;
 		code_size += fu_struct_kinetic_dp_puma_header_info_get_length(st_obj) +
 			     FU_STRUCT_KINETIC_DP_PUMA_HEADER_INFO_SIZE;
-		offset += st_obj->len;
+		offset += st_obj->buf->len;
 	}
 	if (code_size < (512 * 1024) + offset) {
 		g_set_error(error,

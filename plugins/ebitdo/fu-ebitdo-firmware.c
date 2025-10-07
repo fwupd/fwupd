@@ -35,7 +35,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	payload_len = (guint32)(streamsz - st->len);
+	payload_len = (guint32)(streamsz - st->buf->len);
 	if (payload_len != fu_struct_ebitdo_hdr_get_destination_len(st)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -51,7 +51,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	fu_firmware_set_version_raw(firmware, version);
 
 	/* add header */
-	stream_hdr = fu_partial_input_stream_new(stream, 0x0, st->len, error);
+	stream_hdr = fu_partial_input_stream_new(stream, 0x0, st->buf->len, error);
 	if (stream_hdr == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
@@ -61,7 +61,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* add payload */
-	stream_payload = fu_partial_input_stream_new(stream, st->len, payload_len, error);
+	stream_payload = fu_partial_input_stream_new(stream, st->buf->len, payload_len, error);
 	if (stream_payload == NULL)
 		return FALSE;
 	if (!fu_firmware_set_stream(firmware, stream_payload, error))
@@ -84,8 +84,8 @@ fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ebitdo_hdr_set_version(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_ebitdo_hdr_set_destination_addr(st, fu_firmware_get_addr(firmware));
 	fu_struct_ebitdo_hdr_set_destination_len(st, g_bytes_get_size(blob));
-	fu_byte_array_append_bytes(st, blob);
-	return g_steal_pointer(&st);
+	fu_byte_array_append_bytes(st->buf, blob);
+	return g_steal_pointer(&st->buf);
 }
 
 static gchar *

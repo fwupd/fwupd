@@ -48,14 +48,14 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 	}
 
 	/* special cases */
-	if (st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
+	if (st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 0] ==
 	    FU_USI_DOCK_MCU_CMD_FW_UPDATE)
-		st->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
+		st->buf->data[FU_STRUCT_USI_DOCK_MCU_CMD_REQ_OFFSET_BUF + 1] = 0xFF;
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
-					st->data,
-					st->len,
+					st->buf->data,
+					st->buf->len,
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					error);
@@ -415,8 +415,8 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 
 	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
 	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);
-	if (!fu_memcpy_safe(st_req->data,
-			    st_req->len,
+	if (!fu_memcpy_safe(st_req->buf->data,
+			    st_req->buf->len,
 			    FU_STRUCT_USI_DOCK_HID_REQ_OFFSET_BUF, /* dst */
 			    fu_chunk_get_data(chk),
 			    fu_chunk_get_data_sz(chk),
@@ -426,8 +426,8 @@ fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GErro
 		return FALSE;
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
-				      st_req->data,
-				      st_req->len,
+				      st_req->buf->data,
+				      st_req->buf->len,
 				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 				      error))

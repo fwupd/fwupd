@@ -181,12 +181,12 @@ fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 
 	/* parse the EFI_SIGNATURE_LIST blob past the EFI_TIME + WIN_CERTIFICATE */
 	st_wincert = fu_struct_efi_variable_authentication2_get_auth_info(st);
-	if (fu_struct_efi_win_certificate_get_length(st_wincert) > st_wincert->len) {
+	if (fu_struct_efi_win_certificate_get_length(st_wincert) > st_wincert->buf->len) {
 		g_autoptr(GByteArray) buf = NULL;
 		buf = fu_input_stream_read_byte_array(
 		    stream,
-		    offset + st_wincert->len + offset_tmp,
-		    fu_struct_efi_win_certificate_get_length(st_wincert) - st_wincert->len,
+		    offset + st_wincert->buf->len + offset_tmp,
+		    fu_struct_efi_win_certificate_get_length(st_wincert) - st_wincert->buf->len,
 		    NULL,
 		    error);
 		if (buf == NULL)
@@ -210,17 +210,17 @@ fu_efi_variable_authentication2_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(FuStructEfiVariableAuthentication2) st =
 	    fu_struct_efi_variable_authentication2_new();
-	g_autoptr(GByteArray) st_parent = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 
 	/* append EFI_SIGNATURE_LIST */
-	st_parent =
+	buf =
 	    FU_FIRMWARE_CLASS(fu_efi_variable_authentication2_parent_class)->write(firmware, error);
-	if (st_parent == NULL)
+	if (buf == NULL)
 		return NULL;
-	g_byte_array_append(st, st_parent->data, st_parent->len);
+	fu_byte_array_append_array(st->buf, buf);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

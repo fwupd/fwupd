@@ -41,7 +41,7 @@ fu_bitmap_image_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, fu_struct_bitmap_file_header_get_size(st_file));
-	st_info = fu_struct_bitmap_info_header_parse_stream(stream, st_file->len, error);
+	st_info = fu_struct_bitmap_info_header_parse_stream(stream, st_file->buf->len, error);
 	if (st_info == NULL) {
 		g_prefix_error_literal(error, "header is corrupt: ");
 		return FALSE;

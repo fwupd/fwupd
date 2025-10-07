@@ -127,7 +127,7 @@ fu_steelseries_fizz_gen2_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 	    fu_struct_steelseries_fizz_version2_req_new();
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req->buf, error))
 		return NULL;
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
 	if (buf_res == NULL)
@@ -150,7 +150,7 @@ fu_steelseries_fizz_gen2_get_battery_level(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesBatteryLevel2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -189,7 +189,7 @@ fu_steelseries_fizz_gen2_get_paired_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -225,7 +225,7 @@ fu_steelseries_fizz_gen2_get_connection_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesConnectionStatus2Res) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen2_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen2_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen2_response(self, error);
 	if (buf_res == NULL)
@@ -304,7 +304,7 @@ fu_steelseries_fizz_gen2_get_serial(FuSteelseriesFizzImpl *self, gboolean tunnel
 	g_autoptr(FuStructSteelseriesSerial2Req) st_req = fu_struct_steelseries_serial2_req_new();
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req, error))
+	if (!fu_steelseries_device_request(FU_STEELSERIES_DEVICE(self), st_req->buf, error))
 		return NULL;
 	buf_res = fu_steelseries_device_response(FU_STEELSERIES_DEVICE(self), error);
 	if (buf_res == NULL)
