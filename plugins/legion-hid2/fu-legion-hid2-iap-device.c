@@ -50,10 +50,12 @@ fu_legion_hid2_iap_device_transfer(FuLegionHid2IapDevice *self,
 	return TRUE;
 }
 
-static GByteArray *
-fu_legion_hid2_iap_device_tlv(FuLegionHid2IapDevice *self, GByteArray *cmd, GError **error)
+static FuStructLegionIapTlv *
+fu_legion_hid2_iap_device_tlv(FuLegionHid2IapDevice *self,
+			      FuStructLegionIapTlv *cmd,
+			      GError **error)
 {
-	g_autoptr(GByteArray) result = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) result = fu_struct_legion_iap_tlv_new();
 	const guint8 *value;
 	guint8 expected;
 	guint16 tag;
@@ -91,8 +93,8 @@ fu_legion_hid2_iap_device_tlv(FuLegionHid2IapDevice *self, GByteArray *cmd, GErr
 static gboolean
 fu_legion_hid2_iap_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(GByteArray) cmd = NULL;
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) cmd = NULL;
+	g_autoptr(FuStructLegionIapTlv) result = NULL;
 	g_autoptr(GError) error_attach = NULL;
 
 	cmd = fu_struct_legion_iap_tlv_new();
@@ -128,8 +130,8 @@ fu_legion_hid2_iap_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) result = NULL;
 
 	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UNLOCK);
 
@@ -145,8 +147,8 @@ fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **err
 static gboolean
 fu_legion_hid2_iap_device_verify_signature(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) result = NULL;
 
 	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UPDATE);
 
@@ -162,8 +164,8 @@ fu_legion_hid2_iap_device_verify_signature(FuLegionHid2IapDevice *self, GError *
 static gboolean
 fu_legion_hid2_iap_device_verify_code(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) result = NULL;
 
 	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_VERIFY);
 
@@ -187,8 +189,8 @@ fu_legion_hid2_iap_device_write_data_chunks(FuLegionHid2IapDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) req = fu_struct_legion_iap_tlv_new();
-		g_autoptr(GByteArray) res = NULL;
+		g_autoptr(FuStructLegionIapTlv) req = fu_struct_legion_iap_tlv_new();
+		g_autoptr(FuStructLegionIapTlv) res = NULL;
 
 		fu_struct_legion_iap_tlv_set_tag(req, tag);
 
@@ -220,8 +222,8 @@ fu_legion_hid2_iap_device_write_data_chunks(FuLegionHid2IapDevice *self,
 static gboolean
 fu_legion_hid2_iap_device_wait_for_complete_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) result = NULL;
 	const guint8 *value;
 
 	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_CARRY);

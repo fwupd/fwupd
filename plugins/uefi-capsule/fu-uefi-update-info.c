@@ -149,7 +149,7 @@ fu_uefi_update_info_parse(FuFirmware *firmware,
 {
 	FuUefiUpdateInfo *self = FU_UEFI_UPDATE_INFO(firmware);
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st_inf = NULL;
+	g_autoptr(FuStructEfiUpdateInfo) st_inf = NULL;
 
 	g_return_val_if_fail((self), FALSE);
 

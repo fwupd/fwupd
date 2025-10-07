@@ -847,7 +847,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 	/* parse the config length */
 	for (guint i = 0x2; i < res->len; i += partition_size) {
 		guint16 partition_id;
-		g_autoptr(GByteArray) st_prt = NULL;
+		g_autoptr(FuStructRmiPartitionTbl) st_prt = NULL;
 		st_prt = fu_struct_rmi_partition_tbl_parse(res->data, res->len, i, error);
 		if (st_prt == NULL)
 			return FALSE;

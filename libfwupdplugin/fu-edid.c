@@ -222,7 +222,7 @@ fu_edid_parse_descriptor(FuEdid *self, GInputStream *stream, gsize offset, GErro
 {
 	gsize buf2sz = 0;
 	const guint8 *buf2;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEdidDescriptor) st = NULL;
 
 	st = fu_struct_edid_descriptor_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -261,7 +261,7 @@ fu_edid_parse(FuFirmware *firmware,
 	const guint8 *manu_id;
 	gsize offset = 0;
 	g_autofree gchar *pnp_id = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEdid) st = NULL;
 
 	/* parse header */
 	st = fu_struct_edid_parse_stream(stream, offset, error);
@@ -303,7 +303,7 @@ static GByteArray *
 fu_edid_write(FuFirmware *firmware, GError **error)
 {
 	FuEdid *self = FU_EDID(firmware);
-	g_autoptr(GByteArray) st = fu_struct_edid_new();
+	g_autoptr(FuStructEdid) st = fu_struct_edid_new();
 	guint64 serial_number = 0;
 	gsize offset_desc = FU_STRUCT_EDID_OFFSET_DATA_BLOCKS;
 
@@ -320,7 +320,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 
 	/* store descriptors */
 	if (self->product_name != NULL) {
-		g_autoptr(GByteArray) st_desc = fu_struct_edid_descriptor_new();
+		g_autoptr(FuStructEdidDescriptor) st_desc = fu_struct_edid_descriptor_new();
 		fu_struct_edid_descriptor_set_tag(st_desc,
 						  FU_EDID_DESCRIPTOR_TAG_DISPLAY_PRODUCT_NAME);
 		if (!fu_struct_edid_descriptor_set_data(st_desc,
@@ -334,7 +334,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 		offset_desc += st_desc->len;
 	}
 	if (self->serial_number != NULL) {
-		g_autoptr(GByteArray) st_desc = fu_struct_edid_descriptor_new();
+		g_autoptr(FuStructEdidDescriptor) st_desc = fu_struct_edid_descriptor_new();
 		fu_struct_edid_descriptor_set_tag(
 		    st_desc,
 		    FU_EDID_DESCRIPTOR_TAG_DISPLAY_PRODUCT_SERIAL_NUMBER);
@@ -349,7 +349,7 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 		offset_desc += st_desc->len;
 	}
 	if (self->eisa_id != NULL) {
-		g_autoptr(GByteArray) st_desc = fu_struct_edid_descriptor_new();
+		g_autoptr(FuStructEdidDescriptor) st_desc = fu_struct_edid_descriptor_new();
 		fu_struct_edid_descriptor_set_tag(st_desc,
 						  FU_EDID_DESCRIPTOR_TAG_ALPHANUMERIC_DATA_STRING);
 		if (!fu_struct_edid_descriptor_set_data(st_desc,

@@ -62,8 +62,8 @@ static gboolean
 fu_aver_safeisp_device_ensure_version(FuAverSafeispDevice *self, GError **error)
 {
 	g_autofree gchar *ver = NULL;
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispResDeviceVersion) res = fu_struct_aver_safeisp_res_new();
 	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_GET_VERSION);
 	if (!fu_aver_safeisp_device_transfer(self, req, res, error))
 		return FALSE;
@@ -95,8 +95,8 @@ fu_aver_safeisp_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_aver_safeisp_device_support(FuAverSafeispDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispRes) res = fu_struct_aver_safeisp_res_new();
 
 	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_SUPPORT);
 	if (!fu_aver_safeisp_device_transfer(self, req, res, error))
@@ -114,8 +114,8 @@ fu_aver_safeisp_device_upload_prepare(FuAverSafeispDevice *self,
 				      gsize size,
 				      GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispRes) res = fu_struct_aver_safeisp_res_new();
 
 	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_UPLOAD_PREPARE);
 	fu_struct_aver_safeisp_req_set_custom_parm0(req, partition);
@@ -133,8 +133,8 @@ fu_aver_safeisp_device_erase_flash(FuAverSafeispDevice *self,
 				   gsize param1,
 				   GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispRes) res = fu_struct_aver_safeisp_res_new();
 
 	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_ERASE_TEMP);
 	fu_struct_aver_safeisp_req_set_custom_parm0(req, param0);
@@ -158,8 +158,8 @@ fu_aver_safeisp_device_upload(FuAverSafeispDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-		g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+		g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+		g_autoptr(FuStructAverSafeispRes) res = fu_struct_aver_safeisp_res_new();
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
@@ -222,8 +222,8 @@ fu_aver_safeisp_device_upload_checksum(FuAverSafeispDevice *self,
 				       gsize param1,
 				       GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_safeisp_res_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispRes) res = fu_struct_aver_safeisp_res_new();
 
 	fu_struct_aver_safeisp_req_set_custom_cmd(
 	    req,
@@ -242,7 +242,7 @@ fu_aver_safeisp_device_upload_checksum(FuAverSafeispDevice *self,
 static gboolean
 fu_aver_safeisp_device_update(FuAverSafeispDevice *self, gsize param0, gsize param1, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_safeisp_req_new();
+	g_autoptr(FuStructAverSafeispReq) req = fu_struct_aver_safeisp_req_new();
 
 	fu_struct_aver_safeisp_req_set_custom_cmd(req, FU_AVER_SAFEISP_CUSTOM_CMD_UPDATE_START);
 	fu_struct_aver_safeisp_req_set_custom_parm0(req, param0);

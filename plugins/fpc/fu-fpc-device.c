@@ -246,7 +246,7 @@ static gboolean
 fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuFpcDevice *self = FU_FPC_DEVICE(device);
-	g_autoptr(GByteArray) dfu_status = fu_struct_fpc_dfu_new();
+	g_autoptr(FuStructFpcDfu) dfu_status = fu_struct_fpc_dfu_new();
 
 	if (!fu_fpc_device_dfu_cmd(self,
 				   FPC_CMD_DFU_GETSTATUS,

@@ -50,7 +50,7 @@ fu_algoltek_usbcr_device_write_reg(FuAlgoltekUsbcrDevice *self,
 				   guint8 ram_dest,
 				   GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_reg_cdb_new();
+	g_autoptr(FuStructAgUsbcrRegCdb) st = fu_struct_ag_usbcr_reg_cdb_new();
 
 	fu_struct_ag_usbcr_reg_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_GENERIC_CMD);
 	fu_struct_ag_usbcr_reg_cdb_set_subcmd(st, FU_AG_USBCR_RD_WR_RAM);
@@ -69,7 +69,7 @@ fu_algoltek_usbcr_device_read_reg(FuAlgoltekUsbcrDevice *self,
 				  guint8 ram_dest,
 				  GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_reg_cdb_new();
+	g_autoptr(FuStructAgUsbcrRegCdb) st = fu_struct_ag_usbcr_reg_cdb_new();
 
 	fu_struct_ag_usbcr_reg_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_GENERIC_CMD);
 	fu_struct_ag_usbcr_reg_cdb_set_subcmd(st, FU_AG_USBCR_RD_WR_RAM);
@@ -88,7 +88,7 @@ static gboolean
 fu_algoltek_usbcr_device_send_spi_cmd(FuAlgoltekUsbcrDevice *self, guint8 cmd, GError **error)
 {
 	guint8 buf[8] = {0};
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_spi_cdb_new();
+	g_autoptr(FuStructAgUsbcrSpiCdb) st = fu_struct_ag_usbcr_spi_cdb_new();
 
 	fu_struct_ag_usbcr_spi_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_EEPROM_WR);
 	fu_struct_ag_usbcr_spi_cdb_set_addr(st, 0xFFFF);
@@ -115,7 +115,7 @@ fu_algoltek_usbcr_device_do_write_spi(FuAlgoltekUsbcrDevice *self,
 				      guint8 access_sz,
 				      GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_spi_cdb_new();
+	g_autoptr(FuStructAgUsbcrSpiCdb) st = fu_struct_ag_usbcr_spi_cdb_new();
 
 	if (!fu_algoltek_usbcr_device_send_spi_cmd(self, FU_AG_USBCR_WREN, error))
 		return FALSE;
@@ -141,7 +141,7 @@ fu_algoltek_usbcr_device_do_read_spi(FuAlgoltekUsbcrDevice *self,
 				     guint8 bufsz,
 				     GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_spi_cdb_new();
+	g_autoptr(FuStructAgUsbcrSpiCdb) st = fu_struct_ag_usbcr_spi_cdb_new();
 
 	fu_struct_ag_usbcr_spi_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_EEPROM_RD);
 	fu_struct_ag_usbcr_spi_cdb_set_addr(st, addr);
@@ -374,7 +374,7 @@ fu_algoltek_usbcr_device_set_clear_soft_reset_flag(FuAlgoltekUsbcrDevice *self,
 						   guint8 val,
 						   GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_reset_cdb_new();
+	g_autoptr(FuStructAgUsbcrResetCdb) st = fu_struct_ag_usbcr_reset_cdb_new();
 
 	fu_struct_ag_usbcr_reset_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_GENERIC_CMD);
 	fu_struct_ag_usbcr_reset_cdb_set_subcmd(st, 0x96);
@@ -387,7 +387,7 @@ fu_algoltek_usbcr_device_set_clear_soft_reset_flag(FuAlgoltekUsbcrDevice *self,
 static gboolean
 fu_algoltek_usbcr_device_reset_chip(FuAlgoltekUsbcrDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ag_usbcr_reset_cdb_new();
+	g_autoptr(FuStructAgUsbcrResetCdb) st = fu_struct_ag_usbcr_reset_cdb_new();
 
 	fu_struct_ag_usbcr_reset_cdb_set_cmd(st, FU_AG_USBCR_SCSIOP_VENDOR_GENERIC_CMD);
 	fu_struct_ag_usbcr_reset_cdb_set_subcmd(st, 0x95);

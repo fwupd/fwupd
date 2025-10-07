@@ -175,7 +175,7 @@ fu_logitech_rallysystem_tablehub_device_progress_cb(FuDevice *device,
 {
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
 	guint8 buf[FU_STRUCT_USB_PROGRESS_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(FuStructUsbProgressResponse) st_res = NULL;
 
 	if (!fu_logitech_rallysystem_tablehub_device_recv(
 		self,
@@ -213,8 +213,9 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 	gsize streamsz = 0;
 	guint8 buf[FU_STRUCT_USB_FIRMWARE_DOWNLOAD_RESPONSE_SIZE] = {0x0};
 	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_usb_firmware_download_request_new();
-	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(FuStructUsbFirmwareDownloadRequest) st_req =
+	    fu_struct_usb_firmware_download_request_new();
+	g_autoptr(FuStructUsbFirmwareDownloadResponse) st_res = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -294,8 +295,8 @@ fu_logitech_rallysystem_tablehub_device_send_init_cmd_cb(FuDevice *device,
 {
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
 	guint8 buf[FU_STRUCT_USB_INIT_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GByteArray) st_req = fu_struct_usb_init_request_new();
-	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(FuStructUsbInitRequest) st_req = fu_struct_usb_init_request_new();
+	g_autoptr(FuStructUsbInitResponse) st_res = NULL;
 
 	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
 		g_prefix_error_literal(error, "failed to send init packet: ");
@@ -326,8 +327,8 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 	FuLogitechRallysystemTablehubDevice *self = FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE(device);
 	guint8 buf[FU_STRUCT_USB_READ_VERSION_RESPONSE_SIZE] = {0x0};
 	g_autofree gchar *fw_version = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_usb_read_version_request_new();
-	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(FuStructUsbReadVersionRequest) st_req = fu_struct_usb_read_version_request_new();
+	g_autoptr(FuStructUsbReadVersionResponse) st_res = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_rallysystem_tablehub_device_parent_class)

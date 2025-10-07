@@ -38,7 +38,7 @@ static gboolean
 fu_qc_s5gen2_hid_device_msg_out(FuQcS5gen2Impl *impl, guint8 *data, gsize data_len, GError **error)
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
-	g_autoptr(GByteArray) msg = fu_struct_qc_hid_data_transfer_new();
+	g_autoptr(FuStructQcHidDataTransfer) msg = fu_struct_qc_hid_data_transfer_new();
 
 	fu_struct_qc_hid_data_transfer_set_payload_len(msg, data_len);
 	if (!fu_struct_qc_hid_data_transfer_set_payload(msg, data, data_len, error))
@@ -62,7 +62,7 @@ fu_qc_s5gen2_hid_device_msg_in(FuQcS5gen2Impl *impl,
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
 	guint8 buf[FU_STRUCT_QC_HID_RESPONSE_SIZE] = {0x0};
-	g_autoptr(GByteArray) msg = NULL;
+	g_autoptr(FuStructQcHidResponse) msg = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      0x00,
@@ -96,7 +96,7 @@ static gboolean
 fu_qc_s5gen2_hid_device_msg_cmd(FuQcS5gen2Impl *impl, guint8 *data, gsize data_len, GError **error)
 {
 	FuQcS5gen2HidDevice *self = FU_QC_S5GEN2_HID_DEVICE(impl);
-	g_autoptr(GByteArray) msg = fu_struct_qc_hid_command_new();
+	g_autoptr(FuStructQcHidCommand) msg = fu_struct_qc_hid_command_new();
 
 	fu_struct_qc_hid_command_set_payload_len(msg, data_len);
 	if (!fu_struct_qc_hid_command_set_payload(msg, data, data_len, error))
@@ -114,7 +114,7 @@ fu_qc_s5gen2_hid_device_msg_cmd(FuQcS5gen2Impl *impl, guint8 *data, gsize data_l
 static gboolean
 fu_qc_s5gen2_hid_device_cmd_req_disconnect(FuQcS5gen2Impl *impl, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_qc_disconnect_req_new();
+	g_autoptr(FuStructQcDisconnectReq) req = fu_struct_qc_disconnect_req_new();
 	return fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error);
 }
 
@@ -124,8 +124,8 @@ fu_qc_s5gen2_hid_device_cmd_req_connect(FuQcS5gen2Impl *impl, GError **error)
 	guint8 data_in[FU_STRUCT_QC_UPDATE_STATUS_SIZE] = {0x0};
 	gsize read_len;
 	FuQcStatus update_status;
-	g_autoptr(GByteArray) req = fu_struct_qc_connect_req_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructQcConnectReq) req = fu_struct_qc_connect_req_new();
+	g_autoptr(FuStructQcUpdateStatus) st = NULL;
 
 	if (!fu_qc_s5gen2_hid_device_msg_cmd(impl, req->data, req->len, error))
 		return FALSE;

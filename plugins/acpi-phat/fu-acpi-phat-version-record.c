@@ -25,7 +25,7 @@ fu_acpi_phat_version_record_parse(FuFirmware *firmware,
 {
 	gsize offset = 0;
 	guint32 record_count = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAcpiPhatVersionRecord) st = NULL;
 
 	st = fu_struct_acpi_phat_version_record_parse_stream(stream, offset, error);
 	if (st == NULL)
@@ -58,7 +58,7 @@ static GByteArray *
 fu_acpi_phat_version_record_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf2 = g_byte_array_new();
-	g_autoptr(GByteArray) st = fu_struct_acpi_phat_version_record_new();
+	g_autoptr(FuStructAcpiPhatVersionRecord) st = fu_struct_acpi_phat_version_record_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* write each element so we get the image size */

@@ -106,7 +106,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 	for (guint32 i = 0; i < img_rcd->num_img_segments; i++) {
 		guint16 row_size_bytes = 0;
 		g_autoptr(FuCcgxDmcFirmwareSegmentRecord) seg_rcd = NULL;
-		g_autoptr(GByteArray) st_info = NULL;
+		g_autoptr(FuStructCcgxDmcFwctSegmentationInfo) st_info = NULL;
 
 		/* read segment info  */
 		seg_rcd = g_new0(FuCcgxDmcFirmwareSegmentRecord, 1);
@@ -189,7 +189,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 	/* set initial segment info offset */
 	for (guint32 i = 0; i < image_count; i++) {
 		g_autoptr(FuCcgxDmcFirmwareRecord) img_rcd = NULL;
-		g_autoptr(GByteArray) st_img = NULL;
+		g_autoptr(FuStructCcgxDmcFwctImageInfo) st_img = NULL;
 
 		/* read image info */
 		img_rcd = g_new0(FuCcgxDmcFirmwareRecord, 1);
@@ -268,7 +268,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 	guint16 mdbufsz = 0;
 	guint32 hdr_composite_version = 0;
 	guint8 hdr_image_count = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructCcgxDmcFwctInfo) st_hdr = NULL;
 
 	/* parse */
 	st_hdr = fu_struct_ccgx_dmc_fwct_info_parse_stream(stream, 0x0, error);
@@ -328,7 +328,7 @@ static GByteArray *
 fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_ccgx_dmc_fwct_info_new();
+	g_autoptr(FuStructCcgxDmcFwctInfo) st_hdr = fu_struct_ccgx_dmc_fwct_info_new();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* add header */
@@ -361,7 +361,8 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 	/* add segments */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GByteArray) st_info = fu_struct_ccgx_dmc_fwct_segmentation_info_new();
+		g_autoptr(FuStructCcgxDmcFwctSegmentationInfo) st_info =
+		    fu_struct_ccgx_dmc_fwct_segmentation_info_new();
 		g_autoptr(FuChunkArray) chunks = NULL;
 		g_autoptr(GBytes) img_bytes = fu_firmware_get_bytes(img, error);
 		if (img_bytes == NULL)

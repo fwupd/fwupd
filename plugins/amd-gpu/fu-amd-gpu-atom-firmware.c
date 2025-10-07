@@ -67,7 +67,7 @@ fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
 				  gsize offset,
 				  GError **error)
 {
-	g_autoptr(GByteArray) atom = NULL;
+	g_autoptr(FuStructAtomImage) atom = NULL;
 
 	atom = fu_struct_atom_image_parse_stream(stream, offset, error);
 	if (atom == NULL)
@@ -122,7 +122,7 @@ fu_amd_gpu_atom_firmware_parse_vbios_date(FuAmdGpuAtomFirmware *self,
 					  FuStructAtomImage *atom_image,
 					  GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_atom_image_get_vbios_date(atom_image);
+	g_autoptr(FuStructVbiosDate) st = fu_struct_atom_image_get_vbios_date(atom_image);
 	g_autofree gchar *year = NULL;
 	g_autofree gchar *month = NULL;
 	g_autofree gchar *day = NULL;

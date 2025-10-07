@@ -57,7 +57,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 size;
 	gsize offset = 0;
-	g_autoptr(GByteArray) st_mhd = NULL;
+	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
 
 	/* raw version */
 	st_mhd = fu_struct_ifwi_cpd_manifest_parse_stream(stream, offset, error);
@@ -85,7 +85,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 		guint32 extension_type = 0;
 		guint32 extension_length = 0;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_mex = NULL;
+		g_autoptr(FuStructIfwiCpdManifestExt) st_mex = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* set the extension type as the index */
@@ -148,7 +148,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructIfwiCpd) st_hdr = NULL;
 	gsize offset = 0;
 	guint32 num_of_entries;
 
@@ -176,7 +176,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		guint32 img_offset = 0;
 		g_autofree gchar *id = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_ent = NULL;
+		g_autoptr(FuStructIfwiCpdEntry) st_ent = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* the IDX is the position in the file */
@@ -232,7 +232,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
-	g_autoptr(GByteArray) buf = fu_struct_ifwi_cpd_new();
+	g_autoptr(FuStructIfwiCpd) buf = fu_struct_ifwi_cpd_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* write the header */
@@ -262,7 +262,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	/* add entry headers */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GByteArray) st_ent = fu_struct_ifwi_cpd_entry_new();
+		g_autoptr(FuStructIfwiCpdEntry) st_ent = fu_struct_ifwi_cpd_entry_new();
 
 		/* sanity check */
 		if (fu_firmware_get_id(img) == NULL) {

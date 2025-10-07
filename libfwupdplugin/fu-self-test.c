@@ -6967,9 +6967,9 @@ static void
 fu_plugin_struct_func(void)
 {
 	gboolean ret;
-	g_autoptr(GByteArray) st = fu_struct_self_test_new();
-	g_autoptr(GByteArray) st2 = NULL;
-	g_autoptr(GByteArray) st3 = NULL;
+	g_autoptr(FuStructSelfTest) st = fu_struct_self_test_new();
+	g_autoptr(FuStructSelfTest) st2 = NULL;
+	g_autoptr(FuStructSelfTest) st3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
@@ -7034,11 +7034,11 @@ fu_plugin_struct_wrapped_func(void)
 	g_autofree gchar *str1 = NULL;
 	g_autofree gchar *str2 = NULL;
 	g_autofree gchar *str4 = NULL;
-	g_autoptr(GByteArray) st2 = NULL;
-	g_autoptr(GByteArray) st3 = NULL;
-	g_autoptr(GByteArray) st_base2 = NULL;
-	g_autoptr(GByteArray) st_base = fu_struct_self_test_new();
-	g_autoptr(GByteArray) st = fu_struct_self_test_wrapped_new();
+	g_autoptr(FuStructSelfTestWrapped) st2 = NULL;
+	g_autoptr(FuStructSelfTestWrapped) st3 = NULL;
+	g_autoptr(FuStructSelfTest) st_base2 = NULL;
+	g_autoptr(FuStructSelfTest) st_base = fu_struct_self_test_new();
+	g_autoptr(FuStructSelfTestWrapped) st = fu_struct_self_test_wrapped_new();
 	g_autoptr(GError) error = NULL;
 
 	/* size */

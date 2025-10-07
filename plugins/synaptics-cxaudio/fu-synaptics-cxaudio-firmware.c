@@ -160,9 +160,9 @@ fu_synaptics_cxaudio_firmware_parse(FuFirmware *firmware,
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE(firmware);
 	GPtrArray *records = fu_srec_firmware_get_records(FU_SREC_FIRMWARE(firmware));
 	guint8 dev_kind_candidate = G_MAXUINT8;
-	g_autoptr(GByteArray) st = NULL;
-	g_autoptr(GByteArray) st_sig = NULL;
-	g_autoptr(GByteArray) st_pat = NULL;
+	g_autoptr(FuStructSynapticsCxaudioCustomInfo) st = NULL;
+	g_autoptr(FuStructSynapticsCxaudioValiditySignature) st_sig = NULL;
+	g_autoptr(FuStructSynapticsCxaudioPatchInfo) st_pat = NULL;
 	guint8 shadow[FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE] = {0x0};
 
 	/* copy shadow EEPROM */

@@ -217,7 +217,7 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 {
 	guint8 hostname_length;
 	guint8 service_ip_address_format;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructRedfishProtocolOverIp) st = NULL;
 
 	/* port + IP address */
 	st = fu_struct_redfish_protocol_over_ip_parse_stream(stream, offset, error);
@@ -273,7 +273,7 @@ fu_redfish_smbios_parse(FuFirmware *firmware,
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
 	gsize offset = 0;
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructRedfishSmbiosType42) st = NULL;
 
 	/* check size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -348,7 +348,7 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
 	gsize hostname_sz = 0;
-	g_autoptr(GByteArray) st = fu_struct_redfish_protocol_over_ip_new();
+	g_autoptr(FuStructRedfishProtocolOverIp) st = fu_struct_redfish_protocol_over_ip_new();
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	if (self->hostname != NULL)

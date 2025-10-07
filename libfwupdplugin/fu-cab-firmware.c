@@ -428,7 +428,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	guint16 index;
 	guint16 time;
 	g_autoptr(FuCabImage) img = fu_cab_image_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabFile) st = NULL;
 	g_autoptr(GDateTime) created = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GString) filename = g_string_new(NULL);
@@ -554,7 +554,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	gsize off_cffile = 0;
 	gsize offset = 0;
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabHeader) st = NULL;
 	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
 
 	/* get size */
@@ -676,8 +676,8 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	gsize archive_size;
 	gsize offset;
 	guint32 index_into = 0;
-	g_autoptr(GByteArray) st_hdr = fu_struct_cab_header_new();
-	g_autoptr(GByteArray) st_folder = fu_struct_cab_folder_new();
+	g_autoptr(FuStructCabHeader) st_hdr = fu_struct_cab_header_new();
+	g_autoptr(FuStructCabFolder) st_folder = fu_struct_cab_folder_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) cfdata_linear = g_byte_array_new();
 	g_autoptr(GBytes) cfdata_linear_blob = NULL;
@@ -809,7 +809,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		FuCabFileAttribute fattr = FU_CAB_FILE_ATTRIBUTE_NONE;
 		GDateTime *created = fu_cab_image_get_created(FU_CAB_IMAGE(img));
 		const gchar *filename_win32 = fu_cab_image_get_win32_filename(FU_CAB_IMAGE(img));
-		g_autoptr(GByteArray) st_file = fu_struct_cab_file_new();
+		g_autoptr(FuStructCabFile) st_file = fu_struct_cab_file_new();
 		g_autoptr(GBytes) img_blob = fu_firmware_get_bytes(img, NULL);
 
 		if (!g_str_is_ascii(filename_win32))
@@ -840,7 +840,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		GByteArray *chunk_zlib = g_ptr_array_index(chunks_zlib, i);
 		g_autoptr(FuChunk) chk = NULL;
 		g_autoptr(GByteArray) hdr = g_byte_array_new();
-		g_autoptr(GByteArray) st_data = fu_struct_cab_data_new();
+		g_autoptr(FuStructCabData) st_data = fu_struct_cab_data_new();
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);

@@ -33,7 +33,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	guint8 cfg_ver = 0;
 	gsize bufsz = 0;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructGoodixBrlbHdr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	st = fu_struct_goodix_brlb_hdr_parse_stream(stream, 0x0, error);
@@ -96,7 +96,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	offset_hdr = st->len;
 	for (guint i = 0; i < subsys_num; i++) {
 		guint32 img_size;
-		g_autoptr(GByteArray) st_img = NULL;
+		g_autoptr(FuStructGoodixBrlbImg) st_img = NULL;
 
 		st_img = fu_struct_goodix_brlb_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)

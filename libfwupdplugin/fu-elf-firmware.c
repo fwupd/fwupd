@@ -44,7 +44,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	guint16 phentsize;
 	guint16 phnum;
 	guint16 shnum;
-	g_autoptr(GByteArray) st_fhdr = NULL;
+	g_autoptr(FuStructElfFileHeader64le) st_fhdr = NULL;
 	g_autoptr(GByteArray) shstrndx_buf = NULL;
 	g_autoptr(GPtrArray) sections =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
@@ -59,7 +59,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 	phentsize = fu_struct_elf_file_header64le_get_phentsize(st_fhdr);
 	phnum = fu_struct_elf_file_header64le_get_phnum(st_fhdr);
 	for (guint i = 0; i < phnum; i++) {
-		g_autoptr(GByteArray) st_phdr =
+		g_autoptr(FuStructElfProgramHeader64le) st_phdr =
 		    fu_struct_elf_program_header64le_parse_stream(stream, offset_proghdr, error);
 		if (st_phdr == NULL)
 			return FALSE;

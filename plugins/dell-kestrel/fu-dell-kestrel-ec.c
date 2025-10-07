@@ -350,7 +350,7 @@ static gboolean
 fu_dell_kestrel_ec_dock_info_cmd(FuDellKestrelEc *self, GError **error)
 {
 	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_INFO;
-	g_autoptr(GByteArray) res = fu_struct_dell_kestrel_dock_info_new();
+	g_autoptr(FuStructDellKestrelDockInfo) res = fu_struct_dell_kestrel_dock_info_new();
 
 	/* get dock info over HID */
 	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
@@ -387,7 +387,7 @@ static gboolean
 fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 {
 	FuDellKestrelEcCmd cmd = FU_DELL_KESTREL_EC_CMD_GET_DOCK_DATA;
-	g_autoptr(GByteArray) res = fu_struct_dell_kestrel_dock_data_new();
+	g_autoptr(FuStructDellKestrelDockData) res = fu_struct_dell_kestrel_dock_data_new();
 
 	/* get dock data over HID */
 	if (!fu_dell_kestrel_ec_read(self, cmd, res, error)) {
@@ -448,7 +448,8 @@ gboolean
 fu_dell_kestrel_ec_own_dock(FuDellKestrelEc *self, gboolean lock, GError **error)
 {
 	guint16 bitmask = 0x0;
-	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
+	g_autoptr(FuStructDellKestrelEcDatabytes) st_req =
+	    fu_struct_dell_kestrel_ec_databytes_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *msg = NULL;
 
@@ -489,7 +490,8 @@ gboolean
 fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 {
 	guint max_tries = 2;
-	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
+	g_autoptr(FuStructDellKestrelEcDatabytes) st_req =
+	    fu_struct_dell_kestrel_ec_databytes_new();
 	const guint8 bitmap = 0x07;
 
 	/* ec included in cmd, set bit2 in data for tbt */
@@ -629,7 +631,8 @@ fu_dell_kestrel_ec_get_package_version(FuDellKestrelEc *self)
 gboolean
 fu_dell_kestrel_ec_commit_package(FuDellKestrelEc *self, GInputStream *stream, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_dell_kestrel_ec_databytes_new();
+	g_autoptr(FuStructDellKestrelEcDatabytes) st_req =
+	    fu_struct_dell_kestrel_ec_databytes_new();
 	g_autoptr(GByteArray) buf = NULL;
 	gsize streamsz = 0;
 

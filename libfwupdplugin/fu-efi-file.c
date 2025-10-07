@@ -78,7 +78,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	guint32 size = 0x0;
 	g_autofree gchar *guid_str = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiFile) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
@@ -234,7 +234,7 @@ fu_efi_file_write(FuFirmware *firmware, GError **error)
 	FuEfiFile *self = FU_EFI_FILE(firmware);
 	FuEfiFilePrivate *priv = GET_PRIVATE(self);
 	fwupd_guid_t guid = {0x0};
-	g_autoptr(GByteArray) st = fu_struct_efi_file_new();
+	g_autoptr(FuStructEfiFile) st = fu_struct_efi_file_new();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) hdr_blob = NULL;
 

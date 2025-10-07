@@ -35,7 +35,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 nareas;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructFmap) st_hdr = NULL;
 
 	/* find the magic token */
 	if (!fu_input_stream_find(stream,
@@ -76,7 +76,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		guint32 area_size;
 		g_autofree gchar *area_name = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_area = NULL;
+		g_autoptr(FuStructFmapArea) st_area = NULL;
 		g_autoptr(GInputStream) img_stream = NULL;
 
 		/* load area */
@@ -125,7 +125,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	gsize offset;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_fmap_new();
+	g_autoptr(FuStructFmap) st_hdr = fu_struct_fmap_new();
 
 	/* pad to offset */
 	if (fu_firmware_get_offset(firmware) > 0)
@@ -151,7 +151,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
-		g_autoptr(GByteArray) st_area = fu_struct_fmap_area_new();
+		g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
 		fu_struct_fmap_area_set_offset(st_area, fu_firmware_get_offset(firmware) + offset);
 		fu_struct_fmap_area_set_size(st_area, g_bytes_get_size(fw));
 		if (fu_firmware_get_id(img) != NULL) {

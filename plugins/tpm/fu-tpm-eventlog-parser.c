@@ -89,7 +89,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		g_autoptr(GBytes) checksum_sha1 = NULL;
 		g_autoptr(GBytes) checksum_sha256 = NULL;
 		g_autoptr(GBytes) checksum_sha384 = NULL;
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructTpmEventLog2) st = NULL;
 
 		/* read checksum block */
 		st = fu_struct_tpm_event_log2_parse(buf, bufsz, idx, error);

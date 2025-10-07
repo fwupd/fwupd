@@ -108,7 +108,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	g_autofree gchar *sect_id = NULL;
 	g_autofree gchar *sect_id_tmp = NULL;
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructPeCoffSection) st = NULL;
 
 	st = fu_struct_pe_coff_section_parse_stream(stream, hdr_offset, error);
 	if (st == NULL) {
@@ -390,9 +390,10 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
-	g_autoptr(GByteArray) st = fu_struct_pe_dos_header_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_pe_coff_file_header_new();
-	g_autoptr(GByteArray) st_opt = fu_struct_pe_coff_optional_header64_new();
+	g_autoptr(FuStructPeDosHeader) st = fu_struct_pe_dos_header_new();
+	g_autoptr(FuStructPeCoffFileHeader) st_hdr = fu_struct_pe_coff_file_header_new();
+	g_autoptr(FuStructPeCoffOptionalHeader64) st_opt =
+	    fu_struct_pe_coff_optional_header64_new();
 	g_autoptr(GByteArray) strtab = g_byte_array_new();
 	g_autoptr(GPtrArray) sections =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_section_free);

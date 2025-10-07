@@ -104,7 +104,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 	guint32 list_size;
 	guint32 size;
 	g_autofree gchar *sig_type = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSignatureList) st = NULL;
 
 	/* read EFI_SIGNATURE_LIST */
 	st = fu_struct_efi_signature_list_parse_stream(stream, *offset, error);

@@ -60,8 +60,8 @@ fu_cfu_device_send_offer_info(FuCfuDevice *self, FuCfuOfferInfoCode info_code, G
 {
 	g_autoptr(GByteArray) buf_in = g_byte_array_new();
 	g_autoptr(GByteArray) buf_out = g_byte_array_new();
-	g_autoptr(GByteArray) st_req = fu_struct_cfu_offer_info_req_new();
-	g_autoptr(GByteArray) st_res = NULL;
+	g_autoptr(FuStructCfuOfferInfoReq) st_req = fu_struct_cfu_offer_info_req_new();
+	g_autoptr(FuStructCfuOfferRsp) st_res = NULL;
 
 	/* not all devices handle this */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_CFU_DEVICE_FLAG_SEND_OFFER_INFO))
@@ -133,7 +133,7 @@ fu_cfu_device_send_offer(FuCfuDevice *self,
 {
 	g_autoptr(GByteArray) buf_in = g_byte_array_new();
 	g_autoptr(GByteArray) buf_out = g_byte_array_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuOfferRsp) st = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* generate a offer blob */
@@ -216,8 +216,8 @@ fu_cfu_device_send_payload(FuCfuDevice *self,
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_autoptr(GByteArray) buf_in = g_byte_array_new();
 		g_autoptr(GByteArray) buf_out = g_byte_array_new();
-		g_autoptr(GByteArray) st_req = fu_struct_cfu_content_req_new();
-		g_autoptr(GByteArray) st_rsp = NULL;
+		g_autoptr(FuStructCfuContentReq) st_req = fu_struct_cfu_content_req_new();
+		g_autoptr(FuStructCfuContentRsp) st_rsp = NULL;
 
 		/* build */
 		if (i == 0) {
@@ -412,7 +412,7 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 	guint8 component_cnt = 0;
 	gsize offset = 0;
 	g_autoptr(GHashTable) modules_by_cid = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuGetVersionRsp) st = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GPtrArray) descriptors = NULL;
 	g_autoptr(GString) descriptors_error = g_string_new(NULL);

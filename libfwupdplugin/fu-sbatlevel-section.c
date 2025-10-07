@@ -74,7 +74,7 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructSbatLevelSectionHeader) st = NULL;
 
 	st = fu_struct_sbat_level_section_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -105,7 +105,7 @@ fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(FuFirmware) img_ltst = NULL;
 	g_autoptr(FuFirmware) img_prev = NULL;
-	g_autoptr(GByteArray) buf = fu_struct_sbat_level_section_header_new();
+	g_autoptr(FuStructSbatLevelSectionHeader) buf = fu_struct_sbat_level_section_header_new();
 	g_autoptr(GBytes) blob_ltst = NULL;
 	g_autoptr(GBytes) blob_prev = NULL;
 

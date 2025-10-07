@@ -42,7 +42,7 @@ G_DEFINE_TYPE(FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 static gboolean
 fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) st_id = fu_struct_ccgx_dmc_dock_identity_new();
+	g_autoptr(FuStructCcgxDmcDockIdentity) st_id = fu_struct_ccgx_dmc_dock_identity_new();
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_DEVICE_TO_HOST,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -70,7 +70,7 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 	gsize bufsz;
 	gsize offset = FU_STRUCT_CCGX_DMC_DOCK_STATUS_SIZE;
 	g_autofree guint8 *buf = NULL;
-	g_autoptr(GByteArray) st = fu_struct_ccgx_dmc_dock_status_new();
+	g_autoptr(FuStructCcgxDmcDockStatus) st = fu_struct_ccgx_dmc_dock_status_new();
 
 	/* read minimum status length */
 	fu_byte_array_set_size(st, 32, 0x0);
@@ -278,7 +278,9 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 }
 
 static gboolean
-fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, GByteArray *intr_rqt, GError **error)
+fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self,
+				 FuStructCcgxDmcIntRqt *intr_rqt,
+				 GError **error)
 {
 	guint8 rqt_opcode;
 	g_autofree gchar *title = NULL;
@@ -380,7 +382,7 @@ fu_ccgx_dmc_device_get_image_write_status_cb(FuDevice *device, gpointer user_dat
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	const guint8 *req_data;
 	guint8 req_opcode;
-	g_autoptr(GByteArray) dmc_int_req = fu_struct_ccgx_dmc_int_rqt_new();
+	g_autoptr(FuStructCcgxDmcIntRqt) dmc_int_req = fu_struct_ccgx_dmc_int_rqt_new();
 
 	/* get interrupt request */
 	if (!fu_ccgx_dmc_device_read_intr_req(self, dmc_int_req, error)) {
@@ -520,7 +522,7 @@ fu_ccgx_dmc_device_write_firmware(FuDevice *device,
 	gsize fw_data_written = 0;
 	guint8 img_index = 0;
 	guint8 rqt_opcode;
-	g_autoptr(GByteArray) dmc_int_rqt = fu_struct_ccgx_dmc_int_rqt_new();
+	g_autoptr(FuStructCcgxDmcIntRqt) dmc_int_rqt = fu_struct_ccgx_dmc_int_rqt_new();
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

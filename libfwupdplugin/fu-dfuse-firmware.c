@@ -31,7 +31,7 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 				    GError **error)
 {
 	g_autoptr(FuChunk) chk = NULL;
-	g_autoptr(GByteArray) st_ele = NULL;
+	g_autoptr(FuStructDfuseElement) st_ele = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* create new chunk */
@@ -62,7 +62,7 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 {
 	guint chunks;
 	g_autoptr(FuFirmware) image = fu_firmware_new();
-	g_autoptr(GByteArray) st_img = NULL;
+	g_autoptr(FuStructDfuseImage) st_img = NULL;
 
 	/* verify image signature */
 	st_img = fu_struct_dfuse_image_parse_stream(stream, *offset, error);
@@ -116,7 +116,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint8 targets = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructDfuseHdr) st_hdr = NULL;
 
 	/* DFU footer first */
 	if (!fu_dfu_firmware_parse_footer(dfu_firmware, stream, flags, error))
@@ -163,7 +163,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 static GBytes *
 fu_dfuse_firmware_chunk_write(FuDfuseFirmware *self, FuChunk *chk)
 {
-	g_autoptr(GByteArray) st_ele = fu_struct_dfuse_element_new();
+	g_autoptr(FuStructDfuseElement) st_ele = fu_struct_dfuse_element_new();
 	fu_struct_dfuse_element_set_address(st_ele, fu_chunk_get_address(chk));
 	fu_struct_dfuse_element_set_size(st_ele, fu_chunk_get_data_sz(chk));
 	g_byte_array_append(st_ele, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
@@ -174,7 +174,7 @@ static GBytes *
 fu_dfuse_firmware_write_image(FuDfuseFirmware *self, FuFirmware *image, GError **error)
 {
 	gsize totalsz = 0;
-	g_autoptr(GByteArray) st_img = fu_struct_dfuse_image_new();
+	g_autoptr(FuStructDfuseImage) st_img = fu_struct_dfuse_image_new();
 	g_autoptr(GPtrArray) blobs = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -215,7 +215,7 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuDfuseFirmware *self = FU_DFUSE_FIRMWARE(firmware);
 	gsize totalsz = 0;
-	g_autoptr(GByteArray) st_hdr = fu_struct_dfuse_hdr_new();
+	g_autoptr(FuStructDfuseHdr) st_hdr = fu_struct_dfuse_hdr_new();
 	g_autoptr(GBytes) blob_noftr = NULL;
 	g_autoptr(GPtrArray) blobs = NULL;
 	g_autoptr(GPtrArray) images = NULL;

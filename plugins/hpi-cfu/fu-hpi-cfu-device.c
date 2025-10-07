@@ -68,7 +68,7 @@ static gboolean
 fu_hpi_cfu_device_start_entire_transaction(FuHpiCfuDevice *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_hpi_cfu_buf_new();
+	g_autoptr(FuStructHpiCfuBuf) st_req = fu_struct_hpi_cfu_buf_new();
 
 	fu_struct_hpi_cfu_buf_set_report_id(st_req, OFFER_REPORT_ID);
 	fu_struct_hpi_cfu_buf_set_command(st_req, FU_CFU_OFFER_INFO_CODE_START_ENTIRE_TRANSACTION);
@@ -134,7 +134,7 @@ static gboolean
 fu_hpi_cfu_device_send_start_offer_list(FuHpiCfuDevice *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_hpi_cfu_buf_new();
+	g_autoptr(FuStructHpiCfuBuf) st_req = fu_struct_hpi_cfu_buf_new();
 
 	fu_struct_hpi_cfu_buf_set_report_id(st_req, OFFER_REPORT_ID);
 	fu_struct_hpi_cfu_buf_set_command(st_req, FU_CFU_OFFER_INFO_CODE_START_OFFER_LIST);
@@ -214,7 +214,7 @@ fu_hpi_cfu_device_send_offer_update_command(FuHpiCfuDevice *self,
 	const guint8 *buf;
 	gint8 flag_value = 0;
 	gsize bufsz = 0;
-	g_autoptr(GByteArray) st_req = fu_struct_hpi_cfu_offer_cmd_new();
+	g_autoptr(FuStructHpiCfuOfferCmd) st_req = fu_struct_hpi_cfu_offer_cmd_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob_offer = NULL;
 
@@ -373,7 +373,7 @@ static gboolean
 fu_hpi_cfu_device_send_end_offer_list(FuHpiCfuDevice *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_hpi_cfu_buf_new();
+	g_autoptr(FuStructHpiCfuBuf) st_req = fu_struct_hpi_cfu_buf_new();
 
 	fu_struct_hpi_cfu_buf_set_report_id(st_req, OFFER_REPORT_ID);
 	fu_struct_hpi_cfu_buf_set_command(st_req, FU_CFU_OFFER_INFO_CODE_END_OFFER_LIST);
@@ -586,7 +586,7 @@ fu_hpi_cfu_device_handler_send_offer_accepted(FuHpiCfuDevice *self,
 static gboolean
 fu_hpi_cfu_device_send_payload(FuHpiCfuDevice *self, GByteArray *cfu_buf, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_hpi_cfu_payload_cmd_new();
+	g_autoptr(FuStructHpiCfuPayloadCmd) st_req = fu_struct_hpi_cfu_payload_cmd_new();
 	g_autoptr(GError) error_local = NULL;
 
 	fu_struct_hpi_cfu_payload_cmd_set_report_id(st_req, FIRMWARE_REPORT_ID);

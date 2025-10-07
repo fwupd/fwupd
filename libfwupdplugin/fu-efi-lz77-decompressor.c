@@ -608,7 +608,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 dst_bufsz;
 	guint32 src_bufsz;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiLz77DecompressorHeader) st = NULL;
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GByteArray) dst = g_byte_array_new();
 	FuEfiLz77DecompressorVersion decompressor_versions[] = {

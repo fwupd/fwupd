@@ -61,8 +61,8 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 static gboolean
 fu_aver_hid_device_ensure_status(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
@@ -85,8 +85,10 @@ static gboolean
 fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 {
 	g_autofree gchar *ver = NULL;
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_device_version_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_device_version_new();
+	g_autoptr(FuStructAverHidReqDeviceVersion) req =
+	    fu_struct_aver_hid_req_device_version_new();
+	g_autoptr(FuStructAverHidResDeviceVersion) res =
+	    fu_struct_aver_hid_res_device_version_new();
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_aver_hid_device_transfer(self, req, res, &error_local)) {
@@ -151,8 +153,10 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_dnload_new();
-		g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+		g_autoptr(FuStructAverHidReqIspFileDnload) req =
+		    fu_struct_aver_hid_req_isp_file_dnload_new();
+		g_autoptr(FuStructAverHidResIspStatus) res =
+		    fu_struct_aver_hid_res_isp_status_new();
 
 		/* prepare chunk */
 		chk = fu_chunk_array_index(chunks, i, error);
@@ -212,8 +216,8 @@ static gboolean
 fu_aver_hid_device_wait_for_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
@@ -238,8 +242,8 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 				  const gchar *name,
 				  GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_start_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspFileStart) req = fu_struct_aver_hid_req_isp_file_start_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
@@ -263,8 +267,8 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 static gboolean
 fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *name, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspFileEnd) req = fu_struct_aver_hid_req_isp_file_end_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
@@ -290,8 +294,8 @@ static gboolean
 fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_file_end_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_file_end_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
 	if (!fu_aver_hid_device_transfer(self, req, res, error))
@@ -314,8 +318,8 @@ fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GErro
 static gboolean
 fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspStart) req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
@@ -336,7 +340,7 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 static gboolean
 fu_aver_hid_device_isp_reboot(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
 	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
 	return fu_aver_hid_device_transfer(self, req, NULL, error);
 }
@@ -346,8 +350,8 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	FuProgress *progress = FU_PROGRESS(user_data);
-	g_autoptr(GByteArray) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(GByteArray) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
 
 	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
 	if (!fu_aver_hid_device_transfer(self, req, res, error))

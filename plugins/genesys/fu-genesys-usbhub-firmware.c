@@ -16,7 +16,7 @@
 
 struct _FuGenesysUsbhubFirmware {
 	FuFirmware parent_instance;
-	GByteArray *st_static_ts;
+	FuStructGenesysTsStatic *st_static_ts;
 	FuGenesysChip chip;
 };
 
