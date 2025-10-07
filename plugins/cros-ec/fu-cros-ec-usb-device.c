@@ -272,18 +272,18 @@ fu_cros_ec_usb_device_ext_cmd(FuCrosEcUsbDevice *self,
 {
 	gsize usb_msg_size =
 	    FU_STRUCT_CROS_EC_UPDATE_FRAME_HEADER_SIZE + sizeof(subcommand) + body_size;
-	g_autoptr(FuStructCrosEcUpdateFrameHeader) ufh =
+	g_autoptr(FuStructCrosEcUpdateFrameHeader) st_ufh =
 	    fu_struct_cros_ec_update_frame_header_new();
-	fu_struct_cros_ec_update_frame_header_set_block_size(ufh, usb_msg_size);
+	fu_struct_cros_ec_update_frame_header_set_block_size(st_ufh, usb_msg_size);
 	fu_struct_cros_ec_update_frame_header_set_cmd_block_base(
-	    ufh,
+	    st_ufh,
 	    FU_CROS_EC_REQUEST_UPDATE_EXTRA_CMD);
-	fu_byte_array_append_uint16(ufh, subcommand, G_BIG_ENDIAN);
+	fu_byte_array_append_uint16(st_ufh->buf, subcommand, G_BIG_ENDIAN);
 	if (body_size > 0)
-		g_byte_array_append(ufh, cmd_body, body_size);
+		g_byte_array_append(st_ufh->buf, cmd_body, body_size);
 	return fu_cros_ec_usb_device_do_xfer(self,
-					     ufh->data,
-					     ufh->len,
+					     st_ufh->buf->data,
+					     st_ufh->buf->len,
 					     (guint8 *)resp,
 					     resp_size != NULL ? *resp_size : 0,
 					     TRUE,
@@ -297,15 +297,15 @@ fu_cros_ec_usb_device_start_request_cb(FuDevice *device, gpointer user_data, GEr
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	FuStructCrosEcFirstResponsePdu *st_rpdu = (FuStructCrosEcFirstResponsePdu *)user_data;
 	gsize rxed_size = 0;
-	g_autoptr(FuStructCrosEcUpdateFrameHeader) ufh =
+	g_autoptr(FuStructCrosEcUpdateFrameHeader) st_ufh =
 	    fu_struct_cros_ec_update_frame_header_new();
 
-	fu_struct_cros_ec_update_frame_header_set_block_size(ufh, ufh->len);
+	fu_struct_cros_ec_update_frame_header_set_block_size(st_ufh, st_ufh->buf->len);
 	if (!fu_cros_ec_usb_device_do_xfer(self,
-					   ufh->data,
-					   ufh->len,
-					   st_rpdu->data,
-					   st_rpdu->len,
+					   st_ufh->buf->data,
+					   st_ufh->buf->len,
+					   st_rpdu->buf->data,
+					   st_rpdu->buf->len,
 					   TRUE,
 					   &rxed_size,
 					   error))
@@ -472,20 +472,20 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	FuCrosEcUsbBlockHelper *helper = (FuCrosEcUsbBlockHelper *)user_data;
 	gsize transfer_size = 0;
 	guint32 reply = 0;
-	g_autoptr(FuStructCrosEcUpdateFrameHeader) ufh =
+	g_autoptr(FuStructCrosEcUpdateFrameHeader) st_ufh =
 	    fu_struct_cros_ec_update_frame_header_new();
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* first send the header */
 	fu_struct_cros_ec_update_frame_header_set_block_size(
-	    ufh,
-	    ufh->len + fu_chunk_get_data_sz(helper->block));
+	    st_ufh,
+	    st_ufh->buf->len + fu_chunk_get_data_sz(helper->block));
 	fu_struct_cros_ec_update_frame_header_set_cmd_block_base(
-	    ufh,
+	    st_ufh,
 	    fu_chunk_get_address(helper->block));
 	if (!fu_cros_ec_usb_device_do_xfer(self,
-					   ufh->data,
-					   ufh->len,
+					   st_ufh->buf->data,
+					   st_ufh->buf->len,
 					   NULL,
 					   0,
 					   FALSE,
@@ -636,8 +636,8 @@ fu_cros_ec_usb_device_send_done(FuCrosEcUsbDevice *self)
 
 	/* send stop request, ignoring reply */
 	if (!fu_cros_ec_usb_device_do_xfer(self,
-					   st->data,
-					   st->len,
+					   st->buf->data,
+					   st->buf->len,
 					   buf,
 					   sizeof(buf),
 					   FALSE,

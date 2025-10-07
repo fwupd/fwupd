@@ -11,6 +11,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-nvm.h"
@@ -588,22 +589,22 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 	fu_intel_thunderbolt_nvm_digital_set_flags_is_native(st, priv->is_native ? 0x20 : 0x0);
 
 	/* drom section */
-	fu_intel_thunderbolt_nvm_digital_set_drom(st, st->len);
+	fu_intel_thunderbolt_nvm_digital_set_drom(st, st->buf->len);
 	fu_intel_thunderbolt_nvm_drom_set_vendor_id(st_drom, priv->vendor_id);
 	fu_intel_thunderbolt_nvm_drom_set_model_id(st_drom, priv->model_id);
-	g_byte_array_append(st, st_drom->data, st_drom->len);
+	fu_byte_array_append_array(st->buf, st_drom->buf);
 
 	/* ARC param section */
-	fu_intel_thunderbolt_nvm_digital_set_arc_params(st, st->len);
+	fu_intel_thunderbolt_nvm_digital_set_arc_params(st, st->buf->len);
 	fu_intel_thunderbolt_nvm_arc_params_set_pd_pointer(st_arc, priv->has_pd ? 0x1 : 0x0);
-	g_byte_array_append(st, st_arc->data, st_arc->len);
+	fu_byte_array_append_array(st->buf, st_arc->buf);
 
 	/* dram section */
-	fu_intel_thunderbolt_nvm_digital_set_ucode(st, st->len);
-	g_byte_array_append(st, st_dram->data, st_dram->len);
+	fu_intel_thunderbolt_nvm_digital_set_ucode(st, st->buf->len);
+	fu_byte_array_append_array(st->buf, st_dram->buf);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

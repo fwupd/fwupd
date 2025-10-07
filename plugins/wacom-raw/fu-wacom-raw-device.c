@@ -104,7 +104,7 @@ fu_wacom_raw_device_detach(FuDevice *device, FuProgress *progress, GError **erro
 		g_debug("already in bootloader mode, skipping");
 		return TRUE;
 	}
-	if (!fu_wacom_raw_device_set_feature(self, st->data, st->len, &error_local)) {
+	if (!fu_wacom_raw_device_set_feature(self, st->buf->data, st->buf->len, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring: %s", error_local->message);
 		} else {
@@ -252,7 +252,7 @@ fu_wacom_raw_device_cmd_response(FuWacomRawDevice *self,
 				 GError **error)
 {
 	guint8 buf[FU_STRUCT_WACOM_RAW_RESPONSE_SIZE] = {FU_WACOM_RAW_BL_REPORT_ID_GET, 0x0};
-	g_autoptr(FuStructWacomRawRequest) st_rsp = NULL;
+	g_autoptr(FuStructWacomRawResponse) st_rsp = NULL;
 
 	if (!fu_wacom_raw_device_get_feature(self, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
@@ -302,7 +302,7 @@ fu_wacom_raw_device_cmd(FuWacomRawDevice *self,
 			FuWacomRawDeviceCmdFlags flags,
 			GError **error)
 {
-	if (!fu_wacom_raw_device_set_feature(self, st_req->data, st_req->len, error)) {
+	if (!fu_wacom_raw_device_set_feature(self, st_req->buf->data, st_req->buf->len, error)) {
 		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}

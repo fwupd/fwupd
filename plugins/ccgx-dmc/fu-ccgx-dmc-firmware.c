@@ -153,7 +153,7 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 		g_ptr_array_add(img_rcd->seg_records, g_steal_pointer(&seg_rcd));
 
 		/* increment segment info offset */
-		*seg_off += st_info->len;
+		*seg_off += st_info->buf->len;
 	}
 
 	/* check checksum */
@@ -344,18 +344,19 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_ccgx_dmc_fwct_info_set_composite_version(st_hdr,
 							   fu_firmware_get_version_raw(firmware));
 	fu_struct_ccgx_dmc_fwct_info_set_image_count(st_hdr, images->len);
-	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
 
 	/* add image headers */
 	for (guint i = 0; i < images->len; i++) {
-		g_autoptr(GByteArray) st_img = fu_struct_ccgx_dmc_fwct_image_info_new();
+		g_autoptr(FuStructCcgxDmcFwctImageInfo) st_img =
+		    fu_struct_ccgx_dmc_fwct_image_info_new();
 		fu_struct_ccgx_dmc_fwct_image_info_set_device_type(st_img, 0x2);
 		fu_struct_ccgx_dmc_fwct_image_info_set_img_type(st_img, 0x1);
 		fu_struct_ccgx_dmc_fwct_image_info_set_row_size(st_img, 0x1);
 		fu_struct_ccgx_dmc_fwct_image_info_set_fw_version(st_img, 0x330006d2);
 		fu_struct_ccgx_dmc_fwct_image_info_set_app_version(st_img, 0x14136161);
 		fu_struct_ccgx_dmc_fwct_image_info_set_num_img_segments(st_img, 0x1);
-		g_byte_array_append(buf, st_img->data, st_img->len);
+		fu_byte_array_append_array(buf, st_img->buf);
 	}
 
 	/* add segments */
@@ -374,7 +375,7 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_ccgx_dmc_fwct_segmentation_info_set_num_rows(
 		    st_info,
 		    MAX(fu_chunk_array_length(chunks), 1));
-		g_byte_array_append(buf, st_info->data, st_info->len);
+		fu_byte_array_append_array(buf, st_info->buf);
 	}
 
 	/* metadata */

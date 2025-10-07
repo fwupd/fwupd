@@ -135,7 +135,7 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 	self->timestamp = fu_struct_efi_vss_auth_variable_header_get_timestamp(st);
 
 	/* read name */
-	offset += st->len;
+	offset += st->buf->len;
 	buf_name = fu_input_stream_read_byte_array(
 	    stream,
 	    offset,
@@ -239,11 +239,11 @@ fu_efi_vss_auth_variable_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* concat */
-	fu_byte_array_append_bytes(st, name);
-	fu_byte_array_append_bytes(st, blob);
+	fu_byte_array_append_bytes(st->buf, name);
+	fu_byte_array_append_bytes(st->buf, blob);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

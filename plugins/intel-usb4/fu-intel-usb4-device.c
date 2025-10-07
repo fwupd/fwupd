@@ -262,7 +262,11 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 	/* write the operation and poll completion or error */
 	fu_struct_intel_usb4_mbox_set_opcode(st_regex, opcode);
 	fu_struct_intel_usb4_mbox_set_status(st_regex, MBOX_OPVALID);
-	if (!fu_intel_usb4_device_set_mmio(self, MBOX_REG, st_regex->data, st_regex->len, error))
+	if (!fu_intel_usb4_device_set_mmio(self,
+					   MBOX_REG,
+					   st_regex->buf->data,
+					   st_regex->buf->len,
+					   error))
 		return FALSE;
 
 	/* leave early as successful USB4 AUTH resets the device immediately */
@@ -273,8 +277,8 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 		g_autoptr(GError) error_local = NULL;
 		if (fu_intel_usb4_device_get_mmio(self,
 						  MBOX_REG,
-						  st_regex->data,
-						  st_regex->len,
+						  st_regex->buf->data,
+						  st_regex->buf->len,
 						  &error_local))
 			return TRUE;
 		if (i == max_tries) {
@@ -310,8 +314,8 @@ fu_intel_usb4_device_nvm_read(FuIntelUsb4Device *self,
 								  fu_chunk_get_data_sz(chk) / 4);
 		if (!fu_intel_usb4_device_operation(self,
 						    FU_INTEL_USB4_OPCODE_NVM_READ,
-						    st->data,
-						    st->len,
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 			g_prefix_error_literal(error, "hub NVM read error: ");
 			return FALSE;

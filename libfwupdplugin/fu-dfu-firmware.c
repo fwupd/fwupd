@@ -306,7 +306,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 	fu_struct_dfu_ftr_set_pid(st, priv->pid);
 	fu_struct_dfu_ftr_set_vid(st, priv->vid);
 	fu_struct_dfu_ftr_set_ver(st, priv->dfu_version);
-	g_byte_array_append(buf, st->data, st->len - sizeof(guint32));
+	g_byte_array_append(buf, st->buf->data, st->buf->len - sizeof(guint32));
 	fu_byte_array_append_uint32(buf,
 				    fu_crc32(FU_CRC_KIND_B32_JAMCRC, buf->data, buf->len),
 				    G_LITTLE_ENDIAN);

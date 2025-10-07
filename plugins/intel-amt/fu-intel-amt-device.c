@@ -91,7 +91,7 @@ fu_intel_amt_device_get_provisioning_state(FuIntelAmtDevice *self,
 	    fu_amt_host_if_msg_provisioning_state_request_new();
 	g_autoptr(FuAmtHostIfMsgProvisioningStateResponse) st_res = NULL;
 
-	data = fu_intel_amt_device_host_if_call(self, st_req, error);
+	data = fu_intel_amt_device_host_if_call(self, st_req->buf, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -122,7 +122,7 @@ fu_intel_amt_device_ensure_version(FuIntelAmtDevice *self, GError **error)
 	g_autoptr(GString) version_bl = g_string_new(NULL);
 	g_autoptr(GString) version_fw = g_string_new(NULL);
 
-	data = fu_intel_amt_device_host_if_call(self, st_req, error);
+	data = fu_intel_amt_device_host_if_call(self, st_req->buf, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -142,10 +142,11 @@ fu_intel_amt_device_ensure_version(FuIntelAmtDevice *self, GError **error)
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuAmtUnicodeString) st_str = NULL;
 
-		st_str = fu_amt_unicode_string_parse(data->data,
-						     data->len,
-						     st_res->len + (i * FU_AMT_UNICODE_STRING_SIZE),
-						     error);
+		st_str =
+		    fu_amt_unicode_string_parse(data->data,
+						data->len,
+						st_res->buf->len + (i * FU_AMT_UNICODE_STRING_SIZE),
+						error);
 		if (st_str == NULL)
 			return FALSE;
 

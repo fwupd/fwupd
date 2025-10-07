@@ -50,10 +50,6 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 			g_prefix_error_literal(error, "failed to receive packet: ");
 			return FALSE;
 		}
-		g_debug("custom-isp-cmd: %s [0x%x]",
-			fu_aver_hid_custom_isp_cmd_to_string(
-			    fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res)),
-			fu_struct_aver_hid_res_isp_get_custom_isp_cmd(res));
 	}
 	return TRUE;
 }
@@ -61,21 +57,24 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 static gboolean
 fu_aver_hid_device_ensure_status(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) st_req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(st_req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+							st_res->buf->len,
+							0x0,
+							error))
 		return FALSE;
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) == FU_AVER_HID_STATUS_BUSY) {
+	if (fu_struct_aver_hid_res_isp_status_get_status(st_res) == FU_AVER_HID_STATUS_BUSY) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+				fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 		return FALSE;
 	}
 	return TRUE;
@@ -85,13 +84,13 @@ static gboolean
 fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 {
 	g_autofree gchar *ver = NULL;
-	g_autoptr(FuStructAverHidReqDeviceVersion) req =
+	g_autoptr(FuStructAverHidReqDeviceVersion) st_req =
 	    fu_struct_aver_hid_req_device_version_new();
-	g_autoptr(FuStructAverHidResDeviceVersion) res =
+	g_autoptr(FuStructAverHidResDeviceVersion) st_res =
 	    fu_struct_aver_hid_res_device_version_new();
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_aver_hid_device_transfer(self, req, res, &error_local)) {
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 			g_debug("ignoring %s", error_local->message);
 			fu_device_set_version(FU_DEVICE(self), "0.0.0000.00");
@@ -100,9 +99,12 @@ fu_aver_hid_device_ensure_version(FuAverHidDevice *self, GError **error)
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
-	if (!fu_struct_aver_hid_res_device_version_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_device_version_validate(st_res->buf->data,
+							    st_res->buf->len,
+							    0x0,
+							    error))
 		return FALSE;
-	ver = fu_strsafe((const gchar *)fu_struct_aver_hid_res_device_version_get_ver(res, NULL),
+	ver = fu_strsafe((const gchar *)fu_struct_aver_hid_res_device_version_get_ver(st_res, NULL),
 			 FU_STRUCT_AVER_HID_RES_DEVICE_VERSION_SIZE_VER);
 	fu_device_set_version(FU_DEVICE(self), ver);
 	return TRUE;
@@ -153,9 +155,9 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(FuStructAverHidReqIspFileDnload) req =
+		g_autoptr(FuStructAverHidReqIspFileDnload) st_req =
 		    fu_struct_aver_hid_req_isp_file_dnload_new();
-		g_autoptr(FuStructAverHidResIspStatus) res =
+		g_autoptr(FuStructAverHidResIspStatus) st_res =
 		    fu_struct_aver_hid_res_isp_status_new();
 
 		/* prepare chunk */
@@ -166,15 +168,15 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		/* copy in payload */
 		if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
-			    req,
+			    st_req,
 			    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_DNLOAD);
 		} else {
 			fu_struct_aver_hid_req_isp_file_dnload_set_custom_isp_cmd(
-			    req,
+			    st_req,
 			    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_DNLOAD);
 		}
-		if (!fu_memcpy_safe(req->data,
-				    req->len,
+		if (!fu_memcpy_safe(st_req->buf->data,
+				    st_req->buf->len,
 				    FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_OFFSET_DATA, /* dst */
 				    fu_chunk_get_data(chk),
 				    fu_chunk_get_data_sz(chk),
@@ -186,21 +188,24 @@ fu_aver_hid_device_isp_file_dnload(FuAverHidDevice *self,
 		/* resize the last packet */
 		if ((i == (fu_chunk_array_length(chunks) - 1)) &&
 		    (fu_chunk_get_data_sz(chk) < FU_STRUCT_AVER_HID_REQ_ISP_FILE_DNLOAD_SIZE_DATA))
-			fu_byte_array_set_size(req, 3 + fu_chunk_get_data_sz(chk), 0x0);
-		if (!fu_aver_hid_device_transfer(self, req, res, error))
+			fu_byte_array_set_size(st_req->buf, 3 + fu_chunk_get_data_sz(chk), 0x0);
+		if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 			return FALSE;
-		if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+		if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+								st_res->buf->len,
+								0x0,
+								error))
 			return FALSE;
 
 		/* invalid chunk */
-		if (fu_struct_aver_hid_res_isp_status_get_status(res) ==
+		if (fu_struct_aver_hid_res_isp_status_get_status(st_res) ==
 		    FU_AVER_HID_STATUS_FILEERR) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_BUSY,
 				    "device has status %s",
 				    fu_aver_hid_status_to_string(
-					fu_struct_aver_hid_res_isp_status_get_status(res)));
+					fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 			return FALSE;
 		}
 
@@ -216,21 +221,24 @@ static gboolean
 fu_aver_hid_device_wait_for_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
-	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) st_req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(st_req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+							st_res->buf->len,
+							0x0,
+							error))
 		return FALSE;
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_READY) {
+	if (fu_struct_aver_hid_res_isp_status_get_status(st_res) != FU_AVER_HID_STATUS_READY) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+				fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 		return FALSE;
 	}
 	return TRUE;
@@ -242,24 +250,28 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 				  const gchar *name,
 				  GError **error)
 {
-	g_autoptr(FuStructAverHidReqIspFileStart) req = fu_struct_aver_hid_req_isp_file_start_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspFileStart) st_req =
+	    fu_struct_aver_hid_req_isp_file_start_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_START);
 	} else {
 		fu_struct_aver_hid_req_isp_file_start_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_START);
 	}
-	if (!fu_struct_aver_hid_req_isp_file_start_set_file_name(req, name, error))
+	if (!fu_struct_aver_hid_req_isp_file_start_set_file_name(st_req, name, error))
 		return FALSE;
-	fu_struct_aver_hid_req_isp_file_start_set_file_size(req, sz);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_file_start_set_file_size(st_req, sz);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+							st_res->buf->len,
+							0x0,
+							error))
 		return FALSE;
 	return TRUE;
 }
@@ -267,25 +279,28 @@ fu_aver_hid_device_isp_file_start(FuAverHidDevice *self,
 static gboolean
 fu_aver_hid_device_isp_file_end(FuAverHidDevice *self, gsize sz, const gchar *name, GError **error)
 {
-	g_autoptr(FuStructAverHidReqIspFileEnd) req = fu_struct_aver_hid_req_isp_file_end_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspFileEnd) st_req = fu_struct_aver_hid_req_isp_file_end_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_FILE_END);
 	} else {
 		fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_FILE_END);
 	}
-	if (!fu_struct_aver_hid_req_isp_file_end_set_file_name(req, name, error))
+	if (!fu_struct_aver_hid_req_isp_file_end_set_file_name(st_req, name, error))
 		return FALSE;
-	fu_struct_aver_hid_req_isp_file_end_set_end_flag(req, 1);
-	fu_struct_aver_hid_req_isp_file_end_set_file_size(req, sz);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_file_end_set_end_flag(st_req, 1);
+	fu_struct_aver_hid_req_isp_file_end_set_file_size(st_req, sz);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+							st_res->buf->len,
+							0x0,
+							error))
 		return FALSE;
 	return TRUE;
 }
@@ -294,22 +309,23 @@ static gboolean
 fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
-	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_file_end_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspFileEnd) st_req = fu_struct_aver_hid_req_isp_file_end_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_file_end_set_custom_isp_cmd(st_req,
+							       FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
 
 	g_info("isp status: %s",
-	       fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(res)));
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_WAITUSR) {
+	       fu_aver_hid_status_to_string(fu_struct_aver_hid_res_isp_status_get_status(st_res)));
+	if (fu_struct_aver_hid_res_isp_status_get_status(st_res) != FU_AVER_HID_STATUS_WAITUSR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+				fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 		return FALSE;
 	}
 	return TRUE;
@@ -318,21 +334,24 @@ fu_aver_hid_device_wait_for_untar_cb(FuDevice *device, gpointer user_data, GErro
 static gboolean
 fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(FuStructAverHidReqIspStart) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIspStart) st_req = fu_struct_aver_hid_req_isp_start_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_AVER_HID_FLAG_DUAL_ISP)) {
 		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_ALL_START);
 	} else {
 		fu_struct_aver_hid_req_isp_start_set_custom_isp_cmd(
-		    req,
+		    st_req,
 		    FU_AVER_HID_CUSTOM_ISP_CMD_START);
 	}
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (!fu_struct_aver_hid_res_isp_status_validate(res->data, res->len, 0x0, error))
+	if (!fu_struct_aver_hid_res_isp_status_validate(st_res->buf->data,
+							st_res->buf->len,
+							0x0,
+							error))
 		return FALSE;
 	return TRUE;
 }
@@ -340,9 +359,10 @@ fu_aver_hid_device_isp_start(FuAverHidDevice *self, GError **error)
 static gboolean
 fu_aver_hid_device_isp_reboot(FuAverHidDevice *self, GError **error)
 {
-	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
-	return fu_aver_hid_device_transfer(self, req, NULL, error);
+	g_autoptr(FuStructAverHidReqIsp) st_req = fu_struct_aver_hid_req_isp_new();
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(st_req,
+						      FU_AVER_HID_CUSTOM_ISP_CMD_ISP_REBOOT);
+	return fu_aver_hid_device_transfer(self, st_req->buf, NULL, error);
 }
 
 static gboolean
@@ -350,14 +370,14 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 {
 	FuAverHidDevice *self = FU_AVER_HID_DEVICE(device);
 	FuProgress *progress = FU_PROGRESS(user_data);
-	g_autoptr(FuStructAverHidReqIsp) req = fu_struct_aver_hid_req_isp_new();
-	g_autoptr(FuStructAverHidResIspStatus) res = fu_struct_aver_hid_res_isp_status_new();
+	g_autoptr(FuStructAverHidReqIsp) st_req = fu_struct_aver_hid_req_isp_new();
+	g_autoptr(FuStructAverHidResIspStatus) st_res = fu_struct_aver_hid_res_isp_status_new();
 
-	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
-	if (!fu_aver_hid_device_transfer(self, req, res, error))
+	fu_struct_aver_hid_req_isp_set_custom_isp_cmd(st_req, FU_AVER_HID_CUSTOM_ISP_CMD_STATUS);
+	if (!fu_aver_hid_device_transfer(self, st_req->buf, st_res->buf, error))
 		return FALSE;
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) == FU_AVER_HID_STATUS_ISPING) {
-		guint8 percentage = fu_struct_aver_hid_res_isp_status_get_progress(res);
+	if (fu_struct_aver_hid_res_isp_status_get_status(st_res) == FU_AVER_HID_STATUS_ISPING) {
+		guint8 percentage = fu_struct_aver_hid_res_isp_status_get_progress(st_res);
 		if (percentage < 100)
 			fu_progress_set_percentage(progress, percentage);
 		g_set_error(error,
@@ -365,16 +385,16 @@ fu_aver_hid_device_wait_for_reboot_cb(FuDevice *device, gpointer user_data, GErr
 			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+				fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 		return FALSE;
 	}
-	if (fu_struct_aver_hid_res_isp_status_get_status(res) != FU_AVER_HID_STATUS_REBOOT) {
+	if (fu_struct_aver_hid_res_isp_status_get_status(st_res) != FU_AVER_HID_STATUS_REBOOT) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "device has status %s",
 			    fu_aver_hid_status_to_string(
-				fu_struct_aver_hid_res_isp_status_get_status(res)));
+				fu_struct_aver_hid_res_isp_status_get_status(st_res)));
 		return FALSE;
 	}
 	return TRUE;

@@ -80,14 +80,14 @@ fu_efi_ftw_store_parse(FuFirmware *firmware,
 	/* data area */
 	blob = fu_input_stream_read_bytes(
 	    stream,
-	    st->len,
+	    st->buf->len,
 	    fu_struct_efi_fault_tolerant_working_block_header64_get_write_queue_size(st),
 	    NULL,
 	    error);
 	if (blob == NULL)
 		return FALSE;
 	fu_firmware_set_bytes(firmware, blob);
-	fu_firmware_set_size(firmware, st->len + g_bytes_get_size(blob));
+	fu_firmware_set_size(firmware, st->buf->len + g_bytes_get_size(blob));
 
 	/* success */
 	return TRUE;
@@ -112,14 +112,14 @@ fu_efi_ftw_store_write(FuFirmware *firmware, GError **error)
 	    g_bytes_get_size(blob));
 	fu_struct_efi_fault_tolerant_working_block_header64_set_crc(
 	    st,
-	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->data, st->len));
+	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->buf->data, st->buf->len));
 
 	/* attrs + data area */
 	fu_struct_efi_fault_tolerant_working_block_header64_set_state(st, self->state);
-	fu_byte_array_append_bytes(st, blob);
+	fu_byte_array_append_bytes(st->buf, blob);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

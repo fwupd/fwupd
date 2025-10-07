@@ -42,7 +42,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 	st = fu_struct_acpi_phat_version_element_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
-	fu_firmware_set_size(firmware, st->len);
+	fu_firmware_set_size(firmware, st->buf->len);
 	self->guid = fwupd_guid_to_string(fu_struct_acpi_phat_version_element_get_component_id(st),
 					  FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	self->producer_id = fu_struct_acpi_phat_version_element_get_producer_id(st);
@@ -71,7 +71,7 @@ fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

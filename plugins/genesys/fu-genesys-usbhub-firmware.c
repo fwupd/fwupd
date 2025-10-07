@@ -381,10 +381,10 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 		if (!fu_memcpy_safe(buf->data,
 				    buf->len,
 				    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* dst */
-				    self->st_static_ts->data,
-				    self->st_static_ts->len,
+				    self->st_static_ts->buf->data,
+				    self->st_static_ts->buf->len,
 				    0x0, /* src */
-				    self->st_static_ts->len,
+				    self->st_static_ts->buf->len,
 				    error))
 			return NULL;
 	}

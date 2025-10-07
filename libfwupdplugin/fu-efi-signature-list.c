@@ -240,14 +240,14 @@ fu_efi_signature_list_write_x509(FuEfiSignature *sig, GError **error)
 	blob = fu_firmware_write(FU_FIRMWARE(sig), error);
 	if (blob == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(st, blob);
+	fu_byte_array_append_bytes(st->buf, blob);
 	fu_struct_efi_signature_list_set_size(st, g_bytes_get_size(blob));
 	fu_struct_efi_signature_list_set_list_size(st,
 						   FU_STRUCT_EFI_SIGNATURE_LIST_SIZE +
 						       g_bytes_get_size(blob));
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *
@@ -272,15 +272,15 @@ fu_efi_signature_list_write_sha256(GPtrArray *sigs, GError **error)
 		img_blob = fu_firmware_write(FU_FIRMWARE(sig), error);
 		if (img_blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st, img_blob);
+		fu_byte_array_append_bytes(st->buf, img_blob);
 	}
 
 	/* fix up header */
 	fu_struct_efi_signature_list_set_size(st, sizeof(fwupd_guid_t) + 32); /* SHA256 */
-	fu_struct_efi_signature_list_set_list_size(st, st->len);
+	fu_struct_efi_signature_list_set_list_size(st, st->buf->len);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *

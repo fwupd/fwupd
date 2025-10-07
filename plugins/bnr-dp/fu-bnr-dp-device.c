@@ -114,8 +114,8 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 
 	/* write optional data */
 	checksum = fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_TX,
-						 st_request->data,
-						 st_request->len);
+						 st_request->buf->data,
+						 st_request->buf->len);
 	if (buf != NULL && bufsz > 0) {
 		if (!fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 					   FU_BNR_DP_DEVICE_DATA_OFFSET,
@@ -134,8 +134,8 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 	/* write header to kick off processing by the device */
 	return fu_dpaux_device_write(FU_DPAUX_DEVICE(self),
 				     FU_BNR_DP_DEVICE_HEADER_OFFSET,
-				     st_header->data,
-				     st_header->len,
+				     st_header->buf->data,
+				     st_header->buf->len,
 				     FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
 				     error);
 }
@@ -169,8 +169,8 @@ fu_bnr_dp_device_read_response(FuBnrDpDevice *self, GByteArray *data, GError **e
 		return FALSE;
 
 	actual_checksum = fu_bnr_dp_device_xor_checksum(FU_BNR_DP_CHECKSUM_INIT_RX,
-							st_response->data,
-							st_response->len);
+							st_response->buf->data,
+							st_response->buf->len);
 
 	/* read command output data */
 	g_byte_array_set_size(data, fu_struct_bnr_dp_aux_response_get_data_len(st_response));

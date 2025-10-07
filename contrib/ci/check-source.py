@@ -318,6 +318,16 @@ class Checker:
                 self.add_failure(f"static variable {varname} not allowed")
             break
 
+    def _test_rustgen_vars(self, line: str) -> None:
+        self._current_nocheck = "nocheck:rustgen"
+        if line.find(self._current_nocheck) != -1:
+            return
+        if line.find("g_autoptr(FuStruct") == -1:
+            return
+        tokens = line.split(" ")
+        if not tokens[1].startswith("st"):
+            self.add_failure(f"rustgen structure '{tokens[1]}' has to have 'st' prefix")
+
     def _test_zero_init(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:zero-init"
         in_struct: bool = False
@@ -778,6 +788,9 @@ class Checker:
 
             # test for static variables
             self._test_static_vars(line)
+
+            # test for rustgen variables
+            self._test_rustgen_vars(line)
 
         # using too many hardcoded constants
         self._test_gobject_parents(lines)

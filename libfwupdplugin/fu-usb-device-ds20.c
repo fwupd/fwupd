@@ -245,7 +245,7 @@ fu_usb_device_ds20_write(FuFirmware *firmware, GError **error)
 	fu_struct_ds20_set_platform_ver(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_ds20_set_total_length(st, fu_firmware_get_size(firmware));
 	fu_struct_ds20_set_vendor_code(st, fu_firmware_get_idx(firmware));
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

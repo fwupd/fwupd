@@ -1287,10 +1287,10 @@ fu_ccgx_hpi_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* invalidate metadata for alternate image */
-	if (!fu_ccgx_hpi_device_load_metadata(self, fw_mode_alt, st_metadata, error))
+	if (!fu_ccgx_hpi_device_load_metadata(self, fw_mode_alt, st_metadata->buf, error))
 		return FALSE;
 	fu_struct_ccgx_metadata_hdr_set_metadata_valid(st_metadata, 0x0);
-	if (!fu_ccgx_hpi_device_save_metadata(self, fw_mode_alt, st_metadata, error))
+	if (!fu_ccgx_hpi_device_save_metadata(self, fw_mode_alt, st_metadata->buf, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 

@@ -570,7 +570,7 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 			(guint)status & 0x0F,
 			(guint)(status & 0xF0) >> 4);
 
-		offset += st->len;
+		offset += st->buf->len;
 	}
 
 	/* success */
@@ -658,7 +658,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 		self,
 		buf,
 		sizeof(buf),
-		st->len + 0x1,
+		st->buf->len + 0x1,
 		MIN(fu_struct_wistron_dock_wdit_get_device_cnt(st), 32),
 		error)) {
 		g_prefix_error_literal(error, "failed to parse imgs: ");

@@ -16,7 +16,7 @@ enum FuAverHidStatus {
     Stop,
 }
 
-#[derive(ToString)]
+#[repr(u8)]
 enum FuAverHidCustomIspCmd {
     Status = 0x01,
     FileStart,
@@ -35,7 +35,7 @@ enum FuAverHidCustomIspCmd {
     AllStart,
 }
 
-#[derive(ToString)]
+#[repr(u8)]
 enum FuAverSafeispCustomCmd {
     GetVersion = 0x14,
     Support = 0x29,
@@ -72,7 +72,7 @@ enum FuAverSafeispAckStatus {
 struct FuStructAverHidReqIsp {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     data: [u8; 508] = [0xFF; 508],
     end: u8 == 0x00,
 }
@@ -82,7 +82,7 @@ struct FuStructAverHidReqIsp {
 struct FuStructAverHidReqIspFileStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     file_name: [char; 52],
     file_size: u32le,
     free_space: u32le,
@@ -95,7 +95,7 @@ struct FuStructAverHidReqIspFileStart {
 struct FuStructAverHidReqIspFileDnload {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     data: [u8; 508] = [0xFF; 508],
 }
 
@@ -104,7 +104,7 @@ struct FuStructAverHidReqIspFileDnload {
 struct FuStructAverHidReqIspFileEnd {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     file_name: [char; 51],
     end_flag: u8,
     file_size: u32le,
@@ -113,13 +113,13 @@ struct FuStructAverHidReqIspFileEnd {
     end: u8 == 0x00,
 }
 
-#[derive(Getters, Setters, Default)]
+#[derive(Getters, New, Default)]
 #[repr(C, packed)]
 struct FuStructAverHidReqIspStart {
     report_id_custom_command: u8 == 0x08,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
-    isp_cmd: [u8; 60],
+    custom_isp_cmd: FuAverHidCustomIspCmd,
+    isp_cmd: [u8; 60] = [0xFF; 60],
     _reserved: [u8; 448] = [0xFF; 448],
     end: u8 == 0x00,
 }
@@ -139,7 +139,7 @@ struct FuStructAverHidReqDeviceVersion {
 struct FuStructAverHidResIspStatus {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     status: u8,
     status_string: [char; 58],
     progress: u8,
@@ -152,7 +152,7 @@ struct FuStructAverHidResIspStatus {
 struct FuStructAverHidResIsp {
     report_id_custom_command: u8 == 0x09,
     custom_cmd_isp: u8 == 0x10,
-    custom_isp_cmd: u8,
+    custom_isp_cmd: FuAverHidCustomIspCmd,
     _reserved: [u8; 508] = [0xFF; 508],
     end: u8 == 0x00,
 }
@@ -171,7 +171,7 @@ struct FuStructAverHidResDeviceVersion {
 #[repr(C, packed)]
 struct FuStructAverSafeispReq {
     report_id_custom_command: u8 == 0x08,
-    custom_cmd: u8,
+    custom_cmd: FuAverSafeispCustomCmd,
     custom_res: u16le,
     custom_parm0: u32le = 0x00,
     custom_parm1: u32le = 0x00,
@@ -189,11 +189,11 @@ struct FuStructAverSafeispRes {
     data: [u8; 4] = [0x00; 4],
 };
 
-#[derive(Getters, Validate, Default)]
+#[derive(New, Getters, Validate, Default)]
 #[repr(C, packed)]
 struct FuStructAverSafeispResDeviceVersion {
     report_id_custom_command: u8 == 0x09,
-    custom_cmd: u8 == 0x14,
+    custom_cmd: FuAverSafeispCustomCmd == GetVersion,
     ver: [u8; 11],
     _reserved: [u8; 3] = [0x00; 3],
 }
