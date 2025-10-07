@@ -286,6 +286,7 @@ static gboolean
 fu_ilitek_its_device_get_fwid(FuIlitekItsDevice *self, guint16 *fwid, GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsFwid) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check fwid protocol is supported */
@@ -304,7 +305,10 @@ fu_ilitek_its_device_get_fwid(FuIlitekItsDevice *self, guint16 *fwid, GError **e
 		return FALSE;
 
 	/* success */
-	*fwid = fu_struct_ilitek_its_fwid_get_fwid(rbuf);
+	st_resp = fu_struct_ilitek_its_fwid_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	*fwid = fu_struct_ilitek_its_fwid_get_fwid(st_resp);
 	return TRUE;
 }
 
@@ -312,6 +316,7 @@ static gboolean
 fu_ilitek_its_device_get_sensor_id(FuIlitekItsDevice *self, guint8 *sensor_id, GError **error)
 {
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsSensorId) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check sensor-id protocol is supported */
@@ -330,7 +335,10 @@ fu_ilitek_its_device_get_sensor_id(FuIlitekItsDevice *self, guint8 *sensor_id, G
 		return FALSE;
 
 	/* success */
-	*sensor_id = fu_struct_ilitek_its_sensor_id_get_sensor_id(rbuf);
+	st_resp = fu_struct_ilitek_its_sensor_id_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	*sensor_id = fu_struct_ilitek_its_sensor_id_get_sensor_id(st_resp);
 	return TRUE;
 }
 
@@ -413,6 +421,7 @@ fu_ilitek_its_device_ensure_ic_name_old(FuIlitekItsDevice *self, GError **error)
 {
 	g_autofree gchar *name = NULL;
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsMcuVersion) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 1);
@@ -421,7 +430,11 @@ fu_ilitek_its_device_ensure_ic_name_old(FuIlitekItsDevice *self, GError **error)
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
 
-	self->ic_name = g_strdup_printf("%04x", fu_struct_ilitek_its_mcu_version_get_ic_name(rbuf));
+	st_resp = fu_struct_ilitek_its_mcu_version_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	self->ic_name =
+	    g_strdup_printf("%04x", fu_struct_ilitek_its_mcu_version_get_ic_name(st_resp));
 	name = g_strdup_printf("Touchscreen ILI%s", self->ic_name);
 	fu_device_set_name(FU_DEVICE(self), name);
 
@@ -434,6 +447,7 @@ fu_ilitek_its_device_ensure_ic_name(FuIlitekItsDevice *self, GError **error)
 {
 	g_autofree gchar *name = NULL;
 	g_autoptr(FuStructIlitekItsHidCmd) st_cmd = fu_struct_ilitek_its_hid_cmd_new();
+	g_autoptr(FuStructIlitekItsMcuInfo) st_resp = NULL;
 	g_autoptr(GByteArray) rbuf = g_byte_array_new();
 
 	/* check new protocol is supported */
@@ -449,7 +463,10 @@ fu_ilitek_its_device_ensure_ic_name(FuIlitekItsDevice *self, GError **error)
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
 
-	self->ic_name = fu_struct_ilitek_its_mcu_info_get_ic_name(rbuf);
+	st_resp = fu_struct_ilitek_its_mcu_info_parse(rbuf->data, rbuf->len, 0, error);
+	if (st_resp == NULL)
+		return FALSE;
+	self->ic_name = fu_struct_ilitek_its_mcu_info_get_ic_name(st_resp);
 	name = g_strdup_printf("Touchscreen ILI%s", self->ic_name);
 	fu_device_set_name(FU_DEVICE(self), name);
 
