@@ -508,9 +508,7 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 		else
 			fu_struct_qc_data_set_last_packet(pkt, FU_QC_MORE_DATA_MORE);
 
-		pkt = g_byte_array_append(pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		if (pkt == NULL)
-			return FALSE;
+		g_byte_array_append(pkt, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 
 		if (!fu_qc_s5gen2_device_msg_out(self,
 						 pkt->data,
