@@ -801,7 +801,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_cab_folder_set_compression(st_folder,
 					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
 							      : FU_CAB_COMPRESSION_NONE);
-	g_byte_array_append(st_hdr, st_folder->data, st_folder->len);
+	fu_byte_array_append_array(st_hdr, st_folder);
 
 	/* create each CFFILE */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -827,7 +827,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 							(g_date_time_get_minute(created) << 5) +
 							(g_date_time_get_second(created) / 2));
 		}
-		g_byte_array_append(st_hdr, st_file->data, st_file->len);
+		fu_byte_array_append_array(st_hdr, st_file);
 
 		g_byte_array_append(st_hdr, (const guint8 *)filename_win32, strlen(filename_win32));
 		fu_byte_array_append_uint8(st_hdr, 0x0);
@@ -861,7 +861,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_cab_data_set_checksum(st_data, checksum);
 		fu_struct_cab_data_set_comp(st_data, chunk_zlib->len);
 		fu_struct_cab_data_set_uncomp(st_data, fu_chunk_get_data_sz(chk));
-		g_byte_array_append(st_hdr, st_data->data, st_data->len);
+		fu_byte_array_append_array(st_hdr, st_data);
 		g_byte_array_append(st_hdr, chunk_zlib->data, chunk_zlib->len);
 	}
 
