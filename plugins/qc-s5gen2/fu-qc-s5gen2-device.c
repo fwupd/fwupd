@@ -55,7 +55,7 @@ fu_qc_s5gen2_device_msg_in(FuQcS5gen2Device *self,
 			   GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	g_autoptr(GByteArray) err_msg = NULL;
+	g_autoptr(FuStructQcErrorInd) err_msg = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	if (proxy == NULL) {
@@ -139,8 +139,8 @@ fu_qc_s5gen2_device_cmd_abort(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_ABORT_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_abort_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcAbortReq) req = fu_struct_qc_abort_req_new();
+	g_autoptr(FuStructQcAbort) reply = NULL;
 
 	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
 		return FALSE;
@@ -159,8 +159,8 @@ fu_qc_s5gen2_device_cmd_sync(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_SYNC_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_sync_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcSyncReq) req = fu_struct_qc_sync_req_new();
+	g_autoptr(FuStructQcSync) reply = NULL;
 
 	fu_struct_qc_sync_req_set_file_id(req, self->file_id);
 	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
@@ -208,8 +208,8 @@ fu_qc_s5gen2_device_cmd_start(FuQcS5gen2Device *self, GError **error)
 	guint8 data[FU_STRUCT_QC_START_SIZE] = {0};
 	gsize read_len;
 	FuQcStartStatus status;
-	g_autoptr(GByteArray) req = fu_struct_qc_start_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcStartReq) req = fu_struct_qc_start_req_new();
+	g_autoptr(FuStructQcStart) reply = NULL;
 
 	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
 		return FALSE;
@@ -255,8 +255,8 @@ fu_qc_s5gen2_device_cmd_validation(FuQcS5gen2Device *self, GError **error)
 	guint16 delay_ms;
 	guint8 data[FU_STRUCT_QC_IS_VALIDATION_DONE_SIZE] = {0};
 	gsize read_len = 0;
-	g_autoptr(GByteArray) req = fu_struct_qc_validation_req_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcValidationReq) req = fu_struct_qc_validation_req_new();
+	g_autoptr(FuStructQcTransferCompleteInd) reply = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_qc_s5gen2_device_msg_out(self, req->data, req->len, error))
@@ -305,7 +305,7 @@ fu_qc_s5gen2_device_cmd_transfer_complete(FuQcS5gen2Device *self, GError **error
 {
 	/* reboot immediately */
 	FuQcTransferAction action = FU_QC_TRANSFER_ACTION_INTERACTIVE;
-	g_autoptr(GByteArray) req = fu_struct_qc_transfer_complete_new();
+	g_autoptr(FuStructQcTransferComplete) req = fu_struct_qc_transfer_complete_new();
 
 	fu_struct_qc_transfer_complete_set_action(req, action);
 
@@ -318,8 +318,8 @@ fu_qc_s5gen2_device_cmd_proceed_to_commit(FuQcS5gen2Device *self, GError **error
 {
 	guint8 data[FU_STRUCT_QC_COMMIT_REQ_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_proceed_to_commit_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcProceedToCommit) req = fu_struct_qc_proceed_to_commit_new();
+	g_autoptr(FuStructQcCommitReq) reply = NULL;
 
 	fu_struct_qc_proceed_to_commit_set_action(req, FU_QC_COMMIT_ACTION_PROCEED);
 
@@ -340,8 +340,8 @@ fu_qc_s5gen2_device_cmd_commit_cfm(FuQcS5gen2Device *self, GError **error)
 {
 	guint8 data[FU_STRUCT_QC_COMPLETE_SIZE] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_commit_cfm_new();
-	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuStructQcCommitCfm) req = fu_struct_qc_commit_cfm_new();
+	g_autoptr(FuStructQcComplete) reply = NULL;
 
 	fu_struct_qc_commit_cfm_set_action(req, FU_QC_COMMIT_CFM_ACTION_UPGRADE);
 
@@ -367,8 +367,8 @@ fu_qc_s5gen2_device_ensure_version(FuQcS5gen2Device *self, GError **error)
 	g_autofree gchar *ver_str = NULL;
 	gsize read_len;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GByteArray) version = NULL;
-	g_autoptr(GByteArray) version_req = fu_struct_qc_version_req_new();
+	g_autoptr(FuStructQcVersion) version = NULL;
+	g_autoptr(FuStructQcVersionReq) version_req = fu_struct_qc_version_req_new();
 
 	locker =
 	    fu_device_locker_new_full(FU_DEVICE(self),
@@ -495,7 +495,7 @@ fu_qc_s5gen2_device_write_bucket(FuQcS5gen2Device *self,
 					       data_sz);
 
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		g_autoptr(GByteArray) pkt = fu_struct_qc_data_new();
+		g_autoptr(FuStructQcData) pkt = fu_struct_qc_data_new();
 		g_autoptr(FuChunk) chk = fu_chunk_array_index(chunks, i, error);
 
 		if (chk == NULL)
@@ -541,7 +541,7 @@ fu_qc_s5gen2_device_write_blocks(FuQcS5gen2Device *self,
 		gsize read_len;
 		guint32 data_sz;
 		guint32 data_offset;
-		g_autoptr(GByteArray) data_req = NULL;
+		g_autoptr(FuStructQcDataReq) data_req = NULL;
 		g_autoptr(GBytes) data_out = NULL;
 
 		if (!fu_qc_s5gen2_device_msg_in(self, buf_in, sizeof(buf_in), &read_len, error))

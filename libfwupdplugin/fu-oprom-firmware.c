@@ -121,8 +121,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 	guint16 expansion_header_offset = 0;
 	guint16 pci_header_offset;
 	guint16 image_length = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
-	g_autoptr(GByteArray) st_pci = NULL;
+	g_autoptr(FuStructOprom) st_hdr = NULL;
+	g_autoptr(FuStructOpromPci) st_pci = NULL;
 
 	/* parse header */
 	st_hdr = fu_struct_oprom_parse_stream(stream, 0x0, error);
@@ -193,8 +193,8 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	FuOpromFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize image_size = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_oprom_new();
-	g_autoptr(GByteArray) st_pci = fu_struct_oprom_pci_new();
+	g_autoptr(FuStructOprom) st_hdr = fu_struct_oprom_new();
+	g_autoptr(FuStructOpromPci) st_pci = fu_struct_oprom_pci_new();
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */

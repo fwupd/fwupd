@@ -34,7 +34,7 @@ fu_ccgx_pure_hid_device_command(FuCcgxPureHidDevice *self,
 				guint8 param2,
 				GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_ccgx_pure_hid_command_new();
+	g_autoptr(FuStructCcgxPureHidCommand) cmd = fu_struct_ccgx_pure_hid_command_new();
 	fu_struct_ccgx_pure_hid_command_set_cmd(cmd, param1);
 	fu_struct_ccgx_pure_hid_command_set_opt(cmd, param2);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -103,7 +103,7 @@ fu_ccgx_pure_hid_device_ensure_fw_info(FuCcgxPureHidDevice *self, GError **error
 	guint8 buf[0x40] = {FU_CCGX_PURE_HID_REPORT_ID_INFO, 0};
 	guint version = 0;
 	g_autofree gchar *bl_ver = NULL;
-	g_autoptr(GByteArray) st_info = NULL;
+	g_autoptr(FuStructCcgxPureHidFwInfo) st_info = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      buf[0],
@@ -313,7 +313,7 @@ fu_ccgx_pure_hid_device_write_row(FuCcgxPureHidDevice *self,
 				  gsize row_len,
 				  GError **error)
 {
-	g_autoptr(GByteArray) st_hdr = fu_struct_ccgx_pure_hid_write_hdr_new();
+	g_autoptr(FuStructCcgxPureHidWriteHdr) st_hdr = fu_struct_ccgx_pure_hid_write_hdr_new();
 
 	fu_struct_ccgx_pure_hid_write_hdr_set_pd_resp(st_hdr,
 						      FU_CCGX_PD_RESP_FLASH_READ_WRITE_CMD_SIG);

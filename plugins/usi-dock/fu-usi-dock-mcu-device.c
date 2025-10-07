@@ -39,7 +39,7 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize bufsz,
 			  GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_usi_dock_mcu_cmd_req_new();
+	g_autoptr(FuStructUsiDockMcuCmdReq) st = fu_struct_usi_dock_mcu_cmd_req_new();
 
 	fu_struct_usi_dock_mcu_cmd_req_set_length(st, 0x3 + bufsz);
 	fu_struct_usi_dock_mcu_cmd_req_set_tag3(st, tag2);
@@ -70,7 +70,7 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 			  GError **error)
 {
 	guint8 buf[64] = {0};
-	g_autoptr(GByteArray) st_rsp = NULL;
+	g_autoptr(FuStructUsiDockMcuCmdRes) st_rsp = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
@@ -398,7 +398,7 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_usi_dock_hid_req_new();
+	g_autoptr(FuStructUsiDockHidReq) st_req = fu_struct_usi_dock_hid_req_new();
 
 	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
 	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);

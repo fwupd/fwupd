@@ -87,11 +87,11 @@ typedef struct {
 
 struct _FuGenesysUsbhubDevice {
 	FuUsbDevice parent_instance;
-	GByteArray *st_static_ts;
+	FuStructGenesysTsStatic *st_static_ts;
 	GByteArray *st_dynamic_ts;
-	GByteArray *st_fwinfo_ts;
-	GByteArray *st_vendor_ts;
-	GByteArray *st_project_ts;
+	FuStructGenesysTsFirmwareInfo *st_fwinfo_ts;
+	FuStructGenesysTsVendorSupport *st_vendor_ts;
+	FuStructGenesysTsBrandProject *st_project_ts;
 	FuGenesysVendorCommandSetting vcs;
 	FuGenesysModelSpec spec;
 
@@ -2592,7 +2592,7 @@ fu_genesys_usbhub_device_send_hash_data_length(FuGenesysUsbhubDevice *self,
 
 static gboolean
 fu_genesys_usbhub_device_send_hash_digest(FuGenesysUsbhubDevice *self,
-					  GByteArray *st_codesign,
+					  FuStructGenesysFwCodesignInfoEcdsa *st_codesign,
 					  GError **error)
 {
 	gsize hash_bufsz = 0;
@@ -2701,7 +2701,7 @@ fu_genesys_usbhub_device_toggle_hw_read_key(FuGenesysUsbhubDevice *self,
 
 static gboolean
 fu_genesys_usbhub_device_send_signature(FuGenesysUsbhubDevice *self,
-					GByteArray *st_codesign,
+					FuStructGenesysFwCodesignInfoEcdsa *st_codesign,
 					GError **error)
 {
 	gsize sig_bufsz = 0;
@@ -2822,7 +2822,7 @@ fu_genesys_usbhub_device_examine_fw_codesign_hw(FuGenesysUsbhubDevice *self,
 	gsize codesize_to_hash = 0;
 	g_autoptr(FuFirmware) codesign_img = NULL;
 	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GByteArray) st_codesign = NULL;
+	g_autoptr(FuStructGenesysFwCodesignInfoEcdsa) st_codesign = NULL;
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* get fw codesign info */
@@ -3223,11 +3223,11 @@ fu_genesys_usbhub_device_finalize(GObject *object)
 	if (self->st_dynamic_ts != NULL)
 		g_byte_array_unref(self->st_dynamic_ts);
 	if (self->st_fwinfo_ts != NULL)
-		g_byte_array_unref(self->st_fwinfo_ts);
+		fu_struct_genesys_ts_firmware_info_unref(self->st_fwinfo_ts);
 	if (self->st_vendor_ts != NULL)
-		g_byte_array_unref(self->st_vendor_ts);
+		fu_struct_genesys_ts_vendor_support_unref(self->st_vendor_ts);
 	if (self->st_project_ts != NULL)
-		g_byte_array_unref(self->st_project_ts);
+		fu_struct_genesys_ts_brand_project_unref(self->st_project_ts);
 	if (self->hub_fw_bank1_data != NULL)
 		g_bytes_unref(self->hub_fw_bank1_data);
 	if (self->st_codesign != NULL)

@@ -37,7 +37,7 @@ fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAlgoltekProductIdentity) st = NULL;
 	g_autoptr(GInputStream) stream_isp = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 

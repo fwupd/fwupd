@@ -642,7 +642,7 @@ fu_logitech_hidpp_device_rdfu_get_capabilities(FuLogitechHidppDevice *self, GErr
 	guint8 idx;
 	g_autoptr(FuStructLogitechHidppRdfuGetCapabilities) msg =
 	    fu_struct_logitech_hidpp_rdfu_get_capabilities_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuCapabilities) response = NULL;
 
 	priv->rdfu_capabilities = 0; /* set empty */
 
@@ -678,7 +678,7 @@ fu_logitech_hidpp_device_rdfu_start_dfu(FuLogitechHidppDevice *self,
 	guint8 status;
 	g_autoptr(FuStructLogitechHidppRdfuStartDfu) msg =
 	    fu_struct_logitech_hidpp_rdfu_start_dfu_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuStartDfuResponse) response = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -774,7 +774,7 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint retry = 0;
-	g_autoptr(GByteArray) params = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuDataTransferWait) params = NULL;
 
 	params = fu_struct_logitech_hidpp_rdfu_data_transfer_wait_parse(
 	    response->data,
@@ -794,7 +794,7 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 	priv->rdfu_state = FU_LOGITECH_HIDPP_RDFU_STATE_WAIT;
 
 	while (priv->rdfu_state == FU_LOGITECH_HIDPP_RDFU_STATE_WAIT) {
-		g_autoptr(GByteArray) wait_response = NULL;
+		g_autoptr(FuStructLogitechHidppRdfuResponse) wait_response = NULL;
 		g_autoptr(FuLogitechHidppHidppMsg) msg_in_wait = fu_logitech_hidpp_msg_new();
 		g_autoptr(GError) error_local = NULL;
 
@@ -844,12 +844,12 @@ fu_logitech_hidpp_device_rdfu_status_data_transfer_wait(FuLogitechHidppDevice *s
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_status_pkt_ack(FuLogitechHidppDevice *self,
-					     GByteArray *response,
+					     FuStructLogitechHidppRdfuResponse *response,
 					     GError **error)
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint32 pkt;
-	g_autoptr(GByteArray) params = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuDfuTransferPktAck) params = NULL;
 
 	priv->rdfu_state = FU_LOGITECH_HIDPP_RDFU_STATE_TRANSFER;
 	params = fu_struct_logitech_hidpp_rdfu_dfu_transfer_pkt_ack_parse(
@@ -890,10 +890,10 @@ fu_logitech_hidpp_device_rdfu_status_pkt_ack(FuLogitechHidppDevice *self,
 
 static gboolean
 fu_logitech_hidpp_device_rdfu_check_status(FuLogitechHidppDevice *self,
-					   GByteArray *response,
+					   FuStructLogitechHidppRdfuResponse *response,
 					   GError **error)
 {
-	guint8 status = fu_struct_logitech_hidpp_rdfu_start_dfu_response_get_status_code(response);
+	guint8 status = fu_struct_logitech_hidpp_rdfu_response_get_status_code(response);
 
 	switch (status) {
 	case FU_LOGITECH_HIDPP_RDFU_RESPONSE_CODE_DFU_NOT_STARTED:
@@ -953,7 +953,7 @@ fu_logitech_hidpp_device_rdfu_get_dfu_status(FuLogitechHidppDevice *self, GError
 	guint8 idx;
 	g_autoptr(FuStructLogitechHidppRdfuGetDfuStatus) msg =
 	    fu_struct_logitech_hidpp_rdfu_get_dfu_status_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuResponse) response = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
@@ -1043,7 +1043,7 @@ fu_logitech_hidpp_device_rdfu_transfer_pkt(FuLogitechHidppDevice *self,
 	guint8 idx;
 	g_autoptr(FuStructLogitechHidppRdfuTransferDfuData) msg =
 	    fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_new();
-	g_autoptr(GByteArray) response = NULL;
+	g_autoptr(FuStructLogitechHidppRdfuResponse) response = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);

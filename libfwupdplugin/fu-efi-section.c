@@ -161,7 +161,7 @@ fu_efi_section_parse_compression_sections(FuEfiSection *self,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSectionCompression) st = NULL;
 	st = fu_struct_efi_section_compression_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
@@ -225,7 +225,7 @@ fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 {
 	const gchar *guid_ui;
 	g_autofree gchar *guid_str = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSectionFreeformSubtypeGuid) st = NULL;
 
 	st = fu_struct_efi_section_freeform_subtype_guid_parse_stream(stream, 0x0, error);
 	if (st == NULL)
@@ -254,7 +254,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 size;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiSection) st = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
@@ -298,7 +298,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 	priv->type = fu_struct_efi_section_get_type(st);
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		g_autofree gchar *guid_str = NULL;
-		g_autoptr(GByteArray) st_def = NULL;
+		g_autoptr(FuStructEfiSectionGuidDefined) st_def = NULL;
 		st_def = fu_struct_efi_section_guid_defined_parse_stream(stream, st->len, error);
 		if (st_def == NULL)
 			return FALSE;
@@ -399,7 +399,7 @@ fu_efi_section_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) buf = fu_struct_efi_section_new();
+	g_autoptr(FuStructEfiSection) buf = fu_struct_efi_section_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	/* simple blob for now */
@@ -410,7 +410,8 @@ fu_efi_section_write(FuFirmware *firmware, GError **error)
 	/* header */
 	if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED) {
 		fwupd_guid_t guid = {0x0};
-		g_autoptr(GByteArray) st_def = fu_struct_efi_section_guid_defined_new();
+		g_autoptr(FuStructEfiSectionGuidDefined) st_def =
+		    fu_struct_efi_section_guid_defined_new();
 		if (!fwupd_guid_from_string(fu_firmware_get_id(firmware),
 					    &guid,
 					    FWUPD_GUID_FLAG_MIXED_ENDIAN,

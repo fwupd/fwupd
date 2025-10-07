@@ -49,7 +49,7 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	guint32 fwver;
 	gsize bufsz = FU_STRUCT_VLI_PD_HDR_SIZE;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructVliPdHdr) st = NULL;
 
 	/* sanity check */
 	if (parent == NULL) {

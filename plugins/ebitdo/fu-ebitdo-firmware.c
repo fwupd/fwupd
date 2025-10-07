@@ -25,7 +25,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 	guint32 version;
 	gsize streamsz = 0;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEbitdoHdr) st = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -73,7 +73,7 @@ fu_ebitdo_firmware_parse(FuFirmware *firmware,
 static GByteArray *
 fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GByteArray) st = fu_struct_ebitdo_hdr_new();
+	g_autoptr(FuStructEbitdoHdr) st = fu_struct_ebitdo_hdr_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	/* header then payload */

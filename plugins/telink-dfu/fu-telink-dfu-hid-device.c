@@ -43,7 +43,8 @@ fu_telink_dfu_hid_device_create_packet(FuTelinkDfuCmd cmd,
 {
 	guint16 ota_data_len;
 	g_autoptr(FuStructTelinkDfuHidPkt) st_pkt = fu_struct_telink_dfu_hid_pkt_new();
-	g_autoptr(FuStructTelinkDfuHidPkt) st_payload = fu_struct_telink_dfu_hid_pkt_payload_new();
+	g_autoptr(FuStructTelinkDfuHidPktPayload) st_payload =
+	    fu_struct_telink_dfu_hid_pkt_payload_new();
 
 	switch (cmd) {
 	case FU_TELINK_DFU_CMD_OTA_FW_VERSION:

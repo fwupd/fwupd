@@ -125,8 +125,9 @@ fu_qc_s5gen2_ble_device_msg_out(FuQcS5gen2Impl *impl, guint8 *data, gsize data_l
 	FuQcS5gen2BleDevice *self = FU_QC_S5GEN2_BLE_DEVICE(impl);
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_upgrade_control_cmd_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3UpgradeControlCmd) req =
+	    fu_struct_qc_gaia_v3_upgrade_control_cmd_new();
+	g_autoptr(FuStructQcGaiaV3UpgradeControlAck) validate = NULL;
 
 	fu_struct_qc_gaia_v3_upgrade_control_cmd_set_vendor_id(req, self->vid_v3);
 
@@ -202,8 +203,9 @@ fu_qc_s5gen2_ble_device_req_connect(FuQcS5gen2Impl *impl, GError **error)
 	FuQcS5gen2BleDevice *self = FU_QC_S5GEN2_BLE_DEVICE(impl);
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_upgrade_connect_cmd_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3UpgradeConnectCmd) req =
+	    fu_struct_qc_gaia_v3_upgrade_connect_cmd_new();
+	g_autoptr(FuStructQcGaiaV3UpgradeConnectAck) validate = NULL;
 
 	fu_struct_qc_gaia_v3_upgrade_connect_cmd_set_vendor_id(req, self->vid_v3);
 
@@ -229,8 +231,9 @@ fu_qc_s5gen2_ble_device_req_disconnect(FuQcS5gen2Impl *impl, GError **error)
 	FuQcS5gen2BleDevice *self = FU_QC_S5GEN2_BLE_DEVICE(impl);
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_upgrade_disconnect_cmd_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3UpgradeDisconnectCmd) req =
+	    fu_struct_qc_gaia_v3_upgrade_disconnect_cmd_new();
+	g_autoptr(FuStructQcGaiaV3UpgradeDisconnectAck) validate = NULL;
 
 	fu_struct_qc_gaia_v3_upgrade_disconnect_cmd_set_vendor_id(req, self->vid_v3);
 
@@ -273,8 +276,8 @@ fu_qc_s5gen2_ble_device_get_api(FuQcS5gen2BleDevice *self, GError **error)
 	gsize read_len;
 	guint8 api_major;
 	guint8 api_minor;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_api_req_new();
-	g_autoptr(GByteArray) resp = NULL;
+	g_autoptr(FuStructQcGaiaV3ApiReq) req = fu_struct_qc_gaia_v3_api_req_new();
+	g_autoptr(FuStructQcGaiaV3Api) resp = NULL;
 
 	fu_struct_qc_gaia_v3_api_req_set_vendor_id(req, self->vid_v3);
 
@@ -310,8 +313,9 @@ fu_qc_s5gen2_ble_device_get_features(FuQcS5gen2BleDevice *self, gboolean next, G
 {
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_supported_features_req_new();
-	g_autoptr(GByteArray) resp = NULL;
+	g_autoptr(FuStructQcGaiaV3SupportedFeaturesReq) req =
+	    fu_struct_qc_gaia_v3_supported_features_req_new();
+	g_autoptr(FuStructQcGaiaV3SupportedFeatures) resp = NULL;
 
 	fu_struct_qc_gaia_v3_supported_features_req_set_vendor_id(req, self->vid_v3);
 
@@ -369,8 +373,8 @@ fu_qc_s5gen2_ble_device_get_serial(FuQcS5gen2BleDevice *self, GError **error)
 {
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_serial_req_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3SerialReq) req = fu_struct_qc_gaia_v3_serial_req_new();
+	g_autoptr(FuStructQcGaiaV3Serial) validate = NULL;
 	g_autofree gchar *serial = NULL;
 
 	fu_struct_qc_gaia_v3_serial_req_set_vendor_id(req, self->vid_v3);
@@ -401,8 +405,8 @@ fu_qc_s5gen2_ble_device_get_variant(FuQcS5gen2BleDevice *self, GError **error)
 {
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_variant_req_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3VariantReq) req = fu_struct_qc_gaia_v3_variant_req_new();
+	g_autoptr(FuStructQcGaiaV3Variant) validate = NULL;
 	g_autofree gchar *variant = NULL;
 
 	fu_struct_qc_gaia_v3_variant_req_set_vendor_id(req, self->vid_v3);
@@ -445,8 +449,9 @@ fu_qc_s5gen2_ble_device_register_notification(FuQcS5gen2BleDevice *self, GError 
 {
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len = 0;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_register_notification_cmd_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3RegisterNotificationCmd) req =
+	    fu_struct_qc_gaia_v3_register_notification_cmd_new();
+	g_autoptr(FuStructQcGaiaV3RegisterNotificationAck) validate = NULL;
 
 	/* register only for update feature */
 	fu_struct_qc_gaia_v3_register_notification_cmd_set_vendor_id(req, self->vid_v3);
@@ -476,8 +481,9 @@ fu_qc_s5gen2_ble_device_set_transport_protocol(FuQcS5gen2BleDevice *self,
 {
 	guint8 buf[FU_QC_S5GEN2_BLE_DEVICE_BUFFER_SZ] = {0};
 	gsize read_len;
-	g_autoptr(GByteArray) req = fu_struct_qc_gaia_v3_set_transport_info_req_new();
-	g_autoptr(GByteArray) validate = NULL;
+	g_autoptr(FuStructQcGaiaV3SetTransportInfoReq) req =
+	    fu_struct_qc_gaia_v3_set_transport_info_req_new();
+	g_autoptr(FuStructQcGaiaV3SetTransportInfo) validate = NULL;
 
 	fu_struct_qc_gaia_v3_set_transport_info_req_set_vendor_id(req, self->vid_v3);
 	fu_struct_qc_gaia_v3_set_transport_info_req_set_key(req, 0x07);

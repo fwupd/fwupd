@@ -221,7 +221,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructDfuFtr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
@@ -298,7 +298,7 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st = fu_struct_dfu_ftr_new();
+	g_autoptr(FuStructDfuFtr) st = fu_struct_dfu_ftr_new();
 
 	/* add the raw firmware data, the footer-less-CRC, and only then the CRC */
 	fu_byte_array_append_bytes(buf, contents);

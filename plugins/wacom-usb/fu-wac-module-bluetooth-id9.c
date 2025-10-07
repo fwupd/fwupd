@@ -60,9 +60,9 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 	guint8 command = full_erase ? FU_WAC_MODULE_BLUETOOTH_ID9_CMD_FULLERASE
 				    : FU_WAC_MODULE_BLUETOOTH_ID9_CMD_NORMAL;
 	guint32 crc = ~0;
-	g_autoptr(GByteArray) loader_cmd = fu_struct_id9_loader_cmd_new();
-	g_autoptr(GByteArray) spi_cmd = fu_struct_id9_spi_cmd_new();
-	g_autoptr(GByteArray) unknown_cmd = fu_struct_id9_unknown_cmd_new();
+	g_autoptr(FuStructId9LoaderCmd) loader_cmd = fu_struct_id9_loader_cmd_new();
+	g_autoptr(FuStructId9SpiCmd) spi_cmd = fu_struct_id9_spi_cmd_new();
+	g_autoptr(FuStructId9UnknownCmd) unknown_cmd = fu_struct_id9_unknown_cmd_new();
 	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))

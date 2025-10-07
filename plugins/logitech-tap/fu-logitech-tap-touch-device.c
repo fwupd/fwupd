@@ -89,7 +89,7 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 
 static gboolean
 fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
-					  GByteArray *st_req,
+					  FuStructLogitechTapTouchHidReq *st_req,
 					  guint delay,
 					  GByteArray *buf_res,
 					  GError **error)

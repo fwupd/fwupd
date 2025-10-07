@@ -177,7 +177,7 @@ fu_wac_module_touch_id7_write_block(FuWacModule *self,
 				    GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GByteArray) st_blk = NULL;
+	g_autoptr(FuStructWtaBlockHeader) st_blk = NULL;
 
 	/* generate chunks off of the raw block data */
 	st_blk = fu_struct_wta_block_header_parse(info->buf, info->bufsz, info->offset, error);

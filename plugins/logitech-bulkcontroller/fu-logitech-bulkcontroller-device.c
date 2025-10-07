@@ -542,7 +542,8 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 {
 	gsize actual_length = 0;
 	g_autofree guint8 *buf_tmp = g_malloc0(self->transfer_bufsz);
-	GByteArray buf_ack = {.data = buf_tmp, .len = self->transfer_bufsz};
+	FuStructLogitechBulkcontrollerUpdateRes buf_ack = {.data = buf_tmp,
+							   .len = self->transfer_bufsz};
 	g_autoptr(FuStructLogitechBulkcontrollerUpdateReq) buf_pkt =
 	    fu_struct_logitech_bulkcontroller_update_req_new();
 

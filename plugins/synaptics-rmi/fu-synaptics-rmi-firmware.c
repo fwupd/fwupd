@@ -124,7 +124,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf;
 	guint32 signature_size;
-	g_autoptr(GByteArray) st_dsc = NULL;
+	g_autoptr(FuStructRmiContainerDescriptor) st_dsc = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
@@ -189,7 +189,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuFirmware *firmware,
 		guint32 content_addr;
 		guint32 addr;
 		guint32 length;
-		g_autoptr(GByteArray) st_dsc2 = NULL;
+		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
 		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
@@ -363,7 +363,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuFirmware *firmware,
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	guint32 cfg_sz;
 	guint32 img_sz;
-	g_autoptr(GByteArray) st_img = NULL;
+	g_autoptr(FuStructRmiImg) st_img = NULL;
 
 	/* main firmware */
 	st_img = fu_struct_rmi_img_parse_stream(stream, 0x0, error);
@@ -417,7 +417,7 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
 	gsize bufsz = 0;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st_img = NULL;
+	g_autoptr(FuStructRmiImg) st_img = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
@@ -519,7 +519,7 @@ fu_synaptics_rmi_firmware_write_v0x(FuFirmware *firmware, GError **error)
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_img = fu_struct_rmi_img_new();
+	g_autoptr(FuStructRmiImg) st_img = fu_struct_rmi_img_new();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* default image */
@@ -563,8 +563,9 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) desc_hdr = fu_struct_rmi_container_descriptor_new();
-	g_autoptr(GByteArray) desc = fu_struct_rmi_container_descriptor_new();
+	g_autoptr(FuStructRmiContainerDescriptor) desc_hdr =
+	    fu_struct_rmi_container_descriptor_new();
+	g_autoptr(FuStructRmiContainerDescriptor) desc = fu_struct_rmi_container_descriptor_new();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* header | desc_hdr | offset_table | desc | flash_config |

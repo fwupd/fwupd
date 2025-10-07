@@ -36,7 +36,7 @@ fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 				   GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructAcpiPhatVersionElement) st = NULL;
 
 	/* unpack */
 	st = fu_struct_acpi_phat_version_element_parse_stream(stream, 0x0, error);
@@ -55,7 +55,7 @@ static GByteArray *
 fu_acpi_phat_version_element_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhatVersionElement *self = FU_ACPI_PHAT_VERSION_ELEMENT(firmware);
-	g_autoptr(GByteArray) st = fu_struct_acpi_phat_version_element_new();
+	g_autoptr(FuStructAcpiPhatVersionElement) st = fu_struct_acpi_phat_version_element_new();
 
 	/* pack */
 	if (self->guid != NULL) {

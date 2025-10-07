@@ -14,7 +14,7 @@
 
 struct _FuCcgxDmcDevxDevice {
 	FuDevice parent_instance;
-	GByteArray *status; /* DmcDevxStatus */
+	FuStructCcgxDmcDevxStatus *status;
 };
 
 G_DEFINE_TYPE(FuCcgxDmcDevxDevice, fu_ccgx_dmc_devx_device, FU_TYPE_DEVICE)

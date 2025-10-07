@@ -37,10 +37,10 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	g_autofree gchar *configid2_str = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
-	g_autoptr(GByteArray) st_request = fu_struct_synaprom_request_new();
-	g_autoptr(GByteArray) st_cfg = NULL;
-	g_autoptr(GByteArray) st_hdr = NULL;
-	g_autoptr(GByteArray) st_cmd = fu_struct_synaprom_cmd_iota_find_new();
+	g_autoptr(FuStructSynapromRequest) st_request = fu_struct_synaprom_request_new();
+	g_autoptr(FuStructSynapromIotaConfigVersion) st_cfg = NULL;
+	g_autoptr(FuStructSynapromReplyIotaFindHdr) st_hdr = NULL;
+	g_autoptr(FuStructSynapromCmdIotaFind) st_cmd = fu_struct_synaprom_cmd_iota_find_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* get IOTA */
@@ -115,7 +115,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG(device);
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructSynapromCfgHdr) st_hdr = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new();
 	g_autoptr(FuFirmware) img_hdr = NULL;

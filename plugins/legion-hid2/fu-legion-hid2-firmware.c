@@ -46,8 +46,8 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_sig = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
-	g_autoptr(GByteArray) header = NULL;
-	g_autoptr(GByteArray) version = NULL;
+	g_autoptr(FuStructLegionHid2Header) header = NULL;
+	g_autoptr(FuStructLegionHid2Version) version = NULL;
 
 	header = fu_struct_legion_hid2_header_parse_stream(stream, 0x0, error);
 	if (header == NULL)

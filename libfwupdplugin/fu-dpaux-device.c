@@ -99,7 +99,8 @@ fu_dpaux_device_setup(FuDevice *device, GError **error)
 	FuDpauxDevice *self = FU_DPAUX_DEVICE(device);
 	FuDpauxDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 buf[FU_STRUCT_DPAUX_DPCD_SIZE] = {0x0};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructDpauxDpcd) st = NULL;
+
 	/* ignore all Framework FRANDGCP07 BIOS version 3.02 */
 	if (fu_device_get_name(device) != NULL &&
 	    g_str_has_prefix(fu_device_get_name(device), "AMDGPU DM") &&

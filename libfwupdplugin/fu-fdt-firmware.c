@@ -236,7 +236,7 @@ fu_fdt_firmware_parse_dt_struct(FuFdtFirmware *self, GBytes *fw, GByteArray *str
 			guint32 prop_nameoff;
 			g_autoptr(GBytes) blob = NULL;
 			g_autoptr(GString) str = NULL;
-			g_autoptr(GByteArray) st_prp = NULL;
+			g_autoptr(FuStructFdtProp) st_prp = NULL;
 
 			/* sanity check */
 			if (firmware_current == FU_FIRMWARE(self)) {
@@ -304,7 +304,7 @@ fu_fdt_firmware_parse_mem_rsvmap(FuFdtFirmware *self,
 	for (; offset < streamsz; offset += FU_STRUCT_FDT_RESERVE_ENTRY_SIZE) {
 		guint64 address = 0;
 		guint64 size = 0;
-		g_autoptr(GByteArray) st_res = NULL;
+		g_autoptr(FuStructFdtReserveEntry) st_res = NULL;
 		st_res = fu_struct_fdt_reserve_entry_parse_stream(stream, offset, error);
 		if (st_res == NULL)
 			return FALSE;
@@ -336,7 +336,7 @@ fu_fdt_firmware_parse(FuFirmware *firmware,
 	guint32 totalsize;
 	gsize streamsz = 0;
 	guint32 off_mem_rsvmap = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructFdt) st_hdr = NULL;
 
 	/* sanity check */
 	st_hdr = fu_struct_fdt_parse_stream(stream, 0x0, error);
@@ -470,7 +470,7 @@ fu_fdt_firmware_write_image(FuFdtFirmware *self,
 	for (guint i = 0; i < attrs->len; i++) {
 		const gchar *key = g_ptr_array_index(attrs, i);
 		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(GByteArray) st_prp = fu_struct_fdt_prop_new();
+		g_autoptr(FuStructFdtProp) st_prp = fu_struct_fdt_prop_new();
 
 		blob = fu_fdt_image_get_attr(img, key, error);
 		if (blob == NULL)
@@ -508,8 +508,8 @@ fu_fdt_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) dt_struct = g_byte_array_new();
 	g_autoptr(GHashTable) strtab = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
-	g_autoptr(GByteArray) st_hdr = fu_struct_fdt_new();
-	g_autoptr(GByteArray) mem_rsvmap = fu_struct_fdt_reserve_entry_new();
+	g_autoptr(FuStructFdt) st_hdr = fu_struct_fdt_new();
+	g_autoptr(FuStructFdtReserveEntry) mem_rsvmap = fu_struct_fdt_reserve_entry_new();
 	FuFdtFirmwareBuildHelper helper = {
 	    .dt_strings = dt_strings,
 	    .dt_struct = dt_struct,

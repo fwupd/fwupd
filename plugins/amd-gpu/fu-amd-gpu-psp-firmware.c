@@ -52,7 +52,7 @@ fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
 				 gsize offset,
 				 GError **error)
 {
-	g_autoptr(GByteArray) efs = NULL;
+	g_autoptr(FuStructEfs) efs = NULL;
 
 	efs = fu_struct_efs_parse_stream(stream, 0, error);
 	if (efs == NULL)
@@ -192,7 +192,7 @@ fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 			      GError **error)
 {
 	FuAmdGpuPspFirmware *self = FU_AMD_GPU_PSP_FIRMWARE(firmware);
-	g_autoptr(GByteArray) efs = NULL;
+	g_autoptr(FuStructEfs) efs = NULL;
 
 	efs = fu_struct_efs_parse_stream(stream, 0, error);
 	if (efs == NULL)

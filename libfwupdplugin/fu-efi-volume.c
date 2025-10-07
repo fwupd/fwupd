@@ -149,7 +149,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	guint64 fv_length = 0;
 	guint8 alignment;
 	g_autofree gchar *guid_str = NULL;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructEfiVolume) st_hdr = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 
 	/* parse */
@@ -228,7 +228,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 
 	/* extended header items */
 	if (fu_struct_efi_volume_get_ext_hdr(st_hdr) != 0) {
-		g_autoptr(GByteArray) st_ext_hdr = NULL;
+		g_autoptr(FuStructEfiVolumeExtHeader) st_ext_hdr = NULL;
 		goffset offset_ext = fu_struct_efi_volume_get_ext_hdr(st_hdr);
 		st_ext_hdr =
 		    fu_struct_efi_volume_ext_header_parse_stream(stream, offset_ext, error);
@@ -236,7 +236,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 			return FALSE;
 		offset_ext += fu_struct_efi_volume_ext_header_get_size(st_ext_hdr);
 		do {
-			g_autoptr(GByteArray) st_ext_entry = NULL;
+			g_autoptr(FuStructEfiVolumeExtEntry) st_ext_entry = NULL;
 			st_ext_entry =
 			    fu_struct_efi_volume_ext_entry_parse_stream(stream, offset_ext, error);
 			if (st_ext_entry == NULL)
@@ -304,7 +304,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	while (offset < streamsz) {
 		guint32 num_blocks;
 		guint32 length;
-		g_autoptr(GByteArray) st_blk = NULL;
+		g_autoptr(FuStructEfiVolumeBlockMap) st_blk = NULL;
 		st_blk = fu_struct_efi_volume_block_map_parse_stream(stream, offset, error);
 		if (st_blk == NULL)
 			return FALSE;

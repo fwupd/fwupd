@@ -97,7 +97,7 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
 	gsize dp_length;
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiDevicePath) st = NULL;
 
 	/* parse */
 	st = fu_struct_efi_device_path_parse_stream(stream, 0x0, error);
@@ -142,7 +142,7 @@ fu_efi_device_path_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(firmware);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = fu_struct_efi_device_path_new();
+	g_autoptr(FuStructEfiDevicePath) st = fu_struct_efi_device_path_new();
 	g_autoptr(GBytes) payload = NULL;
 
 	/* required */

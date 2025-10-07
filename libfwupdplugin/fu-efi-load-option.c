@@ -298,7 +298,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	g_autofree gchar *id = NULL;
 	g_autoptr(FuEfiDevicePathList) device_path_list = fu_efi_device_path_list_new();
 	g_autoptr(GByteArray) buf_utf16 = g_byte_array_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructEfiLoadOption) st = NULL;
 
 	/* parse header */
 	st = fu_struct_efi_load_option_parse_stream(stream, offset, error);
@@ -416,7 +416,7 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiLoadOption *self = FU_EFI_LOAD_OPTION(firmware);
 	g_autoptr(GByteArray) buf_utf16 = NULL;
-	g_autoptr(GByteArray) st = fu_struct_efi_load_option_new();
+	g_autoptr(FuStructEfiLoadOption) st = fu_struct_efi_load_option_new();
 	g_autoptr(GBytes) dpbuf = NULL;
 
 	/* header */

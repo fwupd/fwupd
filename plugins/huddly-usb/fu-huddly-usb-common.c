@@ -15,7 +15,7 @@ fu_huddly_usb_hlink_msg_free(FuHuddlyUsbHLinkMsg *msg)
 {
 	g_free(msg->msg_name);
 	if (msg->header != NULL)
-		g_byte_array_unref(msg->header);
+		fu_struct_h_link_header_unref(msg->header);
 	if (msg->payload != NULL)
 		g_byte_array_unref(msg->payload);
 	g_free(msg);

@@ -146,7 +146,7 @@ fu_kinetic_dp_secure_firmware_parse_app_fw(FuKineticDpSecureFirmware *self,
 	gsize streamsz = 0;
 	guint32 app_code_block_size;
 	guint32 std_fw_ver = 0;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpJaguarFooter) st = NULL;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))

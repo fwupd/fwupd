@@ -92,7 +92,7 @@ fu_ch347_device_read(FuCh347Device *self,
 {
 	gsize actual_length = 0;
 	guint16 size_rsp;
-	g_autoptr(GByteArray) st = fu_struct_ch347_req_new();
+	g_autoptr(FuStructCh347Req) st = fu_struct_ch347_req_new();
 
 	/* pack */
 	fu_struct_ch347_req_set_cmd(st, cmd);

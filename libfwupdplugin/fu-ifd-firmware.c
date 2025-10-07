@@ -163,8 +163,8 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	FuIfdFirmware *self = FU_IFD_FIRMWARE(firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
-	g_autoptr(GByteArray) st_fcba = NULL;
-	g_autoptr(GByteArray) st_fdbar = NULL;
+	g_autoptr(FuStructIfdFcba) st_fcba = NULL;
+	g_autoptr(FuStructIfdFdbar) st_fdbar = NULL;
 	g_autoptr(GInputStream) stream2 = NULL;
 
 	/* check size */
@@ -321,8 +321,8 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz_max = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_fcba = fu_struct_ifd_fcba_new();
-	g_autoptr(GByteArray) st_fdbar = fu_struct_ifd_fdbar_new();
+	g_autoptr(FuStructIfdFcba) st_fcba = fu_struct_ifd_fcba_new();
+	g_autoptr(FuStructIfdFdbar) st_fdbar = fu_struct_ifd_fdbar_new();
 	g_autoptr(GHashTable) blobs = NULL;
 	g_autoptr(FuFirmware) img_desc = NULL;
 

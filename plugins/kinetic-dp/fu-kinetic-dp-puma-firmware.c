@@ -109,7 +109,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	guint8 checksum_actual;
 	guint8 cmdb_sig[FU_KINETIC_DP_PUMA_REQUEST_FW_CMDB_SIG_SIZE] = {'P', 'M', 'D', 'B'};
 	g_autoptr(GByteArray) cmdb_tmp = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpPumaHeader) st = NULL;
 
 	/* sanity check */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -130,7 +130,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 	offset += st->len;
 	code_size += FU_STRUCT_KINETIC_DP_PUMA_HEADER_SIZE;
 	for (guint i = 0; i < FU_STRUCT_KINETIC_DP_PUMA_HEADER_DEFAULT_OBJECT_COUNT; i++) {
-		g_autoptr(GByteArray) st_obj =
+		g_autoptr(FuStructKineticDpPumaHeaderInfo) st_obj =
 		    fu_struct_kinetic_dp_puma_header_info_parse_stream(stream, offset, error);
 		if (st_obj == NULL)
 			return FALSE;

@@ -539,7 +539,7 @@ fu_wistron_dock_device_parse_wdit_img(FuWistronDockDevice *self,
 		g_autofree gchar *version0 = NULL;
 		g_autofree gchar *version1 = NULL;
 		g_autofree gchar *version2 = NULL;
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructWistronDockWditImg) st = NULL;
 
 		/* parse */
 		st = fu_struct_wistron_dock_wdit_img_parse(buf, bufsz, offset, error);
@@ -579,7 +579,7 @@ fu_wistron_dock_device_ensure_wdit(FuWistronDockDevice *self, GError **error)
 {
 	guint8 update_state = 0x0;
 	guint8 buf[FU_WISTRON_DOCK_WDIT_SIZE + 1] = {FU_WISTRON_DOCK_ID_DOCK_WDIT};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructWistronDockWdit) st = NULL;
 
 	/* get WDIT */
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
