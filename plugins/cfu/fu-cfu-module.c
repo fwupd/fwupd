@@ -36,7 +36,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 {
 	FuDevice *device = FU_DEVICE(self);
 	g_autofree gchar *logical_id = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCfuGetVersionRspComponent) st = NULL;
 
 	/* parse */
 	st = fu_struct_cfu_get_version_rsp_component_parse(buf, bufsz, offset, error);

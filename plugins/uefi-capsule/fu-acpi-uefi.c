@@ -38,7 +38,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 {
 	const gchar *needle = "$QUIRK";
 	gsize data_offset = 0;
-	g_autoptr(GByteArray) st_qrk = NULL;
+	g_autoptr(FuStructAcpiInsydeQuirk) st_qrk = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);

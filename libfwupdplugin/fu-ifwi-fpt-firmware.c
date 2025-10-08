@@ -50,7 +50,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 {
 	guint32 num_of_entries;
 	gsize offset = 0;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructIfwiFpt) st_hdr = NULL;
 
 	/* sanity check */
 	st_hdr = fu_struct_ifwi_fpt_parse_stream(stream, offset, error);
@@ -84,7 +84,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 		guint32 partition_name;
 		g_autofree gchar *id = NULL;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GByteArray) st_ent = NULL;
+		g_autoptr(FuStructIfwiFptEntry) st_ent = NULL;
 
 		/* read IDX */
 		st_ent = fu_struct_ifwi_fpt_entry_parse_stream(stream, offset, error);
@@ -128,7 +128,7 @@ static GByteArray *
 fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
-	g_autoptr(GByteArray) buf = fu_struct_ifwi_fpt_new();
+	g_autoptr(FuStructIfwiFpt) buf = fu_struct_ifwi_fpt_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* fixup the image offsets */

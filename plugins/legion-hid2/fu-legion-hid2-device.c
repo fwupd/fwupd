@@ -62,8 +62,8 @@ fu_legion_hid2_device_convert_version(FuDevice *device, guint64 version_raw)
 static gboolean
 fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_get_version_new();
-	g_autoptr(GByteArray) result = fu_struct_legion_version_new();
+	g_autoptr(FuStructLegionGetVersion) cmd = fu_struct_legion_get_version_new();
+	g_autoptr(FuStructLegionVersion) result = fu_struct_legion_version_new();
 
 	if (!fu_legion_hid2_device_transfer(self, cmd, result, error))
 		return FALSE;
@@ -79,9 +79,9 @@ fu_legion_hid2_device_ensure_version(FuLegionHid2Device *self, GError **error)
 static void
 fu_legion_hid2_device_setup_touchpad_direct(FuLegionHid2Device *self)
 {
-	g_autoptr(GByteArray) cmd = fu_struct_legion_get_pl_test_new();
-	g_autoptr(GByteArray) tp_man = fu_struct_legion_get_pl_test_result_new();
-	g_autoptr(GByteArray) tp_ver = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTest) cmd = fu_struct_legion_get_pl_test_new();
+	g_autoptr(FuStructLegionGetPlTestResult) tp_man = fu_struct_legion_get_pl_test_result_new();
+	g_autoptr(FuStructLegionGetPlTestResult) tp_ver = fu_struct_legion_get_pl_test_result_new();
 	g_autoptr(FuDevice) child = NULL;
 	g_autoptr(GError) error_child = NULL;
 
@@ -274,8 +274,8 @@ fu_legion_hid2_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_legion_hid2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(GByteArray) cmd = NULL;
-	g_autoptr(GByteArray) result = NULL;
+	g_autoptr(FuStructLegionStartIap) cmd = NULL;
+	g_autoptr(FuStructLegionIapResult) result = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	cmd = fu_struct_legion_start_iap_new();

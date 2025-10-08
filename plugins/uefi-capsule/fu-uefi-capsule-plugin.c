@@ -396,8 +396,8 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
-	g_autoptr(GByteArray) st_cap = fu_struct_efi_capsule_header_new();
-	g_autoptr(GByteArray) st_uxh = fu_struct_efi_ux_capsule_header_new();
+	g_autoptr(FuStructEfiCapsuleHeader) st_cap = fu_struct_efi_capsule_header_new();
+	g_autoptr(FuStructEfiUxCapsuleHeader) st_uxh = fu_struct_efi_ux_capsule_header_new();
 	g_autoptr(GOutputStream) ostream = NULL;
 
 	/* get screen dimensions */

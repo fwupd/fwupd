@@ -170,7 +170,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FuFirmwareParseFlags flags
 	guint32 rcd_version_idx = 0;
 	guint32 version = 0;
 	guint8 checksum_calc = 0;
-	g_autoptr(GByteArray) st_metadata = NULL;
+	g_autoptr(FuStructCcgxMetadataHdr) st_metadata = NULL;
 
 	/* sanity check */
 	if (self->records->len == 0) {
@@ -410,7 +410,7 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	const guint8 *fwbuf;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) mdbuf = g_byte_array_new();
-	g_autoptr(GByteArray) st_metadata = fu_struct_ccgx_metadata_hdr_new();
+	g_autoptr(FuStructCcgxMetadataHdr) st_metadata = fu_struct_ccgx_metadata_hdr_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);

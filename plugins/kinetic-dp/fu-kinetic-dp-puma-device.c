@@ -222,7 +222,7 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
 					 GError **error)
 {
 	guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
 	self->flash_id = 0;
 	self->flash_size = 0;
@@ -321,7 +321,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 	if (fu_kinetic_dp_device_get_fw_state(FU_KINETIC_DP_DEVICE(self)) ==
 	    FU_KINETIC_DP_FW_STATE_APP) {
 		guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
-		g_autoptr(GByteArray) st = NULL;
+		g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
 		/* Puma takes about 18ms (Winbond EF13) to get ISP driver ready for flash info */
 		fu_device_sleep(FU_DEVICE(self), 18);

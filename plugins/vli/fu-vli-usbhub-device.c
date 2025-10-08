@@ -26,8 +26,8 @@ struct _FuVliUsbhubDevice {
 	FuVliDevice parent_instance;
 	gboolean disable_powersave;
 	guint8 update_protocol;
-	GByteArray *st_hd1; /* factory */
-	GByteArray *st_hd2; /* update */
+	FuStructVliUsbhubHdr *st_hd1; /* factory */
+	FuStructVliUsbhubHdr *st_hd2; /* update */
 };
 
 G_DEFINE_TYPE(FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
@@ -991,7 +991,7 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_hd1_is_valid(GByteArray *hdr)
+fu_vli_usbhub_device_hd1_is_valid(FuStructVliUsbhubHdr *hdr)
 {
 	if (fu_struct_vli_usbhub_hdr_get_prev_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_INVALID)
 		return FALSE;
@@ -1002,7 +1002,7 @@ fu_vli_usbhub_device_hd1_is_valid(GByteArray *hdr)
 
 static gboolean
 fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
-				 GByteArray *hdr,
+				 FuStructVliUsbhubHdr *hdr,
 				 FuProgress *progress,
 				 GError **error)
 {
@@ -1051,7 +1051,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	guint32 hd2_fw_addr;
 	guint32 hd2_fw_offset;
 	const guint8 *buf_fw;
-	g_autoptr(GByteArray) st_hd = NULL;
+	g_autoptr(FuStructVliUsbhubHdr) st_hd = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
@@ -1209,7 +1209,7 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	guint32 hd2_fw_addr;
 	guint32 hd2_fw_offset;
 	const guint8 *buf_fw;
-	g_autoptr(GByteArray) st_hd = NULL;
+	g_autoptr(FuStructVliUsbhubHdr) st_hd = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
@@ -1438,8 +1438,8 @@ static void
 fu_vli_usbhub_device_finalize(GObject *obj)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE(obj);
-	g_byte_array_unref(self->st_hd1);
-	g_byte_array_unref(self->st_hd2);
+	fu_struct_vli_usbhub_hdr_unref(self->st_hd1);
+	fu_struct_vli_usbhub_hdr_unref(self->st_hd2);
 	G_OBJECT_CLASS(fu_vli_usbhub_device_parent_class)->finalize(obj);
 }
 

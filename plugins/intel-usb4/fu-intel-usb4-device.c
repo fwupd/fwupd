@@ -97,7 +97,7 @@ fu_intel_usb4_device_get_mmio(FuIntelUsb4Device *self,
 	}
 	/* verify status for specific hub mailbox register */
 	if (mbox_reg == MBOX_REG) {
-		g_autoptr(GByteArray) st_regex = NULL;
+		g_autoptr(FuStructIntelUsb4Mbox) st_regex = NULL;
 
 		st_regex = fu_struct_intel_usb4_mbox_parse(buf, bufsz, 0x0, error);
 		if (st_regex == NULL)
@@ -226,7 +226,7 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 			       GError **error)
 {
 	gint max_tries = 100;
-	g_autoptr(GByteArray) st_regex = fu_struct_intel_usb4_mbox_new();
+	g_autoptr(FuStructIntelUsb4Mbox) st_regex = fu_struct_intel_usb4_mbox_new();
 
 	/* Write metadata register for operations that use it */
 	switch (opcode) {

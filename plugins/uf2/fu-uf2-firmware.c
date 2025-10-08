@@ -224,7 +224,7 @@ fu_uf2_firmware_write_chunk(FuUf2Firmware *self, FuChunk *chk, guint chk_len, GE
 	gsize offset_ext = FU_STRUCT_UF2_OFFSET_DATA + fu_chunk_get_data_sz(chk);
 	guint32 addr = fu_firmware_get_addr(FU_FIRMWARE(self));
 	guint32 flags = FU_UF2_FIRMWARE_BLOCK_FLAG_NONE;
-	g_autoptr(GByteArray) st = fu_struct_uf2_new();
+	g_autoptr(FuStructUf2) st = fu_struct_uf2_new();
 	g_autoptr(GPtrArray) extensions =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_struct_uf2_extension_unref);
 

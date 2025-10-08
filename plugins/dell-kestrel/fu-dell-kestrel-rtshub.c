@@ -32,7 +32,7 @@ fu_dell_kestrel_rtshub_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtshub *self, gboolean enable, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
 	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_MCUMODIFYCLOCK);
@@ -55,7 +55,7 @@ fu_dell_kestrel_rtshub_set_clock_mode(FuDellKestrelRtshub *self, gboolean enable
 static gboolean
 fu_dell_kestrel_rtshub_erase_spare_bank(FuDellKestrelRtshub *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
 	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_ERASEBANK);
@@ -80,7 +80,7 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 					FuProgress *progress,
 					GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
 	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_VERIFYUPDATE);
@@ -118,7 +118,7 @@ fu_dell_kestrel_rtshub_verify_update_fw(FuDellKestrelRtshub *self,
 static gboolean
 fu_dell_kestrel_rtshub_reset_device(FuDellKestrelRtshub *self, GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_WRITE_DATA);
 	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_RESET_TO_FLASH);
@@ -144,7 +144,7 @@ fu_dell_kestrel_rtshub_write_flash(FuDellKestrelRtshub *self,
 				   guint16 data_sz,
 				   GError **error)
 {
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	g_return_val_if_fail(data_sz <= 128, FALSE);
 	g_return_val_if_fail(data != NULL, FALSE);
@@ -265,7 +265,7 @@ fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
 {
 	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	g_autofree gchar *version = NULL;
-	g_autoptr(GByteArray) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
+	g_autoptr(FuStructRtshubHidCmdBuf) cmd_buf = fu_struct_rtshub_hid_cmd_buf_new();
 
 	fu_struct_rtshub_hid_cmd_buf_set_cmd(cmd_buf, RTSHUB_CMD_READ_DATA);
 	fu_struct_rtshub_hid_cmd_buf_set_ext(cmd_buf, RTSHUB_EXT_READ_STATUS);

@@ -516,7 +516,7 @@ fu_kinetic_dp_secure_device_execute_isp_drv(FuKineticDpSecureDevice *self, GErro
 	guint8 status;
 	guint8 read_len;
 	guint8 reply_data[6] = {0};
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
 	/* in Jaguar, it takes about FU_KINETIC_DP_DEVICE_TIMEOUT ms to boot up and initialize */
 	self->flash_id = 0;

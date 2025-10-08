@@ -295,7 +295,7 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 	guint8 buf[FU_STRUCT_SYNAPTICS_CXAUDIO_STRING_HEADER_SIZE] = {0};
 	guint8 header_length;
 	g_autofree gchar *str = NULL;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructSynapticsCxaudioStringHeader) st = NULL;
 
 	/* read header */
 	if (!fu_synaptics_cxaudio_device_operation(self,
@@ -396,8 +396,8 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *summary = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autofree gchar *version_patch = NULL;
-	g_autoptr(GByteArray) st_inf = NULL;
-	g_autoptr(GByteArray) st_sig = NULL;
+	g_autoptr(FuStructSynapticsCxaudioCustomInfo) st_inf = NULL;
+	g_autoptr(FuStructSynapticsCxaudioValiditySignature) st_sig = NULL;
 	guint8 cinfo[FU_STRUCT_SYNAPTICS_CXAUDIO_CUSTOM_INFO_SIZE] = {0x0};
 
 	/* FuUsbDevice->setup */
@@ -747,7 +747,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 	 * as it may have not been done by the S37 file */
 	if (file_kind == FU_SYNAPTICS_CXAUDIO_FILE_KIND_CX2070X_FW) {
 		guint8 buf[FU_STRUCT_SYNAPTICS_CXAUDIO_PATCH_INFO_SIZE] = {0};
-		g_autoptr(GByteArray) st_pat = NULL;
+		g_autoptr(FuStructSynapticsCxaudioPatchInfo) st_pat = NULL;
 
 		if (!fu_synaptics_cxaudio_device_operation(
 			self,

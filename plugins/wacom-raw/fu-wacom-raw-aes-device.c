@@ -77,8 +77,9 @@ fu_wacom_raw_aes_device_query_operation_mode(FuWacomRawAesDevice *self,
 					     FuWacomRawOperationMode *mode,
 					     GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_wacom_raw_fw_query_mode_request_new();
-	g_autoptr(GByteArray) st_rsp = NULL;
+	g_autoptr(FuStructWacomRawFwQueryModeRequest) st_req =
+	    fu_struct_wacom_raw_fw_query_mode_request_new();
+	g_autoptr(FuStructWacomRawFwQueryModeResponse) st_rsp = NULL;
 
 	if (!fu_wacom_raw_device_get_feature(FU_WACOM_RAW_DEVICE(self),
 					     st_req->data,

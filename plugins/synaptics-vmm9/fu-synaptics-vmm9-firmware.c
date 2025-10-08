@@ -49,7 +49,7 @@ fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
 				 GError **error)
 {
 	FuSynapticsVmm9Firmware *self = FU_SYNAPTICS_VMM9_FIRMWARE(firmware);
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructSynapticsVmm9) st_hdr = NULL;
 	guint8 version_major = 0;
 	guint8 version_minor = 0;
 	guint16 version_micro = 0;

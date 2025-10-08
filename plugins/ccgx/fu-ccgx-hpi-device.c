@@ -1268,7 +1268,7 @@ fu_ccgx_hpi_device_write_firmware(FuDevice *device,
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
 	FuCcgxFwMode fw_mode_alt = fu_ccgx_fw_mode_get_alternate(self->fw_mode);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GByteArray) st_metadata = fu_struct_ccgx_metadata_hdr_new();
+	g_autoptr(FuStructCcgxMetadataHdr) st_metadata = fu_struct_ccgx_metadata_hdr_new();
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);

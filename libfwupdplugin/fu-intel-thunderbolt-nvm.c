@@ -571,10 +571,11 @@ fu_intel_thunderbolt_nvm_write(FuFirmware *firmware, GError **error)
 {
 	FuIntelThunderboltNvm *self = FU_INTEL_THUNDERBOLT_NVM(firmware);
 	FuIntelThunderboltNvmPrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = fu_intel_thunderbolt_nvm_digital_new();
-	g_autoptr(GByteArray) st_drom = fu_intel_thunderbolt_nvm_drom_new();
-	g_autoptr(GByteArray) st_arc = fu_intel_thunderbolt_nvm_arc_params_new();
-	g_autoptr(GByteArray) st_dram = fu_intel_thunderbolt_nvm_dram_new();
+	g_autoptr(FuIntelThunderboltNvmDigital) st = fu_intel_thunderbolt_nvm_digital_new();
+	g_autoptr(FuIntelThunderboltNvmDrom) st_drom = fu_intel_thunderbolt_nvm_drom_new();
+	g_autoptr(FuIntelThunderboltNvmArcParams) st_arc =
+	    fu_intel_thunderbolt_nvm_arc_params_new();
+	g_autoptr(FuIntelThunderboltNvmDram) st_dram = fu_intel_thunderbolt_nvm_dram_new();
 
 	/* digital section */
 	fu_intel_thunderbolt_nvm_digital_set_available_sections(

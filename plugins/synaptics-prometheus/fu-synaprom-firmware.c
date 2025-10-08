@@ -74,7 +74,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		guint32 tag;
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(FuFirmware) img_old = NULL;
-		g_autoptr(GByteArray) st_hdr = NULL;
+		g_autoptr(FuStructSynapromHdr) st_hdr = NULL;
 		g_autoptr(GInputStream) partial_stream = NULL;
 
 		/* verify item header */
@@ -128,7 +128,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 		/* metadata */
 		if (tag == FU_SYNAPROM_FIRMWARE_TAG_MFW_UPDATE_HEADER) {
 			g_autofree gchar *version = NULL;
-			g_autoptr(GByteArray) st_mfw = NULL;
+			g_autoptr(FuStructSynapromMfwHdr) st_mfw = NULL;
 			st_mfw = fu_struct_synaprom_mfw_hdr_parse_stream(stream, offset, error);
 			if (st_mfw == NULL)
 				return FALSE;
@@ -150,8 +150,8 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GByteArray) st_hdr = fu_struct_synaprom_hdr_new();
-	g_autoptr(GByteArray) st_mfw = fu_struct_synaprom_mfw_hdr_new();
+	g_autoptr(FuStructSynapromHdr) st_hdr = fu_struct_synaprom_hdr_new();
+	g_autoptr(FuStructSynapromMfwHdr) st_mfw = fu_struct_synaprom_mfw_hdr_new();
 	g_autoptr(GBytes) payload = NULL;
 
 	/* add header */

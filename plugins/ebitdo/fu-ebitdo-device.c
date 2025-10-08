@@ -37,7 +37,7 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 {
 	gsize actual_length;
 	guint8 ep_out = FU_EBITDO_USB_RUNTIME_EP_OUT;
-	g_autoptr(GByteArray) st_hdr = fu_struct_ebitdo_pkt_new();
+	g_autoptr(FuStructEbitdoPkt) st_hdr = fu_struct_ebitdo_pkt_new();
 	g_autoptr(GError) error_local = NULL;
 
 	fu_byte_array_set_size(st_hdr, FU_EBITDO_USB_EP_SIZE, 0x0);
@@ -107,7 +107,7 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 	guint8 packet[FU_EBITDO_USB_EP_SIZE] = {0};
 	gsize actual_length;
 	guint8 ep_in = FU_EBITDO_USB_RUNTIME_EP_IN;
-	g_autoptr(GByteArray) st_hdr = NULL;
+	g_autoptr(FuStructEbitdoPkt) st_hdr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* different */

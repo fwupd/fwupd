@@ -59,7 +59,7 @@ G_DEFINE_TYPE(FuMediatekScalerDevice, fu_mediatek_scaler_device, FU_TYPE_DRM_DEV
 
 static gboolean
 fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
-				    GByteArray *st_req,
+				    FuStructDdcCmd *st_req,
 				    GError **error)
 {
 	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
@@ -86,7 +86,9 @@ fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
 }
 
 static GByteArray *
-fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self, GByteArray *st_req, GError **error)
+fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
+				   FuStructDdcCmd *st_req,
+				   GError **error)
 {
 	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
 	guint8 buf[0x40] = {0x00}; /* default 64 bytes */
@@ -172,7 +174,7 @@ fu_mediatek_scaler_device_set_ddc_priority(FuMediatekScalerDevice *self,
 					   FuDdcciPriority priority,
 					   GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GError) error_local = NULL;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_PRIORITY);
@@ -195,7 +197,7 @@ static gboolean
 fu_mediatek_scaler_device_display_is_connected(FuMediatekScalerDevice *self, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 	guint8 randval_req = 0;
@@ -247,7 +249,7 @@ static gchar *
 fu_mediatek_scaler_device_get_hardware_version(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 	guint8 verbuf[4] = {0};
 
@@ -273,7 +275,7 @@ fu_mediatek_scaler_device_ensure_firmware_version(FuMediatekScalerDevice *self, 
 {
 	guint32 version_raw = 0x0;
 	g_autoptr(GByteArray) st_res = NULL;
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 
 	/* get the installed firmware version */
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_VERSION);
@@ -343,7 +345,7 @@ fu_mediatek_scaler_device_close(FuDevice *device, GError **error)
 static gboolean
 fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
 	guint32 controller_type = 0;
@@ -416,7 +418,7 @@ static gboolean
 fu_mediatek_scaler_device_set_recv_info(FuDevice *device, gsize fw_sz, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_UPDATE_PREP);
 	fu_byte_array_append_uint32(st_req, fw_sz, G_LITTLE_ENDIAN);
 	return fu_mediatek_scaler_device_ddc_write(self, st_req, error);
@@ -426,7 +428,7 @@ static gboolean
 fu_mediatek_scaler_device_get_data_ack_size(FuDevice *device, guint32 *ack_sz, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_UPDATE_ACK);
@@ -495,7 +497,7 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 						   DDC_DATA_FRAGEMENT_SIZE);
 	for (guint i = 0; i < fu_chunk_array_length(chk_slices); i++) {
 		g_autoptr(FuChunk) chk_slice = NULL;
-		g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+		g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 
 		chk_slice = fu_chunk_array_index(chk_slices, i, error);
 		if (chk_slice == NULL)
@@ -519,7 +521,7 @@ fu_mediatek_scaler_device_get_staged_data(FuMediatekScalerDevice *self,
 					  guint32 *pktcnt,
 					  GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_GET_STAGED);
@@ -577,7 +579,7 @@ fu_mediatek_scaler_device_check_sent_info(FuMediatekScalerDevice *self,
 static gboolean
 fu_mediatek_scaler_device_run_isp(FuMediatekScalerDevice *self, guint16 chksum, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_COMMIT_FW);
 	fu_byte_array_append_uint16(st_req, chksum, G_LITTLE_ENDIAN);
 	return fu_mediatek_scaler_device_ddc_write(self, st_req, error);
@@ -603,7 +605,7 @@ fu_mediatek_scaler_device_commit_firmware(FuMediatekScalerDevice *self,
 static gboolean
 fu_mediatek_scaler_device_set_isp_reboot(FuMediatekScalerDevice *self, GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GError) error_local = NULL;
 
 	/* device will reboot after this, so the write will timed out fail */
@@ -624,7 +626,7 @@ fu_mediatek_scaler_device_get_isp_status(FuMediatekScalerDevice *self,
 					 guint8 *isp_status,
 					 GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_GET_ISP_MODE);
@@ -703,7 +705,7 @@ fu_mediatek_scaler_device_set_data_fast_forward(FuMediatekScalerDevice *self,
 						guint32 sent_sz,
 						GError **error)
 {
-	g_autoptr(GByteArray) st_req = fu_struct_ddc_cmd_new();
+	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	fu_struct_ddc_cmd_set_vcp_code(st_req, FU_DDC_VCP_CODE_SET_DATA_FF);
 	fu_byte_array_append_uint32(st_req, sent_sz, G_LITTLE_ENDIAN);
 	return fu_mediatek_scaler_device_ddc_write(self, st_req, error);

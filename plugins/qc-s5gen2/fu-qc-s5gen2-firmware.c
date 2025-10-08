@@ -62,7 +62,7 @@ fu_qc_s5gen2_firmware_parse(FuFirmware *firmware,
 	gsize config_offset = 26;
 	guint16 config_ver;
 	g_autofree gchar *ver_str = NULL;
-	g_autoptr(GByteArray) hdr = NULL;
+	g_autoptr(FuStructQcFwUpdateHdr) hdr = NULL;
 
 	/* FIXME: deal with encrypted? */
 	hdr = fu_struct_qc_fw_update_hdr_parse_stream(stream, 0x0, error);

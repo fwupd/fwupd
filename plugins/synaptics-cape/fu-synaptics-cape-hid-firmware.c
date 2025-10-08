@@ -29,7 +29,7 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	gsize streamsz = 0;
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructSynapticsCapeHidHdr) st = NULL;
 	g_autoptr(GInputStream) stream_hdr = NULL;
 	g_autoptr(GInputStream) stream_body = NULL;
 
@@ -86,7 +86,7 @@ fu_synaptics_cape_hid_firmware_write(FuFirmware *firmware, GError **error)
 {
 	FuSynapticsCapeHidFirmware *self = FU_SYNAPTICS_CAPE_HID_FIRMWARE(firmware);
 	guint64 ver = fu_firmware_get_version_raw(firmware);
-	g_autoptr(GByteArray) buf = fu_struct_synaptics_cape_hid_hdr_new();
+	g_autoptr(FuStructSynapticsCapeHidHdr) buf = fu_struct_synaptics_cape_hid_hdr_new();
 	g_autoptr(GBytes) payload = NULL;
 
 	/* pack */
