@@ -63,8 +63,8 @@ fwupdmgr get-remotes lvfs
 expect_rc 0
 
 # ---
-echo " ● Refreshing from the LVFS (already up to date)…"
-fwupdmgr --download-retries=5 refresh
+echo " ● Refreshing (already up to date)…"
+fwupdmgr refresh /var/lib/fwupd/metadata/lvfs/firmware.xml.zst /var/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
 expect_rc 2
 
 # ---
