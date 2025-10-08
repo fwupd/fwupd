@@ -11,7 +11,8 @@
 #include "fu-bnr-dp-firmware.h"
 #include "fu-bnr-dp-struct.h"
 
-#define FU_BNR_DP_IEEE_OUI 0x006065
+#define FU_BNR_DP_IEEE_OUI    0x006065
+#define FU_BNR_DP_IEEE_DEV_ID "B&R-DP"
 
 #define FU_BNR_DP_DEVICE_HEADER_OFFSET 0x00A00
 #define FU_BNR_DP_DEVICE_DATA_OFFSET   0x00900
@@ -496,12 +497,18 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuStructBnrDpPayloadHeader) st_header = NULL;
 	g_autoptr(FuStructBnrDpFactoryData) st_factory_data = NULL;
 
+	/* this is a sink device, this offset provides the most complete information */
+	fu_dpaux_device_set_dpcd_offset(FU_DPAUX_DEVICE(device),
+					FU_DPAUX_DEVICE_DPCD_OFFSET_SINK_DEVICE);
+
 	/* FuDpauxDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_bnr_dp_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* check if device dpcd matches before writing anything else to the device */
-	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != FU_BNR_DP_IEEE_OUI) {
+	if (fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)) != FU_BNR_DP_IEEE_OUI ||
+	    g_strcmp0(fu_dpaux_device_get_dpcd_dev_id(FU_DPAUX_DEVICE(device)),
+		      FU_BNR_DP_IEEE_DEV_ID) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
