@@ -364,6 +364,19 @@
 }
 {%- endif %}
 
+{%- set export = obj.export('ToBytes') %}
+{%- if export in [Export.PUBLIC, Export.PRIVATE] %}
+/**
+ * {{obj.c_method('ToBytes')}}: (skip):
+ **/
+{{export.value}}GBytes *
+{{obj.c_method('ToBytes')}}(const {{obj.name}} *st)
+{
+    g_return_val_if_fail(st != NULL, NULL);
+    return g_bytes_new(st->data, st->len);
+}
+{%- endif %}
+
 {%- set export = obj.export('ValidateInternal') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
 {{export.value}}gboolean

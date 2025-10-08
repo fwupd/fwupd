@@ -478,7 +478,7 @@ fu_bnr_dp_firmware_patch_boot_counter(FuBnrDpFirmware *self,
 
 	fu_struct_bnr_dp_payload_header_set_crc(st_header, crc);
 
-	patch = g_bytes_new(st_header->data, st_header->len);
+	patch = fu_struct_bnr_dp_payload_header_to_bytes(st_header);
 	fu_firmware_add_patch(FU_FIRMWARE(self), FU_BNR_DP_FIRMWARE_HEADER_OFFSET, patch);
 
 	return TRUE;

@@ -23,7 +23,7 @@ struct FuStructDellKestrelHidCmdBuffer {
     databytes: [u8; 128],
 }
 
-#[derive(New, Setters)]
+#[derive(New, Setters, ToBytes)]
 struct FuStructDellKestrelHidFwUpdatePkg {
     cmd: u8,
     ext: u8,
