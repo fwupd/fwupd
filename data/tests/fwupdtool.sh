@@ -255,8 +255,8 @@ run get-remotes --json --verbose
 expect_rc 0
 
 # ---
-echo " ● Refresh remotes (already up to date)"
-run refresh --json --verbose
+echo " ● Refreshing (already up to date)…"
+run refresh /var/lib/fwupd/metadata/lvfs/firmware.xml.zst /var/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
 expect_rc 2
 
 # ---

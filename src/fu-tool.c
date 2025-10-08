@@ -3791,7 +3791,7 @@ fu_util_refresh_remote(FuUtil *self, FwupdRemote *remote, GError **error)
 }
 
 static gboolean
-fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+fu_util_download_metadata(FuUtil *self, GError **error)
 {
 	guint refresh_cnt = 0;
 	g_autoptr(GPtrArray) remotes = NULL;
@@ -3810,6 +3810,7 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(remotes, i);
+		g_autoptr(GError) error_local = NULL;
 		if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED))
 			continue;
 		if (fwupd_remote_get_kind(remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
@@ -3821,13 +3822,28 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 				(guint)fwupd_remote_get_age(remote));
 			continue;
 		}
-		if (!fu_util_refresh_remote(self, remote, error))
+		if (!fu_util_refresh_remote(self, remote, &error_local)) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring: %s", error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
+		}
 		refresh_cnt++;
 	}
 
 	/* metadata refreshed recently */
-	if ((self->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 && refresh_cnt == 0) {
+	if (refresh_cnt == 0) {
+		if (self->flags & FWUPD_INSTALL_FLAG_FORCE) {
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    /* TRANSLATORS: error message for a user who ran fwupdmgr */
+			    _("Metadata is already up to date"));
+			return FALSE;
+		}
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOTHING_TO_DO,
@@ -3840,6 +3856,47 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+
+	/* just do everything */
+	if (g_strv_length(values) == 0)
+		return fu_util_download_metadata(self, error);
+
+	/* sanity check */
+	if (g_strv_length(values) != 3) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_REMOTES |
+				      FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	/* open files */
+	bytes_raw = fu_bytes_get_contents(values[0], error);
+	if (bytes_raw == NULL)
+		return FALSE;
+	bytes_sig = fu_bytes_get_contents(values[1], error);
+	if (bytes_sig == NULL)
+		return FALSE;
+	return fu_engine_update_metadata_bytes(self->engine,
+					       values[2],
+					       bytes_raw,
+					       bytes_sig,
+					       error);
 }
 
 static gboolean
@@ -5546,7 +5603,8 @@ main(int argc, char *argv[])
 			      fu_util_get_remotes);
 	fu_util_cmd_array_add(cmd_array,
 			      "refresh",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FILE FILE_SIG REMOTE-ID]"),
 			      /* TRANSLATORS: command description */
 			      _("Refresh metadata from remote server"),
 			      fu_util_refresh);
