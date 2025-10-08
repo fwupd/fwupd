@@ -78,6 +78,13 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 			return FALSE;
 	}
 
+	fu_context_set_insecure_uefi(fu_device_get_context(FU_DEVICE(self)), self->has_pk_test_key);
+
+	if (self->has_pk_test_key)
+		fu_device_inhibit(FU_DEVICE(self),
+				  "test-pk",
+				  "system has invalid test Platform Key");
+
 	/* the O= key may not exist */
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "VENDOR", subject_vendor);
 	fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", subject_name);
