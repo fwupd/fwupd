@@ -69,8 +69,7 @@ fu_efi_section_parse_volume_image(FuEfiSection *self,
 				      error)) {
 		return FALSE;
 	}
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
-	return TRUE;
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean

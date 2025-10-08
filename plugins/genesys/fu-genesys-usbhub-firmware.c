@@ -345,7 +345,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware_sub, offset);
-		fu_firmware_add_image(firmware, firmware_sub);
+		if (!fu_firmware_add_image(firmware, firmware_sub, error))
+			return FALSE;
 		offset += fu_firmware_get_size(firmware_sub);
 	}
 

@@ -156,7 +156,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 				if (fw_img == NULL)
 					return FALSE;
 				fu_firmware_set_bytes(img, fw_img);
-				if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+				if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 					return FALSE;
 				if (!fu_memread_uint8_safe(buf, bufsz, cfg_offset, &cfg_ver, error))
 					return FALSE;
@@ -197,7 +197,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 			if (fw_img == NULL)
 				return FALSE;
 			fu_firmware_set_bytes(img, fw_img);
-			if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+			if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 				return FALSE;
 		}
 		offset_hdr += st_img->len;

@@ -48,7 +48,8 @@ fu_elan_kbd_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_set_stream(firmware_bootloader, stream_bootloader, error))
 		return FALSE;
 	fu_firmware_set_idx(firmware_bootloader, FU_ELAN_KBD_FIRMWARE_IDX_BOOTLOADER);
-	fu_firmware_add_image(firmware, firmware_bootloader);
+	if (!fu_firmware_add_image(firmware, firmware_bootloader, error))
+		return FALSE;
 
 	/* app */
 	stream_app = fu_partial_input_stream_new(stream,
@@ -60,7 +61,8 @@ fu_elan_kbd_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_set_stream(firmware_app, stream_app, error))
 		return FALSE;
 	fu_firmware_set_idx(firmware_app, FU_ELAN_KBD_FIRMWARE_IDX_APP);
-	fu_firmware_add_image(firmware, firmware_app);
+	if (!fu_firmware_add_image(firmware, firmware_app, error))
+		return FALSE;
 
 	/* option */
 	stream_option = fu_partial_input_stream_new(stream,
@@ -72,7 +74,8 @@ fu_elan_kbd_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_set_stream(firmware_option, stream_option, error))
 		return FALSE;
 	fu_firmware_set_idx(firmware_option, FU_ELAN_KBD_FIRMWARE_IDX_OPTION);
-	fu_firmware_add_image(firmware, firmware_option);
+	if (!fu_firmware_add_image(firmware, firmware_option, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

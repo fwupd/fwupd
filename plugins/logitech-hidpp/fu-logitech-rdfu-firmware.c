@@ -301,7 +301,8 @@ fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "RDFU firmware contents[%u]: ", i);
 			return FALSE;
 		}
-		fu_firmware_add_image(firmware, entity_fw);
+		if (!fu_firmware_add_image(firmware, entity_fw, error))
+			return FALSE;
 	}
 
 	if (!json_object_has_member(json_obj, "payloads")) {

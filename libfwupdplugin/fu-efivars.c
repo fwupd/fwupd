@@ -749,7 +749,8 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 		g_autoptr(GBytes) img_blob = g_bytes_new_static("hello", 5);
 		fu_firmware_set_id(img_text, ".text");
 		fu_firmware_set_bytes(img_text, img_blob);
-		fu_firmware_add_image(pefile, img_text);
+		if (!fu_firmware_add_image(pefile, img_text, error))
+			return FALSE;
 		if (!fu_firmware_write_file(pefile, file, error))
 			return FALSE;
 	}
@@ -760,11 +761,14 @@ fu_efivars_create_boot_entry_for_volume(FuEfivars *self,
 	dp_fp = fu_efi_file_path_device_path_new();
 	if (!fu_efi_file_path_device_path_set_name(dp_fp, target, error))
 		return FALSE;
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd));
-	fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp));
+	if (!fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_hdd), error))
+		return FALSE;
+	if (!fu_firmware_add_image(FU_FIRMWARE(devpath_list), FU_FIRMWARE(dp_fp), error))
+		return FALSE;
 
 	fu_firmware_set_id(FU_FIRMWARE(entry), name);
-	fu_firmware_add_image(FU_FIRMWARE(entry), FU_FIRMWARE(devpath_list));
+	if (!fu_firmware_add_image(FU_FIRMWARE(entry), FU_FIRMWARE(devpath_list), error))
+		return FALSE;
 	return fu_efivars_set_boot_entry(self, idx, entry, error);
 }
 

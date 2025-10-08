@@ -166,7 +166,7 @@ fu_uswid_firmware_parse(FuFirmware *firmware,
 					     flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					     error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, firmware_coswid, error))
+		if (!fu_firmware_add_image(firmware, firmware_coswid, error))
 			return FALSE;
 		if (fu_firmware_get_size(firmware_coswid) == 0) {
 			g_set_error_literal(error,

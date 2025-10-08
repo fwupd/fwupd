@@ -994,8 +994,7 @@ fu_dfu_target_upload(FuDfuTarget *self,
 	}
 
 	/* success */
-	fu_firmware_add_image(firmware, image);
-	return TRUE;
+	return fu_firmware_add_image(firmware, image, error);
 }
 
 static gchar *

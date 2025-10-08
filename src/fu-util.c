@@ -1830,7 +1830,8 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 		payload_blob = g_bytes_new(data, strlen(data));
 		payload_img = fu_firmware_new_from_bytes(payload_blob);
 		fu_firmware_set_id(payload_img, "report.json");
-		fu_firmware_add_image(archive, payload_img);
+		if (!fu_firmware_add_image(archive, payload_img, error))
+			return FALSE;
 
 		/* self sign data */
 		if (self->sign) {
@@ -1848,7 +1849,8 @@ fu_util_report_export(FuUtil *self, gchar **values, GError **error)
 			sig_blob = g_bytes_new(sig, strlen(sig));
 			sig_img = fu_firmware_new_from_bytes(sig_blob);
 			fu_firmware_set_id(sig_img, "report.json.p7c");
-			fu_firmware_add_image(archive, sig_img);
+			if (!fu_firmware_add_image(archive, sig_img, error))
+				return FALSE;
 		}
 
 		/* save to local file */

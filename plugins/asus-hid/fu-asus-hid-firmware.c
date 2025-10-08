@@ -54,9 +54,7 @@ fu_asus_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
-
-	return TRUE;
+	return fu_firmware_add_image(firmware, img_payload, error);
 }
 
 static void

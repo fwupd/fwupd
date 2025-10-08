@@ -106,12 +106,14 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 			g_autoptr(GBytes) blob_padded =
 			    fu_bytes_pad(blob, offset - offset_last, 0xFF);
 			g_autoptr(FuFirmware) img_padded = fu_firmware_new_from_bytes(blob_padded);
-			fu_firmware_add_image(FU_FIRMWARE(self), img_padded);
+			if (!fu_firmware_add_image(FU_FIRMWARE(self), img_padded, error))
+				return FALSE;
 		}
 
 		/* we found something */
 		fu_firmware_set_offset(img, offset);
-		fu_firmware_add_image(FU_FIRMWARE(self), img);
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
+			return FALSE;
 		offset += fu_firmware_get_size(img);
 		offset = fu_common_align_up(offset, FU_FIRMWARE_ALIGNMENT_4K);
 		found_cnt += 1;
@@ -275,7 +277,8 @@ fu_efi_volume_parse(FuFirmware *firmware,
 					      flags | FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					      error))
 			return FALSE;
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(firmware, img, error))
+			return FALSE;
 	} else if (g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA) == 0 ||
 		   g_strcmp0(guid_str, FU_EFI_VOLUME_GUID_NVRAM_EVSA2) == 0) {
 		g_autoptr(GError) error_local = NULL;

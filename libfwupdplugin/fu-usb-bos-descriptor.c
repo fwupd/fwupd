@@ -109,7 +109,7 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError *
 					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 			return FALSE;
 	}
 
@@ -197,7 +197,7 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 					      error))
 			return FALSE;
 		fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), img, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 			return FALSE;
 	}
 
@@ -264,6 +264,6 @@ fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos
 	bytes = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
 	fu_firmware_set_bytes(img, bytes);
 	fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
+	fu_firmware_add_image(FU_FIRMWARE(self), img, NULL);
 	return FU_USB_BOS_DESCRIPTOR(self);
 }

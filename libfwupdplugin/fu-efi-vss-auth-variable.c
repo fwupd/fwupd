@@ -167,7 +167,8 @@ fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 			return FALSE;
 		if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 			return FALSE;
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(firmware, img, error))
+			return FALSE;
 	} else {
 		g_autoptr(GBytes) data = NULL;
 		data = fu_input_stream_read_bytes(

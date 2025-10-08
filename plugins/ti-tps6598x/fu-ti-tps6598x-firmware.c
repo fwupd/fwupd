@@ -57,7 +57,8 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_pubkey, stream_pubkey, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_pubkey, "pubkey");
-	fu_firmware_add_image(firmware, img_pubkey);
+	if (!fu_firmware_add_image(firmware, img_pubkey, error))
+		return FALSE;
 	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
 
 	/* RSA signature */
@@ -68,7 +69,8 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_sig, stream_sig, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
-	fu_firmware_add_image(firmware, img_sig);
+	if (!fu_firmware_add_image(firmware, img_sig, error))
+		return FALSE;
 	offset += FU_TI_TPS6598X_FIRMWARE_PUBKEY_SIZE;
 
 	/* payload */
@@ -88,10 +90,9 @@ fu_ti_tps6598x_firmware_parse(FuFirmware *firmware,
 	version_str = g_strdup_printf("%X.%X.%X", verbuf[2], verbuf[1], verbuf[0]);
 	fu_firmware_set_version(img_payload, version_str);
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
 
 	/* success */
-	return TRUE;
+	return fu_firmware_add_image(firmware, img_payload, error);
 }
 
 static GByteArray *

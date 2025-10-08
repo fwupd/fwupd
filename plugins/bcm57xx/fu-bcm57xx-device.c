@@ -381,14 +381,20 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 
 	/* merge in all the provided images into the existing firmware */
 	img_stage1 = fu_firmware_get_image_by_id(firmware_tmp, "stage1", NULL);
-	if (img_stage1 != NULL)
-		fu_firmware_add_image(firmware, img_stage1);
+	if (img_stage1 != NULL) {
+		if (!fu_firmware_add_image(firmware, img_stage1, error))
+			return NULL;
+	}
 	img_stage2 = fu_firmware_get_image_by_id(firmware_tmp, "stage2", NULL);
-	if (img_stage2 != NULL)
-		fu_firmware_add_image(firmware, img_stage2);
+	if (img_stage2 != NULL) {
+		if (!fu_firmware_add_image(firmware, img_stage2, error))
+			return NULL;
+	}
 	img_ape = fu_firmware_get_image_by_id(firmware_tmp, "ape", NULL);
-	if (img_ape != NULL)
-		fu_firmware_add_image(firmware, img_ape);
+	if (img_ape != NULL) {
+		if (!fu_firmware_add_image(firmware, img_ape, error))
+			return NULL;
+	}
 
 	/* the src and dst dictionaries may be in different order */
 	images = fu_firmware_get_images(firmware);

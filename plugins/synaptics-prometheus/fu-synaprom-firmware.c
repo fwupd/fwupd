@@ -122,7 +122,7 @@ fu_synaprom_firmware_parse(FuFirmware *firmware,
 			hdrsz);
 		fu_firmware_set_idx(img, tag);
 		fu_firmware_set_id(img, fu_synaprom_firmware_tag_to_string(tag));
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* metadata */

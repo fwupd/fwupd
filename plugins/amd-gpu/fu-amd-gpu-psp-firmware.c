@@ -137,7 +137,8 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(ish_img, stream, loc, flags, error))
 			return FALSE;
 		fu_firmware_set_addr(ish_img, loc);
-		fu_firmware_add_image(firmware, ish_img);
+		if (!fu_firmware_add_image(firmware, ish_img, error))
+			return FALSE;
 
 		/* parse the csm image */
 		loc = fu_struct_image_slot_header_get_loc_csm(ish);
@@ -164,7 +165,8 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 				    fu_struct_image_slot_header_get_fw_id(ish));
 			return FALSE;
 		}
-		fu_firmware_add_image(l2_img, csm_img);
+		if (!fu_firmware_add_image(l2_img, csm_img, error))
+			return FALSE;
 
 		l2_stream = fu_partial_input_stream_new(stream, loc, sz, error);
 		if (l2_stream == NULL)
@@ -172,7 +174,8 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		fu_firmware_set_addr(l2_img, loc);
 		if (!fu_firmware_parse_stream(l2_img, l2_stream, 0x0, flags, error))
 			return FALSE;
-		fu_firmware_add_image(ish_img, l2_img);
+		if (!fu_firmware_add_image(ish_img, l2_img, error))
+			return FALSE;
 
 		/* parse the partition */
 		if (!fu_amd_gpu_psp_firmware_parse_l2(l2_img, stream, loc, error))

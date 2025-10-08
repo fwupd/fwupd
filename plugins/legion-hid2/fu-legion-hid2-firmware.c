@@ -62,7 +62,8 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_sig, stream_sig, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
-	fu_firmware_add_image(firmware, img_sig);
+	if (!fu_firmware_add_image(firmware, img_sig, error))
+		return FALSE;
 
 	stream_payload =
 	    fu_partial_input_stream_new(stream,
@@ -74,7 +75,8 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_payload, stream_payload, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, img_payload);
+	if (!fu_firmware_add_image(firmware, img_payload, error))
+		return FALSE;
 
 	version = fu_struct_legion_hid2_version_parse_stream(stream, VERSION_OFFSET, error);
 	if (version == NULL)

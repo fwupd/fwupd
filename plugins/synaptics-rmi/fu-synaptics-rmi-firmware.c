@@ -58,7 +58,7 @@ fu_synaptics_rmi_firmware_add_image(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img, id);
-	return fu_firmware_add_image_full(firmware, img, error);
+	return fu_firmware_add_image(firmware, img, error);
 }
 
 static gboolean
@@ -85,7 +85,8 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 			return FALSE;
 		sig_id = g_strdup_printf("%s-signature", id);
 		fu_firmware_set_id(img, sig_id);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(firmware, img, error))
+			return FALSE;
 	}
 	return TRUE;
 }

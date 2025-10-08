@@ -70,7 +70,7 @@ fu_efi_filesystem_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_firmware_set_offset(firmware, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next! */

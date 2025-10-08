@@ -3444,7 +3444,8 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 	images = fu_firmware_get_images(firmware_src);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		fu_firmware_add_image(firmware_dst, img);
+		if (!fu_firmware_add_image(firmware_dst, img, error))
+			return FALSE;
 	}
 
 	/* copy data as fallback, preferring a binary blob to the export */
@@ -3458,7 +3459,8 @@ fu_util_firmware_convert(FuUtil *self, gchar **values, GError **error)
 				return FALSE;
 		}
 		img = fu_firmware_new_from_bytes(fw);
-		fu_firmware_add_image(firmware_dst, img);
+		if (!fu_firmware_add_image(firmware_dst, img, error))
+			return FALSE;
 	}
 
 	/* write new file */

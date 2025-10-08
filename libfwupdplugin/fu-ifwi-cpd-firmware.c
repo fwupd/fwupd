@@ -122,7 +122,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 
 		/* success */
 		fu_firmware_set_offset(img, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		offset += extension_length;
 	}
@@ -217,7 +217,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		}
 
 		/* success */
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 		offset += st_ent->len;
 	}

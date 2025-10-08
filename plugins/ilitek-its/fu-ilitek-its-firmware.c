@@ -174,7 +174,8 @@ fu_ilitek_its_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_idx(block_img, i);
 		fu_firmware_set_parent(block_img, firmware);
 		fu_firmware_set_addr(block_img, start);
-		fu_firmware_add_image(firmware, block_img);
+		if (!fu_firmware_add_image(firmware, block_img, error))
+			return FALSE;
 	}
 
 	/* success */

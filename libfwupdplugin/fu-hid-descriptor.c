@@ -131,19 +131,19 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 			/* copy the table state to the new report */
 			for (guint i = 0; i < table_state->len; i++) {
 				FuHidReportItem *item_tmp = g_ptr_array_index(table_state, i);
-				if (!fu_firmware_add_image_full(FU_FIRMWARE(report),
-								FU_FIRMWARE(item_tmp),
-								error))
+				if (!fu_firmware_add_image(FU_FIRMWARE(report),
+							   FU_FIRMWARE(item_tmp),
+							   error))
 					return FALSE;
 			}
 			for (guint i = 0; i < table_local->len; i++) {
 				FuHidReportItem *item_tmp = g_ptr_array_index(table_local, i);
-				if (!fu_firmware_add_image_full(FU_FIRMWARE(report),
-								FU_FIRMWARE(item_tmp),
-								error))
+				if (!fu_firmware_add_image(FU_FIRMWARE(report),
+							   FU_FIRMWARE(item_tmp),
+							   error))
 					return FALSE;
 			}
-			if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(report), error))
+			if (!fu_firmware_add_image(firmware, FU_FIRMWARE(report), error))
 				return FALSE;
 
 			/* remove all the local items */

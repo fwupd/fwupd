@@ -335,7 +335,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	/* parse dp blob */
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(device_path_list), stream, offset, flags, error))
 		return FALSE;
-	if (!fu_firmware_add_image_full(firmware, FU_FIRMWARE(device_path_list), error))
+	if (!fu_firmware_add_image(firmware, FU_FIRMWARE(device_path_list), error))
 		return FALSE;
 	offset += fu_struct_efi_load_option_get_dp_size(st);
 

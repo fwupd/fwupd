@@ -343,8 +343,10 @@ fu_uefi_capsule_device_build_dp_buf(FuVolume *esp, const gchar *capsule_path, GE
 	name_with_root = g_strdup_printf("/%s", capsule_path);
 	if (!fu_efi_file_path_device_path_set_name(dp_file, name_with_root, error))
 		return NULL;
-	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd));
-	fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_file));
+	if (!fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_hd), error))
+		return NULL;
+	if (!fu_firmware_add_image(FU_FIRMWARE(dp_buf), FU_FIRMWARE(dp_file), error))
+		return NULL;
 	return g_steal_pointer(&dp_buf);
 }
 

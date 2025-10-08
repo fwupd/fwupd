@@ -50,7 +50,7 @@ fu_archive_firmware_parse_cb(FuArchive *self,
 	FuFirmware *firmware = FU_FIRMWARE(user_data);
 	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes(bytes);
 	fu_firmware_set_id(img, filename);
-	return fu_firmware_add_image_full(firmware, img, error);
+	return fu_firmware_add_image(firmware, img, error);
 }
 
 static gboolean

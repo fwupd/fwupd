@@ -1355,7 +1355,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 			} else {
 				img = fu_firmware_new();
 			}
-			if (!fu_firmware_add_image_full(self, img, error))
+			if (!fu_firmware_add_image(self, img, error))
 				return FALSE;
 			if (!fu_firmware_build(img, xb_image, error))
 				return FALSE;
@@ -1713,7 +1713,7 @@ fu_firmware_get_depth(FuFirmware *self)
 }
 
 /**
- * fu_firmware_add_image_full:
+ * fu_firmware_add_image:
  * @self: a #FuPlugin
  * @img: a child firmware image
  * @error: (nullable): optional return location for an error
@@ -1726,10 +1726,10 @@ fu_firmware_get_depth(FuFirmware *self)
  *
  * Returns: %TRUE if the image was added
  *
- * Since: 1.9.3
+ * Since: 1.9.3, but @error was added in 2.0.17
  **/
 gboolean
-fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
+fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 
@@ -1785,33 +1785,6 @@ fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-/**
- * fu_firmware_add_image:
- * @self: a #FuPlugin
- * @img: a child firmware image
- *
- * Adds an image to the firmware.
- *
- * NOTE: If adding images in a loop of any kind then fu_firmware_add_image_full() should be used
- * instead, and fu_firmware_set_images_max() should be set before adding images.
- *
- * If %FU_FIRMWARE_FLAG_DEDUPE_ID is set, an image with the same ID is already
- * present it is replaced.
- *
- * Since: 1.3.1
- **/
-void
-fu_firmware_add_image(FuFirmware *self, FuFirmware *img)
-{
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_if_fail(FU_IS_FIRMWARE(self));
-	g_return_if_fail(FU_IS_FIRMWARE(img));
-
-	if (!fu_firmware_add_image_full(self, img, &error_local))
-		g_critical("failed to add image: %s", error_local->message);
 }
 
 /**

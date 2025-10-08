@@ -212,10 +212,8 @@ fu_firmware_check_compatible(FuFirmware *self,
 			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);
 
-void
-fu_firmware_add_image(FuFirmware *self, FuFirmware *img) G_GNUC_NON_NULL(1, 2);
 gboolean
-fu_firmware_add_image_full(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
+fu_firmware_add_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_firmware_remove_image(FuFirmware *self, FuFirmware *img, GError **error) G_GNUC_NON_NULL(1, 2);
 gboolean

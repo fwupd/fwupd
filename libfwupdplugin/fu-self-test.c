@@ -4006,6 +4006,7 @@ fu_firmware_fmap_func(void)
 static void
 fu_firmware_sorted_func(void)
 {
+	gboolean ret;
 	g_autofree gchar *xml1 = NULL;
 	g_autofree gchar *xml2 = NULL;
 	g_autoptr(FuFirmware) firmware1 = fu_firmware_new();
@@ -4022,9 +4023,15 @@ fu_firmware_sorted_func(void)
 	fu_firmware_set_idx(firmware2, 0x200);
 	fu_firmware_set_idx(firmware3, 0x100);
 
-	fu_firmware_add_image(firmware, firmware1);
-	fu_firmware_add_image(firmware, firmware2);
-	fu_firmware_add_image(firmware, firmware3);
+	ret = fu_firmware_add_image(firmware, firmware1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_add_image(firmware, firmware2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_add_image(firmware, firmware3, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* by idx */
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
@@ -4244,9 +4251,13 @@ fu_firmware_linear_func(void)
 
 	/* add images then parse */
 	fu_firmware_set_bytes(img1, blob1);
-	fu_firmware_add_image(firmware1, img1);
+	ret = fu_firmware_add_image(firmware1, img1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_firmware_set_bytes(img2, blob2);
-	fu_firmware_add_image(firmware1, img2);
+	ret = fu_firmware_add_image(firmware1, img2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	blob3 = fu_firmware_write(firmware1, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob3);
@@ -4542,11 +4553,15 @@ fu_firmware_func(void)
 	fu_firmware_set_idx(img1, 13);
 	fu_firmware_set_id(img1, "primary");
 	fu_firmware_set_filename(img1, "BIOS.bin");
-	fu_firmware_add_image(firmware, img1);
+	ret = fu_firmware_add_image(firmware, img1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	fu_firmware_set_addr(img2, 0x400);
 	fu_firmware_set_idx(img2, 23);
 	fu_firmware_set_id(img2, "secondary");
-	fu_firmware_add_image(firmware, img2);
+	ret = fu_firmware_add_image(firmware, img2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* check depth */
 	g_assert_cmpint(fu_firmware_get_depth(firmware), ==, 0);
@@ -4656,20 +4671,28 @@ fu_firmware_dedupe_func(void)
 
 	fu_firmware_set_idx(img1_old, 13);
 	fu_firmware_set_id(img1_old, "DAVE");
-	fu_firmware_add_image(firmware, img1_old);
+	ret = fu_firmware_add_image(firmware, img1_old, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	g_assert_true(fu_firmware_get_parent(img1_old) == firmware);
 
 	fu_firmware_set_idx(img1, 13);
 	fu_firmware_set_id(img1, "primary");
-	fu_firmware_add_image(firmware, img1);
+	ret = fu_firmware_add_image(firmware, img1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	fu_firmware_set_idx(img2_old, 123456);
 	fu_firmware_set_id(img2_old, "secondary");
-	fu_firmware_add_image(firmware, img2_old);
+	ret = fu_firmware_add_image(firmware, img2_old, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	fu_firmware_set_idx(img2, 23);
 	fu_firmware_set_id(img2, "secondary");
-	fu_firmware_add_image(firmware, img2);
+	ret = fu_firmware_add_image(firmware, img2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	img_id = fu_firmware_get_image_by_id(firmware, "primary", &error);
 	g_assert_no_error(error);
@@ -4683,7 +4706,7 @@ fu_firmware_dedupe_func(void)
 	g_assert_cmpint(fu_firmware_get_idx(img_idx), ==, 23);
 	g_assert_cmpstr(fu_firmware_get_id(img_idx), ==, "secondary");
 
-	ret = fu_firmware_add_image_full(firmware, img3, &error);
+	ret = fu_firmware_add_image(firmware, img3, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
@@ -6652,10 +6675,12 @@ static void
 fu_plugin_efi_signature_list_func(void)
 {
 	FuEfiX509Signature *sig;
+	gboolean ret;
 	g_autoptr(FuEfiX509Signature) sig2022 = fu_efi_x509_signature_new();
 	g_autoptr(FuEfiX509Signature) sig2023 = fu_efi_x509_signature_new();
 	g_autoptr(FuEfiX509Signature) sig2024 = fu_efi_x509_signature_new();
 	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new();
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) sigs_newest = NULL;
 
 	fu_efi_x509_signature_set_subject(sig2022, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2022");
@@ -6663,9 +6688,15 @@ fu_plugin_efi_signature_list_func(void)
 	fu_efi_x509_signature_set_subject(sig2024, "C=UK,O=Hughski,CN=Hughski Ltd. KEK CA 2024");
 
 	/* 2022 -> 2024 -> 2023 */
-	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2022));
-	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2024));
-	fu_firmware_add_image(siglist, FU_FIRMWARE(sig2023));
+	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig2022), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig2024), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_firmware_add_image(siglist, FU_FIRMWARE(sig2023), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* only one */
 	sigs_newest = fu_efi_signature_list_get_newest(FU_EFI_SIGNATURE_LIST(siglist));
@@ -7104,6 +7135,7 @@ static void
 fu_efi_load_option_path_func(void)
 {
 	const gchar *tmp;
+	gboolean ret;
 	g_autofree gchar *blobstr = NULL;
 	g_autoptr(FuEfiDevicePathList) devpathlist = fu_efi_device_path_list_new();
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
@@ -7119,7 +7151,9 @@ fu_efi_load_option_path_func(void)
 	g_assert_cmpstr(tmp, ==, "/foo");
 
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), "id");
-	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist));
+	ret = fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	blob = fu_firmware_write(FU_FIRMWARE(loadopt), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
@@ -7130,6 +7164,7 @@ fu_efi_load_option_path_func(void)
 static void
 fu_efi_load_option_hive_func(void)
 {
+	gboolean ret;
 	g_autofree gchar *blobstr = NULL;
 	g_autoptr(FuEfiDevicePathList) devpathlist = fu_efi_device_path_list_new();
 	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
@@ -7142,7 +7177,9 @@ fu_efi_load_option_hive_func(void)
 	g_assert_cmpint(fu_efi_load_option_get_kind(loadopt), ==, FU_EFI_LOAD_OPTION_KIND_HIVE);
 
 	fu_firmware_set_id(FU_FIRMWARE(loadopt), "id");
-	fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist));
+	ret = fu_firmware_add_image(FU_FIRMWARE(loadopt), FU_FIRMWARE(devpathlist), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 	blob = fu_firmware_write(FU_FIRMWARE(loadopt), &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);

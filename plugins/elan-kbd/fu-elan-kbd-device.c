@@ -434,7 +434,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_bootloader = fu_firmware_new_from_bytes(blob_bootloader);
 	fu_firmware_set_id(img_bootloader, "bootloader");
-	fu_firmware_add_image(firmware, img_bootloader);
+	if (!fu_firmware_add_image(firmware, img_bootloader, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* app */
@@ -449,7 +450,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_app = fu_firmware_new_from_bytes(blob_app);
 	fu_firmware_set_idx(img_app, FU_ELAN_KBD_FIRMWARE_IDX_APP);
-	fu_firmware_add_image(firmware, img_app);
+	if (!fu_firmware_add_image(firmware, img_app, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* option */
@@ -461,7 +463,8 @@ fu_elan_kbd_device_read_firmware(FuDevice *device, FuProgress *progress, GError 
 	}
 	img_option = fu_firmware_new_from_bytes(blob_option);
 	fu_firmware_set_idx(img_option, FU_ELAN_KBD_FIRMWARE_IDX_OPTION);
-	fu_firmware_add_image(firmware, img_option);
+	if (!fu_firmware_add_image(firmware, img_option, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* success */

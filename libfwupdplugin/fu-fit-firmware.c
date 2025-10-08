@@ -39,7 +39,7 @@ fu_fit_firmware_get_image_root(FuFitFirmware *self)
 	fu_fdt_image_set_attr_uint32(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_TIMESTAMP, 0x0);
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "description", "Firmware image");
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "creator", "fwupd");
-	fu_firmware_add_image(FU_FIRMWARE(self), img);
+	fu_firmware_add_image(FU_FIRMWARE(self), img, NULL);
 	return FU_FDT_IMAGE(img);
 }
 

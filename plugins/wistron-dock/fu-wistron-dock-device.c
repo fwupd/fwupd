@@ -381,11 +381,14 @@ fu_wistron_dock_device_prepare_firmware(FuDevice *device,
 
 	/* success */
 	fu_firmware_set_id(fw_wsig, FU_FIRMWARE_ID_SIGNATURE);
-	fu_firmware_add_image(fw_new, fw_wsig);
+	if (!fu_firmware_add_image(fw_new, fw_wsig, error))
+		return NULL;
 	fu_firmware_set_id(fw_wdfl, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(fw_new, fw_wdfl);
+	if (!fu_firmware_add_image(fw_new, fw_wdfl, error))
+		return NULL;
 	fu_firmware_set_id(fw_cbin, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(fw_new, fw_cbin);
+	if (!fu_firmware_add_image(fw_new, fw_cbin, error))
+		return NULL;
 	return g_steal_pointer(&fw_new);
 }
 

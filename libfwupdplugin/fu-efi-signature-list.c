@@ -158,7 +158,7 @@ fu_efi_signature_list_parse_list(FuEfiSignatureList *self,
 		fu_firmware_set_size(FU_FIRMWARE(sig), size);
 		if (!fu_firmware_parse_stream(FU_FIRMWARE(sig), stream, offset_tmp, flags, error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(sig), error))
 			return FALSE;
 		offset_tmp += size;
 	}

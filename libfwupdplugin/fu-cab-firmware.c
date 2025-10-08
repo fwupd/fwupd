@@ -492,7 +492,7 @@ fu_cab_firmware_parse_file(FuCabFirmware *self,
 	}
 	if (!fu_firmware_parse_stream(FU_FIRMWARE(img), stream, 0x0, helper->parse_flags, error))
 		return FALSE;
-	if (!fu_firmware_add_image_full(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), error))
 		return FALSE;
 
 	/* set created date time */

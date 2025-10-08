@@ -74,7 +74,7 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 		fu_firmware_set_version_raw(firmware_rcd, revision);
 		if (!fu_firmware_parse_stream(firmware_rcd, partial_stream, 0x0, flags, error))
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, firmware_rcd, error))
+		if (!fu_firmware_add_image(firmware, firmware_rcd, error))
 			return FALSE;
 	}
 
