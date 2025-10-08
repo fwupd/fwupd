@@ -27,6 +27,9 @@ gboolean {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, 
 {%- if obj.export('ToString') == Export.PUBLIC %}
 gchar *{{obj.c_method('ToString')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
+{%- if obj.export('ToBytes') == Export.PUBLIC %}
+GBytes *{{obj.c_method('ToBytes')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- endif %}
 
 {%- for item in obj.items | selectattr('enabled') %}
 {%- if item.export('Getters') == Export.PUBLIC %}

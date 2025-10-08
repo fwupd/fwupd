@@ -13,7 +13,7 @@ struct FuStructEfiUxCapsuleHeader {
     y_offset: u32le,
 }
 
-#[derive(New, Getters, Default)]
+#[derive(New, Getters, ToBytes, Default)]
 #[repr(C, packed)]
 struct FuStructEfiCapsuleHeader {
     guid: Guid,

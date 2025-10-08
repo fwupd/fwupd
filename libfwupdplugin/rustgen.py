@@ -191,6 +191,7 @@ class StructObj:
             "ParseInternal": Export.NONE,
             "New": Export.NONE,
             "ToString": Export.NONE,
+            "ToBytes": Export.NONE,
             "Default": Export.NONE,
         }
 

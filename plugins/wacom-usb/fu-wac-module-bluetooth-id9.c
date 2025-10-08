@@ -63,6 +63,7 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 	g_autoptr(GByteArray) loader_cmd = fu_struct_id9_loader_cmd_new();
 	g_autoptr(GByteArray) spi_cmd = fu_struct_id9_spi_cmd_new();
 	g_autoptr(GByteArray) unknown_cmd = fu_struct_id9_unknown_cmd_new();
+	g_autoptr(GBytes) blob = NULL;
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return NULL;
@@ -83,7 +84,8 @@ fu_wac_module_bluetooth_id9_get_startcmd(GInputStream *stream, gboolean full_era
 	if (!fu_struct_id9_loader_cmd_validate(loader_cmd->data, loader_cmd->len, 0, error))
 		return NULL;
 
-	return fu_chunk_bytes_new(g_bytes_new(loader_cmd->data, loader_cmd->len));
+	blob = fu_struct_id9_loader_cmd_to_bytes(loader_cmd);
+	return fu_chunk_bytes_new(blob);
 }
 
 static gboolean

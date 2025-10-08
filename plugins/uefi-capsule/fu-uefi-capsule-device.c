@@ -407,7 +407,7 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	/* pad to the headersize then add the payload */
 	fu_byte_array_set_size(st_cap, hdrsize, 0x00);
 	g_byte_array_append(st_cap, buf, bufsz);
-	return g_bytes_new(st_cap->data, st_cap->len);
+	return fu_struct_efi_capsule_header_to_bytes(st_cap);
 }
 
 gboolean

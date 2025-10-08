@@ -69,7 +69,7 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 	/* data */
 	fu_byte_array_append_bytes(fwbuf, fu_chunk_get_bytes(chk));
 
-	return g_bytes_new(fwbuf->data, fwbuf->len);
+	return fu_struct_dell_kestrel_hid_fw_update_pkg_to_bytes(fwbuf);
 }
 
 static gboolean

@@ -567,7 +567,7 @@ fu_bcm57xx_firmware_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuStructBcm57xxNvramInfo) st = fu_struct_bcm57xx_nvram_info_new();
 		fu_struct_bcm57xx_nvram_info_set_device(st, self->model);
 		fu_struct_bcm57xx_nvram_info_set_vendor(st, self->vendor);
-		blob_info = g_bytes_new(st->data, st->len);
+		blob_info = fu_struct_bcm57xx_nvram_info_to_bytes(st);
 	}
 	fu_byte_array_append_bytes(buf, blob_info);
 
