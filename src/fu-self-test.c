@@ -5171,6 +5171,7 @@ fu_history_func(gconstpointer user_data)
 static GBytes *
 fu_test_build_cab(gboolean compressed, ...)
 {
+	gboolean ret;
 	va_list args;
 	g_autoptr(FuCabFirmware) cabinet = fu_cab_firmware_new();
 	g_autoptr(GError) error = NULL;
@@ -5201,7 +5202,9 @@ fu_test_build_cab(gboolean compressed, ...)
 		blob = g_bytes_new_static(text, strlen(text));
 		fu_firmware_set_id(FU_FIRMWARE(img), fn);
 		fu_firmware_set_bytes(FU_FIRMWARE(img), blob);
-		fu_firmware_add_image(FU_FIRMWARE(cabinet), FU_FIRMWARE(img));
+		ret = fu_firmware_add_image(FU_FIRMWARE(cabinet), FU_FIRMWARE(img), &error);
+		g_assert_no_error(error);
+		g_assert_true(ret);
 	} while (TRUE);
 	va_end(args);
 

@@ -206,7 +206,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 
 	/* success */
-	return fu_firmware_add_image_full(firmware, img, error);
+	return fu_firmware_add_image(firmware, img, error);
 }
 
 static gboolean

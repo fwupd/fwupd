@@ -130,7 +130,8 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 		g_autoptr(FuEfiFilePathDevicePath) dp_fp = fu_efi_file_path_device_path_new();
 		if (!fu_efi_file_path_device_path_set_name(dp_fp, self->capsule_fn, error))
 			return NULL;
-		fu_firmware_add_image(FU_FIRMWARE(dp_list), FU_FIRMWARE(dp_fp));
+		if (!fu_firmware_add_image(FU_FIRMWARE(dp_list), FU_FIRMWARE(dp_fp), error))
+			return NULL;
 		dpbuf = fu_firmware_write(FU_FIRMWARE(dp_list), error);
 		if (dpbuf == NULL)
 			return NULL;

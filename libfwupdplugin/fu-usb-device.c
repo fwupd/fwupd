@@ -1835,9 +1835,9 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 					FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					error))
 					return FALSE;
-				if (!fu_firmware_add_image_full(FU_FIRMWARE(iface),
-								FU_FIRMWARE(img),
-								error))
+				if (!fu_firmware_add_image(FU_FIRMWARE(iface),
+							   FU_FIRMWARE(img),
+							   error))
 					return FALSE;
 				offset += fu_firmware_get_size(FU_FIRMWARE(img));
 			}

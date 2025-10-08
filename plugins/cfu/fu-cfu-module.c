@@ -108,7 +108,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(offer, blob_offer, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(offer, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, offer);
+	if (!fu_firmware_add_image(firmware, offer, error))
+		return NULL;
 
 	/* payload */
 	fw_payload = fu_archive_firmware_get_image_fnmatch(FU_ARCHIVE_FIRMWARE(firmware_archive),
@@ -122,7 +123,8 @@ fu_cfu_module_prepare_firmware(FuDevice *device,
 	if (!fu_firmware_parse_bytes(payload, blob_payload, 0x0, flags, error))
 		return NULL;
 	fu_firmware_set_id(payload, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, payload);
+	if (!fu_firmware_add_image(firmware, payload, error))
+		return NULL;
 
 	/* success */
 	return g_steal_pointer(&firmware);

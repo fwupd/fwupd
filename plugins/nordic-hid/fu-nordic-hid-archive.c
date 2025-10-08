@@ -352,7 +352,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			fu_firmware_set_addr(image, image_addr);
 		}
 
-		if (!fu_firmware_add_image_full(firmware, image, error))
+		if (!fu_firmware_add_image(firmware, image, error))
 			return FALSE;
 	}
 

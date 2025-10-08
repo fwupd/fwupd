@@ -113,7 +113,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			fu_firmware_set_offset(img, data_offset);
 		}
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next */

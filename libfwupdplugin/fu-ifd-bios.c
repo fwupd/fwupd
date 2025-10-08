@@ -53,7 +53,7 @@ fu_ifd_bios_parse(FuFirmware *firmware,
 			continue;
 		}
 		fu_firmware_set_offset(firmware_tmp, offset);
-		if (!fu_firmware_add_image_full(firmware, firmware_tmp, error))
+		if (!fu_firmware_add_image(firmware, firmware_tmp, error))
 			return FALSE;
 
 		/* next! */

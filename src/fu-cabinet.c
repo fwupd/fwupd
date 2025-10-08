@@ -95,7 +95,7 @@ fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
 
 	fu_firmware_set_bytes(FU_FIRMWARE(img), data);
 	fu_firmware_set_id(FU_FIRMWARE(img), basename);
-	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img));
+	fu_firmware_add_image(FU_FIRMWARE(self), FU_FIRMWARE(img), NULL);
 }
 
 /* sets the firmware and signature blobs on XbNode */

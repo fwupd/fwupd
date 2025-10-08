@@ -154,7 +154,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 							     error);
 		if (image == NULL)
 			return FALSE;
-		if (!fu_firmware_add_image_full(firmware, image, error))
+		if (!fu_firmware_add_image(firmware, image, error))
 			return FALSE;
 	}
 	return TRUE;

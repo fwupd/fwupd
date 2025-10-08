@@ -101,7 +101,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		if (g_strcmp0(area_name, FMAP_AREANAME) == 0) {

@@ -273,7 +273,7 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_idx(img, i);
 		if (freg_str != NULL)
 			fu_firmware_set_id(img, freg_str);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* is writable by anything other than the region itself */
@@ -339,7 +339,8 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 		fu_firmware_set_addr(img_desc, 0x0);
 		fu_firmware_set_idx(img_desc, FU_IFD_REGION_DESC);
 		fu_firmware_set_id(img_desc, "desc");
-		fu_firmware_add_image(firmware, img_desc);
+		if (!fu_firmware_add_image(firmware, img_desc, error))
+			return NULL;
 	}
 
 	/* generate ahead of time */

@@ -56,7 +56,8 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 		fw_ocm = fu_firmware_new_from_bytes(blob_ocm);
 		fu_firmware_set_id(fw_ocm, "ocm");
 		fu_firmware_set_addr(fw_ocm, FLASH_OCM_ADDR);
-		fu_firmware_add_image(firmware, fw_ocm);
+		if (!fu_firmware_add_image(firmware, fw_ocm, error))
+			return FALSE;
 
 		/* get OCM version */
 		buf = g_bytes_get_data(blob_ocm, &bufsz);
@@ -83,7 +84,8 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_stx);
 		fu_firmware_set_id(fw2, "stx");
 		fu_firmware_set_addr(fw2, FLASH_TXFW_ADDR);
-		fu_firmware_add_image(firmware, fw2);
+		if (!fu_firmware_add_image(firmware, fw2, error))
+			return FALSE;
 	}
 
 	/* RXFW is optional */
@@ -93,13 +95,15 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_srx);
 		fu_firmware_set_id(fw2, "srx");
 		fu_firmware_set_addr(fw2, FLASH_RXFW_ADDR);
-		fu_firmware_add_image(firmware, fw2);
+		if (!fu_firmware_add_image(firmware, fw2, error))
+			return FALSE;
 	}
 	if (blob_cus != NULL && !fu_bytes_is_empty(blob_cus)) {
 		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes(blob_cus);
 		fu_firmware_set_id(fw2, "custom");
 		fu_firmware_set_addr(fw2, FLASH_CUSTOM_ADDR);
-		fu_firmware_add_image(firmware, fw2);
+		if (!fu_firmware_add_image(firmware, fw2, error))
+			return FALSE;
 	}
 
 	/* success */

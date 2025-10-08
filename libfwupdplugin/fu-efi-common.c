@@ -121,7 +121,7 @@ fu_efi_parse_sections(FuFirmware *firmware,
 		}
 
 		fu_firmware_set_offset(img, offset);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 
 		/* next! */

@@ -124,7 +124,7 @@ fu_elf_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 		}
 		fu_firmware_set_idx(img, i);
-		if (!fu_firmware_add_image_full(firmware, img, error))
+		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 	}
 

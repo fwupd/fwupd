@@ -700,7 +700,8 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 	if (firmware_nordic == NULL)
 		return NULL;
 	fu_firmware_set_id(firmware_nordic, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
-	fu_firmware_add_image(firmware, firmware_nordic);
+	if (!fu_firmware_add_image(firmware, firmware_nordic, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* holtek */
@@ -710,7 +711,8 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 	if (firmware_holtek == NULL)
 		return NULL;
 	fu_firmware_set_id(firmware_holtek, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
-	fu_firmware_add_image(firmware, firmware_holtek);
+	if (!fu_firmware_add_image(firmware, firmware_holtek, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* mouse */
@@ -720,7 +722,8 @@ fu_steelseries_sonic_read_firmware(FuDevice *device, FuProgress *progress, GErro
 	if (firmware_mouse == NULL)
 		return NULL;
 	fu_firmware_set_id(firmware_mouse, FU_STEELSERIES_SONIC_FIRMWARE_ID[chip]);
-	fu_firmware_add_image(firmware, firmware_mouse);
+	if (!fu_firmware_add_image(firmware, firmware_mouse, error))
+		return NULL;
 	fu_progress_step_done(progress);
 
 	/* success */

@@ -558,7 +558,7 @@ fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_payload, stream, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_payload, FU_FIRMWARE_ID_PAYLOAD);
-	if (!fu_firmware_add_image_full(firmware, img_payload, error))
+	if (!fu_firmware_add_image(firmware, img_payload, error))
 		return FALSE;
 
 	/* success */

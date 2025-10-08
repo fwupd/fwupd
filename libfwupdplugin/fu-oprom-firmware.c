@@ -179,7 +179,8 @@ fu_oprom_firmware_parse(FuFirmware *firmware,
 		}
 		fu_firmware_set_id(img, "cpd");
 		fu_firmware_set_offset(img, expansion_header_offset);
-		fu_firmware_add_image(firmware, img);
+		if (!fu_firmware_add_image(firmware, img, error))
+			return FALSE;
 	}
 
 	/* success */

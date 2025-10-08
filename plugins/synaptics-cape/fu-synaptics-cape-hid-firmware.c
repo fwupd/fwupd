@@ -69,7 +69,8 @@ fu_synaptics_cape_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_hdr, stream_hdr, 0x0, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_hdr, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, img_hdr);
+	if (!fu_firmware_add_image(firmware, img_hdr, error))
+		return FALSE;
 
 	/* body */
 	stream_body = fu_partial_input_stream_new(stream, st->len, streamsz - st->len, error);

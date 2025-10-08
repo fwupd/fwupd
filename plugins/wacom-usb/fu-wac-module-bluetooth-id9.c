@@ -194,7 +194,8 @@ fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 		return NULL;
 	loader_fw = fu_firmware_new_from_bytes(loader_bytes);
 	fu_firmware_set_id(loader_fw, FU_FIRMWARE_ID_HEADER);
-	fu_firmware_add_image(firmware, loader_fw);
+	if (!fu_firmware_add_image(firmware, loader_fw, error))
+		return NULL;
 
 	payload_len = blob_len - 2 - loader_len;
 	payload_bytes = fu_bytes_new_offset(fw, 2 + loader_len, payload_len, error);
@@ -202,7 +203,8 @@ fu_wac_module_bluetooth_id9_prepare_firmware(FuDevice *device,
 		return NULL;
 	payload_fw = fu_firmware_new_from_bytes(payload_bytes);
 	fu_firmware_set_id(payload_fw, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(firmware, payload_fw);
+	if (!fu_firmware_add_image(firmware, payload_fw, error))
+		return NULL;
 
 	return g_steal_pointer(&firmware);
 }

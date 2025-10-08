@@ -61,7 +61,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 		g_prefix_error(error, "failed to parse %s: ", entry_name);
 		return FALSE;
 	}
-	if (!fu_firmware_add_image_full(firmware, entry_fw, error))
+	if (!fu_firmware_add_image(firmware, entry_fw, error))
 		return FALSE;
 
 	/* success */
