@@ -4485,6 +4485,13 @@ fu_engine_validate_result_timestamp(JcatResult *jcat_result,
 		delta = jcat_result_get_timestamp(jcat_result) -
 			jcat_result_get_timestamp(jcat_result_old);
 	}
+	if (delta == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "signing timestamp was not newer");
+		return FALSE;
+	}
 	if (delta < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
