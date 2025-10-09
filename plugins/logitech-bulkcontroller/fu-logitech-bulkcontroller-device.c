@@ -19,6 +19,7 @@
 #define UPD_INTERFACE_SUBPROTOCOL_ID  117
 #define SYNC_INTERFACE_SUBPROTOCOL_ID 118
 #define BULK_TRANSFER_TIMEOUT	      2500
+#define BULK_TRANSFER_FLUSH_TIMEOUT   5
 #define HASH_VALUE_SIZE		      16
 #define MAX_RETRIES		      5
 #define MAX_SETUP_RETRIES	      50
@@ -36,7 +37,7 @@ struct _FuLogitechBulkcontrollerDevice {
 	FuLogitechBulkcontrollerDeviceState status;
 	FuLogitechBulkcontrollerUpdateState update_status;
 	guint update_progress; /* percentage value */
-	gboolean is_sync_transfer_in_progress;
+	gboolean is_sync_flush_events_in_progress;
 	GString *device_info_response_json;
 	gsize transfer_bufsz;
 	guint32 sequence_id;
@@ -125,6 +126,7 @@ typedef struct {
 	FuLogitechBulkcontrollerCmd cmd;
 	guint32 sequence_id;
 	GByteArray *data;
+	guint timeout;
 } FuLogitechBulkcontrollerResponse;
 
 static FuLogitechBulkcontrollerResponse *
@@ -150,6 +152,7 @@ static gboolean
 fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
 						GByteArray *buf,
+						guint timeout,
 						GError **error)
 {
 	g_autoptr(FuStructLogitechBulkcontrollerSendSyncReq) st_req =
@@ -175,7 +178,7 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 					 st_req->data,
 					 st_req->len,
 					 NULL, /* transferred */
-					 BULK_TRANSFER_TIMEOUT,
+					 timeout,
 					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to send sync bulk transfer: ");
@@ -189,6 +192,7 @@ fu_logitech_bulkcontroller_device_sync_send_cmd(FuLogitechBulkcontrollerDevice *
 static gboolean
 fu_logitech_bulkcontroller_device_sync_send_ack(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
+						guint timeout,
 						GError **error)
 {
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
@@ -196,6 +200,7 @@ fu_logitech_bulkcontroller_device_sync_send_ack(FuLogitechBulkcontrollerDevice *
 	if (!fu_logitech_bulkcontroller_device_sync_send_cmd(self,
 							     FU_LOGITECH_BULKCONTROLLER_CMD_ACK,
 							     buf_ack,
+							     timeout,
 							     error)) {
 		g_prefix_error(error,
 			       "failed to send ack for %s: ",
@@ -207,6 +212,7 @@ fu_logitech_bulkcontroller_device_sync_send_ack(FuLogitechBulkcontrollerDevice *
 
 static FuLogitechBulkcontrollerResponse *
 fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *self,
+						guint timeout,
 						GError **error)
 {
 	gsize actual_length = 0;
@@ -220,7 +226,7 @@ fu_logitech_bulkcontroller_device_sync_wait_any(FuLogitechBulkcontrollerDevice *
 					 buf,
 					 self->transfer_bufsz,
 					 &actual_length,
-					 BULK_TRANSFER_TIMEOUT,
+					 timeout,
 					 NULL,
 					 error)) {
 		g_prefix_error_literal(error, "failed to receive: ");
@@ -255,11 +261,12 @@ static GByteArray *
 fu_logitech_bulkcontroller_device_sync_wait_cmd(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
 						guint32 sequence_id,
+						guint timeout,
 						GError **error)
 {
 	g_autoptr(FuLogitechBulkcontrollerResponse) response = NULL;
 
-	response = fu_logitech_bulkcontroller_device_sync_wait_any(self, error);
+	response = fu_logitech_bulkcontroller_device_sync_wait_any(self, timeout, error);
 	if (response == NULL)
 		return NULL;
 	if (response->cmd != cmd) {
@@ -298,6 +305,7 @@ fu_logitech_bulkcontroller_device_sync_wait_cmd_retry_cb(FuDevice *device,
 	helper->data = fu_logitech_bulkcontroller_device_sync_wait_cmd(self,
 								       helper->cmd,
 								       helper->sequence_id,
+								       helper->timeout,
 								       error);
 	if (helper->data == NULL)
 		return FALSE;
@@ -310,9 +318,12 @@ static GByteArray *
 fu_logitech_bulkcontroller_device_sync_wait_cmd_retry(FuLogitechBulkcontrollerDevice *self,
 						      FuLogitechBulkcontrollerCmd cmd,
 						      guint32 sequence_id,
+						      guint timeout,
 						      GError **error)
 {
-	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd, .sequence_id = sequence_id};
+	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd,
+						   .sequence_id = sequence_id,
+						   .timeout = timeout};
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_logitech_bulkcontroller_device_sync_wait_cmd_retry_cb,
 			     MAX_RETRIES,
@@ -381,6 +392,7 @@ fu_logitech_bulkcontroller_device_sync_wait_ack_cb(FuDevice *device,
 	buf = fu_logitech_bulkcontroller_device_sync_wait_cmd(self,
 							      FU_LOGITECH_BULKCONTROLLER_CMD_ACK,
 							      self->sequence_id,
+							      helper->timeout,
 							      error);
 	if (buf == NULL)
 		return FALSE;
@@ -395,9 +407,10 @@ fu_logitech_bulkcontroller_device_sync_wait_ack_cb(FuDevice *device,
 static gboolean
 fu_logitech_bulkcontroller_device_sync_wait_ack(FuLogitechBulkcontrollerDevice *self,
 						FuLogitechBulkcontrollerCmd cmd,
+						guint timeout,
 						GError **error)
 {
-	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd};
+	FuLogitechBulkcontrollerResponse helper = {.cmd = cmd, .timeout = timeout};
 	return fu_device_retry_full(FU_DEVICE(self),
 				    fu_logitech_bulkcontroller_device_sync_wait_ack_cb,
 				    10,
@@ -439,6 +452,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
 		req,
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to send request: ");
 		return NULL;
@@ -448,6 +462,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_wait_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_WRITE,
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to wait for ack: ");
 		return NULL;
@@ -458,6 +473,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 		NULL,
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to uninit buffer: ");
 		return NULL;
@@ -466,7 +482,10 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	/* wait device->host buffer-read|ack */
 	do {
 		g_autoptr(FuLogitechBulkcontrollerResponse) response_tmp = NULL;
-		response_tmp = fu_logitech_bulkcontroller_device_sync_wait_any(self, error);
+		response_tmp =
+		    fu_logitech_bulkcontroller_device_sync_wait_any(self,
+								    BULK_TRANSFER_TIMEOUT,
+								    error);
 		if (response_tmp == NULL) {
 			g_prefix_error_literal(error, "failed to wait for any: ");
 			return NULL;
@@ -504,6 +523,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to ack read buffer: ");
 		return NULL;
@@ -514,6 +534,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	    self,
 	    FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
 	    0x0, /* why? */
+	    BULK_TRANSFER_TIMEOUT,
 	    error);
 	if (buf == NULL) {
 		g_prefix_error_literal(error, "failed to wait for uninit buffer: ");
@@ -524,6 +545,7 @@ fu_logitech_bulkcontroller_device_sync_write(FuLogitechBulkcontrollerDevice *sel
 	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to ack uninit buffer: ");
 		return NULL;
@@ -848,6 +870,7 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 		    self,
 		    FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
 		    0x0, /* sequence_id */
+		    BULK_TRANSFER_TIMEOUT,
 		    error);
 		if (buf == NULL)
 			return FALSE;
@@ -928,13 +951,58 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 	FuProgress *progress = FU_PROGRESS(user_data);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GByteArray) uninit_buf = NULL;
 
-	/* poll the out interface */
+	/*
+	 * poll the out interface. Device mandates following read flow on SYNC interface
+	 * Device->Host FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ
+	 * Host->Device FU_LOGITECH_BULKCONTROLLER_CMD_ACK
+	 * Device->Host FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER
+	 * Host->Device FU_LOGITECH_BULKCONTROLLER_CMD_ACK
+	 *
+	 * use lower timeout to quickly flush any kUpdateStateDownloading progress events,
+	 * accumulated while host busy sending firmware image. Device queue stores upto 100 events.
+	 * These events are not removed from the queue, unless properly acknowledged
+	 */
 	buf = fu_logitech_bulkcontroller_device_sync_wait_cmd(
 	    self,
 	    FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
 	    0x0, /* sequence_id */
-	    &error_local);
+	    (self->is_sync_flush_events_in_progress) ? BULK_TRANSFER_FLUSH_TIMEOUT
+						     : BULK_TRANSFER_TIMEOUT,
+	    error);
+	if (buf == NULL)
+		return FALSE;
+
+	/* send host->device ack */
+	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
+		self,
+		FU_LOGITECH_BULKCONTROLLER_CMD_BUFFER_READ,
+		(self->is_sync_flush_events_in_progress) ? BULK_TRANSFER_FLUSH_TIMEOUT
+							 : BULK_TRANSFER_TIMEOUT,
+		error))
+		return FALSE;
+
+	/* wait device->host uninit */
+	uninit_buf = fu_logitech_bulkcontroller_device_sync_wait_cmd_retry(
+	    self,
+	    FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
+	    0x0, /* why? */
+	    (self->is_sync_flush_events_in_progress) ? BULK_TRANSFER_FLUSH_TIMEOUT
+						     : BULK_TRANSFER_TIMEOUT,
+	    error);
+	if (uninit_buf == NULL)
+		return FALSE;
+
+	/* send host->device ack */
+	if (!fu_logitech_bulkcontroller_device_sync_send_ack(
+		self,
+		FU_LOGITECH_BULKCONTROLLER_CMD_UNINIT_BUFFER,
+		(self->is_sync_flush_events_in_progress) ? BULK_TRANSFER_FLUSH_TIMEOUT
+							 : BULK_TRANSFER_TIMEOUT,
+		error))
+		return FALSE;
+
 	if (buf == NULL) {
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
@@ -951,6 +1019,19 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 	g_debug("firmware update status: %s, progress: %u",
 		fu_logitech_bulkcontroller_update_state_to_string(self->update_status),
 		self->update_progress);
+
+	/* events are not sorted, so stale downloading events can appear anytime */
+	if (self->update_status == FU_LOGITECH_BULKCONTROLLER_UPDATE_STATE_DOWNLOADING) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
+				    "waiting for download to finish");
+		self->is_sync_flush_events_in_progress = TRUE;
+		return FALSE;
+	} else {
+		self->is_sync_flush_events_in_progress = FALSE;
+	}
+
 	fu_progress_set_status(
 	    progress,
 	    fu_logitech_bulkcontroller_device_update_state_to_status(self->update_status));
@@ -1082,6 +1163,8 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	/*
 	 * image file pushed. Device validates and uploads new image on inactive partition.
 	 * Restart sync cb, to get the update progress
+	 * Flush any kUpdateStateDownloading progress events, accumulated while busy sending
+	 * firmware image.
 	 * Normally status changes as follows:
 	 *  While image being pushed: kUpdateStateCurrent->kUpdateStateDownloading (~5minutes)
 	 *  After image push is complete: kUpdateStateDownloading->kUpdateStateReady
@@ -1090,10 +1173,11 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	 *  Upload finished: kUpdateStateUpdating->kUpdateStateCurrent (~5minutes)
 	 *  After upload is finished, device reboots itself
 	 */
+	self->is_sync_flush_events_in_progress = TRUE;
 	if (!fu_device_retry_full(device,
 				  fu_logitech_bulkcontroller_device_verify_cb,
-				  500,	/* over 10 minutes */
-				  2500, /* ms */
+				  5000, /* over 10 minutes */
+				  5,	/* ms */
 				  fu_progress_get_child(progress),
 				  error))
 		return FALSE;
@@ -1282,6 +1366,7 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 		self,
 		FU_LOGITECH_BULKCONTROLLER_CMD_CHECK_BUFFERSIZE,
 		NULL, /* data */
+		BULK_TRANSFER_TIMEOUT,
 		error)) {
 		g_prefix_error_literal(error, "failed to send request: ");
 		return FALSE;
@@ -1290,6 +1375,7 @@ fu_logitech_bulkcontroller_device_check_buffer_size(FuLogitechBulkcontrollerDevi
 	    self,
 	    FU_LOGITECH_BULKCONTROLLER_CMD_CHECK_BUFFERSIZE,
 	    0x0, /* always zero */
+	    BULK_TRANSFER_TIMEOUT,
 	    &error_local);
 	if (buf != NULL) {
 		self->transfer_bufsz = 16 * 1024;
