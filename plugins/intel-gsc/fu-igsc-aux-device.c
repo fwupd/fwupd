@@ -80,7 +80,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
-		version = g_strdup_printf("%u.%x", self->major_version, self->oem_version);
+		version = g_strdup_printf("%u.%u", self->major_version, self->oem_version);
 	}
 	fu_device_set_version(device, version);
 
