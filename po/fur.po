@@ -50,7 +50,7 @@ msgstr "Modalitât costrutôr %s"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
-msgstr "Override %s"
+msgstr "Override %s"
 
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 #, c-format
