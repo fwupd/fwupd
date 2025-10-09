@@ -149,6 +149,8 @@ fu_device_list_depsolve_order_full(FuDeviceList *self, FuDevice *device, guint d
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
 		if (fu_device_has_private_flag(child,
+					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST) ||
+		    fu_device_has_private_flag(device,
 					       FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST)) {
 			fu_device_list_depsolve_order_full(self, child, depth + 1);
 		} else {
