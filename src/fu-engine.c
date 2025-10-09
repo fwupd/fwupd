@@ -5115,11 +5115,68 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 }
 #endif
 
+static XbNode *
+fu_engine_find_release_for_checksum_for_device(FuEngine *self,
+					       const gchar *csum,
+					       GPtrArray *device_guids)
+{
+	g_autoptr(XbNode) rel = NULL;
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+	g_autoptr(GPtrArray) rels = NULL;
+
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
+	if (self->query_container_checksum1 != NULL)
+		rels = xb_silo_query_with_context(self->silo,
+						  self->query_container_checksum1,
+						  &context,
+						  NULL);
+	if (rels == NULL && self->query_container_checksum2 != NULL)
+		rels = xb_silo_query_with_context(self->silo,
+						  self->query_container_checksum2,
+						  &context,
+						  NULL);
+
+	if (rels == NULL)
+		return NULL;
+
+	for (guint i = 0; i < rels->len; i++) {
+		XbNode *rel_tmp = g_ptr_array_index(rels, i);
+		g_autoptr(GError) err_tmp = NULL;
+		g_autoptr(XbNode) component_tmp = NULL;
+		g_autoptr(GPtrArray) provides_tmp = NULL;
+
+		component_tmp = xb_node_query_first(rel_tmp, "../..", &err_tmp);
+		if (component_tmp == NULL)
+			continue;
+		provides_tmp = xb_node_query(component_tmp, "provides/firmware", 0, &err_tmp);
+		if (provides_tmp == NULL)
+			continue;
+
+		for (guint j = 0; j < provides_tmp->len; j++) {
+			XbNode *prov = g_ptr_array_index(provides_tmp, j);
+			const gchar *ptext = xb_node_get_text(prov);
+
+			if (ptext == NULL)
+				continue;
+			for (guint k = 0; k < device_guids->len; k++) {
+				const gchar *dg = g_ptr_array_index(device_guids, k);
+				if (g_strcmp0(ptext, dg) != 0)
+					continue;
+				rel = g_object_ref(rel_tmp);
+				return g_steal_pointer(&rel);
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static void
 fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 {
 	FwupdRelease *release;
 	GPtrArray *csums;
+	GPtrArray *device_guids = fu_device_get_guids(device);
 
 	/* get the checksums */
 	release = fu_device_get_release_default(device);
@@ -5135,7 +5192,7 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 		g_autoptr(XbNode) rel = NULL;
 
 		g_debug("finding release checksum %s", csum);
-		rel = fu_engine_get_release_for_checksum(self, csum);
+		rel = fu_engine_find_release_for_checksum_for_device(self, csum, device_guids);
 		if (rel != NULL) {
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(XbNode) component = NULL;
