@@ -214,7 +214,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	gsize length = 0;
 
 	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_set_error(error,
+		g_set_error(error, /* nocheck:error */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "ddcci read length exceed max length:%i: ",
@@ -240,7 +240,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	length = buf_read[1] & 0x7F;
 
 	if ((length + 3) > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_set_error(error,
+		g_set_error(error, /* nocheck:error */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "ddcci read cmd length exceed max length:%i: ",
