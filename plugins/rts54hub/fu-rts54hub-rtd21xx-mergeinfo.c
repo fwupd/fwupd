@@ -414,7 +414,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 				   &merge_version[0],
 				   &merge_version[1],
 				   &merge_version[2],
-				   &merge_version[3])) {
+				   &merge_version[3]) != 4) {
 				g_prefix_error_literal(error, /* nocheck:error */
 						       "failed to parse version str: ");
 				return FALSE;
