@@ -12,6 +12,7 @@
 
 struct _FuIgscOpromFirmware {
 	FuOpromFirmware parent_instance;
+	guint16 major_version;
 	GPtrArray *device_infos; /* of FuIgscFwdataDeviceInfo4 */
 };
 
@@ -21,7 +22,15 @@ static void
 fu_igsc_oprom_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
 	FuIgscOpromFirmware *self = FU_IGSC_OPROM_FIRMWARE(firmware);
+	fu_xmlb_builder_insert_kx(bn, "major_version", self->major_version);
 	fu_igsc_fwdata_device_info_export(self->device_infos, bn);
+}
+
+guint16
+fu_igsc_oprom_firmware_get_major_version(FuIgscOpromFirmware *self)
+{
+	g_return_val_if_fail(FU_IS_IGSC_OPROM_FIRMWARE(self), G_MAXUINT16);
+	return self->major_version;
 }
 
 gboolean
@@ -126,6 +135,7 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 				    "CPD was not FuIfwiCpdFirmware");
 		return FALSE;
 	}
+	self->major_version = fu_firmware_get_version_raw(fw_cpd) >> 48;
 
 	/* parse all the manifest extensions */
 	man_img = fu_firmware_get_image_by_id(fw_cpd, "OROM.man", error);
