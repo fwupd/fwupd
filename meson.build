@@ -839,6 +839,21 @@ endif
 rustgen = generator(
   python3,
   output: ['@BASENAME@-struct.c', '@BASENAME@-struct.h'],
+  # fake custom target to ensure the generator reruns if these input files change
+  depends: custom_target(
+    'rustgen-files-timestamp',
+    input: files(
+      'libfwupdplugin/fu-rustgen-enum.c.in',
+      'libfwupdplugin/fu-rustgen-enum.h.in',
+      'libfwupdplugin/fu-rustgen-struct.c.in',
+      'libfwupdplugin/fu-rustgen-struct.h.in',
+      'libfwupdplugin/fu-rustgen.c.in',
+      'libfwupdplugin/fu-rustgen.h.in',
+      'libfwupdplugin/rustgen.py',
+    ),
+    output: 'rustgen-files-timestamp',
+    command: [python3, '-c', 'from pathlib import Path\nPath("@OUTPUT@").touch()'],
+  ),
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
     '@INPUT@',
