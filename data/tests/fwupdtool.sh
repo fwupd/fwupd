@@ -246,6 +246,7 @@ fi
 
 # ---
 echo " ● Refresh remotes (forced)"
+rm -f /var/lib/fwupd/metadata/lvfs/firmware.xml.zst*
 run refresh --json --force --verbose
 expect_rc 0
 
