@@ -246,7 +246,7 @@ fi
 
 # ---
 echo " ● Refresh remotes (forced)"
-rm -f /var/lib/fwupd/metadata/lvfs/firmware.xml.zst*
+rm -f @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst*
 run refresh --json --force --verbose
 expect_rc 0
 
@@ -257,7 +257,7 @@ expect_rc 0
 
 # ---
 echo " ● Refreshing (already up to date)…"
-run refresh /var/lib/fwupd/metadata/lvfs/firmware.xml.zst /var/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
+run refresh @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
 expect_rc 2
 
 # ---

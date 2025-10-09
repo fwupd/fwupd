@@ -5,6 +5,7 @@ con2.set('installedtestsdatadir', installed_test_datadir)
 con2.set('devicetestdir', join_paths(installed_test_datadir, 'device-tests'))
 con2.set('bindir', bindir)
 con2.set('libexecdir', libexecdir)
+con2.set('localstatedir', localstatedir)
 
 configure_file(
   input: 'fwupdmgr.test.in',
