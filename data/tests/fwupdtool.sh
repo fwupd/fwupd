@@ -365,6 +365,11 @@ run get-devices ${DEVICE}
 expect_rc 0
 
 # ---
+echo " ● Switching branch…"
+run switch-branch ${DEVICE}
+expect_rc 1
+
+# ---
 echo " ● Getting all devices, even unsupported ones…"
 run get-devices --show-all --force
 expect_rc 0

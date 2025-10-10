@@ -4267,7 +4267,7 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	self->filter_device_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length(values) == 1)
-		dev = fu_util_get_device(self, values[1], error);
+		dev = fu_util_get_device(self, values[0], error);
 	else
 		dev = fu_util_prompt_for_device(self, NULL, error);
 	if (dev == NULL)
