@@ -9,12 +9,391 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-08 22:17+0100\n"
 "Language-Team: Danish (http://app.transifex.com/freedesktop/fwupd/language/da/)\n"
+"Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: da\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (stabilt firmware)"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS'en er en gratis tjeneste der opererer som en selvstændig juridisk enhed og har ingen forbindelse med $OS_RELEASE:NAME$. Din distributør har måske ikke bekræftet nogen af firmwareopdateringerne for kompatibilitet med dit system eller tilsluttede enheder. Al firmware leveres kun af den oprindelige udstyrsproducent."
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Aktivering af funktionen sker på egen risiko. Det betydet at du skal kontakte din oprindelige udstyrsproducent vedrørende eventuelle problemer forårsaget af opdateringerne. Det er kun problemer med selv opdateringsprocessen som skal indsende på $OS_RELEASE:BUG_REPORT_URL$."
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (testning firmware)"
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "Fjernen indeholder firmware som der ikke er embargo på, men som stadigvæk testes af hardwareproducenten. Du skal sikre dig at du har en manuel måde til at nedgradere firmwaren på hvis firmwareopdateringen mislykkedes."
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "Settings will apply after system reboots"
+msgstr ""
+
+#. TRANSLATORS: description of a BIOS setting
+msgid "BIOS updates delivered via LVFS or Windows Update"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+#. TRANSLATORS: if the remote is enabled
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Enabled"
+msgstr "Aktiveret"
+
+msgid "Stop the fwupd service"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to stop the firmware update service"
+msgstr ""
+
+msgid "Install signed system firmware"
+msgstr "Installer systemfirmware der er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Der kræves autentifikation for at opdatere firmwaren på maskinen"
+
+msgid "Install unsigned system firmware"
+msgstr "Installer systemfirmware der ikke er underskrevet"
+
+msgid "Install old version of signed system firmware"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "Der kræves autentifikation for at nedgradere firmwaren på maskinen"
+
+msgid "Install old version of unsigned system firmware"
+msgstr ""
+
+msgid "Install signed device firmware"
+msgstr "Installer enhedsfirmware der er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "Der kræves autentifikation for at opdatere firmwaren på en flytbar enhed"
+
+msgid "Install unsigned device firmware"
+msgstr "Installer enhedsfirmware der ikke er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "Der kræves autentifikation for at nedgradere firmwaren på en flytbar enhed"
+
+msgid "Unlock the device to allow access"
+msgstr "Lås enheden op for at tillade adgang"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "Der kræves autentifikation for at låse enhed op"
+
+msgid "Modify daemon configuration"
+msgstr "Rediger dæmonkonfiguration"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Der kræves autentifikation for at redigere dæmonkonfiguration"
+
+msgid "Reset daemon configuration"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to reset daemon configuration to defaults"
+msgstr ""
+
+msgid "Activate the new firmware on the device"
+msgstr "Aktivér den nye firmware på enheden"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Der kræves autentifikation for at skifte til den nye firmwareversion"
+
+msgid "Update the stored device verification information"
+msgstr "Opdaterer de gemte informationer om enhedsverifikation"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "Der kræves autentifikation for at opdatere de gemte checksumme for enheden"
+
+msgid "Modify a configured remote"
+msgstr "Rediger en konfigureret fjern"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "Der kræves autentifikation for at redigere en konfigureret fjern som bruges til firmwareopdateringer"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "Indstiller listen over godkendt firmware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Der kræves autentifikation for at indstille listen over godkendt firmware"
+
+msgid "Sign data using the client certificate"
+msgstr "Underskriv data med klientcertifikat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "Der kræves autentifikation for at underskrive data med klientcertifikatet"
+
+msgid "Get BIOS settings"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to read BIOS settings"
+msgstr ""
+
+msgid "Set one or more BIOS settings"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify BIOS settings"
+msgstr ""
+
+msgid "Security hardening for HSI"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to fix a host security issue"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to undo the fix for a host security issue"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Load device emulation data"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to load hardware emulation data"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Save device emulation data"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to save hardware emulation data"
+msgstr ""
+
+msgid "Enable emulation data collection"
+msgstr ""
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to enable emulation data collection"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "Vis ekstra fejlsøgningsinformation"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "Vis kun én PCR-værdi"
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Programmet virker måske kun korrekt som root"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd TPM-hændelseslogredskab"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "Værktøjet læser og fortolker TPM-hændelsesloggen fra systemfirmwaren."
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "Kunne ikke fortolke argumenter"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Kunne ikke fortolke fil"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Installerer firmwareopdateringer …"
+
+#. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "Vis den udregnede version af dbx'en"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "Vis poster i dbx"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "Anvend opdateringsfiler"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "Angiv dbx-databasefilen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "FILNAVN"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Tilsidesæt standard-ESP-stien"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "STI"
+
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "Anvend opdatering, selv når det ikke tilrådes"
+
+#. TRANSLATORS: description of dbxtool
+msgid "This tool allows an administrator to apply UEFI dbx updates."
+msgstr "Værktøjet giver en administrator mulighed for at anvende UEFI-dbx-opdateringer."
+
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "UEFI-dbx-redskab"
+
+#. TRANSLATORS: could not read existing system data
+#. TRANSLATORS: could not read file
+msgid "Failed to load local dbx"
+msgstr "Kunne ikke indlæse lokal dbx"
+
+#. TRANSLATORS: could not read existing system data
+msgid "Failed to load system dbx"
+msgstr "Kunne ikke indlæse systemets dbx"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "Filnavn kræves"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "Fortolker systemets dbx …"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "Fortolker dbx-opdatering …"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "Kunne ikke fortolke lokal dbx"
+
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "Kan ikke anvende eftersom dbx-opdatering allerede er blevet anvendt."
+
+#. TRANSLATORS: ESP refers to the EFI System Partition
+msgid "Validating ESP contents…"
+msgstr "Validerer ESP-indhold …"
+
+#. TRANSLATORS: something with a blocked hash exists
+#. * in the users ESP -- which would be bad!
+msgid "Failed to validate ESP contents"
+msgstr "Kunne ikke validere ESP-indhold"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "Anvender opdatering …"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "Kunne ikke anvende opdatering"
+
+#. TRANSLATORS: success
+msgid "Done!"
+msgstr "Færdig!"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "Der er ikke angivet nogen handling!"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Indtast venligst et tal nummer 0 og %u: "
+
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
+#. * 'N'
+#, c-format
+msgid "Please enter either %s or %s: "
+msgstr ""
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "Inaktiv …"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "Udpakker …"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "Indlæser …"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "Genstarter enhed …"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Læser …"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Skriver …"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "Sletter …"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "Verificerer …"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "Planlægger …"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Downloader …"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "Autentificerer …"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "Venter …"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+#. TRANSLATORS: Suffix: the fallback HSI result
+msgid "Unknown"
+msgstr "Ukendt"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Mindre end et minut tilbage"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -23,146 +402,223 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minut tilbage"
 msgstr[1] "%.0f minutter tilbage"
 
-#. TRANSLATORS: battery refers to the system power source
-#, c-format
-msgid "%s Battery Update"
-msgstr "%s Opdatering for batteri"
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr ""
 
-#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-#. * at system boot-up
-#, c-format
-msgid "%s CPU Microcode Update"
-msgstr "%s opdatering af CPU-mikrokode"
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Vis fejlsøgningsinformation for alle domæner"
 
-#. TRANSLATORS: camera can refer to the laptop internal
-#. * camera in the bezel or external USB webcam
-#, c-format
-msgid "%s Camera Update"
-msgstr "%s Opdatering for kamera"
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "Medtag ikke tidsstempelpræfiks"
 
-#. TRANSLATORS: a specific part of hardware,
-#. * the first %s is the device name, e.g. 'Secure Boot`
-#, c-format
-msgid "%s Configuration Update"
-msgstr "Opdatering for konfiguration %s"
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "Medtag ikke præfiks for logdomæne"
 
-#. TRANSLATORS: ME stands for Management Engine, where
-#. * the first %s is the device name, e.g. 'ThinkPad P50`
-#, c-format
-msgid "%s Consumer ME Update"
-msgstr "%s ME-opdatering for forbruger"
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Vis uddybende information for dæmon for et bestemt domæne"
 
-#. TRANSLATORS: the controller is a device that has other devices
-#. * plugged into it, for example ThunderBolt, FireWire or USB,
-#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
-#, c-format
-msgid "%s Controller Update"
-msgstr "Opdatering af controller %s"
+#. TRANSLATORS: for the --verbose arg
+msgid "Debugging Options"
+msgstr "Fejlsøgningsindstillinger"
 
-#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
-#. * where the first %s is the device name, e.g. 'ThinkPad P50`
-#, c-format
-msgid "%s Corporate ME Update"
-msgstr "%s ME-opdatering for virksomhed"
+#. TRANSLATORS: for the --verbose arg
+msgid "Show debugging options"
+msgstr "Vis fejlsøgningsindstillinger"
 
-#. TRANSLATORS: a specific part of hardware,
-#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
-msgid "%s Device Update"
-msgstr "Enhedsopdatering for %s"
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] ""
+msgstr[1] ""
 
-#. TRANSLATORS: the EC is typically the keyboard controller chip,
-#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr sync`
 #, c-format
-msgid "%s Embedded Controller Update"
-msgstr "Opdatering af indlejret controller %s"
+msgid "Run `%s` to complete this action."
+msgstr ""
 
-#. TRANSLATORS: Keyboard refers to an input device for typing
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
-msgid "%s Keyboard Update"
-msgstr "%s Opdatering for tastatur"
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u enhed har en tilgængelig firmwareopgradering."
+msgstr[1] "%u enheder har en tilgængelig firmwareopgradering."
 
-#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
-#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#. TRANSLATORS: this is shown in the MOTD -- %1 is the
+#. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
-msgid "%s ME Update"
-msgstr "ME-opdatering for %s"
+msgid "Run `%s` for more information."
+msgstr ""
 
-#. TRANSLATORS: Mouse refers to a handheld input device
-#, c-format
-msgid "%s Mouse Update"
-msgstr "%s Opdatering for mus"
+#. TRANSLATORS: exit after we've started up, used for user profiling
+msgid "Exit after a small delay"
+msgstr "Afslut efter en lille forsinkelse"
 
-#. TRANSLATORS: Network Interface refers to the physical
-#. * PCI card, not the logical wired connection
-#, c-format
-msgid "%s Network Interface Update"
-msgstr "Opdatering af netværksgrænseflade %s"
+#. TRANSLATORS: exit straight away, used for automatic profiling
+msgid "Exit after the engine has loaded"
+msgstr "Afslut efter motoren er indlæst"
 
-#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
-#, c-format
-msgid "%s Storage Controller Update"
-msgstr "Opdatering af lagercontroller %s"
+#. TRANSLATORS: program name
+msgid "Firmware Update Daemon"
+msgstr "Firmwareopdateringsdæmon"
 
-#. TRANSLATORS: the entire system, e.g. all internal devices,
-#. * the first %s is the device name, e.g. 'ThinkPad P50`
-#, c-format
-msgid "%s System Update"
-msgstr "Systemopdatering for %s"
+#. TRANSLATORS: program summary
+msgid "Firmware Update D-Bus Service"
+msgstr "D-Bus-tjeneste for firmwareopdatering"
 
-#. TRANSLATORS: TPM refers to a Trusted Platform Module
-#, c-format
-msgid "%s TPM Update"
-msgstr "%s Opdatering for TPM"
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Din distributør har måske ikke verificeret kompatibiliteten af firmwareopdateringerne med dit system eller tilsluttede enheder."
 
-#. TRANSLATORS: the Thunderbolt controller is a device that
-#. * has other high speed Thunderbolt devices plugged into it;
-#. * the first %s is the system name, e.g. 'ThinkPad P50`
-#, c-format
-msgid "%s Thunderbolt Controller Update"
-msgstr "Opdatering af Thunderbolt-controller %s"
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Aktivering af fjernen sker på egen risiko."
 
-#. TRANSLATORS: TouchPad refers to a flat input device
-#, c-format
-msgid "%s Touchpad Update"
-msgstr "%s Opdatering for pegeplade"
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "SPI-skriv"
 
-#. TRANSLATORS: this is the fallback where we don't know if the release
-#. * is updating the system, the device, or a device class, or something else
-#. --
-#. * the first %s is the device name, e.g. 'ThinkPad P50`
-#, c-format
-msgid "%s Update"
-msgstr "Opdatering for %s"
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI-lås"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
-#, c-format
-msgid "%s and all connected devices may not be usable while updating."
-msgstr "%s og alle tilsluttede enheder vil måske ikke være anvendelige under opdatering."
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "SPI BIOS-region"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS-beskriver"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA protection"
+msgstr "Præopstart DMA-beskyttelse"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Intel BootGuard bekræftet start"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM protected"
+msgstr "Intel BootGuard ACM-beskyttet"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "Intel BootGuard regler om fejl"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * OTP = one time programmable
+msgid "Intel BootGuard OTP fuse"
+msgstr "Intel BootGuard OTP-fuse"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "CET Platform"
+msgstr ""
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * Utilized by OS means the distribution enabled it
+msgid "CET OS Support"
+msgstr ""
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "SMAP"
+msgstr ""
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "Krypteret RAM"
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Nedlukning af Linux-kerne"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux-kerne"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linux-swap"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "Suspender-til-ram"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "Suspender-til-inaktiv"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI-platformsnøgle"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI sikkeropstart"
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI bootservice variables"
+msgstr ""
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
+msgid "TPM empty PCRs"
+msgstr ""
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "TPM PCR0-rekonstruktion"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
 msgstr "%s-fabrikstilstand"
 
-#. TRANSLATORS: warn the user before
-#. * updating, %1 is a device name
-#, c-format
-msgid "%s must remain connected for the duration of the update to avoid damage."
-msgstr "%s skal være tilsluttet under hele opdateringen, for at undgå skade."
-
-#. TRANSLATORS: warn the user before updating, %1 is a machine
-#. * name
-#, c-format
-msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
-msgstr "%s skal være tilsluttet en strømkilde under hele opdateringen, for at undgå skade."
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "MEI manufacturing mode"
+msgstr "MEI-fabrikstilstand"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
 msgstr "%s-tilsidesættelse"
 
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
+#. * "override" is the physical PIN that can be driven to
+#. * logic high -- luckily it is probably not accessible to
+#. * end users on consumer boards
+msgid "MEI override"
+msgstr "MEI-tilsidesættelse"
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refer
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI key manifest"
+msgstr ""
+
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#.
 #, c-format
 msgid "%s v%s"
 msgstr "%s v%s"
@@ -172,378 +628,408 @@ msgstr "%s v%s"
 msgid "%s version"
 msgstr "%s-version"
 
-#. TRANSLATORS: duration in days!
+msgid "MEI version"
+msgstr "MEI-version"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "Firmwareopdateringer"
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware attestation"
+msgstr "Firmwareattest"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "fwupd-plugins"
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform debugging"
+msgstr ""
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Supported CPU"
+msgstr ""
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "Processor rollback protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "SPI replay protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "SPI write protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused platform"
+msgstr ""
+
+#. TRANSLATORS: Title: if we are emulating a different host
+msgid "Emulated host"
+msgstr ""
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS rollback protection"
+msgstr ""
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS mitigation"
+msgstr ""
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS firmware updates"
+msgstr ""
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "SMM locked down"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI memory protection"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI db up-to-date
+msgid "UEFI db"
+msgstr ""
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware Write Protection Lock"
+msgstr ""
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "Firmware BIOS Region"
+msgstr ""
+
+#. TRANSLATORS: Title: firmware refers to the flash chip in the computer
+msgid "Firmware BIOS Descriptor"
+msgstr ""
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard Verified Boot"
+msgstr ""
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * ACM means to verify the integrity of Initial Boot Block
+msgid "Intel BootGuard ACM Protected"
+msgstr ""
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard Error Policy"
+msgstr ""
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard Fuse"
+msgstr ""
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology
+msgid "Control-flow Enforcement Technology"
+msgstr ""
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Supervisor Mode Access Prevention"
+msgstr ""
+
+#. TRANSLATORS: Title:
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux Kernel Lockdown"
+msgstr ""
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux Kernel Verification"
+msgstr ""
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux Swap"
+msgstr ""
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend To RAM"
+msgstr ""
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend To Idle"
+msgstr ""
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI Platform Key"
+msgstr ""
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI Secure Boot"
+msgstr ""
+
+#. TRANSLATORS: Title: Bootservice is when only readable from early-boot
+msgid "UEFI Bootservice Variables"
+msgstr ""
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty
+msgid "TPM Platform Configuration"
+msgstr ""
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM Reconstruction"
+msgstr ""
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Manufacturing Mode"
+msgstr ""
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the "override" is enabled
+#. * with a jumper -- luckily it is probably not accessible to end users on consumer
+#. * boards
+msgid "Intel Management Engine Override"
+msgstr ""
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and key refers
+#. * to the private/public key used to secure loading of firmware
+msgid "MEI Key Manifest"
+msgstr ""
+
+#. TRANSLATORS: Title: MEI = Intel Management Engine
+msgid "Intel Management Engine Version"
+msgstr ""
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware Updates"
+msgstr ""
+
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware Attestation"
+msgstr ""
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "Firmware Updater Verification"
+msgstr ""
+
+#. TRANSLATORS: Title: Allows debugging of parts using proprietary hardware
+msgid "Platform Debugging"
+msgstr ""
+
+#. TRANSLATORS: Title: if fwupd supports HSI on this chip
+msgid "Processor Security Checks"
+msgstr ""
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "AMD Secure Processor Rollback Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI replays
+msgid "AMD Firmware Replay Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if hardware enforces control of SPI writes
+msgid "AMD Firmware Write Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: if the part has been fused
+msgid "Fused Platform"
+msgstr ""
+
+#. TRANSLATORS: Title: if firmware enforces rollback protection
+msgid "BIOS Rollback Protection"
+msgstr ""
+
+#. TRANSLATORS: Title: GDS is where the CPU leaks information
+msgid "Intel GDS Mitigation"
+msgstr ""
+
+#. TRANSLATORS: Title: Whether BIOS Firmware updates is enabled
+msgid "BIOS Firmware Updates"
+msgstr ""
+
+#. TRANSLATORS: Title: Whether firmware is locked down
+msgid "System Management Mode"
+msgstr ""
+
+#. TRANSLATORS: Title: is UEFI early-boot memory protection turned on
+msgid "UEFI Memory Protection"
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Firmware Write Protection protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
+msgstr ""
+
+msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Control-Flow Enforcement Technology detects and prevents certain methods for running malicious software on the device."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
+msgstr ""
+
+msgid "Encrypted RAM makes it impossible for information that is stored in device memory to be read if the memory chip is removed and accessed."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "IOMMU Protection prevents connected devices from accessing unauthorized parts of system memory."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Linux Kernel Lockdown mode prevents administrator (root) accounts from accessing and changing critical parts of system software."
+msgstr ""
+
+msgid "Linux Kernel Verification makes sure that critical system software has not been tampered with. Using device drivers which are not provided with the system can prevent this security feature from working correctly."
+msgstr ""
+
+msgid "Linux Kernel Swap temporarily saves information to disk as you work. If the information is not protected, it could be accessed by someone if they obtained the disk."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Suspend to RAM allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Suspend to Idle allows the device to quickly go to sleep in order to save power. While the device has been suspended, its memory could be physically removed and its information accessed."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI Platform Key is used to determine if device software comes from a trusted source."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "UEFI Secure Boot prevents malicious software from being loaded when the device starts."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "UEFI boot service variables should not be readable from runtime mode."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Platform Configuration is used to check whether the device start process has been modified."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The TPM (Trusted Platform Module) Reconstruction is used to check whether the device start process has been modified."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "TPM (Trusted Platform Module) is a computer chip that detects when hardware components have been tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Manufacturing Mode is used when the device is manufactured and security features are not yet enabled."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Intel Management Engine Override disables checks for device software tampering."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine Key Manifest must be valid so that the device firmware can be trusted by the CPU."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The Intel Management Engine controls device components and needs to have a recent version to avoid security issues."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Device software updates are provided for this device."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Firmware Attestation checks device software using a reference copy, to make sure that it has not been changed."
+msgstr ""
+
+msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Platform Debugging allows device security features to be disabled. This should only be used by hardware manufacturers."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Each system should have tests to ensure firmware security."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Rollback Protection prevents device software from being downgraded to an older version that has security problems."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "CPU Microcode must be updated to mitigate against various information-disclosure security issues."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "Enabling firmware updates for the BIOS allows fixing security issues."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "System management mode is used by the firmware to access resident BIOS code and data."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
+msgstr ""
+
+#. TRANSLATORS: longer description
+msgid "The UEFI db contains the list of valid certificates that can be used to authorize what EFI binaries are allowed to run."
+msgstr ""
+
+#. TRANSLATORS: %s is a link to a website
 #, c-format
-msgid "%u day"
-msgid_plural "%u days"
-msgstr[0] "%u dag"
-msgstr[1] "%u dage"
+msgid "See %s for more information."
+msgstr "Se %s for mere information."
 
-#. TRANSLATORS: this is shown in the MOTD
-#, c-format
-msgid "%u device has a firmware upgrade available."
-msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] "%u enhed har en tilgængelig firmwareopgradering."
-msgstr[1] "%u enheder har en tilgængelig firmwareopgradering."
-
-#. TRANSLATORS: duration in minutes
-#, c-format
-msgid "%u hour"
-msgid_plural "%u hours"
-msgstr[0] "%u time"
-msgstr[1] "%u timer"
-
-#. TRANSLATORS: duration in minutes
-#, c-format
-msgid "%u minute"
-msgid_plural "%u minutes"
-msgstr[0] "%u minut"
-msgstr[1] "%u minutter"
-
-#. TRANSLATORS: duration in seconds
-#, c-format
-msgid "%u second"
-msgid_plural "%u seconds"
-msgstr[0] "%u sekund"
-msgstr[1] "%u sekunder"
-
-#. TRANSLATORS: this is shown as a suffix for obsoleted tests
-msgid "(obsoleted)"
-msgstr "(forældet)"
-
-#. TRANSLATORS: the user needs to do something, e.g. remove the device
-msgid "Action Required:"
-msgstr "Handling kræves:"
-
-#. TRANSLATORS: command description
-msgid "Activate devices"
-msgstr "Aktivér enheder"
-
-#. TRANSLATORS: command description
-msgid "Activate pending devices"
-msgstr "Aktiverer afventende enheder"
-
-msgid "Activate the new firmware on the device"
-msgstr "Aktivér den nye firmware på enheden"
-
-#. TRANSLATORS: shown when shutting down to switch to the new version
-msgid "Activating firmware update"
-msgstr "Aktiverer firmwareopdatering"
-
-#. TRANSLATORS: shown when shutting down to switch to the new version
-msgid "Activating firmware update for"
-msgstr "Aktiverer firmwareopdatering for"
-
-#. TRANSLATORS: the age of the metadata
-msgid "Age"
-msgstr "Alder"
-
-#. TRANSLATORS: should the remote still be enabled
-msgid "Agree and enable the remote?"
-msgstr "Accepter og aktivér fjernen?"
-
-#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
-#, c-format
-msgid "Alias to %s"
-msgstr "Alias til %s"
-
-#. TRANSLATORS: on some systems certain devices have to have matching
-#. versions,
-#. * e.g. the EFI driver for a given network card cannot be different
-msgid "All devices of the same type will be updated at the same time"
-msgstr "Alle enheder af den samme type opdateres samtidigt"
-
-#. TRANSLATORS: command line option
-msgid "Allow downgrading firmware versions"
-msgstr "Tillad nedgradering af firmwareversioner"
-
-#. TRANSLATORS: command line option
-msgid "Allow reinstalling existing firmware versions"
-msgstr "Tillad geninstallering af eksisterende firmwareversioner"
-
-#. TRANSLATORS: command line option
-msgid "Allow switching firmware branch"
-msgstr "Tillad skift af firmwaregren"
-
-#. TRANSLATORS: explain why we want to reboot
-msgid "An update requires a reboot to complete."
-msgstr "For at fuldføre en opdatering skal systemet genstartes."
-
-#. TRANSLATORS: explain why
-msgid "An update requires the system to shutdown to complete."
-msgstr "For at fuldføre en opdatering skal systemet lukkes ned."
-
-#. TRANSLATORS: command line option
-msgid "Answer yes to all questions"
-msgstr "Svar ja til alle spørgsmål"
-
-#. TRANSLATORS: command line option
-msgid "Apply update even when not advised"
-msgstr "Anvend opdatering, selv når det ikke tilrådes"
-
-#. TRANSLATORS: command line option
-msgid "Apply update files"
-msgstr "Anvend opdateringsfiler"
-
-#. TRANSLATORS: actually sending the update to the hardware
-msgid "Applying update…"
-msgstr "Anvender opdatering …"
-
-#. TRANSLATORS: approved firmware has been checked by
-#. * the domain administrator
-msgid "Approved firmware:"
-msgid_plural "Approved firmware:"
-msgstr[0] "Godkendt firmware:"
-msgstr[1] "Godkendt firmware:"
-
-#. TRANSLATORS: command description
-msgid "Attach to firmware mode"
-msgstr "Tilkobl til firmwaretilstand"
-
-#. TRANSLATORS: waiting for user to authenticate
-msgid "Authenticating…"
-msgstr "Autentificerer …"
-
-#. TRANSLATORS: user needs to run a command
-msgid "Authentication details are required"
-msgstr "Der kræves autentifikationsdetaljer"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Der kræves autentifikation for at nedgradere firmwaren på en flytbar enhed"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Der kræves autentifikation for at nedgradere firmwaren på maskinen"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "Der kræves autentifikation for at redigere en konfigureret fjern som bruges til firmwareopdateringer"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to modify daemon configuration"
-msgstr "Der kræves autentifikation for at redigere dæmonkonfiguration"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to set the list of approved firmware"
-msgstr "Der kræves autentifikation for at indstille listen over godkendt firmware"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to sign data using the client certificate"
-msgstr "Der kræves autentifikation for at underskrive data med klientcertifikatet"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to switch to the new firmware version"
-msgstr "Der kræves autentifikation for at skifte til den nye firmwareversion"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to unlock a device"
-msgstr "Der kræves autentifikation for at låse enhed op"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Der kræves autentifikation for at opdatere firmwaren på en flytbar enhed"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to update the firmware on this machine"
-msgstr "Der kræves autentifikation for at opdatere firmwaren på maskinen"
-
-#. TRANSLATORS: this is the PolicyKit modal dialog
-msgid "Authentication is required to update the stored checksums for the device"
-msgstr "Der kræves autentifikation for at opdatere de gemte checksumme for enheden"
-
-#. TRANSLATORS: Boolean value to automatically send reports
-msgid "Automatic Reporting"
-msgstr "Automatisk rapportering"
-
-#. TRANSLATORS: can we JFDI?
-msgid "Automatically upload every time?"
-msgstr "Upload automatisk hver gang?"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "BUILDER-XML FILENAME-DST"
-msgstr "BUILDER-XML FILNAVN-DST"
-
-#. TRANSLATORS: command description
-msgid "Bind new kernel driver"
-msgstr "Bind ny kernedriver"
-
-#. TRANSLATORS: there follows a list of hashes
-msgid "Blocked firmware files:"
-msgstr "Blokerede firmwarefiler:"
-
-#. TRANSLATORS: we will not offer this firmware to the user
-msgid "Blocking firmware:"
-msgstr "Blokerer firmware:"
-
-#. TRANSLATORS: command description
-msgid "Blocks a specific firmware from being installed"
-msgstr "Blokerer en bestemt firmware fra at blive installeret"
-
-#. TRANSLATORS: firmware version of bootloader
-msgid "Bootloader Version"
-msgstr "Opstartsindlæser version"
-
-#. TRANSLATORS: the stream of firmware, e.g. nonfree
-msgid "Branch"
-msgstr "Gren"
-
-#. TRANSLATORS: command description
-msgid "Build a firmware file"
-msgstr "Byg en firmwarefil"
-
-#. TRANSLATORS: this is to abort the interactive prompt
-msgid "Cancel"
-msgstr "Annuller"
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Kunne ikke låse"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 #. TRANSLATORS: this is from ctrl+c
 msgid "Cancelled"
 msgstr "Annulleret"
 
-#. TRANSLATORS: same or newer update already applied
-msgid "Cannot apply as dbx update has already been applied."
-msgstr "Kan ikke anvende eftersom dbx-opdatering allerede er blevet anvendt."
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "Handling kræves:"
 
-#. TRANSLATORS: this is when the daemon state changes
-msgid "Changed"
-msgstr "Ændret"
+#. TRANSLATORS: device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Valgte enhed"
 
-#. TRANSLATORS: command description
-msgid "Checks cryptographic hash matches firmware"
-msgstr "Tjekker om den kryptografiske hash passer med firmwaren"
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Annuller"
 
-#. TRANSLATORS: hash to that exact firmware archive
-#. TRANSLATORS: remote checksum
-msgid "Checksum"
-msgstr "Checksum"
-
-#. TRANSLATORS: command description
-msgid "Clears the results from the last update"
-msgstr "Rydder resultaterne fra den sidste opdatering"
-
-#. TRANSLATORS: error message
-msgid "Command not found"
-msgstr "Kommandoen blev ikke fundet"
-
-#. TRANSLATORS: command description
-msgid "Convert a firmware file"
-msgstr "Konverter en firmwarefil"
-
-#. TRANSLATORS: when the update was built
-msgid "Created"
-msgstr "Oprettet"
-
-#. TRANSLATORS: the release urgency
-msgid "Critical"
-msgstr "Kritisk"
-
-#. TRANSLATORS: Device supports some form of checksum verification
-msgid "Cryptographic hash verification is available"
-msgstr "Bekræftelse af kryptografisk hash er tilgængelig"
-
-#. TRANSLATORS: version number of current firmware
-msgid "Current version"
-msgstr "Nuværende version"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "DEVICE-ID|GUID"
-msgstr "ENHEDS-ID|GUID"
-
-#. TRANSLATORS: for the --verbose arg
-msgid "Debugging Options"
-msgstr "Fejlsøgningsindstillinger"
-
-#. TRANSLATORS: decompressing the firmware file
-msgid "Decompressing…"
-msgstr "Udpakker …"
-
-#. TRANSLATORS: description of BIOS setting
-#. TRANSLATORS: multiline description of device
-msgid "Description"
-msgstr "Beskrivelse"
-
-#. TRANSLATORS: command description
-msgid "Detach to bootloader mode"
-msgstr "Frakobl til opstartsindlæsertilstand"
-
-#. TRANSLATORS: more details about the update link
-msgid "Details"
-msgstr "Detaljer"
-
-#. TRANSLATORS: description of device ability
-msgid "Device Flags"
-msgstr "Enhedsflag"
-
-#. TRANSLATORS: ID for hardware, typically a SHA1 sum
-msgid "Device ID"
-msgstr "Enheds-id"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device added:"
-msgstr "Enhed tilføjet:"
-
-#. TRANSLATORS: Device supports a safety mechanism for flashing
-msgid "Device can recover flash failures"
-msgstr "Enheden kan gendannes efter mislykkedes flash"
-
-#. TRANSLATORS: this is when a device has been updated
-msgid "Device changed:"
-msgstr "Enhed ændret:"
-
-#. TRANSLATORS: a version check is required for all firmware
-msgid "Device firmware is required to have a version check"
-msgstr "Enhedsfirmware kræves for at have et versiontjek"
-
-#. TRANSLATORS: Is locked and can be unlocked
-msgid "Device is locked"
-msgstr "Enheden er låst"
-
-#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
-msgid "Device is required to install all provided releases"
-msgstr "Enhed kræves for at installere alle leverede udgivelser"
-
-#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
-#. state
-#. * or is out of wireless range
-msgid "Device is unreachable"
-msgstr "Enheden er utilgængelig"
-
-#. TRANSLATORS: Device remains usable during update
-msgid "Device is usable for the duration of the update"
-msgstr "Enheden kan anvendes under hele opdateringen"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Device removed:"
-msgstr "Enhed fjernet:"
-
-#. TRANSLATORS: Device supports a safety mechanism for flashing
-msgid "Device stages updates"
-msgstr "Enhedstrin-opdateringer"
-
-#. TRANSLATORS: there is more than one supplier of the firmware
-msgid "Device supports switching to a different branch of firmware"
-msgstr "Enheden understøtter at der kan skiftes til en anden gren med firmware"
-
-#. TRANSLATORS: Device update needs to be separately activated
-msgid "Device update needs activation"
-msgstr "Enhedsopdatering behøver aktivering"
-
-#. TRANSLATORS: save the old firmware to disk before installing the new one
-msgid "Device will backup firmware before installing"
-msgstr "Enheden sikkerhedskopierer firmwaren inden installation"
-
-#. TRANSLATORS: Device will not return after update completes
-msgid "Device will not re-appear after update completes"
-msgstr "Enheden vises ikke igen når opdateringen er færdig"
-
-#. TRANSLATORS: a list of successful updates
-msgid "Devices that have been updated successfully:"
-msgstr "Enheder som det lykkedes at opdatere:"
-
-#. TRANSLATORS: a list of failed updates
-msgid "Devices that were not updated correctly:"
-msgstr "Enheder som ikke blev opdateret korrekt:"
+#. TRANSLATORS: get interactive prompt
+msgid "Choose device"
+msgstr ""
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -565,145 +1051,465 @@ msgstr "Enheder uden nogen tilgængelige firmwareopdateringer: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Enheder med den seneste tilgængelige firmwareversion:"
 
-#. TRANSLATORS: Plugin is inactive and not used
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Disabled"
-msgstr "Deaktiveret"
+msgid "No updates available for remaining devices"
+msgstr "Ingen opdateringer tilgængelige for tilbageværende enheder"
 
-#. TRANSLATORS: command description
-msgid "Disables a given remote"
-msgstr "Deaktiverer en angivet fjern"
+#. TRANSLATORS: nothing attached that can be upgraded
+msgid "No hardware detected with firmware update capability"
+msgstr "Der blev ikke fundet nogen hardware med firmware som kan opdateres"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Opdaterer %s …"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Installerer på %s …"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Læser fra %s …"
+
+#. TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed
+#, c-format
+msgid "%s is not currently updatable"
+msgstr ""
+
+#. TRANSLATORS: message letting the user there is an update
+#. * waiting, but there is a reason it cannot be deployed
+msgid "Devices with firmware updates that need user action: "
+msgstr ""
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Det lykkedes at redigere konfigurationsværdi"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration section"
+msgstr ""
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "Det lykkedes at redigere fjern"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "Det lykkedes at deaktivere fjern"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "Det lykkedes at aktivere fjern"
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully disabled test devices"
+msgstr ""
+
+#. TRANSLATORS: comment explaining result of command
+msgid "Successfully enabled test devices"
+msgstr ""
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "Aktiverer firmwareopdatering"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Enhed tilføjet:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Enhed fjernet:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Enhed ændret:"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Ændret"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Fandt ingen firmware-id'er"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware found"
+msgstr ""
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose firmware"
+msgstr ""
+
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "Skriver fil:"
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+msgid "Metadata is already up to date"
+msgstr ""
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. * refresh recently -- %1 is '--force'
+#, c-format
+msgid "Metadata is up to date; use %s to refresh again."
+msgstr ""
+
+#. TRANSLATORS: error message for unsupported feature
+msgid "Host Security ID (HSI) is not supported"
+msgstr ""
+
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "Værtens sikkerheds-ID:"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "Valgte diskområde"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose volume"
+msgstr ""
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose branch"
+msgstr ""
+
+#. TRANSLATORS: Configured a BIOS setting to a value
+#, c-format
+msgid "Set BIOS setting '%s' using '%s'."
+msgstr ""
+
+#. TRANSLATOR: This is the error message for
+#. * incorrect parameter
+msgid "Invalid arguments, expected an AppStream ID"
+msgstr ""
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fixed successfully"
+msgstr ""
+
+#. TRANSLATORS: we've fixed a security problem on the machine
+msgid "Fix reverted successfully"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "This system doesn't support firmware settings"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Unable to find attribute"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX NAME TARGET [MOUNTPOINT]"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Already exists, and no --force specified"
+msgstr ""
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "No volume matched %s"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected base-16 integer"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected INDEX KEY [VALUE]"
+msgstr ""
+
+#. TRANSLATORS: try to treat the legacy format as a hive
+msgid "The EFI boot entry was not in hive format, falling back"
+msgstr ""
+
+#. TRANSLATORS: the boot entry was in a legacy format
+msgid "The EFI boot entry is not in hive format, and shim may not be new enough to read it."
+msgstr ""
+
+#. TRANSLATORS: ask the user if it's okay to convert,
+#. * "it" being the data contained in the EFI boot entry
+msgid "Do you want to convert it now?"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected GUID"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
+msgstr ""
 
 #. TRANSLATORS: command line option
-msgid "Do not check for old metadata"
-msgstr "Tjek ikke efter gammel metadata"
+msgid "Show client and daemon versions"
+msgstr "Vis klient- og dæmonversioner"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for unreported history"
-msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
+msgid "Allow reinstalling existing firmware versions"
+msgstr "Tillad geninstallering af eksisterende firmwareversioner"
 
 #. TRANSLATORS: command line option
-msgid "Do not check if download remotes should be enabled"
-msgstr "Tjek ikke om download af fjerne skal aktiveres"
+msgid "Allow downgrading firmware versions"
+msgstr "Tillad nedgradering af firmwareversioner"
+
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "Tillad skift af firmwaregren"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Gennemtving handlingen ved at afslappe visse runtimetjek"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "Ignorer mislykkede checksum for firmware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Ignorer mislykkedes firmwarehardware som ikke passer sammen"
+
+#. TRANSLATORS: command line option
+msgid "Ignore non-critical firmware requirements"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Do not check or prompt for reboot after update"
 msgstr "Tjek ikke eller spørg om genstart, efter opdatering"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Do not include log domain prefix"
-msgstr "Medtag ikke præfiks for logdomæne"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Do not include timestamp prefix"
-msgstr "Medtag ikke tidsstempelpræfiks"
+#. TRANSLATORS: command line option
+msgid "Do not search the firmware when parsing"
+msgstr ""
 
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Udfør ikke sikkerhedstjek af enhed"
 
 #. TRANSLATORS: command line option
-msgid "Do not write to the history database"
-msgstr "Skriv ikke til historikdatabasen"
+msgid "Do not prompt for devices"
+msgstr ""
 
-#. TRANSLATORS: should the branch be changed
-msgid "Do you understand the consequences of changing the firmware branch?"
-msgstr "Forstår du de konsekvenser som er forbundet med ændring af firmwaregrenen?"
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Vis alle resultater"
 
-#. TRANSLATORS: offer to disable this nag
-msgid "Do you want to disable this feature for future updates?"
-msgstr "Vil du deaktivere funktionaliteten for fremtidige opdateringer?"
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Vis enheder som ikke kan opdateres"
 
-#. TRANSLATORS: ask if we can update the metadata
-msgid "Do you want to refresh this remote now?"
-msgstr "Vil du opdatere fjernen nu?"
+#. TRANSLATORS: command line option
+msgid "Manually enable specific plugins"
+msgstr "Aktivér bestemte plugins manuelt"
 
-#. TRANSLATORS: offer to stop asking the question
-msgid "Do you want to upload reports automatically for future updates?"
-msgstr "Vil du uploade rapporter automatisk for fremtidige opdateringer?"
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
 
-#. TRANSLATORS: success
-msgid "Done!"
-msgstr "Færdig!"
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
 
-#. TRANSLATORS: message letting the user know an downgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Downgrade %s from %s to %s?"
-msgstr "Nedgrader %s fra %s til %s?"
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "Ignorer strikse SSL-tjek ved download af filer"
 
-#. TRANSLATORS: command description
-msgid "Downgrades the firmware on a device"
-msgstr "Nedgraderer firmwaren på en enhed"
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "Filtrer med et sæt enhedsflag med et ~-præfiks for at udelukke, f.eks. 'intern,~behøver-genstart'"
 
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Downgrading %s…"
-msgstr "Nedgraderer %s …"
+#. TRANSLATORS: command line option
+msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Download a file"
-msgstr "Download en fil"
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr ""
 
-#. TRANSLATORS: downloading from a remote server
-msgid "Downloading…"
-msgstr "Downloader …"
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FIL"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Dump SMBIOS-data fra en fil"
 
-#. TRANSLATORS: length of time the update takes to apply
-msgid "Duration"
-msgstr "Varighed"
-
-#. TRANSLATORS: a remote here is like a 'repo' or software source
-msgid "Enable new remote?"
-msgstr "Aktivér ny fjern?"
-
-#. TRANSLATORS: Turn on the remote
-msgid "Enable this remote?"
-msgstr "Aktivér fjernen?"
-
-#. TRANSLATORS: if the remote is enabled
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Enabled"
-msgstr "Aktiveret"
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "Hent alle aktiverede plugins som er registreret med systemet"
 
 #. TRANSLATORS: command description
-msgid "Enables a given remote"
-msgstr "Aktiverer en angivet fjern"
-
-msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr "Aktivering af funktionen sker på egen risiko. Det betydet at du skal kontakte din oprindelige udstyrsproducent vedrørende eventuelle problemer forårsaget af opdateringerne. Det er kun problemer med selv opdateringsprocessen som skal indsende på $OS_RELEASE:BUG_REPORT_URL$."
-
-#. TRANSLATORS: show the user a warning
-msgid "Enabling this remote is done at your own risk."
-msgstr "Aktivering af fjernen sker på egen risiko."
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Encrypted"
-msgstr "Krypteret"
-
-#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
-msgid "Encrypted RAM"
-msgstr "Krypteret RAM"
+msgid "Gets details about a firmware file"
+msgstr "Hent detaljer om en firmwarefil"
 
 #. TRANSLATORS: command description
-msgid "Erase all firmware update history"
-msgstr "Slet al historik over firmwareopdateringer"
+msgid "Show history of firmware updates"
+msgstr "Vis historik over firmwareopdateringer"
 
-#. TRANSLATORS: erasing contents of the flash chips
-msgid "Erasing…"
-msgstr "Sletter …"
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[ENHEDS-ID|GUID]"
 
-#. TRANSLATORS: exit after we've started up, used for user profiling
-msgid "Exit after a small delay"
-msgstr "Afslut efter en lille forsinkelse"
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr ""
 
-#. TRANSLATORS: exit straight away, used for automatic profiling
-msgid "Exit after the engine has loaded"
-msgstr "Afslut efter motoren er indlæst"
+#. TRANSLATORS: command description
+msgid "Get all devices that support firmware updates"
+msgstr "Hent alle enheder som understøtter firmwareopdateringer"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "Hent alle enhedsflag som understøttes af fwupd"
+
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "Hold øje med hardwareændringer"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Install a raw firmware blob on a device"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "FIL [ENHEDS-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware on a device, all possible devices will also be installed once the CAB matches"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "ENHEDS-ID|GUID"
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Geninstaller firmware på en enhed"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "Tilkobl til firmwaretilstand"
+
+#. TRANSLATORS: command description
+msgid "Get device report metadata"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "Frakobl til opstartsindlæsertilstand"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Fjern binding af nuværende driver"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "UNDERSYSTEM DRIVER [ENHEDS-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Bind ny kernedriver"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "Aktiverer afventende enheder"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FIL|HWID'ER-FIL]"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "Returner alle maskinens hardware-id'er"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWID'ER-FIL"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Gem en fil der gør det muligt at generere hardware-id'er"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "Overvåg dæmonen for hændelser"
+
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEKST"
+
+#. TRANSLATORS: command description
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Underskriv data med klientcertifikat"
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "Opdater det gemte metadata med det nuværende indhold"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "FILNAVN CERTIFIKAT PRIVAT-NØGLE"
+
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Underskriv en firmware med en ny nøgle"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "FILNAVN [ENHEDS-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "Læs en firmwareblob fra en enhed"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware from a device"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "FILNAVN-KILDE FILNAVN-DST [FIRMWARETYPE-KILDE] [FIRMWARE-TYPE-DST]"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Konverter en firmwarefil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BUILDER-XML FILNAVN-DST"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "Byg en firmwarefil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILNAVN [FIRMWARETYPE]"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "Fortolk og vis deltaljer om en firmwarefil"
 
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
@@ -713,75 +1519,1789 @@ msgstr "Eksportér en firmwarefilstruktur til XML"
 msgid "Extract a firmware blob to images"
 msgstr "Udpak en firmwareblob til aftryk"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE"
-msgstr "FIL"
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "Vis de tilgængelige firmwaretyper"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware GTypes"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Gets the configured remotes"
+msgstr "Henter de konfigurerede fjerne"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILE [DEVICE-ID|GUID]"
-msgstr "FIL [ENHEDS-ID|GUID]"
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[FIL FILUNDERSKRIFT FJERN-ID]"
+
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr "Opdater metadata fra fjernserver"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME"
-msgstr "FILNAVN"
+msgid "[FWUPD-VERSION]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "Henter værtens sikkerhedsattributter"
+
+#. TRANSLATORS: command description
+msgid "Adds devices to watch for future emulation"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Removes devices to watch for future emulation"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME CERTIFICATE PRIVATE-KEY"
-msgstr "FILNAVN CERTIFIKAT PRIVAT-NØGLE"
+msgid "EMULATION-FILE [ARCHIVE-FILE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "Monterer ESP'en"
+
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "Afmonterer ESP'en"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "Viser filer på ESP'en"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME [DEVICE-ID|GUID]"
-msgstr "FILNAVN [ENHEDS-ID|GUID]"
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[ENHEDS-ID|GUID] [GREN]"
+
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Skift firmwaregrenen på enheden"
+
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "Slet al historik over firmwareopdateringer"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME [FIRMWARE-TYPE]"
-msgstr "FILNAVN [FIRMWARETYPE]"
+msgid "[SETTING1] [SETTING2]..."
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
+msgstr ""
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
-msgstr "FILNAVN-KILDE FILNAVN-DST [FIRMWARETYPE-KILDE] [FIRMWARE-TYPE-DST]"
+msgid "SETTING VALUE"
+msgstr ""
 
-#. TRANSLATORS: the update state of the specific device
-msgid "Failed"
-msgstr "Mislykkedes"
+#. TRANSLATORS: command description
+msgid "Set a BIOS setting"
+msgstr ""
 
-#. TRANSLATORS: dbx file failed to be applied as an update
-msgid "Failed to apply update"
-msgstr "Kunne ikke anvende opdatering"
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Build a cabinet archive from a firmware blob and XML metadata"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "command-argument"
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: command description
+msgid "List EFI variables with a specific GUID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "List EFI boot parameters"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot next"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX1,INDEX2"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set the EFI boot order"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Delete an EFI boot entry"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX NAME TARGET [MOUNTPOINT]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Create an EFI boot entry"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INDEX KEY [VALUE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Set or remove an EFI boot hive entry"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "List EFI boot files"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[APPSTREAM_ID]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Fix a specific host security attribute"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Undo the host security attribute fix"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Run the post-reboot cleanup action"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SECTION] KEY VALUE"
+msgstr ""
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Modifies a daemon configuration value"
+msgstr "Rediger en værdi i dæmonkonfiguration"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SECTION"
+msgstr ""
+
+#. TRANSLATORS: sets something in the daemon configuration file
+msgid "Resets a daemon configuration section"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "FJERN-ID NØGLE VÆRDI"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "Redigerer en angivet fjern"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "FJERN-ID"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "Aktiverer en angivet fjern"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Deaktiverer en angivet fjern"
+
+#. TRANSLATORS: command description
+msgid "Enables virtual testing devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Disables virtual testing devices"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Get all known version formats"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "VERSION1 VERSION2 [FORMAT]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Compares two versions for equality"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr ""
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "Værktøjet giver en administrator mulighed for at bruge fwupd-plugins uden at installere dem på værtssystemet."
+
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "Firmwareredskab"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Ignorerer strikse SSL-tjeks. Eksportér DISABLE_SSL_STRICT i dit miljø for at gøre det automatisk i fremtiden"
+
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#. TRANSLATORS: the user didn't read the man page, %1 is '--filter'
+#. TRANSLATORS: the user didn't read the man page,
+#. * %1 is '--filter-release'
+#, c-format
+msgid "Failed to parse flags for %s"
+msgstr ""
+
+#. TRANSLATORS: explain how to get help, %1 is
+#. * 'fwupdtool --help'
+#. TRANSLATORS: explain how to get help,
+#. * where $1 is something like 'fwupdmgr --help'
+#, c-format
+msgid "Use %s for help"
+msgstr ""
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Nedgraderer %s …"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Enheder som ikke blev opdateret korrekt:"
+
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "Enheder som det lykkedes at opdatere:"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at identificere opdateringer som fejlede og lykkedes på rigtigt hardware."
+
+#. TRANSLATORS: ask the user to upload
+msgid "Review and upload report now?"
+msgstr ""
+
+#. TRANSLATORS: metadata is downloaded
+msgid "Requires internet connection"
+msgstr "Kræver internetforbindelse"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Vil du deaktivere funktionaliteten for fremtidige opdateringer?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Vil du uploade rapporter automatisk for fremtidige opdateringer?"
+
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr ""
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "Det lykkedes at installere firmware"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr ""
+
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr ""
+
+#. TRANSLATORS: the inhibit ID is a short string like dbus-123456
+#, c-format
+msgid "Inhibit ID is %s."
+msgstr ""
+
+#. TRANSLATORS: we can auto-uninhibit after a timeout
+#, c-format
+msgid "Automatically uninhibiting in %ums…"
+msgstr ""
+
+#. TRANSLATORS: CTRL^C [holding control, and then pressing C] will exit the program
+msgid "Use CTRL^C to cancel."
+msgstr ""
+
+#. TRANSLATORS: this CLI tool is now preventing system updates
+msgid "System Update Inhibited"
+msgstr ""
+
+#. TRANSLATORS: the device is already connected
+msgid "Device already exists"
+msgstr ""
+
+#. TRANSLATORS: the device showed up in time
+#, c-format
+msgid "Successfully waited %.0fms for device"
+msgstr ""
+
+#. TRANSLATORS: device tests can be specific to a CPU type
+#, c-format
+msgid "%u test was skipped"
+msgid_plural "%u tests were skipped"
+msgstr[0] ""
+msgstr[1] ""
+
+#. show the user the entire data blob
+msgid "Target"
+msgstr "Mål"
+
+msgid "Payload"
+msgstr "Nyttelast"
+
+msgid "Signature"
+msgstr "Underskrift"
+
+msgid "Proceed with upload?"
+msgstr "Fortsæt med upload?"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mere information:"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "Det lykkedes at uploade %u rapport"
+msgstr[1] "Det lykkedes at uploade %u rapporter"
+
+#. TRANSLATORS: key for a offline report filename
+msgid "Saved report"
+msgstr ""
+
+#. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
+#. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
+#, c-format
+msgid "%s is pending activation; use %s to complete the update."
+msgstr ""
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "Opdatering af enhedens tjeksumme lykkedes"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Der er ikke nogen metadata da der ikke er aktiveret nogen fjerne."
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Aktivér fjernen?"
+
+msgid "Updating"
+msgstr "Opdaterer"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr ""
+
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr ""
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] ""
+msgstr[1] ""
+
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] ""
+msgstr[1] ""
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "Det lykkedes at opdatere metadata manuelt"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "Ingen tilgængelige udgivelser"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No matching releases for search token"
+msgstr ""
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose release"
+msgstr ""
+
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "Bekræftelse af enhedens tjeksumme lykkedes"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#, c-format
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] "Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
+msgstr[1] "Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
+
+#. TRANSLATORS: ask if we can update metadata
+msgid "Update now?"
+msgstr "Opdater nu?"
+
+#. TRANSLATORS: this is an error string
+msgid "No updatable devices"
+msgstr ""
+
+#. TRANSLATORS: this is an error string
+msgid "No updates available"
+msgstr ""
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "Ingen tilgængelige fjerne"
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr ""
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr ""
+
+#. TRANSLATORS: the best known configuration is a set of software that we know works
+#. * well together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr ""
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Udfør handling?"
+
+#. TRANSLATORS: ask if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Vil du opdatere fjernen nu?"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Det lykkedes at aktivere og opdatere fjernen"
+
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "Ingen nedgraderinger til %s"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "Aktiverer firmwareopdatering for"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Det lykkedes at aktivere alle enheder"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "Der er ikke nogen godkendt firmware."
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Godkendt firmware:"
+msgstr[1] "Godkendt firmware:"
+
+#. TRANSLATORS: changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Genstart dæmonen så ændringerne kan træde i kraft?"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully reset configuration values"
+msgstr ""
+
+#. TRANSLATORS: ask the user to share, %s is something
+#. * like: "Linux Vendor Firmware Service"
+#, c-format
+msgid "Upload these anonymous results to the %s to help other users?"
+msgstr ""
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Host Security ID attributes uploaded successfully, thanks!"
+msgstr ""
+
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "Upload automatisk hver gang?"
+
+#. TRANSLATORS: title prefix for the BIOS settings dialog
+msgid "Configuration Change Suggested"
+msgstr ""
+
+#. TRANSLATORS: the %1 is a BIOS setting name.
+#. * %2 and %3 are the values, e.g. "True" or "Windows10"
+#, c-format
+msgid "This tool can change the BIOS setting '%s' from '%s' to '%s' automatically, but it will only be active after restarting the computer."
+msgstr ""
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from the system firmware setup, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr ""
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can change the kernel argument from '%s' to '%s', but it will only be active after restarting the computer."
+msgstr ""
+
+#. TRANSLATORS: the %1 is a kernel command line key=value
+#, c-format
+msgid "This tool can add a kernel argument of '%s', but it will only be active after restarting the computer."
+msgstr ""
+
+#. TRANSLATORS: the user has to manually recover; we can't do it
+msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "Kan ikke oprette forbindelse til tjeneste"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Ikke-understøttet dæmonversion %s, klientversionen er %s"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "Firmware er allerede blokeret"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "Blokerer firmware:"
+
+#. TRANSLATORS: nothing to show
+msgid "There are no blocked firmware files"
+msgstr "Der er ikke nogen blokerede firmwarefiler"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "Firmware er ikke allerede blokeret"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "Fjerner blokering af firmware:"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "Blokerede firmwarefiler:"
+
+#. TRANSLATORS: explain why we want to upload
+#, c-format
+msgid "Uploading a device list allows the %s team to know what hardware exists, and allows us to put pressure on vendors that do not upload firmware updates for their hardware."
+msgstr ""
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload data now?"
+msgstr ""
+
+#. TRANSLATORS: success, so say thank you to the user
+msgid "Device list uploaded successfully, thanks!"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Set the download retries for transient errors"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Svar ja til alle spørgsmål"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "Underskriv den uploadede data med klientcertifikatet"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "Tjek ikke efter gammel metadata"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Tjek ikke om download af fjerne skal aktiveres"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "Skriv ikke til historikdatabasen"
+
+#. TRANSLATORS: command line option
+msgid "Only use peer-to-peer networking when downloading files"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Do not prompt to fix security issues"
+msgstr ""
+
+#. TRANSLATORS: command line option
+msgid "Don't prompt for authentication (less details may be shown)"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "Del historik over firmware med udviklerne"
+
+#. TRANSLATORS: command description
+msgid "Export firmware history for manual upload"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [VERSION]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Install a specific firmware file on all devices that match"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Install a firmware file in cabinet format on this hardware"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "Tjekker om den kryptografiske hash passer med firmwaren"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "Låser op for enheden for at få adgang til firmwaren"
+
+#. TRANSLATORS: command description
+msgid "Clears the results from the last update"
+msgstr "Rydder resultaterne fra den sidste opdatering"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "Henter resultaterne fra den sidste opdatering"
+
+#. TRANSLATORS: command description
+msgid "Gets the releases for a device"
+msgstr "Henter resultaterne fra en enhed"
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "Nedgraderer firmwaren på en enhed"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "Opdater den gemte kryptografiske hash med indholdet fra den nuværende ROM"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "Aktivér enheder"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Henter listen over godkendt firmware"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "Geninstaller den nuværende firmware på enheden"
+
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the chosen configuration"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[CHECKSUM]"
+
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "Blokerer en bestemt firmware fra at blive installeret"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Fjerner blokering af en bestemt firmware fra at blive installeret"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "Henter listen over blokerede firmware"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "PLACERING"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Download en fil"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILNAVN1] [FILNAVN2]"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "Test en enhed med et JSON-manifest"
+
+#. TRANSLATORS: command description
+msgid "Emulate a device using a JSON manifest"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[REASON] [TIMEOUT]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Inhibit the system to prevent upgrades"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "INHIBIT-ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Uninhibit the system to allow upgrades"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "GUID|DEVICE-ID"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Wait for a device to appear"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Asks the daemon to quit"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SETTING1] [SETTING2] [--no-authenticate]"
+msgstr ""
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SETTING1 VALUE1 [SETTING2] [VALUE2]"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Sets one or more BIOS settings"
+msgstr ""
+
+#. TRANSLATORS: command description
+msgid "Upload the list of updatable devices to a remote server"
+msgstr ""
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "Værktøjet giver en administrator mulighed for at sætte i kø og styre fwupd-dæmonen, hvorved denne kan udføre handlinger såsom at installere eller nedgradere firmware."
+
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "Systemets ur er ikke blevet indstillet korrekt og download af filer kan mislykkes."
+
+#. TRANSLATORS: error message for Windows
+msgid "Failed to connect to Windows service, please ensure it's running."
+msgstr ""
 
 #. TRANSLATORS: could not contact the fwupd service over D-Bus
 msgid "Failed to connect to daemon"
 msgstr "Kunne ikke oprette forbindelse til dæmonen"
 
-#. TRANSLATORS: could not read existing system data
-#. TRANSLATORS: could not read file
-msgid "Failed to load local dbx"
-msgstr "Kunne ikke indlæse lokal dbx"
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Dæmonen har indlæst tredjepartskode og understøttes ikke længere af opstrømsudviklerne!"
 
-#. TRANSLATORS: could not read existing system data
-msgid "Failed to load system dbx"
-msgstr "Kunne ikke indlæse systemets dbx"
+#. TRANSLATORS: a feature is something like "can show an image"
+msgid "Failed to set front-end features"
+msgstr ""
 
-#. TRANSLATORS: another fwupdtool instance is already running
-msgid "Failed to lock"
-msgstr "Kunne ikke låse"
+#. TRANSLATORS: The BIOS setting can only be changed to fixed values
+msgid "Enumeration"
+msgstr ""
 
-#. TRANSLATORS: the user didn't read the man page
-msgid "Failed to parse arguments"
-msgstr "Kunne ikke fortolke argumenter"
+#. TRANSLATORS: The BIOS setting only accepts integers in a fixed range
+msgid "Integer"
+msgstr ""
 
-#. TRANSLATORS: failed to read measurements file
-msgid "Failed to parse file"
-msgstr "Kunne ikke fortolke fil"
+#. TRANSLATORS: The BIOS setting accepts strings
+msgid "String"
+msgstr ""
 
-#. TRANSLATORS: could not parse file
-msgid "Failed to parse local dbx"
-msgstr "Kunne ikke fortolke lokal dbx"
+#. TRANSLATORS: type of BIOS setting
+msgid "Setting type"
+msgstr ""
 
-#. TRANSLATORS: something with a blocked hash exists
-#. * in the users ESP -- which would be bad!
-msgid "Failed to validate ESP contents"
-msgstr "Kunne ikke validere ESP-indhold"
+#. TRANSLATORS: tell a user how to get information
+#, c-format
+msgid "Run without '%s' to see"
+msgstr ""
+
+#. TRANSLATORS: current value of a BIOS setting
+msgid "Current Value"
+msgstr ""
+
+#. TRANSLATORS: description of BIOS setting
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "Beskrivelse"
+
+#. TRANSLATORS: item is TRUE
+msgid "True"
+msgstr ""
+
+#. TRANSLATORS: item is FALSE
+msgid "False"
+msgstr ""
+
+#. TRANSLATORS: BIOS setting is read only
+msgid "Read Only"
+msgstr ""
+
+#. TRANSLATORS: Lowest valid integer for BIOS setting
+msgid "Minimum value"
+msgstr ""
+
+#. TRANSLATORS: Highest valid integer for BIOS setting
+msgid "Maximum value"
+msgstr ""
+
+#. TRANSLATORS: Scalar increment for integer BIOS setting
+msgid "Scalar Increment"
+msgstr ""
+
+#. TRANSLATORS: Shortest valid string for BIOS setting
+msgid "Minimum length"
+msgstr ""
+
+#. TRANSLATORS: Longest valid string for BIOS setting
+msgid "Maximum length"
+msgstr ""
+
+#. TRANSLATORS: Possible values for a bios setting
+msgid "Possible Values"
+msgstr ""
+
+#. TRANSLATORS: error message
+msgid "Invalid arguments"
+msgstr ""
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr ""
+
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr ""
+
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr ""
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Nedgrader %s fra %s til %s?"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade %s from %s to %s?"
+msgstr "Opgrader %s fra %s til %s?"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Geninstaller %s til %s?"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "%s og alle tilsluttede enheder vil måske ikke være anvendelige under opdatering."
+
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
+#.
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "%s skal være tilsluttet under hele opdateringen, for at undgå skade."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
+#.
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "%s skal være tilsluttet en strømkilde under hele opdateringen, for at undgå skade."
+
+#. TRANSLATORS: explain why
+msgid "An update requires the system to shutdown to complete."
+msgstr "For at fuldføre en opdatering skal systemet lukkes ned."
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Luk ned nu?"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "For at fuldføre en opdatering skal systemet genstartes."
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Genstart nu?"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "Alias til %s"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "Kommandoen blev ikke fundet"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "standard"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "Enhedsopdatering for %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "Opdatering for konfiguration %s"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "Systemopdatering for %s"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "Opdatering af indlejret controller %s"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "ME-opdatering for %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s ME-opdatering for virksomhed"
+
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s ME-opdatering for forbruger"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "Opdatering af controller %s"
+
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "Opdatering af Thunderbolt-controller %s"
+
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system boot-up
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s opdatering af CPU-mikrokode"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s Opdatering for batteri"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s Opdatering for kamera"
+
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s Opdatering for TPM"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s Opdatering for pegeplade"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s Opdatering for mus"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s Opdatering for tastatur"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "Opdatering af lagercontroller %s"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "Opdatering af netværksgrænseflade %s"
+
+#. TRANSLATORS: Video Display refers to the laptop internal display or
+#. * external monitor
+#, c-format
+msgid "%s Display Update"
+msgstr ""
+
+#. TRANSLATORS: BMC refers to baseboard management controller which
+#. * is the device that updates all the other firmware on the system
+#, c-format
+msgid "%s BMC Update"
+msgstr ""
+
+#. TRANSLATORS: Receiver refers to a radio device, e.g. a tiny Bluetooth
+#. * device that stays in the USB port so the wireless peripheral works
+#, c-format
+msgid "%s USB Receiver Update"
+msgstr ""
+
+#. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
+#, c-format
+msgid "%s Drive Update"
+msgstr ""
+
+#. TRANSLATORS: flash refers to solid state storage, e.g. UFS or eMMC
+#, c-format
+msgid "%s Flash Drive Update"
+msgstr ""
+
+#. TRANSLATORS: SSD refers to a Solid State Drive, e.g. non-rotating
+#. * SATA or NVMe disk
+#, c-format
+msgid "%s SSD Update"
+msgstr ""
+
+#. TRANSLATORS: GPU refers to a Graphics Processing Unit, e.g.
+#. * the "video card"
+#, c-format
+msgid "%s GPU Update"
+msgstr ""
+
+#. TRANSLATORS: Dock refers to the port replicator hardware laptops are
+#. * cradled in, or lowered onto
+#, c-format
+msgid "%s Dock Update"
+msgstr ""
+
+#. TRANSLATORS: Dock refers to the port replicator device connected
+#. * by plugging in a USB cable -- which may or may not also provide power
+#, c-format
+msgid "%s USB Dock Update"
+msgstr ""
+
+#. TRANSLATORS: a device that can read your fingerprint pattern
+#, c-format
+msgid "%s Fingerprint Reader Update"
+msgstr ""
+
+#. TRANSLATORS: a large pressure-sensitive drawing area typically used
+#. * by artists and digital artists
+#, c-format
+msgid "%s Graphics Tablet Update"
+msgstr ""
+
+#. TRANSLATORS: an input device used by gamers, e.g. a joystick
+#, c-format
+msgid "%s Input Controller Update"
+msgstr ""
+
+#. TRANSLATORS: two miniature speakers attached to your ears
+#, c-format
+msgid "%s Headphones Update"
+msgstr ""
+
+#. TRANSLATORS: headphones with an integrated microphone
+#, c-format
+msgid "%s Headset Update"
+msgstr ""
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "Opdatering for %s"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekund"
+msgstr[1] "%u sekunder"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minut"
+msgstr[1] "%u minutter"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u time"
+msgstr[1] "%u timer"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dag"
+msgstr[1] "%u dage"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Intern enhed"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Kan opdateres"
+
+#. TRANSLATORS: Must be plugged into an outlet
+msgid "System requires external power source"
+msgstr "Systemet kræver ekstern strømkilde"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Enheden er låst"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "Understøttes på fjernserver"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "Kræver en opstartsindlæser"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "Genstart efter installation er nødvendig"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "Nedlukning efter installation er nødvendig"
+
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "Rapporteret til fjernserver"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "Brugeren er blevet underrettet"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "Er i opstartsindlæsertilstand"
+
+#. TRANSLATORS: the hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "Hardwaren venter på at bliver gentilkoblet"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "Enhedsopdatering behøver aktivering"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "Enheden vises ikke igen når opdateringen er færdig"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "Bekræftelse af kryptografisk hash er tilgængelig"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "Enhedstrin-opdateringer"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "Enheden kan gendannes efter mislykkedes flash"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "Enheden kan anvendes under hele opdateringen"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "Enhedsfirmware kræves for at have et versiontjek"
+
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
+msgid "Device is required to install all provided releases"
+msgstr "Enhed kræves for at installere alle leverede udgivelser"
+
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "Enheden understøtter at der kan skiftes til en anden gren med firmware"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "Enheden sikkerhedskopierer firmwaren inden installation"
+
+#. TRANSLATORS: on some systems certain devices have to have matching versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "Alle enheder af den samme type opdateres samtidigt"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "Kun versionsopgraderinger er tilladte"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "Enheden er utilgængelig"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr ""
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr ""
+
+#. TRANSLATORS: firmware is verified on-device the payload using strong crypto
+msgid "Signed Payload"
+msgstr ""
+
+#. TRANSLATORS: firmware payload is unsigned and it is possible to modify it
+msgid "Unsigned Payload"
+msgstr ""
+
+#. TRANSLATORS: this device is not actually real
+msgid "Emulated"
+msgstr ""
+
+#. TRANSLATORS: we're saving all USB events for emulation
+msgid "Tagged for emulation"
+msgstr ""
+
+#. TRANSLATORS: stay on one firmware version unless the new version is explicitly
+#. * specified
+msgid "Installing a specific release is explicitly required"
+msgstr ""
+
+#. TRANSLATORS: we can save all device enumeration events for emulation
+msgid "Can tag for emulation"
+msgstr ""
+
+#. TRANSLATORS: ask the user to do a simple task which should be translated
+msgid "Message"
+msgstr ""
+
+#. TRANSLATORS: show the user a generic image that can be themed
+msgid "Image"
+msgstr ""
+
+#. TRANSLATORS: ask the user a question, and it will not be translated
+msgid "Message (custom)"
+msgstr ""
+
+#. TRANSLATORS: show the user a random image from the internet
+msgid "Image (custom)"
+msgstr ""
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Pending"
+msgstr "Afventer"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "Lykkedes"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "Mislykkedes"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Transient failure"
+msgstr "Forbigående mislykkedes"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "Genstart er nødvendig"
+
+#. TRANSLATORS: as in laptop battery power
+msgid "System power is too low"
+msgstr ""
+
+#. TRANSLATORS: as in laptop battery power
+#, c-format
+msgid "System power is too low (%u%%, requires %u%%)"
+msgstr ""
+
+#. TRANSLATORS: for example, a Bluetooth mouse that is in powersave mode
+msgid "Device is unreachable, or out of wireless range"
+msgstr ""
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+msgid "Device battery power is too low"
+msgstr ""
+
+#. TRANSLATORS: for example the batteries *inside* the Bluetooth mouse
+#, c-format
+msgid "Device battery power is too low (%u%%, requires %u%%)"
+msgstr ""
+
+#. TRANSLATORS: usually this is when we're waiting for a reboot
+msgid "Device is waiting for the update to be applied"
+msgstr ""
+
+#. TRANSLATORS: as in, wired mains power for a laptop
+msgid "Device requires AC power to be connected"
+msgstr ""
+
+#. TRANSLATORS: lid means "laptop top cover"
+msgid "Device cannot be updated while the lid is closed"
+msgstr ""
+
+#. TRANSLATORS: emulated means we are pretending to be a different model
+msgid "Device is emulated"
+msgstr ""
+
+#. TRANSLATORS: The device cannot be updated due to missing vendor's license."
+msgid "Device requires a software license to update"
+msgstr ""
+
+#. TRANSLATORS: an application is preventing system updates
+msgid "All devices are prevented from update by system inhibit"
+msgstr ""
+
+#. TRANSLATORS: another application is updating the device already
+msgid "An update is in progress"
+msgstr ""
+
+#. TRANSLATORS: device cannot be interrupted, for instance taking a phone call
+msgid "Device is in use"
+msgstr ""
+
+#. TRANSLATORS: device does not have a display connected
+msgid "Device requires a display to be plugged in"
+msgstr ""
+
+#. TRANSLATORS: we have two ways of communicating with the device, so we hide one
+msgid "Device is lower priority than an equivalent device"
+msgstr ""
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Ukendt enhed"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "Enheds-id"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "Opsummering"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Forrige version"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Nuværende version"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Minimum version"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Opstartsindlæser version"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Producent"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Release Branch"
+msgstr "Udgivelsesgren"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "Varighed for installation"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "Serienummer"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "Opdateringstilstand"
+
+#. TRANSLATORS: first percentage is current value, 2nd percentage is the
+#. * lowest limit the firmware update is allowed for the update to happen
+#, c-format
+msgid "%u%% (threshold %u%%)"
+msgstr ""
+
+#. TRANSLATORS: refers to the battery inside the peripheral device
+msgid "Battery"
+msgstr ""
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "Fejl ved opdatering"
+
+#. TRANSLATORS: reasons the device is not updatable
+msgid "Problems"
+msgstr ""
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "Sidst redigeret"
+
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUID'er"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "Enhedsflag"
+
+#. TRANSLATORS: description of the device requests
+msgid "Device Requests"
+msgstr ""
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Problemstilling"
+msgstr[1] "Problemstillinger"
+
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr ""
+
+#. TRANSLATORS: Plugin is active and in use
+msgid "Ready"
+msgstr ""
+
+#. TRANSLATORS: Plugin is inactive and not used
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Disabled"
+msgstr "Deaktiveret"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "Det krævede hardware blev ikke fundet"
+
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "UEFI-firmware kan ikke opdateres i forældet BIOS-tilstand"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "UEFI-kapselopdateringer ikke tilgængelige eller aktiveret i firmwareopsætning"
+
+#. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
+#, c-format
+msgid "Firmware updates disabled; run '%s' to enable"
+msgstr ""
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "Der kræves autentifikationsdetaljer"
+
+#. TRANSLATORS: no peeking
+msgid "Configuration is only readable by the system administrator"
+msgstr ""
+
+#. TRANSLATORS: the plugin was created from a .so object, and was not built-in
+msgid "Loaded from an external module"
+msgstr ""
+
+#. TRANSLATORS: check various UEFI and ACPI tables are unchanged after the update
+msgid "Will measure elements of system integrity around an update"
+msgstr ""
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "Krævede efivarfs-filsystem blev ikke fundet"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "UEFI ESP-partition ikke registreret eller konfigureret"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition may not be set up correctly"
+msgstr ""
+
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "Plugin-afhængigheder mangler"
+
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "Kørende kerne er for gammel"
+
+#. TRANSLATORS: The plugin is only for testing
+msgid "Plugin is only for testing"
+msgstr ""
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr ""
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+msgid "Flags"
+msgstr "Flag"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Proprietær"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Lav"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Mellem"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Høj"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Kritisk"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr ""
+
+#. TRANSLATORS: We verified the metadata against the server
+msgid "Trusted metadata"
+msgstr ""
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr ""
+
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr ""
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr ""
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr ""
+
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr ""
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr ""
+
+#. TRANSLATORS: someone we trust has tested this
+msgid "Tested by trusted vendor"
+msgstr ""
+
+#. TRANSLATORS: the %s is a vendor name, e.g. Lenovo
+#, c-format
+msgid "Tested by %s"
+msgstr ""
+
+#. TRANSLATORS: when the release was tested
+msgid "Tested"
+msgstr ""
+
+#. TRANSLATORS: the OS the release was tested on
+msgid "Distribution"
+msgstr ""
+
+#. TRANSLATORS: the firmware old version
+msgid "Old version"
+msgstr ""
+
+#. TRANSLATORS: the fwupd version the release was tested on
+msgid "Version[fwupd]"
+msgstr ""
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Ny version"
+
+#. TRANSLATORS: the server the file is coming from
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "Fjern-id"
+
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr ""
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree
+msgid "Branch"
+msgstr "Gren"
+
+#. TRANSLATORS: one line variant of release (e.g. 'China')
+msgid "Variant"
+msgstr "Variant"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "Licens"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Størrelse"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Oprettet"
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Vigtighed"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Detaljer"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Kilde"
+
+#. TRANSLATORS: Software Bill of Materials link
+msgid "SBOM"
+msgstr ""
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Varighed"
+
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "Opdateringsmeddelelse"
+
+#. TRANSLATORS: helpful image for the update
+msgid "Update Image"
+msgstr ""
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr ""
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] ""
+msgstr[1] ""
+
+#. TRANSLATORS: hash to that exact firmware archive
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "Checksum"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Type"
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Metadata"
+msgstr ""
+
+#. TRANSLATORS: if we can get metadata from peer-to-peer clients
+msgid "P2P Firmware"
+msgstr ""
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Alder"
+
+#. TRANSLATORS: how often we should refresh the metadata
+msgid "Refresh Interval"
+msgstr ""
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Prioritet"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Brugernavn"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Adgangskode"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -795,394 +3315,97 @@ msgstr "Filnavnets underskrift"
 msgid "Filename Source"
 msgstr "Filnavnets kilde"
 
-#. TRANSLATORS: user did not include a filename parameter
-msgid "Filename required"
-msgstr "Filnavn kræves"
-
-#. TRANSLATORS: command line option
-msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "Filtrer med et sæt enhedsflag med et ~-præfiks for at udelukke, f.eks. 'intern,~behøver-genstart'"
-
 #. TRANSLATORS: remote URI
-msgid "Firmware Base URI"
-msgstr "Grund-URI for firmware"
-
-#. TRANSLATORS: program summary
-msgid "Firmware Update D-Bus Service"
-msgstr "D-Bus-tjeneste for firmwareopdatering"
-
-#. TRANSLATORS: program name
-msgid "Firmware Update Daemon"
-msgstr "Firmwareopdateringsdæmon"
-
-#. TRANSLATORS: program name
-msgid "Firmware Utility"
-msgstr "Firmwareredskab"
-
-#. TRANSLATORS: Title: if we can verify the firmware checksums
-msgid "Firmware attestation"
-msgstr "Firmwareattest"
-
-#. TRANSLATORS: user selected something not possible
-msgid "Firmware is already blocked"
-msgstr "Firmware er allerede blokeret"
-
-#. TRANSLATORS: user selected something not possible
-msgid "Firmware is not already blocked"
-msgstr "Firmware er ikke allerede blokeret"
-
-#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
-#, c-format
-msgid "Firmware metadata has not been updated for %u day and may not be up to date."
-msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
-msgstr[0] "Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
-msgstr[1] "Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
-
-#. TRANSLATORS: Title: if firmware updates are available
-msgid "Firmware updates"
-msgstr "Firmwareopdateringer"
-
-#. TRANSLATORS: description of plugin state, e.g. disabled
-msgid "Flags"
-msgstr "Flag"
-
-#. TRANSLATORS: command line option
-msgid "Force the action by relaxing some runtime checks"
-msgstr "Gennemtving handlingen ved at afslappe visse runtimetjek"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Found"
-msgstr "Fundet"
-
-#. TRANSLATORS: global ID common to all similar hardware
-msgid "GUID"
-msgid_plural "GUIDs"
-msgstr[0] "GUID"
-msgstr[1] "GUID'er"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgctxt "command-argument"
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all device flags supported by fwupd"
-msgstr "Hent alle enhedsflag som understøttes af fwupd"
-
-#. TRANSLATORS: command description
-msgid "Get all devices that support firmware updates"
-msgstr "Hent alle enheder som understøtter firmwareopdateringer"
-
-#. TRANSLATORS: command description
-msgid "Get all enabled plugins registered with the system"
-msgstr "Hent alle aktiverede plugins som er registreret med systemet"
-
-#. TRANSLATORS: command description
-msgid "Gets details about a firmware file"
-msgstr "Hent detaljer om en firmwarefil"
-
-#. TRANSLATORS: command description
-msgid "Gets the configured remotes"
-msgstr "Henter de konfigurerede fjerne"
-
-#. TRANSLATORS: command description
-msgid "Gets the host security attributes"
-msgstr "Henter værtens sikkerhedsattributter"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware"
-msgstr "Henter listen over godkendt firmware"
-
-#. TRANSLATORS: command description
-msgid "Gets the list of blocked firmware"
-msgstr "Henter listen over blokerede firmware"
-
-#. TRANSLATORS: command description
-msgid "Gets the releases for a device"
-msgstr "Henter resultaterne fra en enhed"
-
-#. TRANSLATORS: command description
-msgid "Gets the results from the last update"
-msgstr "Henter resultaterne fra den sidste opdatering"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "HWIDS-FILE"
-msgstr "HWID'ER-FIL"
-
-#. TRANSLATORS: the hardware is waiting to be replugged
-msgid "Hardware is waiting to be replugged"
-msgstr "Hardwaren venter på at bliver gentilkoblet"
-
-#. TRANSLATORS: the release urgency
-msgid "High"
-msgstr "Høj"
-
-#. TRANSLATORS: this is a string like 'HSI:2-U'
-msgid "Host Security ID:"
-msgstr "Værtens sikkerheds-ID:"
-
-#. TRANSLATORS: Title:
-#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
-msgid "IOMMU"
-msgstr "IOMMU"
-
-#. TRANSLATORS: daemon is inactive
-msgid "Idle…"
-msgstr "Inaktiv …"
-
-#. TRANSLATORS: command line option
-msgid "Ignore SSL strict checks when downloading files"
-msgstr "Ignorer strikse SSL-tjek ved download af filer"
-
-#. TRANSLATORS: command line option
-msgid "Ignore firmware checksum failures"
-msgstr "Ignorer mislykkede checksum for firmware"
-
-#. TRANSLATORS: command line option
-msgid "Ignore firmware hardware mismatch failures"
-msgstr "Ignorer mislykkedes firmwarehardware som ikke passer sammen"
-
-#. TRANSLATORS: try to help
-msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "Ignorerer strikse SSL-tjeks. Eksportér DISABLE_SSL_STRICT i dit miljø for at gøre det automatisk i fremtiden"
-
-#. TRANSLATORS: length of time the update takes to apply
-msgid "Install Duration"
-msgstr "Varighed for installation"
-
-msgid "Install signed device firmware"
-msgstr "Installer enhedsfirmware der er underskrevet"
-
-msgid "Install signed system firmware"
-msgstr "Installer systemfirmware der er underskrevet"
-
-msgid "Install unsigned device firmware"
-msgstr "Installer enhedsfirmware der ikke er underskrevet"
-
-msgid "Install unsigned system firmware"
-msgstr "Installer systemfirmware der ikke er underskrevet"
-
-#. TRANSLATORS: this is shown when updating the firmware after the reboot
-msgid "Installing firmware update…"
-msgstr "Installerer firmwareopdateringer …"
-
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing on %s…"
-msgstr "Installerer på %s …"
-
-#. TRANSLATORS: Title: BootGuard is a trademark from Intel
-msgid "Intel BootGuard"
-msgstr "Intel BootGuard"
-
-#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
-#. * ACM means to verify the integrity of Initial Boot Block
-msgid "Intel BootGuard ACM protected"
-msgstr "Intel BootGuard ACM-beskyttet"
-
-#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
-#. * OTP = one time programmable
-msgid "Intel BootGuard OTP fuse"
-msgstr "Intel BootGuard OTP-fuse"
-
-#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
-#. * error policy is what to do on failure
-msgid "Intel BootGuard error policy"
-msgstr "Intel BootGuard regler om fejl"
-
-#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
-#. * verified boot refers to the way the boot process is verified
-msgid "Intel BootGuard verified boot"
-msgstr "Intel BootGuard bekræftet start"
-
-#. TRANSLATORS: Device cannot be removed easily
-msgid "Internal device"
-msgstr "Intern enhed"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Invalid"
-msgstr "Ugyldig"
-
-#. TRANSLATORS: Is currently in bootloader mode
-msgid "Is in bootloader mode"
-msgstr "Er i opstartsindlæsertilstand"
-
-#. TRANSLATORS: issue fixed with the release, e.g. CVE
-msgid "Issue"
-msgid_plural "Issues"
-msgstr[0] "Problemstilling"
-msgstr[1] "Problemstillinger"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "LOCATION"
-msgstr "PLACERING"
-
-#. TRANSLATORS: the original time/date the device was modified
-msgid "Last modified"
-msgstr "Sidst redigeret"
-
-#. TRANSLATORS: time remaining for completing firmware flash
-msgid "Less than one minute remaining"
-msgstr "Mindre end et minut tilbage"
-
-#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
-msgid "License"
-msgstr "Licens"
-
-msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Linux Vendor Firmware Service (stabilt firmware)"
-
-msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux Vendor Firmware Service (testning firmware)"
-
-#. TRANSLATORS: Title: if it's tainted or not
-msgid "Linux kernel"
-msgstr "Linux-kerne"
-
-#. TRANSLATORS: Title: lockdown is a security mode of the kernel
-msgid "Linux kernel lockdown"
-msgstr "Nedlukning af Linux-kerne"
-
-#. TRANSLATORS: Title: swap space or swap partition
-msgid "Linux swap"
-msgstr "Linux-swap"
-
-#. TRANSLATORS: command line option
-msgid "List entries in dbx"
-msgstr "Vis poster i dbx"
-
-#. TRANSLATORS: command description
-msgid "List the available firmware types"
-msgstr "Vis de tilgængelige firmwaretyper"
-
-#. TRANSLATORS: command description
-msgid "Lists files on the ESP"
-msgstr "Viser filer på ESP'en"
-
-#. TRANSLATORS: parsing the firmware information
-msgid "Loading…"
-msgstr "Indlæser …"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Locked"
-msgstr "Låst"
-
-#. TRANSLATORS: the release urgency
-msgid "Low"
-msgstr "Lav"
-
-#. TRANSLATORS: Title: MEI = Intel Management Engine
-msgid "MEI manufacturing mode"
-msgstr "MEI-fabrikstilstand"
-
-#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
-#. * "override" is the physical PIN that can be driven to
-#. * logic high -- luckily it is probably not accessible to
-#. * end users on consumer boards
-msgid "MEI override"
-msgstr "MEI-tilsidesættelse"
-
-msgid "MEI version"
-msgstr "MEI-version"
-
-#. TRANSLATORS: command line option
-msgid "Manually enable specific plugins"
-msgstr "Aktivér bestemte plugins manuelt"
-
-#. TRANSLATORS: the release urgency
-msgid "Medium"
-msgstr "Mellem"
+msgid "Metadata URI"
+msgstr "Metadata-URI"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
 msgstr "Underskrift for metadata"
 
 #. TRANSLATORS: remote URI
-msgid "Metadata URI"
-msgstr "Metadata-URI"
+msgid "Firmware Base URI"
+msgstr "Grund-URI for firmware"
 
-#. TRANSLATORS: explain why no metadata available
-msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "Rapport-URI"
 
-#. TRANSLATORS: smallest version number installable on device
-msgid "Minimum Version"
-msgstr "Minimum version"
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "Automatisk rapportering"
 
-#. TRANSLATORS: sets something in the daemon configuration file
-msgid "Modifies a daemon configuration value"
-msgstr "Rediger en værdi i dæmonkonfiguration"
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Modifies a given remote"
-msgstr "Redigerer en angivet fjern"
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been unplugged."
+msgstr ""
 
-msgid "Modify a configured remote"
-msgstr "Rediger en konfigureret fjern"
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "The update will continue when the device USB cable has been re-inserted."
+msgstr ""
 
-msgid "Modify daemon configuration"
-msgstr "Rediger dæmonkonfiguration"
+#. TRANSLATORS: warning message
+msgid "Press unlock on the device to continue the update process."
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Monitor the daemon for events"
-msgstr "Overvåg dæmonen for hændelser"
+#. TRANSLATORS: warning message shown after update has been scheduled
+msgid "Do not turn off your computer or remove the AC adaptor while the update is in progress."
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Mounts the ESP"
-msgstr "Monterer ESP'en"
+#. TRANSLATORS: message shown after device has been marked for emulation
+msgid "Unplug and replug the device to continue the update process."
+msgstr ""
 
-#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
-msgid "Needs a reboot after installation"
-msgstr "Genstart efter installation er nødvendig"
+#. TRANSLATORS: warning message
+msgid "The update will continue when the device power cable has been removed and re-inserted."
+msgstr ""
 
-#. TRANSLATORS: the update state of the specific device
-msgid "Needs reboot"
-msgstr "Genstart er nødvendig"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "Gyldig"
 
-#. TRANSLATORS: Requires system shutdown to apply firmware
-msgid "Needs shutdown after installation"
-msgstr "Nedlukning efter installation er nødvendig"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "Ugyldig"
 
-#. TRANSLATORS: version number of new firmware
-msgid "New version"
-msgstr "Ny version"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "Låst"
 
-#. TRANSLATORS: user did not tell the tool what to do
-msgid "No action specified!"
-msgstr "Der er ikke angivet nogen handling!"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Låst op"
 
-#. TRANSLATORS: message letting the user know no device downgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No downgrades for %s"
-msgstr "Ingen nedgraderinger til %s"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "Krypteret"
 
-#. TRANSLATORS: nothing found
-msgid "No firmware IDs found"
-msgstr "Fandt ingen firmware-id'er"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "Dekrypteret"
 
-#. TRANSLATORS: nothing attached that can be upgraded
-msgid "No hardware detected with firmware update capability"
-msgstr "Der blev ikke fundet nogen hardware med firmware som kan opdateres"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "Tainted"
 
-#. TRANSLATORS: no repositories to download from
-msgid "No releases available"
-msgstr "Ingen tilgængelige udgivelser"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Untainted"
+msgstr "Untainted"
 
-#. TRANSLATORS: explain why no metadata available
-msgid "No remotes are currently enabled so no metadata is available."
-msgstr "Der er ikke nogen metadata da der ikke er aktiveret nogen fjerne."
-
-#. TRANSLATORS: no repositories to download from
-msgid "No remotes available"
-msgstr "Ingen tilgængelige fjerne"
-
-msgid "No updates available for remaining devices"
-msgstr "Ingen opdateringer tilgængelige for tilbageværende enheder"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Fundet"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
 msgstr "Ikke fundet"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "Understøttet"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not supported"
@@ -1192,378 +3415,141 @@ msgstr "Ikke-understøttet"
 msgid "OK"
 msgstr "OK"
 
-#. TRANSLATORS: command line option
-msgid "Only show single PCR value"
-msgstr "Vis kun én PCR-værdi"
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(forældet)"
 
-#. TRANSLATORS: some devices can only be updated to a new semver and cannot
-#. * be downgraded or reinstalled with the existing version
-msgid "Only version upgrades are allowed"
-msgstr "Kun versionsopgraderinger er tilladte"
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr ""
 
-#. TRANSLATORS: command line option
-msgid "Override the default ESP path"
-msgstr "Tilsidesæt standard-ESP-stien"
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr ""
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "PATH"
-msgstr "STI"
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Parse and show details about a firmware file"
-msgstr "Fortolk og vis deltaljer om en firmwarefil"
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr ""
 
-#. TRANSLATORS: reading new dbx from the update
-msgid "Parsing dbx update…"
-msgstr "Fortolker dbx-opdatering …"
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr ""
 
-#. TRANSLATORS: reading existing dbx from the system
-msgid "Parsing system dbx…"
-msgstr "Fortolker systemets dbx …"
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr ""
 
-#. TRANSLATORS: remote filename base
-msgid "Password"
-msgstr "Adgangskode"
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr ""
 
-msgid "Payload"
-msgstr "Nyttelast"
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr ""
 
-#. TRANSLATORS: the update state of the specific device
-msgid "Pending"
-msgstr "Afventer"
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr ""
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Perform operation?"
-msgstr "Udfør handling?"
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr ""
 
-#. TRANSLATORS: the user isn't reading the question
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is now valid"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled but not locked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection enabled and locked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now locked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "UEFI memory protection is now unlocked"
+msgstr ""
+
+#. TRANSLATORS: HSI event title
+msgid "The UEFI certificate store is now up to date"
+msgstr ""
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
+#. %2 refers to a result value, e.g. "Invalid"
 #, c-format
-msgid "Please enter a number from 0 to %u: "
-msgstr "Indtast venligst et tal nummer 0 og %u: "
+msgid "%s disappeared: %s"
+msgstr ""
 
-#. TRANSLATORS: Failed to open plugin, hey Arch users
-msgid "Plugin dependencies missing"
-msgstr "Plugin-afhængigheder mangler"
-
-#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
-msgid "Pre-boot DMA protection"
-msgstr "Præopstart DMA-beskyttelse"
-
-#. TRANSLATORS: version number of previous firmware
-msgid "Previous version"
-msgstr "Forrige version"
-
-#. TRANSLATORS: the numeric priority
-msgid "Priority"
-msgstr "Prioritet"
-
-msgid "Proceed with upload?"
-msgstr "Fortsæt med upload?"
-
-#. TRANSLATORS: a non-free software license
-msgid "Proprietary"
-msgstr "Proprietær"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "REMOTE-ID"
-msgstr "FJERN-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "REMOTE-ID KEY VALUE"
-msgstr "FJERN-ID NØGLE VÆRDI"
-
-#. TRANSLATORS: command description
-msgid "Read a firmware blob from a device"
-msgstr "Læs en firmwareblob fra en enhed"
-
-#. TRANSLATORS: %1 is a device name
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
 #, c-format
-msgid "Reading from %s…"
-msgstr "Læser fra %s …"
+msgid "%s appeared: %s"
+msgstr ""
 
-#. TRANSLATORS: reading from the flash chips
-msgid "Reading…"
-msgstr "Læser …"
-
-#. TRANSLATORS: command description
-msgid "Refresh metadata from remote server"
-msgstr "Opdater metadata fra fjernserver"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 is a version string
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
 #, c-format
-msgid "Reinstall %s to %s?"
-msgstr "Geninstaller %s til %s?"
+msgid "%s changed: %s → %s"
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device"
-msgstr "Geninstaller den nuværende firmware på enheden"
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr ""
 
-#. TRANSLATORS: command description
-msgid "Reinstall firmware on a device"
-msgstr "Geninstaller firmware på en enhed"
-
-#. TRANSLATORS: the stream of firmware, e.g. nonfree
-msgid "Release Branch"
-msgstr "Udgivelsesgren"
-
-#. TRANSLATORS: the server the file is coming from
-#. TRANSLATORS: remote identifier, e.g. lvfs-testing
-msgid "Remote ID"
-msgstr "Fjern-id"
-
-#. TRANSLATORS: URI to send success/failure reports
-msgid "Report URI"
-msgstr "Rapport-URI"
-
-#. TRANSLATORS: Has been reported to a metadata server
-msgid "Reported to remote server"
-msgstr "Rapporteret til fjernserver"
-
-#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
-msgid "Required efivarfs filesystem was not found"
-msgstr "Krævede efivarfs-filsystem blev ikke fundet"
-
-#. TRANSLATORS: not required for this system
-msgid "Required hardware was not found"
-msgstr "Det krævede hardware blev ikke fundet"
-
-#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
-msgid "Requires a bootloader"
-msgstr "Kræver en opstartsindlæser"
-
-#. TRANSLATORS: metadata is downloaded
-msgid "Requires internet connection"
-msgstr "Kræver internetforbindelse"
-
-#. TRANSLATORS: reboot to apply the update
-msgid "Restart now?"
-msgstr "Genstart nu?"
-
-#. TRANSLATORS: changes only take effect on restart
-msgid "Restart the daemon to make the change effective?"
-msgstr "Genstart dæmonen så ændringerne kan træde i kraft?"
-
-#. TRANSLATORS: restarting the device to pick up new F/W
-msgid "Restarting device…"
-msgstr "Genstarter enhed …"
-
-#. TRANSLATORS: command description
-msgid "Return all the hardware IDs for the machine"
-msgstr "Returner alle maskinens hardware-id'er"
-
-#. TRANSLATORS: command line option
-msgid "Run the plugin composite cleanup routine when using install-blob"
-msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
-
-#. TRANSLATORS: command line option
-msgid "Run the plugin composite prepare routine when using install-blob"
-msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
-
-#. TRANSLATORS: The kernel does not support this plugin
-msgid "Running kernel is too old"
-msgstr "Kørende kerne er for gammel"
+#. TRANSLATORS: now list devices with unfixed high-priority issues
+msgid "There are devices with issues:"
+msgstr ""
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Suffiks for runtime"
 
-#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
-msgid "SPI BIOS Descriptor"
-msgstr "SPI BIOS-beskriver"
+#. TRANSLATORS: this is instructions on how to improve the HSI security level
+msgid "This system has a low HSI security level."
+msgstr "Systemet har et lavt HSI-sikkerhedsniveau."
 
-#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
-msgid "SPI BIOS region"
-msgstr "SPI BIOS-region"
+#. TRANSLATORS: this is instructions on how to improve the HSI suffix
+msgid "This system has HSI runtime issues."
+msgstr "Systemet har problemer med HSI-runtime."
 
-#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
-msgid "SPI lock"
-msgstr "SPI-lås"
+#. TRANSLATORS: this is more background on a security measurement problem
+msgid "The TPM PCR0 differs from reconstruction."
+msgstr "TPM PCR0'en er ikke magen til rekonstruktionen."
 
-#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
-msgid "SPI write"
-msgstr "SPI-skriv"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
-msgstr "UNDERSYSTEM DRIVER [ENHEDS-ID|GUID]"
-
-#. TRANSLATORS: command description
-msgid "Save a file that allows generation of hardware IDs"
-msgstr "Gem en fil der gør det muligt at generere hardware-id'er"
-
-#. TRANSLATORS: scheduling an update to be done on the next boot
-msgid "Scheduling…"
-msgstr "Planlægger …"
-
-#. TRANSLATORS: %s is a link to a website
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
-msgid "See %s for more information."
-msgstr "Se %s for mere information."
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "Firmwaren fra %s leveres ikke af hardwareleverandøren %s."
 
-#. TRANSLATORS: device has been chosen by the daemon for the user
-msgid "Selected device"
-msgstr "Valgte enhed"
-
-#. TRANSLATORS: Volume has been chosen by the user
-msgid "Selected volume"
-msgstr "Valgte diskområde"
-
-#. TRANSLATORS: serial number of hardware
-msgid "Serial Number"
-msgstr "Serienummer"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware"
-msgstr "Indstiller listen over godkendt firmware"
-
-#. TRANSLATORS: command description
-msgid "Share firmware history with the developers"
-msgstr "Del historik over firmware med udviklerne"
-
-#. TRANSLATORS: command line option
-msgid "Show all results"
-msgstr "Vis alle resultater"
-
-#. TRANSLATORS: command line option
-msgid "Show client and daemon versions"
-msgstr "Vis klient- og dæmonversioner"
-
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information for a particular domain"
-msgstr "Vis uddybende information for dæmon for et bestemt domæne"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all domains"
-msgstr "Vis fejlsøgningsinformation for alle domæner"
-
-#. TRANSLATORS: for the --verbose arg
-msgid "Show debugging options"
-msgstr "Vis fejlsøgningsindstillinger"
-
-#. TRANSLATORS: command line option
-msgid "Show devices that are not updatable"
-msgstr "Vis enheder som ikke kan opdateres"
-
-#. TRANSLATORS: command line option
-msgid "Show extra debugging information"
-msgstr "Vis ekstra fejlsøgningsinformation"
-
-#. TRANSLATORS: command description
-msgid "Show history of firmware updates"
-msgstr "Vis historik over firmwareopdateringer"
-
-#. TRANSLATORS: command line option
-msgid "Show the calculated version of the dbx"
-msgstr "Vis den udregnede version af dbx'en"
-
-#. TRANSLATORS: shutdown to apply the update
-msgid "Shutdown now?"
-msgstr "Luk ned nu?"
-
-#. TRANSLATORS: command description
-msgid "Sign a firmware with a new key"
-msgstr "Underskriv en firmware med en ny nøgle"
-
-msgid "Sign data using the client certificate"
-msgstr "Underskriv data med klientcertifikat"
-
-#. TRANSLATORS: command description
-msgctxt "command-description"
-msgid "Sign data using the client certificate"
-msgstr "Underskriv data med klientcertifikat"
-
-#. TRANSLATORS: command line option
-msgid "Sign the uploaded data with the client certificate"
-msgstr "Underskriv den uploadede data med klientcertifikatet"
-
-msgid "Signature"
-msgstr "Underskrift"
-
-#. TRANSLATORS: file size of the download
-msgid "Size"
-msgstr "Størrelse"
-
-#. TRANSLATORS: source (as in code) link
-msgid "Source"
-msgstr "Kilde"
-
-#. TRANSLATORS: command line option
-msgid "Specify the dbx database file"
-msgstr "Angiv dbx-databasefilen"
-
-#. TRANSLATORS: the update state of the specific device
-msgid "Success"
-msgstr "Lykkedes"
-
-#. TRANSLATORS: success message -- where activation is making the new
-#. * firmware take effect, usually after updating offline
-msgid "Successfully activated all devices"
-msgstr "Det lykkedes at aktivere alle enheder"
-
-#. TRANSLATORS: success message
-msgid "Successfully disabled remote"
-msgstr "Det lykkedes at deaktivere fjern"
-
-#. TRANSLATORS: success message
-msgid "Successfully enabled and refreshed remote"
-msgstr "Det lykkedes at aktivere og opdatere fjernen"
-
-#. TRANSLATORS: success message
-msgid "Successfully enabled remote"
-msgstr "Det lykkedes at aktivere fjern"
-
-#. TRANSLATORS: success message
-msgid "Successfully installed firmware"
-msgstr "Det lykkedes at installere firmware"
-
-#. TRANSLATORS: success message -- a per-system setting value
-msgid "Successfully modified configuration value"
-msgstr "Det lykkedes at redigere konfigurationsværdi"
-
-#. TRANSLATORS: success message for a per-remote setting change
-msgid "Successfully modified remote"
-msgstr "Det lykkedes at redigere fjern"
-
-#. TRANSLATORS: success message -- the user can do this by-hand too
-msgid "Successfully refreshed metadata manually"
-msgstr "Det lykkedes at opdatere metadata manuelt"
-
-#. TRANSLATORS: success message when user refreshes device checksums
-msgid "Successfully updated device checksums"
-msgstr "Opdatering af enhedens tjeksumme lykkedes"
-
-#. TRANSLATORS: success message -- where the user has uploaded
-#. * success and/or failure reports to the remote server
+#. TRANSLATORS: %1 is the device vendor name
 #, c-format
-msgid "Successfully uploaded %u report"
-msgid_plural "Successfully uploaded %u reports"
-msgstr[0] "Det lykkedes at uploade %u rapport"
-msgstr[1] "Det lykkedes at uploade %u rapporter"
-
-#. TRANSLATORS: success message when user verified device checksums
-msgid "Successfully verified device checksums"
-msgstr "Bekræftelse af enhedens tjeksumme lykkedes"
-
-#. TRANSLATORS: one line summary of device
-msgid "Summary"
-msgstr "Opsummering"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Supported"
-msgstr "Understøttet"
-
-#. TRANSLATORS: Is found in current metadata
-msgid "Supported on remote server"
-msgstr "Understøttes på fjernserver"
-
-#. TRANSLATORS: Title: a better sleep state
-msgid "Suspend-to-idle"
-msgstr "Suspender-til-inaktiv"
-
-#. TRANSLATORS: Title: sleep state
-msgid "Suspend-to-ram"
-msgstr "Suspender-til-ram"
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "Der er mulighed for at din hardware kan tage skade hvis firmwaren bruges og installation af udgivelsen kan ugyldiggøre garantien med %s."
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name
@@ -1571,336 +3557,36 @@ msgstr "Suspender-til-ram"
 msgid "Switch branch from %s to %s?"
 msgstr "Skift gren fra %s til %s?"
 
-#. TRANSLATORS: command description
-msgid "Switch the firmware branch on the device"
-msgstr "Skift firmwaregrenen på enheden"
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Forstår du de konsekvenser som er forbundet med ændring af firmwaregrenen?"
 
-#. TRANSLATORS: Must be plugged into an outlet
-msgid "System requires external power source"
-msgstr "Systemet kræver ekstern strømkilde"
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr ""
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "TEXT"
-msgstr "TEKST"
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr ""
 
-#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
-msgid "TPM PCR0 reconstruction"
-msgstr "TPM PCR0-rekonstruktion"
-
-#. TRANSLATORS: Title: TPM = Trusted Platform Module
-msgid "TPM v2.0"
-msgstr "TPM v2.0"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Tainted"
-msgstr "Tainted"
-
-#. show the user the entire data blob
-msgid "Target"
-msgstr "Mål"
-
-#. TRANSLATORS: command description
-msgid "Test a device using a JSON manifest"
-msgstr "Test en enhed med et JSON-manifest"
-
-#. TRANSLATORS: do not translate the variables marked using $
-msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFS'en er en gratis tjeneste der opererer som en selvstændig juridisk enhed og har ingen forbindelse med $OS_RELEASE:NAME$. Din distributør har måske ikke bekræftet nogen af firmwareopdateringerne for kompatibilitet med dit system eller tilsluttede enheder. Al firmware leveres kun af den oprindelige udstyrsproducent."
-
-#. TRANSLATORS: this is more background on a security measurement problem
-msgid "The TPM PCR0 differs from reconstruction."
-msgstr "TPM PCR0'en er ikke magen til rekonstruktionen."
-
-#. TRANSLATORS: the user is SOL for support...
-msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
-msgstr "Dæmonen har indlæst tredjepartskode og understøttes ikke længere af opstrømsudviklerne!"
-
-#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#. TRANSLATORS: the %1 is a URL to a wiki page
 #, c-format
-msgid "The firmware from %s is not supplied by %s, the hardware vendor."
-msgstr "Firmwaren fra %s leveres ikke af hardwareleverandøren %s."
+msgid "See %s for more details."
+msgstr ""
 
-#. TRANSLATORS: try to help
-msgid "The system clock has not been set correctly and downloading files may fail."
-msgstr "Systemets ur er ikke blevet indstillet korrekt og download af filer kan mislykkes."
-
-#. TRANSLATORS: nothing to show
-msgid "There are no blocked firmware files"
-msgstr "Der er ikke nogen blokerede firmwarefiler"
-
-#. TRANSLATORS: approved firmware has been checked by
-#. * the domain administrator
-msgid "There is no approved firmware."
-msgstr "Der er ikke nogen godkendt firmware."
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr ""
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
 msgstr "Pakken er ikke blevet valideret — den virker måske ikke ordentligt."
 
-#. TRANSLATORS: we're poking around as a power user
-msgid "This program may only work correctly as root"
-msgstr "Programmet virker måske kun korrekt som root"
-
-msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Fjernen indeholder firmware som der ikke er embargo på, men som stadigvæk testes af hardwareproducenten. Du skal sikre dig at du har en manuel måde til at nedgradere firmwaren på hvis firmwareopdateringen mislykkedes."
-
-#. TRANSLATORS: this is instructions on how to improve the HSI suffix
-msgid "This system has HSI runtime issues."
-msgstr "Systemet har problemer med HSI-runtime."
-
-#. TRANSLATORS: this is instructions on how to improve the HSI security level
-msgid "This system has a low HSI security level."
-msgstr "Systemet har et lavt HSI-sikkerhedsniveau."
-
-#. TRANSLATORS: description of dbxtool
-msgid "This tool allows an administrator to apply UEFI dbx updates."
-msgstr "Værktøjet giver en administrator mulighed for at anvende UEFI-dbx-opdateringer."
-
-#. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
-msgstr "Værktøjet giver en administrator mulighed for at sætte i kø og styre fwupd-dæmonen, hvorved denne kan udføre handlinger såsom at installere eller nedgradere firmware."
-
-#. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
-msgstr "Værktøjet giver en administrator mulighed for at bruge fwupd-plugins uden at installere dem på værtssystemet."
-
-#. TRANSLATORS: CLI description
-msgid "This tool will read and parse the TPM event log from the system firmware."
-msgstr "Værktøjet læser og fortolker TPM-hændelsesloggen fra systemfirmwaren."
-
-#. TRANSLATORS: the update state of the specific device
-msgid "Transient failure"
-msgstr "Forbigående mislykkedes"
-
-#. TRANSLATORS: remote type, e.g. remote or local
-msgid "Type"
-msgstr "Type"
-
-#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
-msgid "UEFI ESP partition not detected or configured"
-msgstr "UEFI ESP-partition ikke registreret eller konfigureret"
-
-#. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled in firmware setup"
-msgstr "UEFI-kapselopdateringer ikke tilgængelige eller aktiveret i firmwareopsætning"
-
-#. TRANSLATORS: program name
-msgid "UEFI dbx Utility"
-msgstr "UEFI-dbx-redskab"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "UEFI firmware can not be updated in legacy BIOS mode"
-msgstr "UEFI-firmware kan ikke opdateres i forældet BIOS-tilstand"
-
-#. TRANSLATORS: Title: PK is the 'platform key' for the machine
-msgid "UEFI platform key"
-msgstr "UEFI-platformsnøgle"
-
-#. TRANSLATORS: Title: SB is a way of locking down UEFI
-msgid "UEFI secure boot"
-msgstr "UEFI sikkeropstart"
-
-#. TRANSLATORS: error message
-msgid "Unable to connect to service"
-msgstr "Kan ikke oprette forbindelse til tjeneste"
-
-#. TRANSLATORS: command description
-msgid "Unbind current driver"
-msgstr "Fjern binding af nuværende driver"
-
-#. TRANSLATORS: we will now offer this firmware to the user
-msgid "Unblocking firmware:"
-msgstr "Fjerner blokering af firmware:"
-
-#. TRANSLATORS: command description
-msgid "Unblocks a specific firmware from being installed"
-msgstr "Fjerner blokering af en bestemt firmware fra at blive installeret"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Unencrypted"
-msgstr "Dekrypteret"
-
-#. TRANSLATORS: current daemon status is unknown
-#. TRANSLATORS: we don't know the license of the update
-#. TRANSLATORS: unknown release urgency
-#. TRANSLATORS: Suffix: the fallback HSI result
-msgid "Unknown"
-msgstr "Ukendt"
-
-#. TRANSLATORS: Name of hardware
-msgid "Unknown Device"
-msgstr "Ukendt enhed"
-
-msgid "Unlock the device to allow access"
-msgstr "Lås enheden op for at tillade adgang"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Unlocked"
-msgstr "Låst op"
-
-#. TRANSLATORS: command description
-msgid "Unlocks the device for firmware access"
-msgstr "Låser op for enheden for at få adgang til firmwaren"
-
-#. TRANSLATORS: command description
-msgid "Unmounts the ESP"
-msgstr "Afmonterer ESP'en"
-
-#. TRANSLATORS: error message
-#, c-format
-msgid "Unsupported daemon version %s, client version is %s"
-msgstr "Ikke-understøttet dæmonversion %s, klientversionen er %s"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Untainted"
-msgstr "Untainted"
-
-#. TRANSLATORS: Device is updatable in this or any other mode
-msgid "Updatable"
-msgstr "Kan opdateres"
-
-#. TRANSLATORS: error message from last update attempt
-msgid "Update Error"
-msgstr "Fejl ved opdatering"
-
-#. TRANSLATORS: helpful messages for the update
-msgid "Update Message"
-msgstr "Opdateringsmeddelelse"
-
-#. TRANSLATORS: hardware state, e.g. "pending"
-msgid "Update State"
-msgstr "Opdateringstilstand"
-
-#. TRANSLATORS: the server sent the user a small message
-msgid "Update failure is a known issue, visit this URL for more information:"
-msgstr "Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mere information:"
-
-#. TRANSLATORS: ask if we can update metadata
-msgid "Update now?"
-msgstr "Opdater nu?"
-
-#. TRANSLATORS: command description
-msgid "Update the stored cryptographic hash with current ROM contents"
-msgstr "Opdater den gemte kryptografiske hash med indholdet fra den nuværende ROM"
-
-msgid "Update the stored device verification information"
-msgstr "Opdaterer de gemte informationer om enhedsverifikation"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current contents"
-msgstr "Opdater det gemte metadata med det nuværende indhold"
-
-msgid "Updating"
-msgstr "Opdaterer"
-
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Updating %s…"
-msgstr "Opdaterer %s …"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade %s from %s to %s?"
-msgstr "Opgrader %s fra %s til %s?"
-
-#. TRANSLATORS: explain why we want to upload
-msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
-msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at identificere opdateringer som fejlede og lykkedes på rigtigt hardware."
-
-#. TRANSLATORS: how important the release is
-msgid "Urgency"
-msgstr "Vigtighed"
-
-#. TRANSLATORS: User has been notified
-msgid "User has been notified"
-msgstr "Brugeren er blevet underrettet"
-
-#. TRANSLATORS: remote filename base
-msgid "Username"
-msgstr "Brugernavn"
-
-#. TRANSLATORS: Suffix: the HSI result
-msgid "Valid"
-msgstr "Gyldig"
-
-#. TRANSLATORS: ESP refers to the EFI System Partition
-msgid "Validating ESP contents…"
-msgstr "Validerer ESP-indhold …"
-
-#. TRANSLATORS: one line variant of release (e.g. 'China')
-msgid "Variant"
-msgstr "Variant"
-
-#. TRANSLATORS: manufacturer of hardware
-msgid "Vendor"
-msgstr "Producent"
-
-#. TRANSLATORS: verifying we wrote the firmware correctly
-msgid "Verifying…"
-msgstr "Verificerer …"
-
-#. TRANSLATORS: the detected version number of the dbx
-msgid "Version"
-msgstr "Version"
-
-#. TRANSLATORS: waiting for device to do something
-msgid "Waiting…"
-msgstr "Venter …"
-
-#. TRANSLATORS: command description
-msgid "Watch for hardware changes"
-msgstr "Hold øje med hardwareændringer"
-
-#. TRANSLATORS: decompressing images from a container firmware
-msgid "Writing file:"
-msgstr "Skriver fil:"
-
-#. TRANSLATORS: writing to the flash chips
-msgid "Writing…"
-msgstr "Skriver …"
-
-#. TRANSLATORS: show the user a warning
-msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr "Din distributør har måske ikke verificeret kompatibiliteten af firmwareopdateringerne med dit system eller tilsluttede enheder."
-
-#. TRANSLATORS: %1 is the device vendor name
-#, c-format
-msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
-msgstr "Der er mulighed for at din hardware kan tage skade hvis firmwaren bruges og installation af udgivelsen kan ugyldiggøre garantien med %s."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[CHECKSUM]"
-msgstr "[CHECKSUM]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[DEVICE-ID|GUID]"
-msgstr "[ENHEDS-ID|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[DEVICE-ID|GUID] [BRANCH]"
-msgstr "[ENHEDS-ID|GUID] [GREN]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE FILE_SIG REMOTE-ID]"
-msgstr "[FIL FILUNDERSKRIFT FJERN-ID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILENAME1] [FILENAME2]"
-msgstr "[FILNAVN1] [FILNAVN2]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[SMBIOS-FILE|HWIDS-FILE]"
-msgstr "[SMBIOS-FIL|HWID'ER-FIL]"
-
-#. TRANSLATORS: this is the default branch name when unset
-msgid "default"
-msgstr "standard"
-
-#. TRANSLATORS: program name
-msgid "fwupd TPM event log utility"
-msgstr "fwupd TPM-hændelseslogredskab"
-
-#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
-msgid "fwupd plugins"
-msgstr "fwupd-plugins"
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Aktivér ny fjern?"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Accepter og aktivér fjernen?"
