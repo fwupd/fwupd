@@ -4382,6 +4382,45 @@ fu_util_switch_branch(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_results(FuUtil *self, gchar **values, GError **error)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FwupdDevice) device = NULL;
+
+	/* check args */
+	if (g_strv_length(values) < 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments, expected DEVICE-ID");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				      FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG |
+				      FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	/* print device */
+	device = fu_engine_get_results(self->engine, values[0], error);
+	if (device == NULL)
+		return FALSE;
+	if (self->as_json) {
+		str = fwupd_codec_to_json_string(FWUPD_CODEC(device), FWUPD_CODEC_FLAG_NONE, error);
+		if (str == NULL)
+			return FALSE;
+	} else {
+		str = fwupd_codec_to_string(FWUPD_CODEC(device));
+	}
+	fu_console_print_literal(self->console, str);
+	return TRUE;
+}
+
+static gboolean
 fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 {
 	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
@@ -5663,6 +5702,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Switch the firmware branch on the device"),
 			      fu_util_switch_branch);
+	fu_util_cmd_array_add(cmd_array,
+			      "get-results",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("DEVICE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Gets the results from the last update"),
+			      fu_util_get_results);
 	fu_util_cmd_array_add(cmd_array,
 			      "clear-history",
 			      NULL,
