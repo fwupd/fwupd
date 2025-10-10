@@ -115,7 +115,7 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 			g_prefix_error(error, "failed to parse at 0x%x: ", (guint)offset);
 			return FALSE;
 		}
-		fu_firmware_set_offset(firmware, offset);
+		fu_firmware_set_offset(img, offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
 

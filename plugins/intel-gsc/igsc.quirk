@@ -124,13 +124,13 @@ Flags = has-sku,has-aux,has-oprom
 
 [PCI\VEN_8086&DEV_E20B]
 Name = Arc B580
-Flags = has-sku,has-oprom
+Flags = has-sku,has-aux,has-oprom
 [PCI\VEN_8086&DEV_E20C]
 Name = Arc B570
-Flags = has-sku,has-oprom
+Flags = has-sku,has-aux,has-oprom
 [PCI\VEN_8086&DEV_E211]
 Name = Arc Pro B60
-Flags = has-sku,has-oprom
+Flags = has-sku,has-aux,has-oprom
 [PCI\VEN_8086&DEV_E212]
 Name = Arc Pro B50
-Flags = has-sku,has-oprom
+Flags = has-sku,has-aux,has-oprom
