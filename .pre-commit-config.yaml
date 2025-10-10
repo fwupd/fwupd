@@ -64,6 +64,7 @@ repos:
       language: system
       entry: shellcheck --severity=warning -e SC2068
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: run-tests
       name: run tests before pushing
       language: script
