@@ -5584,6 +5584,107 @@ fu_plugin_composite_multistep_func(gconstpointer user_data)
 }
 
 static void
+fu_plugin_engine_get_results_appstream_id_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	FwupdRelease *release_default;
+	g_autoptr(FuDevice) device_tmp = fu_device_new(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FwupdDevice) device = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* load engine to get FuConfig set up */
+	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, progress, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add the fake metadata */
+	ret = xb_builder_source_load_xml(
+	    source,
+	    "<?xml version=\"1.0\"?>\n"
+	    "<components>\n"
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.WRONGDEVICE.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">00000000-0000-0000-0000-000000000000</firmware>\n"
+	    "  </provides>\n"
+	    "  <custom>\n"
+	    "    <value key=\"LVFS::VersionFormat\">triplet</value>\n"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.acme.test</value>\n"
+	    "  </custom>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\">\n"
+	    "      <checksum type=\"sha1\" target=\"content\">aaa</checksum>\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"binary\">\n"
+	    "        <checksum type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>\n"
+	    "<component type=\"firmware\">\n"
+	    "  <id>com.acme.example.firmware</id>\n"
+	    "  <provides>\n"
+	    "    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	    "  </provides>\n"
+	    "  <custom>\n"
+	    "    <value key=\"LVFS::VersionFormat\">triplet</value>\n"
+	    "    <value key=\"LVFS::UpdateProtocol\">com.acme.test</value>\n"
+	    "  </custom>\n"
+	    "  <releases>\n"
+	    "    <release version=\"1.2.3\">\n"
+	    "      <checksum type=\"sha1\" target=\"content\">aaa</checksum>\n"
+	    "      <artifacts>\n"
+	    "        <artifact type=\"binary\">\n"
+	    "        <checksum type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
+	    "        </artifact>\n"
+	    "      </artifacts>\n"
+	    "    </release>\n"
+	    "  </releases>\n"
+	    "</component>\n"
+	    "</components>",
+	    XB_BUILDER_SOURCE_FLAG_NONE,
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	fu_engine_set_silo(engine, silo);
+
+	/* add a dummy device  */
+	fu_device_set_id(device_tmp, "08d460be0f1f9f128413f816022a6439e0078018");
+	fu_engine_add_device(engine, device_tmp);
+	fu_release_set_appstream_id(release, "com.acme.example.firmware");
+	fu_release_add_checksum(release, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	fu_device_add_release(device_tmp, FWUPD_RELEASE(release));
+	fu_device_set_update_state(device_tmp, FWUPD_UPDATE_STATE_SUCCESS);
+	ret = fu_history_add_device(history, device_tmp, release, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check we got the correct component */
+	device = fu_engine_get_results(engine, "08d460be0f1f9f128413f816022a6439e0078018", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device);
+	release_default = fu_device_get_release_default(device);
+	g_assert_nonnull(release_default);
+	g_assert_cmpstr(fwupd_release_get_appstream_id(release_default),
+			==,
+			"com.acme.example.firmware");
+}
+
+static void
 fu_security_attr_func(gconstpointer user_data)
 {
 	gboolean ret;
@@ -7962,6 +8063,9 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{install-duration}",
 			     self,
 			     fu_engine_install_duration_func);
+	g_test_add_data_func("/fwupd/engine{get-results-appstream-id}",
+			     self,
+			     fu_plugin_engine_get_results_appstream_id_func);
 	g_test_add_data_func("/fwupd/engine{release-dedupe}", self, fu_engine_release_dedupe_func);
 	g_test_add_data_func("/fwupd/engine{generate-md}", self, fu_engine_generate_md_func);
 	g_test_add_data_func("/fwupd/engine{requirements-other-device}",

@@ -5121,8 +5121,80 @@ fu_engine_get_history_set_hsi_attrs(FuEngine *self, FuDevice *device)
 }
 #endif
 
-static void
-fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
+static gboolean
+fu_engine_fixup_history_device_for_rel(FuEngine *self,
+				       FuDevice *device,
+				       XbNode *rel,
+				       GError **error)
+{
+	FwupdRelease *release = fu_device_get_release_default(device);
+	const gchar *appstream_id;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbNode) component = NULL;
+
+	component = xb_node_query_first(rel, "../..", error);
+	if (component == NULL) {
+		fwupd_error_convert(error);
+		g_prefix_error_literal(error, "failed to load component: ");
+		return FALSE;
+	}
+
+	/* check appstream ID is the same */
+	appstream_id = xb_node_query_text(component, "id", NULL);
+	if (appstream_id == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no appstream ID for component");
+		return FALSE;
+	}
+	if (g_strcmp0(appstream_id, fwupd_release_get_appstream_id(release)) != 0) {
+		g_debug("ignoring %s as expecting %s",
+			appstream_id,
+			fwupd_release_get_appstream_id(release));
+		return TRUE;
+	}
+
+	if (!fu_release_load(FU_RELEASE(release),
+			     NULL,
+			     component,
+			     rel,
+			     FWUPD_INSTALL_FLAG_NONE,
+			     error)) {
+		g_prefix_error_literal(error, "failed to load release: ");
+		return FALSE;
+	}
+
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
+	return TRUE;
+}
+
+static gboolean
+fu_engine_fixup_history_device_for_csum(FuEngine *self,
+					FuDevice *device,
+					const gchar *csum,
+					GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+
+	rels = fu_engine_get_releases_for_container_checksum(self, csum);
+	if (rels == NULL)
+		return TRUE;
+	for (guint i = 0; i < rels->len; i++) {
+		XbNode *rel = g_ptr_array_index(rels, i);
+		if (!fu_engine_fixup_history_device_for_rel(self, device, rel, error))
+			return FALSE;
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED))
+			break;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_fixup_history_device(FuEngine *self, FuDevice *device, GError **error)
 {
 	FwupdRelease *release;
 	GPtrArray *csums;
@@ -5130,47 +5202,33 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 	/* get the checksums */
 	release = fu_device_get_release_default(device);
 	if (release == NULL) {
-		g_warning("no checksums from release history");
-		return;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no default release for device");
+		return FALSE;
 	}
 
 	/* find the checksum that matches */
 	csums = fwupd_release_get_checksums(release);
-	for (guint j = 0; j < csums->len; j++) {
-		const gchar *csum = g_ptr_array_index(csums, j);
-		g_autoptr(GPtrArray) rels = NULL;
-
+	if (csums->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "no checksums from release");
+		return FALSE;
+	}
+	for (guint i = 0; i < csums->len; i++) {
+		const gchar *csum = g_ptr_array_index(csums, i);
 		g_debug("finding release checksum %s", csum);
-		rels = fu_engine_get_releases_for_container_checksum(self, csum);
-		if (rels == NULL)
-			continue;
-		for (guint i = 0; i < rels->len; i++) {
-			XbNode *rel = g_ptr_array_index(rels, j);
-			g_autoptr(GError) error_local = NULL;
-			g_autoptr(XbNode) component = NULL;
-
-			component = xb_node_query_first(rel, "../..", &error_local);
-			if (component == NULL) {
-				g_warning("failed to load component: %s", error_local->message);
-				continue;
-			}
-			fu_release_set_device(FU_RELEASE(release), device);
-
-			if (!fu_release_load(FU_RELEASE(release),
-					     NULL,
-					     component,
-					     rel,
-					     FWUPD_INSTALL_FLAG_NONE,
-					     &error_local)) {
-				g_warning("failed to load release: %s", error_local->message);
-				continue;
-			}
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
-			break;
-		}
+		if (!fu_engine_fixup_history_device_for_csum(self, device, csum, error))
+			return FALSE;
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED))
 			break;
 	}
+
+	/* no device was matched, which is fine... */
+	return TRUE;
 }
 
 /**
@@ -5218,7 +5276,8 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* try to set the remote ID for each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		fu_engine_fixup_history_device(self, dev);
+		if (!fu_engine_fixup_history_device(self, dev, error))
+			return NULL;
 	}
 
 	return g_steal_pointer(&devices);
@@ -6174,7 +6233,8 @@ fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error)
 	}
 
 	/* try to set some release properties for the UI */
-	fu_engine_fixup_history_device(self, device);
+	if (!fu_engine_fixup_history_device(self, device, error))
+		return NULL;
 
 	/* we did not either record or find the AppStream ID */
 	rel = fu_device_get_release_default(device);
