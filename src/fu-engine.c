@@ -759,30 +759,30 @@ fu_engine_load_release(FuEngine *self,
 	return TRUE;
 }
 
-/* finds the release for the first firmware in the silo that matches this
+/* finds the releases for all firmware in the silo that matches this
  * container or artifact checksum */
-static XbNode *
-fu_engine_get_release_for_checksum(FuEngine *self, const gchar *csum)
+static GPtrArray *
+fu_engine_get_releases_for_container_checksum(FuEngine *self, const gchar *csum)
 {
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, csum, NULL);
 	if (self->query_container_checksum1 != NULL) {
-		g_autoptr(XbNode) rel =
-		    xb_silo_query_first_with_context(self->silo,
-						     self->query_container_checksum1,
-						     &context,
-						     NULL);
-		if (rel != NULL)
-			return g_steal_pointer(&rel);
+		g_autoptr(GPtrArray) rels =
+		    xb_silo_query_with_context(self->silo,
+					       self->query_container_checksum1,
+					       &context,
+					       NULL);
+		if (rels != NULL)
+			return g_steal_pointer(&rels);
 	}
 	if (self->query_container_checksum2 != NULL) {
-		g_autoptr(XbNode) rel =
-		    xb_silo_query_first_with_context(self->silo,
-						     self->query_container_checksum2,
-						     &context,
-						     NULL);
-		if (rel != NULL)
-			return g_steal_pointer(&rel);
+		g_autoptr(GPtrArray) rels =
+		    xb_silo_query_with_context(self->silo,
+					       self->query_container_checksum2,
+					       &context,
+					       NULL);
+		if (rels != NULL)
+			return g_steal_pointer(&rels);
 	}
 
 	/* failed */
@@ -800,11 +800,16 @@ fu_engine_get_remote_id_for_stream(FuEngine *self, GInputStream *stream)
 
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		g_autofree gchar *csum = NULL;
-		g_autoptr(XbNode) rel = NULL;
+		g_autoptr(GPtrArray) rels = NULL;
+
 		csum = fu_input_stream_compute_checksum(stream, checksum_types[i], NULL);
-		if (csum != NULL)
-			rel = fu_engine_get_release_for_checksum(self, csum);
-		if (rel != NULL) {
+		if (csum == NULL)
+			continue;
+		rels = fu_engine_get_releases_for_container_checksum(self, csum);
+		if (rels == NULL)
+			continue;
+		for (guint j = 0; j < rels->len; j++) {
+			XbNode *rel = g_ptr_array_index(rels, j);
 			const gchar *remote_id =
 			    xb_node_query_text(rel,
 					       "../../../custom/value[@key='fwupd::RemoteId']",
@@ -4894,7 +4899,7 @@ fu_engine_get_details(FuEngine *self,
 	g_autoptr(GPtrArray) details = NULL;
 	g_autoptr(GPtrArray) checksums = g_ptr_array_new_with_free_func(g_free);
 	g_autoptr(FuCabinet) cabinet = NULL;
-	g_autoptr(XbNode) rel_by_csum = NULL;
+	g_autoptr(GPtrArray) rels_by_csum = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
@@ -4921,8 +4926,8 @@ fu_engine_get_details(FuEngine *self,
 	/* does this exist in any enabled remote */
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *csum = g_ptr_array_index(checksums, i);
-		rel_by_csum = fu_engine_get_release_for_checksum(self, csum);
-		if (rel_by_csum != NULL)
+		rels_by_csum = fu_engine_get_releases_for_container_checksum(self, csum);
+		if (rels_by_csum != NULL)
 			break;
 	}
 
@@ -4938,7 +4943,8 @@ fu_engine_get_details(FuEngine *self,
 			return NULL;
 		fu_device_add_release(dev, FWUPD_RELEASE(rel));
 
-		if (rel_by_csum != NULL) {
+		for (guint j = 0; rels_by_csum != NULL && j < rels_by_csum->len; j++) {
+			XbNode *rel_by_csum = g_ptr_array_index(rels_by_csum, j);
 			const gchar *remote_id =
 			    xb_node_query_text(rel_by_csum,
 					       "../../../custom/value[@key='fwupd::RemoteId']",
@@ -5132,11 +5138,14 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 	csums = fwupd_release_get_checksums(release);
 	for (guint j = 0; j < csums->len; j++) {
 		const gchar *csum = g_ptr_array_index(csums, j);
-		g_autoptr(XbNode) rel = NULL;
+		g_autoptr(GPtrArray) rels = NULL;
 
 		g_debug("finding release checksum %s", csum);
-		rel = fu_engine_get_release_for_checksum(self, csum);
-		if (rel != NULL) {
+		rels = fu_engine_get_releases_for_container_checksum(self, csum);
+		if (rels == NULL)
+			continue;
+		for (guint i = 0; i < rels->len; i++) {
+			XbNode *rel = g_ptr_array_index(rels, j);
 			g_autoptr(GError) error_local = NULL;
 			g_autoptr(XbNode) component = NULL;
 
@@ -5159,6 +5168,8 @@ fu_engine_fixup_history_device(FuEngine *self, FuDevice *device)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
 			break;
 		}
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED))
+			break;
 	}
 }
 
