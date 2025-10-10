@@ -94,7 +94,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 				    "invalid subsys_num");
 		return FALSE;
 	}
-	offset_hdr = st->len;
+	offset_hdr = st->buf->len;
 	for (guint i = 0; i < subsys_num; i++) {
 		guint32 img_size;
 		g_autoptr(FuStructGoodixBrlbImg) st_img = NULL;
@@ -117,7 +117,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 			if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 				return FALSE;
 		}
-		offset_hdr += st_img->len;
+		offset_hdr += st_img->buf->len;
 		offset_payload += img_size;
 	}
 

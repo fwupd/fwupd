@@ -90,7 +90,7 @@ fu_ilitek_its_device_read_cb(FuDevice *device, gpointer data, GError **error)
 		return FALSE;
 	}
 
-	fu_dump_raw(G_LOG_DOMAIN, "HidReadReport", st_res->data, st_res->len);
+	fu_dump_raw(G_LOG_DOMAIN, "HidReadReport", st_res->buf->data, st_res->buf->len);
 
 	if (helper->rbuf != NULL)
 		g_byte_array_append(helper->rbuf, buf_data, bufsz_data);
@@ -112,8 +112,8 @@ fu_ilitek_its_device_send_cmd(FuIlitekItsDevice *self,
 	};
 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_cmd->data,
-					  st_cmd->len,
+					  st_cmd->buf->data,
+					  st_cmd->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		g_prefix_error_literal(error, "failed to send HID cmd: ");
@@ -170,8 +170,8 @@ fu_ilitek_its_device_send_long_cmd_then_wake_ack(FuIlitekItsDevice *self,
 	};
 
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_cmd->data,
-					  st_cmd->len,
+					  st_cmd->buf->data,
+					  st_cmd->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error)) {
 		g_prefix_error_literal(error, "failed to send long HID cmd: ");
@@ -196,11 +196,11 @@ fu_ilitek_its_device_recalculate_crc(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 8);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_GET_BLOCK_CRC);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_RECALCULATE;
-	fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1,
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_RECALCULATE;
+	fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1,
 			   start,
 			   G_LITTLE_ENDIAN);
-	fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 4,
+	fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 4,
 			   end,
 			   G_LITTLE_ENDIAN);
 
@@ -216,7 +216,7 @@ fu_ilitek_its_device_get_block_crc(FuIlitekItsDevice *self, guint16 *crc, GError
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 2);
 	fu_struct_ilitek_its_hid_cmd_set_read_len(st_cmd, 2);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_GET_BLOCK_CRC);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_GET;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = FU_ILITEK_ITS_CRC_GET;
 
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, rbuf, error))
 		return FALSE;
@@ -235,14 +235,14 @@ fu_ilitek_its_device_flash_enable(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, in_ap ? 3 : 9);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_FLASH_ENABLE);
-	fu_memwrite_uint16(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 0,
+	fu_memwrite_uint16(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 0,
 			   FU_ILITEK_ITS_WRITE_ENABLE_KEY,
 			   G_BIG_ENDIAN);
 	if (!in_ap) {
-		fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 2,
+		fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 2,
 				   start,
 				   G_LITTLE_ENDIAN);
-		fu_memwrite_uint24(st_cmd->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 5,
+		fu_memwrite_uint24(st_cmd->buf->data + FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 5,
 				   end,
 				   G_LITTLE_ENDIAN);
 	}
@@ -259,8 +259,8 @@ fu_ilitek_its_device_set_ctrl_mode(FuIlitekItsDevice *self,
 
 	fu_struct_ilitek_its_hid_cmd_set_write_len(st_cmd, 3);
 	fu_struct_ilitek_its_hid_cmd_set_cmd(st_cmd, FU_ILITEK_ITS_CMD_SET_CTRL_MODE);
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = mode;
-	st_cmd->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1] = 0x0;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA] = mode;
+	st_cmd->buf->data[FU_STRUCT_ILITEK_ITS_HID_CMD_OFFSET_DATA + 1] = 0x0;
 
 	if (!fu_ilitek_its_device_send_cmd(self, st_cmd, NULL, error))
 		return FALSE;

@@ -111,7 +111,7 @@ fu_efi_hard_drive_device_path_parse(FuFirmware *firmware,
 	self->signature_type = fu_struct_efi_hard_drive_device_path_get_signature_type(st);
 
 	/* success */
-	fu_firmware_set_size(firmware, fu_struct_efi_device_path_get_length(st));
+	fu_firmware_set_size(firmware, st->buf->len);
 	return TRUE;
 }
 
@@ -131,7 +131,7 @@ fu_efi_hard_drive_device_path_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_hard_drive_device_path_set_signature_type(st, self->signature_type);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

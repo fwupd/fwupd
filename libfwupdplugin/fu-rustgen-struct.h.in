@@ -1,6 +1,10 @@
-typedef GByteArray {{obj.name}};
+typedef struct {
+  GByteArray *buf;
+  guint refcount;
+} {{obj.name}};
 
-#define {{obj.c_method('Unref')}} g_byte_array_unref
+{{obj.name}} *{{obj.c_method('Ref')}}({{obj.name}} *st) G_GNUC_NON_NULL(1);
+void {{obj.c_method('Unref')}}({{obj.name}} *st) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, {{obj.c_method('Unref')}})
 
 {%- if obj.export('New') == Export.PUBLIC %}

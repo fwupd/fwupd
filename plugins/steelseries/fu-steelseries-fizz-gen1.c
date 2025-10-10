@@ -46,7 +46,7 @@ fu_steelseries_fizz_gen1_get_version(FuSteelseriesFizzImpl *self, gboolean tunne
 
 	st_req = fu_struct_steelseries_fizz_version_req_new();
 	fu_struct_steelseries_fizz_version_req_set_cmd(st_req, cmd);
-	if (!fu_steelseries_fizz_gen1_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen1_request(self, st_req->buf, error))
 		return NULL;
 	buf_res = fu_steelseries_fizz_gen1_response(self, error);
 	if (buf_res == NULL)
@@ -83,7 +83,7 @@ fu_steelseries_fizz_gen1_get_paired_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesPairedStatusRes) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen1_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen1_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen1_response(self, error);
 	if (buf_res == NULL)
@@ -106,7 +106,7 @@ fu_steelseries_fizz_gen1_get_connection_status(FuSteelseriesFizzImpl *self,
 	g_autoptr(FuStructSteelseriesConnectionStatusRes) st_res = NULL;
 	g_autoptr(GByteArray) buf_res = NULL;
 
-	if (!fu_steelseries_fizz_gen1_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen1_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen1_response(self, error);
 	if (buf_res == NULL)
@@ -137,7 +137,7 @@ fu_steelseries_fizz_gen1_get_battery_level(FuSteelseriesFizzImpl *self,
 
 	st_req = fu_struct_steelseries_battery_level_req_new();
 	fu_struct_steelseries_battery_level_req_set_cmd(st_req, cmd);
-	if (!fu_steelseries_fizz_gen1_request(self, st_req, error))
+	if (!fu_steelseries_fizz_gen1_request(self, st_req->buf, error))
 		return FALSE;
 	buf_res = fu_steelseries_fizz_gen1_response(self, error);
 	if (buf_res == NULL)

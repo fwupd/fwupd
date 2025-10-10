@@ -78,8 +78,8 @@ fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
 	    FU_LOGITECH_TAP_SENSOR_HID_TDE_MODE_ENABLE);
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    st->data,
-					    st->len,
+					    st->buf->data,
+					    st->buf->len,
 					    FU_IOCTL_FLAG_RETRY,
 					    error);
 }
@@ -99,8 +99,8 @@ fu_logitech_tap_sensor_device_disable_tde(FuDevice *device, GError **error)
 	    FU_LOGITECH_TAP_SENSOR_HID_TDE_MODE_DISABLE);
 
 	return fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					    st->data,
-					    st->len,
+					    st->buf->data,
+					    st->buf->len,
 					    FU_IOCTL_FLAG_RETRY,
 					    error);
 }
@@ -140,8 +140,8 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	    st,
 	    FU_LOGITECH_TAP_SENSOR_HID_REBOOT_PWR);
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st->data,
-					  st->len,
+					  st->buf->data,
+					  st->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
@@ -150,8 +150,8 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	    st,
 	    FU_LOGITECH_TAP_SENSOR_HID_REBOOT_RST);
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st->data,
-					  st->len,
+					  st->buf->data,
+					  st->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
@@ -165,8 +165,8 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	    st,
 	    FU_LOGITECH_TAP_SENSOR_HID_REBOOT_PWR);
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st->data,
-					  st->len,
+					  st->buf->data,
+					  st->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
@@ -177,8 +177,8 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 	    st,
 	    FU_LOGITECH_TAP_SENSOR_HID_REBOOT_RST);
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st->data,
-					  st->len,
+					  st->buf->data,
+					  st->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
@@ -207,20 +207,20 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 						      FU_LOGITECH_TAP_SENSOR_HID_GET_CMD_VERSION);
 	/* setup HID report to query current device version */
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_req->data,
-					  st_req->len,
+					  st_req->buf->data,
+					  st_req->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
 	if (!fu_logitech_tap_sensor_device_get_feature(self,
-						       (guint8 *)st_res->data,
-						       st_res->len,
+						       (guint8 *)st_res->buf->data,
+						       st_res->buf->len,
 						       error))
 		return FALSE;
 
 	/* MinorVersion byte 3, MajorVersion byte 4, BuildVersion byte 2 & 1 */
-	if (!fu_memread_uint32_safe((guint8 *)st_res->data,
-				    st_res->len,
+	if (!fu_memread_uint32_safe((guint8 *)st_res->buf->data,
+				    st_res->buf->len,
 				    0x01,
 				    &version,
 				    G_LITTLE_ENDIAN,
@@ -267,8 +267,8 @@ fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError
 
 	/* setup HID report for serial number */
 	if (!fu_hidraw_device_set_feature(FU_HIDRAW_DEVICE(self),
-					  st_req->data,
-					  st_req->len,
+					  st_req->buf->data,
+					  st_req->buf->len,
 					  FU_IOCTL_FLAG_RETRY,
 					  error))
 		return FALSE;
@@ -284,16 +284,16 @@ fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError
 		    FU_LOGITECH_TAP_SENSOR_HID_GET_CMD_SERIAL_NUMBER);
 
 		if (!fu_logitech_tap_sensor_device_get_feature(self,
-							       (guint8 *)st_res->data,
-							       st_res->len,
+							       (guint8 *)st_res->buf->data,
+							       st_res->buf->len,
 							       error))
 			return FALSE;
 		g_string_append_printf(serial_number,
 				       "%c%c%c%c",
-				       st_res->data[1],
-				       st_res->data[2],
-				       st_res->data[3],
-				       st_res->data[4]);
+				       st_res->buf->data[1],
+				       st_res->buf->data[2],
+				       st_res->buf->data[3],
+				       st_res->buf->data[4]);
 	}
 	fu_device_set_serial(FU_DEVICE(self), serial_number->str);
 

@@ -117,7 +117,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 		/* next */
-		offset += st_ent->len;
+		offset += st_ent->buf->len;
 	}
 
 	/* success */
@@ -128,11 +128,11 @@ static GByteArray *
 fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 {
 	gsize offset = 0;
-	g_autoptr(FuStructIfwiFpt) buf = fu_struct_ifwi_fpt_new();
+	g_autoptr(FuStructIfwiFpt) st = fu_struct_ifwi_fpt_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* fixup the image offsets */
-	offset += buf->len;
+	offset += st->buf->len;
 	offset += FU_STRUCT_IFWI_FPT_ENTRY_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -147,16 +147,16 @@ fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* write the header */
-	fu_struct_ifwi_fpt_set_num_of_entries(buf, imgs->len);
+	fu_struct_ifwi_fpt_set_num_of_entries(st, imgs->len);
 
 	/* add entries */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GByteArray) st_ent = fu_struct_ifwi_fpt_entry_new();
+		g_autoptr(FuStructIfwiFptEntry) st_ent = fu_struct_ifwi_fpt_entry_new();
 		fu_struct_ifwi_fpt_entry_set_partition_name(st_ent, fu_firmware_get_idx(img));
 		fu_struct_ifwi_fpt_entry_set_offset(st_ent, fu_firmware_get_offset(img));
 		fu_struct_ifwi_fpt_entry_set_length(st_ent, fu_firmware_get_size(img));
-		g_byte_array_append(buf, st_ent->data, st_ent->len);
+		fu_byte_array_append_array(st->buf, st_ent->buf);
 	}
 
 	/* add entry data */
@@ -166,11 +166,11 @@ fu_ifwi_fpt_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_firmware_get_bytes(img, error);
 		if (blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_append_bytes(st->buf, blob);
 	}
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

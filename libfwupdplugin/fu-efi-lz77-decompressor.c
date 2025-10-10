@@ -623,7 +623,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	src_bufsz = fu_struct_efi_lz77_decompressor_header_get_src_size(st);
-	if (streamsz < src_bufsz + st->len) {
+	if (streamsz < src_bufsz + st->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -659,7 +659,7 @@ fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 		};
 		g_autoptr(GError) error_local = NULL;
 
-		if (!g_seekable_seek(G_SEEKABLE(stream), st->len, G_SEEK_SET, NULL, error))
+		if (!g_seekable_seek(G_SEEKABLE(stream), st->buf->len, G_SEEK_SET, NULL, error))
 			return FALSE;
 		if (fu_efi_lz77_decompressor_internal(&helper,
 						      decompressor_versions[i],

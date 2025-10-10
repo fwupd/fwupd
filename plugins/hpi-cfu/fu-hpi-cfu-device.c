@@ -75,7 +75,7 @@ fu_hpi_cfu_device_start_entire_transaction(FuHpiCfuDevice *self, GError **error)
 	if (!fu_struct_hpi_cfu_buf_set_report_data(st_req, report_data, sizeof(report_data), error))
 		return FALSE;
 
-	fu_dump_raw(G_LOG_DOMAIN, "StartEntireTransaction", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "StartEntireTransaction", st_req->buf->data, st_req->buf->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -83,8 +83,8 @@ fu_hpi_cfu_device_start_entire_transaction(FuHpiCfuDevice *self, GError **error)
 					    SET_REPORT,
 					    OUT_REPORT_TYPE | OFFER_REPORT_ID,
 					    FU_HPI_CFU_INTERFACE,
-					    st_req->data,
-					    st_req->len,
+					    st_req->buf->data,
+					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
 					    NULL,
@@ -141,7 +141,7 @@ fu_hpi_cfu_device_send_start_offer_list(FuHpiCfuDevice *self, GError **error)
 	if (!fu_struct_hpi_cfu_buf_set_report_data(st_req, report_data, sizeof(report_data), error))
 		return FALSE;
 
-	fu_dump_raw(G_LOG_DOMAIN, "SendStartOfferList", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "SendStartOfferList", st_req->buf->data, st_req->buf->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -149,8 +149,8 @@ fu_hpi_cfu_device_send_start_offer_list(FuHpiCfuDevice *self, GError **error)
 					    SET_REPORT,
 					    OUT_REPORT_TYPE | OFFER_REPORT_ID,
 					    FU_HPI_CFU_INTERFACE,
-					    st_req->data,
-					    st_req->len,
+					    st_req->buf->data,
+					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
 					    NULL,
@@ -223,15 +223,15 @@ fu_hpi_cfu_device_send_offer_update_command(FuHpiCfuDevice *self,
 		return FALSE;
 	buf = g_bytes_get_data(blob_offer, &bufsz);
 
-	fu_struct_hpi_cfu_payload_cmd_set_report_id(st_req, OFFER_REPORT_ID);
-	if (!fu_memcpy_safe(st_req->data, st_req->len, 0x1, buf, bufsz, 0x0, 16, error))
+	fu_struct_hpi_cfu_offer_cmd_set_report_id(st_req, OFFER_REPORT_ID);
+	if (!fu_memcpy_safe(st_req->buf->data, st_req->buf->len, 0x1, buf, bufsz, 0x0, 16, error))
 		return FALSE;
 
 	FU_BIT_SET(flag_value, 7); /* (update now) */
 	FU_BIT_SET(flag_value, 6); /* (force update version) */
 	fu_struct_hpi_cfu_offer_cmd_set_flags(st_req, flag_value);
 
-	fu_dump_raw(G_LOG_DOMAIN, "SendOfferUpdateCommand", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "SendOfferUpdateCommand", st_req->buf->data, st_req->buf->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -239,8 +239,8 @@ fu_hpi_cfu_device_send_offer_update_command(FuHpiCfuDevice *self,
 					    SET_REPORT,
 					    OUT_REPORT_TYPE | FIRMWARE_REPORT_ID,
 					    FU_HPI_CFU_INTERFACE,
-					    st_req->data,
-					    st_req->len,
+					    st_req->buf->data,
+					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
 					    NULL,
@@ -380,7 +380,7 @@ fu_hpi_cfu_device_send_end_offer_list(FuHpiCfuDevice *self, GError **error)
 	if (!fu_struct_hpi_cfu_buf_set_report_data(st_req, report_data, sizeof(report_data), error))
 		return FALSE;
 
-	fu_dump_raw(G_LOG_DOMAIN, "SendEndOfferListCommand", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "SendEndOfferListCommand", st_req->buf->data, st_req->buf->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -388,8 +388,8 @@ fu_hpi_cfu_device_send_end_offer_list(FuHpiCfuDevice *self, GError **error)
 					    SET_REPORT,
 					    OUT_REPORT_TYPE | OFFER_REPORT_ID,
 					    FU_HPI_CFU_INTERFACE,
-					    st_req->data,
-					    st_req->len,
+					    st_req->buf->data,
+					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
 					    NULL,
@@ -606,7 +606,7 @@ fu_hpi_cfu_device_send_payload(FuHpiCfuDevice *self, GByteArray *cfu_buf, GError
 
 	self->currentaddress += cfu_buf->len;
 
-	fu_dump_raw(G_LOG_DOMAIN, "ToDevice", st_req->data, st_req->len);
+	fu_dump_raw(G_LOG_DOMAIN, "ToDevice", st_req->buf->data, st_req->buf->len);
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(self),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_VENDOR,
@@ -614,8 +614,8 @@ fu_hpi_cfu_device_send_payload(FuHpiCfuDevice *self, GByteArray *cfu_buf, GError
 					    SET_REPORT,
 					    OUT_REPORT_TYPE | FIRMWARE_REPORT_ID,
 					    FU_HPI_CFU_INTERFACE,
-					    st_req->data,
-					    st_req->len,
+					    st_req->buf->data,
+					    st_req->buf->len,
 					    NULL,
 					    FU_HPI_CFU_DEVICE_TIMEOUT,
 					    NULL,

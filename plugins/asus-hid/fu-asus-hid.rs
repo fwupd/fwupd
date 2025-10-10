@@ -85,7 +85,7 @@ struct FuStructAsusHidFwInfo {
 
 #[derive(Default, New)]
 #[repr(C, packed)]
-struct FuStructAsusPreUpdateCommand {
+struct FuStructAsusHidPreUpdateCommand {
     report_id: FuAsusHidReportId == Info,
     cmd: u32le,
     length: u8,

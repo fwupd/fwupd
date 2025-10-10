@@ -81,7 +81,7 @@ fu_smbios_setup_from_data(FuSmbios *self, const guint8 *buf, gsize bufsz, GError
 		if (st_str == NULL)
 			return FALSE;
 		length = fu_struct_smbios_structure_get_length(st_str);
-		if (length < st_str->len) {
+		if (length < st_str->buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,

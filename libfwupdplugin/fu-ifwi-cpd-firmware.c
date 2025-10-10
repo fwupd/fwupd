@@ -101,7 +101,7 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 		extension_length = fu_struct_ifwi_cpd_manifest_ext_get_extension_length(st_mex);
 		if (extension_length == 0x0)
 			break;
-		if (extension_length < st_mex->len) {
+		if (extension_length < st_mex->buf->len) {
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -110,8 +110,8 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 			return FALSE;
 		}
 		partial_stream = fu_partial_input_stream_new(stream,
-							     offset + st_mex->len,
-							     extension_length - st_mex->len,
+							     offset + st_mex->buf->len,
+							     extension_length - st_mex->buf->len,
 							     error);
 		if (partial_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut CPD extension: ");
@@ -219,7 +219,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		/* success */
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-		offset += st_ent->len;
+		offset += st_ent->buf->len;
 	}
 
 	/* success */
@@ -232,19 +232,19 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
-	g_autoptr(FuStructIfwiCpd) buf = fu_struct_ifwi_cpd_new();
+	g_autoptr(FuStructIfwiCpd) st = fu_struct_ifwi_cpd_new();
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* write the header */
-	fu_struct_ifwi_cpd_set_num_of_entries(buf, imgs->len);
-	fu_struct_ifwi_cpd_set_header_version(buf, priv->header_version);
-	fu_struct_ifwi_cpd_set_entry_version(buf, priv->entry_version);
-	fu_struct_ifwi_cpd_set_checksum(buf, 0x0);
-	fu_struct_ifwi_cpd_set_partition_name(buf, fu_firmware_get_idx(firmware));
-	fu_struct_ifwi_cpd_set_crc32(buf, 0x0);
+	fu_struct_ifwi_cpd_set_num_of_entries(st, imgs->len);
+	fu_struct_ifwi_cpd_set_header_version(st, priv->header_version);
+	fu_struct_ifwi_cpd_set_entry_version(st, priv->entry_version);
+	fu_struct_ifwi_cpd_set_checksum(st, 0x0);
+	fu_struct_ifwi_cpd_set_partition_name(st, fu_firmware_get_idx(firmware));
+	fu_struct_ifwi_cpd_set_crc32(st, 0x0);
 
 	/* fixup the image offsets */
-	offset += buf->len;
+	offset += st->buf->len;
 	offset += FU_STRUCT_IFWI_CPD_ENTRY_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
@@ -277,7 +277,7 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_struct_ifwi_cpd_entry_set_offset(st_ent, fu_firmware_get_offset(img));
 		fu_struct_ifwi_cpd_entry_set_length(st_ent, fu_firmware_get_size(img));
-		g_byte_array_append(buf, st_ent->data, st_ent->len);
+		fu_byte_array_append_array(st->buf, st_ent->buf);
 	}
 
 	/* add entry data */
@@ -287,11 +287,11 @@ fu_ifwi_cpd_firmware_write(FuFirmware *firmware, GError **error)
 		blob = fu_firmware_get_bytes(img, error);
 		if (blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_append_bytes(st->buf, blob);
 	}
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

@@ -58,7 +58,7 @@ fu_acpi_uefi_parse_insyde(FuAcpiUefi *self, GInputStream *stream, GError **error
 	st_qrk = fu_struct_acpi_insyde_quirk_parse_stream(stream, data_offset, error);
 	if (st_qrk == NULL)
 		return FALSE;
-	if (fu_struct_acpi_insyde_quirk_get_size(st_qrk) < st_qrk->len) {
+	if (fu_struct_acpi_insyde_quirk_get_size(st_qrk) < st_qrk->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,

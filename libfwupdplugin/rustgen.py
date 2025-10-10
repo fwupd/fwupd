@@ -190,6 +190,7 @@ class StructObj:
             "ParseStream": Export.NONE,
             "ParseInternal": Export.NONE,
             "New": Export.NONE,
+            "NewInternal": Export.NONE,
             "ToString": Export.NONE,
             "ToBytes": Export.NONE,
             "Default": Export.NONE,
@@ -236,6 +237,7 @@ class StructObj:
         if derive == "Validate":
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ValidateInternal")
         elif derive == "ValidateBytes":
             self.add_private_export("Validate")
@@ -252,8 +254,10 @@ class StructObj:
                 if item.enum_obj and not item.constant and item.enabled:
                     item.enum_obj.add_private_export("ToString")
         elif derive == "Parse":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseStream":
+            self.add_private_export("NewInternal")
             self.add_private_export("ParseInternal")
         elif derive == "ParseBytes":
             self.add_private_export("Parse")
@@ -270,6 +274,7 @@ class StructObj:
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")
         elif derive == "New":
+            self.add_private_export("NewInternal")
             for item in self.items:
                 if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Setters")
@@ -282,6 +287,8 @@ class StructObj:
             for item in self.items:
                 if not item.constant:
                     item.add_public_export(derive)
+                if item.struct_obj:
+                    item.struct_obj.add_private_export("NewInternal")
         else:
             self.add_private_export(derive)
             self._exports[derive] = Export.PUBLIC

@@ -381,10 +381,10 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    0x0,
-			    st_fdbar->data,
-			    st_fdbar->len,
+			    st_fdbar->buf->data,
+			    st_fdbar->buf->len,
 			    0x0,
-			    st_fdbar->len,
+			    st_fdbar->buf->len,
 			    error))
 		return NULL;
 
@@ -395,10 +395,10 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    priv->flash_component_base_addr,
-			    st_fcba->data,
-			    st_fcba->len,
+			    st_fcba->buf->data,
+			    st_fcba->buf->len,
 			    0x0,
-			    st_fcba->len,
+			    st_fcba->buf->len,
 			    error))
 		return NULL;
 

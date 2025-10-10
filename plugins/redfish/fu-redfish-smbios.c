@@ -252,8 +252,8 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 		if (!fu_input_stream_read_safe(stream,
 					       (guint8 *)hostname,
 					       hostname_length,
-					       0x0,		 /* dst */
-					       offset + st->len, /* seek */
+					       0x0,		      /* dst */
+					       offset + st->buf->len, /* seek */
 					       hostname_length,
 					       error))
 			return FALSE;
@@ -369,7 +369,7 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 
 	/* protocol record */
 	fu_byte_array_append_uint8(buf, REDFISH_PROTOCOL_REDFISH_OVER_IP);
-	fu_byte_array_append_uint8(buf, st->len + hostname_sz);
+	fu_byte_array_append_uint8(buf, st->buf->len + hostname_sz);
 
 	if (self->hostname != NULL)
 		hostname_sz = strlen(self->hostname);
@@ -381,7 +381,7 @@ fu_redfish_smbios_write(FuFirmware *firmware, GError **error)
 	    st,
 	    FU_REDFISH_IP_ASSIGNMENT_TYPE_STATIC);
 	fu_struct_redfish_protocol_over_ip_set_service_hostname_len(st, hostname_sz);
-	g_byte_array_append(buf, st->data, st->len);
+	g_byte_array_append(buf, st->buf->data, st->buf->len);
 	if (hostname_sz > 0)
 		g_byte_array_append(buf, (guint8 *)self->hostname, hostname_sz);
 	return g_steal_pointer(&buf);

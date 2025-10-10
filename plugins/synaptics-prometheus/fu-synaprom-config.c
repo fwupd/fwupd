@@ -47,12 +47,12 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	fu_struct_synaprom_cmd_iota_find_set_itype(st_cmd, FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
 	fu_struct_synaprom_cmd_iota_find_set_flags(st_cmd, FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX);
 	fu_struct_synaprom_request_set_cmd(st_request, FU_SYNAPROM_CMD_IOTA_FIND);
-	g_byte_array_append(st_request, st_cmd->data, st_cmd->len);
+	fu_byte_array_append_array(st_request->buf, st_cmd->buf);
 
 	reply = fu_synaprom_reply_new(FU_STRUCT_SYNAPROM_REPLY_IOTA_FIND_HDR_SIZE +
 				      FU_SYNAPROM_MAX_IOTA_READ_SIZE);
 	if (!fu_synaprom_device_cmd_send(FU_SYNAPROM_DEVICE(parent),
-					 st_request,
+					 st_request->buf,
 					 reply,
 					 progress,
 					 5000,
@@ -81,7 +81,7 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	}
 	st_cfg = fu_struct_synaprom_iota_config_version_parse(reply->data,
 							      reply->len,
-							      st_hdr->len,
+							      st_hdr->buf->len,
 							      error);
 	if (st_cfg == NULL)
 		return FALSE;

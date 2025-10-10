@@ -65,7 +65,7 @@ struct FuStructLogitechBulkcontrollerUpdateReq {
     payload_length: u32le,
 }
 
-#[derive(Getters)]
+#[derive(Parse)]
 #[repr(C, packed)]
 struct FuStructLogitechBulkcontrollerUpdateRes {
     cmd: FuLogitechBulkcontrollerCmd,

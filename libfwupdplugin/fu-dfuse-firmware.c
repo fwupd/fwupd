@@ -38,7 +38,7 @@ fu_dfuse_firmware_image_chunk_parse(FuDfuseFirmware *self,
 	st_ele = fu_struct_dfuse_element_parse_stream(stream, *offset, error);
 	if (st_ele == NULL)
 		return NULL;
-	*offset += st_ele->len;
+	*offset += st_ele->buf->len;
 	blob = fu_input_stream_read_bytes(stream,
 					  *offset,
 					  fu_struct_dfuse_element_get_size(st_ele),
@@ -87,7 +87,7 @@ fu_dfuse_firmware_image_parse_stream(FuDfuseFirmware *self,
 	}
 
 	/* parse chunks */
-	*offset += st_img->len;
+	*offset += st_img->buf->len;
 	for (guint j = 0; j < chunks; j++) {
 		g_autoptr(FuChunk) chk = NULL;
 		chk = fu_dfuse_firmware_image_chunk_parse(self, stream, offset, error);
@@ -145,7 +145,7 @@ fu_dfuse_firmware_parse(FuFirmware *firmware,
 
 	/* parse the image targets */
 	targets = fu_struct_dfuse_hdr_get_targets(st_hdr);
-	offset += st_hdr->len;
+	offset += st_hdr->buf->len;
 	for (guint i = 0; i < targets; i++) {
 		g_autoptr(FuFirmware) image = NULL;
 		image = fu_dfuse_firmware_image_parse_stream(FU_DFUSE_FIRMWARE(firmware),
@@ -166,7 +166,7 @@ fu_dfuse_firmware_chunk_write(FuDfuseFirmware *self, FuChunk *chk)
 	g_autoptr(FuStructDfuseElement) st_ele = fu_struct_dfuse_element_new();
 	fu_struct_dfuse_element_set_address(st_ele, fu_chunk_get_address(chk));
 	fu_struct_dfuse_element_set_size(st_ele, fu_chunk_get_data_sz(chk));
-	g_byte_array_append(st_ele, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	g_byte_array_append(st_ele->buf, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	return fu_struct_dfuse_element_to_bytes(st_ele);
 }
 
@@ -205,7 +205,7 @@ fu_dfuse_firmware_write_image(FuDfuseFirmware *self, FuFirmware *image, GError *
 	/* copy data */
 	for (guint i = 0; i < blobs->len; i++) {
 		GBytes *blob = g_ptr_array_index(blobs, i);
-		fu_byte_array_append_bytes(st_img, blob);
+		fu_byte_array_append_bytes(st_img->buf, blob);
 	}
 	return fu_struct_dfuse_image_to_bytes(st_img);
 }
@@ -234,7 +234,7 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* DfuSe header */
-	fu_struct_dfuse_hdr_set_image_size(st_hdr, st_hdr->len + totalsz);
+	fu_struct_dfuse_hdr_set_image_size(st_hdr, st_hdr->buf->len + totalsz);
 	if (images->len > G_MAXUINT8) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -248,7 +248,7 @@ fu_dfuse_firmware_write(FuFirmware *firmware, GError **error)
 	/* copy images */
 	for (guint i = 0; i < blobs->len; i++) {
 		GBytes *blob = g_ptr_array_index(blobs, i);
-		fu_byte_array_append_bytes(st_hdr, blob);
+		fu_byte_array_append_bytes(st_hdr->buf, blob);
 	}
 
 	/* return blob */

@@ -55,7 +55,7 @@ fu_intel_cvs_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* verify checksum of header */
-	checksum_new = fu_sum32w(st_hdr->data, st_hdr->len, G_LITTLE_ENDIAN);
+	checksum_new = fu_sum32w(st_hdr->buf->data, st_hdr->buf->len, G_LITTLE_ENDIAN);
 	if (checksum_new != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

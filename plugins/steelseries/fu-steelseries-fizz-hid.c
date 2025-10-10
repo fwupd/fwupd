@@ -113,14 +113,14 @@ static gboolean
 fu_steelseries_fizz_hid_ensure_version(FuSteelseriesFizzHid *self, GError **error)
 {
 	g_autofree gchar *version = NULL;
-	g_autoptr(GByteArray) st_buf = NULL;
+	g_autoptr(GByteArray) buf = NULL;
 	g_autoptr(FuStructSteelseriesFizzHidGetVersionReq) st =
 	    fu_struct_steelseries_fizz_hid_get_version_req_new();
 
-	st_buf = fu_steelseries_fizz_hid_command(self, st, error);
-	if (st_buf == NULL)
+	buf = fu_steelseries_fizz_hid_command(self, st->buf, error);
+	if (buf == NULL)
 		return FALSE;
-	version = fu_strsafe((const gchar *)st_buf->data, st_buf->len);
+	version = fu_strsafe((const gchar *)buf->data, buf->len);
 	if (version == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -35,7 +35,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 	guint32 offset_hdr;
 	guint32 offset_payload = GTX8_FW_DATA_OFFSET;
 	const guint8 *buf;
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructGoodixGtx8Hdr) st = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	st = fu_struct_goodix_gtx8_hdr_parse_stream(stream, 0x0, error);
@@ -179,10 +179,10 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 				    "subsys_num is 0");
 		return FALSE;
 	}
-	offset_hdr = st->len;
+	offset_hdr = st->buf->len;
 	for (guint i = 0; i < subsys_num; i++) {
 		guint32 img_size;
-		g_autoptr(GByteArray) st_img = NULL;
+		g_autoptr(FuStructGoodixGtx8Img) st_img = NULL;
 
 		st_img = fu_struct_goodix_gtx8_img_parse_stream(stream, offset_hdr, error);
 		if (st_img == NULL)
@@ -200,7 +200,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 			if (!fu_firmware_add_image(FU_FIRMWARE(self), img, error))
 				return FALSE;
 		}
-		offset_hdr += st_img->len;
+		offset_hdr += st_img->buf->len;
 		offset_payload += img_size;
 	}
 

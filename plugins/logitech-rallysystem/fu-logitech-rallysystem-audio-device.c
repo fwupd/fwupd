@@ -91,7 +91,7 @@ fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice
 			       fu_struct_audio_serial_number_get_month(st),
 			       fu_struct_audio_serial_number_get_day(st));
 	for (guint i = 0x0; i < FU_STRUCT_AUDIO_SERIAL_NUMBER_SIZE_MAC_ADDRESS; i++)
-		g_string_append_printf(serial, "%02x", st->data[i]);
+		g_string_append_printf(serial, "%02x", st->buf->data[i]);
 	fu_device_set_serial(FU_DEVICE(self), serial->str);
 
 	/* success */

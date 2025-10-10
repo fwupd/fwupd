@@ -6926,14 +6926,14 @@ fu_plugin_struct_bits_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* 0b1111 + 0b1 + 0b0010 = 0b111110010 -> 0x1F2 */
-	g_assert_cmpint(st->len, ==, 4);
-	fu_dump_raw(G_LOG_DOMAIN, "buf", st->data, st->len);
-	g_assert_cmpint(st->data[0], ==, 0xF2);
-	g_assert_cmpint(st->data[1], ==, 0x01);
-	g_assert_cmpint(st->data[2], ==, 0x0);
-	g_assert_cmpint(st->data[3], ==, 0x0);
+	g_assert_cmpint(st->buf->len, ==, 4);
+	fu_dump_raw(G_LOG_DOMAIN, "buf", st->buf->data, st->buf->len);
+	g_assert_cmpint(st->buf->data[0], ==, 0xF2);
+	g_assert_cmpint(st->buf->data[1], ==, 0x01);
+	g_assert_cmpint(st->buf->data[2], ==, 0x0);
+	g_assert_cmpint(st->buf->data[3], ==, 0x0);
 
-	st2 = fu_struct_self_test_bits_parse(st->data, st->len, 0x0, &error);
+	st2 = fu_struct_self_test_bits_parse(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(st2);
 
@@ -6987,7 +6987,7 @@ fu_plugin_struct_list_func(void)
 	}
 
 	/* size */
-	str = fu_byte_array_to_string(st);
+	str = fu_byte_array_to_string(st->buf);
 	g_assert_cmpstr(
 	    str,
 	    ==,
@@ -7007,7 +7007,7 @@ fu_plugin_struct_func(void)
 	g_autofree gchar *oem_table_id = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 59);
+	g_assert_cmpint(st->buf->len, ==, 59);
 
 	/* getters and setters */
 	fu_struct_self_test_set_revision(st, 0xFF);
@@ -7019,14 +7019,14 @@ fu_plugin_struct_func(void)
 	g_assert_cmpint(fu_struct_self_test_get_length(st), ==, 0xDEAD);
 
 	/* pack */
-	str1 = fu_byte_array_to_string(st);
+	str1 = fu_byte_array_to_string(st->buf);
 	g_assert_cmpstr(str1,
 			==,
 			"12345678adde0000ff000000000000000000000000000000004142434445465800000000"
 			"00000000000000dfdfdfdf00000000ffffffffffffffff");
 
 	/* parse */
-	st2 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
+	st2 = fu_struct_self_test_parse(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(st2);
 	g_assert_cmpint(fu_struct_self_test_get_revision(st2), ==, 0xFF);
@@ -7048,12 +7048,12 @@ fu_plugin_struct_func(void)
 			"  asl_compiler_revision: 0x0");
 
 	/* parse failing signature */
-	st->data[0] = 0xFF;
-	st3 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
+	st->buf->data[0] = 0xFF;
+	st3 = fu_struct_self_test_parse(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(st3);
 	g_clear_error(&error);
-	ret = fu_struct_self_test_validate(st->data, st->len, 0x0, &error);
+	ret = fu_struct_self_test_validate(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }
@@ -7073,13 +7073,13 @@ fu_plugin_struct_wrapped_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 61);
+	g_assert_cmpint(st->buf->len, ==, 61);
 
 	/* getters and setters */
 	fu_struct_self_test_wrapped_set_less(st, 0x99);
 	fu_struct_self_test_wrapped_set_more(st, 0x12);
 	g_assert_cmpint(fu_struct_self_test_wrapped_get_more(st), ==, 0x12);
-	str1 = fu_byte_array_to_string(st);
+	str1 = fu_byte_array_to_string(st->buf);
 	g_assert_cmpstr(str1,
 			==,
 			"99123456783b000000000000000000000000000000000000000041424344454600000000"
@@ -7090,14 +7090,14 @@ fu_plugin_struct_wrapped_func(void)
 	ret = fu_struct_self_test_wrapped_set_base(st, st_base, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	str4 = fu_byte_array_to_string(st);
+	str4 = fu_byte_array_to_string(st->buf);
 	g_assert_cmpstr(str4,
 			==,
 			"99123456783b000000fe0000000000000000000000000000000041424344454600000000"
 			"0000000000000000dfdfdfdf00000000ffffffffffffffff12");
 
 	/* parse */
-	st2 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
+	st2 = fu_struct_self_test_wrapped_parse(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(st2);
 	g_assert_cmpint(fu_struct_self_test_wrapped_get_more(st), ==, 0x12);
@@ -7121,12 +7121,12 @@ fu_plugin_struct_wrapped_func(void)
 			"  more: 0x12");
 
 	/* parse failing signature */
-	st->data[FU_STRUCT_SELF_TEST_WRAPPED_OFFSET_BASE] = 0xFF;
-	st3 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
+	st->buf->data[FU_STRUCT_SELF_TEST_WRAPPED_OFFSET_BASE] = 0xFF;
+	st3 = fu_struct_self_test_wrapped_parse(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_null(st3);
 	g_clear_error(&error);
-	ret = fu_struct_self_test_wrapped_validate(st->data, st->len, 0x0, &error);
+	ret = fu_struct_self_test_wrapped_validate(st->buf->data, st->buf->len, 0x0, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
 	g_assert_false(ret);
 }

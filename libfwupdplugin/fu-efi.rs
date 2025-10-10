@@ -118,10 +118,11 @@ struct FuStructEfiSection {
     type: FuEfiSectionType,
 }
 
-#[derive(ParseStream)]
+#[derive(ParseStream, Default)]
 #[repr(C, packed)]
 struct FuStructEfiSection2 {
-    _base: FuStructEfiSection,
+    size: u24le == 0xFFFFFF,
+    type: FuEfiSectionType,
     extended_size: u32le,
 }
 

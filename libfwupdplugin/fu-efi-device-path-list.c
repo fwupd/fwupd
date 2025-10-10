@@ -129,7 +129,7 @@ fu_efi_device_path_list_write(FuFirmware *firmware, GError **error)
 	st_dp_end = fu_struct_efi_device_path_new();
 	fu_struct_efi_device_path_set_type(st_dp_end, FU_EFI_DEVICE_PATH_TYPE_END);
 	fu_struct_efi_device_path_set_subtype(st_dp_end, 0xFF);
-	g_byte_array_append(buf, st_dp_end->data, st_dp_end->len);
+	fu_byte_array_append_array(buf, st_dp_end->buf);
 
 	/* success */
 	return g_steal_pointer(&buf);

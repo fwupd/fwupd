@@ -46,17 +46,18 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmware) img_sig = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GInputStream) stream_sig = NULL;
-	g_autoptr(FuStructLegionHid2Header) header = NULL;
-	g_autoptr(FuStructLegionHid2Version) version = NULL;
+	g_autoptr(FuStructLegionHid2Header) st_header = NULL;
+	g_autoptr(FuStructLegionHid2Version) st_version = NULL;
 
-	header = fu_struct_legion_hid2_header_parse_stream(stream, 0x0, error);
-	if (header == NULL)
+	st_header = fu_struct_legion_hid2_header_parse_stream(stream, 0x0, error);
+	if (st_header == NULL)
 		return FALSE;
 
-	stream_sig = fu_partial_input_stream_new(stream,
-						 fu_struct_legion_hid2_header_get_sig_add(header),
-						 fu_struct_legion_hid2_header_get_sig_len(header),
-						 error);
+	stream_sig =
+	    fu_partial_input_stream_new(stream,
+					fu_struct_legion_hid2_header_get_sig_add(st_header),
+					fu_struct_legion_hid2_header_get_sig_len(st_header),
+					error);
 	if (stream_sig == NULL)
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_sig, stream_sig, 0x0, flags, error))
@@ -67,8 +68,8 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 
 	stream_payload =
 	    fu_partial_input_stream_new(stream,
-					fu_struct_legion_hid2_header_get_data_add(header),
-					fu_struct_legion_hid2_header_get_data_len(header),
+					fu_struct_legion_hid2_header_get_data_add(st_header),
+					fu_struct_legion_hid2_header_get_data_len(st_header),
 					error);
 	if (stream_payload == NULL)
 		return FALSE;
@@ -78,10 +79,10 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_add_image(firmware, img_payload, error))
 		return FALSE;
 
-	version = fu_struct_legion_hid2_version_parse_stream(stream, VERSION_OFFSET, error);
-	if (version == NULL)
+	st_version = fu_struct_legion_hid2_version_parse_stream(stream, VERSION_OFFSET, error);
+	if (st_version == NULL)
 		return FALSE;
-	self->version = fu_struct_legion_hid2_version_get_version(version);
+	self->version = fu_struct_legion_hid2_version_get_version(st_version);
 
 	return TRUE;
 }

@@ -54,14 +54,14 @@ fu_ch347_device_write(FuCh347Device *self,
 	fu_struct_ch347_req_set_cmd(st, cmd);
 	fu_struct_ch347_req_set_payloadsz(st, bufsz);
 	if (bufsz > 0)
-		g_byte_array_append(st, buf, bufsz);
+		g_byte_array_append(st->buf, buf, bufsz);
 
 	/* debug */
-	fu_dump_raw(G_LOG_DOMAIN, "write", st->data, st->len);
+	fu_dump_raw(G_LOG_DOMAIN, "write", st->buf->data, st->buf->len);
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_CH347_EP_OUT,
-					 st->data,
-					 st->len,
+					 st->buf->data,
+					 st->buf->len,
 					 &actual_length,
 					 FU_CH347_USB_TIMEOUT,
 					 NULL,
@@ -69,13 +69,13 @@ fu_ch347_device_write(FuCh347Device *self,
 		g_prefix_error(error, "failed to write 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
-	if (st->len != actual_length) {
+	if (st->buf->len != actual_length) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "only wrote 0x%x of 0x%x",
 			    (guint)actual_length,
-			    (guint)st->len);
+			    (guint)st->buf->len);
 		return FALSE;
 	}
 
@@ -97,13 +97,13 @@ fu_ch347_device_read(FuCh347Device *self,
 	/* pack */
 	fu_struct_ch347_req_set_cmd(st, cmd);
 	fu_struct_ch347_req_set_payloadsz(st, sizeof(guint32));
-	fu_byte_array_append_uint32(st, bufsz, G_LITTLE_ENDIAN);
-	fu_byte_array_set_size(st, FU_CH347_PACKET_SIZE, 0x0);
+	fu_byte_array_append_uint32(st->buf, bufsz, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st->buf, FU_CH347_PACKET_SIZE, 0x0);
 
 	if (!fu_usb_device_bulk_transfer(FU_USB_DEVICE(self),
 					 FU_CH347_EP_IN,
-					 st->data,
-					 st->len,
+					 st->buf->data,
+					 st->buf->len,
 					 &actual_length,
 					 FU_CH347_USB_TIMEOUT,
 					 NULL,
@@ -111,7 +111,7 @@ fu_ch347_device_read(FuCh347Device *self,
 		g_prefix_error(error, "failed to read 0x%x bytes: ", (guint)bufsz);
 		return FALSE;
 	}
-	fu_dump_raw(G_LOG_DOMAIN, "read", st->data, actual_length);
+	fu_dump_raw(G_LOG_DOMAIN, "read", st->buf->data, actual_length);
 	if (actual_length == 0) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "returned 0 bytes");
 		return FALSE;
@@ -142,8 +142,8 @@ fu_ch347_device_read(FuCh347Device *self,
 	return fu_memcpy_safe(buf,
 			      bufsz,
 			      0x0,
-			      st->data,
-			      st->len,
+			      st->buf->data,
+			      st->buf->len,
 			      FU_STRUCT_CH347_REQ_SIZE,
 			      size_rsp,
 			      error);

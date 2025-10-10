@@ -52,32 +52,32 @@ fu_legion_hid2_iap_device_transfer(FuLegionHid2IapDevice *self,
 
 static FuStructLegionIapTlv *
 fu_legion_hid2_iap_device_tlv(FuLegionHid2IapDevice *self,
-			      FuStructLegionIapTlv *cmd,
+			      FuStructLegionIapTlv *st_req,
 			      GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) result = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = fu_struct_legion_iap_tlv_new();
 	const guint8 *value;
 	guint8 expected;
 	guint16 tag;
 
-	if (fu_struct_legion_iap_tlv_get_tag(cmd) == FU_LEGION_IAP_HOST_TAG_IAP_UPDATE)
+	if (fu_struct_legion_iap_tlv_get_tag(st_req) == FU_LEGION_IAP_HOST_TAG_IAP_UPDATE)
 		expected = FU_LEGION_IAP_ERROR_IAP_CERTIFIED;
 	else
 		expected = FU_LEGION_IAP_ERROR_IAP_OK;
 
-	if (!fu_legion_hid2_iap_device_transfer(self, cmd, result, error))
+	if (!fu_legion_hid2_iap_device_transfer(self, st_req->buf, st_res->buf, error))
 		return NULL;
 
-	tag = fu_struct_legion_iap_tlv_get_tag(result);
+	tag = fu_struct_legion_iap_tlv_get_tag(st_res);
 	if (tag != FU_LEGION_IAP_DEVICE_TAG_IAP_ACK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_WRITE,
-			    "failed to transmit TLV, result: %u",
+			    "failed to transmit TLV, st_res: %u",
 			    tag);
 		return NULL;
 	}
-	value = fu_struct_legion_iap_tlv_get_value(result, NULL);
+	value = fu_struct_legion_iap_tlv_get_value(st_res, NULL);
 	if (value[0] != expected) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -87,23 +87,20 @@ fu_legion_hid2_iap_device_tlv(FuLegionHid2IapDevice *self,
 		return NULL;
 	}
 
-	return g_steal_pointer(&result);
+	return g_steal_pointer(&st_res);
 }
 
 static gboolean
 fu_legion_hid2_iap_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) cmd = NULL;
-	g_autoptr(FuStructLegionIapTlv) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 	g_autoptr(GError) error_attach = NULL;
 
-	cmd = fu_struct_legion_iap_tlv_new();
-
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_RESTART);
-
-	result =
-	    fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), cmd, &error_attach);
-	if (result == NULL)
+	fu_struct_legion_iap_tlv_set_tag(st_req, FU_LEGION_IAP_HOST_TAG_IAP_RESTART);
+	st_res =
+	    fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), st_req, &error_attach);
+	if (st_res == NULL)
 		g_debug("failed to attach: %s", error_attach->message);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -130,13 +127,13 @@ fu_legion_hid2_iap_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(FuStructLegionIapTlv) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UNLOCK);
+	fu_struct_legion_iap_tlv_set_tag(st_req, FU_LEGION_IAP_HOST_TAG_IAP_UNLOCK);
 
-	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
-	if (result == NULL) {
+	st_res = fu_legion_hid2_iap_device_tlv(self, st_req, error);
+	if (st_res == NULL) {
 		g_prefix_error_literal(error, "failed to unlock: ");
 		return FALSE;
 	}
@@ -147,13 +144,13 @@ fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **err
 static gboolean
 fu_legion_hid2_iap_device_verify_signature(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(FuStructLegionIapTlv) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_UPDATE);
+	fu_struct_legion_iap_tlv_set_tag(st_req, FU_LEGION_IAP_HOST_TAG_IAP_UPDATE);
 
-	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
-	if (result == NULL) {
+	st_res = fu_legion_hid2_iap_device_tlv(self, st_req, error);
+	if (st_res == NULL) {
 		g_prefix_error_literal(error, "failed to verify signature: ");
 		return FALSE;
 	}
@@ -164,13 +161,13 @@ fu_legion_hid2_iap_device_verify_signature(FuLegionHid2IapDevice *self, GError *
 static gboolean
 fu_legion_hid2_iap_device_verify_code(FuLegionHid2IapDevice *self, GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(FuStructLegionIapTlv) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_VERIFY);
+	fu_struct_legion_iap_tlv_set_tag(st_req, FU_LEGION_IAP_HOST_TAG_IAP_VERIFY);
 
-	result = fu_legion_hid2_iap_device_tlv(self, cmd, error);
-	if (result == NULL) {
+	st_res = fu_legion_hid2_iap_device_tlv(self, st_req, error);
+	if (st_res == NULL) {
 		g_prefix_error_literal(error, "failed to verify code: ");
 		return FALSE;
 	}
@@ -189,25 +186,25 @@ fu_legion_hid2_iap_device_write_data_chunks(FuLegionHid2IapDevice *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks));
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
 		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(FuStructLegionIapTlv) req = fu_struct_legion_iap_tlv_new();
-		g_autoptr(FuStructLegionIapTlv) res = NULL;
+		g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+		g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 
-		fu_struct_legion_iap_tlv_set_tag(req, tag);
+		fu_struct_legion_iap_tlv_set_tag(st_req, tag);
 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
 
-		if (!fu_struct_legion_iap_tlv_set_value(req,
+		if (!fu_struct_legion_iap_tlv_set_value(st_req,
 							fu_chunk_get_data(chk),
 							fu_chunk_get_data_sz(chk),
 							error))
 			return FALSE;
 
-		fu_struct_legion_iap_tlv_set_length(req, fu_chunk_get_data_sz(chk));
+		fu_struct_legion_iap_tlv_set_length(st_req, fu_chunk_get_data_sz(chk));
 
-		res = fu_legion_hid2_iap_device_tlv(self, req, error);
-		if (res == NULL) {
+		st_res = fu_legion_hid2_iap_device_tlv(self, st_req, error);
+		if (st_res == NULL) {
 			g_prefix_error_literal(error, "failed to write data chunks: ");
 			return FALSE;
 		}
@@ -222,18 +219,18 @@ fu_legion_hid2_iap_device_write_data_chunks(FuLegionHid2IapDevice *self,
 static gboolean
 fu_legion_hid2_iap_device_wait_for_complete_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	g_autoptr(FuStructLegionIapTlv) cmd = fu_struct_legion_iap_tlv_new();
-	g_autoptr(FuStructLegionIapTlv) result = NULL;
+	g_autoptr(FuStructLegionIapTlv) st_req = fu_struct_legion_iap_tlv_new();
+	g_autoptr(FuStructLegionIapTlv) st_res = NULL;
 	const guint8 *value;
 
-	fu_struct_legion_iap_tlv_set_tag(cmd, FU_LEGION_IAP_HOST_TAG_IAP_CARRY);
+	fu_struct_legion_iap_tlv_set_tag(st_req, FU_LEGION_IAP_HOST_TAG_IAP_CARRY);
 
-	result = fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), cmd, error);
-	if (result == NULL) {
+	st_res = fu_legion_hid2_iap_device_tlv(FU_LEGION_HID2_IAP_DEVICE(device), st_req, error);
+	if (st_res == NULL) {
 		g_prefix_error_literal(error, "failed to verify code: ");
 		return FALSE;
 	}
-	value = fu_struct_legion_iap_tlv_get_value(result, NULL);
+	value = fu_struct_legion_iap_tlv_get_value(st_res, NULL);
 	if (value[1] < 100) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -113,7 +113,7 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 									error);
 		if (buf == NULL)
 			return NULL;
-		g_byte_array_append(st, buf->data, buf->len);
+		g_byte_array_append(st->buf, buf->data, buf->len);
 	}
 
 	/* data record */
@@ -123,12 +123,12 @@ fu_acpi_phat_health_record_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		fu_struct_acpi_phat_health_record_set_device_signature(st, &guid);
 	}
-	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->len);
+	fu_struct_acpi_phat_health_record_set_rcdlen(st, st->buf->len);
 	fu_struct_acpi_phat_health_record_set_version(st, fu_firmware_get_version_raw(firmware));
 	fu_struct_acpi_phat_health_record_set_flags(st, self->am_healthy);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

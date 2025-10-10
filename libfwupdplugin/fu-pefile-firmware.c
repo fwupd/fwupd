@@ -243,7 +243,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 		g_prefix_error_literal(error, "failed to read COFF header: ");
 		return FALSE;
 	}
-	offset += st_coff->len;
+	offset += st_coff->buf->len;
 
 	regions = g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_region_free);
 
@@ -399,7 +399,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_pefile_firmware_section_free);
 
 	/* calculate the offset for each of the sections */
-	offset += st->len + st_hdr->len + st_opt->len;
+	offset += st->buf->len + st_hdr->buf->len + st_opt->buf->len;
 	offset += FU_STRUCT_PE_COFF_SECTION_SIZE * imgs->len;
 	for (guint i = 0; i < imgs->len; i++) {
 		g_autofree FuPefileSection *section = g_new0(FuPefileSection, 1);
@@ -419,16 +419,16 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_pe_coff_optional_header64_set_number_of_rva_and_sizes(st_opt, 7);
 
 	/* COFF file header */
-	fu_struct_pe_coff_file_header_set_size_of_optional_header(st_hdr, st_opt->len);
+	fu_struct_pe_coff_file_header_set_size_of_optional_header(st_hdr, st_opt->buf->len);
 	fu_struct_pe_coff_file_header_set_number_of_sections(st_hdr, sections->len);
 	fu_struct_pe_coff_file_header_set_pointer_to_symbol_table(st_hdr, offset);
-	g_byte_array_append(st, st_hdr->data, st_hdr->len);
-	g_byte_array_append(st, st_opt->data, st_opt->len);
+	fu_byte_array_append_array(st->buf, st_hdr->buf);
+	fu_byte_array_append_array(st->buf, st_opt->buf);
 
 	/* add sections */
 	for (guint i = 0; i < sections->len; i++) {
 		FuPefileSection *section = g_ptr_array_index(sections, i);
-		g_autoptr(GByteArray) st_sect = fu_struct_pe_coff_section_new();
+		g_autoptr(FuStructPeCoffSection) st_sect = fu_struct_pe_coff_section_new();
 
 		fu_struct_pe_coff_section_set_size_of_raw_data(st_sect,
 							       g_bytes_get_size(section->blob));
@@ -470,7 +470,7 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 			fu_byte_array_set_size(strtab_buf, FU_PEFILE_SECTION_ID_STRTAB_SIZE, 0x0);
 			g_byte_array_append(strtab, strtab_buf->data, strtab_buf->len);
 		}
-		g_byte_array_append(st, st_sect->data, st_sect->len);
+		fu_byte_array_append_array(st->buf, st_sect->buf);
 	}
 
 	/* add the section data itself */
@@ -478,14 +478,14 @@ fu_pefile_firmware_write(FuFirmware *firmware, GError **error)
 		FuPefileSection *section = g_ptr_array_index(sections, i);
 		g_autoptr(GBytes) blob_aligned =
 		    fu_bytes_pad(section->blob, section->blobsz_aligned, 0xFF);
-		fu_byte_array_append_bytes(st, blob_aligned);
+		fu_byte_array_append_bytes(st->buf, blob_aligned);
 	}
 
 	/* string table comes last */
-	g_byte_array_append(st, strtab->data, strtab->len);
+	g_byte_array_append(st->buf, strtab->data, strtab->len);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gchar *

@@ -72,7 +72,7 @@ fu_qc_firehose_sahara_impl_hello(FuQcFirehoseSaharaImpl *self, GByteArray *buf, 
 		return FALSE;
 	fu_qc_firehose_sahara_pkt_hello_resp_set_mode(st_resp,
 						      fu_qc_firehose_sahara_pkt_hello_get_mode(st));
-	return fu_qc_firehose_sahara_impl_write(self, st_resp->data, st_resp->len, error);
+	return fu_qc_firehose_sahara_impl_write(self, st_resp->buf->data, st_resp->buf->len, error);
 }
 
 static gboolean
@@ -150,7 +150,7 @@ fu_qc_firehose_sahara_impl_eoi(FuQcFirehoseSaharaImpl *self, GByteArray *buf, GE
 			    fu_qc_firehose_sahara_status_to_string(status));
 		return FALSE;
 	}
-	return fu_qc_firehose_sahara_impl_write(self, st_resp->data, st_resp->len, error);
+	return fu_qc_firehose_sahara_impl_write(self, st_resp->buf->data, st_resp->buf->len, error);
 }
 
 static gboolean

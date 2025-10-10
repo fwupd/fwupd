@@ -234,7 +234,7 @@ fu_cab_firmware_parse_data(FuCabFirmware *self,
 		return FALSE;
 	}
 
-	hdr_sz = st->len + helper->rsvd_block;
+	hdr_sz = st->buf->len + helper->rsvd_block;
 
 	/* verify checksum */
 	partial_stream =
@@ -370,7 +370,7 @@ fu_cab_firmware_parse_folder(FuCabFirmware *self,
 			     GError **error)
 {
 	FuCabFirmwarePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(GByteArray) st = NULL;
+	g_autoptr(FuStructCabFolder) st = NULL;
 
 	/* parse header */
 	st = fu_struct_cab_folder_parse_stream(helper->stream, offset, error);
@@ -628,13 +628,13 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 		helper->ndatabsz = streamsz;
 
 	/* reserved sizes */
-	offset += st->len;
+	offset += st->buf->len;
 	if (fu_struct_cab_header_get_flags(st) & 0x0004) {
-		g_autoptr(GByteArray) st2 = NULL;
+		g_autoptr(FuStructCabHeaderReserve) st2 = NULL;
 		st2 = fu_struct_cab_header_reserve_parse_stream(stream, offset, error);
 		if (st2 == NULL)
 			return FALSE;
-		offset += st2->len;
+		offset += st2->buf->len;
 		offset += fu_struct_cab_header_reserve_get_rsvd_hdr(st2);
 		helper->rsvd_block = fu_struct_cab_header_reserve_get_rsvd_block(st2);
 		helper->rsvd_folder = fu_struct_cab_header_reserve_get_rsvd_folder(st2);
@@ -801,7 +801,7 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_cab_folder_set_compression(st_folder,
 					     priv->compressed ? FU_CAB_COMPRESSION_MSZIP
 							      : FU_CAB_COMPRESSION_NONE);
-	fu_byte_array_append_array(st_hdr, st_folder);
+	fu_byte_array_append_array(st_hdr->buf, st_folder->buf);
 
 	/* create each CFFILE */
 	for (guint i = 0; i < imgs->len; i++) {
@@ -827,10 +827,12 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 							(g_date_time_get_minute(created) << 5) +
 							(g_date_time_get_second(created) / 2));
 		}
-		fu_byte_array_append_array(st_hdr, st_file);
+		fu_byte_array_append_array(st_hdr->buf, st_file->buf);
 
-		g_byte_array_append(st_hdr, (const guint8 *)filename_win32, strlen(filename_win32));
-		fu_byte_array_append_uint8(st_hdr, 0x0);
+		g_byte_array_append(st_hdr->buf,
+				    (const guint8 *)filename_win32,
+				    strlen(filename_win32));
+		fu_byte_array_append_uint8(st_hdr->buf, 0x0);
 		index_into += g_bytes_get_size(img_blob);
 	}
 
@@ -861,12 +863,12 @@ fu_cab_firmware_write(FuFirmware *firmware, GError **error)
 		fu_struct_cab_data_set_checksum(st_data, checksum);
 		fu_struct_cab_data_set_comp(st_data, chunk_zlib->len);
 		fu_struct_cab_data_set_uncomp(st_data, fu_chunk_get_data_sz(chk));
-		fu_byte_array_append_array(st_hdr, st_data);
-		g_byte_array_append(st_hdr, chunk_zlib->data, chunk_zlib->len);
+		fu_byte_array_append_array(st_hdr->buf, st_data->buf);
+		g_byte_array_append(st_hdr->buf, chunk_zlib->data, chunk_zlib->len);
 	}
 
 	/* success */
-	return g_steal_pointer(&st_hdr);
+	return g_steal_pointer(&st_hdr->buf);
 }
 
 static gboolean

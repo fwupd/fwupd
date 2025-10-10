@@ -198,7 +198,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	fu_firmware_set_alignment(firmware, alignment);
 	priv->attrs = attrs & 0xffff;
 	hdr_length = fu_struct_efi_volume_get_hdr_len(st_hdr);
-	if (hdr_length < st_hdr->len || hdr_length > fv_length || hdr_length > streamsz ||
+	if (hdr_length < st_hdr->buf->len || hdr_length > fv_length || hdr_length > streamsz ||
 	    hdr_length % 2 != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -303,7 +303,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 	}
 
 	/* skip the blockmap */
-	offset += st_hdr->len;
+	offset += st_hdr->buf->len;
 	while (offset < streamsz) {
 		guint32 num_blocks;
 		guint32 length;
@@ -313,7 +313,7 @@ fu_efi_volume_parse(FuFirmware *firmware,
 			return FALSE;
 		num_blocks = fu_struct_efi_volume_block_map_get_num_blocks(st_blk);
 		length = fu_struct_efi_volume_block_map_get_length(st_blk);
-		offset += st_blk->len;
+		offset += st_blk->buf->len;
 		if (num_blocks == 0x0 && length == 0x0)
 			break;
 		blockmap_sz += (gsize)num_blocks * (gsize)length;
@@ -335,7 +335,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
-	g_autoptr(FuStructEfiVolume) buf = fu_struct_efi_volume_new();
+	g_autoptr(FuStructEfiVolume) st_vol = fu_struct_efi_volume_new();
 	g_autoptr(FuStructEfiVolumeBlockMap) st_blk = fu_struct_efi_volume_block_map_new();
 	fwupd_guid_t guid = {0x0};
 	guint32 hdr_length = 0x48;
@@ -391,7 +391,7 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* pack */
-	fu_struct_efi_volume_set_guid(buf, &guid);
+	fu_struct_efi_volume_set_guid(st_vol, &guid);
 	fv_length = fu_common_align_up(hdr_length + g_bytes_get_size(img_blob),
 				       fu_firmware_get_alignment(firmware));
 
@@ -403,11 +403,11 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 		fv_length = fu_firmware_get_size(firmware);
 	}
 
-	fu_struct_efi_volume_set_length(buf, fv_length);
-	fu_struct_efi_volume_set_attrs(buf,
+	fu_struct_efi_volume_set_length(st_vol, fv_length);
+	fu_struct_efi_volume_set_attrs(st_vol,
 				       priv->attrs |
 					   ((guint32)fu_firmware_get_alignment(firmware) << 16));
-	fu_struct_efi_volume_set_hdr_len(buf, hdr_length);
+	fu_struct_efi_volume_set_hdr_len(st_vol, hdr_length);
 
 	/* blockmap */
 	chunks = fu_chunk_array_new_virtual(fv_length,
@@ -416,22 +416,22 @@ fu_efi_volume_write(FuFirmware *firmware, GError **error)
 					    0x1000);
 	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, fu_chunk_array_length(chunks));
 	fu_struct_efi_volume_block_map_set_length(st_blk, 0x1000);
-	g_byte_array_append(buf, st_blk->data, st_blk->len);
+	fu_byte_array_append_array(st_vol->buf, st_blk->buf);
 	fu_struct_efi_volume_block_map_set_num_blocks(st_blk, 0x0);
 	fu_struct_efi_volume_block_map_set_length(st_blk, 0x0);
-	g_byte_array_append(buf, st_blk->data, st_blk->len);
+	fu_byte_array_append_array(st_vol->buf, st_blk->buf);
 
 	/* fix up checksum */
-	fu_struct_efi_volume_set_checksum(buf,
-					  0x10000 -
-					      fu_sum16w(buf->data, buf->len, G_LITTLE_ENDIAN));
+	fu_struct_efi_volume_set_checksum(
+	    st_vol,
+	    0x10000 - fu_sum16w(st_vol->buf->data, st_vol->buf->len, G_LITTLE_ENDIAN));
 
 	/* pad contents to alignment */
-	fu_byte_array_append_bytes(buf, img_blob);
-	fu_byte_array_set_size(buf, fv_length, 0xFF);
+	fu_byte_array_append_bytes(st_vol->buf, img_blob);
+	fu_byte_array_set_size(st_vol->buf, fv_length, 0xFF);
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st_vol->buf);
 }
 
 static void

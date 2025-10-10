@@ -54,12 +54,12 @@ fu_asus_hid_device_transfer_feature(FuAsusHidDevice *self,
 static gboolean
 fu_asus_hid_device_init_seq(FuAsusHidDevice *self, GError **error)
 {
-	g_autoptr(FuStructAsusHidCommand) cmd = fu_struct_asus_hid_command_new();
+	g_autoptr(FuStructAsusHidCommand) st = fu_struct_asus_hid_command_new();
 
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_INIT_SEQUENCE);
+	fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_INIT_SEQUENCE);
 
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
+						 st->buf,
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error)) {
@@ -139,13 +139,13 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_asus_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	g_autoptr(FuStructAsusFlashReset) cmd = fu_struct_asus_flash_reset_new();
+	g_autoptr(FuStructAsusFlashReset) st = fu_struct_asus_flash_reset_new();
 
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	if (!fu_asus_hid_device_transfer_feature(FU_ASUS_HID_DEVICE(device),
-						 cmd,
+						 st->buf,
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_FLASHING,
 						 error)) {
@@ -162,59 +162,59 @@ static gboolean
 fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuAsusHidDevice *self = FU_ASUS_HID_DEVICE(device);
-	g_autoptr(FuStructAsusPreUpdateCommand) cmd = fu_struct_asus_pre_update_command_new();
-	g_autoptr(FuStructAsusHidResult) result = fu_struct_asus_hid_result_new();
+	g_autoptr(FuStructAsusHidPreUpdateCommand) st = fu_struct_asus_hid_pre_update_command_new();
+	g_autoptr(FuStructAsusHidResult) st_result = fu_struct_asus_hid_result_new();
 	guint32 previous_result;
 
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE);
-	fu_struct_asus_hid_command_set_length(cmd, FU_STRUCT_ASUS_HID_RESULT_SIZE);
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE);
+	fu_struct_asus_hid_pre_update_command_set_length(st, FU_STRUCT_ASUS_HID_RESULT_SIZE);
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
-						 result,
+						 st->buf,
+						 st_result->buf,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
 		return FALSE;
 
 	// TODO save some bits from result here for data for next command
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE2);
-	fu_struct_asus_hid_command_set_length(cmd, 1);
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE2);
+	fu_struct_asus_hid_pre_update_command_set_length(st, 1);
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
-						 result,
+						 st->buf,
+						 st_result->buf,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
 		return FALSE;
 
 	// TODO save some bits from result here for data for next command
 	previous_result = 0x1;
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE3);
-	fu_struct_asus_hid_command_set_length(cmd, 1);
-	if (!fu_struct_asus_pre_update_command_set_data(cmd,
-							(guint8 *)&previous_result,
-							sizeof(previous_result),
-							error))
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE3);
+	fu_struct_asus_hid_pre_update_command_set_length(st, 1);
+	if (!fu_struct_asus_hid_pre_update_command_set_data(st,
+							    (guint8 *)&previous_result,
+							    sizeof(previous_result),
+							    error))
 		return FALSE;
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
+						 st->buf,
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
 		return FALSE;
 
 	previous_result = 0x0;
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE4);
-	fu_struct_asus_hid_command_set_length(cmd, FU_STRUCT_ASUS_HID_RESULT_SIZE);
-	if (!fu_struct_asus_pre_update_command_set_data(cmd,
-							(guint8 *)&previous_result,
-							sizeof(previous_result),
-							error))
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE4);
+	fu_struct_asus_hid_pre_update_command_set_length(st, FU_STRUCT_ASUS_HID_RESULT_SIZE);
+	if (!fu_struct_asus_hid_pre_update_command_set_data(st,
+							    (guint8 *)&previous_result,
+							    sizeof(previous_result),
+							    error))
 		return FALSE;
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
-						 result,
+						 st->buf,
+						 st_result->buf,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
 		return FALSE;
@@ -222,15 +222,15 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 	// TODO save some bits from result here for data for next command
 
 	previous_result = 0x2;
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE5);
-	fu_struct_asus_hid_command_set_length(cmd, 0x01);
-	if (!fu_struct_asus_pre_update_command_set_data(cmd,
-							(guint8 *)&previous_result,
-							sizeof(previous_result),
-							error))
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE5);
+	fu_struct_asus_hid_pre_update_command_set_length(st, 0x01);
+	if (!fu_struct_asus_hid_pre_update_command_set_data(st,
+							    (guint8 *)&previous_result,
+							    sizeof(previous_result),
+							    error))
 		return FALSE;
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
+						 st->buf,
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
@@ -238,15 +238,15 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 
 	/* Maybe this command unlocks for flashing mode? */
 	previous_result = 0x0;
-	fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_PRE_UPDATE6);
-	fu_struct_asus_hid_command_set_length(cmd, 0x0);
-	if (!fu_struct_asus_pre_update_command_set_data(cmd,
-							(guint8 *)&previous_result,
-							sizeof(previous_result),
-							error))
+	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE6);
+	fu_struct_asus_hid_pre_update_command_set_length(st, 0x0);
+	if (!fu_struct_asus_hid_pre_update_command_set_data(st,
+							    (guint8 *)&previous_result,
+							    sizeof(previous_result),
+							    error))
 		return FALSE;
 	if (!fu_asus_hid_device_transfer_feature(self,
-						 cmd,
+						 st->buf,
 						 NULL,
 						 FU_ASUS_HID_REPORT_ID_INFO,
 						 error))
@@ -285,28 +285,28 @@ fu_asus_hid_device_dump_firmware(FuDevice *device, FuProgress *progress, GError 
 		FuChunk *chk = g_ptr_array_index(blocks, i);
 		const guint8 *buf;
 		gsize bufsz = 0;
-		g_autoptr(FuStructAsusReadFlashCommand) cmd =
+		g_autoptr(FuStructAsusReadFlashCommand) st =
 		    fu_struct_asus_read_flash_command_new();
-		g_autoptr(FuStructAsusReadFlashCommand) result =
+		g_autoptr(FuStructAsusReadFlashCommand) st_result =
 		    fu_struct_asus_read_flash_command_new();
 
-		fu_struct_asus_read_flash_command_set_offset(cmd, offset);
-		fu_struct_asus_read_flash_command_set_datasz(cmd, fu_chunk_get_data_sz(chk));
+		fu_struct_asus_read_flash_command_set_offset(st, offset);
+		fu_struct_asus_read_flash_command_set_datasz(st, fu_chunk_get_data_sz(chk));
 
 		if (!fu_asus_hid_device_transfer_feature(self,
-							 cmd,
-							 result,
+							 st->buf,
+							 st_result->buf,
 							 FU_ASUS_HID_REPORT_ID_FLASHING,
 							 error))
 			return NULL;
-		buf = fu_struct_asus_read_flash_command_get_data(result, &bufsz);
+		buf = fu_struct_asus_read_flash_command_get_data(st_result, &bufsz);
 		if (!fu_memcpy_safe(fu_chunk_get_data_out(chk),
 				    fu_chunk_get_data_sz(chk),
 				    0x0,
 				    buf,
 				    bufsz,
 				    0x0,
-				    fu_struct_asus_read_flash_command_get_datasz(result),
+				    fu_struct_asus_read_flash_command_get_datasz(st_result),
 				    error))
 			return NULL;
 		offset += fu_chunk_get_data_sz(chk);

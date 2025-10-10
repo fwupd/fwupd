@@ -105,23 +105,23 @@ fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(FuFirmware) img_ltst = NULL;
 	g_autoptr(FuFirmware) img_prev = NULL;
-	g_autoptr(FuStructSbatLevelSectionHeader) buf = fu_struct_sbat_level_section_header_new();
+	g_autoptr(FuStructSbatLevelSectionHeader) st = fu_struct_sbat_level_section_header_new();
 	g_autoptr(GBytes) blob_ltst = NULL;
 	g_autoptr(GBytes) blob_prev = NULL;
 
 	/* previous */
-	fu_struct_sbat_level_section_header_set_previous(buf, sizeof(guint32) * 2);
+	fu_struct_sbat_level_section_header_set_previous(st, sizeof(guint32) * 2);
 	img_prev = fu_firmware_get_image_by_id(firmware, "previous", error);
 	if (img_prev == NULL)
 		return NULL;
 	blob_prev = fu_firmware_write(img_prev, error);
 	if (blob_prev == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(buf, blob_prev);
-	fu_byte_array_append_uint8(buf, 0x0);
+	fu_byte_array_append_bytes(st->buf, blob_prev);
+	fu_byte_array_append_uint8(st->buf, 0x0);
 
 	/* latest */
-	fu_struct_sbat_level_section_header_set_latest(buf,
+	fu_struct_sbat_level_section_header_set_latest(st,
 						       (sizeof(guint32) * 2) +
 							   g_bytes_get_size(blob_prev) + 1);
 	img_ltst = fu_firmware_get_image_by_id(firmware, "latest", error);
@@ -130,11 +130,11 @@ fu_sbatlevel_section_write(FuFirmware *firmware, GError **error)
 	blob_ltst = fu_firmware_write(img_ltst, error);
 	if (blob_ltst == NULL)
 		return NULL;
-	fu_byte_array_append_bytes(buf, blob_ltst);
-	fu_byte_array_append_uint8(buf, 0x0);
+	fu_byte_array_append_bytes(st->buf, blob_ltst);
+	fu_byte_array_append_uint8(st->buf, 0x0);
 
 	/* success */
-	return g_steal_pointer(&buf);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

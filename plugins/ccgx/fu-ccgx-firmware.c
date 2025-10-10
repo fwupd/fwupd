@@ -460,10 +460,10 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(mdbuf->data,
 			    mdbuf->len,
 			    0x40, /* dst */
-			    st_metadata->data,
-			    st_metadata->len,
+			    st_metadata->buf->data,
+			    st_metadata->buf->len,
 			    0x0, /* src */
-			    st_metadata->len,
+			    st_metadata->buf->len,
 			    error))
 		return NULL;
 	fu_ccgx_firmware_write_record(str,

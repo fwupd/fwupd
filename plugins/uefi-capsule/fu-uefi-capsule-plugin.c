@@ -448,16 +448,16 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum += fu_sum8(st_cap->data, st_cap->len);
-	csum += fu_sum8(st_uxh->data, st_uxh->len);
+	csum += fu_sum8(st_cap->buf->data, st_cap->buf->len);
+	csum += fu_sum8(st_uxh->buf->data, st_uxh->buf->len);
 	csum += fu_sum8_bytes(blob);
 	fu_struct_efi_ux_capsule_header_set_checksum(st_uxh, 0x100 - csum);
 
 	/* write capsule file */
-	size = g_output_stream_write(ostream, st_cap->data, st_cap->len, NULL, error);
+	size = g_output_stream_write(ostream, st_cap->buf->data, st_cap->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
-	size = g_output_stream_write(ostream, st_uxh->data, st_uxh->len, NULL, error);
+	size = g_output_stream_write(ostream, st_uxh->buf->data, st_uxh->buf->len, NULL, error);
 	if (size < 0)
 		return FALSE;
 	if (!fu_output_stream_write_bytes(ostream, blob, NULL, error))

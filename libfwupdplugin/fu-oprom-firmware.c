@@ -199,7 +199,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob_cpd = NULL;
 
 	/* the smallest each image (and header) can be is 512 bytes */
-	image_size += fu_common_align_up(st_hdr->len, FU_FIRMWARE_ALIGNMENT_512);
+	image_size += fu_common_align_up(st_hdr->buf->len, FU_FIRMWARE_ALIGNMENT_512);
 	blob_cpd = fu_firmware_get_image_by_id_bytes(firmware, "cpd", NULL);
 	if (blob_cpd != NULL) {
 		image_size +=
@@ -216,7 +216,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 							    image_size -
 								FU_OPROM_FIRMWARE_ALIGN_LEN);
 	}
-	g_byte_array_append(buf, st_hdr->data, st_hdr->len);
+	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
 
 	/* add PCI section */
 	fu_struct_oprom_pci_set_vendor_id(st_pci, priv->vendor_id);
@@ -225,7 +225,7 @@ fu_oprom_firmware_write(FuFirmware *firmware, GError **error)
 	fu_struct_oprom_pci_set_code_type(st_pci, fu_firmware_get_idx(firmware));
 	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_IS_LAST_IMAGE))
 		fu_struct_oprom_pci_set_indicator(st_pci, FU_OPROM_INDICATOR_FLAG_LAST);
-	g_byte_array_append(buf, st_pci->data, st_pci->len);
+	fu_byte_array_append_array(buf, st_pci->buf);
 	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_512, 0xFF);
 
 	/* add CPD */

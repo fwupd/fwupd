@@ -188,7 +188,7 @@ fu_efi_load_option_parse_optional_hive(FuEfiLoadOption *self,
 		st_item = fu_struct_shim_hive_item_parse_stream(stream, offset, error);
 		if (st_item == NULL)
 			return FALSE;
-		offset += st_item->len;
+		offset += st_item->buf->len;
 
 		/* key */
 		keysz = fu_struct_shim_hive_item_get_key_length(st_item);
@@ -305,7 +305,7 @@ fu_efi_load_option_parse(FuFirmware *firmware,
 	if (st == NULL)
 		return FALSE;
 	self->attrs = fu_struct_efi_load_option_get_attrs(st);
-	offset += st->len;
+	offset += st->buf->len;
 
 	/* parse UTF-16 description */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -374,22 +374,24 @@ fu_efi_load_option_write_hive(FuEfiLoadOption *self, GError **error)
 		fu_struct_shim_hive_item_set_key_length(st_item, keysz);
 		fu_struct_shim_hive_item_set_value_length(st_item, value_safe->len);
 		if (keysz > 0)
-			g_byte_array_append(st_item, (const guint8 *)key, keysz);
+			g_byte_array_append(st_item->buf, (const guint8 *)key, keysz);
 		if (value_safe->len > 0) {
-			g_byte_array_append(st_item,
+			g_byte_array_append(st_item->buf,
 					    (const guint8 *)value_safe->str,
 					    value_safe->len);
 		}
 
 		/* add to hive */
-		g_byte_array_append(st, st_item->data, st_item->len);
+		fu_byte_array_append_array(st->buf, st_item->buf);
 	}
 
 	/* this covers all items, and so has to be done last */
-	fu_struct_shim_hive_set_crc32(st, fu_crc32(FU_CRC_KIND_B32_STANDARD, st->data, st->len));
+	fu_struct_shim_hive_set_crc32(
+	    st,
+	    fu_crc32(FU_CRC_KIND_B32_STANDARD, st->buf->data, st->buf->len));
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static GByteArray *
@@ -436,14 +438,14 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 						error);
 	if (buf_utf16 == NULL)
 		return NULL;
-	g_byte_array_append(st, buf_utf16->data, buf_utf16->len);
+	g_byte_array_append(st->buf, buf_utf16->data, buf_utf16->len);
 
 	/* dpbuf */
 	dpbuf = fu_firmware_get_image_by_gtype_bytes(firmware, FU_TYPE_EFI_DEVICE_PATH_LIST, error);
 	if (dpbuf == NULL)
 		return NULL;
 	fu_struct_efi_load_option_set_dp_size(st, g_bytes_get_size(dpbuf));
-	fu_byte_array_append_bytes(st, dpbuf);
+	fu_byte_array_append_bytes(st->buf, dpbuf);
 
 	/* hive, path or data */
 	if (self->kind == FU_EFI_LOAD_OPTION_KIND_HIVE) {
@@ -451,20 +453,20 @@ fu_efi_load_option_write(FuFirmware *firmware, GError **error)
 		buf_hive = fu_efi_load_option_write_hive(self, error);
 		if (buf_hive == NULL)
 			return NULL;
-		g_byte_array_append(st, buf_hive->data, buf_hive->len);
-		fu_byte_array_align_up(st, FU_FIRMWARE_ALIGNMENT_512, 0x0); /* make atomic */
+		g_byte_array_append(st->buf, buf_hive->data, buf_hive->len);
+		fu_byte_array_align_up(st->buf, FU_FIRMWARE_ALIGNMENT_512, 0x0); /* make atomic */
 	} else if (self->kind == FU_EFI_LOAD_OPTION_KIND_PATH) {
 		g_autoptr(GByteArray) buf_path = NULL;
 		buf_path = fu_efi_load_option_write_path(self, error);
 		if (buf_path == NULL)
 			return NULL;
-		g_byte_array_append(st, buf_path->data, buf_path->len);
+		g_byte_array_append(st->buf, buf_path->data, buf_path->len);
 	} else if (self->kind == FU_EFI_LOAD_OPTION_KIND_DATA && self->optional_data != NULL) {
-		fu_byte_array_append_bytes(st, self->optional_data);
+		fu_byte_array_append_bytes(st->buf, self->optional_data);
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

@@ -59,7 +59,7 @@ fu_huddly_usb_hlink_msg_write(FuHuddlyUsbHLinkMsg *msg, GError **error)
 	g_return_val_if_fail(msg != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	g_byte_array_append(packet, msg->header->data, msg->header->len);
+	fu_byte_array_append_array(packet, msg->header->buf);
 	g_byte_array_append(packet, (const guint8 *)msg->msg_name, strlen(msg->msg_name));
 	if (msg->payload != NULL)
 		g_byte_array_append(packet, msg->payload->data, msg->payload->len);

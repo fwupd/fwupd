@@ -48,28 +48,30 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 					FuDellKestrelEcDevType dev_type,
 					guint8 dev_identifier)
 {
-	g_autoptr(FuStructDellKestrelHidFwUpdatePkg) fwbuf =
+	g_autoptr(FuStructDellKestrelHidFwUpdatePkg) st_fwbuf =
 	    fu_struct_dell_kestrel_hid_fw_update_pkg_new();
 	gsize chk_datasz = fu_chunk_get_data_sz(chk);
 
 	/* header */
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_cmd(fwbuf, FU_DELL_KESTREL_HID_CMD_FWUPDATE);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_ext(fwbuf, FU_DELL_KESTREL_HID_EXT_FWUPDATE);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_cmd(st_fwbuf,
+							 FU_DELL_KESTREL_HID_CMD_FWUPDATE);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_ext(st_fwbuf,
+							 FU_DELL_KESTREL_HID_EXT_FWUPDATE);
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_chunk_sz(
-	    fwbuf,
+	    st_fwbuf,
 	    7 + chk_datasz); // 7 = sizeof(command)
 
 	/* command */
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_sub_cmd(fwbuf,
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_sub_cmd(st_fwbuf,
 							     FU_DELL_KESTREL_HID_SUBCMD_FWUPDATE);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_type(fwbuf, dev_type);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_identifier(fwbuf, dev_identifier);
-	fu_struct_dell_kestrel_hid_fw_update_pkg_set_fw_sz(fwbuf, fw_size);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_type(st_fwbuf, dev_type);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_dev_identifier(st_fwbuf, dev_identifier);
+	fu_struct_dell_kestrel_hid_fw_update_pkg_set_fw_sz(st_fwbuf, fw_size);
 
 	/* data */
-	fu_byte_array_append_bytes(fwbuf, fu_chunk_get_bytes(chk));
+	fu_byte_array_append_bytes(st_fwbuf->buf, fu_chunk_get_bytes(chk));
 
-	return fu_struct_dell_kestrel_hid_fw_update_pkg_to_bytes(fwbuf);
+	return fu_struct_dell_kestrel_hid_fw_update_pkg_to_bytes(st_fwbuf);
 }
 
 static gboolean
@@ -128,21 +130,20 @@ fu_dell_kestrel_hid_device_i2c_write(FuDellKestrelHidDevice *self,
 				     GByteArray *cmd_buf,
 				     GError **error)
 {
-	g_autoptr(FuStructDellKestrelHidCmdBuffer) buf =
-	    fu_struct_dell_kestrel_hid_cmd_buffer_new();
+	g_autoptr(FuStructDellKestrelHidCmdBuffer) st = fu_struct_dell_kestrel_hid_cmd_buffer_new();
 
 	g_return_val_if_fail(cmd_buf->len <= FU_DELL_KESTREL_HID_I2C_MAX_WRITE, FALSE);
 
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(buf, FU_DELL_KESTREL_HID_CMD_EXT_I2C_WRITE);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(buf, 0x00);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(buf, cmd_buf->len);
-	if (!fu_struct_dell_kestrel_hid_cmd_buffer_set_databytes(buf,
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(st, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(st, FU_DELL_KESTREL_HID_CMD_EXT_I2C_WRITE);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(st, 0x00);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(st, cmd_buf->len);
+	if (!fu_struct_dell_kestrel_hid_cmd_buffer_set_databytes(st,
 								 cmd_buf->data,
 								 cmd_buf->len,
 								 error))
 		return FALSE;
-	return fu_dell_kestrel_hid_device_hid_set_report(self, buf, error);
+	return fu_dell_kestrel_hid_device_hid_set_report(self, st->buf, error);
 }
 
 gboolean
@@ -152,15 +153,14 @@ fu_dell_kestrel_hid_device_i2c_read(FuDellKestrelHidDevice *self,
 				    guint delayms,
 				    GError **error)
 {
-	g_autoptr(FuStructDellKestrelHidCmdBuffer) buf =
-	    fu_struct_dell_kestrel_hid_cmd_buffer_new();
+	g_autoptr(FuStructDellKestrelHidCmdBuffer) st = fu_struct_dell_kestrel_hid_cmd_buffer_new();
 	guint8 inbuf[FU_DELL_KESTREL_HID_I2C_MAX_READ] = {0xff};
 
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(buf, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(buf, FU_DELL_KESTREL_HID_CMD_EXT_I2C_READ);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(buf, cmd);
-	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(buf, res->len + 1);
-	if (!fu_dell_kestrel_hid_device_hid_set_report(self, buf, error))
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_cmd(st, FU_DELL_KESTREL_HID_CMD_WRITE_DATA);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_ext(st, FU_DELL_KESTREL_HID_CMD_EXT_I2C_READ);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_dwregaddr(st, cmd);
+	fu_struct_dell_kestrel_hid_cmd_buffer_set_bufferlen(st, res->len + 1);
+	if (!fu_dell_kestrel_hid_device_hid_set_report(self, st->buf, error))
 		return FALSE;
 
 	if (delayms > 0)

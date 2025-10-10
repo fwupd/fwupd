@@ -237,7 +237,10 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to copy download mode payload: ");
 		return FALSE;
 	}
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self,
+							  st_req->buf->data,
+							  st_req->buf->len,
+							  error)) {
 		g_prefix_error_literal(error, "failed to set download mode: ");
 		return FALSE;
 	}
@@ -298,7 +301,10 @@ fu_logitech_rallysystem_tablehub_device_send_init_cmd_cb(FuDevice *device,
 	g_autoptr(FuStructUsbInitRequest) st_req = fu_struct_usb_init_request_new();
 	g_autoptr(FuStructUsbInitResponse) st_res = NULL;
 
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self,
+							  st_req->buf->data,
+							  st_req->buf->len,
+							  error)) {
 		g_prefix_error_literal(error, "failed to send init packet: ");
 		return FALSE;
 	}
@@ -347,7 +353,10 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* query tablehub firmware version */
-	if (!fu_logitech_rallysystem_tablehub_device_send(self, st_req->data, st_req->len, error)) {
+	if (!fu_logitech_rallysystem_tablehub_device_send(self,
+							  st_req->buf->data,
+							  st_req->buf->len,
+							  error)) {
 		g_prefix_error_literal(error,
 				       "failed to send tablehub firmware version request: "
 				       "please reboot the device: ");

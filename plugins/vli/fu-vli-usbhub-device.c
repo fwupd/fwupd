@@ -754,16 +754,16 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813) &&
 	    !fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 					  0x0,
-					  self->st_hd1->data,
-					  self->st_hd1->len,
+					  self->st_hd1->buf->data,
+					  self->st_hd1->buf->len,
 					  &error_tmp)) {
 		g_warning("failed to read, trying to unlock 813: %s", error_tmp->message);
 		if (!fu_vli_usbhub_device_vdr_unlock_813(self, error))
 			return FALSE;
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  0x0,
-						  self->st_hd1->data,
-						  self->st_hd1->len,
+						  self->st_hd1->buf->data,
+						  self->st_hd1->buf->len,
 						  error)) {
 			g_prefix_error_literal(error, "813 unlock fail: ");
 			return FALSE;
@@ -779,8 +779,8 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	/* read HD1 (factory) header */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 					  VLI_USBHUB_FLASHMAP_ADDR_HD1,
-					  self->st_hd1->data,
-					  self->st_hd1->len,
+					  self->st_hd1->buf->data,
+					  self->st_hd1->buf->len,
 					  error)) {
 		g_prefix_error_literal(error, "failed to read HD1 header: ");
 		return FALSE;
@@ -833,8 +833,8 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	if (self->update_protocol >= 0x2) {
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD2,
-						  self->st_hd2->data,
-						  self->st_hd2->len,
+						  self->st_hd2->buf->data,
+						  self->st_hd2->buf->len,
 						  error)) {
 			g_prefix_error_literal(error, "failed to read HD2 header: ");
 			return FALSE;
@@ -991,25 +991,28 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_hd1_is_valid(FuStructVliUsbhubHdr *hdr)
+fu_vli_usbhub_device_hd1_is_valid(FuStructVliUsbhubHdr *st_hdr)
 {
-	if (fu_struct_vli_usbhub_hdr_get_prev_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_INVALID)
+	if (fu_struct_vli_usbhub_hdr_get_prev_ptr(st_hdr) != VLI_USBHUB_FLASHMAP_IDX_INVALID)
 		return FALSE;
-	if (fu_struct_vli_usbhub_hdr_get_checksum(hdr) != fu_vli_usbhub_device_header_crc8(hdr))
+	if (fu_struct_vli_usbhub_hdr_get_checksum(st_hdr) !=
+	    fu_vli_usbhub_device_header_crc8(st_hdr->buf))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
 fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
-				 FuStructVliUsbhubHdr *hdr,
+				 FuStructVliUsbhubHdr *st_hdr,
 				 FuProgress *progress,
 				 GError **error)
 {
 	/* point to HD2, i.e. updated firmware */
-	if (fu_struct_vli_usbhub_hdr_get_next_ptr(hdr) != VLI_USBHUB_FLASHMAP_IDX_HD2) {
-		fu_struct_vli_usbhub_hdr_set_next_ptr(hdr, VLI_USBHUB_FLASHMAP_IDX_HD2);
-		fu_struct_vli_usbhub_hdr_set_checksum(hdr, fu_vli_usbhub_device_header_crc8(hdr));
+	if (fu_struct_vli_usbhub_hdr_get_next_ptr(st_hdr) != VLI_USBHUB_FLASHMAP_IDX_HD2) {
+		fu_struct_vli_usbhub_hdr_set_next_ptr(st_hdr, VLI_USBHUB_FLASHMAP_IDX_HD2);
+		fu_struct_vli_usbhub_hdr_set_checksum(
+		    st_hdr,
+		    fu_vli_usbhub_device_header_crc8(st_hdr->buf));
 	}
 
 	/* write new header block */
@@ -1023,8 +1026,8 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 					   VLI_USBHUB_FLASHMAP_ADDR_HD1,
-					   hdr->data,
-					   hdr->len,
+					   st_hdr->buf->data,
+					   st_hdr->buf->len,
 					   progress,
 					   error)) {
 		g_prefix_error(error,
@@ -1034,8 +1037,8 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 	}
 
 	/* update the cached copy */
-	g_byte_array_unref(self->st_hd1);
-	self->st_hd1 = g_byte_array_ref(hdr);
+	fu_struct_vli_usbhub_hdr_unref(self->st_hd1);
+	self->st_hd1 = fu_struct_vli_usbhub_hdr_ref(st_hdr);
 	return TRUE;
 }
 
@@ -1073,8 +1076,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 			}
 			if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 							   VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-							   self->st_hd1->data,
-							   self->st_hd1->len,
+							   self->st_hd1->buf->data,
+							   self->st_hd1->buf->len,
 							   progress,
 							   error)) {
 				g_prefix_error_literal(error, "failed to write block at hdr 1: ");
@@ -1094,8 +1097,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-						  self->st_hd1->data,
-						  self->st_hd1->len,
+						  self->st_hd1->buf->data,
+						  self->st_hd1->buf->len,
 						  error)) {
 			g_prefix_error(error,
 				       "failed to read root header from 0x%x: ",
@@ -1174,7 +1177,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr_high(st_hd, hd2_fw_addr >> 16);
 	fu_struct_vli_usbhub_hdr_set_prev_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_HD1);
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
-	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd));
+	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd->buf));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
@@ -1183,8 +1186,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 					   VLI_USBHUB_FLASHMAP_ADDR_HD2,
-					   st_hd->data,
-					   st_hd->len,
+					   st_hd->buf->data,
+					   st_hd->buf->len,
 					   fu_progress_get_child(progress),
 					   error)) {
 		g_prefix_error_literal(error, "failed to write HD2: ");
@@ -1193,8 +1196,8 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_progress_step_done(progress);
 
 	/* success */
-	g_byte_array_unref(self->st_hd2);
-	self->st_hd2 = g_byte_array_ref(st_hd);
+	fu_struct_vli_usbhub_hdr_unref(self->st_hd2);
+	self->st_hd2 = fu_struct_vli_usbhub_hdr_ref(st_hd);
 	return TRUE;
 }
 
@@ -1231,8 +1234,8 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 			}
 			if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 							   VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-							   self->st_hd1->data,
-							   self->st_hd1->len,
+							   self->st_hd1->buf->data,
+							   self->st_hd1->buf->len,
 							   progress,
 							   error)) {
 				g_prefix_error_literal(error, "failed to write block at hdr 1: ");
@@ -1252,8 +1255,8 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
 						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
-						  self->st_hd1->data,
-						  self->st_hd1->len,
+						  self->st_hd1->buf->data,
+						  self->st_hd1->buf->len,
 						  error)) {
 			g_prefix_error(error,
 				       "failed to read root header from 0x%x: ",
@@ -1327,7 +1330,7 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_usb3_fw_addr_high(st_hd, hd2_fw_addr >> 16);
 	fu_struct_vli_usbhub_hdr_set_prev_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_HD1);
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
-	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd));
+	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd->buf));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
 					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
@@ -1336,8 +1339,8 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
 					   VLI_USBHUB_FLASHMAP_ADDR_HD2,
-					   st_hd->data,
-					   st_hd->len,
+					   st_hd->buf->data,
+					   st_hd->buf->len,
 					   fu_progress_get_child(progress),
 					   error)) {
 		g_prefix_error_literal(error, "failed to write HD2: ");
@@ -1346,8 +1349,8 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	fu_progress_step_done(progress);
 
 	/* success */
-	g_byte_array_unref(self->st_hd2);
-	self->st_hd2 = g_byte_array_ref(st_hd);
+	fu_struct_vli_usbhub_hdr_unref(self->st_hd2);
+	self->st_hd2 = fu_struct_vli_usbhub_hdr_ref(st_hd);
 	return TRUE;
 }
 

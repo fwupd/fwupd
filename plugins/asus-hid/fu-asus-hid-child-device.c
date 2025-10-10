@@ -64,17 +64,17 @@ static gboolean
 fu_asus_hid_child_device_ensure_manufacturer(FuAsusHidChildDevice *self, GError **error)
 {
 	g_autofree gchar *man = NULL;
-	g_autoptr(FuStructAsusManCommand) cmd = fu_struct_asus_man_command_new();
-	g_autoptr(FuStructAsusManResult) result = fu_struct_asus_man_result_new();
+	g_autoptr(FuStructAsusManCommand) st = fu_struct_asus_man_command_new();
+	g_autoptr(FuStructAsusManResult) st_result = fu_struct_asus_man_result_new();
 
 	if (!fu_asus_hid_child_device_transfer_feature(self,
-						       cmd,
-						       result,
+						       st->buf,
+						       st_result->buf,
 						       FU_ASUS_HID_REPORT_ID_INFO,
 						       error))
 		return FALSE;
 
-	man = fu_struct_asus_man_result_get_data(result);
+	man = fu_struct_asus_man_result_get_data(st_result);
 	if (g_strcmp0(man, "ASUSTech.Inc.") != 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -90,15 +90,15 @@ fu_asus_hid_child_device_ensure_manufacturer(FuAsusHidChildDevice *self, GError 
 static gboolean
 fu_asus_hid_child_device_ensure_version(FuAsusHidChildDevice *self, GError **error)
 {
-	g_autoptr(FuStructAsusHidCommand) cmd = fu_struct_asus_hid_command_new();
-	g_autoptr(FuStructAsusHidFwInfo) result = fu_struct_asus_hid_fw_info_new();
-	g_autoptr(FuStructAsusHidFwInfo) fw_info = NULL;
+	g_autoptr(FuStructAsusHidCommand) st = fu_struct_asus_hid_command_new();
+	g_autoptr(FuStructAsusHidFwInfo) st_result = fu_struct_asus_hid_fw_info_new();
+	g_autoptr(FuStructAsusHidDesc) st_fwinfo = NULL;
 	g_autofree gchar *version = NULL;
 
 	if (self->idx == FU_ASUS_HID_CONTROLLER_PRIMARY)
-		fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_FW_VERSION);
+		fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_FW_VERSION);
 	else if (self->idx == FU_ASUS_HID_CONTROLLER_MAIN)
-		fu_struct_asus_hid_command_set_cmd(cmd, FU_ASUS_HID_COMMAND_MAIN_FW_VERSION);
+		fu_struct_asus_hid_command_set_cmd(st, FU_ASUS_HID_COMMAND_MAIN_FW_VERSION);
 	else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -107,21 +107,21 @@ fu_asus_hid_child_device_ensure_version(FuAsusHidChildDevice *self, GError **err
 		return FALSE;
 	}
 
-	fu_struct_asus_hid_command_set_length(cmd, FU_STRUCT_ASUS_HID_RESULT_SIZE);
+	fu_struct_asus_hid_command_set_length(st, FU_STRUCT_ASUS_HID_RESULT_SIZE);
 
 	if (!fu_asus_hid_child_device_transfer_feature(self,
-						       cmd,
-						       result,
+						       st->buf,
+						       st_result->buf,
 						       FU_ASUS_HID_REPORT_ID_INFO,
 						       error))
 		return FALSE;
 
-	fw_info = fu_struct_asus_hid_fw_info_get_description(result);
-	version = fu_struct_asus_hid_desc_get_version(fw_info);
+	st_fwinfo = fu_struct_asus_hid_fw_info_get_description(st_result);
+	version = fu_struct_asus_hid_desc_get_version(st_fwinfo);
 	fu_device_set_version(FU_DEVICE(self), version);
 
 	if (fu_device_get_logical_id(FU_DEVICE(self)) == NULL) {
-		g_autofree gchar *product = fu_struct_asus_hid_desc_get_product(fw_info);
+		g_autofree gchar *product = fu_struct_asus_hid_desc_get_product(st_fwinfo);
 		fu_device_add_instance_strsafe(FU_DEVICE(self), "PART", product);
 		fu_device_build_instance_id(FU_DEVICE(self),
 					    NULL,

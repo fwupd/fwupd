@@ -75,7 +75,7 @@ fu_telink_dfu_hid_device_create_packet(FuTelinkDfuCmd cmd,
 	/* exclude the ota_cmd field */
 	fu_struct_telink_dfu_hid_pkt_payload_set_crc(
 	    st_payload,
-	    ~fu_crc16(FU_CRC_KIND_B16_USB, st_payload->data, st_payload->len - 2));
+	    ~fu_crc16(FU_CRC_KIND_B16_USB, st_payload->buf->data, st_payload->buf->len - 2));
 	fu_struct_telink_dfu_hid_pkt_set_ota_data_len(st_pkt, ota_data_len);
 	if (!fu_struct_telink_dfu_hid_pkt_set_payload(st_pkt, st_payload, error))
 		return NULL;
@@ -84,10 +84,7 @@ fu_telink_dfu_hid_device_create_packet(FuTelinkDfuCmd cmd,
 }
 
 static gboolean
-fu_telink_dfu_hid_device_write(FuTelinkDfuHidDevice *self,
-			       const guint8 *buf,
-			       gsize bufsz,
-			       GError **error)
+fu_telink_dfu_hid_device_write(FuTelinkDfuHidDevice *self, GByteArray *buf, GError **error)
 {
 	FuHidDeviceFlags set_report_flag = FU_HID_DEVICE_FLAG_NONE;
 	guint8 buf_mut[FU_TELINK_DFU_HID_DEVICE_OTA_LENGTH] = {0};
@@ -95,7 +92,14 @@ fu_telink_dfu_hid_device_write(FuTelinkDfuHidDevice *self,
 	if (self->windows_hid_tool_ver >= FU_TELINK_DEVICE_WINDOWS_TOOL_VERSION(5, 2))
 		set_report_flag = FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER;
 
-	if (!fu_memcpy_safe(buf_mut, sizeof(buf_mut), 0x0, buf, bufsz, 0x0, bufsz, error))
+	if (!fu_memcpy_safe(buf_mut,
+			    sizeof(buf_mut),
+			    0x0,
+			    buf->data,
+			    buf->len,
+			    0x0,
+			    buf->len,
+			    error))
 		return FALSE;
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					FU_TELINK_DFU_HID_DEVICE_REPORT_ID,
@@ -170,10 +174,7 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 										     st_payload,
 										     error))
 					return FALSE;
-				if (!fu_telink_dfu_hid_device_write(self,
-								    st_long_pkt->data,
-								    st_long_pkt->len,
-								    error))
+				if (!fu_telink_dfu_hid_device_write(self, st_long_pkt->buf, error))
 					return FALSE;
 			} else {
 				/* should not reach here */
@@ -184,7 +185,7 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 				return FALSE;
 			}
 		} else {
-			if (!fu_telink_dfu_hid_device_write(self, st_pkt->data, st_pkt->len, error))
+			if (!fu_telink_dfu_hid_device_write(self, st_pkt->buf, error))
 				return FALSE;
 			fu_device_sleep(FU_DEVICE(self), 20);
 		}
@@ -195,10 +196,7 @@ fu_telink_dfu_hid_device_write_blocks(FuTelinkDfuHidDevice *self,
 
 	if (self->windows_hid_tool_ver >= FU_TELINK_DEVICE_WINDOWS_TOOL_VERSION(5, 2) &&
 	    payload_index != 2) {
-		if (!fu_telink_dfu_hid_device_write(self,
-						    st_long_pkt->data,
-						    st_long_pkt->len,
-						    error))
+		if (!fu_telink_dfu_hid_device_write(self, st_long_pkt->buf, error))
 			return FALSE;
 	}
 
@@ -228,13 +226,10 @@ fu_telink_dfu_hid_device_ota_start(FuTelinkDfuHidDevice *self, GError **error)
 								     st_payload,
 								     error))
 			return FALSE;
-		if (!fu_telink_dfu_hid_device_write(self,
-						    st_long_pkt->data,
-						    st_long_pkt->len,
-						    error))
+		if (!fu_telink_dfu_hid_device_write(self, st_long_pkt->buf, error))
 			return FALSE;
 	} else {
-		if (!fu_telink_dfu_hid_device_write(self, st_pkt->data, st_pkt->len, error))
+		if (!fu_telink_dfu_hid_device_write(self, st_pkt->buf, error))
 			return FALSE;
 	}
 
@@ -257,8 +252,8 @@ fu_telink_dfu_hid_device_ota_stop(FuTelinkDfuHidDevice *self, guint number_chunk
 	else
 		fu_struct_telink_dfu_end_check_set_inverted_pkt_index(st_end_check, ~pkt_index);
 	st_pkt = fu_telink_dfu_hid_device_create_packet(FU_TELINK_DFU_CMD_OTA_END,
-							st_end_check->data,
-							st_end_check->len,
+							st_end_check->buf->data,
+							st_end_check->buf->len,
 							error);
 	if (st_pkt == NULL)
 		return FALSE;
@@ -273,13 +268,10 @@ fu_telink_dfu_hid_device_ota_stop(FuTelinkDfuHidDevice *self, guint number_chunk
 								     st_payload,
 								     error))
 			return FALSE;
-		if (!fu_telink_dfu_hid_device_write(self,
-						    st_long_pkt->data,
-						    st_long_pkt->len,
-						    error))
+		if (!fu_telink_dfu_hid_device_write(self, st_long_pkt->buf, error))
 			return FALSE;
 	} else {
-		if (!fu_telink_dfu_hid_device_write(self, st_pkt->data, st_pkt->len, error))
+		if (!fu_telink_dfu_hid_device_write(self, st_pkt->buf, error))
 			return FALSE;
 	}
 

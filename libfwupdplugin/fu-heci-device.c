@@ -69,8 +69,8 @@ fu_heci_device_read_file(FuHeciDevice *self, const gchar *filename, GError **err
 	fu_mkhi_read_file_request_set_data_size(st_req, datasz_req);
 	fu_mkhi_read_file_request_set_flags(st_req, (1 << 3)); /* ?? */
 	if (!fu_mei_device_write(FU_MEI_DEVICE(self),
-				 st_req->data,
-				 st_req->len,
+				 st_req->buf->data,
+				 st_req->buf->len,
 				 FU_HECI_DEVICE_TIMEOUT,
 				 error))
 		return NULL;
@@ -103,7 +103,7 @@ fu_heci_device_read_file(FuHeciDevice *self, const gchar *filename, GError **err
 	}
 
 	/* success */
-	g_byte_array_append(bufout, &buf_res->data[st_res->len], data_size);
+	g_byte_array_append(bufout, &buf_res->data[st_res->buf->len], data_size);
 	return g_steal_pointer(&bufout);
 }
 
@@ -142,8 +142,8 @@ fu_heci_device_read_file_ex(FuHeciDevice *self,
 	fu_mkhi_read_file_ex_request_set_data_size(st_req, datasz_req);
 	fu_mkhi_read_file_ex_request_set_flags(st_req, section);
 	if (!fu_mei_device_write(FU_MEI_DEVICE(self),
-				 st_req->data,
-				 st_req->len,
+				 st_req->buf->data,
+				 st_req->buf->len,
 				 FU_HECI_DEVICE_TIMEOUT,
 				 error))
 		return NULL;
@@ -177,7 +177,7 @@ fu_heci_device_read_file_ex(FuHeciDevice *self,
 	}
 
 	/* success */
-	g_byte_array_append(bufout, &buf_res->data[st_res->len], data_size);
+	g_byte_array_append(bufout, &buf_res->data[st_res->buf->len], data_size);
 	return g_steal_pointer(&bufout);
 }
 
@@ -214,8 +214,8 @@ fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,
 
 	/* request */
 	if (!fu_mei_device_write(FU_MEI_DEVICE(self),
-				 st_req->data,
-				 st_req->len,
+				 st_req->buf->data,
+				 st_req->buf->len,
 				 FU_HECI_DEVICE_TIMEOUT,
 				 error))
 		return FALSE;
@@ -238,7 +238,7 @@ fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,
 
 	/* verify we got what we asked for */
 	num_entries = fu_mkhi_arbh_svn_get_info_response_get_num_entries(st_res);
-	offset += st_res->len;
+	offset += st_res->buf->len;
 	for (guint32 i = 0; i < num_entries; i++) {
 		g_autoptr(FuMkhiArbhSvnInfoEntry) st_entry = NULL;
 
@@ -260,7 +260,7 @@ fu_heci_device_arbh_svn_get_info(FuHeciDevice *self,
 		}
 
 		/* next */
-		offset += st_entry->len;
+		offset += st_entry->buf->len;
 	}
 
 	/* did not find */

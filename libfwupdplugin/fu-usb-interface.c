@@ -386,11 +386,11 @@ fu_usb_interface_parse(FuFirmware *firmware,
 	fu_firmware_set_size(FU_FIRMWARE(self), self->iface.bLength);
 
 	/* extra data */
-	if (self->iface.bLength > st->len) {
+	if (self->iface.bLength > st->buf->len) {
 		g_autoptr(GByteArray) buf = NULL;
 		buf = fu_input_stream_read_byte_array(stream,
-						      st->len,
-						      self->iface.bLength - st->len,
+						      st->buf->len,
+						      self->iface.bLength - st->buf->len,
 						      NULL,
 						      error);
 		if (buf == NULL)

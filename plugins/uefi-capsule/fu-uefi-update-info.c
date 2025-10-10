@@ -135,11 +135,11 @@ fu_uefi_update_info_write(FuFirmware *firmware, GError **error)
 		dpbuf = fu_firmware_write(FU_FIRMWARE(dp_list), error);
 		if (dpbuf == NULL)
 			return NULL;
-		fu_byte_array_append_bytes(st, dpbuf);
+		fu_byte_array_append_bytes(st->buf, dpbuf);
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

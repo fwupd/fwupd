@@ -330,8 +330,10 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error_literal(error, "cannot write product name: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
-		offset_desc += st_desc->len;
+		memcpy(st->buf->data + offset_desc,
+		       st_desc->buf->data,
+		       st_desc->buf->len); /* nocheck:blocked */
+		offset_desc += st_desc->buf->len;
 	}
 	if (self->serial_number != NULL) {
 		g_autoptr(FuStructEdidDescriptor) st_desc = fu_struct_edid_descriptor_new();
@@ -345,8 +347,10 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error_literal(error, "cannot write serial number: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
-		offset_desc += st_desc->len;
+		memcpy(st->buf->data + offset_desc,
+		       st_desc->buf->data,
+		       st_desc->buf->len); /* nocheck:blocked */
+		offset_desc += st_desc->buf->len;
 	}
 	if (self->eisa_id != NULL) {
 		g_autoptr(FuStructEdidDescriptor) st_desc = fu_struct_edid_descriptor_new();
@@ -359,12 +363,14 @@ fu_edid_write(FuFirmware *firmware, GError **error)
 			g_prefix_error_literal(error, "cannot write EISA ID: ");
 			return NULL;
 		}
-		memcpy(st->data + offset_desc, st_desc->data, st_desc->len); /* nocheck:blocked */
-		offset_desc += st_desc->len;
+		memcpy(st->buf->data + offset_desc,
+		       st_desc->buf->data,
+		       st_desc->buf->len); /* nocheck:blocked */
+		offset_desc += st_desc->buf->len;
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

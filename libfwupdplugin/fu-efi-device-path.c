@@ -124,9 +124,13 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 			fu_struct_efi_device_path_get_length(st),
 			(guint)dp_length);
 	}
-	if (dp_length > st->len) {
-		g_autoptr(GBytes) payload =
-		    fu_input_stream_read_bytes(stream, st->len, dp_length - st->len, NULL, error);
+	if (dp_length > st->buf->len) {
+		g_autoptr(GBytes) payload = NULL;
+		payload = fu_input_stream_read_bytes(stream,
+						     st->buf->len,
+						     dp_length - st->buf->len,
+						     NULL,
+						     error);
 		if (payload == NULL)
 			return FALSE;
 		fu_firmware_set_bytes(firmware, payload);
@@ -151,11 +155,11 @@ fu_efi_device_path_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	fu_struct_efi_device_path_set_type(st, fu_firmware_get_idx(firmware));
 	fu_struct_efi_device_path_set_subtype(st, priv->subtype);
-	fu_struct_efi_device_path_set_length(st, st->len + g_bytes_get_size(payload));
-	fu_byte_array_append_bytes(st, payload);
+	fu_struct_efi_device_path_set_length(st, st->buf->len + g_bytes_get_size(payload));
+	fu_byte_array_append_bytes(st->buf, payload);
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

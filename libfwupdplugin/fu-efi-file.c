@@ -102,14 +102,14 @@ fu_efi_file_parse(FuFirmware *firmware,
 			return FALSE;
 		}
 		fu_struct_efi_file_unref(st);
-		st = fu_struct_efi_file2_parse_stream(stream, 0x0, error);
+		st = (FuStructEfiFile *)fu_struct_efi_file2_parse_stream(stream, 0x0, error);
 		if (st == NULL)
 			return FALSE;
-		size = fu_struct_efi_file2_get_extended_size(st);
+		size = fu_struct_efi_file2_get_extended_size((FuStructEfiFile2 *)st);
 	} else {
 		size = fu_struct_efi_file_get_size(st);
 	}
-	if (size < st->len) {
+	if (size < st->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -123,7 +123,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 		guint8 hdr_checksum_verify;
 		g_autoptr(GBytes) hdr_blob = NULL;
 
-		hdr_blob = fu_input_stream_read_bytes(stream, 0x0, st->len, NULL, error);
+		hdr_blob = fu_input_stream_read_bytes(stream, 0x0, st->buf->len, NULL, error);
 		if (hdr_blob == NULL)
 			return FALSE;
 		hdr_checksum_verify = fu_efi_file_hdr_checksum8(hdr_blob);
@@ -139,7 +139,8 @@ fu_efi_file_parse(FuFirmware *firmware,
 	}
 
 	/* add simple blob */
-	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len, error);
+	partial_stream =
+	    fu_partial_input_stream_new(stream, st->buf->len, size - st->buf->len, error);
 	if (partial_stream == NULL) {
 		g_prefix_error_literal(error, "failed to cut EFI blob: ");
 		return FALSE;
@@ -254,15 +255,15 @@ fu_efi_file_write(FuFirmware *firmware, GError **error)
 	fu_struct_efi_file_set_data_checksum(st, 0x100 - fu_sum8_bytes(blob));
 	fu_struct_efi_file_set_type(st, priv->type);
 	fu_struct_efi_file_set_attrs(st, priv->attrib);
-	fu_struct_efi_file_set_size(st, g_bytes_get_size(blob) + st->len);
+	fu_struct_efi_file_set_size(st, g_bytes_get_size(blob) + st->buf->len);
 
 	/* fix up header checksum */
-	hdr_blob = g_bytes_new_static(st->data, st->len);
+	hdr_blob = g_bytes_new_static(st->buf->data, st->buf->len);
 	fu_struct_efi_file_set_hdr_checksum(st, fu_efi_file_hdr_checksum8(hdr_blob));
 
 	/* success */
-	fu_byte_array_append_bytes(st, blob);
-	return g_steal_pointer(&st);
+	fu_byte_array_append_bytes(st->buf, blob);
+	return g_steal_pointer(&st->buf);
 }
 
 static gboolean

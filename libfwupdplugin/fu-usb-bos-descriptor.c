@@ -178,13 +178,13 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 	self->bos_cap.bDevCapabilityType = fu_usb_bos_hdr_get_dev_capability_type(st);
 
 	/* data */
-	if (self->bos_cap.bLength > st->len) {
+	if (self->bos_cap.bLength > st->buf->len) {
 		g_autoptr(FuFirmware) img = fu_firmware_new();
 		g_autoptr(GInputStream) img_stream = NULL;
 
 		img_stream = fu_partial_input_stream_new(stream,
-							 st->len,
-							 self->bos_cap.bLength - st->len,
+							 st->buf->len,
+							 self->bos_cap.bLength - st->buf->len,
 							 error);
 		if (img_stream == NULL) {
 			g_prefix_error_literal(error, "failed to cut BOS descriptor: ");
@@ -215,12 +215,12 @@ fu_usb_bos_descriptor_write(FuFirmware *firmware, GError **error)
 	fu_usb_bos_hdr_set_dev_capability_type(st, self->bos_cap.bDevCapabilityType);
 	blob = fu_firmware_get_image_by_id_bytes(firmware, FU_FIRMWARE_ID_PAYLOAD, NULL);
 	if (blob != NULL) {
-		fu_byte_array_append_bytes(st, blob);
-		fu_usb_bos_hdr_set_length(st, st->len);
+		fu_byte_array_append_bytes(st->buf, blob);
+		fu_usb_bos_hdr_set_length(st, st->buf->len);
 	}
 
 	/* success */
-	return g_steal_pointer(&st);
+	return g_steal_pointer(&st->buf);
 }
 
 static void

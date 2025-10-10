@@ -312,7 +312,7 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 
 	/* just copy the new EfiUpdateInfo and save it back */
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_UNKNOWN);
-	memcpy(data, st_inf->data, st_inf->len); /* nocheck:blocked */
+	memcpy(data, st_inf->buf->data, st_inf->buf->len); /* nocheck:blocked */
 	if (!fu_efivars_set_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
 				 varname,
@@ -407,8 +407,8 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	fu_struct_efi_capsule_header_set_guid(st_cap, &esrt_guid);
 
 	/* pad to the headersize then add the payload */
-	fu_byte_array_set_size(st_cap, hdrsize, 0x00);
-	g_byte_array_append(st_cap, buf, bufsz);
+	fu_byte_array_set_size(st_cap->buf, hdrsize, 0x00);
+	g_byte_array_append(st_cap->buf, buf, bufsz);
 	return fu_struct_efi_capsule_header_to_bytes(st_cap);
 }
 
@@ -442,12 +442,12 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 	fu_struct_efi_update_info_set_hw_inst(st_inf, priv->fmp_hardware_instance);
 	fu_struct_efi_update_info_set_status(st_inf, FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE);
 	fu_struct_efi_update_info_set_guid(st_inf, &guid);
-	fu_byte_array_append_bytes(st_inf, dp_blob);
+	fu_byte_array_append_bytes(st_inf->buf, dp_blob);
 	if (!fu_efivars_set_data(efivars,
 				 FU_EFIVARS_GUID_FWUPDATE,
 				 varname,
-				 st_inf->data,
-				 st_inf->len,
+				 st_inf->buf->data,
+				 st_inf->buf->len,
 				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
 				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
 				 error)) {

@@ -24,12 +24,12 @@ fu_framework_qmk_device_detach(FuDevice *device, FuProgress *progress, GError **
 {
 	FuFrameworkQmkDevice *self = FU_FRAMEWORK_QMK_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FuStructFrameworkQmkResetRequest) req =
+	g_autoptr(FuStructFrameworkQmkResetRequest) st_req =
 	    fu_struct_framework_qmk_reset_request_new();
 
 	if (!fu_hidraw_device_set_report(FU_HIDRAW_DEVICE(self),
-					 req->data,
-					 req->len,
+					 st_req->buf->data,
+					 st_req->buf->len,
 					 FU_IO_CHANNEL_FLAG_NONE,
 					 error)) {
 		g_prefix_error_literal(error, "failed to write packet: ");

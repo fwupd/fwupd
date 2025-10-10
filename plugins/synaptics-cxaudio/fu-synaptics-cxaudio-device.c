@@ -315,7 +315,7 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 	if (st == NULL)
 		return NULL;
 	header_length = fu_struct_synaptics_cxaudio_string_header_get_length(st);
-	if (header_length < st->len) {
+	if (header_length < st->buf->len) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -324,7 +324,7 @@ fu_synaptics_cxaudio_device_eeprom_read_string(FuSynapticsCxaudioDevice *self,
 	}
 
 	/* allocate buffer + NUL terminator */
-	str = g_malloc0(header_length - st->len + 1);
+	str = g_malloc0(header_length - st->buf->len + 1);
 	if (!fu_synaptics_cxaudio_device_operation(self,
 						   FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						   FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
@@ -773,8 +773,8 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 				FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
 				FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
 				FU_SYNAPTICS_CXAUDIO_EEPROM_PATCH_INFO_OFFSET,
-				st_pat->data,
-				st_pat->len,
+				st_pat->buf->data,
+				st_pat->buf->len,
 				FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 				error)) {
 				g_prefix_error_literal(error,

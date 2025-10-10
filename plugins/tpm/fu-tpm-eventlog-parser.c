@@ -95,7 +95,7 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		st = fu_struct_tpm_event_log2_parse(buf, bufsz, idx, error);
 		if (st == NULL)
 			return NULL;
-		idx += st->len;
+		idx += st->buf->len;
 		digestcnt = fu_struct_tpm_event_log2_get_digest_count(st);
 		for (guint i = 0; i < digestcnt; i++) {
 			guint16 alg_type = 0;
