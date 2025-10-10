@@ -355,7 +355,7 @@ fu_xmlb_builder_insert_kx(XbBuilderNode *bn, const gchar *key, guint64 value)
 	g_autofree gchar *value_hex = NULL;
 	if (value == 0)
 		return;
-	value_hex = g_strdup_printf("0x%x", (guint)value);
+	value_hex = g_strdup_printf("0x%lx", (gulong)value);
 	xb_builder_node_insert_text(bn, key, value_hex, NULL);
 }
 

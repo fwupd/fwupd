@@ -16,6 +16,7 @@
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
+#include "fu-version-common.h"
 
 /**
  * FuIfwiCpdFirmware:
@@ -49,7 +50,8 @@ fu_ifwi_cpd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static gboolean
-fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
+fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
+				    FuFirmware *firmware,
 				    GInputStream *stream,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
@@ -57,13 +59,20 @@ fu_ifwi_cpd_firmware_parse_manifest(FuFirmware *firmware,
 	gsize streamsz = 0;
 	guint32 size;
 	gsize offset = 0;
+	guint64 version_raw = 0;
 	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
 
 	/* raw version */
 	st_mhd = fu_struct_ifwi_cpd_manifest_parse_stream(stream, offset, error);
 	if (st_mhd == NULL)
 		return FALSE;
-	fu_firmware_set_version_raw(firmware, fu_struct_ifwi_cpd_manifest_get_version(st_mhd));
+
+	/* read as [u16le;4] and then build back into a native u64 */
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_major(st_mhd) << 48;
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_minor(st_mhd) << 32;
+	version_raw += (guint64)fu_struct_ifwi_cpd_manifest_get_version_hotfix(st_mhd) << 16;
+	version_raw += ((guint64)fu_struct_ifwi_cpd_manifest_get_version_build(st_mhd)) << 0;
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
 
 	/* verify the size */
 	if (!fu_input_stream_size(stream, &streamsz, error))
@@ -212,7 +221,11 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 		if (i == FU_IFWI_CPD_FIRMWARE_IDX_MANIFEST &&
 		    fu_struct_ifwi_cpd_entry_get_length(st_ent) >
 			FU_STRUCT_IFWI_CPD_MANIFEST_SIZE) {
-			if (!fu_ifwi_cpd_firmware_parse_manifest(img, partial_stream, flags, error))
+			if (!fu_ifwi_cpd_firmware_parse_manifest(self,
+								 img,
+								 partial_stream,
+								 flags,
+								 error))
 				return FALSE;
 		}
 
@@ -321,10 +334,17 @@ fu_ifwi_cpd_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_ifwi_cpd_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint64(version_raw, fu_firmware_get_version_format(firmware));
+}
+
 static void
 fu_ifwi_cpd_firmware_init(FuIfwiCpdFirmware *self)
 {
 	fu_firmware_set_images_max(FU_FIRMWARE(self), FU_IFWI_CPD_FIRMWARE_ENTRIES_MAX);
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 
 static void
@@ -336,6 +356,7 @@ fu_ifwi_cpd_firmware_class_init(FuIfwiCpdFirmwareClass *klass)
 	firmware_class->parse = fu_ifwi_cpd_firmware_parse;
 	firmware_class->write = fu_ifwi_cpd_firmware_write;
 	firmware_class->build = fu_ifwi_cpd_firmware_build;
+	firmware_class->convert_version = fu_ifwi_cpd_firmware_convert_version;
 }
 
 /**
