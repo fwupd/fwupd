@@ -39,6 +39,7 @@ _fwupdtool_cmd_list=(
 	'get-plugins'
 	'get-remotes'
 	'get-report-metadata'
+	'get-results'
 	'get-topology'
 	'get-version-formats'
 	'hwids'
