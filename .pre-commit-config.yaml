@@ -95,11 +95,13 @@ repos:
       language: system
       entry: shellcheck --severity=warning -e SC2068
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: shfmt
       name: format shell scripts with shfmt
       language: system
       entry: shfmt --write --indent 4
       types: [shell]
+      exclude: ^contrib/PKGBUILD$
     - id: run-tests
       name: run tests before pushing
       language: system
