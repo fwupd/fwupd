@@ -5,6 +5,9 @@ export NO_COLOR=1
 exec 0>/dev/null
 exec 2>&1
 
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf -- "$TMPDIR"' EXIT
+
 DEVICE=08d460be0f1f9f128413f816022a6439e0078018
 
 error() {
@@ -64,7 +67,8 @@ expect_rc 0
 
 # ---
 echo " ● Refreshing (already up to date)…"
-fwupdmgr refresh /var/lib/fwupd/metadata/lvfs/firmware.xml.zst /var/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
+cp @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst* ${TMPDIR}
+fwupdmgr refresh ${TMPDIR}/firmware.xml.zst ${TMPDIR}/firmware.xml.zst.jcat lvfs
 expect_rc 2
 
 # ---
