@@ -191,6 +191,11 @@ fwupd_client_modify_remote(FwupdClient *self,
 			   GCancellable *cancellable,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
 gboolean
+fwupd_client_clean_remote(FwupdClient *self,
+			  const gchar *remote_id,
+			  GCancellable *cancellable,
+			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2, 3);
+gboolean
 fwupd_client_modify_device(FwupdClient *self,
 			   const gchar *device_id,
 			   const gchar *key,

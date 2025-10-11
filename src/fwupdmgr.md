@@ -151,6 +151,8 @@ configured in the daemon:
 
 **modify-remote**: Edit a remote, for instance turning on properties such as `AutomaticReports`.
 
+**clean-remote**: Cleans a remote, deleting metadata where required.
+
 ### Historical Data
 
 The following actions can be used to upload, export or clear historical data:

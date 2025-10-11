@@ -56,8 +56,20 @@ fwupdmgr get-devices --no-unreported-check
 expect_rc 0
 
 # ---
+echo " ● Clean remote"
+fwupdmgr clean-remote lvfs
+expect_rc 0
+
+# ---
+echo " ● Showing remote ages (JSON)…"
+fwupdmgr get-remotes lvfs --json
+expect_rc 0
+
+# ---
 echo " ● Refreshing from the LVFS…"
 fwupdmgr --download-retries=5 refresh --force
+expect_rc 0
+ls -R @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst*
 expect_rc 0
 
 # ---
@@ -68,6 +80,7 @@ expect_rc 0
 # ---
 echo " ● Refreshing (already up to date)…"
 cp @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst* ${TMPDIR}
+expect_rc 0
 fwupdmgr refresh ${TMPDIR}/firmware.xml.zst ${TMPDIR}/firmware.xml.zst.jcat lvfs
 expect_rc 2
 

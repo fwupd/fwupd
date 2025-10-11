@@ -35,6 +35,8 @@ void
 fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime) G_GNUC_NON_NULL(1);
 gboolean
 fwupd_remote_ensure_mtime(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
+gboolean
+fwupd_remote_ensure_checksum_sig(FwupdRemote *self, GError **error) G_GNUC_NON_NULL(1);
 gchar **
 fwupd_remote_get_order_after(FwupdRemote *self) G_GNUC_NON_NULL(1);
 gchar **

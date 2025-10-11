@@ -3415,6 +3415,34 @@ fu_util_remote_enable(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_remote_clean(FuUtil *self, gchar **values, GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+	remote = fwupd_client_get_remote_by_id(self->client, values[0], self->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fwupd_client_clean_remote(self->client,
+				       fwupd_remote_get_id(remote),
+				       self->cancellable,
+				       error))
+		return FALSE;
+
+	if (self->as_json)
+		return TRUE;
+
+	/* TRANSLATORS: success message */
+	fu_console_print_literal(self->console, _("Successfully cleaned remote"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
@@ -3444,6 +3472,28 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 
 	/* TRANSLATORS: success message */
 	fu_console_print_literal(self->console, _("Successfully disabled remote"));
+
+	/* delete the now-unused cache files? */
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
+	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+		if (self->assume_yes ||
+		    fu_console_input_bool(self->console,
+					  FALSE,
+					  "%s",
+					  /* TRANSLATORS: this is now useless */
+					  _("Delete the now-unused remote cache files?"))) {
+			if (!fwupd_client_clean_remote(self->client,
+						       values[0],
+						       self->cancellable,
+						       error))
+				return FALSE;
+		}
+		fu_console_print_literal(self->console,
+					 /* TRANSLATORS: success message */
+					 _("Successfully cleaned remote"));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -5611,6 +5661,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Enables a given remote"),
 			      fu_util_remote_enable);
+	fu_util_cmd_array_add(cmd_array,
+			      "clean-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Cleans a given remote"),
+			      fu_util_remote_clean);
 	fu_util_cmd_array_add(cmd_array,
 			      "disable-remote",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
