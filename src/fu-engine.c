@@ -975,6 +975,20 @@ fu_engine_modify_remote(FuEngine *self,
 	    NULL,
 	};
 
+	/* a special value */
+	if (g_strcmp0(key, "Cache") == 0 && g_strcmp0(value, "clean") == 0) {
+		FwupdRemote *remote = fu_remote_list_get_by_id(self->remote_list, remote_id);
+		if (remote == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "remote %s not found",
+				    remote_id);
+			return FALSE;
+		}
+		return fu_remote_clean(remote, error);
+	}
+
 	/* check keys are valid */
 	if (!g_strv_contains(keys, key)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "key %s not supported", key);

@@ -245,8 +245,12 @@ if [ -z "$CI_NETWORK" ]; then
 fi
 
 # ---
+echo " ● Clean remotes"
+run modify-remote lvfs Cache clean
+expect_rc 0
+
+# ---
 echo " ● Refresh remotes (forced)"
-rm -f @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst*
 run refresh --json --force --verbose
 expect_rc 0
 
