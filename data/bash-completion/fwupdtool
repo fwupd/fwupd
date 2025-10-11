@@ -1,6 +1,7 @@
 _fwupdtool_cmd_list=(
 	'activate'
 	'build-cabinet'
+	'clean-remote'
 	'clear-history'
 	'disable-remote'
 	'disable-test-devices'

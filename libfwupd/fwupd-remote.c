@@ -855,20 +855,8 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 	}
 
 	/* load the signature checksum */
-	if (priv->filename_cache_sig != NULL &&
-	    g_file_test(priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
-		gsize sz = 0;
-		g_autofree gchar *buf = NULL;
-		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
-		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
-			g_prefix_error_literal(error, "failed to get signature checksum: ");
-			return FALSE;
-		}
-		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
-		fwupd_remote_set_checksum_sig(self, g_checksum_get_string(checksum_sig));
-	} else {
-		fwupd_remote_set_checksum_sig(self, NULL);
-	}
+	if (!fwupd_remote_ensure_checksum_sig(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -1077,6 +1065,44 @@ fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	priv->mtime = mtime;
+}
+
+/**
+ * fwupd_remote_ensure_checksum_sig:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Calculates the signature checksum of the remote using the filename cache.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 2.0.17
+ **/
+gboolean
+fwupd_remote_ensure_checksum_sig(FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (priv->filename_cache_sig != NULL &&
+	    g_file_test(priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
+		gsize sz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autoptr(GChecksum) checksum_sig = g_checksum_new(G_CHECKSUM_SHA256);
+		if (!g_file_get_contents(priv->filename_cache_sig, &buf, &sz, error)) {
+			g_prefix_error_literal(error, "failed to get signature checksum: ");
+			return FALSE;
+		}
+		g_checksum_update(checksum_sig, (guchar *)buf, (gssize)sz);
+		fwupd_remote_set_checksum_sig(self, g_checksum_get_string(checksum_sig));
+	} else {
+		fwupd_remote_set_checksum_sig(self, NULL);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**

@@ -69,6 +69,7 @@ struct FuUtil {
 	gboolean no_reboot_check;
 	gboolean no_safety_check;
 	gboolean no_device_prompt;
+	gboolean assume_yes;
 	gboolean prepare_blob;
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
@@ -2289,6 +2290,39 @@ fu_util_remote_modify(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_remote_clean(FuUtil *self, gchar **values, GError **error)
+{
+	FwupdRemote *remote = NULL;
+
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(self,
+				  FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_HWINFO,
+				  self->progress,
+				  error))
+		return FALSE;
+
+	remote = fu_engine_get_remote_by_id(self->engine, values[0], error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fu_engine_clean_remote(self->engine, fwupd_remote_get_id(remote), error))
+		return FALSE;
+
+	if (self->as_json)
+		return TRUE;
+
+	/* TRANSLATORS: success message */
+	fu_console_print_literal(self->console, _("Successfully cleaned remote"));
+	return TRUE;
+}
+
+static gboolean
 fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 {
 	FwupdRemote *remote = NULL;
@@ -2318,7 +2352,27 @@ fu_util_remote_disable(FuUtil *self, gchar **values, GError **error)
 	if (self->as_json)
 		return TRUE;
 
+	/* TRANSLATORS: success message */
 	fu_console_print_literal(self->console, _("Successfully disabled remote"));
+
+	/* delete the now-unused cache files? */
+	if (fwupd_remote_get_kind(remote) == FWUPD_REMOTE_KIND_DOWNLOAD &&
+	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+		if (self->assume_yes ||
+		    fu_console_input_bool(self->console,
+					  FALSE,
+					  "%s",
+					  /* TRANSLATORS: this is now useless */
+					  _("Delete the now-unused remote cache files?"))) {
+			if (!fu_engine_clean_remote(self->engine, values[0], error))
+				return FALSE;
+		}
+		fu_console_print_literal(self->console,
+					 /* TRANSLATORS: success message */
+					 _("Successfully cleaned remote"));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -5346,6 +5400,14 @@ main(int argc, char *argv[])
 	     N_("Filter with a set of release flags using a ~ prefix to "
 		"exclude, e.g. 'trusted-release,~trusted-metadata'"),
 	     NULL},
+	    {"assume-yes",
+	     'y',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &self->assume_yes,
+	     /* TRANSLATORS: command line option */
+	     N_("Answer yes to all questions"),
+	     NULL},
 	    {"json",
 	     '\0',
 	     0,
@@ -5836,6 +5898,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Modifies a given remote"),
 			      fu_util_remote_modify);
+	fu_util_cmd_array_add(cmd_array,
+			      "clean-remote",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("REMOTE-ID"),
+			      /* TRANSLATORS: command description */
+			      _("Cleans a given remote"),
+			      fu_util_remote_clean);
 	fu_util_cmd_array_add(cmd_array,
 			      "enable-remote",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */

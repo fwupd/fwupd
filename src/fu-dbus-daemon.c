@@ -680,6 +680,29 @@ fu_dbus_daemon_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gp
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
+static void
+fu_dbus_daemon_authorize_clean_remote_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
+	g_autoptr(GError) error = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(helper->self));
+
+	/* get result */
+	if (!fu_polkit_authority_check_finish(FU_POLKIT_AUTHORITY(source), res, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_clean_remote(engine, helper->remote_id, &error)) {
+		fu_dbus_daemon_method_invocation_return_gerror(helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value(helper->invocation, NULL);
+}
+
 static FuPolkitAuthorityCheckFlags
 fu_dbus_daemon_engine_request_get_authority_check_flags(FuEngineRequest *request)
 {
@@ -2056,6 +2079,36 @@ fu_dbus_daemon_method_modify_remote(FuDbusDaemon *self,
 }
 
 static void
+fu_dbus_daemon_method_clean_remote(FuDbusDaemon *self,
+				   GVariant *parameters,
+				   FuEngineRequest *request,
+				   GDBusMethodInvocation *invocation)
+{
+	const gchar *remote_id = NULL;
+	g_autoptr(FuMainAuthHelper) helper = NULL;
+
+	/* check the id exists */
+	g_variant_get(parameters, "(&s)", &remote_id);
+
+	/* create helper object */
+	helper = g_new0(FuMainAuthHelper, 1);
+	helper->request = g_object_ref(request);
+	helper->invocation = g_object_ref(invocation);
+	helper->remote_id = g_strdup(remote_id);
+	helper->self = self;
+
+	/* authenticate */
+	fu_dbus_daemon_set_status(self, FWUPD_STATUS_WAITING_FOR_AUTH);
+	fu_polkit_authority_check(self->authority,
+				  fu_engine_request_get_sender(request),
+				  "org.freedesktop.fwupd.clean-remote",
+				  fu_dbus_daemon_engine_request_get_authority_check_flags(request),
+				  NULL,
+				  fu_dbus_daemon_authorize_clean_remote_cb,
+				  g_steal_pointer(&helper));
+}
+
+static void
 fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 				    GVariant *parameters,
 				    FuEngineRequest *request,
@@ -2512,6 +2565,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 	    {"ModifyConfig", fu_dbus_daemon_method_modify_config},
 	    {"ResetConfig", fu_dbus_daemon_method_reset_config},
 	    {"ModifyRemote", fu_dbus_daemon_method_modify_remote},
+	    {"CleanRemote", fu_dbus_daemon_method_clean_remote},
 	    {"VerifyUpdate", fu_dbus_daemon_method_verify_update},
 	    {"Verify", fu_dbus_daemon_method_verify},
 	    {"SetFeatureFlags", fu_dbus_daemon_method_set_feature_flags},

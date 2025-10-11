@@ -95,6 +95,8 @@ static void
 fu_engine_ensure_security_attrs(FuEngine *self);
 static void
 fu_engine_md_refresh_device(FuEngine *self, FuDevice *device);
+static void
+fu_engine_metadata_changed(FuEngine *self);
 
 struct _FuEngine {
 	GObject parent_instance;
@@ -981,6 +983,34 @@ fu_engine_modify_remote(FuEngine *self,
 		return FALSE;
 	}
 	return fu_remote_list_set_key_value(self->remote_list, remote_id, key, value, error);
+}
+
+/**
+ * fu_engine_clean_remote:
+ * @self: a #FuEngine
+ * @remote_id: a remote ID
+ * @error: (nullable): optional return location for an error
+ *
+ * Cleans a remote, deleting downloaded metadata files.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_clean_remote(FuEngine *self, const gchar *remote_id, GError **error)
+{
+	FwupdRemote *remote = fu_remote_list_get_by_id(self->remote_list, remote_id);
+	if (remote == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "remote %s not found",
+			    remote_id);
+		return FALSE;
+	}
+	if (!fu_remote_clean(remote, error))
+		return FALSE;
+	fu_engine_metadata_changed(self);
+	return TRUE;
 }
 
 static gboolean
