@@ -64,7 +64,7 @@ expect_rc 0
 
 # ---
 echo " ● Refreshing (already up to date)…"
-fwupdmgr refresh /var/lib/fwupd/metadata/lvfs/firmware.xml.zst /var/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
+fwupdmgr refresh @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst @localstatedir@/lib/fwupd/metadata/lvfs/firmware.xml.zst.jcat lvfs
 expect_rc 2
 
 # ---
