@@ -2061,8 +2061,7 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	fwupd_codec_string_append(str, idt + 1, _("Checksum"), fwupd_remote_get_checksum(remote));
 
 	/* optional parameters */
-	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) > 0 &&
-	    fwupd_remote_get_age(remote) != G_MAXUINT64) {
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD && fwupd_remote_get_age(remote) != G_MAXUINT64) {
 		g_autofree gchar *age_str = fu_util_time_to_str(fwupd_remote_get_age(remote));
 		/* TRANSLATORS: the age of the metadata */
 		fwupd_codec_string_append(str, idt + 1, _("Age"), age_str);
