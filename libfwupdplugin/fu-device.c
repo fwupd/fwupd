@@ -413,7 +413,7 @@ fu_device_add_private_flag(FuDevice *self, const gchar *flag)
 
 	/* do not let devices be updated until re-connected */
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
-		fu_device_inhibit(self, "unconnected", "Device has been removed");
+		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 
 	/* add counterpart GUIDs already added */
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_COUNTERPART_VISIBLE) == 0) {
@@ -470,7 +470,7 @@ fu_device_remove_private_flag(FuDevice *self, const gchar *flag)
 	fu_device_register_private_flags(self);
 
 	if (g_strcmp0(flag, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED) == 0)
-		fu_device_uninhibit(self, "unconnected");
+		fu_device_remove_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 
 	flag_quark = fu_device_find_private_flag_quark(self, flag);
 	if (G_UNLIKELY(flag_quark == 0)) {
