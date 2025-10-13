@@ -3233,7 +3233,6 @@ fu_device_ensure_inhibits(FuDevice *self)
 
 	/* was okay -> not okay */
 	if (nr_inhibits > 0) {
-		g_autofree gchar *reasons_str = NULL;
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		g_autoptr(GPtrArray) reasons = g_ptr_array_new();
 
@@ -3247,11 +3246,16 @@ fu_device_ensure_inhibits(FuDevice *self)
 		/* update the update error */
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
-			g_ptr_array_add(reasons, inhibit->reason);
+			if (inhibit->problem == FWUPD_DEVICE_PROBLEM_NONE)
+				g_ptr_array_add(reasons, inhibit->reason);
 			problems |= inhibit->problem;
 		}
-		reasons_str = fu_strjoin(", ", reasons);
-		fu_device_set_update_error(self, reasons_str);
+		if (reasons->len > 0) {
+			g_autofree gchar *reasons_str = fu_strjoin(", ", reasons);
+			fu_device_set_update_error(self, reasons_str);
+		} else {
+			fu_device_set_update_error(self, NULL);
+		}
 	} else {
 		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
