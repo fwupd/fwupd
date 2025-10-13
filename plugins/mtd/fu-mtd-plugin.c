@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-mtd-device.h"
+#include "fu-mtd-fmap-device.h"
 #include "fu-mtd-ifd-device.h"
 #include "fu-mtd-plugin.h"
 
@@ -41,9 +42,11 @@ fu_mtd_plugin_constructed(GObject *obj)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_context_add_quirk_key(ctx, "MtdMetadataOffset");
 	fu_context_add_quirk_key(ctx, "MtdMetadataSize");
+	fu_context_add_quirk_key(ctx, "MtdFmapRegions");
 	fu_plugin_add_device_udev_subsystem(plugin, "mtd");
 	fu_plugin_set_device_gtype_default(plugin, FU_TYPE_MTD_DEVICE);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_IFD_DEVICE); /* coverage */
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_FMAP_DEVICE); /* coverage */
 }
 
 static void

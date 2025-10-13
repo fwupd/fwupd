@@ -14,7 +14,9 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "fu-fmap-firmware.h"
 #include "fu-mtd-device.h"
+#include "fu-mtd-fmap-device.h"
 #include "fu-mtd-ifd-device.h"
 
 struct _FuMtdDevice {
@@ -23,6 +25,7 @@ struct _FuMtdDevice {
 	guint64 metadata_offset;
 	guint64 metadata_size;
 	gboolean is_pci_device;
+	gchar **fmap_regions;
 };
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
@@ -164,6 +167,25 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 		}
 		return TRUE;
+	}
+	if (FU_IS_FMAP_FIRMWARE(firmware) && self->fmap_regions != NULL) {
+		for (guint i = 0; self->fmap_regions[i] != NULL; i++) {
+			g_autoptr(FuMtdFmapDevice) child = NULL;
+			const gchar *region = self->fmap_regions[i];
+			FuFirmware *img = fu_firmware_get_image_by_id(firmware, region, NULL);
+
+			if (img == NULL) {
+				g_warning("FMAP region '%s' missing from firmware", region);
+				continue;
+			}
+			child = fu_mtd_fmap_device_new(FU_DEVICE(self), img);
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+			if (firmware_child == NULL &&
+			    (fu_firmware_get_version(img) != NULL ||
+			     fu_firmware_get_version_raw(img) != G_MAXUINT64)) {
+				firmware_child = g_object_ref(img);
+			}
+		}
 	}
 
 	/* find the firmware child that matches any of the device GUID, then use the first
@@ -674,6 +696,28 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 				   FU_INTEGER_BASE_AUTO,
 				   error);
 	}
+	if (g_strcmp0(key, "MtdFmapRegions") == 0) {
+		g_autoptr(GPtrArray) regions = g_ptr_array_new();
+		g_auto(GStrv) split = g_strsplit(value, ",", 0);
+
+		for (guint i = 0; split != NULL && split[i] != NULL; i++) {
+			g_strstrip(split[i]);
+			if (split[i][0] == '\0')
+				continue;
+			g_ptr_array_add(regions, g_strdup(split[i]));
+		}
+		if (regions->len == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "FMAP regions cannot be empty");
+			return FALSE;
+		}
+		g_ptr_array_add(regions, NULL);
+		g_strfreev(self->fmap_regions);
+		self->fmap_regions = (gchar **)g_ptr_array_free(g_steal_pointer(&regions), FALSE);
+		return TRUE;
+	}
 
 	/* failed */
 	g_set_error_literal(error,
@@ -681,6 +725,16 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "quirk key not supported");
 	return FALSE;
+}
+
+static void
+fu_mtd_device_finalize(GObject *object)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(object);
+
+	g_strfreev(self->fmap_regions);
+
+	G_OBJECT_CLASS(fu_mtd_device_parent_class)->finalize(object);
 }
 
 static void
@@ -716,4 +770,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->read_firmware = fu_mtd_device_read_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
+
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_mtd_device_finalize;
 }

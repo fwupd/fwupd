@@ -71,6 +71,14 @@ avoid dumping a huge amount of MTD data to access a tiny chunk of data.
 
 Since: 1.9.1
 
+### MtdFmapRegions
+
+A comma-separated list of FMAP region names that should be exposed as child devices. Each listed
+region is parsed using the FMAP metadata and made available as an addressable sub-device. This can
+be combined with `FirmwareGType = FuFmapFirmware` to selectively target coreboot regions.
+
+Since: 2.0.18
+
 ## Vendor ID Security
 
 The vendor ID is set from the system vendor, for example `DMI:LENOVO`

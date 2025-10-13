@@ -8,6 +8,7 @@ plugin_builtin_mtd = static_library('fu_plugin_mtd',
   sources: [
     'fu-mtd-plugin.c',
     'fu-mtd-device.c',
+    'fu-mtd-fmap-device.c',
     'fu-mtd-ifd-device.c',
   ],
   include_directories: plugin_incdirs,
