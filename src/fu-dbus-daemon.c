@@ -1060,8 +1060,19 @@ fu_dbus_daemon_invocation_get_input_stream(GDBusMethodInvocation *invocation, GE
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		return NULL;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		return NULL;
 	}
 	fd = g_unix_fd_list_get(fd_list, 0, error);
@@ -1093,8 +1104,19 @@ fu_dbus_daemon_invocation_get_output_stream(GDBusMethodInvocation *invocation, G
 	/* get the fd */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 1) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		return NULL;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		return NULL;
 	}
 	fd = g_unix_fd_list_get(fd_list, 0, error);
@@ -1844,8 +1866,20 @@ fu_dbus_daemon_method_update_metadata(FuDbusDaemon *self,
 	/* update the metadata store */
 	message = g_dbus_method_invocation_get_message(invocation);
 	fd_list = g_dbus_message_get_unix_fd_list(message);
-	if (fd_list == NULL || g_unix_fd_list_get_length(fd_list) != 2) {
-		g_set_error_literal(&error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "invalid handle");
+	if (fd_list == NULL) {
+		g_set_error_literal(&error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no file descriptors are associated");
+		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
+		return;
+	}
+	if (g_unix_fd_list_get_length(fd_list) != 2) {
+		g_set_error(&error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong number of file descriptors: %i",
+			    g_unix_fd_list_get_length(fd_list));
 		fu_dbus_daemon_method_invocation_return_gerror(invocation, error);
 		return;
 	}
