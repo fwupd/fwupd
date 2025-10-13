@@ -359,6 +359,20 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 	if (locker == NULL)
 		return FALSE;
 
+	/* update on connected, i.e., uod is false */
+	if (!fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
+		/* releasing the dock will activate devices immediately */
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *dev = g_ptr_array_index(devices, i);
+
+			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				g_debug("uoc dropped needs-activation flag for %s",
+					fu_device_get_name(dev));
+			}
+		}
+	}
+
 	/* release the dock */
 	if (!fu_dell_kestrel_ec_own_dock(FU_DELL_KESTREL_EC(ec_dev), FALSE, error))
 		return FALSE;
@@ -410,6 +424,14 @@ fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device
 
 	if (parent == NULL)
 		return TRUE;
+
+	/* uod: device is managed to activate when disconnected */
+	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD) &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("uod dropped needs-activation flag for %s", fu_device_get_name(device));
+	}
+
 	if (!FU_IS_DELL_KESTREL_EC(parent))
 		return TRUE;
 
