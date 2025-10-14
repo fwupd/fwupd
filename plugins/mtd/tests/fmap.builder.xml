@@ -1,0 +1,12 @@
+<firmware gtype="FuFmapFirmware">
+  <firmware>
+    <id>FMAP</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuUswidFirmware">
+    <id>SBOM</id>
+    <firmware gtype="FuCoswidFirmware">
+      <version>456</version>
+    </firmware>
+  </firmware>
+</firmware>
