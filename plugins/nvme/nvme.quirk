@@ -1,6 +1,7 @@
 # Phison
 [NVME\VEN_1987]
 Flags = force-align,needs-shutdown
+NvmeSerialSuffixChars = 6
 
 # Kingston
 [NVME\VEN_2646]
@@ -53,6 +54,7 @@ Flags = needs-shutdown
 # Lexar
 [NVME\VEN_1D97]
 Flags = ensure-semver
+NvmeSerialSuffixChars = 5
 
 [NVME\VEN_144D&DEV_A80A&VER_2B2QGXA7]
 Issue = https://www.pugetsystems.com/support/guides/critical-samsung-ssd-firmware-update/

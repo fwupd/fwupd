@@ -11,6 +11,38 @@
 #include "fu-nvme-device.h"
 
 static void
+fu_nvme_serial_suffix_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
+	g_autoptr(GError) error = NULL;
+
+	fu_device_add_instance_str(device, "VEN", "1234");
+	fu_device_add_instance_str(device, "DEV", "5678");
+	ret = fu_device_set_quirk_kv(device,
+				     "NvmeSerialSuffixChars",
+				     "8",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = fu_nvme_device_set_serial(FU_NVME_DEVICE(device), "S6B0NL0ABCDEFGH", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check has SNSUFFIX extra ID */
+	str = fu_device_to_string(device);
+	g_debug("%s", str);
+	g_assert_cmpstr(fu_device_get_serial(device), ==, "S6B0NL0ABCDEFGH");
+	g_assert_true(fu_device_has_instance_id(device,
+						"NVME\\VEN_1234&DEV_5678&SNSUFFIX_ABCDEFGH",
+						FU_DEVICE_INSTANCE_FLAG_VISIBLE));
+}
+
+static void
 fu_nvme_cns_func(void)
 {
 	gboolean ret;
@@ -98,6 +130,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	/* tests go here */
+	g_test_add_func("/fwupd/serial-suffix", fu_nvme_serial_suffix_func);
 	g_test_add_func("/fwupd/cns", fu_nvme_cns_func);
 	g_test_add_func("/fwupd/cns{all}", fu_nvme_cns_all_func);
 	return g_test_run();
