@@ -85,6 +85,16 @@ The `[fwupd Remote]` section can contain the following parameters:
 
   If `true`, automatically sent HSI platform security reports when running `fwupdmgr security`.
 
+**NoPhasedUpdates=false**
+
+  If `true`, disregard the requirement check for random client phased deployment.
+
+  A systems eligibility to a phased update is determined by seeding random number generator
+  with /etc/machine-id, the archive filename, and the remote cache mtime. If the seed divides
+  by the metadata-provided `phased_update` value with no remainder then the release is considered.
+  This also implies that the seed will be different on a different machine, for a different update
+  or if the metadata is refreshed.
+
 **OrderBefore=**
 
   This remote will be ordered before any remotes listed here, using commas as the delimiter.
