@@ -27,6 +27,8 @@
 
 typedef struct {
 	gsize signature_offset;
+	guint8 ver_major;
+	guint8 ver_minor;
 } FuFmapFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
@@ -77,6 +79,8 @@ fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBui
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	fu_xmlb_builder_insert_kx(bn, "ver_major", priv->ver_major);
+	fu_xmlb_builder_insert_kx(bn, "ver_minor", priv->ver_minor);
 	if (priv->signature_offset != G_MAXSIZE)
 		fu_xmlb_builder_insert_kx(bn, "signature_offset", priv->signature_offset);
 }
@@ -95,6 +99,20 @@ fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		priv->signature_offset = (gsize)tmp64;
+	}
+	tmp = xb_node_query_text(n, "ver_major", NULL);
+	if (tmp != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		priv->ver_major = (gsize)tmp64;
+	}
+	tmp = xb_node_query_text(n, "ver_minor", NULL);
+	if (tmp != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXUINT8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		priv->ver_minor = (gsize)tmp64;
 	}
 
 	/* success */
@@ -129,6 +147,8 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
+	priv->ver_major = fu_struct_fmap_get_ver_major(st_hdr);
+	priv->ver_minor = fu_struct_fmap_get_ver_minor(st_hdr);
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
@@ -182,14 +202,6 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_addr(img, area_offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
-
-		if (g_strcmp0(area_name, FMAP_AREANAME) == 0) {
-			g_autofree gchar *version = NULL;
-			version = g_strdup_printf("%d.%d",
-						  fu_struct_fmap_get_ver_major(st_hdr),
-						  fu_struct_fmap_get_ver_minor(st_hdr));
-			fu_firmware_set_version(img, version);
-		}
 		offset += st_area->buf->len;
 	}
 
@@ -225,6 +237,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* header */
+	fu_struct_fmap_set_ver_major(st_hdr, priv->ver_major);
+	fu_struct_fmap_set_ver_minor(st_hdr, priv->ver_minor);
 	fu_struct_fmap_set_base(st_hdr, fu_firmware_get_addr(firmware));
 	fu_struct_fmap_set_nareas(st_hdr, images->len);
 	fu_struct_fmap_set_size(st_hdr, signature_offset + total_sz);
@@ -263,6 +277,8 @@ fu_fmap_firmware_init(FuFmapFirmware *self)
 {
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
 	priv->signature_offset = G_MAXSIZE;
+	priv->ver_major = FU_STRUCT_FMAP_DEFAULT_VER_MAJOR;
+	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
