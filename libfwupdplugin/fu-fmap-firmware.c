@@ -13,6 +13,7 @@
 #include "fu-fmap-struct.h"
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
+#include "fu-string.h"
 
 /**
  * FuFmapFirmware:
@@ -24,7 +25,81 @@
 
 #define FMAP_AREANAME "FMAP"
 
-G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
+typedef struct {
+	gsize signature_offset;
+} FuFmapFirmwarePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private(o))
+
+/**
+ * fu_fmap_firmware_set_signature_offset:
+ * @self: a #FuFmapFirmware
+ * @signature_offset: raw offset
+ *
+ * Sets the signature offset. This is different to the offset returned by fu_firmware_get_offset()
+ * which points to the position of the entire image with regards to the parent.
+ *
+ * The `FLASH` region for example enumerates the entire size of the stream, and the `__FMAP__`
+ * header may be positioned in a `FMAP` section *within* the image. This "signature offset" points
+ * to the `__FMAP__` header itself.
+ *
+ * Since: 2.0.17
+ **/
+void
+fu_fmap_firmware_set_signature_offset(FuFmapFirmware *self, gsize signature_offset)
+{
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FMAP_FIRMWARE(self));
+	priv->signature_offset = signature_offset;
+}
+
+/**
+ * fu_fmap_firmware_get_signature_offset:
+ * @self: a #FuFmapFirmware
+ *
+ * Gets the signature offset.
+ *
+ * Returns: offset, or %G_MAXSIZE for unset
+ *
+ * Since: 2.0.17
+ **/
+gsize
+fu_fmap_firmware_get_signature_offset(FuFmapFirmware *self)
+{
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FMAP_FIRMWARE(self), G_MAXSIZE);
+	return priv->signature_offset;
+}
+
+static void
+fu_fmap_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
+{
+	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	if (priv->signature_offset != G_MAXSIZE)
+		fu_xmlb_builder_insert_kx(bn, "signature_offset", priv->signature_offset);
+}
+
+static gboolean
+fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	const gchar *tmp;
+
+	/* simple properties */
+	tmp = xb_node_query_text(n, "signature_offset", NULL);
+	if (tmp != NULL) {
+		guint64 tmp64 = 0;
+		if (!fu_strtoull(tmp, &tmp64, 0x0, G_MAXSIZE, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		priv->signature_offset = (gsize)tmp64;
+	}
+
+	/* success */
+	return TRUE;
+}
 
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
@@ -32,21 +107,25 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
-	gsize offset = 0;
+	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	gsize offset;
 	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(FuStructFmap) st_hdr = NULL;
 
-	/* find the magic token */
-	if (!fu_input_stream_find(stream,
-				  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
-				  FU_STRUCT_FMAP_SIZE_SIGNATURE,
-				  &offset,
-				  error))
-		return FALSE;
+	/* find the magic token if not already specified */
+	if (priv->signature_offset == G_MAXSIZE) {
+		if (!fu_input_stream_find(stream,
+					  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
+					  FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					  &priv->signature_offset,
+					  error))
+			return FALSE;
+	}
 
 	/* parse */
-	st_hdr = fu_struct_fmap_parse_stream(stream, offset, error);
+	st_hdr = fu_struct_fmap_parse_stream(stream, priv->signature_offset, error);
 	if (st_hdr == NULL)
 		return FALSE;
 	fu_firmware_set_addr(firmware, fu_struct_fmap_get_base(st_hdr));
@@ -70,7 +149,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    "number of areas invalid");
 		return FALSE;
 	}
-	offset += st_hdr->buf->len;
+	offset = priv->signature_offset + st_hdr->buf->len;
 	for (gsize i = 0; i < nareas; i++) {
 		guint32 area_offset;
 		guint32 area_size;
@@ -121,15 +200,19 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 static GByteArray *
 fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 {
+	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize total_sz;
 	gsize offset;
+	gsize signature_offset = 0;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(FuStructFmap) st_hdr = fu_struct_fmap_new();
 
 	/* pad to offset */
-	if (fu_firmware_get_offset(firmware) > 0)
-		fu_byte_array_set_size(buf, fu_firmware_get_offset(firmware), 0x00);
+	if (priv->signature_offset > 0 && priv->signature_offset != G_MAXSIZE)
+		signature_offset = priv->signature_offset;
+	fu_byte_array_set_size(buf, signature_offset, 0x00);
 
 	/* add header */
 	total_sz = offset = st_hdr->buf->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
@@ -144,15 +227,15 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	/* header */
 	fu_struct_fmap_set_base(st_hdr, fu_firmware_get_addr(firmware));
 	fu_struct_fmap_set_nareas(st_hdr, images->len);
-	fu_struct_fmap_set_size(st_hdr, fu_firmware_get_offset(firmware) + total_sz);
-	g_byte_array_append(buf, st_hdr->buf->data, st_hdr->buf->len);
+	fu_struct_fmap_set_size(st_hdr, signature_offset + total_sz);
+	fu_byte_array_append_array(buf, st_hdr->buf);
 
 	/* add each area */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
 		g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
-		fu_struct_fmap_area_set_offset(st_area, fu_firmware_get_offset(firmware) + offset);
+		fu_struct_fmap_area_set_offset(st_area, signature_offset + offset);
 		fu_struct_fmap_area_set_size(st_area, g_bytes_get_size(fw));
 		if (fu_firmware_get_id(img) != NULL) {
 			if (!fu_struct_fmap_area_set_name(st_area, fu_firmware_get_id(img), error))
@@ -178,6 +261,8 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	priv->signature_offset = G_MAXSIZE;
 	fu_firmware_set_images_max(FU_FIRMWARE(self), 1024);
 }
 
@@ -187,6 +272,8 @@ fu_fmap_firmware_class_init(FuFmapFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_fmap_firmware_parse;
 	firmware_class->write = fu_fmap_firmware_write;
+	firmware_class->export = fu_fmap_firmware_export;
+	firmware_class->build = fu_fmap_firmware_build;
 }
 
 /**
