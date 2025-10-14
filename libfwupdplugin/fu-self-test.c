@@ -1926,6 +1926,8 @@ fu_plugin_quirks_device_func(void)
 	FuDevice *device_tmp;
 	GPtrArray *children;
 	gboolean ret;
+	g_autoptr(FuDevice) child1 = NULL;
+	g_autoptr(FuDevice) child2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(GError) error = NULL;
@@ -1965,6 +1967,14 @@ fu_plugin_quirks_device_func(void)
 	device_tmp = g_ptr_array_index(children, 0);
 	g_assert_cmpstr(fu_device_get_name(device_tmp), ==, "HDMI");
 	g_assert_true(fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* get this one specific child */
+	child1 = fu_device_get_child_by_logical_id(device, "USB\\VID_0763&PID_2806&I2C_01", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(child1);
+	child2 = fu_device_get_child_by_logical_id(device, "SPI", &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(child2);
 }
 
 static void
