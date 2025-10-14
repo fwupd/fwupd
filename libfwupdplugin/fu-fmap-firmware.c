@@ -53,7 +53,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (fu_struct_fmap_get_size(st_hdr) != streamsz) {
+	if (fu_struct_fmap_get_size(st_hdr) > streamsz) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
