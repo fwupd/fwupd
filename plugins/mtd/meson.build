@@ -19,7 +19,7 @@ plugin_builtins += plugin_builtin_mtd
 
 if not supported_build
   plugin_quirks += files('ci.quirk')
-  device_tests += files('tests/mtdram.json')
+  device_tests += files('tests/bnr-mtd.json', 'tests/mtdram.json')
 endif
 
 if get_option('tests')
