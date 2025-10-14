@@ -18,6 +18,7 @@ struct _FuNvmeDevice {
 	FuPciDevice parent_instance;
 	guint pci_depth;
 	guint64 write_block_size;
+	guint serial_suffix;
 };
 
 #define FU_NVME_COMMIT_ACTION_CA0 0b000 /* replace only */
@@ -37,6 +38,7 @@ fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
+	fwupd_codec_string_append_int(str, idt, "SerialSuffix", self->serial_suffix);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -218,6 +220,37 @@ fu_nvme_device_parse_cns_maybe_dell(FuNvmeDevice *self, const guint8 *buf)
 		fu_device_add_instance_id(FU_DEVICE(self), guid_efi);
 }
 
+gboolean
+fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **error)
+{
+	gsize serialsz;
+
+	g_return_val_if_fail(serial != NULL, FALSE);
+
+	/* always */
+	fu_device_set_serial(FU_DEVICE(self), serial);
+
+	/* some vendors seem to think it's logical to use the last 5 (Lexar) or 6 (Phison)
+	 * characters of the serial number for the firmware variant */
+	serialsz = strlen(serial);
+	if (self->serial_suffix > 0 && serialsz > self->serial_suffix) {
+		fu_device_add_instance_str(FU_DEVICE(self),
+					   "SNSUFFIX",
+					   serial + (serialsz - self->serial_suffix));
+		if (!fu_device_build_instance_id(FU_DEVICE(self),
+						 error,
+						 "NVME",
+						 "VEN",
+						 "DEV",
+						 "SNSUFFIX",
+						 NULL))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
 {
@@ -243,8 +276,10 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	/* get sanitized string from CNS -- see the following doc for offsets:
 	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
 	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
-	if (sn != NULL)
-		fu_device_set_serial(FU_DEVICE(self), sn);
+	if (sn != NULL) {
+		if (!fu_nvme_device_set_serial(self, sn, error))
+			return FALSE;
+	}
 	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
 	if (mn != NULL)
 		fu_device_set_name(FU_DEVICE(self), mn);
@@ -460,6 +495,13 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->write_block_size = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "NvmeSerialSuffixChars") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->serial_suffix = tmp;
 		return TRUE;
 	}
 
