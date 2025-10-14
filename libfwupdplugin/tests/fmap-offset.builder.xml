@@ -1,5 +1,5 @@
 <firmware gtype="FuFmapFirmware">
-  <offset>0x10</offset>
+  <signature_offset>0x10</signature_offset>
   <firmware>
     <id>FMAP</id>
     <data>aGVsbG8gd29ybGQ=</data>
