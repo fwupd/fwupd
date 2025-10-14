@@ -1,0 +1,18 @@
+{
+  "name": "B&R Automation Expansion option",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "691300a8557b1f341fc8ca12b04fd9809f318a2d876c78297629e152e55884c3-5ACCIFM0.FCAN-000_7.cab",
+      "emulation-url": "c7d573a52589357b1f807cf5f6ee25955a2c1bb8ac204f54b9910b2ab2df5a75-5ACCIFM0.FCAN-000_7-emulation.zip",
+      "components": [
+        {
+          "version": "5",
+          "guids": [
+            "0f303377-5909-50d3-b0f0-4cadc99cebd1"
+          ]
+        }
+      ]
+    }
+  ]
+}
