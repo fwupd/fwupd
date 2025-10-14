@@ -52,7 +52,7 @@ Flags = needs-shutdown
 
 # Lexar
 [NVME\VEN_1D97]
-Flags = ensure-semver
+Flags = ensure-semver,commit-ca3
 
 [NVME\VEN_144D&DEV_A80A&VER_2B2QGXA7]
 Issue = https://www.pugetsystems.com/support/guides/critical-samsung-ssd-firmware-update/
