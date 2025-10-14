@@ -1141,6 +1141,9 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
     G_GNUC_NON_NULL(1);
 GPtrArray *
 fu_device_get_children(FuDevice *self) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_child_by_logical_id(FuDevice *self, const gchar *logical_id, GError **error)
+    G_GNUC_NON_NULL(1);
 void
 fu_device_add_child(FuDevice *self, FuDevice *child) G_GNUC_NON_NULL(1, 2);
 void

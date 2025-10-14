@@ -1718,6 +1718,54 @@ fu_device_get_children(FuDevice *self)
 	return fwupd_device_get_children(FWUPD_DEVICE(self));
 }
 
+/**
+ * fu_device_get_child_by_logical_id:
+ * @self: a #FuDevice
+ * @logical_id: (nullable): an ID, e.g. `CONFIG`
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets a child device by the logical ID.
+ *
+ * Returns: (transfer full): a device, or %NULL
+ *
+ * Since: 2.0.17
+ **/
+FuDevice *
+fu_device_get_child_by_logical_id(FuDevice *self, const gchar *logical_id, GError **error)
+{
+	GPtrArray *children;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GPtrArray) logical_ids = g_ptr_array_new();
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* find the first that matches */
+	children = fu_device_get_children(self);
+	if (children->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no children");
+		return NULL;
+	}
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index(children, i);
+		if (g_strcmp0(fu_device_get_logical_id(device_tmp), logical_id) == 0)
+			return g_object_ref(device_tmp);
+
+		/* save this for the error message */
+		g_ptr_array_add(logical_ids, (gpointer)fu_device_get_logical_id(device_tmp));
+	}
+
+	/* nothing found */
+	str = fu_strjoin(",", logical_ids);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no child with logical ID %s, only have %s",
+		    logical_id,
+		    str);
+	return NULL;
+}
+
 static void
 fu_device_ensure_name_prefix(FuDevice *self)
 {
