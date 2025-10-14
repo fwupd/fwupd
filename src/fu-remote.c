@@ -91,6 +91,12 @@ fu_remote_load_from_filename(FwupdRemote *self,
 		else
 			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED);
 	}
+	if (g_key_file_has_key(kf, group, "NoPhasedUpdates", NULL)) {
+		if (g_key_file_get_boolean(kf, group, "NoPhasedUpdates", NULL))
+			fwupd_remote_add_flag(self, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
+		else
+			fwupd_remote_remove_flag(self, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
+	}
 	if (g_key_file_has_key(kf, group, "Title", NULL)) {
 		g_autofree gchar *tmp = g_key_file_get_string(kf, group, "Title", NULL);
 		fwupd_remote_set_title(self, tmp);

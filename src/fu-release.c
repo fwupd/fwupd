@@ -289,6 +289,21 @@ fu_release_set_remote(FuRelease *self, FwupdRemote *remote)
 }
 
 /**
+ * fu_release_get_remote:
+ * @self: a #FuRelease
+ *
+ * Gets the remote this release should use when loading.
+ *
+ * Returns: (transfer none): a #FwupdRemote, or %NULL if never set
+ **/
+FwupdRemote *
+fu_release_get_remote(FuRelease *self)
+{
+	g_return_val_if_fail(FU_IS_RELEASE(self), NULL);
+	return self->remote;
+}
+
+/**
  * fu_release_set_config:
  * @self: a #FuRelease
  * @config: (nullable): a #FuEngineConfig

@@ -31,6 +31,8 @@ void
 fwupd_remote_set_filename_cache(FwupdRemote *self, const gchar *filename) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_metadata_uri(FwupdRemote *self, const gchar *metadata_uri) G_GNUC_NON_NULL(1);
+guint64
+fwupd_remote_get_mtime(FwupdRemote *self) G_GNUC_NON_NULL(1);
 void
 fwupd_remote_set_mtime(FwupdRemote *self, guint64 mtime) G_GNUC_NON_NULL(1);
 gboolean
