@@ -5134,7 +5134,8 @@ fu_util_build_cabinet(FuUtil *self, gchar **values, GError **error)
 				    values[i]);
 			return FALSE;
 		}
-		fu_cabinet_add_file(cab_file, basename, blob);
+		if (!fu_cabinet_add_file(cab_file, basename, blob, error))
+			return FALSE;
 	}
 
 	/* export */

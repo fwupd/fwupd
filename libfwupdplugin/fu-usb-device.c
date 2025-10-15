@@ -1020,6 +1020,8 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 			struct libusb_bos_dev_capability_descriptor *bos_cap =
 			    bos->dev_capability[i];
 			bos_descriptor = fu_usb_bos_descriptor_new(bos_cap);
+			if (bos_descriptor == NULL)
+				continue;
 			g_ptr_array_add(priv->bos_descriptors, bos_descriptor);
 		}
 		libusb_free_bos_descriptor(bos);
