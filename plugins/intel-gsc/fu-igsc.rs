@@ -67,7 +67,7 @@ struct FuStructIgscFwuIupData {
     vcn: u32le,
 }
 
-#[derive(Getters, Default)]
+#[derive(Getters, Default, New, ToBytes)]
 #[repr(C, packed)]
 struct FuStructIgscFwuHeciImageMetadata {
     version_format: u32le = 0x1,
@@ -98,6 +98,12 @@ enum FuIgscFwuHeciPayloadType {
     OpromData,
     OpromCode,
     Fwdata = 5,
+}
+
+enum FuIgscOpromIdx {
+    Unknown = 0x0,
+    Data    = 0xF0,
+    Code    = 0xF1,
 }
 
 #[repr(u8)]

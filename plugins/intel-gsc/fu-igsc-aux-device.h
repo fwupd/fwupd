@@ -13,4 +13,4 @@
 G_DECLARE_FINAL_TYPE(FuIgscAuxDevice, fu_igsc_aux_device, FU, IGSC_AUX_DEVICE, FuDevice)
 
 FuIgscAuxDevice *
-fu_igsc_aux_device_new(FuContext *ctx);
+fu_igsc_aux_device_new(FuDevice *proxy);

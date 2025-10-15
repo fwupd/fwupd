@@ -3,29 +3,38 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/intel-gsc-setup.json",
+      "url": "d14216c9300ca87f4a2f50ea72bf2c18a8358f8edfd9afb9af5a4bc4b5d9d320-intel-arc-b580-21.1161.cab",
       "components": [
         {
+          "name": "FwCode",
           "protocol": "com.intel.gsc",
-          "version": "21.1137",
+          "version": "21.1161",
           "guids": [
             "c3808bdf-c31b-5c03-905f-6f223848cae0"
           ]
         },
         {
+          "name": "FwData",
+          "protocol": "com.intel.gsc",
+          "version": "203.60",
+          "guids": [
+            "d7b15d5c-07a3-5055-81a6-fd6643411382"
+          ]
+        },
+        {
           "name": "OptionROM Code",
           "protocol": "com.intel.gsc",
-          "version": "23.1051.0.0",
+          "version": "23.1061.0.0",
           "guids": [
-            "055b452f-5860-53fd-bb74-5316f955de6b"
+            "3ef75a3f-7174-5426-a43a-91fd6d2c9b9f"
           ]
         },
         {
           "name": "OptionROM Data",
           "protocol": "com.intel.gsc",
-          "version": "23.1051.0.0",
+          "version": "23.1061.0.0",
           "guids": [
-            "41a3c2f5-bbe0-56e7-ae2f-7d4aa77e68a6"
+            "d791f9fd-2546-50d2-a65a-fe3e15b36817"
           ]
         }
       ]
