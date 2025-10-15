@@ -5773,10 +5773,14 @@ fu_common_cabinet_func(void)
 	g_assert_true(ret);
 
 	/* add */
-	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob1);
+	ret = fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* replace */
-	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
+	ret = fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* get data */
 	img1 = fu_firmware_get_image_by_id(FU_FIRMWARE(cabinet), "firmware.jcat", &error);
