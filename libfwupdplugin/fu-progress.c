@@ -859,8 +859,17 @@ fu_progress_step_done(FuProgress *self)
 	}
 
 	/* get the active child */
-	if (self->children->len > 0)
+	if (self->children->len > 0) {
+		if (self->step_now >= self->children->len) {
+			g_autoptr(GString) str = g_string_new(NULL);
+			fu_progress_build_parent_chain(self, str, 0);
+			g_warning("progress done when no children left! [%s]: %s",
+				  self->id,
+				  str->str);
+			return;
+		}
 		child = g_ptr_array_index(self->children, self->step_now);
+	}
 
 	/* save the duration in the array */
 	if (self->profile) {
