@@ -4230,6 +4230,8 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return NULL;
 	}
+	if (parent != self)
+		fu_device_set_target(parent, self);
 	if (!fu_device_probe(parent, &error_local)) {
 		if (event != NULL)
 			fu_device_event_set_error(event, error_local);
@@ -4254,8 +4256,7 @@ fu_device_get_backend_parent_with_subsystem(FuDevice *self, const gchar *subsyst
 		}
 	}
 
-	if (parent != self)
-		fu_device_set_target(parent, self);
+	/* success */
 	return g_steal_pointer(&parent);
 }
 
