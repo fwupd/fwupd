@@ -314,7 +314,8 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 			FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
 			FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 
-		if (fu_device_get_version(device) == NULL)
+		g_warning("LOOK HERE device version: %s", fu_device_get_version(device));
+		if (TRUE)
 			fu_device_set_version_raw(
 			    device,
 			    fu_pci_device_get_revision(FU_PCI_DEVICE(parent_device)));
