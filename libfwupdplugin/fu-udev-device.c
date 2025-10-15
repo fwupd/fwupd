@@ -1845,8 +1845,10 @@ fu_udev_device_read_sysfs(FuUdevDevice *self, const gchar *attr, guint timeout_m
 					    timeout_ms,
 					    FU_IO_CHANNEL_FLAG_NONE,
 					    error);
-	if (buf == NULL)
+	if (buf == NULL) {
+		g_prefix_error(error, "failed read of %s: ", path);
 		return NULL;
+	}
 	if (!g_utf8_validate((const gchar *)buf->data, buf->len, NULL)) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "non UTF-8 data");
 		return NULL;
@@ -1933,8 +1935,10 @@ fu_udev_device_read_sysfs_bytes(FuUdevDevice *self,
 		return NULL;
 	blob =
 	    fu_io_channel_read_bytes(io_channel, count, timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
-	if (blob == NULL)
+	if (blob == NULL) {
+		g_prefix_error(error, "failed read of %s: ", path);
 		return NULL;
+	}
 
 	/* save for emulation */
 	if (event != NULL)
@@ -2004,12 +2008,18 @@ fu_udev_device_write_sysfs(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_raw(io_channel,
-				       (const guint8 *)val,
-				       strlen(val),
-				       timeout_ms,
-				       FU_IO_CHANNEL_FLAG_NONE,
-				       error);
+	if (!fu_io_channel_write_raw(io_channel,
+				     (const guint8 *)val,
+				     strlen(val),
+				     timeout_ms,
+				     FU_IO_CHANNEL_FLAG_NONE,
+				     error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -2073,11 +2083,17 @@ fu_udev_device_write_sysfs_byte_array(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_byte_array(io_channel,
-					      buf,
-					      timeout_ms,
-					      FU_IO_CHANNEL_FLAG_NONE,
-					      error);
+	if (!fu_io_channel_write_byte_array(io_channel,
+					    buf,
+					    timeout_ms,
+					    FU_IO_CHANNEL_FLAG_NONE,
+					    error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -2142,11 +2158,17 @@ fu_udev_device_write_sysfs_bytes(FuUdevDevice *self,
 	/* save */
 	if (event_id != NULL)
 		event = fu_device_save_event(FU_DEVICE(self), event_id);
-	return fu_io_channel_write_bytes(io_channel,
-					 blob,
-					 timeout_ms,
-					 FU_IO_CHANNEL_FLAG_NONE,
-					 error);
+	if (!fu_io_channel_write_bytes(io_channel,
+				       blob,
+				       timeout_ms,
+				       FU_IO_CHANNEL_FLAG_NONE,
+				       error)) {
+		g_prefix_error(error, "failed write of %s: ", path);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
