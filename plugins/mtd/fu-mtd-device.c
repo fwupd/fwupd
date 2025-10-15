@@ -22,7 +22,6 @@ struct _FuMtdDevice {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
-	gboolean is_pci_device;
 };
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
@@ -36,7 +35,6 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
-	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", self->is_pci_device);
 }
 
 static gchar *
@@ -309,8 +307,6 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
 	if (parent_device != NULL) {
-		self->is_pci_device = TRUE;
-
 		fu_device_incorporate(
 		    device,
 		    parent_device,
