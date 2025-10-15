@@ -36,3 +36,14 @@ struct FuStructLegionGo2NormalCmd {
         device_id: u8,
         data: [u8; 59],
 }
+
+#[derive(New, Getters, Setters, Default, ParseStream)]
+#[repr(C, packed)]
+struct FuStructLegionGo2BinHeader {
+        mcu_size: u32le,
+        mcu_version: u32le,
+        left_size: u32le,
+        left_version: u32le,
+        right_size: u32le,
+        right_version: u32le,
+}

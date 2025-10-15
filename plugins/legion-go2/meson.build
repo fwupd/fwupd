@@ -13,6 +13,7 @@ plugin_builtins += static_library('fu_plugin_legion_go2',
   sources: [
     'fu-legion-go2-plugin.c',
     'fu-legion-go2-device.c',
+    'fu-legion-go2-firmware.c'
   ],
   include_directories: plugin_incdirs,
   link_with: plugin_libs,

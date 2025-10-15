@@ -7,6 +7,7 @@
 
 #include "fu-legion-go2-device.h"
 #include "fu-legion-go2-struct.h"
+#include "fu-legion-go2-firmware.h"
 
 #define FU_LEGION_GO2_DEVICE_VID       0x17EF
 #define FU_LEGION_GO2_DEVICE_PID_BEGIN 0x61EB
@@ -138,7 +139,7 @@ fu_legion_go2_device_upgrade_start(FuLegionGo2Device *self, GByteArray *req, GBy
 				g_message("read start response failed again: ");
 				continue;
 			}
-			status = res->data[9];
+			status = (guint8)res->data[9];
 		}
 
 		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
@@ -193,7 +194,7 @@ fu_legion_go2_device_upgrade_query_size(FuLegionGo2Device *self, GByteArray *req
 				g_message("read query size response failed again: ");
 				continue;
 			}
-			status = res->data[9];
+			status = (guint8)res->data[9];
 		}
 
 		if (status == FU_LEGION_GO2_RESPONSE_STATUS_FAIL)
@@ -254,7 +255,7 @@ fu_legion_go2_device_upgrade_write_data(FuLegionGo2Device *self, GByteArray *req
 				g_message("read firmware data response failed again: ");
 				continue;
 			}
-			status = res->data[9];
+			status = (guint8)res->data[9];
 		}
 
 		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
@@ -309,7 +310,7 @@ fu_legion_go2_device_upgrade_verify(FuLegionGo2Device *self, GByteArray *req, GB
 				g_message("read verify response failed again: ");
 				continue;
 			}
-			status = res->data[9];
+			status = (guint8)res->data[9];
 		}
 
 		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
@@ -321,9 +322,11 @@ fu_legion_go2_device_upgrade_verify(FuLegionGo2Device *self, GByteArray *req, GB
 	return TRUE;
 }
 
-static gchar*
+static guint
 fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **error)
 {
+	guint version = 0;
+
 	g_autoptr(FuStructLegionGo2NormalCmd) versionCmd = fu_struct_legion_go2_normal_cmd_new();
 	guint8 content[] = { 
 		0x01
@@ -342,7 +345,7 @@ fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **er
 				  FU_IO_CHANNEL_FLAG_NONE,
 				  error)) {
 		g_message("send version command failed: ");
-		return NULL;
+		return version;
 	}
 
 	g_autoptr(GByteArray) response = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
@@ -350,15 +353,14 @@ fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **er
 	if (!fu_legion_go2_device_read_response_ex(self, 0x79, 0x01, id, response))
 	{
 		g_message("read version response failed: ");
-		return NULL;
+		return version;
 	}
 
-	gchar* version = g_strdup_printf("%x%02x%02x%02x", 
-					  response->data[13], 
-					  response->data[14], 
-					  response->data[15], 
-					  response->data[16]);
-	g_message("device (%d) version: %s", id, version);
+	version = response->data[13] << 24 |
+	          response->data[14] << 16 |
+		  response->data[15] << 8  |
+		  response->data[16];
+	g_message("device (%u) version: %u", id, version);
 	
 	return version;
 }
@@ -641,13 +643,29 @@ fu_legion_go2_device_setup(FuDevice *device, GError **error)
 	if (!fu_legion_go2_device_validate_descriptor(device, error))
 		return FALSE;
 
-	g_free(fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 1, error));
-	g_free(fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 3, error));
-	g_free(fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 4, error));
+	guint mcu_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 1, error);
+	guint lef_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 3, error);
+	guint rig_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 4, error);
 
-	// set testing version
-	fu_device_set_version(device, "1.0.0.0");
+	guint version = mcu_version + lef_version + rig_version;
+	fu_device_set_version_raw(device, version);
 	return TRUE;
+}
+
+static FuFirmware *
+fu_legion_go2_device_prepare_firmware(FuDevice *device,
+				      GInputStream *stream,
+				      FuProgress *progress,
+				      FuFirmwareParseFlags flags,
+				      GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_legion_go2_firmware_new();
+
+	/* sanity check */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+
+	return g_steal_pointer(&firmware);
 }
 
 static void
@@ -658,6 +676,7 @@ fu_legion_go2_device_class_init(FuLegionGo2DeviceClass *klass)
 	device_class->probe = fu_legion_go2_device_probe;
 	device_class->write_firmware = fu_legion_go2_device_write_firmware;
 	device_class->set_progress = fu_legion_go2_device_set_progress;
+	device_class->prepare_firmware = fu_legion_go2_device_prepare_firmware;
 }
 
 static void
