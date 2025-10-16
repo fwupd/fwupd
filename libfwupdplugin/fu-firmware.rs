@@ -31,6 +31,7 @@ enum FuFirmwareFlags {
     NoAutoDetection = 1 << 7, // has no known header
     HasCheckCompatible = 1 << 8,
     IsLastImage = 1 << 9, // use for FuLinearFirmware when padding is present
+    InWrite = 1 << 10,
 }
 
 enum FuFirmwareAlignment {

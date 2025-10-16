@@ -85,6 +85,14 @@ fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag)
 	priv->flags |= flag;
 }
 
+static void
+fu_firmware_remove_flag(FuFirmware *self, FuFirmwareFlags flag)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	priv->flags &= ~flag;
+}
+
 /**
  * fu_firmware_has_flag:
  * @firmware: a #FuFirmware
@@ -591,8 +599,12 @@ fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes)
 GBytes *
 fu_firmware_get_bytes(FuFirmware *self, GError **error)
 {
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (priv->bytes != NULL)
 		return g_bytes_ref(priv->bytes);
 	if (priv->stream != NULL) {
@@ -604,6 +616,12 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 			return NULL;
 		}
 		return fu_input_stream_read_bytes(priv->stream, 0x0, priv->streamsz, NULL, error);
+	}
+	if (klass->write != NULL && !fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_IN_WRITE)) {
+		g_autoptr(GByteArray) buf = klass->write(self, error);
+		if (buf == NULL)
+			return NULL;
+		return g_bytes_new(buf->data, buf->len);
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
 	return NULL;
@@ -627,17 +645,17 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
-
-	if (priv->bytes == NULL) {
-		if (priv->stream != NULL)
-			return fu_firmware_get_bytes(self, error);
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
-		return NULL;
-	}
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* usual case */
 	if (priv->patches == NULL)
 		return fu_firmware_get_bytes(self, error);
+
+	/* sanity check */
+	if (priv->bytes == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
+		return NULL;
+	}
 
 	/* convert to a mutable buffer, apply each patch, aborting if the offset isn't valid */
 	fu_byte_array_append_bytes(buf, priv->bytes);
@@ -694,12 +712,25 @@ fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment)
 GInputStream *
 fu_firmware_get_stream(FuFirmware *self, GError **error)
 {
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
 	if (priv->bytes != NULL)
 		return g_memory_input_stream_new_from_bytes(priv->bytes);
+	if (klass->write != NULL && !fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_IN_WRITE)) {
+		g_autoptr(GByteArray) buf = NULL;
+		g_autoptr(GBytes) blob = NULL;
+		buf = klass->write(self, error);
+		if (buf == NULL)
+			return NULL;
+		blob = g_bytes_new(buf->data, buf->len);
+		return g_memory_input_stream_new_from_bytes(blob);
+	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
 	return NULL;
 }
@@ -851,7 +882,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 	}
 
 	/* write */
-	if (klass->write != NULL) {
+	if (klass->write != NULL && !fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_IN_WRITE)) {
 		blob = fu_firmware_write(self, error);
 		if (blob == NULL)
 			return NULL;
@@ -1529,7 +1560,12 @@ fu_firmware_write(FuFirmware *self, GError **error)
 
 	/* subclassed */
 	if (klass->write != NULL) {
-		g_autoptr(GByteArray) buf = klass->write(self, error);
+		g_autoptr(GByteArray) buf = NULL;
+
+		/* never recurse */
+		fu_firmware_add_flag(self, FU_FIRMWARE_FLAG_IN_WRITE);
+		buf = klass->write(self, error);
+		fu_firmware_remove_flag(self, FU_FIRMWARE_FLAG_IN_WRITE);
 		if (buf == NULL)
 			return NULL;
 		return g_bytes_new(buf->data, buf->len);
