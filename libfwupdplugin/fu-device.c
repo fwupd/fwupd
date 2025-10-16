@@ -1581,8 +1581,12 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 static void
 fu_device_incorporate_from_proxy_flags(FuDevice *self, FuDevice *proxy)
 {
-	const FwupdDeviceFlags flags[] = {FWUPD_DEVICE_FLAG_EMULATED,
-					  FWUPD_DEVICE_FLAG_UNREACHABLE};
+	const FwupdDeviceFlags flags[] = {
+	    FWUPD_DEVICE_FLAG_EMULATED,
+	    FWUPD_DEVICE_FLAG_INTERNAL,
+	    FWUPD_DEVICE_FLAG_REQUIRE_AC,
+	    FWUPD_DEVICE_FLAG_UNREACHABLE,
+	};
 	for (guint i = 0; i < G_N_ELEMENTS(flags); i++) {
 		if (fu_device_has_flag(proxy, flags[i]) && !fu_device_has_flag(self, flags[i])) {
 			g_debug("propagating %s from proxy", fwupd_device_flag_to_string(flags[i]));
