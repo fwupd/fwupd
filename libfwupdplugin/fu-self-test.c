@@ -2638,6 +2638,10 @@ fu_device_flags_func(void)
 	fu_device_set_proxy(device, proxy);
 	fu_device_add_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
+
+	/* unsetting flags on the proxy should unpropagate to the device that *uses* the proxy */
+	fu_device_remove_flag(proxy, FWUPD_DEVICE_FLAG_EMULATED);
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED));
 }
 
 static void
