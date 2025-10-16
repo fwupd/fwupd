@@ -93,8 +93,6 @@ fu_main_is_container(void)
 {
 	g_autofree gchar *buf = NULL;
 	gsize bufsz = 0;
-	if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
-		return FALSE;
 	if (g_strstr_len(buf, (gssize)bufsz, "docker") != NULL)
 		return TRUE;
 	if (g_strstr_len(buf, (gssize)bufsz, "lxc") != NULL)
