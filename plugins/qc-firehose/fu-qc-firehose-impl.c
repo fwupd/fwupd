@@ -8,10 +8,23 @@
 
 #include "config.h"
 
+#include <libxmlb/xb-version.h>
+
 #include "fu-qc-firehose-impl-common.h"
 #include "fu-qc-firehose-impl.h"
 
 G_DEFINE_INTERFACE(FuQcFirehoseImpl, fu_qc_firehose_impl, G_TYPE_OBJECT)
+
+static const gchar *
+fu_qc_firehose_impl_xmlb_version_string(void)
+{
+#if defined(LIBXMLB_CHECK_VERSION) && LIBXMLB_CHECK_VERSION(0, 3, 22)
+	return xb_version_string();
+#else
+	/* treat older libxmlb releases as pre-0.3.22 */
+	return "0.0.0";
+#endif
+}
 
 static void
 fu_qc_firehose_impl_default_init(FuQcFirehoseImplInterface *iface)
@@ -344,7 +357,9 @@ fu_qc_firehose_impl_write_xml(FuQcFirehoseImpl *self, XbBuilderNode *bn, GError 
 		return FALSE;
 	xml_fixed = g_string_new(xml);
 	/* firehose is *very* picky about XML and will not accept empty elements */
-	if (fu_version_compare(xb_version_string(), "0.3.22", FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
+	if (fu_version_compare(fu_qc_firehose_impl_xmlb_version_string(),
+			      "0.3.22",
+			      FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
 		g_string_replace(xml_fixed, ">\n  </configure>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </program>", " />", 0);
 		g_string_replace(xml_fixed, ">\n  </erase>", " />", 0);
