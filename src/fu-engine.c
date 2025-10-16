@@ -2110,6 +2110,9 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 static gboolean
 fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError **error)
 {
+#ifdef __ANDROID__
+	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("enforcing"));
+#else
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *filename = NULL;
 
@@ -2135,6 +2138,7 @@ fu_engine_get_report_metadata_selinux(FuEngine *self, GHashTable *hash, GError *
 		return TRUE;
 	}
 	g_hash_table_insert(hash, g_strdup("SELinux"), g_strdup("permissive"));
+#endif
 	return TRUE;
 }
 
