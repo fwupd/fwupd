@@ -16,6 +16,7 @@
 #define FU_LEGION_GO2_DEVICE_IO_TIMEOUT            500
 #define FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT     (60*1000)
 #define FU_LEGION_GO2_DEVICE_READ_RESPONSE_TIMEOUT 2000
+#define FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME      (10*1000)
 
 #define FU_LEGION_GO2_DEVICE_FW_SIGNED_LENGTH 384
 #define FU_LEGION_GO2_DEVICE_FW_ID_LENGTH     4
@@ -42,6 +43,7 @@ fu_legion_go2_device_read_response(FuLegionGo2Device *self, guint8 main_id, guin
 			g_message("read response timeout: ");
 			break;
 		}
+		g_byte_array_set_size(res, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
 		if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
 						res->data,
 						res->len,
@@ -55,6 +57,20 @@ fu_legion_go2_device_read_response(FuLegionGo2Device *self, guint8 main_id, guin
 		if (res->data[2] == main_id &&
 		    res->data[3] == sub_id &&
 		    res->data[4] ==  id)
+		{
+			return TRUE;
+		}
+		if (res->data[2] == main_id &&
+		    res->data[3] == sub_id &&
+		    res->data[4] == 3 &&
+		    (id == 5 || id == 7))
+		{
+			return TRUE;
+		}
+		if (res->data[2] == main_id &&
+		    res->data[3] == sub_id &&
+		    res->data[4] == 4 &&
+		    (id == 6 || id == 8))
 		{
 			return TRUE;
 		}
@@ -79,14 +95,6 @@ fu_legion_go2_device_upgrade_start(FuLegionGo2Device *self, GByteArray *req, GBy
 	}
 	if (res != NULL) {
 		guint8 id = req->data[4];
-		if (id == 5 || id == 7)
-		{
-			id = 3;
-		}
-		if (id == 6 || id == 8)
-		{
-			id = 4;
-		}
 		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
 		{
 			g_message("read start response failed: ");
@@ -143,14 +151,6 @@ fu_legion_go2_device_upgrade_query_size(FuLegionGo2Device *self, GByteArray *req
 	}
 	if (res != NULL) {
 		guint8 id = req->data[4];
-		if (id == 5 || id == 7)
-		{
-			id = 3;
-		}
-		if (id == 6 || id == 8)
-		{
-			id = 4;
-		}
 		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
 		{
 			g_message("read query size response failed: ");
@@ -213,14 +213,6 @@ fu_legion_go2_device_upgrade_write_data(FuLegionGo2Device *self, GByteArray *req
 
 	if (res != NULL) {
 		guint8 id = req->data[4];
-		if (id == 5 || id == 7)
-		{
-			id = 3;
-		}
-		if (id == 6 || id == 8)
-		{
-			id = 4;
-		}
 		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
 		{
 			g_message("read firmware data response failed: ");
@@ -277,14 +269,6 @@ fu_legion_go2_device_upgrade_verify(FuLegionGo2Device *self, GByteArray *req, GB
 	}
 	if (res != NULL) {
 		guint8 id = req->data[4];
-		if (id == 5 || id == 7)
-		{
-			id = 3;
-		}
-		if (id == 6 || id == 8)
-		{
-			id = 4;
-		}
 		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
 		{
 			g_message("read verify response failed: ");
@@ -366,6 +350,23 @@ fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **er
 	g_message("device (%u) version: %u", id, version);
 	
 	return version;
+}
+
+static void 
+fu_legion_go2_device_set_version(FuLegionGo2Device *device, GError **error)
+{
+	guint mcu_version = fu_legion_go2_device_get_version(device, 1, error);
+	guint lef_version = fu_legion_go2_device_get_version(device, 3, error);
+	guint rig_version = fu_legion_go2_device_get_version(device, 4, error);
+
+	guint version = mcu_version + lef_version + rig_version;
+	gchar szVersion[32] = { 0 };
+	g_snprintf(szVersion, sizeof(szVersion), "%x.%02x.%02x.%02x", 
+						  version >> 24 & 0xff,
+						  version >> 16 & 0xff,
+					          version >> 8 & 0xff,
+				                  version & 0xff);
+	fu_device_set_version(FU_DEVICE(device), szVersion);
 }
 
 static guint16
@@ -461,6 +462,7 @@ fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self,
 	guint16 crc16 = fu_legion_go2_device_calc_crc16(array);
 	g_autoptr(GByteArray) response = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
 	g_byte_array_set_size(response, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	g_message("firmware crc: %u size: %u", crc16, size);
 
 	// start step
 	{
@@ -507,6 +509,7 @@ fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self,
 			return FALSE;
 		}
 		maxSize = response->data[9] << 8 | response->data[10];
+		g_message("max size: %u", maxSize);
 	}
 	g_message("query size step done: ");
 
@@ -545,6 +548,7 @@ fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self,
 				gboolean wait = (tempSize % maxSize == 0) || (tempSize >= size);
 				if (!fu_legion_go2_device_upgrade_write_data(self, writeCmd->buf, response, wait, error))
 				{
+					g_message("write data failed: %u", sendSize);
 					return FALSE;
 				}
 				sendSize += FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
@@ -664,7 +668,8 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
-		g_usleep(FU_LEGION_GO2_DEVICE_READ_RESPONSE_TIMEOUT * 1000);
+		// wait for device to normal state
+		g_usleep(FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME * 1000);
 	}
 
 	if (right_need_upgrade)
@@ -675,7 +680,8 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
-		g_usleep(FU_LEGION_GO2_DEVICE_READ_RESPONSE_TIMEOUT * 1000);
+		// wait for device to normal state
+		g_usleep(FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME * 1000);
 	}
 
 	if (mcu_need_upgrade)
@@ -686,6 +692,10 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
+	}
+	else
+	{
+		fu_legion_go2_device_set_version(self, error);
 	}
 
 	return TRUE;
@@ -732,18 +742,7 @@ fu_legion_go2_device_setup(FuDevice *device, GError **error)
 	if (!fu_legion_go2_device_validate_descriptor(device, error))
 		return FALSE;
 
-	guint mcu_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 1, error);
-	guint lef_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 3, error);
-	guint rig_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 4, error);
-
-	guint version = mcu_version + lef_version + rig_version;
-	gchar szVersion[32] = { 0 };
-	g_snprintf(szVersion, sizeof(szVersion), "%x.%02x.%02x.%02x", 
-						  version >> 24 & 0xff,
-						  version >> 16 & 0xff,
-					          version >> 8 & 0xff,
-				                  version & 0xff);
-	fu_device_set_version(device, szVersion);
+	fu_legion_go2_device_set_version(FU_LEGION_GO2_DEVICE(device), error);
 	
 	return TRUE;
 }
