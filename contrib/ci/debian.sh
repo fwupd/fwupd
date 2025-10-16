@@ -48,19 +48,19 @@ debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
 #check lintian output
 #suppress tags that are side effects of building in docker this way
 lintian ../*changes \
-	-IE \
-	--pedantic \
-	--no-tag-display-limit \
-	--suppress-tags missing-build-dependency-for-dh-addon \
-	--suppress-tags library-not-linked-against-libc \
-	--suppress-tags bad-distribution-in-changes-file \
-	--suppress-tags source-nmu-has-incorrect-version-number \
-	--suppress-tags no-symbols-control-file \
-	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
-	--suppress-tags missing-dependency-on-libc \
-	--suppress-tags arch-dependent-file-not-in-arch-specific-directory \
-	--suppress-tags package-installs-ieee-data \
-	--allow-root
+    -IE \
+    --pedantic \
+    --tag-display-limit 0 \
+    --suppress-tags missing-build-dependency-for-dh-addon \
+    --suppress-tags library-not-linked-against-libc \
+    --suppress-tags bad-distribution-in-changes-file \
+    --suppress-tags source-nmu-has-incorrect-version-number \
+    --suppress-tags no-symbols-control-file \
+    --suppress-tags gzip-file-is-not-multi-arch-same-safe \
+    --suppress-tags missing-dependency-on-libc \
+    --suppress-tags arch-dependent-file-not-in-arch-specific-directory \
+    --suppress-tags package-installs-ieee-data \
+    --allow-root
 
 #place built packages in dist outside docker
 mkdir -p ../dist
