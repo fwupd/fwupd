@@ -431,20 +431,10 @@ fu_legion_go2_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_legion_go2_device_write_firmware(FuDevice *device,
-                                    FuFirmware *firmware,
-                                    FuProgress *progress,
-                                    FwupdInstallFlags flags,
-                                    GError **error)
+fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self, 
+			             FuFirmware *firmware,
+				     GError **error)
 {
-	FuLegionGo2Device* self = FU_LEGION_GO2_DEVICE(device);
-
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10, NULL);
-
 	g_autoptr(GBytes) payload = fu_firmware_get_bytes(firmware, error);
 	if (payload == NULL || g_bytes_get_size(payload) == 0)
 	{
@@ -493,7 +483,6 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 	}
-	fu_progress_step_done(progress);
 	g_message("start step done: ");
 	
 	// query size step
@@ -516,7 +505,6 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 		}
 		maxSize = response->data[9] << 8 | response->data[10];
 	}
-	fu_progress_step_done(progress);
 	g_message("query size step done: ");
 
 	// write data step
@@ -572,7 +560,6 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			}
 		}
 	}
-	fu_progress_step_done(progress);
 	g_message("write data step done: ");
 	
 	// verify step
@@ -593,8 +580,108 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 			return FALSE;
 		}
 	}
-	fu_progress_step_done(progress);
 	g_message("verify step done: ");
+
+	return TRUE;	
+}
+
+static gboolean
+fu_legion_go2_device_write_firmware(FuDevice *device,
+                                    FuFirmware *firmware,
+                                    FuProgress *progress,
+                                    FwupdInstallFlags flags,
+                                    GError **error)
+{
+	FuLegionGo2Device* self = FU_LEGION_GO2_DEVICE(device);
+
+	FuFirmware* img_mcu = NULL;
+	FuFirmware* img_left = NULL;
+	FuFirmware* img_right = NULL;
+	gboolean mcu_need_upgrade = FALSE;
+	gboolean left_need_upgrade = FALSE;
+	gboolean right_need_upgrade = FALSE;
+	guint device_count = 0;
+
+	img_mcu = fu_firmware_get_image_by_id(firmware, "DeviceIDRx", error);
+	if (img_mcu)
+	{
+		guint raw_version = fu_firmware_get_version_raw(img_mcu);
+		guint mcu_version = fu_legion_go2_device_get_version(self, 1, error);
+		if (raw_version > mcu_version)
+		{
+			mcu_need_upgrade = TRUE;
+			device_count++;
+		}
+	}
+
+	img_left = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadL", error);
+	if (img_left)
+	{
+		guint raw_version = fu_firmware_get_version_raw(img_left);
+		guint left_version = fu_legion_go2_device_get_version(self, 3, error);
+		if (raw_version > left_version)
+		{
+			left_need_upgrade = TRUE;
+			device_count++;
+		}
+	}
+
+	img_right = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadR", error);
+	if (img_right)
+	{
+		guint raw_version = fu_firmware_get_version_raw(img_right);
+		guint right_version = fu_legion_go2_device_get_version(self, 4, error);
+		if (raw_version > right_version)
+		{
+			right_need_upgrade = TRUE;
+			device_count++;
+		}
+	}
+
+	if (device_count == 0)
+	{
+		g_message("no device need upgrade: ");
+		return FALSE;
+	}
+
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, NULL);
+	for (guint i = 0; i < device_count; ++i)
+	{
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90 / device_count, NULL);
+	}
+
+	fu_progress_step_done(progress);
+
+	if (left_need_upgrade)
+	{
+		if (!fu_legion_go2_device_execute_upgrade(self, img_left, error))
+		{
+			g_message("execute upgrade left gamepad failed: ");
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
+
+	if (right_need_upgrade)
+	{
+		if (!fu_legion_go2_device_execute_upgrade(self, img_right, error))
+		{
+			g_message("execute upgrade right gamepad failed: ");
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
+
+	if (mcu_need_upgrade)
+	{
+		if (!fu_legion_go2_device_execute_upgrade(self, img_mcu, error))
+		{
+			g_message("execute upgrade mcu failed: ");
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
 
 	return TRUE;
 }
@@ -615,7 +702,6 @@ fu_legion_go2_device_validate_descriptor(FuDevice *device, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
-	g_autoptr(GPtrArray) imgs = NULL;
 
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL)
@@ -638,8 +724,6 @@ fu_legion_go2_device_validate_descriptor(FuDevice *device, GError **error)
 static gboolean
 fu_legion_go2_device_setup(FuDevice *device, GError **error)
 {
-	g_autoptr(GError) error_touchpad = NULL;
-
 	if (!fu_legion_go2_device_validate_descriptor(device, error))
 		return FALSE;
 
@@ -648,7 +732,14 @@ fu_legion_go2_device_setup(FuDevice *device, GError **error)
 	guint rig_version = fu_legion_go2_device_get_version(FU_LEGION_GO2_DEVICE(device), 4, error);
 
 	guint version = mcu_version + lef_version + rig_version;
-	fu_device_set_version_raw(device, version);
+	gchar szVersion[32] = { 0 };
+	g_snprintf(szVersion, sizeof(szVersion), "%x.%02x.%02x.%02x", 
+						  version >> 24 & 0xff,
+						  version >> 16 & 0xff,
+					          version >> 8 & 0xff,
+				                  version & 0xff);
+	fu_device_set_version(device, szVersion);
+	
 	return TRUE;
 }
 
