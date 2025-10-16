@@ -631,8 +631,7 @@ fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
 	if (priv->bytes == NULL) {
 		if (priv->stream != NULL)
 			return fu_firmware_get_bytes(self, error);
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
-		return NULL;
+		return fu_firmware_write(self, error);
 	}
 
 	/* usual case */
@@ -698,10 +697,12 @@ fu_firmware_get_stream(FuFirmware *self, GError **error)
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	if (priv->stream != NULL)
 		return g_object_ref(priv->stream);
-	if (priv->bytes != NULL)
-		return g_memory_input_stream_new_from_bytes(priv->bytes);
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no stream or bytes set");
-	return NULL;
+	if (priv->bytes == NULL) {
+		priv->bytes = fu_firmware_write(self, error);
+		if (priv->bytes == NULL)
+			return NULL;
+	}
+	return g_memory_input_stream_new_from_bytes(priv->bytes);
 }
 
 /**
