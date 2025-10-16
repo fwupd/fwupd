@@ -5484,7 +5484,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_FMAP_FIRMWARE,
 		"fmap.builder.xml",
-		"a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01",
+		"0db91efb987353ffb779d259b130d63d1b8bcbec",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
