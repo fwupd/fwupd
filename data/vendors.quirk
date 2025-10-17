@@ -51,6 +51,8 @@ Vendor = Sandisk
 Vendor = Qualcomm
 [PCI\VEN_1987]
 Vendor = Phison
+[PCI\VEN_1D50]
+Vendor = OpenMoko
 [PCI\VEN_1D97]
 Vendor = Lexar
 [PCI\VEN_1E0F]
