@@ -79,6 +79,7 @@ plugins = {
   'jabra-gnp': false,
   'kinetic-dp': false,
   'legion-hid2': false,
+  'legion-go2': false,
   'lenovo-thinklmi': false,
   'linux-display': false,
   'linux-lockdown': false,
