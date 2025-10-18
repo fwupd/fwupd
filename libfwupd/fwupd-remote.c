@@ -108,6 +108,8 @@ fwupd_remote_flag_to_string(FwupdRemoteFlags flag)
 		return "allow-p2p-metadata";
 	if (flag == FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE)
 		return "allow-p2p-firmware";
+	if (flag == FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES)
+		return "no-phased-updates";
 	return NULL;
 }
 
@@ -136,6 +138,8 @@ fwupd_remote_flag_from_string(const gchar *flag)
 		return FWUPD_REMOTE_FLAG_ALLOW_P2P_METADATA;
 	if (g_strcmp0(flag, "allow-p2p-firmware") == 0)
 		return FWUPD_REMOTE_FLAG_ALLOW_P2P_FIRMWARE;
+	if (g_strcmp0(flag, "no-phased-updates") == 0)
+		return FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES;
 	return FWUPD_REMOTE_FLAG_NONE;
 }
 
@@ -1048,6 +1052,24 @@ fwupd_remote_set_priority(FwupdRemote *self, gint priority)
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_REMOTE(self));
 	priv->priority = priority;
+}
+
+/**
+ * fwupd_remote_get_mtime:
+ * @self: a #FwupdRemote
+ *
+ * Gets the remote mtime in seconds.
+ *
+ * Returns: value in seconds
+ *
+ * Since: 2.0.17
+ **/
+guint64
+fwupd_remote_get_mtime(FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_REMOTE(self), G_MAXUINT64);
+	return priv->mtime;
 }
 
 /**

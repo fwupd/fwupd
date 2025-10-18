@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include "fwupd-remote-private.h"
+
 #include "fu-engine-requirements.h"
 
 static gboolean
@@ -658,6 +660,77 @@ fu_engine_requirements_check_not_hardware(FuEngine *self,
 }
 
 static gboolean
+fu_engine_requirements_check_phased_update(FuEngine *self,
+					   XbNode *req,
+					   FuEngineRequirementsHelper *helper,
+					   GError **error)
+{
+	FwupdRemote *remote = fu_release_get_remote(helper->release);
+	guint64 seed = 0;
+	guint64 phased_update = 0;
+	const gchar *archive_filename = fu_release_get_filename(helper->release);
+	const gchar *host_machine_id = fu_engine_get_host_machine_id(self);
+
+	/* i'm feeling lucky */
+	if (helper->install_flags & FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS) {
+		g_info("ignoring phased_update requirement");
+		return TRUE;
+	}
+
+	/* check fwupd version requirement */
+	if (!fu_engine_requirements_check_fwupd_version(helper, "2.0.17", error)) {
+		g_prefix_error_literal(error, "requirement phased_update: ");
+		return FALSE;
+	}
+
+	/* sanity check */
+	if (remote == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no assigned remote for firmware release");
+		return FALSE;
+	}
+	if (fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES)) {
+		g_info("ignoring phased update requirement due to remote policy");
+		return TRUE;
+	}
+	if (xb_node_get_text(req) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no phased_update value supplied");
+		return FALSE;
+	}
+	if (!fu_strtoull(xb_node_get_text(req),
+			 &phased_update,
+			 2,
+			 1024,
+			 FU_INTEGER_BASE_AUTO,
+			 error)) {
+		g_prefix_error_literal(error, "expected integer for phased_update: ");
+		return FALSE;
+	}
+
+	/* does seed divide perfectly into the phased update factor */
+	if (host_machine_id != NULL)
+		seed += g_str_hash(host_machine_id);
+	if (archive_filename != NULL)
+		seed += g_str_hash(archive_filename);
+	seed += fwupd_remote_get_mtime(remote);
+	if (seed % phased_update != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "remote mtime meant that deployment was delayed");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_requirements_check_client(FuEngine *self,
 				    XbNode *req,
 				    FuEngineRequirementsHelper *helper,
@@ -748,6 +821,10 @@ fu_engine_requirements_check_hard(FuEngine *self,
 			return TRUE;
 		return fu_engine_requirements_check_not_hardware(self, req, helper, error);
 	}
+
+	/* support slowing down deployments */
+	if (g_strcmp0(xb_node_get_element(req), "phased_update") == 0)
+		return fu_engine_requirements_check_phased_update(self, req, helper, error);
 
 	/* ensure client requirement */
 	if (g_strcmp0(xb_node_get_element(req), "client") == 0)
