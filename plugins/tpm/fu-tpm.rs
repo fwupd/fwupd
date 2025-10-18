@@ -48,3 +48,12 @@ struct FuStructTpmEfiStartupLocalityEvent {
     signature: [char; 16] == "StartupLocality",
     locality: u8,    // from which TPM2_Startup() was issued -- which is the initial value of PCR0
 }
+
+#[derive(Parse)]
+#[repr(C, packed)]
+struct FuStructTpmEventLog1Item {
+    pcr: u32le,
+    event_type: u32le,
+    digest: [u8; 20],
+    datasz: u32le,
+}
