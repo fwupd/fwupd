@@ -3,3 +3,4 @@ FirmwareGType = FuUswidFirmware
 Flags = ~needs-reboot
 MtdMetadataOffset = 0x0
 MtdMetadataSize = 0x100
+#MtdFmapOffset = 0x1290000

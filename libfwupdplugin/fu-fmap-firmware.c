@@ -14,6 +14,7 @@
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
+#include "fu-uswid-firmware.h"
 
 /**
  * FuFmapFirmware:
@@ -174,7 +175,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		guint32 area_offset;
 		guint32 area_size;
 		g_autofree gchar *area_name = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(FuStructFmapArea) st_area = NULL;
 		g_autoptr(GInputStream) img_stream = NULL;
 
@@ -194,9 +195,14 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "failed to cut FMAP area: ");
 			return FALSE;
 		}
+		area_name = fu_struct_fmap_area_get_name(st_area);
+		if (g_strcmp0(area_name, "SBOM") == 0) {
+			img = fu_uswid_firmware_new();
+		} else {
+			img = fu_firmware_new();
+		}
 		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
 			return FALSE;
-		area_name = fu_struct_fmap_area_get_name(st_area);
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
