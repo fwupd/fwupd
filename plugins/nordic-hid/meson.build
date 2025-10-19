@@ -5,6 +5,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('nordic-hid.quirk')
 plugin_builtins += static_library('fu_plugin_nordic_hid',
+  rustgen.process('fu-nordic-hid.rs'),
   sources: [
     'fu-nordic-hid-plugin.c',
     'fu-nordic-hid-cfg-channel.c',
