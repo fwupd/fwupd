@@ -41,7 +41,7 @@ distro-provided system version.
 analysis plugin built to analyze GLib code. It can be installed and then run using:
 
     mkdir build-tartan
-    CC=clang-17 meson ../
+    CC=clang-18 meson ../
     SCANBUILD=../contrib/tartan.sh ninja scan-build
 
 ## LVFS
