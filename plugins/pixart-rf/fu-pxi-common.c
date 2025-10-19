@@ -37,47 +37,19 @@ fu_pxi_ota_fw_state_parse(struct ota_fw_state *fwstate,
 			  gsize offset,
 			  GError **error)
 {
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x00, &fwstate->status, error))
+	g_autoptr(FuStructPxiOtaFwState) st = NULL;
+
+	st = fu_struct_pxi_ota_fw_state_parse(buf, bufsz, offset, error);
+	if (st == NULL)
 		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x01, &fwstate->new_flow, error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + 0x2,
-				    &fwstate->offset,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + 0x4,
-				    &fwstate->checksum,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint32_safe(buf,
-				    bufsz,
-				    offset + 0x06,
-				    &fwstate->max_object_size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + 0x0A,
-				    &fwstate->mtu_size,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint16_safe(buf,
-				    bufsz,
-				    offset + 0x0C,
-				    &fwstate->prn_threshold,
-				    G_LITTLE_ENDIAN,
-				    error))
-		return FALSE;
-	if (!fu_memread_uint8_safe(buf, bufsz, offset + 0x0E, &fwstate->spec_check_result, error))
-		return FALSE;
+	fwstate->status = fu_struct_pxi_ota_fw_state_get_status(st);
+	fwstate->new_flow = fu_struct_pxi_ota_fw_state_get_new_flow(st);
+	fwstate->offset = fu_struct_pxi_ota_fw_state_get_offset(st);
+	fwstate->checksum = fu_struct_pxi_ota_fw_state_get_checksum(st);
+	fwstate->max_object_size = fu_struct_pxi_ota_fw_state_get_max_object_size(st);
+	fwstate->mtu_size = fu_struct_pxi_ota_fw_state_get_mtu_size(st);
+	fwstate->prn_threshold = fu_struct_pxi_ota_fw_state_get_prn_threshold(st);
+	fwstate->spec_check_result = fu_struct_pxi_ota_fw_state_get_spec_check_result(st);
 
 	/* success */
 	return TRUE;
