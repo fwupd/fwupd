@@ -300,6 +300,7 @@ static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
 	priv->signature_offset = G_MAXSIZE;
 	priv->ver_major = FU_STRUCT_FMAP_DEFAULT_VER_MAJOR;
 	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;
