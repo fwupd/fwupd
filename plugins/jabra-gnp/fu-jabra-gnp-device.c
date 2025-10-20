@@ -11,6 +11,7 @@
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
+#include "fu-jabra-gnp-struct.h"
 
 struct _FuJabraGnpDevice {
 	FuUsbDevice parent_instance;
@@ -119,8 +120,8 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					    0x09,
 					    0x0200 | FU_JABRA_GNP_IFACE,
 					    self->iface_hid,
-					    tx_data->txbuf,
-					    FU_JABRA_GNP_BUF_SIZE,
+					    tx_data->buf->data,
+					    tx_data->buf->len,
 					    NULL,
 					    tx_data->timeout,
 					    NULL, /* cancellable */
@@ -210,17 +211,9 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 				       guint16 *child_dfu_pid,
 				       GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    FU_JABRA_GNP_ADDRESS_OTA_CHILD,
-		    0x00,
-		    self->sequence_number,
-		    0x46,
-		    0x02,
-		    0x13,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -229,6 +222,13 @@ fu_jabra_gnp_device_read_child_dfu_pid(FuJabraGnpDevice *self,
 	};
 
 	g_return_val_if_fail(child_dfu_pid != NULL, FALSE);
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, FU_JABRA_GNP_ADDRESS_OTA_CHILD);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, self->sequence_number);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x13);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
 				  fu_jabra_gnp_device_tx_cb,

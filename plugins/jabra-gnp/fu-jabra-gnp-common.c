@@ -11,6 +11,7 @@
 #include "fu-jabra-gnp-device.h"
 #include "fu-jabra-gnp-firmware.h"
 #include "fu-jabra-gnp-image.h"
+#include "fu-jabra-gnp-struct.h"
 
 static guint64
 fu_jabra_gnp_update_crc(guint64 acc, guint64 delta)
@@ -80,17 +81,9 @@ fu_jabra_gnp_calculate_crc(GBytes *bytes)
 gboolean
 fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x00,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -98,6 +91,13 @@ fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 	g_autofree gchar *name = NULL;
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x00);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -131,17 +131,9 @@ fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **
 gboolean
 fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x12,
-		    0x02,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -149,6 +141,13 @@ fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, 
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 	guint8 battery_level = 0;
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x12);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x02);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -189,23 +188,22 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 			  guint16 *dfu_pid,
 			  GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x13,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x13);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -232,17 +230,9 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 gboolean
 fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x03,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -250,6 +240,13 @@ fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 	g_autofree gchar *version = NULL;
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x03);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -299,23 +296,22 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 			       guint8 *fwu_protocol,
 			       GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x46,
-		    0x02,
-		    0x14,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x02);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x14);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -355,24 +351,24 @@ fu_jabra_gnp_write_partition(FuDevice *device,
 			     guint8 part,
 			     GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x87,
-		    0x0F,
-		    0x2D,
-		    part,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x87);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x2D);
+	fu_byte_array_append_uint8(st->buf, part);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -407,23 +403,23 @@ fu_jabra_gnp_write_partition(FuDevice *device,
 gboolean
 fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x86,
-		    0x0F,
-		    0x17,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x17);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -500,17 +496,9 @@ fu_jabra_gnp_write_crc(FuDevice *device,
 		       guint preload_count,
 		       GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x8E,
-		    0x0F,
-		    0x19,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -518,9 +506,17 @@ fu_jabra_gnp_write_crc(FuDevice *device,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 11, total_chunks, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x8E);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x19);
+
+	fu_byte_array_append_uint32(st->buf, crc, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, total_chunks, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, preload_count, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -561,17 +557,9 @@ fu_jabra_gnp_write_extended_crc(FuDevice *device,
 				guint preload_count,
 				GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x92,
-		    0x0F,
-		    0x19,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
@@ -579,10 +567,17 @@ fu_jabra_gnp_write_extended_crc(FuDevice *device,
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
 
-	fu_memwrite_uint32(tx_data.txbuf + 7, crc, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 11, 0x00, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 13, preload_count, G_LITTLE_ENDIAN);
-	fu_memwrite_uint32(tx_data.txbuf + 15, total_chunks, G_LITTLE_ENDIAN);
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x92);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x19);
+	fu_byte_array_append_uint32(st->buf, crc, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, 0x00, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, preload_count, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(st->buf, total_chunks, G_LITTLE_ENDIAN);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -623,31 +618,23 @@ fu_jabra_gnp_write_chunk(FuDevice *device,
 			 GError **error)
 {
 	guint8 write_length = 0x00 + bufsz + 10;
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    0x00,
-		    write_length,
-		    0x0F,
-		    0x1A,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 
-	fu_memwrite_uint16(tx_data.txbuf + 7, chunk_number, G_LITTLE_ENDIAN);
-	fu_memwrite_uint16(tx_data.txbuf + 9, bufsz, G_LITTLE_ENDIAN);
-	if (!fu_memcpy_safe(tx_data.txbuf,
-			    sizeof(tx_data.txbuf),
-			    11,
-			    buf,
-			    bufsz,
-			    0x0,
-			    bufsz,
-			    error))
-		return FALSE;
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, 0x00);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, write_length);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1A);
+	fu_byte_array_append_uint16(st->buf, chunk_number, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16(st->buf, bufsz, G_LITTLE_ENDIAN);
+	g_byte_array_append(st->buf, buf, bufsz);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
+
 	return fu_device_retry_full(device,
 				    address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
 					? fu_jabra_gnp_child_device_tx_cb
@@ -777,26 +764,26 @@ fu_jabra_gnp_write_version(FuDevice *device,
 			   FuJabraGnpVersionData *version_data,
 			   GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x89,
-		    0x0F,
-		    0x1E,
-		    version_data->major,
-		    version_data->minor,
-		    version_data->micro,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x89);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1E);
+	fu_byte_array_append_uint8(st->buf, version_data->major);
+	fu_byte_array_append_uint8(st->buf, version_data->minor);
+	fu_byte_array_append_uint8(st->buf, version_data->micro);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
@@ -831,23 +818,23 @@ fu_jabra_gnp_write_version(FuDevice *device,
 gboolean
 fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
+	g_autoptr(FuStructJabraGnpPacket) st = fu_struct_jabra_gnp_packet_new();
 	FuJabraGnpTxData tx_data = {
-	    .txbuf =
-		{
-		    FU_JABRA_GNP_IFACE,
-		    address,
-		    0x00,
-		    seq,
-		    0x86,
-		    0x0F,
-		    0x1D,
-		},
+	    .buf = st->buf,
 	    .timeout = FU_JABRA_GNP_STANDARD_SEND_TIMEOUT,
 	};
 	FuJabraGnpRxData rx_data = {
 	    .rxbuf = {0x00},
 	    .timeout = FU_JABRA_GNP_STANDARD_RECEIVE_TIMEOUT,
 	};
+
+	/* set up request */
+	fu_struct_jabra_gnp_packet_set_dst(st, address);
+	fu_struct_jabra_gnp_packet_set_sequence_number(st, seq);
+	fu_struct_jabra_gnp_packet_set_cmd_length(st, 0x86);
+	fu_struct_jabra_gnp_packet_set_cmd(st, 0x0F);
+	fu_struct_jabra_gnp_packet_set_sub_cmd(st, 0x1D);
+	fu_byte_array_set_size(st->buf, FU_JABRA_GNP_BUF_SIZE, 0x0);
 
 	if (!fu_device_retry_full(device,
 				  address == FU_JABRA_GNP_ADDRESS_OTA_CHILD
