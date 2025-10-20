@@ -311,6 +311,10 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
 	if (parent_device != NULL) {
+		/* ensure the parent gets probed (needed for emulation) */
+		if (!fu_device_probe(parent_device, error))
+			return FALSE;
+
 		fu_device_incorporate(
 		    device,
 		    parent_device,
