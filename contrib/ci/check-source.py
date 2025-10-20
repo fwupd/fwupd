@@ -755,6 +755,44 @@ class Checker:
             self.add_failure("nesting was weird")
             success = False
 
+    def _test_memread(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:rustgen"
+
+        if self._current_fn and os.path.basename(self._current_fn) in [
+            "fu-mem.c",
+            "fu-mem.h",
+        ]:
+            return
+        memread_cnt: int = 0
+        memwrite_cnt: int = 0
+        linecnt_last_read: int = 0
+        linecnt_last_write: int = 0
+        blocksz: int = 3
+        max_calls: int = 7
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                continue
+            if line.find("fu_memread_uint") != -1:
+                if linecnt - linecnt_last_read < blocksz:
+                    memread_cnt += 1
+                linecnt_last_read = linecnt
+            if line.find("fu_memwrite_uint") != -1:
+                if linecnt - linecnt_last_write < blocksz:
+                    memwrite_cnt += 1
+                linecnt_last_write = linecnt
+        if memread_cnt >= max_calls:
+            self._current_linecnt = linecnt_last_read
+            self.add_failure(
+                "Too many calls to fu_memread_uintXX() "
+                f"({memread_cnt}/{max_calls}) within {blocksz} lines, use rustgen"
+            )
+        if memwrite_cnt >= max_calls:
+            self._current_linecnt = linecnt_last_write
+            self.add_failure(
+                "Too many calls to fu_memwrite_uintXX() "
+                f"({memwrite_cnt}/{max_calls}) within {blocksz} lines, use rustgen"
+            )
+
     def _test_gobject_parents(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:name"
 
@@ -854,6 +892,9 @@ class Checker:
 
         # using too many hardcoded constants
         self._test_gobject_parents(lines)
+
+        # using too many memory reads/writes
+        self._test_memread(lines)
 
         # using too many hardcoded constants
         self._test_lines_magic_numbers(lines)
