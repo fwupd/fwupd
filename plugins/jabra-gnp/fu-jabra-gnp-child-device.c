@@ -52,8 +52,8 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 					    0x09,
 					    0x0200 | FU_JABRA_GNP_IFACE,
 					    fu_jabra_gnp_device_get_iface_hid(parent),
-					    tx_data->txbuf,
-					    FU_JABRA_GNP_BUF_SIZE,
+					    tx_data->buf->data,
+					    tx_data->buf->len,
 					    NULL,
 					    tx_data->timeout,
 					    NULL, /* cancellable */

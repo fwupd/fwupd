@@ -3,6 +3,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('jabra-gnp.quirk')
 plugin_builtins += static_library('fu_plugin_jabra_gnp',
+  rustgen.process('fu-jabra-gnp.rs'),
   sources: [
     'fu-jabra-gnp-child-device.c',
     'fu-jabra-gnp-common.c',
