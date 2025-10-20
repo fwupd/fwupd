@@ -1,3 +1,6 @@
+# Copyright 2025 hya1711 <591770796@qq.com>
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
 [HIDRAW\VEN_17EF&DEV_61EB]
 Plugin = legion_go2
 GType = FuLegionGo2Device

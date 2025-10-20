@@ -1,3 +1,8 @@
+/*
+ * Copyright 2025 hya1711 <591770796@qq.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
 #[repr(u8)]
 enum FuLegionGo2UpgradeStep {
@@ -19,8 +24,8 @@ enum FuLegionGo2ResponseStatus {
 struct FuStructLegionGo2UpgradeCmd {
         report_id: u8,
         length: u8,
-        main_id: u8 == 0x53,
-        sub_id: u8 == 0x11,
+        main_id: u8 = 0x53,
+        sub_id: u8 = 0x11,
         device_id: u8,
         param: u8,
         data: [u8; 58],

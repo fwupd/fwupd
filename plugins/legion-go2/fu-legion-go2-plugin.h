@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 lazro <li@shzj.cc>
+ * Copyright 2025 lazro <2059899519@qq.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */

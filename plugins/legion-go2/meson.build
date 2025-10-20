@@ -1,6 +1,5 @@
-# plugins/legion-go2/meson.build
+# Copyright 2025 lazro <2059899519@qq.com>
 # SPDX-License-Identifier: LGPL-2.1-or-later
-# Copyright 2025 lazro
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLegionGo2"']
 
@@ -20,5 +19,3 @@ plugin_builtins += static_library('fu_plugin_legion_go2',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-
-# device_tests += files('tests/legion-go2.json')

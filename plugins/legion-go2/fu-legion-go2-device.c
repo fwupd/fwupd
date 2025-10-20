@@ -9,21 +9,6 @@
 #include "fu-legion-go2-struct.h"
 #include "fu-legion-go2-firmware.h"
 
-#define FU_LEGION_GO2_DEVICE_VID       0x17EF
-#define FU_LEGION_GO2_DEVICE_PID_BEGIN 0x61EB
-#define FU_LEGION_GO2_DEVICE_PID_END   0x61EE
-
-#define FU_LEGION_GO2_DEVICE_IO_TIMEOUT            500
-#define FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT     (60*1000)
-#define FU_LEGION_GO2_DEVICE_READ_RESPONSE_TIMEOUT 2000
-#define FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME      (10*1000)
-
-#define FU_LEGION_GO2_DEVICE_FW_SIGNED_LENGTH 384
-#define FU_LEGION_GO2_DEVICE_FW_ID_LENGTH     4
-#define FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH 32
-#define FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH 64
-
-
 struct _FuLegionGo2Device {
 	FuHidrawDevice parent_instance;
 };
@@ -31,281 +16,366 @@ struct _FuLegionGo2Device {
 G_DEFINE_TYPE(FuLegionGo2Device, fu_legion_go2_device, FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
-fu_legion_go2_device_read_response(FuLegionGo2Device *self, guint8 main_id, guint8 sub_id, guint8 id, GByteArray* res)
+fu_legion_go2_device_read_normal_response_retry_func(FuDevice* device, gpointer user_data, GError** error)
 {
-	gint64 timeNow = g_get_monotonic_time();
-	while (TRUE)
+	struct FuStructLegionGo2NormalRetryParam* param = (struct FuStructLegionGo2NormalRetryParam*)user_data;
+	GByteArray* res = param->res;
+	guint8 main_id = param->main_id;
+	guint8 sub_id = param->sub_id;
+	guint8 dev_id = param->dev_id;
+
+	g_byte_array_set_size(res, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
+				 res->data,
+				 res->len,
+				 NULL,
+				 FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+				 FU_IO_CHANNEL_FLAG_NONE,
+				 error))
 	{
-		gint64 timeNext = g_get_monotonic_time();
-		gint64 interval = (timeNext - timeNow) / 1000;
-		if (interval > FU_LEGION_GO2_DEVICE_READ_RESPONSE_TIMEOUT)
-		{
-			g_message("read response timeout: ");
-			break;
-		}
-		g_byte_array_set_size(res, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
-		if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
-						res->data,
-						res->len,
-						NULL,
-						FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
-						FU_IO_CHANNEL_FLAG_NONE,
-						NULL)) {
-			g_message("execute fu_udev_device_read failed: ");
-			continue;
-		}
-		if (res->data[2] == main_id &&
-		    res->data[3] == sub_id &&
-		    res->data[4] ==  id)
-		{
-			return TRUE;
-		}
-		if (res->data[2] == main_id &&
-		    res->data[3] == sub_id &&
-		    res->data[4] == 3 &&
-		    (id == 5 || id == 7))
-		{
-			return TRUE;
-		}
-		if (res->data[2] == main_id &&
-		    res->data[3] == sub_id &&
-		    res->data[4] == 4 &&
-		    (id == 6 || id == 8))
-		{
-			return TRUE;
-		}
+		g_debug("fu_udev_device_read failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
+		g_clear_error(error);
+		return FALSE;
 	}
+
+	if (res->data[2] == main_id &&
+	    res->data[3] == sub_id &&
+	    res->data[4] == dev_id)
+		return TRUE;
 
 	return FALSE;
 }
 
 static gboolean
-fu_legion_go2_device_upgrade_start(FuLegionGo2Device *self, GByteArray *req, GByteArray* res, GError **error)
+fu_legion_go2_device_read_response(FuLegionGo2Device *self, struct FuStructLegionGo2NormalRetryParam* param, GError **error)
 {
-	if (req != NULL) {
-		if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
-					  req->data,
-					  req->len,
-					  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
-					  FU_IO_CHANNEL_FLAG_NONE,
-					  error)) {
-			g_message("send start command failed: ");
-			return FALSE;
-		}
-	}
-	if (res != NULL) {
-		guint8 id = req->data[4];
-		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-		{
-			g_message("read start response failed: ");
-			return FALSE;
-		}
-
-		if (res->data[7] != FU_LEGION_GO2_UPGRADE_STEP_START)
-		{
-			g_message("response mismatch start command: ");
-			return FALSE;
-		}
-
-		guint8 status = (guint8)res->data[9];
-		gint64 timeNow = g_get_monotonic_time();
-		while (status == FU_LEGION_GO2_RESPONSE_STATUS_BUSY)
-		{
-			gint64 timeNext = g_get_monotonic_time();
-			gint64 interval = (timeNext - timeNow) / 1000;
-			if (interval > FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT)
-			{
-				g_message("start busy wait timeout: ");
-				return FALSE;
-			}
-			if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-			{
-				g_message("read start response failed again: ");
-				continue;
-			}
-			status = (guint8)res->data[9];
-		}
-
-		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
-		{
-			g_message("failed to execute start step: ");
-			return FALSE;
-		}
-	}
-	return TRUE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_legion_go2_device_read_normal_response_retry_func,
+				    5,
+				    0,
+			            (gpointer)param,
+				    error);
 }
 
 static gboolean
-fu_legion_go2_device_upgrade_query_size(FuLegionGo2Device *self, GByteArray *req, GByteArray *res, GError **error)
+fu_legion_go2_device_read_upgrade_response_retry_func(FuDevice* device, gpointer user_data, GError** error)
 {
-	if (req != NULL) {
-		if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
-					  req->data,
-					  req->len,
-					  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
-					  FU_IO_CHANNEL_FLAG_NONE,
-					  error)) {
-			g_message("send query size command failed: ");
-			return FALSE;
-		}
-	}
-	if (res != NULL) {
-		guint8 id = req->data[4];
-		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-		{
-			g_message("read query size response failed: ");
-			return FALSE;
-		}
+	struct FuStructLegionGo2UpgradeRetryParam* param = (struct FuStructLegionGo2UpgradeRetryParam*)user_data;
+	GByteArray* res = param->res;
+	guint8 main_id = param->main_id;
+	guint8 sub_id = param->sub_id;
+	guint8 dev_id = param->dev_id;
+	guint8 step = param->step;
+	gboolean is_valid_dev_id = FALSE;
 
-		if (res->data[7] != FU_LEGION_GO2_UPGRADE_STEP_QUERY_SIZE)
-		{
-			g_message("response mismatch query size command: ");
-			return FALSE;
-		}
-
-		guint8 status = (guint8)res->data[9];
-		gint64 timeNow = g_get_monotonic_time();
-		while (status == FU_LEGION_GO2_RESPONSE_STATUS_BUSY)
-		{
-			gint64 timeNext = g_get_monotonic_time();
-			gint64 interval = (timeNext - timeNow) / 1000;
-			if (interval > FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT)
-			{
-				g_message("query size busy wait timeout: ");
-				return FALSE;
-			}
-			if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-			{
-				g_message("read query size response failed again: ");
-				continue;
-			}
-			status = (guint8)res->data[9];
-		}
-
-		if (status == FU_LEGION_GO2_RESPONSE_STATUS_FAIL)
-		{
-			g_message("failed to execute query size step: ");
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_legion_go2_device_upgrade_write_data(FuLegionGo2Device *self, GByteArray *req, GByteArray *res, gboolean wait, GError **error)
-{
-	if (req != NULL) {
-		if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
-					  req->data,
-					  req->len,
-					  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
-					  FU_IO_CHANNEL_FLAG_NONE,
-					  error)) {
-			g_message("send firmware data command failed: ");
-			return FALSE;
-		}
-	}
-
-	if (!wait)
+	g_byte_array_set_size(res, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
+				 res->data,
+				 res->len,
+				 NULL,
+				 FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+				 FU_IO_CHANNEL_FLAG_NONE,
+				 error))
 	{
+		g_debug("fu_udev_device_read failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
+		g_clear_error(error);
+		return FALSE;
+	}
+
+	is_valid_dev_id = (res->data[4] == dev_id) || 
+	                  (res->data[4] == 3 && (dev_id == 5 || dev_id == 7)) ||
+			  (res->data[4] == 4 && (dev_id == 6 || dev_id == 8));
+
+	if (res->data[2] == main_id &&
+	    res->data[3] == sub_id &&
+	    is_valid_dev_id &&
+	    res->data[7] == step &&
+	    res->data[9] != FU_LEGION_GO2_RESPONSE_STATUS_BUSY)
 		return TRUE;
+
+	return FALSE;
+}
+
+static gboolean
+fu_legion_go2_device_read_upgrade_response(FuLegionGo2Device *self, struct FuStructLegionGo2UpgradeRetryParam* param, GError **error)
+{
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_legion_go2_device_read_upgrade_response_retry_func,
+				    120,
+				    0,
+			            (gpointer)param,
+				    error);
+}
+
+static gboolean
+fu_legion_go2_device_upgrade_start(FuLegionGo2Device *self, guint8 id, guint16 crc16, guint size, GError **error)
+{
+	g_autoptr(GByteArray) res = NULL;
+	g_autoptr(FuStructLegionGo2UpgradeCmd) cmd = fu_struct_legion_go2_upgrade_cmd_new();
+	guint8 content[] = 
+	{ 
+		0x08,
+		FU_LEGION_GO2_UPGRADE_STEP_START,
+		0x00,
+		crc16 >> 8 & 0xff,
+		crc16 & 0xff,
+		size >> 16 & 0xff,
+		size >> 8 & 0xff,
+		size & 0xff,
+		0x01
+	};
+	fu_struct_legion_go2_upgrade_cmd_set_report_id(cmd, 5);
+	fu_struct_legion_go2_upgrade_cmd_set_length(cmd, sizeof(content) + 5);
+	fu_struct_legion_go2_upgrade_cmd_set_device_id(cmd, id);
+	fu_struct_legion_go2_upgrade_cmd_set_param(cmd, 0x01);
+	fu_struct_legion_go2_upgrade_cmd_set_data(cmd, content, sizeof(content), error);
+	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+				  cmd->buf->data,
+			          cmd->buf->len,
+				  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+				  FU_IO_CHANNEL_FLAG_NONE,
+				  error)) 
+	{
+		g_debug("fu_udev_device_write failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
+		return FALSE;
 	}
 
-	if (res != NULL) {
-		guint8 id = req->data[4];
-		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-		{
-			g_message("read firmware data response failed: ");
-			return FALSE;
-		}
-
-		if (res->data[7] != FU_LEGION_GO2_UPGRADE_STEP_WRITE_DATA)
-		{
-			g_message("response mismatch firmware data command: ");
-			return FALSE;
-		}
-
-		guint8 status = (guint8)res->data[9];
-		gint64 timeNow = g_get_monotonic_time();
-		while (status == FU_LEGION_GO2_RESPONSE_STATUS_BUSY)
-		{
-			gint64 timeNext = g_get_monotonic_time();
-			gint64 interval = (timeNext - timeNow) / 1000;
-			if (interval > FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT)
-			{
-				g_message("firmware data busy wait timeout: ");
-				return FALSE;
-			}
-			if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-			{
-				g_message("read firmware data response failed again: ");
-				continue;
-			}
-			status = (guint8)res->data[9];
-		}
-
-		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
-		{
-			g_message("failed to execute firmware data step: ");
-			return FALSE;
-		}
+	res = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	struct FuStructLegionGo2UpgradeRetryParam param = 
+	{
+		.res = res,
+		.main_id = fu_struct_legion_go2_upgrade_cmd_get_main_id(cmd),
+		.sub_id = fu_struct_legion_go2_upgrade_cmd_get_sub_id(cmd),
+		.dev_id = id,
+		.step = FU_LEGION_GO2_UPGRADE_STEP_START
+	};
+	if (!fu_legion_go2_device_read_upgrade_response(self, &param, error))
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "read start command response failed");
+		return FALSE;
 	}
+	guint8 status = param.res->data[9];
+	if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "device report start command failed");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
 static gboolean
-fu_legion_go2_device_upgrade_verify(FuLegionGo2Device *self, GByteArray *req, GByteArray *res, GError **error)
+fu_legion_go2_device_upgrade_query_size(FuLegionGo2Device *self, guint8 id, guint* max_size, GError **error)
 {
-	if (req != NULL) {
-		if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
-					  req->data,
-					  req->len,
-					  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
-					  FU_IO_CHANNEL_FLAG_NONE,
-					  error)) {
-			g_message("send verify command failed: ");
-			return FALSE;
-		}
+	g_autoptr(GByteArray) res = NULL;
+	g_autoptr(FuStructLegionGo2UpgradeCmd) cmd = fu_struct_legion_go2_upgrade_cmd_new();
+	guint8 content[] = 
+	{ 
+		0x02,
+		FU_LEGION_GO2_UPGRADE_STEP_QUERY_SIZE,
+		0x01
+	};
+	fu_struct_legion_go2_upgrade_cmd_set_report_id(cmd, 5);
+	fu_struct_legion_go2_upgrade_cmd_set_length(cmd, sizeof(content) + 5);
+	fu_struct_legion_go2_upgrade_cmd_set_device_id(cmd, id);
+	fu_struct_legion_go2_upgrade_cmd_set_param(cmd, 0x01);
+	fu_struct_legion_go2_upgrade_cmd_set_data(cmd, content, sizeof(content), error);
+	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+				  cmd->buf->data,
+			          cmd->buf->len,
+				  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+				  FU_IO_CHANNEL_FLAG_NONE,
+				  error)) 
+	{
+		g_debug("fu_udev_device_write failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
+		return FALSE;
 	}
-	if (res != NULL) {
-		guint8 id = req->data[4];
-		if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
-		{
-			g_message("read verify response failed: ");
-			return FALSE;
-		}
 
-		if (res->data[7] != FU_LEGION_GO2_UPGRADE_STEP_VERIFY)
-		{
-			g_message("response mismatch verify command: ");
-			return FALSE;
-		}
+	res = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	struct FuStructLegionGo2UpgradeRetryParam param = 
+	{
+		.res = res,
+		.main_id = fu_struct_legion_go2_upgrade_cmd_get_main_id(cmd),
+		.sub_id = fu_struct_legion_go2_upgrade_cmd_get_sub_id(cmd),
+		.dev_id = id,
+		.step = FU_LEGION_GO2_UPGRADE_STEP_QUERY_SIZE
+	};
+	if (!fu_legion_go2_device_read_upgrade_response(self, &param, error))
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "read query size command response failed");
+		return FALSE;
+	}
+	guint8 status = param.res->data[9];
+	if (status == FU_LEGION_GO2_RESPONSE_STATUS_FAIL)
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "device report query size command failed");
+		return FALSE;
+	}
+	if (max_size)
+		*max_size = param.res->data[9] << 8 | param.res->data[10];
 
-		guint8 status = (guint8)res->data[9];
-		gint64 timeNow = g_get_monotonic_time();
-		while (status == FU_LEGION_GO2_RESPONSE_STATUS_BUSY)
+	return TRUE;
+}
+
+static gboolean
+fu_legion_go2_device_upgrade_write_data(FuLegionGo2Device *self, guint8 id, GByteArray *buffer, guint max_size, GError **error)
+{
+	if (max_size % FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH != 0)
+	{	
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "device report max size invalid");
+		return FALSE;
+	}
+	g_debug("device report max size: %u", max_size);
+	
+	guint size = buffer->len;
+	guint inner_loop_times = max_size / FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
+	guint outer_loop_times = size / max_size;
+	if (size % max_size != 0)
+		outer_loop_times += 1;
+	guint send_size = 0;
+	for (guint i = 0; i < outer_loop_times; ++i)
+	{
+		for (guint j = 0; j < inner_loop_times; ++j)
 		{
-			gint64 timeNext = g_get_monotonic_time();
-			gint64 interval = (timeNext - timeNow) / 1000;
-			if (interval > FU_LEGION_GO2_DEVICE_BUSY_WAIT_TIMEOUT)
+			if (send_size >= size)
 			{
-				g_message("verify busy wait timeout: ");
+				break;
+			}
+			g_autoptr(FuStructLegionGo2UpgradeCmd) cmd = fu_struct_legion_go2_upgrade_cmd_new();
+			guint8 content[FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH + 1] = { 0 };
+			memcpy(content, buffer->data + send_size, FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH);
+			content[FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH] = 0x01;
+			fu_struct_legion_go2_upgrade_cmd_set_report_id(cmd, 5);
+			fu_struct_legion_go2_upgrade_cmd_set_length(cmd, sizeof(content) + 5);
+			fu_struct_legion_go2_upgrade_cmd_set_device_id(cmd, id);
+			fu_struct_legion_go2_upgrade_cmd_set_param(cmd, 0x02);
+			fu_struct_legion_go2_upgrade_cmd_set_data(cmd, content, sizeof(content), error);
+			guint ready_send_size = send_size + FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
+			gboolean wait = (ready_send_size % max_size == 0) || (ready_send_size >= size);
+			if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+						  cmd->buf->data,
+						  cmd->buf->len,
+						  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+						  FU_IO_CHANNEL_FLAG_NONE,
+						  error)) 
+			{
+				g_debug("fu_udev_device_write failed: %s",
+					(error && *error) ? (*error)->message : "unknown");
 				return FALSE;
 			}
-			if (!fu_legion_go2_device_read_response(self, 0x53, 0x11, id, res))
+			send_size += FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
+			if (wait)
 			{
-				g_message("read verify response failed again: ");
-				continue;
+				g_autoptr(GByteArray) res = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+				struct FuStructLegionGo2UpgradeRetryParam param = 
+				{
+					.res = res,
+					.main_id = fu_struct_legion_go2_upgrade_cmd_get_main_id(cmd),
+					.sub_id = fu_struct_legion_go2_upgrade_cmd_get_sub_id(cmd),
+					.dev_id = id,
+					.step = FU_LEGION_GO2_UPGRADE_STEP_WRITE_DATA
+				};
+				if (!fu_legion_go2_device_read_upgrade_response(self, &param, error))
+				{
+					g_set_error_literal(error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_READ,
+							    "read write data command response failed");
+					return FALSE;
+				}
+				guint recieved_size = res->data[10] << 24 | 
+						      res->data[11] << 16 | 
+						      res->data[12] << 8  | 
+						      res->data[13];
+				if (recieved_size != send_size && recieved_size != size)
+				{
+					g_set_error_literal(error,
+							    FWUPD_ERROR,
+							    FWUPD_ERROR_INTERNAL,
+							    "device report recieved size mismatch send size");
+					return FALSE;
+				}
 			}
-			status = (guint8)res->data[9];
-		}
-
-		if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
-		{
-			g_message("failed to execute verify step: ");
-			return FALSE;
 		}
 	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_legion_go2_device_upgrade_verify(FuLegionGo2Device *self, guint8 id, GError **error)
+{
+	g_autoptr(GByteArray) res = NULL;
+	g_autoptr(FuStructLegionGo2UpgradeCmd) cmd = fu_struct_legion_go2_upgrade_cmd_new();
+	guint8 content[] = 
+	{ 
+		0x02,
+		FU_LEGION_GO2_UPGRADE_STEP_VERIFY,
+		0x01
+	};
+	fu_struct_legion_go2_upgrade_cmd_set_report_id(cmd, 5);
+	fu_struct_legion_go2_upgrade_cmd_set_length(cmd, sizeof(content) + 5);
+	fu_struct_legion_go2_upgrade_cmd_set_device_id(cmd, id);
+	fu_struct_legion_go2_upgrade_cmd_set_param(cmd, 0x01);
+	fu_struct_legion_go2_upgrade_cmd_set_data(cmd, content, sizeof(content), error);
+	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+				  cmd->buf->data,
+			          cmd->buf->len,
+				  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
+				  FU_IO_CHANNEL_FLAG_NONE,
+				  error)) 
+	{
+		g_debug("fu_udev_device_write failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
+		return FALSE;
+	}
+
+	res = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	struct FuStructLegionGo2UpgradeRetryParam param = 
+	{
+		.res = res,
+		.main_id = fu_struct_legion_go2_upgrade_cmd_get_main_id(cmd),
+		.sub_id = fu_struct_legion_go2_upgrade_cmd_get_sub_id(cmd),
+		.dev_id = id,
+		.step = FU_LEGION_GO2_UPGRADE_STEP_VERIFY
+	};
+	if (!fu_legion_go2_device_read_upgrade_response(self, &param, error))
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "read verify command response failed");
+		return FALSE;
+	}
+	guint8 status = param.res->data[9];
+	if (status != FU_LEGION_GO2_RESPONSE_STATUS_OK)
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "device report verify command failed");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -313,41 +383,50 @@ static guint
 fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **error)
 {
 	guint version = 0;
-
-	g_autoptr(FuStructLegionGo2NormalCmd) versionCmd = fu_struct_legion_go2_normal_cmd_new();
+	g_autoptr(GByteArray) res = NULL;
+	g_autoptr(FuStructLegionGo2NormalCmd) cmd = fu_struct_legion_go2_normal_cmd_new();
 	guint8 content[] = { 
 		0x01
 	};
-	fu_struct_legion_go2_normal_cmd_set_report_id(versionCmd, 5);
-	fu_struct_legion_go2_normal_cmd_set_length(versionCmd, sizeof(content) + 4);
-	fu_struct_legion_go2_normal_cmd_set_main_id(versionCmd, 0x79);
-	fu_struct_legion_go2_normal_cmd_set_sub_id(versionCmd, 0x01);
-	fu_struct_legion_go2_normal_cmd_set_device_id(versionCmd, id);
-	fu_struct_legion_go2_normal_cmd_set_data(versionCmd, content, sizeof(content), error);
-
+	fu_struct_legion_go2_normal_cmd_set_report_id(cmd, 5);
+	fu_struct_legion_go2_normal_cmd_set_length(cmd, sizeof(content) + 4);
+	fu_struct_legion_go2_normal_cmd_set_main_id(cmd, 0x79);
+	fu_struct_legion_go2_normal_cmd_set_sub_id(cmd, 0x01);
+	fu_struct_legion_go2_normal_cmd_set_device_id(cmd, id);
+	fu_struct_legion_go2_normal_cmd_set_data(cmd, content, sizeof(content), error);
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
-				  versionCmd->buf->data,
-				  versionCmd->buf->len,
+				  cmd->buf->data,
+				  cmd->buf->len,
 				  FU_LEGION_GO2_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
 				  error)) {
-		g_message("send version command failed: ");
+		g_debug("fu_udev_device_write failed: %s",
+			(error && *error) ? (*error)->message : "unknown");
 		return version;
 	}
 
-	g_autoptr(GByteArray) response = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
-	g_byte_array_set_size(response, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
-	if (!fu_legion_go2_device_read_response(self, 0x79, 0x01, id, response))
+	res = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
+	struct FuStructLegionGo2NormalRetryParam param = 
 	{
-		g_message("read version response failed: ");
+		.res = res,
+		.main_id = fu_struct_legion_go2_normal_cmd_get_main_id(cmd),
+		.sub_id = fu_struct_legion_go2_normal_cmd_get_sub_id(cmd),
+		.dev_id = id
+	};
+	if (!fu_legion_go2_device_read_response(self, &param, error))
+	{
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "read version command response failed");
 		return version;
 	}
 
-	version = response->data[13] << 24 |
-	          response->data[14] << 16 |
-		  response->data[15] << 8  |
-		  response->data[16];
-	g_message("device (%u) version: %u", id, version);
+	version = res->data[13] << 24 |
+	          res->data[14] << 16 |
+		  res->data[15] << 8  |
+		  res->data[16];
+	g_debug("device %u version: %u", id, version);
 	
 	return version;
 }
@@ -355,11 +434,12 @@ fu_legion_go2_device_get_version(FuLegionGo2Device *self, guint8 id, GError **er
 static void 
 fu_legion_go2_device_set_version(FuLegionGo2Device *device, GError **error)
 {
-	guint mcu_version = fu_legion_go2_device_get_version(device, 1, error);
-	guint lef_version = fu_legion_go2_device_get_version(device, 3, error);
-	guint rig_version = fu_legion_go2_device_get_version(device, 4, error);
+	guint mcu_version, left_version, right_version;
+	mcu_version = fu_legion_go2_device_get_version(device, 1, error);
+	left_version = fu_legion_go2_device_get_version(device, 3, error);
+	right_version = fu_legion_go2_device_get_version(device, 4, error);
 
-	guint version = mcu_version + lef_version + rig_version;
+	guint version = mcu_version + left_version + right_version;
 	gchar szVersion[32] = { 0 };
 	g_snprintf(szVersion, sizeof(szVersion), "%x.%02x.%02x.%02x", 
 						  version >> 24 & 0xff,
@@ -367,31 +447,6 @@ fu_legion_go2_device_set_version(FuLegionGo2Device *device, GError **error)
 					          version >> 8 & 0xff,
 				                  version & 0xff);
 	fu_device_set_version(FU_DEVICE(device), szVersion);
-}
-
-static guint16
-fu_legion_go2_device_calc_crc16(GByteArray* buffer)
-{
-	const guint16 POLY = 0x1021;
-	guint16 crc = 0x0000;
-
-	for (guint i = 0; i < buffer->len; i++)
-	{
-		crc ^= (guint16)(buffer->data[i] << 8);
-		for (int j = 0; j < 8; j++)
-		{
-			if ((crc & 0x8000) != 0)
-			{
-				crc = (guint16)((crc << 1) ^ POLY);
-			}
-			else
-			{
-				crc = (guint16)(crc << 1);
-			}
-		}
-	}
-
-	return crc;
 }
 
 static guint8 fu_legion_go2_device_get_id(GByteArray* buffer)
@@ -415,26 +470,6 @@ static guint8 fu_legion_go2_device_get_id(GByteArray* buffer)
 }
 
 static gboolean
-fu_legion_go2_device_probe(FuDevice *device, GError **error)
-{
-	guint16 vid = fu_device_get_vid(FU_DEVICE(device));
-	guint16 pid = fu_device_get_pid(FU_DEVICE(device));
-
-	if (vid == FU_LEGION_GO2_DEVICE_VID && 
-	    pid >= FU_LEGION_GO2_DEVICE_PID_BEGIN && 
-	    pid <= FU_LEGION_GO2_DEVICE_PID_END) {
-		fu_device_set_name(device, "Legion Go2 MCU");
-		fu_device_set_vendor(device, "Lenovo");
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_protocol(device, "com.legion.go2");
-		g_message("Detected Legion Go2 MCU device (vid=0x%04x pid=0x%04x)", vid, pid);
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-static gboolean
 fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self, 
 			             FuFirmware *firmware,
 				     GError **error)
@@ -442,7 +477,10 @@ fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self,
 	g_autoptr(GBytes) payload = fu_firmware_get_bytes(firmware, error);
 	if (payload == NULL || g_bytes_get_size(payload) == 0)
 	{
-		g_message("firmware payload invalid: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "firmware data is invalid");
 		return FALSE;
 	}
 
@@ -454,140 +492,33 @@ fu_legion_go2_device_execute_upgrade(FuLegionGo2Device* self,
 	guint8 id = fu_legion_go2_device_get_id(array);
 	if (id == 0)
 	{
-		g_message("firmware device id invalid: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "firmware device id is invalid");
 		return FALSE;
 	}
-	g_message("firmware device id: %d", id);
+	g_debug("firmware device id: %u", id);
 
-	guint16 crc16 = fu_legion_go2_device_calc_crc16(array);
-	g_autoptr(GByteArray) response = g_byte_array_sized_new(FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
-	g_byte_array_set_size(response, FU_LEGION_GO2_DEVICE_FW_REPORT_LENGTH);
-	g_message("firmware crc: %u size: %u", crc16, size);
+	guint16 crc16 = fu_crc16(FU_CRC_KIND_B16_XMODEM, array->data, array->len);
+	g_debug("firmware crc16: %u and firmware size: %u", crc16, size);
 
-	// start step
-	{
-		g_autoptr(FuStructLegionGo2UpgradeCmd) startCmd = fu_struct_legion_go2_upgrade_cmd_new();
-		guint8 content[] = { 
-			0x08,
-			FU_LEGION_GO2_UPGRADE_STEP_START,
-			0x00,
-			crc16 >> 8 & 0xff,
-			crc16 & 0xff,
-			size >> 16 & 0xff,
-			size >> 8 & 0xff,
-			size & 0xff,
-			0x01
-		};
-		fu_struct_legion_go2_upgrade_cmd_set_report_id(startCmd, 5);
-		fu_struct_legion_go2_upgrade_cmd_set_length(startCmd, sizeof(content) + 5);
-		fu_struct_legion_go2_upgrade_cmd_set_device_id(startCmd, id);
-		fu_struct_legion_go2_upgrade_cmd_set_param(startCmd, 0x01);
-		fu_struct_legion_go2_upgrade_cmd_set_data(startCmd, content, sizeof(content), error);
-		if (!fu_legion_go2_device_upgrade_start(self, startCmd->buf, response, error))
-		{
-			return FALSE;
-		}
-	}
-	g_message("start step done: ");
+	if (!fu_legion_go2_device_upgrade_start(self, id, crc16, size, error))
+		return FALSE;
+	g_debug("start step done");
 	
-	// query size step
-	guint maxSize = 0;
-	{
-		g_autoptr(FuStructLegionGo2UpgradeCmd) queryCmd = fu_struct_legion_go2_upgrade_cmd_new();
-		guint8 content[] = { 
-			0x02,
-			FU_LEGION_GO2_UPGRADE_STEP_QUERY_SIZE,
-			0x01
-		};
-		fu_struct_legion_go2_upgrade_cmd_set_report_id(queryCmd, 5);
-		fu_struct_legion_go2_upgrade_cmd_set_length(queryCmd, sizeof(content) + 5);
-		fu_struct_legion_go2_upgrade_cmd_set_device_id(queryCmd, id);
-		fu_struct_legion_go2_upgrade_cmd_set_param(queryCmd, 0x01);
-		fu_struct_legion_go2_upgrade_cmd_set_data(queryCmd, content, sizeof(content), error);
-		if (!fu_legion_go2_device_upgrade_query_size(self, queryCmd->buf, response, error))
-		{
-			return FALSE;
-		}
-		maxSize = response->data[9] << 8 | response->data[10];
-		g_message("max size: %u", maxSize);
-	}
-	g_message("query size step done: ");
+	guint max_size = 0;
+	if (!fu_legion_go2_device_upgrade_query_size(self, id, &max_size, error))
+		return FALSE;
+	g_debug("query size step done");
 
-	// write data step
-	{
-		if (maxSize % FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH != 0)
-		{
-			g_message("max size (%u) invalid", maxSize);
-			return FALSE;
-		}
-		guint innerLoopTimes = maxSize / FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
-		guint outerLoopTimes = size / maxSize;
-		if ((size % maxSize) != 0)
-		{
-			outerLoopTimes += 1;
-		}
-		guint sendSize = 0;
-		for (guint i = 0; i < outerLoopTimes; ++i)
-		{
-			for (guint j = 0; j < innerLoopTimes; ++j)
-			{
-				if (sendSize >= size)
-				{
-					break;
-				}
-				g_autoptr(FuStructLegionGo2UpgradeCmd) writeCmd = fu_struct_legion_go2_upgrade_cmd_new();
-				guint8 content[FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH + 1] = { 0 };
-				memcpy(content, array->data + sendSize, FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH);
-				content[FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH] = 0x01;
-				fu_struct_legion_go2_upgrade_cmd_set_report_id(writeCmd, 5);
-				fu_struct_legion_go2_upgrade_cmd_set_length(writeCmd, sizeof(content) + 5);
-				fu_struct_legion_go2_upgrade_cmd_set_device_id(writeCmd, id);
-				fu_struct_legion_go2_upgrade_cmd_set_param(writeCmd, 0x02);
-				fu_struct_legion_go2_upgrade_cmd_set_data(writeCmd, content, sizeof(content), error);
-				guint tempSize = sendSize + FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
-				gboolean wait = (tempSize % maxSize == 0) || (tempSize >= size);
-				if (!fu_legion_go2_device_upgrade_write_data(self, writeCmd->buf, response, wait, error))
-				{
-					g_message("write data failed: %u", sendSize);
-					return FALSE;
-				}
-				sendSize += FU_LEGION_GO2_DEVICE_FW_PACKET_LENGTH;
-				if (wait)
-				{
-					guint recievedSize = response->data[10] << 24 | 
-							     response->data[11] << 16 | 
-							     response->data[12] << 8  | 
-							     response->data[13];
-					if (recievedSize != sendSize && recievedSize != size)
-					{
-						g_message("size verify failed(%u %u %u)", sendSize, recievedSize, size);
-						return FALSE;
-					}
-				}
-			}
-		}
-	}
-	g_message("write data step done: ");
+	if (!fu_legion_go2_device_upgrade_write_data(self, id, array, max_size, error))
+		return FALSE;
+	g_debug("write data step done");
 	
-	// verify step
-	{
-		g_autoptr(FuStructLegionGo2UpgradeCmd) verifyCmd = fu_struct_legion_go2_upgrade_cmd_new();
-		guint8 content[] = { 
-			0x02,
-			FU_LEGION_GO2_UPGRADE_STEP_VERIFY,
-			0x01
-		};
-		fu_struct_legion_go2_upgrade_cmd_set_report_id(verifyCmd, 5);
-		fu_struct_legion_go2_upgrade_cmd_set_length(verifyCmd, sizeof(content) + 5);
-		fu_struct_legion_go2_upgrade_cmd_set_device_id(verifyCmd, id);
-		fu_struct_legion_go2_upgrade_cmd_set_param(verifyCmd, 0x01);
-		fu_struct_legion_go2_upgrade_cmd_set_data(verifyCmd, content, sizeof(content), error);
-		if (!fu_legion_go2_device_upgrade_verify(self, verifyCmd->buf, response, error))
-		{
-			return FALSE;
-		}
-	}
-	g_message("verify step done: ");
+	if (!fu_legion_go2_device_upgrade_verify(self, id, error))
+		return FALSE;
+	g_debug("verify step done");
 
 	return TRUE;	
 }
@@ -647,7 +578,10 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 
 	if (device_count == 0)
 	{
-		g_message("no device need upgrade: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "no device need upgrade");
 		return FALSE;
 	}
 
@@ -664,11 +598,13 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 	{
 		if (!fu_legion_go2_device_execute_upgrade(self, img_left, error))
 		{
-			g_message("execute upgrade left gamepad failed: ");
+			g_set_error_literal(error,
+				            FWUPD_ERROR,
+				            FWUPD_ERROR_INTERNAL,
+				            "execute upgrade left gamepad failed");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
-		// wait for device to normal state
 		g_usleep(FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME * 1000);
 	}
 
@@ -676,11 +612,13 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 	{
 		if (!fu_legion_go2_device_execute_upgrade(self, img_right, error))
 		{
-			g_message("execute upgrade right gamepad failed: ");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "execute upgrade right gamepad failed");			
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
-		// wait for device to normal state
 		g_usleep(FU_LEGION_GO2_DEVICE_REBOOT_WAIT_TIME * 1000);
 	}
 
@@ -688,7 +626,10 @@ fu_legion_go2_device_write_firmware(FuDevice *device,
 	{
 		if (!fu_legion_go2_device_execute_upgrade(self, img_mcu, error))
 		{
-			g_message("execute upgrade mcu failed: ");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "execute upgrade mcu failed");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -711,6 +652,21 @@ fu_legion_go2_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "reload");
 }
+
+static gboolean
+fu_legion_go2_device_probe(FuDevice *device, GError **error)
+{
+	guint16 vid = fu_device_get_vid(FU_DEVICE(device));
+	guint16 pid = fu_device_get_pid(FU_DEVICE(device));
+
+	if (vid == FU_LEGION_GO2_DEVICE_VID && 
+	    pid >= FU_LEGION_GO2_DEVICE_PID_BEGIN && 
+	    pid <= FU_LEGION_GO2_DEVICE_PID_END)
+		return TRUE;
+
+	return FALSE;
+}
+
 
 static gboolean
 fu_legion_go2_device_validate_descriptor(FuDevice *device, GError **error)
@@ -777,6 +733,11 @@ fu_legion_go2_device_class_init(FuLegionGo2DeviceClass *klass)
 static void
 fu_legion_go2_device_init(FuLegionGo2Device *self)
 {
+	fu_device_set_name(FU_DEVICE(self), "Legion Go2 MCU");
+	fu_device_set_vendor(FU_DEVICE(self), "Lenovo");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-go2");
+	
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);

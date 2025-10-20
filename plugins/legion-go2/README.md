@@ -13,7 +13,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* `com.legion.go2`
+* `com.lenovo.legion-go2`
 
 ## GUID Generation
 
@@ -39,7 +39,7 @@ This plugin requires read/write access to `/dev/bus/usb`.
 
 ## Version Considerations
 
-This plugin has been available since fwupd version `SET_VERSION_HERE`.
+This plugin has been available since fwupd version `2.0.18`.
 
 ## Owners
 
