@@ -17,15 +17,15 @@
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 
-struct _FuMtdDevice {
-	FuUdevDevice parent_instance;
+typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
 	gboolean is_pci_device;
-};
+} FuMtdDevicePrivate;
 
-G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
+#define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
@@ -33,10 +33,11 @@ static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
-	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
-	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
-	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", self->is_pci_device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append_hex(str, idt, "EraseSize", priv->erasesize);
+	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", priv->metadata_offset);
+	fwupd_codec_string_append_hex(str, idt, "MetadataSize", priv->metadata_size);
+	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", priv->is_pci_device);
 }
 
 static gchar *
@@ -54,6 +55,7 @@ static FuFirmware *
 fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
@@ -106,10 +108,10 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
 	}
-	if (self->metadata_size > 0) {
+	if (priv->metadata_size > 0) {
 		stream_partial = fu_partial_input_stream_new(stream,
-							     self->metadata_offset,
-							     self->metadata_size,
+							     priv->metadata_offset,
+							     priv->metadata_size,
 							     error);
 		if (stream_partial == NULL)
 			return NULL;
@@ -205,23 +207,24 @@ static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
-	if (self->metadata_offset > firmware_size_max) {
+	if (priv->metadata_offset > firmware_size_max) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "offset of metadata (0x%x) greater than image size (0x%x)",
-			    (guint)self->metadata_offset,
+			    (guint)priv->metadata_offset,
 			    (guint)firmware_size_max);
 		return FALSE;
 	}
-	if (self->metadata_size > firmware_size_max - self->metadata_offset) {
-		self->metadata_size = firmware_size_max - self->metadata_offset;
-		g_debug("truncating metadata size to 0x%x", (guint)self->metadata_size);
+	if (priv->metadata_size > firmware_size_max - priv->metadata_offset) {
+		priv->metadata_size = firmware_size_max - priv->metadata_offset;
+		g_debug("truncating metadata size to 0x%x", (guint)priv->metadata_size);
 	}
 
 	/* nothing to do */
@@ -263,6 +266,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	guint64 flags = 0;
 	guint64 size = 0;
 	g_autofree gchar *attr_flags = NULL;
@@ -309,7 +313,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
 	if (parent_device != NULL) {
-		self->is_pci_device = TRUE;
+		priv->is_pci_device = TRUE;
 
 		fu_device_incorporate(
 		    device,
@@ -366,7 +370,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 		if (attr_erasesize == NULL)
 			return FALSE;
 		if (!fu_strtoull(attr_erasesize,
-				 &self->erasesize,
+				 &priv->erasesize,
 				 0,
 				 G_MAXUINT64,
 				 FU_INTEGER_BASE_AUTO,
@@ -387,12 +391,13 @@ static gboolean
 fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progress, GError **error)
 {
 #ifdef HAVE_MTD_USER_H
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	chunks = fu_chunk_array_new_from_stream(stream,
 						FU_CHUNK_ADDR_OFFSET_NONE,
 						FU_CHUNK_PAGESZ_NONE,
-						self->erasesize,
+						priv->erasesize,
 						error);
 	if (chunks == NULL)
 		return FALSE;
@@ -416,12 +421,12 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 
 		/* the last chunk may be smaller than the erasesize. if it is, extend the last erase
 		 * up to the erasesize */
-		if (erase.length < self->erasesize) {
+		if (erase.length < priv->erasesize) {
 			g_debug("extending last erase from %" G_GUINT32_FORMAT
 				" bytes to %" G_GUINT64_FORMAT " bytes",
 				erase.length,
-				self->erasesize);
-			erase.length = self->erasesize;
+				priv->erasesize);
+			erase.length = priv->erasesize;
 		}
 
 		if (!fu_ioctl_execute(ioctl,
@@ -609,6 +614,7 @@ fu_mtd_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -629,7 +635,7 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	}
 
 	/* just one step required */
-	if (self->erasesize == 0)
+	if (priv->erasesize == 0)
 		return fu_mtd_device_write_verify(self, stream, progress, error);
 
 	/* progress */
@@ -656,11 +662,12 @@ static gboolean
 fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* load from quirks */
 	if (g_strcmp0(key, "MtdMetadataOffset") == 0) {
 		return fu_strtoull(value,
-				   &self->metadata_offset,
+				   &priv->metadata_offset,
 				   0x0,
 				   G_MAXUINT32,
 				   FU_INTEGER_BASE_AUTO,
@@ -668,7 +675,7 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	}
 	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
 		return fu_strtoull(value,
-				   &self->metadata_size,
+				   &priv->metadata_size,
 				   0x100,
 				   FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
 				   FU_INTEGER_BASE_AUTO,
@@ -686,7 +693,8 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 static void
 fu_mtd_device_init(FuMtdDevice *self)
 {
-	self->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	priv->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
 	fu_device_set_summary(FU_DEVICE(self), "Memory Technology Device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);

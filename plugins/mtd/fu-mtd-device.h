@@ -9,4 +9,8 @@
 #include <fwupdplugin.h>
 
 #define FU_TYPE_MTD_DEVICE (fu_mtd_device_get_type())
-G_DECLARE_FINAL_TYPE(FuMtdDevice, fu_mtd_device, FU, MTD_DEVICE, FuUdevDevice)
+G_DECLARE_DERIVABLE_TYPE(FuMtdDevice, fu_mtd_device, FU, MTD_DEVICE, FuUdevDevice)
+
+struct _FuMtdDeviceClass {
+	FuUdevDeviceClass parent_class;
+};
