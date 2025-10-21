@@ -137,11 +137,10 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 	guint8 buf_write[MAX_READ_WRITE_LENGTH_ONE_TIME + 4] = {0x00};
 
 	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_set_error(error, /* nocheck:error */
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "ddcci write length exceed max length:%d: ",
-			    MAX_READ_WRITE_LENGTH_ONE_TIME);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "ddcci write length exceed max length:256: ");
 		return FALSE;
 	}
 
@@ -216,11 +215,10 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	gsize length = 0;
 
 	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_set_error(error, /* nocheck:error */
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "ddcci read length exceed max length:%i: ",
-			    MAX_READ_WRITE_LENGTH_ONE_TIME);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "ddcci read length exceed max length:256: ");
 		return FALSE;
 	}
 
@@ -245,11 +243,10 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	length = buf_read[1] & 0x7F;
 
 	if (length + 3 > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_set_error(error, /* nocheck:error */
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "ddcci read cmd length exceed max length:%i: ",
-			    MAX_READ_WRITE_LENGTH_ONE_TIME);
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "ddcci read cmd length exceed max length:256: ");
 		return FALSE;
 	}
 
