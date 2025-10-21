@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 13:49+0000\n"
+"PO-Revision-Date: 2025-10-21 16:10+0000\n"
 "Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -256,7 +256,7 @@ msgstr "%s não é atualmente atualizável"
 #. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
 #, c-format
 msgid "%s is pending activation; use %s to complete the update."
-msgstr "%s está pendente ativação, use %s para concluir a atualização"
+msgstr "%s está pendente ativação, use %s para concluir a atualização."
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -995,7 +995,7 @@ msgstr "Dispositivos com atualizações de firmware que precisam de ação do us
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Dispositivos com nenhuma atualização de firmware disponível:"
+msgstr "Dispositivos com nenhuma atualização de firmware disponível: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1366,7 +1366,7 @@ msgstr "Nome de arquivo necessário"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "Filtra com um conjunto de opções de dispositivo usando um prefixo ~ para excluir, p.ex.  \"internal,~needs-reboot\""
+msgstr "Filtra com um conjunto de opções de dispositivo usando um prefixo ~ para excluir, p.ex. \"internal,~needs-reboot\""
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
@@ -1374,7 +1374,7 @@ msgstr "Filtra com um conjunto de opções de versão usando um prefixo ~ para e
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
-msgstr "Encontra versões de firmware a partir dos metadados."
+msgstr "Encontra versões de firmware a partir dos metadados"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -3164,7 +3164,7 @@ msgstr "Esta ferramenta permite que um administrador consulte e controle o daemo
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
-msgstr "Esta ferramenta permite que um administrador use os plugins do fwupd sem estarem instalados no sistema host"
+msgstr "Esta ferramenta permite que um administrador use os plugins do fwupd sem estarem instalados no sistema host."
 
 #. TRANSLATORS: the %1 is a kernel command line key=value
 #, c-format
@@ -3236,7 +3236,7 @@ msgstr "O Secure Boot de UEFI impede que software malicioso seja carregado quand
 
 #. TRANSLATORS: longer description
 msgid "UEFI boot service variables should not be readable from runtime mode."
-msgstr "As variáveis ​​do serviço de inicialização UEFI não devem ser legíveis no modo de tempo de execução."
+msgstr "As variáveis do serviço de inicialização UEFI não devem ser legíveis no modo de tempo de execução."
 
 #. TRANSLATORS: Title: Bootservice is when only readable from early-boot
 msgid "UEFI bootservice variables"
@@ -3424,7 +3424,7 @@ msgstr "Enviar dados agora?"
 
 #. TRANSLATORS: command description
 msgid "Upload the list of updatable devices to a remote server"
-msgstr "Envia a lista de dispositivos atualizáveis ​​para um servidor remoto"
+msgstr "Envia a lista de dispositivos atualizáveis para um servidor remoto"
 
 #. TRANSLATORS: ask the user to share, %s is something
 #. * like: "Linux Vendor Firmware Service"
