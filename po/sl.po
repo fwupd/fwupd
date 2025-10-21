@@ -8,12 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Slovenian (http://app.transifex.com/freedesktop/fwupd/language/sl/)\n"
+"PO-Revision-Date: 2025-10-21 13:49+0000\n"
+"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
+"Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
+"Language: sl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: sl\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -93,7 +96,7 @@ msgstr "Posodobitev priklopne postaje %s"
 #. TRANSLATORS: drive refers to a storage device, e.g. SATA disk
 #, c-format
 msgid "%s Drive Update"
-msgstr "Posodobitev naprave %s"
+msgstr "Posodobitev pogona %s"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -305,8 +308,8 @@ msgstr[3] "%u naprave imajo na voljo posodobitev vdelane programske opreme."
 #, c-format
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
-msgstr[0] " %u naprave niso najboljša znana konfiguracija."
-msgstr[1] " %u naprava ni najboljša znana konfiguracija."
+msgstr[0] "%u naprav niso najboljša znana konfiguracija."
+msgstr[1] "%u naprava ni najboljša znana konfiguracija."
 msgstr[2] "%u napravi nista najboljša znana konfiguracija."
 msgstr[3] "%u naprave niso najboljša znana konfiguracija."
 
@@ -361,9 +364,9 @@ msgstr[3] "%u s"
 #, c-format
 msgid "%u test was skipped"
 msgid_plural "%u tests were skipped"
-msgstr[0] "%u  preizkusov je preskočenih"
-msgstr[1] "%u  preizkus je preskočen"
-msgstr[2] "%u  preizkusa sta preskočena"
+msgstr[0] "%u preizkusov je preskočenih"
+msgstr[1] "%u preizkus je preskočen"
+msgstr[2] "%u preizkusa sta preskočena"
 msgstr[3] "%u preizkusi so preskočeni"
 
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
@@ -521,7 +524,7 @@ msgstr "Pripni na način vdelane programske opreme"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "Preverjanje pristnosti..."
+msgstr "Preverjanje pristnosti …"
 
 #. TRANSLATORS: user needs to run a command
 msgid "Authentication details are required"
@@ -614,7 +617,7 @@ msgstr "Samodejno poročanje"
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
 msgid "Automatically uninhibiting in %ums…"
-msgstr "Samodejno sproščanje sistema čez %u ms ..."
+msgstr "Samodejno sproščanje sistema čez %u ms …"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -755,7 +758,7 @@ msgstr "Izberite nosilec"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Počisti rezultate zadnje posodobitve."
+msgstr "Počisti rezultate zadnje posodobitve"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -823,7 +826,7 @@ msgstr "Možnosti razhroščevanja"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "Razširjanje ..."
+msgstr "Razširjanje …"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
@@ -987,7 +990,7 @@ msgstr "Naprave, ki niso bile pravilno posodobljene:"
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action: "
-msgstr "Naprave s posodobitvami vdelane programske opreme, ki zahtevajo ukrepanje:"
+msgstr "Naprave s posodobitvami vdelane programske opreme, ki zahtevajo ukrepanje: "
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1120,7 +1123,7 @@ msgstr "Zamenja vdelano programsko opremo naprave s starejšo različico"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Downgrading %s…"
-msgstr "Povrnitev na starejšo različico %s ..."
+msgstr "Povrnitev na starejšo različico %s …"
 
 #. TRANSLATORS: command description
 msgid "Download a file"
@@ -1225,7 +1228,7 @@ msgstr "Izbriši vso zgodovino posodobitev vdelane programske opreme"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "Poteka brisanje..."
+msgstr "Poteka brisanje …"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -1373,7 +1376,7 @@ msgstr "Filtriraj z nizom zastavic naprave s predpono ~, da izključite, npr. \"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
-msgstr "Filtriraj z naborom zastavic za izdajo s predpono ~, da se izključijo npr. »zaupanja-vredna-izdaja,~zaupanja-vredni-metapodatki« oz.  'trusted-release,~trusted-metadata'"
+msgstr "Filtriraj z naborom zastavic za izdajo s predpono ~, da se izključijo npr. »zaupanja-vredna-izdaja,~zaupanja-vredni-metapodatki« oz. 'trusted-release,~trusted-metadata'"
 
 #. TRANSLATORS: command description
 msgid "Finds firmware releases from the metadata"
@@ -1623,7 +1626,7 @@ msgstr "INDEKS KLJUČ [VREDNOST]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX NAME TARGET [MOUNTPOINT]"
-msgstr "INDEKS IME CILJ  [TOČKAPRIKLOPA]"
+msgstr "INDEKS IME CILJ [TOČKAPRIKLOPA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "INDEX1,INDEX2"
@@ -1742,12 +1745,12 @@ msgstr "Namestitev določene izdaje je izrecno zahtevana"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Nameščanje posodobitve strojne programske opreme ..."
+msgstr "Nameščanje posodobitve strojne programske opreme …"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Installing on %s…"
-msgstr "Nameščanje na %s ..."
+msgstr "Nameščanje na %s …"
 
 #. TRANSLATORS: if it breaks, you get to keep both pieces
 msgid "Installing this update may also void any device warranty."
@@ -2261,11 +2264,11 @@ msgstr "Razčleni in prikaži podrobnosti o datoteki vdelane programske opreme"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "Razčlenjevanje posodobitve dbx ..."
+msgstr "Razčlenjevanje posodobitve dbx …"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr "Razčlenjevanje sistemskega dbx ..."
+msgstr "Razčlenjevanje sistemskega dbx …"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -2312,7 +2315,7 @@ msgstr "Vnesite številko od 0 do %u: "
 #. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
-msgstr "Vnesite %s ali %s:"
+msgstr "Vnesite %s ali %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -2404,11 +2407,11 @@ msgstr "Preberi vdelano programsko opremo iz naprave"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Reading from %s…"
-msgstr "Branje iz %s ..."
+msgstr "Branje iz %s …"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "Poteka branje ..."
+msgstr "Poteka branje …"
 
 #. TRANSLATORS: Plugin is active and in use
 msgid "Ready"
@@ -2498,7 +2501,7 @@ msgstr "Želite znova zagnati prikriti proces, da bo sprememba uveljavljena?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "Ponovni zagon naprave ..."
+msgstr "Ponovni zagon naprave …"
 
 #. TRANSLATORS: command description
 msgid "Retrieve BIOS settings.  If no arguments are passed all settings are returned"
@@ -2623,7 +2626,7 @@ msgstr "Skalarni prirastek"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Časovno načrtovanje procesov ..."
+msgstr "Časovno načrtovanje procesov …"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
@@ -3102,7 +3105,7 @@ msgstr "Posodobitev se bo nadaljevala, ko bo kabel naprave USB znova vstavljen."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
-msgstr "Posodobitev se bo nadaljevala, ko bo kabel naprave  USB izključen in nato znova vstavljen."
+msgstr "Posodobitev se bo nadaljevala, ko bo kabel naprave USB izključen in nato znova vstavljen."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged."
@@ -3418,7 +3421,7 @@ msgstr "Posodabljanje"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Updating %s…"
-msgstr "Posodabljanje %s ..."
+msgstr "Posodabljanje %s …"
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
@@ -3484,7 +3487,7 @@ msgstr "Veljavno"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "Preverjanje vsebine ESP ..."
+msgstr "Preverjanje vsebine ESP …"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
@@ -3496,7 +3499,7 @@ msgstr "Ponudnik"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "Poteka preverjanje ..."
+msgstr "Poteka preverjanje …"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -3537,7 +3540,7 @@ msgstr "Zapisovanje datoteke:"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "Poteka zapisovanje ..."
+msgstr "Poteka zapisovanje …"
 
 #. TRANSLATORS: the user has to manually recover; we can't do it
 msgid "You should ensure you are comfortable restoring the setting from a recovery or installation disk, as this change may cause the system to not boot into Linux or cause other system instability."

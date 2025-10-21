@@ -7,18 +7,21 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # F Bausch, 2024-2025
-# Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
+# Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018, 2025.
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Portuguese (Brazil) (http://app.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
+"PO-Revision-Date: 2025-10-21 13:49+0000\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
+"Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pt_BR\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -55,13 +58,13 @@ msgstr "Atualização de câmera para %s"
 #. * the first %s is the device name, e.g. 'Secure Boot`
 #, c-format
 msgid "%s Configuration Update"
-msgstr "Atualização da configuração de %s "
+msgstr "Atualização da configuração de %s"
 
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Consumer ME Update"
-msgstr "Atualização consumidor-final de ME para %s "
+msgstr "Atualização consumidor-final de ME para %s"
 
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
@@ -247,13 +250,13 @@ msgstr "%s desapareceu: %s"
 #. closed
 #, c-format
 msgid "%s is not currently updatable"
-msgstr "%s não é atualmente atualizável:"
+msgstr "%s não é atualmente atualizável"
 
 #. TRANSLATORS: %1 is a device name, e.g. "ThinkPad Universal
 #. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
 #, c-format
 msgid "%s is pending activation; use %s to complete the update."
-msgstr "%s está pendente ativação. use %s para concluir a atualização"
+msgstr "%s está pendente ativação, use %s para concluir a atualização"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -285,7 +288,7 @@ msgstr "%s v%s"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
-msgstr "versão %s "
+msgstr "versão %s"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -299,7 +302,7 @@ msgstr[2] "%u dias"
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
+msgstr[0] "%u dispositivo tem uma atualização de firmware disponível."
 msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
 msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 

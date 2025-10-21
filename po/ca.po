@@ -5,16 +5,20 @@
 # Translators:
 # Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2025
 # Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Catalan (http://app.transifex.com/freedesktop/fwupd/language/ca/)\n"
+"PO-Revision-Date: 2025-10-21 13:32+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Catalan <https://hosted.weblate.org/projects/fwupd/fwupd/ca/>\n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ca\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -484,7 +488,7 @@ msgstr "Adjunta al mode microprogramari."
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "S'està autenticant..."
+msgstr "S'està autenticant…"
 
 #. TRANSLATORS: user needs to run a command
 msgid "Authentication details are required"
@@ -786,7 +790,7 @@ msgstr "Opcions per a la depuració"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "S'està descomprimint..."
+msgstr "S'està descomprimint…"
 
 #. TRANSLATORS: command description
 msgid "Delete an EFI boot entry"
@@ -1091,7 +1095,7 @@ msgstr "Descarrega un fitxer"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "S'està descarregant..."
+msgstr "S'està descarregant…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
@@ -1188,7 +1192,7 @@ msgstr "Esborra tot l'historial de les actualitzacions de microprogramari."
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "S'està esborrant..."
+msgstr "S'està esborrant…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
