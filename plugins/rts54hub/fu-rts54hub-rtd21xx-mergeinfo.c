@@ -1,7 +1,7 @@
 /*
- * Copyright 2021 Realtek Corporation
- * Copyright 2021 Ricky Wu <ricky_wu@realtek.com> <spring1527@gmail.com>
- * Copyright 2021 Richard Hughes <richard@hughsie.com>
+ * Copyright 2025 Realtek Corporation
+ * Copyright 2025 Shadow Zhang <shadow_zhang@realsil.com.cn>
+ * Copyright 2025 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -77,7 +77,8 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 						    buf_request,
 						    sizeof(buf_request),
 						    error)) {
-		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error /* nocheck:error */,
+				       "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
@@ -88,14 +89,16 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 						   DDCCI_TARGET_ADDR,
 						   DDCCI_COMM_SUB_ADDR,
 						   buf_reply,
-						   6,
+						   sizeof(buf_reply),
 						   error)) {
-		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error /* nocheck:error */,
+				       "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
 	if (buf_reply[4] != DDCCI_CHECK_TARGET_VALUE) {
-		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error /* nocheck:error */,
+				       "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
@@ -107,7 +110,7 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 {
 	guint8 buf_reply[16] = {0x00};
 	guint8 buf_request[2] = {0x00};
-	g_autofree gchar *version = NULL;
+	guint32 version_raw = 0;
 
 	/* read merge version */
 	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
@@ -135,9 +138,17 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 		return FALSE;
 	}
 
-	version =
-	    g_strdup_printf("%u.%u.%u.%u", buf_reply[4], buf_reply[5], buf_reply[6], buf_reply[7]);
-	fu_device_set_version(FU_DEVICE(self), version);
+	if (!fu_memread_uint32_safe(buf_reply,
+				    sizeof(buf_reply),
+				    4,
+				    &version_raw,
+				    G_BIG_ENDIAN,
+				    error)) {
+		g_prefix_error_literal(error, "convert version to uint32 fail: ");
+		return FALSE;
+	}
+
+	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 
 	return TRUE;
 }
@@ -145,6 +156,7 @@ fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, G
 static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 					   guint8 *buf_version,
+					   gsize buf_version_sz,
 					   GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
@@ -177,12 +189,12 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 	}
 
 	if (!fu_memcpy_safe(buf_version,
-			    VERSION_NUMBER_COUNT,
+			    buf_version_sz,
 			    0x0, /* dst */
-			    (const guint8 *)buf_reply,
+			    buf_reply,
 			    16,
 			    4, /* src */
-			    VERSION_NUMBER_COUNT,
+			    buf_version_sz,
 			    error)) {
 		g_prefix_error_literal(error, "memcpy merge version fail: ");
 		return FALSE;
@@ -194,12 +206,12 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 					    const guint8 *buf_version,
-					    gsize buf_size,
+					    gsize buf_version_sz,
 					    GError **error)
 {
 	guint8 buf_request[6] = {0x00};
 
-	if (buf_size != VERSION_NUMBER_COUNT) {
+	if (buf_version_sz != VERSION_NUMBER_COUNT) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -214,10 +226,10 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 	if (!fu_memcpy_safe(buf_request,
 			    6,
 			    0x2, /* dst */
-			    (const guint8 *)buf_version,
-			    buf_size,
+			    buf_version,
+			    buf_version_sz,
 			    0, /* src */
-			    buf_size,
+			    buf_version_sz,
 			    error)) {
 		g_prefix_error_literal(error, "memcpy merge version fail: ");
 		return FALSE;
@@ -406,27 +418,29 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	// get version x.x.x.x
 	version_str = fu_firmware_get_version(firmware);
 
+	if (version_str == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "get version in write firmware fail: ");
+		return FALSE;
+	}
+
 	// convert x.x.x.x to merge_version
-	if (version_str != NULL) {
-		if (fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_QUAD) {
-			if (sscanf(version_str,
-				   "%hhu.%hhu.%hhu.%hhu",
-				   &merge_version[0],
-				   &merge_version[1],
-				   &merge_version[2],
-				   &merge_version[3]) != 4) {
-				g_prefix_error_literal(error, /* nocheck:error */
-						       "failed to parse version str: ");
-				return FALSE;
-			};
-		} else {
+	if (fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_QUAD) {
+		if (sscanf(version_str,
+			   "%hhu.%hhu.%hhu.%hhu",
+			   &merge_version[0],
+			   &merge_version[1],
+			   &merge_version[2],
+			   &merge_version[3]) != 4) {
 			g_prefix_error_literal(error, /* nocheck:error */
-					       "failed to get version format: ");
+					       "failed to parse version str: ");
 			return FALSE;
-		}
+		};
 	} else {
 		g_prefix_error_literal(error, /* nocheck:error */
-				       "get version in write firmware fail: ");
+				       "failed to get version format: ");
 		return FALSE;
 	}
 
@@ -444,7 +458,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 
 	fu_progress_step_done(progress);
 
-	if (!fu_rts54hub_rtd21xx_mergeinfo_read_version(self, read_buf, error)) {
+	if (!fu_rts54hub_rtd21xx_mergeinfo_read_version(self, read_buf, sizeof(read_buf), error)) {
 		g_prefix_error_literal(error, "failed to read merge version: ");
 		return FALSE;
 	}
@@ -469,9 +483,16 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gchar *
+fu_rts54hub_rtd21xx_mergeinfo_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+}
+
 static void
 fu_rts54hub_rtd21xx_mergeinfo_init(FuRts54hubRtd21xxMergeinfo *self)
 {
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	/* set merge version format*/
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
@@ -485,4 +506,5 @@ fu_rts54hub_rtd21xx_mergeinfo_class_init(FuRts54hubRtd21xxMergeinfoClass *klass)
 	device_class->attach = fu_rts54hub_rtd21xx_mergeinfo_attach;
 	device_class->detach = fu_rts54hub_rtd21xx_mergeinfo_detach;
 	device_class->write_firmware = fu_rts54hub_rtd21xx_mergeinfo_write_firmware;
+	device_class->convert_version = fu_rts54hub_rtd21xx_mergeinfo_convert_version;
 }

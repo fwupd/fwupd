@@ -137,7 +137,7 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 	guint8 buf_write[MAX_READ_WRITE_LENGTH_ONE_TIME + 4] = {0x00};
 
 	if (datasz > MAX_READ_WRITE_LENGTH_ONE_TIME) {
-		g_prefix_error(error,
+		g_prefix_error(error, /* nocheck:error */
 			       "ddcci write length exceed max length:%d: ",
 			       MAX_READ_WRITE_LENGTH_ONE_TIME);
 		return FALSE;
@@ -233,13 +233,14 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 	}
 
 	if (buf_read[0] != target_addr) {
-		g_prefix_error_literal(error, "failed to DDCCI read I2C target addr invalid: ");
+		g_prefix_error_literal(error /* nocheck:error */,
+				       "failed to DDCCI read I2C target addr invalid: ");
 		return FALSE;
 	}
 
 	length = buf_read[1] & 0x7F;
 
-	if ((length + 3) > MAX_READ_WRITE_LENGTH_ONE_TIME) {
+	if (length + 3 > MAX_READ_WRITE_LENGTH_ONE_TIME) {
 		g_set_error(error, /* nocheck:error */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
@@ -248,7 +249,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 		return FALSE;
 	}
 
-	for (gsize i = 0; i < (length + 2); i++) {
+	for (gsize i = 0; i < length + 2; i++) {
 		checksum ^= buf_read[i];
 	}
 
@@ -260,7 +261,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 		return FALSE;
 	}
 
-	for (gsize i = 0; i < (length + 3); i++) {
+	for (gsize i = 0; i < length + 3; i++) {
 		data[i] = buf_read[i];
 	}
 
