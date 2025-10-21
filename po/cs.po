@@ -7,16 +7,20 @@
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
 # Pavel Borecki <pavel.borecki@gmail.com>, 2020-2023,2025
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Czech (http://app.transifex.com/freedesktop/fwupd/language/cs/)\n"
+"PO-Revision-Date: 2025-10-21 13:48+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: cs\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -1824,7 +1828,7 @@ msgstr "Intel Management Engine – režim pro výrobce"
 #. consumer
 #. * boards
 msgid "Intel Management Engine Override"
-msgstr "Intel Management Engine –  přebití"
+msgstr "Intel Management Engine – přebití"
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
