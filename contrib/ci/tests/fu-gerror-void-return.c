@@ -3,11 +3,11 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * nocheck:expect: contains blocked token cbor_get_uint
+ * nocheck:expect: void return type not expected for GError
  */
 
 static void
-fu_blocked_funcs_test(void)
+fu_gerror_void_return(FuCustomDevice *self, GError **error)
 {
-	guint32 i = cbor_get_uint32(n);
+	return;
 }

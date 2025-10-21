@@ -10,5 +10,6 @@ static void
 fu_gerror_literal_test(void)
 {
 	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "test");
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "valid %m");
 	return FALSE;
 }

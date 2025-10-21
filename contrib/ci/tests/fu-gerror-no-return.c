@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * nocheck:expect: uses g_set_error() without returning FALSE
+ * nocheck:expect: uses g_set_error() without returning a value
  */
 
 static gboolean

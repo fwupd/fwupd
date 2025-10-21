@@ -10,6 +10,11 @@
 
 #include "fu-synaptics-mst-common.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=550
+ */
+
 FuSynapticsMstFamily
 fu_synaptics_mst_family_from_chip_id(guint16 chip_id)
 {

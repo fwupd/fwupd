@@ -11,6 +11,11 @@
 #include "fu-vli-pd-parade-device.h"
 #include "fu-vli-struct.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=100
+ */
+
 struct _FuVliPdParadeDevice {
 	FuUsbDevice parent_instance;
 	FuVliDeviceKind device_kind;

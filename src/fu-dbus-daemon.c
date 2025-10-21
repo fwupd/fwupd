@@ -781,7 +781,7 @@ fu_dbus_daemon_authorize_install_queue(FuMainAuthHelper *helper_ref)
 					 &error);
 	fu_daemon_set_update_in_progress(FU_DAEMON(self), FALSE);
 	if (fu_daemon_get_pending_stop(FU_DAEMON(self))) {
-		g_set_error_literal(&error,
+		g_set_error_literal(&error, /* nocheck:error-false-return */
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
 				    "daemon was stopped");
@@ -2691,7 +2691,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "HostMachineId") == 0) {
 		const gchar *tmp = fu_engine_get_host_machine_id(engine);
 		if (tmp == NULL) {
-			g_set_error(error,
+			g_set_error(error, /* nocheck:error */
 				    G_DBUS_ERROR,
 				    G_DBUS_ERROR_NOT_SUPPORTED,
 				    "failed to get daemon property %s",
@@ -2706,7 +2706,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		g_autofree gchar *tmp = fu_engine_get_host_security_id(engine, NULL);
 		return g_variant_new_string(tmp);
 #else
-		g_set_error(error,
+		g_set_error(error, /* nocheck:error */
 			    G_DBUS_ERROR,
 			    G_DBUS_ERROR_NOT_SUPPORTED,
 			    "failed to get daemon property %s",
@@ -2726,7 +2726,7 @@ fu_dbus_daemon_get_property(GDBusConnection *connection_,
 		return fu_dbus_daemon_get_property_hwids(self);
 
 	/* return an error */
-	g_set_error(error,
+	g_set_error(error, /* nocheck:error */
 		    G_DBUS_ERROR,
 		    G_DBUS_ERROR_UNKNOWN_PROPERTY,
 		    "failed to get daemon property %s",

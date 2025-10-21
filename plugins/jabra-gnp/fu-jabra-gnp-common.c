@@ -13,6 +13,11 @@
 #include "fu-jabra-gnp-image.h"
 #include "fu-jabra-gnp-struct.h"
 
+/*
+ * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
+ * nocheck:magic-inlines=400
+ */
+
 static guint64
 fu_jabra_gnp_update_crc(guint64 acc, guint64 delta)
 {

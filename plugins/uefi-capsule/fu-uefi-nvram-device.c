@@ -30,7 +30,7 @@ fu_uefi_nvram_device_get_results(FuDevice *device, GError **error)
 		if (fu_device_has_private_flag(
 			device,
 			FU_UEFI_CAPSULE_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
-			g_prefix_error_literal(&error_local,
+			g_prefix_error_literal(&error_local, /* nocheck:error */
 					       "boot entry missing; "
 					       "perhaps 'Boot Order Lock' enabled in the BIOS: ");
 			fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);

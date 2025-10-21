@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * nocheck:expect: Too many calls to fu_memread_uintXX
+ * nocheck:expect: too many calls to fu_memread_uintXX
  */
 
 static void
