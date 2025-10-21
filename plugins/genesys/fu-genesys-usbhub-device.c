@@ -983,7 +983,6 @@ fu_genesys_usbhub_device_ensure_public_key(FuGenesysUsbhubDevice *self,
 		}
 	} else {
 		if (fu_struct_genesys_fw_rsa_public_key_text_validate(buf, bufsz, 0, NULL)) {
-			g_autoptr(FuStructGenesysFwRsaPublicKeyText) st_codesign = NULL;
 			self->codesign = FU_GENESYS_FW_CODESIGN_RSA;
 			self->st_rsa_pubkey =
 			    fu_struct_genesys_fw_rsa_public_key_text_parse(buf, bufsz, 0, error);
