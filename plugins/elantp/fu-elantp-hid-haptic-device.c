@@ -770,7 +770,6 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 	const gchar *fw_ver;
 	const gchar *fw_ver_device;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GError) error_local = NULL;
 	FuElantpHaptictpWaitFlashEEPROMChecksumHelper helper = {0x0};
 	FuElantpHaptictpWriteHelper helper_write = {0x0};
 

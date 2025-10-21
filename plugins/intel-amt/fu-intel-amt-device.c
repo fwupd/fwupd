@@ -85,7 +85,6 @@ fu_intel_amt_device_get_provisioning_state(FuIntelAmtDevice *self,
 					   FuAmtProvisioningState *provisioning_state,
 					   GError **error)
 {
-	g_autofree struct FuAmtHostIfRespHeader *response = NULL;
 	g_autoptr(GByteArray) data = NULL;
 	g_autoptr(FuAmtHostIfMsgProvisioningStateRequest) st_req =
 	    fu_amt_host_if_msg_provisioning_state_request_new();

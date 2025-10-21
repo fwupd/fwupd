@@ -227,11 +227,9 @@ static gboolean
 fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local1 = NULL;
 	g_autoptr(GError) error_local2 = NULL;
 	g_autoptr(GError) error_local3 = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
 	if (descriptor == NULL)

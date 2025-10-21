@@ -34,7 +34,6 @@ fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autofree gchar *name = NULL;
 
 	/* from the self tests */
 	if (parent == NULL) {

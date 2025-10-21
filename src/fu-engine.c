@@ -5159,7 +5159,6 @@ fu_engine_fixup_history_device_for_rel(FuEngine *self,
 {
 	FwupdRelease *release = fu_device_get_release_default(device);
 	const gchar *appstream_id;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) component = NULL;
 
 	component = xb_node_query_first(rel, "../..", error);

@@ -124,7 +124,6 @@ fu_devlink_plugin_flash_func(void)
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) fw_data = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *instance_id = NULL;
 
 	/* create test netdevsim to set up netdevsim device */
 	ndsim = fu_devlink_netdevsim_new(FU_DEVLINK_NETDEVSIM_DEVICE_ID, &error_local);

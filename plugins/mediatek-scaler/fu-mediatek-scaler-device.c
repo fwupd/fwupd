@@ -348,7 +348,6 @@ fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, G
 {
 	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
-	g_autoptr(GError) error_local = NULL;
 	guint32 controller_type = 0;
 
 	fu_struct_ddc_cmd_set_opcode(st_req, FU_DDC_OPCODE_GET_VCP);
