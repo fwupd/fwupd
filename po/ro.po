@@ -8,12 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Romanian (http://app.transifex.com/freedesktop/fwupd/language/ro/)\n"
+"PO-Revision-Date: 2025-10-21 16:10+0000\n"
+"Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
+"Language-Team: Romanian <https://hosted.weblate.org/projects/fwupd/fwupd/ro/>\n"
+"Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ro\n"
-"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
+"Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -603,7 +606,7 @@ msgstr "Raportare automată"
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
 msgid "Automatically uninhibiting in %ums…"
-msgstr "Dezinhibare automată în %ums..."
+msgstr "Dezinhibare automată în %ums…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -1812,7 +1815,7 @@ msgstr "Modul de fabricație al Intel Management Engine"
 #. consumer
 #. * boards
 msgid "Intel Management Engine Override"
-msgstr "Intel Management Engine Override"
+msgstr "Redefinirea motorului de gestionare Intel"
 
 #. TRANSLATORS: longer description
 msgid "Intel Management Engine Override disables checks for device software tampering."
@@ -2981,7 +2984,7 @@ msgstr "PCR-uri goale de TPM"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
-msgstr "TPM v2.0"
+msgstr "TPM versiunea 2.0"
 
 #. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
 msgid "Tag"
