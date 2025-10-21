@@ -95,7 +95,10 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 	}
 
 	if (buf_reply[4] != DDCCI_CHECK_TARGET_VALUE) {
-		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
@@ -431,13 +434,17 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 			   &merge_version[1],
 			   &merge_version[2],
 			   &merge_version[3]) != 4) {
-			g_prefix_error_literal(error, /* nocheck:error */
-					       "failed to parse version str: ");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "failed to parse version str: ");
 			return FALSE;
 		};
 	} else {
-		g_prefix_error_literal(error, /* nocheck:error */
-				       "failed to get version format: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "failed to get version format: ");
 		return FALSE;
 	}
 
