@@ -963,7 +963,6 @@ fu_logitech_hidpp_device_rdfu_get_dfu_status(FuLogitechHidppDevice *self, GError
 	g_autoptr(FuStructLogitechHidppRdfuGetDfuStatus) st_req =
 	    fu_struct_logitech_hidpp_rdfu_get_dfu_status_new();
 	g_autoptr(FuStructLogitechHidppRdfuResponse) st_res = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1005,7 +1004,6 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 	g_autoptr(FuStructLogitechHidppRdfuApplyDfu) st_req =
 	    fu_struct_logitech_hidpp_rdfu_apply_dfu_new();
 	FuLogitechHidppHidppMsg *hidpp_msg = NULL;
-	g_autoptr(GByteArray) st_res = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1056,7 +1054,6 @@ fu_logitech_hidpp_device_rdfu_transfer_pkt(FuLogitechHidppDevice *self,
 	g_autoptr(FuStructLogitechHidppRdfuTransferDfuData) st_req =
 	    fu_struct_logitech_hidpp_rdfu_transfer_dfu_data_new();
 	g_autoptr(FuStructLogitechHidppRdfuResponse) st_res = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx == 0x00) {
@@ -1707,7 +1704,6 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
 	FuLogitechRdfuFirmware *entity_fw = NULL;
 	guint8 idx;
 	guint retry = 0;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GByteArray) magic = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1809,7 +1805,6 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 {
 	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	guint8 idx;
-	g_autoptr(GBytes) fw = NULL;
 
 	/* device should support either RDFU or DFU mode */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);

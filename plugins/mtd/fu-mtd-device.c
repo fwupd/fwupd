@@ -201,7 +201,6 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 {
 	GPtrArray *instance_ids;
 	g_autoptr(FuFirmware) firmware_child = NULL;
-	g_autoptr(GFile) file = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 

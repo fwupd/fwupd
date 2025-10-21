@@ -978,7 +978,6 @@ static void
 fu_context_hwids_unset_func(void)
 {
 	g_autofree gchar *testdatadir = NULL;
-	g_autofree gchar *dump = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error = NULL;

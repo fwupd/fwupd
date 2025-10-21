@@ -166,7 +166,6 @@ fu_amd_kria_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *buf = NULL;
 	g_autofree gchar *path = g_build_path("/", devpath, "eeprom", NULL);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GError) error_esp = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 
 	if (!g_file_get_contents(path, &buf, &bufsz, error))

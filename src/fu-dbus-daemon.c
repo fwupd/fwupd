@@ -1940,7 +1940,6 @@ fu_dbus_daemon_method_unlock(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
 
@@ -1968,7 +1967,6 @@ fu_dbus_daemon_method_activate(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_variant_get(parameters, "(&s)", &device_id);
 
@@ -2116,7 +2114,6 @@ fu_dbus_daemon_method_verify_update(FuDbusDaemon *self,
 {
 	const gchar *device_id = NULL;
 	g_autoptr(FuMainAuthHelper) helper = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* check the id exists */
 	g_variant_get(parameters, "(&s)", &device_id);

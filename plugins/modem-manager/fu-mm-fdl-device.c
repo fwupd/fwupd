@@ -225,8 +225,6 @@ fu_mm_fdl_device_write_firmware(FuDevice *device,
 		return FALSE;
 	while (offset < fw_len) {
 		g_autoptr(FuMmFdlDeviceWriteHelper) helper = g_new0(FuMmFdlDeviceWriteHelper, 1);
-		g_autoptr(GBytes) size_bytes = NULL;
-		g_autoptr(GBytes) chunk_bytes = NULL;
 		guint16 chunk_size = 0;
 
 		helper->size_bytes =
