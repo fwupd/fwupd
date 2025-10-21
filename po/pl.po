@@ -8,12 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Polish (http://app.transifex.com/freedesktop/fwupd/language/pl/)\n"
+"PO-Revision-Date: 2025-10-21 16:10+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish <https://hosted.weblate.org/projects/fwupd/fwupd/pl/>\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -975,7 +978,7 @@ msgstr "Urządzenia, które nie zostały poprawnie zaktualizowane:"
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action: "
-msgstr "Urządzenia z aktualizacjami oprogramowania sprzętowego wymagającymi działania użytkownika:"
+msgstr "Urządzenia z aktualizacjami oprogramowania sprzętowego wymagającymi działania użytkownika: "
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -2237,7 +2240,7 @@ msgstr "Proszę podać liczbę od 0 do %u: "
 #. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
-msgstr "Proszę podać %s lub %s:"
+msgstr "Proszę podać %s lub %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
