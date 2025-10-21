@@ -77,8 +77,7 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 						    buf_request,
 						    sizeof(buf_request),
 						    error)) {
-		g_prefix_error_literal(error /* nocheck:error */,
-				       "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
@@ -91,14 +90,12 @@ fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GErr
 						   buf_reply,
 						   sizeof(buf_reply),
 						   error)) {
-		g_prefix_error_literal(error /* nocheck:error */,
-				       "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
 	if (buf_reply[4] != DDCCI_CHECK_TARGET_VALUE) {
-		g_prefix_error_literal(error /* nocheck:error */,
-				       "failed to DDC/CI communication with fw: ");
+		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
 	}
 
