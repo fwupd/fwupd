@@ -29,12 +29,12 @@ fu_legion_go2_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GInputStream) stream_left = NULL;
 	g_autoptr(GInputStream) stream_right = NULL;
 	g_autoptr(FuStructLegionGo2BinHeader) header = NULL;
+	guint offset = FU_STRUCT_LEGION_GO2_BIN_HEADER_SIZE;
 
 	header = fu_struct_legion_go2_bin_header_parse_stream(stream, 0x00, error);
 	if (header == NULL)
 		return FALSE;
 
-	guint offset = FU_STRUCT_LEGION_GO2_BIN_HEADER_SIZE;
 	stream_mcu = fu_partial_input_stream_new(stream,
 						 offset,
 						 fu_struct_legion_go2_bin_header_get_mcu_size(header),
