@@ -10,5 +10,10 @@ static void
 fu_firmware_convert_version_test(void)
 {
 	fu_firmware_set_version_raw(firmware, 0x123);
+}
+
+static void
+fu_firmware_convert_version_test2(void)
+{
 	fu_firmware_set_version(firmware, "1.2.3");
 }

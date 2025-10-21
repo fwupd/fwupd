@@ -5418,6 +5418,7 @@ fu_device_get_id_display(FuDevice *self)
 		g_debug("ignoring: %s", error_local->message);
 	if (fu_device_get_id(self) != NULL)
 		g_string_append(str, fu_device_get_id(self));
+	/* nocheck:blocked */
 	if (fu_device_get_name(self) != NULL) {
 		if (str->len > 0)
 			g_string_append(str, " ");

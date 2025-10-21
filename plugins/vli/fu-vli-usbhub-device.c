@@ -19,7 +19,7 @@
 
 /*
  * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
- * nocheck:magic-inlines=111
+ * nocheck:magic-inlines=120
  */
 
 struct _FuVliUsbhubDevice {

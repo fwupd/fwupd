@@ -401,6 +401,7 @@ fu_flashrom_plugin_finalize(GObject *obj)
 		flashrom_programmer_shutdown(self->flashprog);
 	g_free(self->guid);
 
+	/* nocheck:finalize */
 	/* G_OBJECT_CLASS(fu_flashrom_plugin_parent_class)->finalize() not required as modular */
 }
 

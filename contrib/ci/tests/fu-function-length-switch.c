@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * nocheck:expect: fu_function_length_switch_test has too many switches
+ * nocheck:expect: has too many switches
  */
 
 static void

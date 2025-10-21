@@ -2600,6 +2600,7 @@ fu_firmware_new_from_gtypes(GInputStream *stream,
 			if (error_all == NULL) {
 				g_propagate_error(&error_all, g_steal_pointer(&error_local));
 			} else {
+				/* nocheck:error */
 				g_prefix_error(&error_all, "%s: ", error_local->message);
 			}
 			continue;

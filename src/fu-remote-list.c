@@ -88,7 +88,7 @@ fu_remote_list_monitor_changed_cb(GFileMonitor *monitor,
  * when /proc/sys/fs/inotify/max_user_instances is set too low; detect this and set a proper
  * error prefix to aid debugging when the daemon fails to start */
 static void
-fu_remote_list_fixup_inotify_error(GError **error)
+fu_remote_list_fixup_inotify_error(GError **error) /* nocheck:error */
 {
 #ifdef HAVE_INOTIFY_H
 	int fd;

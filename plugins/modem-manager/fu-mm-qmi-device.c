@@ -305,7 +305,7 @@ fu_mm_qmi_device_load_config_indication(QmiClientPdc *client,
 			return;
 		}
 
-		g_set_error(&ctx->error,
+		g_set_error(&ctx->error, /* nocheck:error-false-return */
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
 			    "couldn't load mcfg: %s",

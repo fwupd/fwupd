@@ -267,10 +267,11 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 }
 
 static void
-fu_util_maybe_prefix_sandbox_error(const gchar *value, GError **error)
+fu_util_maybe_prefix_sandbox_error(const gchar *value, GError **error) /* nocheck:error */
 {
 	g_autofree gchar *path = g_path_get_dirname(value);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		/* nocheck:error */
 		g_prefix_error(error,
 			       "Unable to access %s. You may need to copy %s to %s: ",
 			       path,

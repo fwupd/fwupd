@@ -220,7 +220,7 @@ fu_debug_verbose_arg_cb(const gchar *option_name,
 		self->log_level = G_LOG_LEVEL_DEBUG;
 		return TRUE;
 	}
-	g_set_error_literal(error,
+	g_set_error_literal(error, /* nocheck:error */
 			    G_OPTION_ERROR,
 			    G_OPTION_ERROR_FAILED,
 			    "No further debug level supported");

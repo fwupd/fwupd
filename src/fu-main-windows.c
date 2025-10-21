@@ -18,6 +18,7 @@
 #include "fu-daemon.h"
 #include "fu-debug.h"
 
+/* nocheck:static */
 static SERVICE_STATUS gSvcStatus = {.dwServiceType = SERVICE_WIN32_OWN_PROCESS,
 				    .dwServiceSpecificExitCode = 0};
 static SERVICE_STATUS_HANDLE gSvcStatusHandle = 0;

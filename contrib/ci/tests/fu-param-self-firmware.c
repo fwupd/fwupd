@@ -3,9 +3,10 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * nocheck:expect: invalid enum name
+ * nocheck:expect: invalid parameter name self
  */
 
-typedef enum {
-	FOO,
-} WrongPrefix;
+static gboolean
+fu_param_self_firmware(FuFirmware *self)
+{
+}

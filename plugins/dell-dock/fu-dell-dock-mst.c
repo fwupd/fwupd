@@ -24,6 +24,7 @@
 /*
  * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
  * nocheck:magic-defines=38
+ * nocheck:magic-inlines=600
  */
 
 #define I2C_MST_ADDRESS 0x72

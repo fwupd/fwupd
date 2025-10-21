@@ -66,18 +66,10 @@ repos:
               src/tests/history_v[12]\.db|
               src/tests/sys/devices/pci0000:00/0000:00:14\.0/usb1/1-1/descriptors
             )$
-    - id: check-null-false-returns
-      name: check for null / false return mismatch
-      language: script
-      entry: ./contrib/ci/check-null-false-returns.py
     - id: check-potfiles
       name: check for missing translated files from potfiles
       language: script
       entry: ./contrib/ci/check-potfiles.py
-    - id: check-finalizers
-      name: check for missing GObject parent finalize
-      language: script
-      entry: ./contrib/ci/check-finalizers.py
     - id: check-headers
       name: check for superfluous includes
       language: script
