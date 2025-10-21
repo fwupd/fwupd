@@ -1085,7 +1085,7 @@ fu_hpi_cfu_device_handler_send_payload(FuHpiCfuDevice *self,
 
 	chunks = fu_firmware_get_chunks(options->fw_payload, error);
 	if (chunks == NULL) {
-		g_prefix_error_literal(error, "null chunks");
+		g_prefix_error_literal(error, "null chunks: ");
 		return FALSE;
 	}
 	for (guint32 i = 0; i < chunks->len; i++) {

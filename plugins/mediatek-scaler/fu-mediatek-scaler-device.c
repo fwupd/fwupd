@@ -785,7 +785,7 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 					  FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS,
 					  &helper_wchunk,
 					  error)) {
-			g_prefix_error_literal(error, "writing chunk exceeded the maximum retries");
+			g_prefix_error_literal(error, "writing chunk exceeded maximum retries: ");
 			return FALSE;
 		}
 

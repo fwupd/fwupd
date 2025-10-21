@@ -844,7 +844,7 @@ fu_kinetic_dp_secure_device_install_fw_images(FuKineticDpSecureDevice *self, GEr
 				  INSTALL_IMAGE_POLL_INTERVAL_MS,
 				  NULL,
 				  error)) {
-		g_prefix_error_literal(error, "timeout waiting for install to be processed ");
+		g_prefix_error_literal(error, "timeout waiting for install to be processed: ");
 		return FALSE;
 	}
 

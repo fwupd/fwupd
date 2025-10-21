@@ -139,7 +139,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(JsonObject *obj,
 			G_MAXINT64,
 			FU_INTEGER_BASE_AUTO,
 			error)) {
-		g_prefix_error_literal(error, "failed to parse image_index:");
+		g_prefix_error_literal(error, "failed to parse image_index: ");
 		return FALSE;
 	}
 
@@ -159,7 +159,7 @@ fu_nordic_hid_archive_parse_file_get_flash_area_id_v1(JsonObject *obj,
 		return FALSE;
 	}
 	if (!fu_strtoll(slot_str, &slot, G_MININT64, G_MAXINT64, FU_INTEGER_BASE_AUTO, error)) {
-		g_prefix_error_literal(error, "failed to parse slot:");
+		g_prefix_error_literal(error, "failed to parse slot: ");
 		return FALSE;
 	}
 

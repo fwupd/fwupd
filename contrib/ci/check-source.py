@@ -255,7 +255,17 @@ class Checker:
         sections = _split_args(line)
         if len(sections) == 2:
             self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
-        if len(sections) > 1 and not sections[1].endswith(': "'):
+
+    def _test_line_missing_error_suffixes(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if line.find(self._current_nocheck) != -1:
+            return
+        idx = line.find("g_prefix_error")
+        if idx == -1:
+            return
+        sections = _split_args(line, delimiters=[",", "(", ")"])
+        if len(sections) > 2 and not sections[2].endswith(': "'):
             self.add_failure(f"missing ': ' suffix")
 
     def _test_line_missing_literal_set_error(self, line: str) -> None:
@@ -785,6 +795,9 @@ class Checker:
             self._test_line_missing_literal_task_return_new(line)
             self._test_line_missing_literal_prefix_error(line)
             self._test_line_missing_literal_set_error(line)
+
+            # test for missing : suffixes
+            self._test_line_missing_error_suffixes(line)
 
             # test for static variables
             self._test_static_vars(line)

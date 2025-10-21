@@ -210,7 +210,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   FALSE,
 						   error)) {
 				g_prefix_error_literal(error,
-						       "fail to clear status in setup version");
+						       "fail to clear status in setup version: ");
 				return FALSE;
 			}
 		}
@@ -224,7 +224,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   TRUE,
 					   TRUE,
 					   error)) {
-			g_prefix_error_literal(error, "fail to get fw status in setup version");
+			g_prefix_error_literal(error, "fail to get fw status in setup version: ");
 			return FALSE;
 		}
 
