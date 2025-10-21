@@ -308,6 +308,22 @@ msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u Gerät ist nicht die beste bekannte Konfiguration."
 msgstr[1] "%u Geräte sind nicht die beste bekannte Konfiguration."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u Gerät wird in den aktivierten Gegenstellen unterstützt (eine Aktualisierung wurde veröffentlicht)"
+msgstr[1] "%u Geräte werden in den aktivierten Gegenstellen unterstützt (eine Aktualisierung wurde veröffentlicht)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u Gerät ist aktualisierbar"
+msgstr[1] "%u Geräte sind aktualisierbar"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -1343,6 +1359,10 @@ msgstr "Mit einer Reihe von Geräte-Bitschaltern filtern, wobei ein ~-Präfix zu
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Mit einer Reihe von Veröffentlichungsbitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'trusted-release,~trusted-metadata'."
 
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr "Findet Firmware-Versionen aus den Metadaten"
+
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
 msgstr "Firmware-Attestierung"
@@ -2094,6 +2114,10 @@ msgstr "Neue Version"
 msgid "No action specified!"
 msgstr "Keine Aktion angegeben!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Keine Geräte sind aktualisierbar"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2111,6 +2135,10 @@ msgstr "Keine Firmware gefunden"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No matching releases for search token"
+msgstr "Keine passenden Veröffentlichungen für Suchbegriff"
 
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
@@ -2758,6 +2786,11 @@ msgstr "Erfolgreich deaktivierte Gegenstelle"
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
 msgstr "Prüfgeräte erfolgreich deaktiviert"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "Neue Metadaten erfolgreich heruntergeladen:"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
@@ -3450,6 +3483,10 @@ msgstr "Version[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "WARNUNG"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr "WORT"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"
