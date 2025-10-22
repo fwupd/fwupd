@@ -3045,19 +3045,22 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 		/* do any releases match this checksum */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
-			if (fwupd_release_has_checksum(rel_tmp, rel_csum)) {
-				g_autofree gchar *title =
-				    g_strdup_printf("%s %s",
-						    fwupd_client_get_host_product(self->client),
-						    fwupd_client_get_host_product(self->client));
-				if (!fu_util_prompt_warning(self->console,
-							    dev_tmp,
-							    rel_tmp,
-							    title,
-							    error))
-					return FALSE;
-				break;
-			}
+			g_autofree gchar *title = NULL;
+			gint vercmp;
+
+			if (!fwupd_release_has_checksum(rel_tmp, rel_csum))
+				continue;
+			vercmp = fu_version_compare(fwupd_release_get_version(rel_tmp),
+						    fu_device_get_version(dev_tmp),
+						    fwupd_device_get_version_format(dev_tmp));
+			if ((self->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0 && vercmp == 0)
+				continue;
+			title = g_strdup_printf("%s %s",
+						fwupd_client_get_host_product(self->client),
+						fwupd_client_get_host_product(self->client));
+			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
+				return FALSE;
+			break;
 		}
 	}
 
