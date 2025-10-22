@@ -22,7 +22,7 @@
   </description>
   <url type="bugtracker">https://github.com/fwupd/fwupd/issues</url>
   <url type="homepage">https://fwupd.org/</url>
-  <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
+  <url type="translate">https://hosted.weblate.org/projects/fwupd/fwupd/</url>
   <url type="vcs-browser">https://github.com/fwupd/fwupd</url>
   <update_contact>richard_at_hughsie.com</update_contact>
   <developer_name>The fwupd authors</developer_name>

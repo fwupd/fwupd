@@ -80,7 +80,7 @@ fu_igsc_fwdata_device_info_parse_device_id_array(GPtrArray *device_infos,
 		st = fu_igsc_fwdata_device_info4_parse_stream(stream, offset, error);
 		if (st == NULL)
 			return FALSE;
-		g_ptr_array_add(device_infos, g_steal_pointer(&st->buf));
+		g_ptr_array_add(device_infos, g_steal_pointer(&st));
 	}
 
 	/* success */

@@ -255,7 +255,7 @@ fu_usb_bos_descriptor_init(FuUsbBosDescriptor *self)
 FuUsbBosDescriptor *
 fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos_cap)
 {
-	FuUsbBosDescriptor *self = g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
+	g_autoptr(FuUsbBosDescriptor) self = g_object_new(FU_TYPE_USB_BOS_DESCRIPTOR, NULL);
 	g_autoptr(FuFirmware) img = fu_firmware_new();
 	g_autoptr(GBytes) bytes = NULL;
 
@@ -264,6 +264,7 @@ fu_usb_bos_descriptor_new(const struct libusb_bos_dev_capability_descriptor *bos
 	bytes = g_bytes_new(bos_cap->dev_capability_data, bos_cap->bLength - FU_USB_BOS_HDR_SIZE);
 	fu_firmware_set_bytes(img, bytes);
 	fu_firmware_set_id(img, FU_FIRMWARE_ID_PAYLOAD);
-	fu_firmware_add_image(FU_FIRMWARE(self), img, NULL);
-	return FU_USB_BOS_DESCRIPTOR(self);
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, NULL))
+		return NULL;
+	return g_steal_pointer(&self);
 }

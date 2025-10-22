@@ -10,16 +10,20 @@
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
+# Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: German (http://app.transifex.com/freedesktop/fwupd/language/de/)\n"
+"PO-Revision-Date: 2025-10-21 13:48+0000\n"
+"Last-Translator: Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>\n"
+"Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -308,6 +312,22 @@ msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u Gerät ist nicht die beste bekannte Konfiguration."
 msgstr[1] "%u Geräte sind nicht die beste bekannte Konfiguration."
 
+#. TRANSLATORS: how many devices have published updates on
+#. something like the LVFS
+#, c-format
+msgid "%u device is supported in the enabled remotes (an update has been published)"
+msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
+msgstr[0] "%u Gerät wird in den aktivierten Gegenstellen unterstützt (eine Aktualisierung wurde veröffentlicht)"
+msgstr[1] "%u Geräte werden in den aktivierten Gegenstellen unterstützt (eine Aktualisierung wurde veröffentlicht)"
+
+#. TRANSLATORS: how many devices could be updated in theory if
+#. we had the firmware locally
+#, c-format
+msgid "%u device is updatable"
+msgid_plural "%u devices are updatable"
+msgstr[0] "%u Gerät ist aktualisierbar"
+msgstr[1] "%u Geräte sind aktualisierbar"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -505,7 +525,7 @@ msgstr "Zum Herabstufen der Firmware auf diesem System ist eine Authentifizierun
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr "Zum Aktivieren der Emulationsdatenerfassung ist eine Authentifizierung erforderlich."
+msgstr "Zum Aktivieren der Emulationsdatenerfassung ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -582,7 +602,7 @@ msgstr "Automatische Berichterstattung"
 #. TRANSLATORS: we can auto-uninhibit after a timeout
 #, c-format
 msgid "Automatically uninhibiting in %ums…"
-msgstr "Wird in %u ms automatisch entriegelt..."
+msgstr "Wird in %u ms automatisch entriegelt…"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
@@ -880,7 +900,7 @@ msgstr "Gerät hat eine niedrigere Priorität als ein gleichwertiges Gerät"
 
 #. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
-msgstr "Das Gerät muss alle bereitgestellten Versionen nacheinander installieren."
+msgstr "Das Gerät muss alle bereitgestellten Versionen nacheinander installieren"
 
 #. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
 #. state
@@ -955,7 +975,7 @@ msgstr "Nicht korrekt aktualisierte Geräte:"
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action: "
-msgstr "Geräte mit Firmware-Aktualisierungen, die eine Benutzeraktion erfordern:"
+msgstr "Geräte mit Firmware-Aktualisierungen, die eine Benutzeraktion erfordern: "
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1337,11 +1357,15 @@ msgstr "Dateiname erforderlich"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "Mit einer Reihe von Geräte-Bitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'internal,~needs-reboot'."
+msgstr "Mit einer Reihe von Geräte-Bitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'internal,~needs-reboot'"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
-msgstr "Mit einer Reihe von Veröffentlichungsbitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'trusted-release,~trusted-metadata'."
+msgstr "Mit einer Reihe von Veröffentlichungsbitschaltern filtern, wobei ein ~-Präfix zum Ausschluss verwendet wird, z. B. 'trusted-release,~trusted-metadata'"
+
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr "Findet Firmware-Versionen aus den Metadaten"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -1416,7 +1440,7 @@ msgstr "Firmware ist bereits blockiert"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is not already blocked"
-msgstr "Firmware ist nicht bereits blockiert."
+msgstr "Firmware ist nicht bereits blockiert"
 
 #. TRANSLATORS: the metadata is very out of date; %u is a number > 1
 #, c-format
@@ -1432,7 +1456,7 @@ msgstr "Firmware-Aktualisierungen"
 #. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
 #, c-format
 msgid "Firmware updates disabled; run '%s' to enable"
-msgstr "Firmware-Aktualisierungen deaktiviert; rufe '%s' auf, um sie zu aktivieren."
+msgstr "Firmware-Aktualisierungen deaktiviert; rufe '%s' auf, um sie zu aktivieren"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1822,7 +1846,7 @@ msgstr "Ungültige Argumente, erwartete INDEXNAME ZIEL [EINHÄNGEPUNKT]"
 #. TRANSLATOR: This is the error message for
 #. * incorrect parameter
 msgid "Invalid arguments, expected an AppStream ID"
-msgstr "Ungültige Argumente. Es wurde eine AppStream-Kennung erwartet."
+msgstr "Ungültige Argumente. Es wurde eine AppStream-Kennung erwartet"
 
 #. TRANSLATORS: error message
 msgid "Invalid arguments, expected at least ARCHIVE FIRMWARE METAINFO"
@@ -1847,8 +1871,8 @@ msgstr "Ist Aktualisierung"
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
 msgid_plural "Issues"
-msgstr[0] "Anliegen"
-msgstr[1] "Anliegen"
+msgstr[0] "Problem"
+msgstr[1] "Probleme"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel is no longer tainted"
@@ -2094,6 +2118,10 @@ msgstr "Neue Version"
 msgid "No action specified!"
 msgstr "Keine Aktion angegeben!"
 
+#. TRANSLATORS: no devices that can be upgraded with new firmware
+msgid "No devices are updatable"
+msgstr "Keine Geräte sind aktualisierbar"
+
 #. TRANSLATORS: message letting the user know no device downgrade available
 #. * %1 is the device name
 #, c-format
@@ -2111,6 +2139,10 @@ msgstr "Keine Firmware gefunden"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No matching releases for search token"
+msgstr "Keine passenden Veröffentlichungen für Suchbegriff"
 
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
@@ -2759,13 +2791,18 @@ msgstr "Erfolgreich deaktivierte Gegenstelle"
 msgid "Successfully disabled test devices"
 msgstr "Prüfgeräte erfolgreich deaktiviert"
 
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata:"
+msgstr "Neue Metadaten erfolgreich heruntergeladen:"
+
 #. TRANSLATORS: success message
 msgid "Successfully enabled and refreshed remote"
 msgstr "Gegenstelle erfolgreich aktiviert und aufgefrischt"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr "Erfolgreich aktivierte Gegenstelle "
+msgstr "Erfolgreich aktivierte Gegenstelle"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
@@ -3022,7 +3059,7 @@ msgstr "Die UEFI-DB enthält die Liste der gültigen Zertifikate, die zur Autori
 
 #. TRANSLATORS: longer description
 msgid "The UEFI system can set up memory attributes at boot which prevent common exploits from running."
-msgstr "Das UEFI-System kann beim Booten Speicherattribute einrichten, die die Ausführung gängiger Exploits verhindern."
+msgstr "Das UEFI-System kann beim Booten Speicherattribute zur Verhinderung gängiger Exploits einrichten."
 
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
@@ -3450,6 +3487,10 @@ msgstr "Version[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "WARNUNG"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr "WORT"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"

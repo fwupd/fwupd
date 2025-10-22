@@ -16,6 +16,7 @@
 #include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
+#include "fu-string.h"
 
 /**
  * FuFirmware:
@@ -1953,9 +1954,20 @@ FuFirmware *
 fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *id_str = NULL;
+	g_autoptr(GPtrArray) id_errmsg = g_ptr_array_new();
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* sanity check */
+	if (priv->images->len == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "no images in firmware");
+		return NULL;
+	}
 
 	/* non-NULL */
 	if (id != NULL) {
@@ -1969,24 +1981,26 @@ fu_firmware_get_image_by_id(FuFirmware *self, const gchar *id, GError **error)
 					return g_object_ref(img);
 			}
 		}
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no image id %s found in firmware",
-			    id);
-		return NULL;
+	} else {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img = g_ptr_array_index(priv->images, i);
+			if (fu_firmware_get_id(img) == NULL)
+				return g_object_ref(img);
+		}
 	}
 
-	/* NULL */
+	/* build a useful error */
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(priv->images, i);
-		if (fu_firmware_get_id(img) == NULL)
-			return g_object_ref(img);
+		g_ptr_array_add(id_errmsg, (gpointer)fu_firmware_get_id(img));
 	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "no NULL image id found in firmware");
+	id_str = fu_strjoin(",", id_errmsg);
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "no image id %s found in firmware, only have %s",
+		    id,
+		    id_str);
 	return NULL;
 }
 

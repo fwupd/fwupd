@@ -1723,8 +1723,16 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 			    g_strdup_printf("%s %s",
 					    fu_engine_get_host_vendor(self->engine),
 					    fu_engine_get_host_product(self->engine));
-			if (!fu_util_prompt_warning(self->console, dev, rel, title, error))
+			if (!fu_util_prompt_warning(self->console, dev, rel, title, &error_local)) {
+				if (g_error_matches(error_local,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOTHING_TO_DO)) {
+					g_debug("%s", error_local->message);
+					continue;
+				}
+				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
+			}
 			if (!fu_util_prompt_warning_fde(self->console, dev, error))
 				return FALSE;
 		}
@@ -5134,7 +5142,8 @@ fu_util_build_cabinet(FuUtil *self, gchar **values, GError **error)
 				    values[i]);
 			return FALSE;
 		}
-		fu_cabinet_add_file(cab_file, basename, blob);
+		if (!fu_cabinet_add_file(cab_file, basename, blob, error))
+			return FALSE;
 	}
 
 	/* export */

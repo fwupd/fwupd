@@ -17,12 +17,12 @@ G_DECLARE_FINAL_TYPE(FuIgscDevice, fu_igsc_device, FU, IGSC_DEVICE, FuHeciDevice
 #define FU_IGSC_DEVICE_FLAG_IS_WEDGED "is-wedged"
 
 gboolean
-fu_igsc_device_get_oprom_code_devid_enforcement(FuIgscDevice *self);
+fu_igsc_device_get_oprom_code_devid_enforcement(FuIgscDevice *self) G_GNUC_NON_NULL(1);
 
 guint16
-fu_igsc_device_get_ssvid(FuIgscDevice *self);
+fu_igsc_device_get_ssvid(FuIgscDevice *self) G_GNUC_NON_NULL(1);
 guint16
-fu_igsc_device_get_ssdid(FuIgscDevice *self);
+fu_igsc_device_get_ssdid(FuIgscDevice *self) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_igsc_device_write_blob(FuIgscDevice *self,
@@ -30,17 +30,19 @@ fu_igsc_device_write_blob(FuIgscDevice *self,
 			  GBytes *fw_info,
 			  GInputStream *stream_payload,
 			  FuProgress *progress,
-			  GError **error);
+			  GError **error) G_GNUC_NON_NULL(1, 3);
+gboolean
+fu_igsc_device_restart(FuIgscDevice *self, GError **error) G_GNUC_NON_NULL(1);
 
 gboolean
 fu_igsc_device_get_aux_version(FuIgscDevice *self,
 			       guint32 *oem_version,
 			       guint16 *major_version,
 			       guint16 *major_vcn,
-			       GError **error);
+			       GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_igsc_device_get_version_raw(FuIgscDevice *self,
 			       FuIgscFwuHeciPartitionVersion partition,
 			       guint8 *buf,
 			       gsize bufsz,
-			       GError **error);
+			       GError **error) G_GNUC_NON_NULL(1, 3);

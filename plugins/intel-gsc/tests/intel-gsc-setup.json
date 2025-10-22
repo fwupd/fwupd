@@ -1,8 +1,8 @@
 {
-  "FwupdVersion": "2.0.9",
+  "FwupdVersion": "2.0.17",
   "UsbDevices": [
     {
-      "Created": "2025-04-28T15:30:52.356627Z",
+      "Created": "2025-10-09T14:01:54.582611Z",
       "GType": "FuUdevDevice",
       "BackendId": "/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:01.0/0000:03:00.0/xe.mei-gscfi.768/mei/mei0",
       "DeviceFile": "/dev/mei0",
@@ -22,7 +22,7 @@
         },
         {
           "Id": "ReadAttr:Attr=uevent",
-          "Data": "MAJOR=235\nMINOR=0\nDEVNAME=mei0"
+          "Data": "MAJOR=236\nMINOR=0\nDEVNAME=mei0"
         },
         {
           "Id": "ReadProp:Key=DEVNAME",
@@ -105,11 +105,6 @@
           "Id": "ReadProp:Key=DEVTYPE"
         },
         {
-          "Id": "GetBackendParent:Subsystem=i2c",
-          "Error": 8,
-          "ErrorMsg": "no parent with subsystem i2c"
-        },
-        {
           "Id": "ReadAttr:Attr=class",
           "Data": "0x030000"
         },
@@ -180,7 +175,7 @@
         },
         {
           "Id": "ReadAttr:Attr=uevent",
-          "Data": "MAJOR=235\nMINOR=0\nDEVNAME=mei0"
+          "Data": "MAJOR=236\nMINOR=0\nDEVNAME=mei0"
         },
         {
           "Id": "Ioctl:Request=0xc0104801,Data=pvcq/iLvRUuHLxdrC7yLQw==,Length=0x10",
@@ -202,7 +197,7 @@
         },
         {
           "Id": "Read:Length=0x1c",
-          "Data": "BgEAAAAAAAAAAAAAAQAAAAgAAABCTUdfFQBxBA=="
+          "Data": "BgEAAAAAAAAAAAAAAQAAAAgAAABCTUdfFQCJBA=="
         },
         {
           "Id": "Write:Data=BwAAAAAAAAAAAAAA,Length=0xc"
@@ -219,18 +214,25 @@
           "Data": "CgEAAAAAAAAAAAAAhoAAEQAAAAAAAAAA"
         },
         {
+          "Id": "Write:Data=CQAAAAAAAAAAAAAA,Length=0xc"
+        },
+        {
+          "Id": "Read:Length=0x40",
+          "Data": "CQEAAAAAAAAAAAAAAgAAADwAAAD/////ywAAAAAAAAABAAAA/////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
           "Id": "Write:Data=BgAAAAMAAAA=,Length=0x8"
         },
         {
           "Id": "Read:Length=0x1c",
-          "Data": "BgEAAAAAAAAAAAAAAwAAAAgAAAAXABsEAAAAAA=="
+          "Data": "BgEAAAAAAAAAAAAAAwAAAAgAAAAXACUEAAAAAA=="
         },
         {
           "Id": "Write:Data=BgAAAAIAAAA=,Length=0x8"
         },
         {
           "Id": "Read:Length=0x1c",
-          "Data": "BgEAAAAAAAAAAAAAAgAAAAgAAAAXABsEAAAAAA=="
+          "Data": "BgEAAAAAAAAAAAAAAgAAAAgAAAAXACUEAAAAAA=="
         }
       ]
     }
