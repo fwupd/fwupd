@@ -82,7 +82,6 @@ fu_legion_go2_firmware_parse(FuFirmware *firmware,
 static void
 fu_legion_go2_firmware_init(FuLegionGo2Firmware *self)
 {
-	
 }
 
 static void

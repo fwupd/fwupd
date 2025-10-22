@@ -18,7 +18,6 @@ G_DEFINE_TYPE(FuLegionGo2Plugin, fu_legion_go2_plugin, FU_TYPE_PLUGIN)
 static void
 fu_legion_go2_plugin_init(FuLegionGo2Plugin *self)
 {
-	
 }
 
 static void
