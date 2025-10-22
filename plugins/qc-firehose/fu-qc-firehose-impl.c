@@ -736,7 +736,7 @@ fu_qc_firehose_impl_reset(FuQcFirehoseImpl *self, GError **error)
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new("data");
 	FuQcFirehoseImplHelper helper = {0x0};
 
-	/* <data><power value="reset /></data> */
+	/* <data><power value="reset" /></data> */
 	xb_builder_node_insert_text(bn, "power", NULL, "value", "reset", NULL);
 	if (!fu_qc_firehose_impl_write_xml(self, bn, error))
 		return FALSE;
