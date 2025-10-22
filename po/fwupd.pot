@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-21 14:05+0100\n"
+"POT-Creation-Date: 2025-10-22 09:51+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -449,75 +449,74 @@ msgid "No action specified!"
 msgstr ""
 
 #. TRANSLATORS: the user isn't reading the question
-#: src/fu-console.c:194
+#: src/fu-console.c:197
 #, c-format
-msgid "Please enter a number from 0 to %u: "
+msgid "Please enter a number from 0 to %u:"
 msgstr ""
 
-#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is
-#. * 'N'
-#: src/fu-console.c:231
+#. TRANSLATORS: the user isn't reading the question -- %1 is 'Y' and %2 is 'N'
+#: src/fu-console.c:240
 #, c-format
-msgid "Please enter either %s or %s: "
+msgid "Please enter either %s or %s:"
 msgstr ""
 
 #. TRANSLATORS: daemon is inactive
-#: src/fu-console.c:363
+#: src/fu-console.c:374
 msgid "Idle…"
 msgstr ""
 
 #. TRANSLATORS: decompressing the firmware file
-#: src/fu-console.c:367
+#: src/fu-console.c:378
 msgid "Decompressing…"
 msgstr ""
 
 #. TRANSLATORS: parsing the firmware information
-#: src/fu-console.c:371
+#: src/fu-console.c:382
 msgid "Loading…"
 msgstr ""
 
 #. TRANSLATORS: restarting the device to pick up new F/W
-#: src/fu-console.c:375
+#: src/fu-console.c:386
 msgid "Restarting device…"
 msgstr ""
 
 #. TRANSLATORS: reading from the flash chips
-#: src/fu-console.c:379
+#: src/fu-console.c:390
 msgid "Reading…"
 msgstr ""
 
 #. TRANSLATORS: writing to the flash chips
-#: src/fu-console.c:383
+#: src/fu-console.c:394
 msgid "Writing…"
 msgstr ""
 
 #. TRANSLATORS: erasing contents of the flash chips
-#: src/fu-console.c:387
+#: src/fu-console.c:398
 msgid "Erasing…"
 msgstr ""
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
-#: src/fu-console.c:391
+#: src/fu-console.c:402
 msgid "Verifying…"
 msgstr ""
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
-#: src/fu-console.c:395
+#: src/fu-console.c:406
 msgid "Scheduling…"
 msgstr ""
 
 #. TRANSLATORS: downloading from a remote server
-#: src/fu-console.c:399
+#: src/fu-console.c:410
 msgid "Downloading…"
 msgstr ""
 
 #. TRANSLATORS: waiting for user to authenticate
-#: src/fu-console.c:403
+#: src/fu-console.c:414
 msgid "Authenticating…"
 msgstr ""
 
 #. TRANSLATORS: waiting for device to do something
-#: src/fu-console.c:408
+#: src/fu-console.c:419
 msgid "Waiting…"
 msgstr ""
 
@@ -525,18 +524,18 @@ msgstr ""
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 #. TRANSLATORS: Suffix: the fallback HSI result
-#: src/fu-console.c:415 src/fu-util-common.c:1733 src/fu-util-common.c:1773
+#: src/fu-console.c:426 src/fu-util-common.c:1733 src/fu-util-common.c:1773
 #: src/fu-util-common.c:2260
 msgid "Unknown"
 msgstr ""
 
 #. TRANSLATORS: time remaining for completing firmware flash
-#: src/fu-console.c:469
+#: src/fu-console.c:480
 msgid "Less than one minute remaining"
 msgstr ""
 
 #. TRANSLATORS: more than a minute
-#: src/fu-console.c:474
+#: src/fu-console.c:485
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -544,7 +543,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. TRANSLATORS: this is a prefix on the console
-#: src/fu-console.c:555
+#: src/fu-console.c:566
 msgid "WARNING"
 msgstr ""
 
@@ -1402,7 +1401,7 @@ msgstr ""
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 #: src/fu-tool.c:752 src/fu-tool.c:1762 src/fu-util.c:2799 src/fu-util.c:3283
-msgid "Devices with no available firmware updates: "
+msgid "Devices with no available firmware updates:"
 msgstr ""
 
 #. TRANSLATORS: message letting the user know no device upgrade available
@@ -1451,7 +1450,7 @@ msgstr ""
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 #: src/fu-tool.c:1773 src/fu-util.c:3294
-msgid "Devices with firmware updates that need user action: "
+msgid "Devices with firmware updates that need user action:"
 msgstr ""
 
 #. TRANSLATORS: success message -- a per-system setting value

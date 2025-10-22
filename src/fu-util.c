@@ -3291,7 +3291,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		    self->console,
 		    /* TRANSLATORS: message letting the user there is an update
 		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action: "));
+		    _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
