@@ -23,7 +23,6 @@ static gboolean
 fu_framework_qmk_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuFrameworkQmkDevice *self = FU_FRAMEWORK_QMK_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuStructFrameworkQmkResetRequest) st_req =
 	    fu_struct_framework_qmk_reset_request_new();
 

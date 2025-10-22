@@ -33,6 +33,8 @@ Vendor = AMD
 Vendor = AMD
 [PCI\VEN_106B]
 Vendor = Apple
+[PCI\VEN_10DE]
+Vendor = NVIDIA
 [PCI\VEN_10EC]
 Vendor = Realtek
 [PCI\VEN_1179]
@@ -51,6 +53,8 @@ Vendor = Sandisk
 Vendor = Qualcomm
 [PCI\VEN_1987]
 Vendor = Phison
+[PCI\VEN_1D50]
+Vendor = OpenMoko
 [PCI\VEN_1D97]
 Vendor = Lexar
 [PCI\VEN_1E0F]

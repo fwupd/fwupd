@@ -19,6 +19,10 @@ fu_nvme_serial_suffix_func(void)
 	g_autoptr(FuDevice) device = g_object_new(FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
 	g_autoptr(GError) error = NULL;
 
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	fu_device_add_instance_str(device, "VEN", "1234");
 	fu_device_add_instance_str(device, "DEV", "5678");
 	ret = fu_device_set_quirk_kv(device,

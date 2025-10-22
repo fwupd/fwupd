@@ -444,6 +444,14 @@ static {{obj.name}} *
                     "expected '{{item.constant}}' and got '%s'",
                     str);
         return FALSE;
+{%- elif item.enum_obj %}
+        g_set_error(error,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
+                    "constant {{obj.name}}.{{item.element_id}} was not valid, "
+                    "expected '{{item.enum_obj.name}}' and got '%s'",
+                    {{item.enum_obj.c_method('ToString')}}({{item.c_getter}}(st)));
+        return FALSE;
 {%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
         g_set_error(error,
                     FWUPD_ERROR,

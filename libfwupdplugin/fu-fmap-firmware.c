@@ -14,6 +14,7 @@
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"
+#include "fu-uswid-firmware.h"
 
 /**
  * FuFmapFirmware:
@@ -174,7 +175,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		guint32 area_offset;
 		guint32 area_size;
 		g_autofree gchar *area_name = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(FuStructFmapArea) st_area = NULL;
 		g_autoptr(GInputStream) img_stream = NULL;
 
@@ -194,9 +195,22 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "failed to cut FMAP area: ");
 			return FALSE;
 		}
-		if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
-			return FALSE;
 		area_name = fu_struct_fmap_area_get_name(st_area);
+		if (g_strcmp0(area_name, "SBOM") == 0) {
+			img = fu_firmware_new_from_gtypes(img_stream,
+							  0x0,
+							  flags,
+							  error,
+							  FU_TYPE_USWID_FIRMWARE,
+							  FU_TYPE_FIRMWARE,
+							  G_TYPE_INVALID);
+			if (img == NULL)
+				return FALSE;
+		} else {
+			img = fu_firmware_new();
+			if (!fu_firmware_parse_stream(img, img_stream, 0x0, flags, error))
+				return FALSE;
+		}
 		fu_firmware_set_id(img, area_name);
 		fu_firmware_set_idx(img, i + 1);
 		fu_firmware_set_addr(img, area_offset);
@@ -226,13 +240,23 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 		signature_offset = priv->signature_offset;
 	fu_byte_array_set_size(buf, signature_offset, 0x00);
 
+	/* write each image if not already a blob */
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index(images, i);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
+		if (fw != NULL)
+			continue;
+		fw = fu_firmware_write(img, error);
+		if (fw == NULL)
+			return NULL;
+		fu_firmware_set_bytes(img, fw);
+	}
+
 	/* add header */
 	total_sz = offset = st_hdr->buf->len + (FU_STRUCT_FMAP_AREA_SIZE * images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
-		if (fw == NULL)
-			return NULL;
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
 		total_sz += g_bytes_get_size(fw);
 	}
 
@@ -247,7 +271,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	/* add each area */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
 		g_autoptr(FuStructFmapArea) st_area = fu_struct_fmap_area_new();
 		fu_struct_fmap_area_set_offset(st_area, signature_offset + offset);
 		fu_struct_fmap_area_set_size(st_area, g_bytes_get_size(fw));
@@ -262,7 +286,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	/* add the images */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, error);
 		if (fw == NULL)
 			return NULL;
 		fu_byte_array_append_bytes(buf, fw);
@@ -276,6 +300,7 @@ static void
 fu_fmap_firmware_init(FuFmapFirmware *self)
 {
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
 	priv->signature_offset = G_MAXSIZE;
 	priv->ver_major = FU_STRUCT_FMAP_DEFAULT_VER_MAJOR;
 	priv->ver_minor = FU_STRUCT_FMAP_DEFAULT_VER_MINOR;

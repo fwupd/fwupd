@@ -1416,8 +1416,10 @@ fu_util_device_test_full(FuUtil *self,
 	json_builder_begin_array(helper->builder);
 	for (guint i = 0; values[i] != NULL; i++) {
 		json_builder_begin_object(helper->builder);
-		if (!fu_util_device_test_filename(self, helper, values[i], error))
+		if (!fu_util_device_test_filename(self, helper, values[i], error)) {
+			g_prefix_error(error, "%s failed: ", values[i]);
 			return FALSE;
+		}
 		json_builder_end_object(helper->builder);
 	}
 	json_builder_end_array(helper->builder);

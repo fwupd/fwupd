@@ -39,7 +39,8 @@ fu_fit_firmware_get_image_root(FuFitFirmware *self)
 	fu_fdt_image_set_attr_uint32(FU_FDT_IMAGE(img), FU_FIT_FIRMWARE_ATTR_TIMESTAMP, 0x0);
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "description", "Firmware image");
 	fu_fdt_image_set_attr_str(FU_FDT_IMAGE(img), "creator", "fwupd");
-	fu_firmware_add_image(FU_FIRMWARE(self), img, NULL);
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), img, NULL))
+		return NULL;
 	return FU_FDT_IMAGE(img);
 }
 
@@ -61,6 +62,8 @@ fu_fit_firmware_get_timestamp(FuFitFirmware *self)
 
 	g_return_val_if_fail(FU_IS_FIT_FIRMWARE(self), 0x0);
 
+	if (img_root == NULL)
+		return 0;
 	/* this has to exist */
 	(void)fu_fdt_image_get_attr_u32(img_root, FU_FIT_FIRMWARE_ATTR_TIMESTAMP, &tmp, NULL);
 	return tmp;
@@ -80,6 +83,8 @@ fu_fit_firmware_set_timestamp(FuFitFirmware *self, guint32 timestamp)
 {
 	g_autoptr(FuFdtImage) img_root = fu_fit_firmware_get_image_root(self);
 	g_return_if_fail(FU_IS_FIT_FIRMWARE(self));
+	if (img_root == NULL)
+		return;
 	fu_fdt_image_set_attr_uint32(img_root, FU_FIT_FIRMWARE_ATTR_TIMESTAMP, timestamp);
 }
 

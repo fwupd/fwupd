@@ -17,15 +17,19 @@
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 
-struct _FuMtdDevice {
-	FuUdevDevice parent_instance;
+typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
-	gboolean is_pci_device;
-};
 
-G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
+	/* FMAP specific */
+	GPtrArray *fmap_regions;
+	FuFirmware *fmap_firmware;
+	guint64 fmap_offset;
+} FuMtdDevicePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
+#define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
@@ -33,10 +37,15 @@ static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
-	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
-	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
-	fwupd_codec_string_append_bool(str, idt, "IsPciDevice", self->is_pci_device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	fwupd_codec_string_append_hex(str, idt, "EraseSize", priv->erasesize);
+	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", priv->metadata_offset);
+	fwupd_codec_string_append_hex(str, idt, "MetadataSize", priv->metadata_size);
+	fwupd_codec_string_append_hex(str, idt, "FmapOffset", priv->fmap_offset);
+	if (priv->fmap_regions->len > 0) {
+		g_autofree gchar *fmap_regions = fu_strjoin(",", priv->fmap_regions);
+		fwupd_codec_string_append(str, idt, "FmapRegions", fmap_regions);
+	}
 }
 
 static gchar *
@@ -54,6 +63,7 @@ static FuFirmware *
 fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
@@ -61,6 +71,13 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_partial = NULL;
+
+	/* pass the hint along */
+	if (firmware_gtype == FU_TYPE_FMAP_FIRMWARE) {
+		fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware),
+						      priv->fmap_offset);
+		g_set_object(&priv->fmap_firmware, firmware);
+	}
 
 	/* need event ID */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -106,10 +123,10 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
 	}
-	if (self->metadata_size > 0) {
+	if (priv->fmap_offset == 0 && priv->metadata_size > 0) {
 		stream_partial = fu_partial_input_stream_new(stream,
-							     self->metadata_offset,
-							     self->metadata_size,
+							     priv->metadata_offset,
+							     priv->metadata_size,
 							     error);
 		if (stream_partial == NULL)
 			return NULL;
@@ -141,6 +158,45 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 }
 
 static gboolean
+fu_mtd_device_metadata_ensure_version_from_image(FuMtdDevice *self,
+						 FuFirmware *firmware,
+						 GError **error)
+{
+	if (fu_firmware_get_version(firmware) != NULL) {
+		fu_device_set_version(FU_DEVICE(self), /* nocheck:set-version */
+				      fu_firmware_get_version(firmware));
+	}
+	if (fu_firmware_get_version_raw(firmware) != G_MAXUINT64) {
+		fu_device_set_version_raw(FU_DEVICE(self), fu_firmware_get_version_raw(firmware));
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuFirmware *firmware, GError **error)
+{
+	g_autoptr(FuFirmware) img = fu_uswid_firmware_new();
+	g_autoptr(FuFirmware) img0 = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+
+	stream = fu_firmware_get_image_by_id_stream(firmware, "SBOM", error);
+	if (stream == NULL)
+		return FALSE;
+	if (!fu_firmware_parse_stream(img, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
+		g_prefix_error_literal(error, "failed to parse uSWID from FMAP SBOM image: ");
+		return FALSE;
+	}
+	img0 = fu_firmware_get_image_by_idx(img, 0, error);
+	if (img0 == NULL)
+		return FALSE;
+
+	/* success */
+	return fu_mtd_device_metadata_ensure_version_from_image(self, img0, error);
+}
+
+static gboolean
 fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 {
 	GPtrArray *instance_ids;
@@ -153,6 +209,10 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 	firmware = fu_mtd_device_read_firmware(FU_DEVICE(self), NULL, error);
 	if (firmware == NULL)
 		return FALSE;
+
+	/* read SBOM image */
+	if (FU_IS_FMAP_FIRMWARE(firmware))
+		return fu_mtd_device_metadata_load_fmap(self, firmware, error);
 
 	/* add each IFD image as a sub-device */
 	imgs = fu_firmware_get_images(firmware);
@@ -188,47 +248,37 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 		firmware_child = g_object_ref(firmware);
 
 	/* copy over the version */
-	if (fu_firmware_get_version(firmware_child) != NULL) {
-		fu_device_set_version(FU_DEVICE(self), /* nocheck:set-version */
-				      fu_firmware_get_version(firmware_child));
-	}
-	if (fu_firmware_get_version_raw(firmware_child) != G_MAXUINT64) {
-		fu_device_set_version_raw(FU_DEVICE(self),
-					  fu_firmware_get_version_raw(firmware_child));
-	}
-
-	/* success */
-	return TRUE;
+	return fu_mtd_device_metadata_ensure_version_from_image(self, firmware_child, error);
 }
 
 static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
-	if (self->metadata_offset > firmware_size_max) {
+	if (priv->metadata_offset > firmware_size_max) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "offset of metadata (0x%x) greater than image size (0x%x)",
-			    (guint)self->metadata_offset,
+			    (guint)priv->metadata_offset,
 			    (guint)firmware_size_max);
 		return FALSE;
 	}
-	if (self->metadata_size > firmware_size_max - self->metadata_offset) {
-		self->metadata_size = firmware_size_max - self->metadata_offset;
-		g_debug("truncating metadata size to 0x%x", (guint)self->metadata_size);
+	if (priv->metadata_size > firmware_size_max - priv->metadata_offset) {
+		priv->metadata_size = firmware_size_max - priv->metadata_offset;
+		g_debug("truncating metadata size to 0x%x", (guint)priv->metadata_size);
 	}
 
 	/* nothing to do */
-	if (firmware_gtype == G_TYPE_INVALID)
+	if (fu_device_get_firmware_gtype(device) == G_TYPE_INVALID)
 		return TRUE;
 	if (!fu_mtd_device_metadata_load(self, &error_local)) {
-		g_warning("no version metadata found: %s", error_local->message);
+		g_debug("no version metadata found: %s", error_local->message);
 		return TRUE;
 	}
 
@@ -263,6 +313,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	guint64 flags = 0;
 	guint64 size = 0;
 	g_autofree gchar *attr_flags = NULL;
@@ -309,7 +360,9 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
 	if (parent_device != NULL) {
-		self->is_pci_device = TRUE;
+		/* ensure the parent gets probed (needed for emulation) */
+		if (!fu_device_probe(parent_device, error))
+			return FALSE;
 
 		fu_device_incorporate(
 		    device,
@@ -366,7 +419,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 		if (attr_erasesize == NULL)
 			return FALSE;
 		if (!fu_strtoull(attr_erasesize,
-				 &self->erasesize,
+				 &priv->erasesize,
 				 0,
 				 G_MAXUINT64,
 				 FU_INTEGER_BASE_AUTO,
@@ -384,15 +437,20 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progress, GError **error)
+fu_mtd_device_erase(FuMtdDevice *self,
+		    GInputStream *stream,
+		    gsize offset,
+		    FuProgress *progress,
+		    GError **error)
 {
 #ifdef HAVE_MTD_USER_H
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	chunks = fu_chunk_array_new_from_stream(stream,
-						FU_CHUNK_ADDR_OFFSET_NONE,
+						offset,
 						FU_CHUNK_PAGESZ_NONE,
-						self->erasesize,
+						priv->erasesize,
 						error);
 	if (chunks == NULL)
 		return FALSE;
@@ -416,12 +474,12 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 
 		/* the last chunk may be smaller than the erasesize. if it is, extend the last erase
 		 * up to the erasesize */
-		if (erase.length < self->erasesize) {
+		if (erase.length < priv->erasesize) {
 			g_debug("extending last erase from %" G_GUINT32_FORMAT
 				" bytes to %" G_GUINT64_FORMAT " bytes",
 				erase.length,
-				self->erasesize);
-			erase.length = self->erasesize;
+				priv->erasesize);
+			erase.length = priv->erasesize;
 		}
 
 		if (!fu_ioctl_execute(ioctl,
@@ -534,16 +592,14 @@ fu_mtd_device_verify(FuMtdDevice *self, FuChunkArray *chunks, FuProgress *progre
 static gboolean
 fu_mtd_device_write_verify(FuMtdDevice *self,
 			   GInputStream *stream,
+			   gsize offset,
 			   FuProgress *progress,
 			   GError **error)
 {
 	g_autoptr(FuChunkArray) chunks = NULL;
 
-	chunks = fu_chunk_array_new_from_stream(stream,
-						FU_CHUNK_ADDR_OFFSET_NONE,
-						FU_CHUNK_PAGESZ_NONE,
-						10 * 1024,
-						error);
+	chunks =
+	    fu_chunk_array_new_from_stream(stream, offset, FU_CHUNK_PAGESZ_NONE, 10 * 1024, error);
 	if (chunks == NULL)
 		return FALSE;
 
@@ -602,6 +658,134 @@ fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 }
 
 static gboolean
+fu_mtd_device_write_stream(FuMtdDevice *self,
+			   GInputStream *stream,
+			   gsize offset,
+			   FuProgress *progress,
+			   GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* just one step required */
+	if (priv->erasesize == 0)
+		return fu_mtd_device_write_verify(self, stream, offset, progress, error);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 50, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+
+	/* erase */
+	if (!fu_mtd_device_erase(self, stream, offset, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write */
+	if (!fu_mtd_device_write_verify(self,
+					stream,
+					offset,
+					fu_progress_get_child(progress),
+					error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
+{
+	g_autoptr(GInputStream) img_stream = NULL;
+
+	img_stream = fu_firmware_get_stream(img, error);
+	if (img_stream == NULL)
+		return FALSE;
+	g_debug("writing image %s", fu_firmware_get_id(img));
+	return fu_mtd_device_write_stream(self,
+					  img_stream,
+					  fu_firmware_get_addr(img),
+					  progress,
+					  error);
+}
+
+static FuFirmware *
+fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
+				    GInputStream *stream,
+				    FuFirmwareParseFlags flags,
+				    GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+
+	/* parse FMAP header */
+	fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware), priv->fmap_offset);
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+
+	/* check each FMAP area in order */
+	for (guint i = 0; i < priv->fmap_regions->len; i++) {
+		const gchar *fmap_region = g_ptr_array_index(priv->fmap_regions, i);
+		g_autoptr(FuFirmware) img_device = NULL;
+		g_autoptr(FuFirmware) img_firmware = NULL;
+
+		img_device = fu_firmware_get_image_by_id(priv->fmap_firmware, fmap_region, error);
+		if (img_device == NULL)
+			return NULL;
+		img_firmware = fu_firmware_get_image_by_id(firmware, fmap_region, error);
+		if (img_firmware == NULL)
+			return NULL;
+
+		/* check they're compatible */
+		if (fu_firmware_get_offset(img_device) != fu_firmware_get_offset(img_firmware)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "FMAP region %s moved, device @0x%x and firmware @0x%x",
+				    fmap_region,
+				    (guint)fu_firmware_get_offset(img_device),
+				    (guint)fu_firmware_get_offset(img_firmware));
+			return NULL;
+		}
+		if (fu_firmware_get_size(img_device) < fu_firmware_get_size(img_firmware)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "FMAP region %s too small, device 0x%x and firmware 0x%x",
+				    fmap_region,
+				    (guint)fu_firmware_get_size(img_device),
+				    (guint)fu_firmware_get_size(img_firmware));
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&firmware);
+}
+
+static FuFirmware *
+fu_mtd_device_prepare_firmware(FuDevice *device,
+			       GInputStream *stream,
+			       FuProgress *progress,
+			       FuFirmwareParseFlags flags,
+			       GError **error)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuFirmware) firmware = fu_firmware_new();
+
+	/* FMAP */
+	if (priv->fmap_firmware != NULL)
+		return fu_mtd_device_fmap_prepare_firmware(self, stream, flags, error);
+
+	/* plain blob */
+	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+		return NULL;
+	return g_steal_pointer(&firmware);
+}
+
+static gboolean
 fu_mtd_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
 			     FuProgress *progress,
@@ -609,6 +793,7 @@ fu_mtd_device_write_firmware(FuDevice *device,
 			     GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -628,25 +813,26 @@ fu_mtd_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* just one step required */
-	if (self->erasesize == 0)
-		return fu_mtd_device_write_verify(self, stream, progress, error);
+	/* just a random blob */
+	if (priv->fmap_regions->len == 0)
+		return fu_mtd_device_write_stream(self, stream, 0, progress, error);
 
-	/* progress */
+	/* write each area in order */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 50, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
+	fu_progress_set_steps(progress, priv->fmap_regions->len);
+	for (guint i = 0; i < priv->fmap_regions->len; i++) {
+		const gchar *fmap_region = g_ptr_array_index(priv->fmap_regions, i);
+		g_autoptr(FuFirmware) img = NULL;
 
-	/* erase */
-	if (!fu_mtd_device_erase(self, stream, fu_progress_get_child(progress), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* write */
-	if (!fu_mtd_device_write_verify(self, stream, fu_progress_get_child(progress), error))
-		return FALSE;
-	fu_progress_step_done(progress);
+		img = fu_firmware_get_image_by_id(firmware, fmap_region, error);
+		if (img == NULL)
+			return FALSE;
+		if (!fu_mtd_device_write_image(self, img, fu_progress_get_child(progress), error)) {
+			g_prefix_error(error, "failed to write %s: ", fmap_region);
+			return FALSE;
+		}
+		fu_progress_step_done(progress);
+	}
 
 	/* success */
 	return TRUE;
@@ -656,11 +842,12 @@ static gboolean
 fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* load from quirks */
 	if (g_strcmp0(key, "MtdMetadataOffset") == 0) {
 		return fu_strtoull(value,
-				   &self->metadata_offset,
+				   &priv->metadata_offset,
 				   0x0,
 				   G_MAXUINT32,
 				   FU_INTEGER_BASE_AUTO,
@@ -668,11 +855,43 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	}
 	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
 		return fu_strtoull(value,
-				   &self->metadata_size,
+				   &priv->metadata_size,
 				   0x100,
 				   FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
 				   FU_INTEGER_BASE_AUTO,
 				   error);
+	}
+	if (g_strcmp0(key, "MtdFmapOffset") == 0) {
+		if (!fu_strtoull(value,
+				 &priv->fmap_offset,
+				 0x0,
+				 G_MAXUINT32,
+				 FU_INTEGER_BASE_AUTO,
+				 error))
+			return FALSE;
+		fu_device_set_firmware_gtype(device, FU_TYPE_FMAP_FIRMWARE);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "MtdFmapRegions") == 0) {
+		g_auto(GStrv) split = g_strsplit(value, ",", 0);
+		for (guint i = 0; split != NULL && split[i] != NULL; i++) {
+			if (split[i][0] == '\0') {
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "an empty region is not supported");
+				return FALSE;
+			}
+			g_ptr_array_add(priv->fmap_regions, fu_strstrip(split[i]));
+		}
+		if (priv->fmap_regions->len == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "regions cannot be empty");
+			return FALSE;
+		}
+		return TRUE;
 	}
 
 	/* failed */
@@ -686,7 +905,10 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 static void
 fu_mtd_device_init(FuMtdDevice *self)
 {
-	self->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
+	priv->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
+	priv->fmap_regions = g_ptr_array_new_with_free_func(g_free);
 	fu_device_set_summary(FU_DEVICE(self), "Memory Technology Device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
@@ -704,9 +926,22 @@ fu_mtd_device_init(FuMtdDevice *self)
 }
 
 static void
+fu_mtd_device_finalize(GObject *object)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(object);
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_ptr_array_unref(priv->fmap_regions);
+	if (priv->fmap_firmware != NULL)
+		g_object_unref(priv->fmap_firmware);
+	G_OBJECT_CLASS(fu_mtd_device_parent_class)->finalize(object);
+}
+
+static void
 fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_mtd_device_finalize;
 	device_class->open = fu_mtd_device_open;
 	device_class->probe = fu_mtd_device_probe;
 	device_class->setup = fu_mtd_device_setup;
@@ -714,6 +949,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->convert_version = fu_mtd_device_convert_version;
 	device_class->dump_firmware = fu_mtd_device_dump_firmware;
 	device_class->read_firmware = fu_mtd_device_read_firmware;
+	device_class->prepare_firmware = fu_mtd_device_prepare_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;
 	device_class->set_quirk_kv = fu_mtd_device_set_quirk_kv;
 }

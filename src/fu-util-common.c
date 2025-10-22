@@ -1295,6 +1295,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: we have two ways of communicating with the device, so we hide one */
 		return g_strdup(_("Device is lower priority than an equivalent device"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM) {
+		/* TRANSLATORS: firmware is signed with insecure key */
+		return g_strdup(_("System has been signed with an insecure key"));
+	}
 	return NULL;
 }
 

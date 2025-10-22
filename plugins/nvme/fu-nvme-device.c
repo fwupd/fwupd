@@ -234,6 +234,7 @@ fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **erro
 	 * characters of the serial number for the firmware variant */
 	serialsz = strlen(serial);
 	if (self->serial_suffix > 0 && serialsz > self->serial_suffix) {
+		/* keep SNSUFFIX as just the tail */
 		fu_device_add_instance_str(FU_DEVICE(self),
 					   "SNSUFFIX",
 					   serial + (serialsz - self->serial_suffix));
@@ -245,6 +246,15 @@ fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **erro
 						 "SNSUFFIX",
 						 NULL))
 			return FALSE;
+
+		fu_device_build_instance_id(FU_DEVICE(self),
+					    NULL,
+					    "NVME",
+					    "VEN",
+					    "DEV",
+					    "SNSUFFIX",
+					    "NAME",
+					    NULL);
 	}
 
 	/* success */
@@ -275,14 +285,16 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 
 	/* get sanitized string from CNS -- see the following doc for offsets:
 	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
+	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
+	if (mn != NULL) {
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", mn);
+		fu_device_set_name(FU_DEVICE(self), mn);
+	}
 	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
 	if (sn != NULL) {
 		if (!fu_nvme_device_set_serial(self, sn, error))
 			return FALSE;
 	}
-	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
-	if (mn != NULL)
-		fu_device_set_name(FU_DEVICE(self), mn);
 	sr = fu_nvme_device_get_string_safe(buf, 64, 71);
 	if (sr != NULL)
 		fu_device_set_version(FU_DEVICE(self), sr);

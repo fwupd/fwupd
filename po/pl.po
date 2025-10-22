@@ -8,12 +8,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Polish (http://app.transifex.com/freedesktop/fwupd/language/pl/)\n"
+"PO-Revision-Date: 2025-10-21 16:10+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish <https://hosted.weblate.org/projects/fwupd/fwupd/pl/>\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"X-Generator: Weblate 5.14-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -316,7 +319,7 @@ msgstr[3] "%u urządzeń nie ma najlepszej znanej konfiguracji."
 msgid "%u device is supported in the enabled remotes (an update has been published)"
 msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
 msgstr[0] "%u urządzenie jest obsługiwane we włączonych repozytoriach (aktualizacja została opublikowana)"
-msgstr[1] "%u urządzenia są obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
+msgstr[1] "%u urządzenia są obsługiwane we włączonych repozytoriach (aktualizacja została opublikowana)"
 msgstr[2] "%u urządzeń jest obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
 msgstr[3] "%u urządzeń jest obsługiwanych we włączonych repozytoriach (aktualizacja została opublikowana)"
 
@@ -975,7 +978,7 @@ msgstr "Urządzenia, które nie zostały poprawnie zaktualizowane:"
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action: "
-msgstr "Urządzenia z aktualizacjami oprogramowania sprzętowego wymagającymi działania użytkownika:"
+msgstr "Urządzenia z aktualizacjami oprogramowania sprzętowego wymagającymi działania użytkownika: "
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1351,6 +1354,10 @@ msgstr "Filtruje za pomocą zestawu flag urządzeń, przedrostek ~ wyklucza, np.
 #. TRANSLATORS: command line option
 msgid "Filter with a set of release flags using a ~ prefix to exclude, e.g. 'trusted-release,~trusted-metadata'"
 msgstr "Filtruje za pomocą zestawu flag wydań, przedrostek ~ wyklucza, np. „trusted-release,~trusted-metadata”"
+
+#. TRANSLATORS: command description
+msgid "Finds firmware releases from the metadata"
+msgstr "Znajduje wydania oprogramowania sprzętowego z metadanych"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware Attestation"
@@ -2083,6 +2090,10 @@ msgstr "Nie odnaleziono oprogramowania sprzętowego"
 msgid "No hardware detected with firmware update capability"
 msgstr "Nie wykryto sprzętu z możliwością aktualizacji jego oprogramowania"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No matching releases for search token"
+msgstr "Nie ma pasujących wydań dla szukanego słowa"
+
 #. TRANSLATORS: no rebooting needed
 msgid "No reboot is necessary"
 msgstr "Ponowne uruchomienie nie jest konieczne"
@@ -2229,7 +2240,7 @@ msgstr "Proszę podać liczbę od 0 do %u: "
 #. * 'N'
 #, c-format
 msgid "Please enter either %s or %s: "
-msgstr "Proszę podać %s lub %s:"
+msgstr "Proszę podać %s lub %s: "
 
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
@@ -3362,6 +3373,10 @@ msgstr "Wersja[fwupd]"
 #. TRANSLATORS: this is a prefix on the console
 msgid "WARNING"
 msgstr "OSTRZEŻENIE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "WORD"
+msgstr "SŁOWO"
 
 #. TRANSLATORS: command description
 msgid "Wait for a device to appear"
