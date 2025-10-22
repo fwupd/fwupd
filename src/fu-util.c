@@ -4859,14 +4859,13 @@ fu_util_show_plugin_warnings(FuUtil *self)
 static gboolean
 fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 {
-	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
+	g_autoptr(GHashTable) settings = NULL;
 
+	settings = fu_util_bios_settings_parse_argv(input, error);
 	if (settings == NULL)
 		return FALSE;
-
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
-		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error_literal(error, "failed to set BIOS setting: ");
+		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
