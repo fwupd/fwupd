@@ -749,7 +749,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -1759,7 +1759,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_unsupported->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
