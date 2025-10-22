@@ -5481,12 +5481,14 @@ fu_firmware_builder_round_trip_func(void)
 		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
+#ifdef HAVE_CBOR
 	    {
 		FU_TYPE_FMAP_FIRMWARE,
 		"fmap.builder.xml",
 		"0db91efb987353ffb779d259b130d63d1b8bcbec",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
+#endif
 	    {
 		FU_TYPE_EFI_LOAD_OPTION,
 		"efi-load-option.builder.xml",
