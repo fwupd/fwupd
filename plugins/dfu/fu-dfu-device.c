@@ -1247,7 +1247,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		return;
 
 	/* not the right error to query */
-	if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+	if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) /* nocheck:error */
 		return;
 
 	/* get the status */

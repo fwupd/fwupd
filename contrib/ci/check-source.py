@@ -619,6 +619,15 @@ class Checker:
                 self.add_failure("uses g_set_error() without using FWUPD_ERROR")
                 break
 
+    def _test_lines_gerror_deref(self, line: str) -> None:
+        self._current_nocheck = "nocheck:error"
+        if not self._should_process_line(line):
+            return
+
+        # do not use G_IO_ERROR internally
+        if line.find("(*error") != -1:
+            self.add_failure("dereferences GError; use error_local instead")
+
     def _test_lines_function_length(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:lines"
         func_n_switch: int = 0
@@ -839,6 +848,9 @@ class Checker:
 
             # using FUWPD_ERROR domains
             self._test_lines_gerror_domain(line)
+
+            # using (*error)->message
+            self._test_lines_gerror_deref(line)
 
         # using too many hardcoded constants
         self._test_gobject_parents(lines)

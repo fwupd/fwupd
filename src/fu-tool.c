@@ -4497,8 +4497,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 		return FALSE;
 
 	if (!fu_engine_modify_bios_settings(self->engine, settings, FALSE, error)) {
-		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error_literal(error, "failed to set BIOS setting: ");
+		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
