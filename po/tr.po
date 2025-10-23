@@ -10,12 +10,13 @@
 # Sabri Ünal <yakushabb@gmail.com>, 2020
 # Serdar Sağlam <teknomobil@msn.com>, 2020
 # yunus kaba <yunuskaba@gmail.com>, 2021
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:25+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/fwupd/fwupd/tr/>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
@@ -1157,7 +1158,7 @@ msgstr "Üst veriyi uzak sunucudan yenile"
 #. * %1 is the device name and %2 is a version string
 #, c-format
 msgid "Reinstall %s to %s?"
-msgstr " %s %s yeniden kurulsun mu?"
+msgstr "%s %s yeniden kurulsun mu?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1246,7 +1247,7 @@ msgstr "HSI için güvenlik güçlendirmesi"
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
-msgstr "Daha fazlası için tıklayınız. %s "
+msgstr "Daha fazlası için tıklayınız. %s"
 
 #. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1576,7 +1577,7 @@ msgstr "Güncelleniyor %s…"
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
 msgid "Upgrade %s from %s to %s?"
-msgstr " %s,  %s sürümünden %s sürümüne yükseltilsin mi?"
+msgstr "%s, %s sürümünden %s sürümüne yükseltilsin mi?"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
