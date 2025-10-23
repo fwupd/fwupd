@@ -1,6 +1,8 @@
 /* auto-generated, do not modify */
 #include "config.h"
 
+#include <glib.h>
+
 #include "{{basename}}"
 {%- if struct_objs %}
 #include "fu-byte-array.h"
