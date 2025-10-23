@@ -9,12 +9,13 @@
 # Ryo Nakano, 2024
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:49+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/fwupd/fwupd/ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
