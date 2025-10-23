@@ -4,12 +4,13 @@
 #
 # Translators:
 # Dušan Kazik <prescott66@gmail.com>, 2015-2017
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:15+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Slovak <https://hosted.weblate.org/projects/fwupd/fwupd/sk/>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
@@ -41,7 +42,7 @@ msgstr "Na odomknutie zariadenia sa vyžaduje overenie totožnosti"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Vyžaduje sa overenie totožnosti na aktualizovanie firmvéru vymeniteľného zariadenia "
+msgstr "Vyžaduje sa overenie totožnosti na aktualizovanie firmvéru vymeniteľného zariadenia"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
