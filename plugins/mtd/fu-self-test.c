@@ -109,11 +109,8 @@ fu_test_mtd_device_fmap_func(void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *str = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuDevice) device1 = NULL;
-	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
