@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:14+0000\n"
-"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
+"Last-Translator: jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/fwupd/fwupd/ar/>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
@@ -2843,7 +2843,7 @@ msgstr "عطِّل الطرف البعيد بنجاح"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
-msgstr "عطِّل أجهزة الاختبار بنجاح"
+msgstr "عُطِّل أجهزة الاختبار بنجاح"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
@@ -2856,11 +2856,11 @@ msgstr "فُعِّل وُحُدّث الطرف البعيد بنجاح"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr "فعِّل الطرف البعيد بنجاح"
+msgstr "فُعِّل الطرف البعيد بنجاح"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
-msgstr "فعِّل أجهزة الاختبار بنجاح"
+msgstr "فُعِّل أجهزة الاختبار بنجاح"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
