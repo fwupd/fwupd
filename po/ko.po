@@ -6,12 +6,13 @@
 # Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2024
 # Shinjo Park <kde@peremen.name>, 2018-2021,2023
 # Changwoo Ryu <cwryu@debian.org>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:52+0000\n"
-"Last-Translator: Changwoo Ryu <cwryu@debian.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Korean <https://hosted.weblate.org/projects/fwupd/fwupd/ko/>\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
@@ -430,7 +431,7 @@ msgstr "업데이트 파일 적용"
 
 #. TRANSLATORS: actually sending the update to the hardware
 msgid "Applying update…"
-msgstr "업데이트 적용 중..."
+msgstr "업데이트 적용 중…"
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
@@ -955,7 +956,7 @@ msgstr "장치 펌웨어 다운그레이드"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Downgrading %s…"
-msgstr "%s 다운그레이드 중..."
+msgstr "%s 다운그레이드 중…"
 
 #. TRANSLATORS: command description
 msgid "Download a file"
@@ -1486,7 +1487,7 @@ msgstr "펌웨어 업데이트 설치 중…"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Installing on %s…"
-msgstr "%s에 설치 중..."
+msgstr "%s에 설치 중…"
 
 #. TRANSLATORS: if it breaks, you get to keep both pieces
 msgid "Installing this update may also void any device warranty."
@@ -1925,11 +1926,11 @@ msgstr "펌웨어 파일을 처리하고 세부 정보 표시"
 
 #. TRANSLATORS: reading new dbx from the update
 msgid "Parsing dbx update…"
-msgstr "dbx 업데이트 해석 중..."
+msgstr "dbx 업데이트 해석 중…"
 
 #. TRANSLATORS: reading existing dbx from the system
 msgid "Parsing system dbx…"
-msgstr "시스템 dbx 해석 중..."
+msgstr "시스템 dbx 해석 중…"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -2054,7 +2055,7 @@ msgstr "장치에서 펌웨어 읽기"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Reading from %s…"
-msgstr "%s에서 읽는 중..."
+msgstr "%s에서 읽는 중…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -2880,7 +2881,7 @@ msgstr "업데이트"
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Updating %s…"
-msgstr "%s 업데이트 중..."
+msgstr "%s 업데이트 중…"
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
@@ -2929,7 +2930,7 @@ msgstr "올바름"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "ESP 내용 검사 중..."
+msgstr "ESP 내용 검사 중…"
 
 #. TRANSLATORS: one line variant of release (e.g. 'China')
 msgid "Variant"
