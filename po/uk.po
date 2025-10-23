@@ -4,12 +4,13 @@
 #
 # Translators:
 # Yuri Chornoivan <yurchor@ukr.net>, 2015-2025
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:28+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/fwupd/fwupd/uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
