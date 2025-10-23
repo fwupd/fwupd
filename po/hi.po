@@ -5,12 +5,13 @@
 # Translators:
 # Prashant Gupta <guptaprashant504@gmail.com>, 2015
 # Scrambled777 <weblate.scrambled777@simplelogin.com>, 2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:39+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Hindi <https://hosted.weblate.org/projects/fwupd/fwupd/hi/>\n"
 "Language: hi\n"
 "MIME-Version: 1.0\n"
@@ -1238,7 +1239,7 @@ msgstr "फर्मवेयर BIOS क्षेत्र उपकरण फ�
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
-msgstr "फर्मवेयर बेस  URI"
+msgstr "फर्मवेयर बेस URI"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -1375,7 +1376,7 @@ msgstr "उपकरण रिपोर्ट मेटाडेटा प्र
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "फर्मवेयर फाइल की अधिक जानकारी प्राप्त करें "
+msgstr "फर्मवेयर फाइल की अधिक जानकारी प्राप्त करें"
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
