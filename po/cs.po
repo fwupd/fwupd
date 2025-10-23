@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-23 13:21+0000\n"
+"PO-Revision-Date: 2025-10-23 13:52+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
@@ -393,7 +393,7 @@ msgstr "AMD – zamezení znovupoužití dříve použitého"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
-msgstr "AMD – zamezení zápisu firmware"
+msgstr "AMD – ochrana zápisu firmware"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
@@ -2347,7 +2347,7 @@ msgstr "Ochrana přímého přístupu do paměti před startem operačního syst
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr "Ochrana přímého přístupu do paměti (DMA) brání zařízení přistupovat k systémové paměti poté co jsou připojena k počítači."
+msgstr "Ochrana přímého přístupu do paměti (DMA) (před zavedením systému) brání zařízení přistupovat k systémové paměti poté co jsou připojena k počítači."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
