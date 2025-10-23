@@ -6,12 +6,13 @@
 # A S Alam, 2021
 # A S Alam, 2025
 # Aman Alam <aalam@users.noreply.hosted.weblate.org>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:01+0000\n"
-"Last-Translator: Aman Alam <aalam@users.noreply.hosted.weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Punjabi <https://hosted.weblate.org/projects/fwupd/fwupd/pa/>\n"
 "Language: pa\n"
 "MIME-Version: 1.0\n"
@@ -271,7 +272,7 @@ msgstr "ਫਾਇਲ-ਦਾ-ਨਾਂ"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
-msgstr " ਫਾਇਲ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ"
+msgstr "ਫਾਇਲ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
@@ -383,7 +384,7 @@ msgstr "ਲੀਨਕਸ ਵੇਂਡਰ ਫਿਰਮਵੇਅਰ ਸਰਵਿਸ
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr "ਲੀਨਕਸ ਕਰਨਲ "
+msgstr "ਲੀਨਕਸ ਕਰਨਲ"
 
 #. TRANSLATORS: Title: lockdown is a security mode of the kernel
 msgid "Linux kernel lockdown"
@@ -536,7 +537,7 @@ msgid "Source"
 msgstr "ਸਰੋਤ"
 
 msgid "Stop the fwupd service"
-msgstr " fwupd ਸੇਵਾ ਨੂੰ ਰੋਕੋ"
+msgstr "fwupd ਸੇਵਾ ਨੂੰ ਰੋਕੋ"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Success"
