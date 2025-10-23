@@ -5,12 +5,13 @@
 # Translators:
 # Seong-ho Cho <darkcircle.0426@gmail.com>, 2017,2019,2021-2024
 # Shinjo Park <kde@peremen.name>, 2018-2021,2023
+# Changwoo Ryu <cwryu@debian.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:52+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Changwoo Ryu <cwryu@debian.org>\n"
 "Language-Team: Korean <https://hosted.weblate.org/projects/fwupd/fwupd/ko/>\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
@@ -1198,7 +1199,7 @@ msgstr "펌웨어 BIOS 영역"
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
-msgstr "펌웨어 BIOS 영역에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다"
+msgstr "펌웨어 BIOS 영역에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다."
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -1237,7 +1238,7 @@ msgstr "펌웨어 기록 보호 잠금"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
-msgstr "펌웨어 기록 보호 정책에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다"
+msgstr "펌웨어 기록 보호 정책에서 장치 펌웨어 메모리에 펌웨어를 임의로 변경하는 행위를 막습니다."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -2871,7 +2872,7 @@ msgstr "저장된 메타데이터를 현재 내용으로 업데이트"
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
-msgstr "모든 지정 장치를 최신 펌웨어 버전으로 업데이트합니다. 지정하지 않으면 모든 장치를 업데이트합니다."
+msgstr "모든 지정 장치를 최신 펌웨어 버전으로 업데이트합니다. 지정하지 않으면 모든 장치를 업데이트합니다"
 
 msgid "Updating"
 msgstr "업데이트"
