@@ -5,12 +5,13 @@
 # Translators:
 # Philip Goto <philip.goto@gmail.com>, 2023
 # Richard E. van der Luit <nippur@fedoraproject.org>, 2017,2023
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:58+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Dutch <https://hosted.weblate.org/projects/fwupd/fwupd/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -481,7 +482,7 @@ msgstr "Foutopsporingsopties"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "Uitpakken..."
+msgstr "Uitpakken…"
 
 #. TRANSLATORS: description of BIOS setting
 #. TRANSLATORS: multiline description of device
@@ -829,7 +830,7 @@ msgstr "IOMMU-apparaatbeveiliging ingeschakeld"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr "Slaapt..."
+msgstr "Slaapt…"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -944,7 +945,7 @@ msgstr "Linux-wisselgeheugen"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr "Laden..."
+msgstr "Laden…"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Locked"
@@ -1208,7 +1209,7 @@ msgstr "Nu herstarten?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "Herstarten apparaat..."
+msgstr "Herstarten apparaat…"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
@@ -1228,7 +1229,7 @@ msgstr "SUBSYSTEEM STUURPROGRAMMA [APPARAAT-ID|GUID]"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Inplannen..."
+msgstr "Inplannen…"
 
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot disabled"
@@ -1550,7 +1551,7 @@ msgstr "Leverancier"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "Valideren..."
+msgstr "Valideren…"
 
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
@@ -1578,7 +1579,7 @@ msgstr "Bestand schrijven:"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "Schrijven..."
+msgstr "Schrijven…"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
