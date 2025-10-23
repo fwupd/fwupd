@@ -41,5 +41,6 @@ readability-*,\
 -readability-redundant-declaration,\
 -readability-suspicious-call-argument,\
 -readability-uppercase-literal-suffix,\
+-header-filter=.*\
 "
 ...
