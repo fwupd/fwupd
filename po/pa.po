@@ -5,12 +5,13 @@
 # Translators:
 # A S Alam, 2021
 # A S Alam, 2025
+# Aman Alam <aalam@users.noreply.hosted.weblate.org>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:01+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Aman Alam <aalam@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Punjabi <https://hosted.weblate.org/projects/fwupd/fwupd/pa/>\n"
 "Language: pa\n"
 "MIME-Version: 1.0\n"
@@ -165,7 +166,7 @@ msgstr "BIOS ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ"
 
 #. TRANSLATORS: description of a BIOS setting
 msgid "BIOS updates delivered via LVFS or Windows Update"
-msgstr "BIOS ਅੱਪਡੇਟਾਂ ਨੂੰ  LVFS ਜਾਂ ਵਿੰਡੋਜ਼ ਅੱਪਡੇਟ ਰਾਹੀਂ ਲਾਗੂ ਕੀਤੇ ਗਏ ਹਨ"
+msgstr "BIOS ਅੱਪਡੇਟਾਂ ਨੂੰ LVFS ਜਾਂ ਵਿੰਡੋਜ਼ ਅੱਪਡੇਟ ਰਾਹੀਂ ਲਾਗੂ ਕੀਤੇ ਗਏ ਹਨ"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
