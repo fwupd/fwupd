@@ -4,12 +4,13 @@
 #
 # Translators:
 # Martin Srebotnjak <miles@filmsi.net>, 2021,2024-2025
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:19+0000\n"
-"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Slovenian <https://hosted.weblate.org/projects/fwupd/fwupd/sl/>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
