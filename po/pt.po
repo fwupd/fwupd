@@ -6,12 +6,13 @@
 # Hugo Carvalho <hugokarvalho@hotmail.com>, 2021
 # Luis Filipe Teixeira <lufilte@gmail.com>, 2023-2024
 # Peter J. Mello <admin@petermello.net>, 2020
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:06+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/fwupd/fwupd/pt/>\n"
 "Language: pt\n"
 "MIME-Version: 1.0\n"
@@ -189,7 +190,7 @@ msgstr[2] "%u dias"
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
+msgstr[0] "%u dispositivo tem uma atualização de firmware disponível."
 msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
 msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 
