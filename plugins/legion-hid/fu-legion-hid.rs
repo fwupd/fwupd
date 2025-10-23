@@ -5,7 +5,7 @@
  */
 
 #[repr(u8)]
-enum FuLegionGo2UpgradeStep {
+enum FuLegionHidUpgradeStep {
         Start = 0x50,
         QuerySize,
         WriteData,
@@ -13,7 +13,7 @@ enum FuLegionGo2UpgradeStep {
 }
 
 #[repr(u8)]
-enum FuLegionGo2ResponseStatus {
+enum FuLegionHidResponseStatus {
         Ok = 0x00,
         Fail,
         Busy,
@@ -21,7 +21,7 @@ enum FuLegionGo2ResponseStatus {
 
 #[derive(New, Getters, Setters, Default, ParseStream)]
 #[repr(C, packed)]
-struct FuStructLegionGo2UpgradeCmd {
+struct FuStructLegionHidUpgradeCmd {
         report_id: u8,
         length: u8,
         main_id: u8 = 0x53,
@@ -33,7 +33,20 @@ struct FuStructLegionGo2UpgradeCmd {
 
 #[derive(New, Getters, Setters, Default, ParseStream)]
 #[repr(C, packed)]
-struct FuStructLegionGo2NormalCmd {
+struct FuStructLegionHidUpgradeStartParam {
+        length: u8 = 0x08,
+        step: FuLegionHidUpgradeStep = Start,
+        flag: u8 = 0x00,
+        crc16: u16be,
+        size_high: u8,
+        size_mid: u8,
+        size_low: u8,
+        sn: u8 = 0x01,
+}
+
+#[derive(New, Getters, Setters, Default, ParseStream)]
+#[repr(C, packed)]
+struct FuStructLegionHidNormalCmd {
         report_id: u8,
         length: u8,
         main_id: u8,
@@ -44,7 +57,7 @@ struct FuStructLegionGo2NormalCmd {
 
 #[derive(New, Getters, Setters, Default, ParseStream)]
 #[repr(C, packed)]
-struct FuStructLegionGo2BinHeader {
+struct FuStructLegionHidBinHeader {
         mcu_size: u32le,
         mcu_version: u32le,
         left_size: u32le,

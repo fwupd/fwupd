@@ -8,8 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuLegionGo2Plugin,
-		     fu_legion_go2_plugin,
-		     FU,
-		     LEGION_GO2_PLUGIN,
-		     FuPlugin)
+G_DECLARE_FINAL_TYPE(FuLegionHidPlugin, fu_legion_hid_plugin, FU, LEGION_HID_PLUGIN, FuPlugin)

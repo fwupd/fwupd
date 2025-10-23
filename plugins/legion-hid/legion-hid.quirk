@@ -2,25 +2,25 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 [HIDRAW\VEN_17EF&DEV_61EB]
-Plugin = legion_go2
-GType = FuLegionGo2Device
+Plugin = legion_hid
+GType = FuLegionHidDevice
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EB
 Name = Legion Go 2
 
 [HIDRAW\VEN_17EF&DEV_61EC]
-Plugin = legion_go2
-GType = FuLegionGo2Device
+Plugin = legion_hid
+GType = FuLegionHidDevice
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EC
 Name = Legion Go 2
 
 [HIDRAW\VEN_17EF&DEV_61ED]
-Plugin = legion_go2
-GType = FuLegionGo2Device
+Plugin = legion_hid
+GType = FuLegionHidDevice
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_61ED
 Name = Legion Go 2
 
 [HIDRAW\VEN_17EF&DEV_61EE]
-Plugin = legion_go2
-GType = FuLegionGo2Device
+Plugin = legion_hid
+GType = FuLegionHidDevice
 CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EE
 Name = Legion Go 2

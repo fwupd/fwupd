@@ -1,10 +1,10 @@
 ---
-title: Plugin: Legion Go2
+title: Plugin: Legion HID
 ---
 
 ## Introduction
 
-The Legion Go2 plugin is used for interacting with the MCU on Legion Go 2 devices.
+The Legion HID plugin is used for interacting with the MCU on Legion Go 2 devices.
 
 ## Firmware Format
 
@@ -13,7 +13,7 @@ a packed binary file format.
 
 This plugin supports the following protocol ID:
 
-* `com.lenovo.legion-go2`
+* `com.lenovo.legion-hid`
 
 ## GUID Generation
 
