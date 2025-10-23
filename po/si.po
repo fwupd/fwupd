@@ -4,12 +4,13 @@
 #
 # Translators:
 # HelaBasa Group <transifex-helabasa-group@yalu.lk>, 2021-2022
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:14+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Sinhala <https://hosted.weblate.org/projects/fwupd/fwupd/si/>\n"
 "Language: si\n"
 "MIME-Version: 1.0\n"
