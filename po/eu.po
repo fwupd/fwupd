@@ -4,12 +4,13 @@
 #
 # Translators:
 # assar <asier.sarasua@gmail.com>, 2017,2023-2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:29+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Basque <https://hosted.weblate.org/projects/fwupd/fwupd/eu/>\n"
 "Language: eu\n"
 "MIME-Version: 1.0\n"
@@ -435,7 +436,7 @@ msgstr "Instalatu sinatu gabeko sistema-firmwarea"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Firmwarearen eguneratzea instalatzen..."
+msgstr "Firmwarearen eguneratzea instalatzen…"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
