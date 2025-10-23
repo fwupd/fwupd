@@ -10,12 +10,13 @@
 # Luna Jernberg <droidbittin@gmail.com>, 2020-2021
 # Sebastian Rasmussen <sebras@gmail.com>, 2018-2020
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
+# Anders Jonsson <anders.jonsson@norsjovallen.se>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:24+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Anders Jonsson <anders.jonsson@norsjovallen.se>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/fwupd/fwupd/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
@@ -870,7 +871,7 @@ msgstr "Enhet kan återhämta sig från flashningsfel"
 
 #. TRANSLATORS: lid means "laptop top cover"
 msgid "Device cannot be updated while the lid is closed"
-msgstr "Enheten kan inte uppdateras medan locket är stängt."
+msgstr "Enheten kan inte uppdateras medan locket är stängt"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
@@ -1455,7 +1456,7 @@ msgstr "Uppdateringar för fast programvara"
 #. TRANSLATORS: user needs to run a command, %1 is 'fwupdmgr unlock'
 #, c-format
 msgid "Firmware updates disabled; run '%s' to enable"
-msgstr "Uppdateringar av fast programvara inaktiverade; kör ”%s” för att  aktivera"
+msgstr "Uppdateringar av fast programvara inaktiverade; kör ”%s” för att aktivera"
 
 #. TRANSLATORS: command description
 msgid "Fix a specific host security attribute"
@@ -1783,7 +1784,7 @@ msgstr "Intel BootGuard-felpolicy"
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
-msgstr "Intel BootGuard förhindrar ej auktoriserad enhetsprogramvara från att  köras då enheten startas."
+msgstr "Intel BootGuard förhindrar ej auktoriserad enhetsprogramvara från att köras då enheten startas."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * verified boot refers to the way the boot process is verified
@@ -2920,7 +2921,7 @@ msgstr "Systemhanteringsläge"
 
 #. TRANSLATORS: this CLI tool is now preventing system updates
 msgid "System Update Inhibited"
-msgstr "Systemuppdatering hindrad."
+msgstr "Systemuppdatering hindrad"
 
 #. TRANSLATORS: longer description
 msgid "System management mode is used by the firmware to access resident BIOS code and data."
