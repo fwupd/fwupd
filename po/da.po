@@ -5,12 +5,13 @@
 # Translators:
 # scootergrisen, 2019
 # scootergrisen, 2019-2021
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:21+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Danish <https://hosted.weblate.org/projects/fwupd/fwupd/da/>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
