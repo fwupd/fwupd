@@ -1,15 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fwupd package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-22 09:51+0100\n"
 "PO-Revision-Date: 2025-10-23 13:12+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: English <https://hosted.weblate.org/projects/fwupd/fwupd/en/>\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -774,7 +773,7 @@ msgstr "TPM PCR0 reconstruction"
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 #: src/fu-security-attr-common.c:129 src/fu-security-attr-common.c:348
 msgid "TPM v2.0"
-msgstr ""
+msgstr "TPM v2.0"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #: src/fu-security-attr-common.c:135
@@ -2143,7 +2142,7 @@ msgstr "Set a BIOS setting"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: src/fu-tool.c:5807
 msgid "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
-msgstr ""
+msgstr "ARCHIVE FIRMWARE METAINFO [FIRMWARE] [METAINFO] [JCATFILE]"
 
 #. TRANSLATORS: command description
 #: src/fu-tool.c:5809
@@ -3924,8 +3923,8 @@ msgstr "Last modified"
 #: src/fu-util-common.c:1495
 msgid "GUID"
 msgid_plural "GUIDs"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "GUID"
+msgstr[1] "GUIDs"
 
 #. TRANSLATORS: description of device ability
 #: src/fu-util-common.c:1503
