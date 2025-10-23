@@ -11,12 +11,13 @@
 # Mingye Wang <arthur200126@gmail.com>, 2016
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
 # Richard Hughes <richard@hughsie.com>, 2023
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 14:29+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Chinese (Simplified Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hans/>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
@@ -661,7 +662,7 @@ msgstr "下载文件"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "正在下载..."
+msgstr "正在下载…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
@@ -1009,7 +1010,7 @@ msgstr "安装未签名的系统固件"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "正在安装固件更新..."
+msgstr "正在安装固件更新…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1914,7 +1915,7 @@ msgstr "版本"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
-msgstr "等待中..."
+msgstr "等待中…"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
