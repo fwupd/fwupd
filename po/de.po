@@ -11,12 +11,13 @@
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
 # Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:24+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
