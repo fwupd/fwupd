@@ -8,12 +8,13 @@
 # ver nos, 2025
 # zayed <zayed.alsaidi@gmail.com>, 2025
 # jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>, 2025.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:14+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Zayed Al-Saidi <zayed.alsaidi@gmail.com>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/fwupd/fwupd/ar/>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
@@ -1792,7 +1793,7 @@ msgstr "عدد صحيح"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
-msgstr "Intel BootGuard"
+msgstr "انتل BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
