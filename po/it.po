@@ -6,12 +6,13 @@
 # Daniele Guarascio, 2024
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
 # Milo Casagrande <milo@ubuntu.com>, 2017-2023
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:48+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/fwupd/fwupd/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -496,7 +497,7 @@ msgstr "È richiesto autenticarsi per firmare i dati utilizzando il certificato 
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "È richiesto autenticarsi per passare alla nuova versione del firmware "
+msgstr "È richiesto autenticarsi per passare alla nuova versione del firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to undo the fix for a host security issue"
@@ -850,7 +851,7 @@ msgstr "Non controlla i metadati vecchi"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
-msgstr "Non controlla la cronologia non segnalata "
+msgstr "Non controlla la cronologia non segnalata"
 
 #. TRANSLATORS: command line option
 msgid "Do not check if download remotes should be enabled"
@@ -2419,7 +2420,7 @@ msgstr "Non ci sono firmware approvati."
 #. command name, e.g. `fwupdmgr sync`
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
-msgstr "Questo dispositivo verrà retrocesso alla versione %s all'esecuzione del comando %s. "
+msgstr "Questo dispositivo verrà retrocesso alla versione %s all'esecuzione del comando %s."
 
 #. TRANSLATORS: the vendor did not upload this
 msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
