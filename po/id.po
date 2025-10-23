@@ -5,12 +5,13 @@
 # Translators:
 # Andika Triwidada <andika@gmail.com>, 2017-2019,2021,2024
 # Andika Triwidada <andika@gmail.com>, 2021
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2025-10-23 13:45+0000\n"
-"Last-Translator: Anonymous <noreply@weblate.org>\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Indonesian <https://hosted.weblate.org/projects/fwupd/fwupd/id/>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
