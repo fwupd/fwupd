@@ -149,6 +149,9 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 	} else if (region == FU_IFD_REGION_GBE) {
 		bit_r = 19;
 		bit_w = 27;
+	} else if (region == FU_IFD_REGION_PLATFORM) {
+		bit_r = 20;
+		bit_w = 28;
 	}
 	return ((flash_master >> bit_r) & 0b1 ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
 	       ((flash_master >> bit_w) & 0b1 ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
