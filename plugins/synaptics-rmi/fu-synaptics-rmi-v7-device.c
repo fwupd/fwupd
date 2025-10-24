@@ -59,7 +59,7 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 	/* wait for idle */
 	if (!fu_synaptics_rmi_device_wait_for_idle(self,
 						   RMI_F34_ENABLE_WAIT_MS,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 						   error))
 		return FALSE;
 	if (!fu_synaptics_rmi_device_poll_wait(self, error))
@@ -102,7 +102,7 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 	/* wait for ATTN */
 	if (!fu_synaptics_rmi_device_wait_for_idle(self,
 						   RMI_F34_ERASE_WAIT_MS,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 						   error)) {
 		g_prefix_error_literal(error, "failed to wait for idle: ");
 		return FALSE;
@@ -153,10 +153,11 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 	if (flash->bootloader_id[1] >= 8) {
 		/* wait for ATTN */
-		if (!fu_synaptics_rmi_device_wait_for_idle(self,
-							   RMI_F34_ERASE_WAIT_MS,
-							   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
-							   error)) {
+		if (!fu_synaptics_rmi_device_wait_for_idle(
+			self,
+			RMI_F34_ERASE_WAIT_MS,
+			FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+			error)) {
 			g_prefix_error_literal(error, "failed to wait for idle: ");
 			return FALSE;
 		}
@@ -189,7 +190,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		if (!fu_synaptics_rmi_device_wait_for_idle(
 			self,
 			RMI_F34_ERASE_WAIT_MS,
-			RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
+			FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
 			error)) {
 			g_prefix_error_literal(error, "failed to wait for idle: ");
 			return FALSE;
@@ -241,7 +242,7 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 	/* wait for idle */
 	if (!fu_synaptics_rmi_device_wait_for_idle(self,
 						   RMI_F34_IDLE_WAIT_MS,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 						   error)) {
 		g_prefix_error(error, "failed to wait for idle @0x%x: ", address);
 		return FALSE;

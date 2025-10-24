@@ -90,10 +90,11 @@ fu_synaptics_rmi_v5_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 						    FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE,
 						    error))
 		return FALSE;
-	if (!fu_synaptics_rmi_device_wait_for_idle(self,
-						   RMI_F34_ERASE_WAIT_MS,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
-						   error)) {
+	if (!fu_synaptics_rmi_device_wait_for_idle(
+		self,
+		RMI_F34_ERASE_WAIT_MS,
+		FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
+		error)) {
 		g_prefix_error_literal(error, "failed to wait for idle for erase: ");
 		return FALSE;
 	}
@@ -122,7 +123,7 @@ fu_synaptics_rmi_v5_device_write_block(FuSynapticsRmiDevice *self,
 	}
 	if (!fu_synaptics_rmi_device_wait_for_idle(self,
 						   RMI_F34_IDLE_WAIT_MS,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 						   error)) {
 		g_prefix_error(error, "failed to wait for idle @0x%x: ", address);
 		return FALSE;
@@ -274,10 +275,11 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* check is idle */
-	if (!fu_synaptics_rmi_device_wait_for_idle(self,
-						   0,
-						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
-						   error)) {
+	if (!fu_synaptics_rmi_device_wait_for_idle(
+		self,
+		0,
+		FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
+		error)) {
 		g_prefix_error_literal(error, "not idle: ");
 		return FALSE;
 	}
