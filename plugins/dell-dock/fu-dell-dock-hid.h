@@ -24,14 +24,6 @@ typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 i2cspeed;
 } FuHIDI2CParameters;
 
-typedef enum {
-	I2C_SPEED_250K,
-	I2C_SPEED_400K,
-	I2C_SPEED_800K,
-	/* <private >*/
-	I2C_SPEED_LAST,
-} BridgedI2CSpeed;
-
 #define HIDI2C_MAX_READ	 192
 #define HIDI2C_MAX_WRITE 128
 

@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "fu-dell-dock-common.h"
+#include "fu-dell-dock-struct.h"
 
 #define I2C_EC_ADDRESS 0xec
 
@@ -47,7 +48,7 @@ typedef enum {
 const FuHIDI2CParameters ec_base_settings = {
     .i2ctargetaddr = I2C_EC_ADDRESS,
     .regaddrlen = 1,
-    .i2cspeed = I2C_SPEED_250K,
+    .i2cspeed = FU_DELL_DOCK_I2C_SPEED_250K,
 };
 
 typedef enum {
