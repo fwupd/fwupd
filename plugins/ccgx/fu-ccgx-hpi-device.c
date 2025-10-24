@@ -453,7 +453,7 @@ fu_ccgx_hpi_device_reg_read_cb(FuDevice *device, gpointer user_data, GError **er
 
 static gboolean
 fu_ccgx_hpi_device_reg_read(FuCcgxHpiDevice *self,
-			    guint16 addr,
+			    FuCcgxPdRespReg addr,
 			    guint8 *buf,
 			    gsize bufsz,
 			    GError **error)
@@ -572,7 +572,8 @@ fu_ccgx_hpi_device_read_event_reg(FuCcgxHpiDevice *self,
 		guint8 buf[4] = {0x0};
 
 		/* first read the response register */
-		reg_addr = fu_ccgx_hpi_device_reg_addr_gen(section, HPI_REG_PART_PDDATA_READ, 0);
+		reg_addr =
+		    fu_ccgx_hpi_device_reg_addr_gen(section, FU_CCGX_HPI_REG_PART_PDDATA_READ, 0);
 		if (!fu_ccgx_hpi_device_reg_read(self, reg_addr, buf, sizeof(buf), error)) {
 			g_prefix_error_literal(error, "read response reg error: ");
 			return FALSE;
@@ -583,7 +584,7 @@ fu_ccgx_hpi_device_read_event_reg(FuCcgxHpiDevice *self,
 		memcpy((guint8 *)event, buf, sizeof(buf)); /* nocheck:blocked */
 		if (event->event_length != 0) {
 			reg_addr = fu_ccgx_hpi_device_reg_addr_gen(section,
-								   HPI_REG_PART_PDDATA_READ,
+								   FU_CCGX_HPI_REG_PART_PDDATA_READ,
 								   sizeof(buf));
 			if (!fu_ccgx_hpi_device_reg_read(self,
 							 reg_addr,
@@ -635,7 +636,7 @@ fu_ccgx_hpi_device_app_read_intr_reg(FuCcgxHpiDevice *self,
 	guint8 intr_reg = 0;
 
 	reg_addr = fu_ccgx_hpi_device_reg_addr_gen(HPI_REG_SECTION_DEV,
-						   HPI_REG_PART_REG,
+						   FU_CCGX_HPI_REG_PART_REG,
 						   HPI_DEV_REG_INTR_ADDR);
 	if (!fu_ccgx_hpi_device_reg_read(self, reg_addr, &intr_reg, sizeof(intr_reg), error)) {
 		g_prefix_error_literal(error, "read intr reg error: ");
@@ -1050,7 +1051,7 @@ fu_ccgx_hpi_device_detach(FuDevice *device, FuProgress *progress, GError **error
 	if (!fu_ccgx_hpi_device_clear_all_events(self, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error))
 		return FALSE;
 	if (!fu_ccgx_hpi_device_reg_write(self,
-					  FU_CCGX_PD_RESP_JUMP_TO_BOOT_REG_ADDR,
+					  FU_CCGX_PD_RESP_REG_JUMP_TO_BOOT_REG_ADDR,
 					  buf,
 					  sizeof(buf),
 					  error)) {
@@ -1337,7 +1338,7 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 	guint8 buf[2] = {0x0};
 
 	if (!fu_ccgx_hpi_device_reg_read(self,
-					 FU_CCGX_PD_RESP_SILICON_ID,
+					 FU_CCGX_PD_RESP_REG_SILICON_ID,
 					 buf,
 					 sizeof(buf),
 					 error)) {
@@ -1438,7 +1439,7 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 		bufsz = self->hpi_addrsz == 1 ? HPI_DEVICE_VERSION_SIZE_HPIV1
 					      : HPI_DEVICE_VERSION_SIZE_HPIV2;
 		if (!fu_ccgx_hpi_device_reg_read(self,
-						 FU_CCGX_PD_RESP_GET_VERSION,
+						 FU_CCGX_PD_RESP_REG_GET_VERSION,
 						 bufver,
 						 bufsz,
 						 error)) {
