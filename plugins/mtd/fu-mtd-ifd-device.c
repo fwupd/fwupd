@@ -91,7 +91,9 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 
 	if (self->img != NULL) {
 		FuIfdRegion region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
-		fu_device_set_name(device, fu_mtd_ifd_device_region_to_name(region));
+		const gchar *name = fu_mtd_ifd_device_region_to_name(region);
+		if (name != NULL)
+			fu_device_set_name(device, name);
 		fu_device_set_logical_id(device, fu_ifd_region_to_string(region));
 		fu_device_add_instance_str(device, "REGION", fu_ifd_region_to_string(region));
 	}
