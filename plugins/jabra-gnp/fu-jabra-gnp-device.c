@@ -174,10 +174,7 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 			   0,
 			   sizeof(rx_data->rxbuf),
 			   error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "error reading from device: ");
+		g_prefix_error_literal(error, "error reading from device: ");
 		return FALSE;
 	}
 	return TRUE;
