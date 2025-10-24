@@ -34,17 +34,19 @@ fu_legion_hid_device_read_normal_response_retry_func(FuDevice *device,
 				 NULL,
 				 FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				 FU_IO_CHANNEL_FLAG_NONE,
-				 error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_read failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				 error))
 		return FALSE;
-	}
 
 	if (res->data[2] == main_id && res->data[3] == sub_id && res->data[4] == dev_id)
 		return TRUE;
 
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "response mismatch, retrying...");
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_BUSY,
+		    "response mismatch filter(%u, %u, %u), retrying...",
+		    main_id,
+		    sub_id,
+		    dev_id);
 	return FALSE;
 }
 
@@ -82,12 +84,8 @@ fu_legion_hid_device_read_upgrade_response_retry_func(FuDevice *device,
 				 NULL,
 				 FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				 FU_IO_CHANNEL_FLAG_NONE,
-				 error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_read failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				 error))
 		return FALSE;
-	}
 
 	is_valid_dev_id = (res->data[4] == dev_id) ||
 			  (res->data[4] == 3 && (dev_id == 5 || dev_id == 7)) ||
@@ -97,7 +95,14 @@ fu_legion_hid_device_read_upgrade_response_retry_func(FuDevice *device,
 	    res->data[7] == step && res->data[9] != FU_LEGION_HID_RESPONSE_STATUS_BUSY)
 		return TRUE;
 
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "response mismatch, retrying...");
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_BUSY,
+		    "response mismatch filter(%u, %u, %u, %u), retrying...",
+		    main_id,
+		    sub_id,
+		    dev_id,
+		    step);
 	return FALSE;
 }
 
@@ -135,21 +140,18 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 	fu_struct_legion_hid_upgrade_cmd_set_length(st_cmd, st_content->buf->len + 5);
 	fu_struct_legion_hid_upgrade_cmd_set_device_id(st_cmd, id);
 	fu_struct_legion_hid_upgrade_cmd_set_param(st_cmd, 0x01);
-	fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd,
-						  st_content->buf->data,
-						  st_content->buf->len,
-						  error);
+	if (!fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd,
+						       st_content->buf->data,
+						       st_content->buf->len,
+						       error))
+		return FALSE;
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
 				  st_cmd->buf->data,
 				  st_cmd->buf->len,
 				  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
-				  error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_write failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				  error))
 		return FALSE;
-	}
 
 	res = g_byte_array_sized_new(FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	param.res = res;
@@ -157,19 +159,15 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 	param.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	param.dev_id = id;
 	param.step = FU_LEGION_HID_UPGRADE_STEP_START;
-	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "read start command response failed");
+	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error))
 		return FALSE;
-	}
 	status = param.res->data[9];
 	if (status != FU_LEGION_HID_RESPONSE_STATUS_OK) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device report start command failed");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report start command failed with %u",
+			    status);
 		return FALSE;
 	}
 
@@ -191,18 +189,15 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 	fu_struct_legion_hid_upgrade_cmd_set_length(st_cmd, sizeof(content) + 5);
 	fu_struct_legion_hid_upgrade_cmd_set_device_id(st_cmd, id);
 	fu_struct_legion_hid_upgrade_cmd_set_param(st_cmd, 0x01);
-	fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd, content, sizeof(content), error);
+	if (!fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd, content, sizeof(content), error))
+		return FALSE;
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
 				  st_cmd->buf->data,
 				  st_cmd->buf->len,
 				  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
-				  error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_write failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				  error))
 		return FALSE;
-	}
 
 	res = g_byte_array_sized_new(FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	param.res = res;
@@ -210,19 +205,15 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 	param.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	param.dev_id = id;
 	param.step = FU_LEGION_HID_UPGRADE_STEP_QUERY_SIZE;
-	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "read query size command response failed");
+	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error))
 		return FALSE;
-	}
 	status = param.res->data[9];
 	if (status == FU_LEGION_HID_RESPONSE_STATUS_FAIL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device report query size command failed");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report query size command failed with %u",
+			    status);
 		return FALSE;
 	}
 	if (max_size)
@@ -251,38 +242,39 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 	gboolean wait = FALSE;
 
 	if (max_size % FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device report max size invalid");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report max size %u is invalid",
+			    max_size);
 		return FALSE;
 	}
-	g_message("device report max size: %u", max_size);
 
 	if (size % max_size != 0)
 		outer_loop_times += 1;
 	for (guint i = 0; i < outer_loop_times; ++i) {
 		for (guint j = 0; j < inner_loop_times; ++j) {
-			if (send_size >= size) {
+			if (send_size >= size)
 				break;
-			}
-			fu_memcpy_safe(content,
-				       sizeof(content),
-				       0,
-				       buffer->data,
-				       buffer->len,
-				       send_size,
-				       FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH,
-				       error);
+			if (!fu_memcpy_safe(content,
+					    sizeof(content),
+					    0,
+					    buffer->data,
+					    buffer->len,
+					    send_size,
+					    FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH,
+					    error))
+				return FALSE;
 			content[FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH] = 0x01;
 			fu_struct_legion_hid_upgrade_cmd_set_report_id(st_cmd, 5);
 			fu_struct_legion_hid_upgrade_cmd_set_length(st_cmd, sizeof(content) + 5);
 			fu_struct_legion_hid_upgrade_cmd_set_device_id(st_cmd, id);
 			fu_struct_legion_hid_upgrade_cmd_set_param(st_cmd, 0x02);
-			fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd,
-								  content,
-								  sizeof(content),
-								  error);
+			if (!fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd,
+								       content,
+								       sizeof(content),
+								       error))
+				return FALSE;
 			ready_send_size = send_size + FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH;
 			wait = (ready_send_size % max_size == 0) || (ready_send_size >= size);
 			if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
@@ -290,12 +282,8 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 						  st_cmd->buf->len,
 						  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 						  FU_IO_CHANNEL_FLAG_NONE,
-						  error)) {
-				g_prefix_error(error,
-					       "fu_udev_device_write failed %s: ",
-					       (error && *error) ? (*error)->message : "unknown");
+						  error))
 				return FALSE;
-			}
 			send_size += FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH;
 			if (wait) {
 				param.res = res;
@@ -306,22 +294,18 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 				param.step = FU_LEGION_HID_UPGRADE_STEP_WRITE_DATA;
 				if (!fu_legion_hid_device_read_upgrade_response(self,
 										&param,
-										error)) {
-					g_set_error_literal(
-					    error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "read write data command response failed");
+										error))
 					return FALSE;
-				}
 				recieved_size = res->data[10] << 24 | res->data[11] << 16 |
 						res->data[12] << 8 | res->data[13];
 				if (recieved_size != send_size && recieved_size != size) {
-					g_set_error_literal(
+					g_set_error(
 					    error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
-					    "device report received size mismatch send size");
+					    "device report received size %u mismatch send size %u",
+					    recieved_size,
+					    send_size);
 					return FALSE;
 				}
 			}
@@ -343,18 +327,15 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError *
 	fu_struct_legion_hid_upgrade_cmd_set_length(st_cmd, sizeof(content) + 5);
 	fu_struct_legion_hid_upgrade_cmd_set_device_id(st_cmd, id);
 	fu_struct_legion_hid_upgrade_cmd_set_param(st_cmd, 0x01);
-	fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd, content, sizeof(content), error);
+	if (!fu_struct_legion_hid_upgrade_cmd_set_data(st_cmd, content, sizeof(content), error))
+		return FALSE;
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
 				  st_cmd->buf->data,
 				  st_cmd->buf->len,
 				  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
-				  error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_write failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				  error))
 		return FALSE;
-	}
 
 	res = g_byte_array_sized_new(FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	param.res = res;
@@ -362,19 +343,15 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError *
 	param.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	param.dev_id = id;
 	param.step = FU_LEGION_HID_UPGRADE_STEP_VERIFY;
-	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "read verify command response failed");
+	if (!fu_legion_hid_device_read_upgrade_response(self, &param, error))
 		return FALSE;
-	}
 	status = param.res->data[9];
 	if (status != FU_LEGION_HID_RESPONSE_STATUS_OK) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device report verify command failed");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report verify command failed with %u",
+			    status);
 		return FALSE;
 	}
 
@@ -394,34 +371,25 @@ fu_legion_hid_device_get_version(FuLegionHidDevice *self, guint8 id, GError **er
 	fu_struct_legion_hid_normal_cmd_set_main_id(st_cmd, 0x79);
 	fu_struct_legion_hid_normal_cmd_set_sub_id(st_cmd, 0x01);
 	fu_struct_legion_hid_normal_cmd_set_device_id(st_cmd, id);
-	fu_struct_legion_hid_normal_cmd_set_data(st_cmd, content, sizeof(content), error);
+	if (!fu_struct_legion_hid_normal_cmd_set_data(st_cmd, content, sizeof(content), error))
+		return version;
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
 				  st_cmd->buf->data,
 				  st_cmd->buf->len,
 				  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
-				  error)) {
-		g_prefix_error(error,
-			       "fu_udev_device_write failed %s: ",
-			       (error && *error) ? (*error)->message : "unknown");
+				  error))
 		return version;
-	}
 
 	res = g_byte_array_sized_new(FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	param.res = res;
 	param.main_id = fu_struct_legion_hid_normal_cmd_get_main_id(st_cmd);
 	param.sub_id = fu_struct_legion_hid_normal_cmd_get_sub_id(st_cmd);
 	param.dev_id = id;
-	if (!fu_legion_hid_device_read_response(self, &param, error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "read version command response failed");
+	if (!fu_legion_hid_device_read_response(self, &param, error))
 		return version;
-	}
 
 	version = res->data[13] << 24 | res->data[14] << 16 | res->data[15] << 8 | res->data[16];
-	g_message("device %u version: %u", id, version);
 
 	return version;
 }
@@ -440,10 +408,10 @@ fu_legion_hid_device_set_version(FuLegionHidDevice *device, GError **error)
 	g_snprintf(szVersion,
 		   sizeof(szVersion),
 		   "%x.%02x.%02x.%02x",
-		   version >> 24 & 0xff,
-		   version >> 16 & 0xff,
-		   version >> 8 & 0xff,
-		   version & 0xff);
+		   (guint8)(version >> 24),
+		   (guint8)(version >> 16),
+		   (guint8)(version >> 8),
+		   (guint8)(version));
 	fu_device_set_version(FU_DEVICE(device), szVersion);
 }
 
@@ -454,16 +422,13 @@ fu_legion_hid_device_get_id(GByteArray *buffer)
 	    buffer->len - FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH - FU_LEGION_HID_DEVICE_FW_ID_LENGTH;
 	guint8 id = 0;
 
-	if (buffer->len <
-	    FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH + FU_LEGION_HID_DEVICE_FW_ID_LENGTH) {
+	if (buffer->len < FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH + FU_LEGION_HID_DEVICE_FW_ID_LENGTH)
 		return 0;
-	}
 
 	for (guint i = 0; i < FU_LEGION_HID_DEVICE_FW_ID_LENGTH; ++i) {
 		id = buffer->data[offset + i];
-		if (id == 2 || id == 7 || id == 8) {
+		if (id == 2 || id == 7 || id == 8)
 			return id;
-		}
 	}
 
 	return 0;
@@ -479,13 +444,8 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 	guint8 id = 0;
 	guint16 crc16 = 0;
 	guint max_size = 0;
-	if (payload == NULL || g_bytes_get_size(payload) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "firmware data is invalid");
+	if (payload == NULL)
 		return FALSE;
-	}
 
 	data = g_bytes_get_data(payload, &size);
 	array = g_byte_array_sized_new(size);
@@ -499,27 +459,20 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 				    "firmware device id is invalid");
 		return FALSE;
 	}
-	g_message("firmware device id: %u", id);
 
 	crc16 = fu_crc16(FU_CRC_KIND_B16_XMODEM, array->data, array->len);
-	g_message("firmware crc16: %u and firmware size: %lu", crc16, size);
 
 	if (!fu_legion_hid_device_upgrade_start(self, id, crc16, size, error))
 		return FALSE;
-	g_message("start step done");
 
-	max_size = 0;
 	if (!fu_legion_hid_device_upgrade_query_size(self, id, &max_size, error))
 		return FALSE;
-	g_message("query size step done");
 
 	if (!fu_legion_hid_device_upgrade_write_data(self, id, array, max_size, error))
 		return FALSE;
-	g_message("write data step done");
 
 	if (!fu_legion_hid_device_upgrade_verify(self, id, error))
 		return FALSE;
-	g_message("verify step done");
 
 	return TRUE;
 }
@@ -581,18 +534,14 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, NULL);
-	for (guint i = 0; i < device_count; ++i) {
+	for (guint i = 0; i < device_count; ++i)
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90 / device_count, NULL);
-	}
 
 	fu_progress_step_done(progress);
 
 	if (left_need_upgrade) {
 		if (!fu_legion_hid_device_execute_upgrade(self, img_left, error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "execute upgrade left gamepad failed");
+			g_prefix_error_literal(error, "execute upgrade left gamepad failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -601,10 +550,7 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 
 	if (right_need_upgrade) {
 		if (!fu_legion_hid_device_execute_upgrade(self, img_right, error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "execute upgrade right gamepad failed");
+			g_prefix_error_literal(error, "execute upgrade right gamepad failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -613,10 +559,7 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 
 	if (mcu_need_upgrade) {
 		if (!fu_legion_hid_device_execute_upgrade(self, img_mcu, error)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "execute upgrade mcu failed");
+			g_prefix_error_literal(error, "execute upgrade mcu failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
