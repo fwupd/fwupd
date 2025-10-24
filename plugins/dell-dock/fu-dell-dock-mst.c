@@ -117,7 +117,7 @@ const MSTBankAttributes cayenne_attributes = {
 FuHIDI2CParameters mst_base_settings = {
     .i2ctargetaddr = I2C_MST_ADDRESS,
     .regaddrlen = 0,
-    .i2cspeed = I2C_SPEED_400K,
+    .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,
 };
 
 struct _FuDellDockMst {
