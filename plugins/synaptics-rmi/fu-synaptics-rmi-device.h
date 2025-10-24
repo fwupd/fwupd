@@ -78,9 +78,9 @@ typedef struct {
 #define RMI_KEY_SIZE_2K 0x100
 
 typedef enum {
-	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE = 0,
-	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34 = (1 << 0),
-} RmiDeviceWaitForIdleFlags;
+	FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE = 0,
+	FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34 = (1 << 0),
+} FuSynapticsRmiDeviceWaitForIdleFlags;
 
 void
 fu_synaptics_rmi_device_set_iepmode(FuSynapticsRmiDevice *self, gboolean iepmode);
@@ -111,7 +111,7 @@ fu_synaptics_rmi_device_reset(FuSynapticsRmiDevice *self, GError **error);
 gboolean
 fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 				      guint timeout_ms,
-				      RmiDeviceWaitForIdleFlags flags,
+				      FuSynapticsRmiDeviceWaitForIdleFlags flags,
 				      GError **error);
 gboolean
 fu_synaptics_rmi_device_disable_sleep(FuSynapticsRmiDevice *self, GError **error);
