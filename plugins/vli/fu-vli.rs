@@ -9,6 +9,16 @@ struct FuStructVliPdHdr {
     pid: u16le,
 }
 
+enum FuVliUsbhubFlashmapAddr {
+    Hd1          = 0x0,
+    Hd1Backup    = 0x1800,
+    Hd2          = 0x1000,
+    Fw           = 0x2000,
+    PdLegacy     = 0x10000,
+    Pd           = 0x20000,
+    PdBackup     = 0x30000,
+}
+
 enum FuVliPdRegisterAddress {
     GpioControlA = 0x0003,
     ProjLegacy   = 0x0018,
