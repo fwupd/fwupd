@@ -10,6 +10,7 @@
 
 #include "fu-rts54hub-device.h"
 #include "fu-rts54hub-rtd21xx-device.h"
+#include "fu-rts54hub-struct.h"
 
 typedef struct {
 	guint8 target_addr;
@@ -185,7 +186,7 @@ fu_rts54hub_rtd21xx_device_read_status_cb(FuDevice *device, gpointer user_data, 
 	guint8 status = 0xfd;
 	if (!fu_rts54hub_rtd21xx_device_read_status_raw(self, &status, error))
 		return FALSE;
-	if (status == ISP_STATUS_BUSY) {
+	if (status == FU_RTS54HUB_RTD21XX_ISP_STATUS_BUSY) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "status was 0x%02x", status);
 		return FALSE;
 	}
