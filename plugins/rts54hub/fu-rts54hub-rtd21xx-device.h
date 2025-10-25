@@ -29,12 +29,6 @@ struct _FuRts54hubRtd21xxDeviceClass {
 #define UC_BACKGROUND_OPCODE	      0x31
 #define UC_BACKGROUND_ISP_DATA_OPCODE 0x32
 
-typedef enum {
-	ISP_STATUS_BUSY = 0xBB,		/* host must wait for device */
-	ISP_STATUS_IDLE_SUCCESS = 0x11, /* previous command was OK */
-	ISP_STATUS_IDLE_FAILURE = 0x12, /* previous command failed */
-} IspStatus;
-
 gboolean
 fu_rts54hub_rtd21xx_device_read_status(FuRts54hubRtd21xxDevice *self,
 				       guint8 *status,
