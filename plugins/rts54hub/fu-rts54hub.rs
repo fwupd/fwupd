@@ -6,3 +6,14 @@ enum FuRts54hubRtd21xxIspStatus {
     IdleSuccess = 0x11, // previous command was OK
     IdleFailure = 0x12, // previous command failed
 }
+
+enum FuRts54hubI2cSpeed {
+    100K,
+    200K,
+    300K,
+    400K,
+    500K,
+    600K,
+    700K,
+    800K,
+}
