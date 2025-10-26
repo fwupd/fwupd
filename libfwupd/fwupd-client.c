@@ -4196,7 +4196,7 @@ guint32
 fwupd_client_get_battery_level(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), G_MAXUINT32);
 	return priv->battery_level;
 }
 
@@ -4215,7 +4215,7 @@ guint32
 fwupd_client_get_battery_threshold(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), G_MAXUINT32);
 	return priv->battery_threshold;
 }
 

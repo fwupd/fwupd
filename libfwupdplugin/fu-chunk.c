@@ -60,7 +60,7 @@ fu_chunk_set_idx(FuChunk *self, guint idx)
 guint
 fu_chunk_get_idx(FuChunk *self)
 {
-	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
+	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT);
 	return self->idx;
 }
 
@@ -93,7 +93,7 @@ fu_chunk_set_page(FuChunk *self, guint page)
 guint
 fu_chunk_get_page(FuChunk *self)
 {
-	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
+	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT);
 	return self->page;
 }
 
@@ -126,7 +126,7 @@ fu_chunk_set_address(FuChunk *self, gsize address)
 gsize
 fu_chunk_get_address(FuChunk *self)
 {
-	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
+	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXSIZE);
 	return self->address;
 }
 
@@ -188,7 +188,7 @@ fu_chunk_get_data_out(FuChunk *self)
 gsize
 fu_chunk_get_data_sz(FuChunk *self)
 {
-	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXUINT32);
+	g_return_val_if_fail(FU_IS_CHUNK(self), G_MAXSIZE);
 	return self->data_sz;
 }
 
