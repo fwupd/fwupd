@@ -813,12 +813,24 @@ fu_mtd_device_write_firmware(FuDevice *device,
 	}
 
 	/* just a random blob */
-	if (priv->fmap_regions->len == 0)
-		return fu_mtd_device_write_stream(self, stream, 0, progress, error);
+	if (priv->fmap_regions->len == 0) {
+		gsize off = fu_firmware_get_addr(firmware);
+		return fu_mtd_device_write_stream(self, stream, off, progress, error);
+	}
 
 	/* write each area in order */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, priv->fmap_regions->len);
+	/* if the provided firmware is not an FMAP container, fall back to blob-at-addr */
+	if (priv->fmap_regions->len > 0) {
+		const gchar *fmap_region0 = g_ptr_array_index(priv->fmap_regions, 0);
+		g_autoptr(FuFirmware) img0 =
+		    fu_firmware_get_image_by_id(firmware, fmap_region0, NULL);
+		if (img0 == NULL) {
+			gsize off = fu_firmware_get_addr(firmware);
+			return fu_mtd_device_write_stream(self, stream, off, progress, error);
+		}
+	}
 	for (guint i = 0; i < priv->fmap_regions->len; i++) {
 		const gchar *fmap_region = g_ptr_array_index(priv->fmap_regions, i);
 		g_autoptr(FuFirmware) img = NULL;

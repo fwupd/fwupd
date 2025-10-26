@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-ifd-struct.h"
 #include "fu-mtd-ifd-device.h"
 
 struct _FuMtdIfdDevice {
@@ -104,6 +103,16 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 		fu_device_set_name(device, name);
 		fu_device_set_logical_id(device, region_str);
 		fu_device_add_instance_str(device, "REGION", region_str);
+
+		/* Region is updatable via the parent MTD device if the BIOS master
+		 * (host CPU) has write permission for this specific region. */
+		{
+			FuIfdAccess acc = fu_ifd_image_get_access(self->img, region);
+			if ((acc & FU_IFD_ACCESS_WRITE) != 0) {
+				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_add_protocol(device, "org.infradead.mtd");
+			}
+		}
 	}
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;
@@ -112,11 +121,89 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_mtd_ifd_device_write_firmware(FuDevice *device,
+				 FuFirmware *firmware,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	FuMtdIfdDevice *self = FU_MTD_IFD_DEVICE(device);
+	FuIfdRegion region;
+	FuDevice *proxy;
+	gsize addr;
+	g_autoptr(FuFirmware) img_to_write = NULL;
+	g_autoptr(GInputStream) stream = NULL;
+	gsize streamsz = 0;
+	gsize regionsz = 0;
+
+	if (self->img == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "no IFD image");
+		return FALSE;
+	}
+
+	/* write is performed on the parent MTD device */
+	proxy = fu_device_get_proxy_with_fallback(device);
+	if (proxy == NULL || !FU_IS_MTD_DEVICE(proxy)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent MTD device");
+		return FALSE;
+	}
+
+	region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
+	/* ensure the BIOS master (host CPU) has write permission to this region */
+	if ((fu_ifd_image_get_access(self->img, region) & FU_IFD_ACCESS_WRITE) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "region not writable by BIOS master");
+		return FALSE;
+	}
+	addr = fu_firmware_get_addr(FU_FIRMWARE(self->img));
+	regionsz = fu_firmware_get_size(FU_FIRMWARE(self->img));
+
+	/* pick the correct sub-image from the provided firmware when possible */
+	if (FU_IS_IFD_FIRMWARE(firmware)) {
+		img_to_write = fu_firmware_get_image_by_idx(firmware, region, NULL);
+		if (img_to_write == NULL) {
+			/* fall back to writing the entire provided blob */
+			img_to_write = g_object_ref(firmware);
+		}
+	} else {
+		img_to_write = g_object_ref(firmware);
+	}
+
+	/* size sanity: avoid writing past region limit */
+	stream = fu_firmware_get_stream(img_to_write, error);
+	if (stream == NULL)
+		return FALSE;
+	if (!fu_input_stream_size(stream, &streamsz, error))
+		return FALSE;
+	if (regionsz > 0 && streamsz > regionsz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware (0x%x) larger than region (0x%x)",
+			    (guint)streamsz,
+			    (guint)regionsz);
+		return FALSE;
+	}
+
+	/* delegate to the parent MTD device writer at the correct offset
+	 * by setting the address on the image and calling the parent vfunc */
+	fu_firmware_set_addr(img_to_write, addr);
+	return fu_device_write_firmware(proxy, img_to_write, progress, flags, error);
+}
+
 static void
 fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 {
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 }
 
 static void
@@ -125,6 +212,7 @@ fu_mtd_ifd_device_class_init(FuMtdIfdDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_mtd_ifd_device_probe;
 	device_class->add_security_attrs = fu_mtd_ifd_device_add_security_attrs;
+	device_class->write_firmware = fu_mtd_ifd_device_write_firmware;
 }
 
 FuMtdIfdDevice *
