@@ -130,8 +130,21 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 
 	/* new layout */
 	if (new_layout) {
-		bit_r = (flash_master >> (region + 8)) & 0b1;
-		bit_w = (flash_master >> (region + 20)) & 0b1;
+		/*
+		 * Skylake+ master layout:
+		 *  bits  0..3  ext_read   (regions 12..15)
+		 *  bits  4..7  ext_write  (regions 12..15)
+		 *  bits  8..19 read       (regions 0..11)
+		 *  bits 20..31 write      (regions 0..11)
+		 */
+		if (region < 12) {
+			bit_r = (flash_master >> (region + 8)) & 0b1;
+			bit_w = (flash_master >> (region + 20)) & 0b1;
+		} else {
+			guint8 ext_idx = (guint8)(region - 12);
+			bit_r = (flash_master >> ext_idx) & 0b1;
+			bit_w = (flash_master >> (4 + ext_idx)) & 0b1;
+		}
 		return (bit_r ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
 		       (bit_w ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
 	}
@@ -195,6 +208,13 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 	priv->num_regions = (priv->descriptor_map0 >> 24) & 0b111;
 	if (priv->num_regions == 0)
 		priv->num_regions = 10;
+
+	/*
+	 * Choose master layout based on number of regions parsed from the descriptor:
+	 * - Old layout (pre-Skylake) used 5/7 regions and different bit positions.
+	 * - New layout (Skylake+) uses 10 or more regions and the split ext/read/write fields.
+	 */
+	priv->new_layout = priv->num_regions >= 10;
 	priv->num_components = (priv->descriptor_map0 >> 8) & 0b11;
 	priv->flash_component_base_addr = (priv->descriptor_map0 << 4) & 0x00000FF0;
 	priv->flash_region_base_addr = (priv->descriptor_map0 >> 12) & 0x00000FF0;
