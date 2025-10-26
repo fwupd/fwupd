@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-24 10:42+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2025-10-26 05:02+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/fwupd/fwupd/uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
@@ -991,7 +991,7 @@ msgstr "Пристрої, для яких не вдалося оновити д�
 #. TRANSLATORS: message letting the user there is an update
 #. * waiting, but there is a reason it cannot be deployed
 msgid "Devices with firmware updates that need user action: "
-msgstr "Пристрої із оновленнями мікропрограм, які потребують дій від користувача:"
+msgstr "Пристрої із оновленнями мікропрограм, які потребують дій від користувача: "
 
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
@@ -1002,7 +1002,7 @@ msgstr "Пристрої із оновленнями мікропрограм, �
 #. TRANSLATORS: message letting the user know no
 #. * device upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Пристрої, для яких немає оновлень мікропрограми:"
+msgstr "Пристрої, для яких немає оновлень мікропрограми: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device
@@ -1198,7 +1198,7 @@ msgid "Enabling firmware updates for the BIOS allows fixing security issues."
 msgstr "Вмикання оновлень мікропрограми для BIOS уможливлює виправлення проблем із захистом."
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr "Наслідки вмикання цієї можливості покладаються на вас. Це означає, що усі проблеми, пов'язані із цими оновленнями, ви маєте вирішувати із виробником обладнання. Повідомляти розробникам дистрибутива за адресою  $OS_RELEASE:BUG_REPORT_URL$ слід лише про помилки у процесі оновлення."
+msgstr "Наслідки вмикання цієї можливості покладаються на вас. Це означає, що усі проблеми, пов'язані із цими оновленнями, ви маєте вирішувати із виробником обладнання. Повідомляти розробникам дистрибутива за адресою $OS_RELEASE:BUG_REPORT_URL$ слід лише про помилки у процесі оновлення."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
@@ -3094,7 +3094,7 @@ msgstr "Годинник системи налаштовано неправил�
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been re-inserted."
-msgstr "Оновлення буде продовжено після того, як кабель USB буде повторно вставлено до пристрою"
+msgstr "Оновлення буде продовжено після того, як кабель USB буде повторно вставлено до пристрою."
 
 #. TRANSLATORS: warning message shown after update has been scheduled
 msgid "The update will continue when the device USB cable has been unplugged and then re-inserted."
@@ -3406,7 +3406,7 @@ msgstr "Оновити збережені метадані поточними д
 
 #. TRANSLATORS: command description
 msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
-msgstr "Оновлює усі вказані пристрої до найсвіжішої версії мікропрограми. Якщо пристрої не вказано, оновлює усі пристрої."
+msgstr "Оновлює усі вказані пристрої до найсвіжішої версії мікропрограми. Якщо пристрої не вказано, оновлює усі пристрої"
 
 msgid "Updating"
 msgstr "Оновлення"
