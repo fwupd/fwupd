@@ -4985,7 +4985,7 @@ fu_device_set_battery_level(FuDevice *self, guint battery_level)
 guint
 fu_device_get_battery_threshold(FuDevice *self)
 {
-	g_return_val_if_fail(FU_IS_DEVICE(self), FWUPD_BATTERY_LEVEL_INVALID);
+	g_return_val_if_fail(FU_IS_DEVICE(self), G_MAXUINT);
 
 	/* use the parent if the child is unset */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&

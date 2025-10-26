@@ -125,16 +125,16 @@ fu_msgpack_item_get_binary(FuMsgpackItem *self)
  *
  * Reads the number of items in the map.
  *
- * Returns: an integer, or %G_MAXINT64 if invalid or not found
+ * Returns: an integer, or %G_MAXUINT64 if invalid or not found
  *
  * Since: 2.0.0
  **/
 guint64
 fu_msgpack_item_get_map(FuMsgpackItem *self)
 {
-	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), G_MAXINT64);
-	g_return_val_if_fail(self->kind == FU_MSGPACK_ITEM_KIND_MAP, G_MAXINT64);
-	return self->value.i64;
+	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), G_MAXUINT64);
+	g_return_val_if_fail(self->kind == FU_MSGPACK_ITEM_KIND_MAP, G_MAXUINT64);
+	return (guint64)self->value.i64;
 }
 
 /**
@@ -143,16 +143,16 @@ fu_msgpack_item_get_map(FuMsgpackItem *self)
  *
  * Reads the number of items in the array.
  *
- * Returns: an integer, or %G_MAXINT64 if invalid or not found
+ * Returns: an integer, or %G_MAXUINT64 if invalid or not found
  *
  * Since: 2.0.0
  **/
 guint64
 fu_msgpack_item_get_array(FuMsgpackItem *self)
 {
-	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), G_MAXINT64);
-	g_return_val_if_fail(self->kind == FU_MSGPACK_ITEM_KIND_ARRAY, G_MAXINT64);
-	return self->value.i64;
+	g_return_val_if_fail(FU_IS_MSGPACK_ITEM(self), G_MAXUINT64);
+	g_return_val_if_fail(self->kind == FU_MSGPACK_ITEM_KIND_ARRAY, G_MAXUINT64);
+	return (guint64)self->value.i64;
 }
 
 /**
