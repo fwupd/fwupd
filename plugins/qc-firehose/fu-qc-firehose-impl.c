@@ -275,7 +275,7 @@ fu_qc_firehose_impl_read_xml_cb(FuQcFirehoseImpl *self,
 					 error)) {
 				g_prefix_error_literal(
 				    error,
-				    "failed to parse MaxPayloadSizeToTargetInBytes:");
+				    "failed to parse MaxPayloadSizeToTargetInBytes: ");
 				return FALSE;
 			}
 			g_debug("max payload size now 0x%x", (guint)helper->max_payload_size);
