@@ -137,7 +137,7 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_INVALID_DATA,
-						    "chunk data CRC failed: ");
+						    "chunk data CRC failed");
 				return FALSE;
 			}
 			g_set_error(error,
