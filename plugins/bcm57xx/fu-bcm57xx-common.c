@@ -81,18 +81,18 @@ fu_bcm57xx_verify_magic(GInputStream *stream, gsize offset, GError **error)
 }
 
 void
-fu_bcm57xx_veritem_free(Bcm57xxVeritem *veritem)
+fu_bcm57xx_veritem_free(FuBcm57xxVeritem *veritem)
 {
 	g_free(veritem->branch);
 	g_free(veritem->version);
 	g_free(veritem);
 }
 
-Bcm57xxVeritem *
+FuBcm57xxVeritem *
 fu_bcm57xx_veritem_new(const guint8 *buf, gsize bufsz)
 {
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(Bcm57xxVeritem) veritem = g_new0(Bcm57xxVeritem, 1);
+	g_autoptr(FuBcm57xxVeritem) veritem = g_new0(FuBcm57xxVeritem, 1);
 	struct {
 		const gchar *prefix;
 		const gchar *branch;
