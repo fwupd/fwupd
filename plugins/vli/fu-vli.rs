@@ -131,3 +131,21 @@ enum FuVliDeviceFwTag {
     VL109A = 0xA2,
     VL109B = 0xB2,
 }
+
+enum FuVliUsbhubRtd21xxIspStatus {
+    Busy = 0xBB,        // host must wait for device
+    IdleSuccess = 0x11, // previous command was OK
+    IdleFailure = 0x12, // previous command failed
+}
+
+enum FuVliUsbhubRtd21xxIspCmd {
+    None,
+    EnterFwUpdate,
+    GetProjectIdAddr,
+    SyncIdentifyCode,
+    GetFwInfo,
+    FwUpdateStart,
+    FwUpdateIspDone,
+    FwUpdateExit,
+    FwUpdateReset,
+}
