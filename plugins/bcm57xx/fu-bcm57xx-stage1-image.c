@@ -52,7 +52,7 @@ fu_bcm57xx_stage1_image_parse(FuFirmware *image,
 			return FALSE;
 		if (veraddr != 0x0) {
 			guint32 bufver[4] = {'\0'};
-			g_autoptr(Bcm57xxVeritem) veritem = NULL;
+			g_autoptr(FuBcm57xxVeritem) veritem = NULL;
 			if (veraddr < BCM_PHYS_ADDR_DEFAULT + sizeof(bufver)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
