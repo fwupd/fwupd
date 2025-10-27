@@ -17,3 +17,31 @@ enum FuRts54hubI2cSpeed {
     700K,
     800K,
 }
+
+enum FuRts54hubRtd21xxVendorCmd {
+    Disable,
+    Enable,
+    AccessFlash,
+}
+
+enum FuRts54hubRtd21xxBgIspCmd {
+    None,
+    FwUpdateStart,
+    FwUpdateIspDone,
+    GetFwInfo,
+    FwUpdateExit,
+    GetProjectIdAddr,
+    SyncIdentifyCode,
+}
+
+enum FuRts54hubRtd21xxFgIspCmd {
+    None,
+    EnterFwUpdate,
+    GetProjectIdAddr,
+    SyncIdentifyCode,
+    GetFwInfo,
+    FwUpdateStart,
+    FwUpdateIspDone,
+    FwUpdateReset,
+    FwUpdateExit,
+}
