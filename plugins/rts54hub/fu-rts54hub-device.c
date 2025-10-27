@@ -267,7 +267,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 					    &actual_len,
 					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
 					    NULL, error)) {
-		g_prefix_error (error, "failed to read flash: ");
+		g_prefix_error_literal(error, "failed to read flash: ");
 		return FALSE;
 	}
 	if (actual_len != datasz) {
