@@ -88,27 +88,27 @@ typedef struct {
 	guint start;
 	guint length;
 	guint checksum_cmd;
-} MSTBankAttributes;
+} FuDellDockMstBankAttributes;
 
-const MSTBankAttributes bank0_attributes = {
+const FuDellDockMstBankAttributes bank0_attributes = {
     .start = 0,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes bank1_attributes = {
+const FuDellDockMstBankAttributes bank1_attributes = {
     .start = EEPROM_BANK_OFFSET,
     .length = EEPROM_BANK_OFFSET,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes esm_attributes = {
+const FuDellDockMstBankAttributes esm_attributes = {
     .start = EEPROM_ESM_OFFSET,
     .length = 0x3ffff,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CHECKSUM,
 };
 
-const MSTBankAttributes cayenne_attributes = {
+const FuDellDockMstBankAttributes cayenne_attributes = {
     .start = 0,
     .length = 0x50000,
     .checksum_cmd = FU_DELL_DOCK_MST_CMD_CRC16_CHECKSUM,
@@ -139,7 +139,7 @@ G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
 /**
  * fu_dell_dock_mst_get_bank_attribs:
  * @bank: the MSTBank
- * @out (out): the MSTBankAttributes attribute that matches
+ * @out (out): the FuDellDockMstBankAttributes attribute that matches
  * @error: (nullable): optional return location for an error
  *
  * Returns a structure that corresponds to the attributes for a bank
@@ -147,7 +147,9 @@ G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dell_dock_mst_get_bank_attribs(MSTBank bank, const MSTBankAttributes **out, GError **error)
+fu_dell_dock_mst_get_bank_attribs(MSTBank bank,
+				  const FuDellDockMstBankAttributes **out,
+				  GError **error)
 {
 	switch (bank) {
 	case Bank0:
@@ -516,7 +518,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	g_autoptr(GBytes) csum_bytes = NULL;
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize length = 0;
 	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 	guint32 payload_sum = 0;
@@ -580,7 +582,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 static gboolean
 fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **error)
 {
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	guint32 sector;
 
 	if (!fu_dell_dock_mst_get_bank_attribs(bank, &attribs, error))
@@ -635,7 +637,7 @@ fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 				  FuProgress *progress,
 				  GError **error)
 {
-	const MSTBankAttributes *attribs = NULL;
+	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
 	const guint8 *data = g_bytes_get_data(blob_fw, NULL);
@@ -748,7 +750,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError **error)
 {
-	const MSTBankAttributes *attribs;
+	const FuDellDockMstBankAttributes *attribs;
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *crc_tag;
 	const guint8 *new_tag;
