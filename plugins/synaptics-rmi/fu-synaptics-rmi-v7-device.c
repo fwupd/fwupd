@@ -13,17 +13,6 @@
 
 #define RMI_F34_ERASE_WAIT_MS 10000 /* ms */
 
-typedef enum {
-	RMI_FLASH_CMD_IDLE = 0x00,
-	RMI_FLASH_CMD_ENTER_BL,
-	RMI_FLASH_CMD_READ,
-	RMI_FLASH_CMD_WRITE,
-	RMI_FLASH_CMD_ERASE,
-	RMI_FLASH_CMD_ERASE_AP,
-	RMI_FLASH_CMD_SENSOR_ID,
-	RMI_FLASH_CMD_SIGNATURE,
-} RmiFlashCommand;
-
 gboolean
 fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -44,7 +33,7 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 	/* enter BL */
 	fu_byte_array_append_uint8(enable_req, FU_RMI_PARTITION_ID_BOOTLOADER);
 	fu_byte_array_append_uint32(enable_req, 0x0, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(enable_req, RMI_FLASH_CMD_ENTER_BL);
+	fu_byte_array_append_uint8(enable_req, FU_SYNAPTICS_RMI_FLASH_CMD_ENTER_BL);
 	fu_byte_array_append_uint8(enable_req, flash->bootloader_id[0]);
 	fu_byte_array_append_uint8(enable_req, flash->bootloader_id[1]);
 	if (!fu_synaptics_rmi_device_write(self,
@@ -83,7 +72,7 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 		return FALSE;
 	fu_byte_array_append_uint8(erase_cmd, partition_id);
 	fu_byte_array_append_uint32(erase_cmd, 0x0, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE);
+	fu_byte_array_append_uint8(erase_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_ERASE);
 
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[0]);
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
@@ -131,10 +120,10 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 	fu_byte_array_append_uint32(erase_cmd, 0x0, G_LITTLE_ENDIAN);
 	if (flash->bootloader_id[1] >= 8) {
 		/* For bootloader v8 */
-		fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE_AP);
+		fu_byte_array_append_uint8(erase_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_ERASE_AP);
 	} else {
 		/* For bootloader v7 */
-		fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE);
+		fu_byte_array_append_uint8(erase_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_ERASE);
 	}
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[0]);
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
@@ -173,7 +162,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 
 		fu_byte_array_append_uint8(erase_config_cmd, FU_RMI_PARTITION_ID_CORE_CONFIG);
 		fu_byte_array_append_uint32(erase_config_cmd, 0x0, G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint8(erase_config_cmd, RMI_FLASH_CMD_ERASE);
+		fu_byte_array_append_uint8(erase_config_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_ERASE);
 
 		fu_device_sleep(FU_DEVICE(self), 100); /* ms */
 		if (!fu_synaptics_rmi_device_write(self,
@@ -317,7 +306,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 			g_prefix_error_literal(error, "failed to write transfer length: ");
 			return FALSE;
 		}
-		fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_SIGNATURE);
+		fu_byte_array_append_uint8(req_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_SIGNATURE);
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base + 0x4,
 						   req_cmd,
@@ -407,7 +396,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 			g_prefix_error_literal(error, "failed to write transfer length: ");
 			return FALSE;
 		}
-		fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_WRITE);
+		fu_byte_array_append_uint8(req_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_WRITE);
 		if (!fu_synaptics_rmi_device_write(self,
 						   f34->data_base + 0x4,
 						   req_cmd,
@@ -486,7 +475,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 	}
 
 	/* set command to read */
-	fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_READ);
+	fu_byte_array_append_uint8(req_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_READ);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 0x4,
 					   req_cmd,
@@ -814,7 +803,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 	}
 
 	/* set command to read */
-	fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_READ);
+	fu_byte_array_append_uint8(req_cmd, FU_SYNAPTICS_RMI_FLASH_CMD_READ);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 0x4,
 					   req_cmd,

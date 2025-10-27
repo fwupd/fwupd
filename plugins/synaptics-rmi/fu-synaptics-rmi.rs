@@ -170,3 +170,14 @@ enum FuRmiStickDeviceType {
     Synaptics = 6,
     Unknown = 0xFFFFFFFF,
 }
+
+enum FuSynapticsRmiFlashCmd {
+    Idle,
+    EnterBl,
+    Read,
+    Write,
+    Erase,
+    EraseAp,
+    SensorId,
+    Signature,
+}
