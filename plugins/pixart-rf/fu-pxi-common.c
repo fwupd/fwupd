@@ -11,7 +11,7 @@
 #include "fu-pxi-struct.h"
 
 void
-fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *str)
+fu_pxi_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString *str)
 {
 	fwupd_codec_string_append_hex(str, idt, "Status", fwstate->status);
 	fwupd_codec_string_append_hex(str, idt, "NewFlow", fwstate->new_flow);
@@ -31,7 +31,7 @@ fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *
 }
 
 gboolean
-fu_pxi_ota_fw_state_parse(struct ota_fw_state *fwstate,
+fu_pxi_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
 			  const guint8 *buf,
 			  gsize bufsz,
 			  gsize offset,
