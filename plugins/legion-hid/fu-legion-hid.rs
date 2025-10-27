@@ -19,7 +19,7 @@ enum FuLegionHidResponseStatus {
         Busy,
 }
 
-#[derive(New, Getters, Setters, Default, ParseStream)]
+#[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidUpgradeCmd {
         report_id: u8,
@@ -31,7 +31,7 @@ struct FuStructLegionHidUpgradeCmd {
         data: [u8; 58],
 }
 
-#[derive(New, Getters, Setters, Default, ParseStream)]
+#[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidUpgradeStartParam {
         length: u8 = 0x08,
@@ -44,7 +44,7 @@ struct FuStructLegionHidUpgradeStartParam {
         sn: u8 = 0x01,
 }
 
-#[derive(New, Getters, Setters, Default, ParseStream)]
+#[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidNormalCmd {
         report_id: u8,
@@ -55,7 +55,7 @@ struct FuStructLegionHidNormalCmd {
         data: [u8; 59],
 }
 
-#[derive(New, Getters, Setters, Default, ParseStream)]
+#[derive(Getters, Setters, Default, ParseStream)]
 #[repr(C, packed)]
 struct FuStructLegionHidBinHeader {
         mcu_size: u32le,
