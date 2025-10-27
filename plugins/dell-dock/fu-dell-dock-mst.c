@@ -71,19 +71,6 @@
 /* firmware file offsets */
 #define MST_BLOB_VERSION_OFFSET 0x06F0
 
-typedef enum {
-	Panamera_mst,
-	Cayenne_mst,
-	Unknown,
-} MSTType;
-
-typedef enum {
-	Bank0,
-	Bank1,
-	ESM,
-	Cayenne,
-} MSTBank;
-
 typedef struct {
 	guint start;
 	guint length;
@@ -131,14 +118,14 @@ struct _FuDellDockMst {
 	guint32 mst_rc_data_addr;
 	guint32 mst_core_mcu_bootloader_addr;
 	guint8 dock_type;
-	MSTType mst_type;
+	FuDellDockMstType mst_type;
 };
 
 G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
 
 /**
  * fu_dell_dock_mst_get_bank_attribs:
- * @bank: the MSTBank
+ * @bank: the FuDellDockMstBank
  * @out (out): the FuDellDockMstBankAttributes attribute that matches
  * @error: (nullable): optional return location for an error
  *
@@ -147,21 +134,21 @@ G_DEFINE_TYPE(FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dell_dock_mst_get_bank_attribs(MSTBank bank,
+fu_dell_dock_mst_get_bank_attribs(FuDellDockMstBank bank,
 				  const FuDellDockMstBankAttributes **out,
 				  GError **error)
 {
 	switch (bank) {
-	case Bank0:
+	case FU_DELL_DOCK_MST_BANK_0:
 		*out = &bank0_attributes;
 		break;
-	case Bank1:
+	case FU_DELL_DOCK_MST_BANK_1:
 		*out = &bank1_attributes;
 		break;
-	case ESM:
+	case FU_DELL_DOCK_MST_BANK_ESM:
 		*out = &esm_attributes;
 		break;
-	case Cayenne:
+	case FU_DELL_DOCK_MST_BANK_CAYENNE:
 		*out = &cayenne_attributes;
 		break;
 	default:
@@ -225,7 +212,7 @@ fu_dell_dock_mst_write_register(FuDevice *proxy,
 }
 
 static gboolean
-fu_dell_dock_mst_query_active_bank(FuDevice *proxy, MSTBank *active, GError **error)
+fu_dell_dock_mst_query_active_bank(FuDevice *proxy, FuDellDockMstBank *active, GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
 	const guint32 *data = NULL;
@@ -242,9 +229,9 @@ fu_dell_dock_mst_query_active_bank(FuDevice *proxy, MSTBank *active, GError **er
 
 	data = g_bytes_get_data(bytes, &length);
 	if ((data[0] & (1 << 7)) || (data[0] & (1 << 30)))
-		*active = Bank1;
+		*active = FU_DELL_DOCK_MST_BANK_1;
 	else
-		*active = Bank0;
+		*active = FU_DELL_DOCK_MST_BANK_0;
 	g_debug("MST: active bank is: %u", *active);
 
 	return TRUE;
@@ -395,7 +382,7 @@ fu_dell_dock_mst_rc_command(FuDevice *device,
 	return fu_dell_dock_mst_trigger_rc_command(device, error);
 }
 
-static MSTType
+static FuDellDockMstType
 fu_dell_dock_mst_get_module_type(FuDevice *device)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
@@ -512,7 +499,7 @@ fu_dell_dock_mst_get_crc(guint8 type, guint32 length, const guint8 *payload_data
 static gboolean
 fu_dell_dock_mst_checksum_bank(FuDevice *device,
 			       GBytes *blob_fw,
-			       MSTBank bank,
+			       FuDellDockMstBank bank,
 			       gboolean *checksum,
 			       GError **error)
 {
@@ -580,7 +567,7 @@ fu_dell_dock_mst_checksum_bank(FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, MSTBank bank, GError **error)
+fu_dell_dock_mst_erase_panamera_bank(FuDevice *device, FuDellDockMstBank bank, GError **error)
 {
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	guint32 sector;
@@ -633,7 +620,7 @@ fu_dell_dock_mst_erase_cayenne(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_mst_write_flash_bank(FuDevice *device,
 				  GBytes *blob_fw,
-				  MSTBank bank,
+				  FuDellDockMstBank bank,
 				  FuProgress *progress,
 				  GError **error)
 {
@@ -748,7 +735,7 @@ fu_dell_dock_mst_stop_esm(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_invalidate_bank(FuDevice *device, MSTBank bank_in_use, GError **error)
+fu_dell_dock_mst_invalidate_bank(FuDevice *device, FuDellDockMstBank bank_in_use, GError **error)
 {
 	const FuDellDockMstBankAttributes *attribs;
 	g_autoptr(GBytes) bytes = NULL;
@@ -924,8 +911,8 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 				GError **error)
 {
 	gboolean checksum = FALSE;
-	MSTBank bank_in_use = 0;
-	guint8 order[2] = {ESM, Bank0};
+	FuDellDockMstBank bank_in_use = 0;
+	guint8 order[2] = {FU_DELL_DOCK_MST_BANK_ESM, FU_DELL_DOCK_MST_BANK_0};
 	FuProgress *progress_local;
 
 	fu_progress_set_id(progress, G_STRLOC);
@@ -935,8 +922,8 @@ fu_dell_dock_mst_write_panamera(FuDevice *device,
 	if (!fu_dell_dock_mst_query_active_bank(fu_device_get_proxy(device), &bank_in_use, error))
 		return FALSE;
 
-	if (bank_in_use == Bank0)
-		order[1] = Bank1;
+	if (bank_in_use == FU_DELL_DOCK_MST_BANK_0)
+		order[1] = FU_DELL_DOCK_MST_BANK_1;
 	/* ESM needs special handling during flash process*/
 	if (!fu_dell_dock_mst_stop_esm(device, error))
 		return FALSE;
@@ -992,11 +979,15 @@ fu_dell_dock_mst_write_cayenne(FuDevice *device,
 		fu_progress_step_done(progress);
 		if (!fu_dell_dock_mst_write_flash_bank(device,
 						       fw,
-						       Cayenne,
+						       FU_DELL_DOCK_MST_BANK_CAYENNE,
 						       fu_progress_get_child(progress),
 						       error))
 			return FALSE;
-		if (!fu_dell_dock_mst_checksum_bank(device, fw, Cayenne, &checksum, error))
+		if (!fu_dell_dock_mst_checksum_bank(device,
+						    fw,
+						    FU_DELL_DOCK_MST_BANK_CAYENNE,
+						    &checksum,
+						    error))
 			return FALSE;
 		fu_progress_step_done(progress);
 		if (!checksum) {
@@ -1038,7 +1029,7 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
-	MSTType type;
+	FuDellDockMstType type;
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
@@ -1069,10 +1060,10 @@ fu_dell_dock_mst_write_fw(FuDevice *device,
 		return FALSE;
 
 	type = fu_dell_dock_mst_get_module_type(device);
-	if (type == Panamera_mst) {
+	if (type == FU_DELL_DOCK_MST_TYPE_PANAMERA) {
 		if (!fu_dell_dock_mst_write_panamera(device, fw, flags, progress, error))
 			return FALSE;
-	} else if (type == Cayenne_mst) {
+	} else if (type == FU_DELL_DOCK_MST_TYPE_CAYENNE) {
 		if (!fu_dell_dock_mst_write_cayenne(device, fw, flags, progress, error))
 			return FALSE;
 	} else {
@@ -1170,7 +1161,7 @@ fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 
 	/* instance id */
 	if (self->dock_type == DOCK_BASE_TYPE_ATOMIC) {
-		self->mst_type = Cayenne_mst;
+		self->mst_type = FU_DELL_DOCK_MST_TYPE_CAYENNE;
 		self->mst_rc_trigger_addr = CAYENNE_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = CAYENNE_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = CAYENNE_MST_RC_DATA_ADDR;
@@ -1178,7 +1169,7 @@ fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		fu_device_add_instance_id(device, DELL_DOCK_VMM6210_INSTANCE_ID);
 	} else if (self->dock_type == DOCK_BASE_TYPE_SALOMON) {
-		self->mst_type = Panamera_mst;
+		self->mst_type = FU_DELL_DOCK_MST_TYPE_PANAMERA;
 		self->mst_rc_trigger_addr = PANAMERA_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = PANAMERA_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = PANAMERA_MST_RC_DATA_ADDR;
