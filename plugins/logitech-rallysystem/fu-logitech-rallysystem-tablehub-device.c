@@ -250,7 +250,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 		sizeof(buf),
 		FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 		error)) {
-		g_prefix_error(
+		g_prefix_error_literal(
 		    error,
 		    "failed to receive set download mode response: please reboot the device: ");
 		return FALSE;
