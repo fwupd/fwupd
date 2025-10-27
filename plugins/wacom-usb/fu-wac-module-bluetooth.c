@@ -33,9 +33,9 @@ typedef struct {
 static void
 fu_wac_module_bluetooth_calculate_crc_byte(guint8 *crc, guint8 data)
 {
-	guint8 c[8];
-	guint8 m[8];
-	guint8 r[8];
+	guint8 c[8] = {0};
+	guint8 m[8] = {0};
+	guint8 r[8] = {0};
 
 	/* find out what bits are set */
 	for (guint i = 0; i < 8; i++) {
