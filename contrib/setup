@@ -1,6 +1,11 @@
 #!/usr/bin/env -S bash -e
 # Setup the repository and local system for development
 
+[ "$0" = "contrib/setup" ] || [ "$0" = "./contrib/setup" ] || {
+    echo "must be called as contrib/setup or ./contrib/setup" >&2
+    return 1
+}
+
 cd "$(dirname "$0")/.."
 
 HELPER=./contrib/ci/fwupd_setup_helpers.py
