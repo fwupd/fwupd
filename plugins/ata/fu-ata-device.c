@@ -14,7 +14,7 @@
 #define FU_ATA_IDENTIFY_SIZE 512 /* bytes */
 #define FU_ATA_BLOCK_SIZE    512 /* bytes */
 
-struct ata_tf {
+typedef struct {
 	guint8 dev;
 	guint8 command;
 	guint8 error;
@@ -24,7 +24,7 @@ struct ata_tf {
 	guint8 lbal;
 	guint8 lbam;
 	guint8 lbah;
-};
+} FuAtaDeviceTf;
 
 #define ATA_USING_LBA (1 << 6)
 #define ATA_STAT_DRQ  (1 << 3)
@@ -478,7 +478,7 @@ fu_ata_device_probe(FuDevice *device, GError **error)
 }
 
 static guint64
-fu_ata_device_tf_to_pack_id(struct ata_tf *tf)
+fu_ata_device_tf_to_pack_id(FuAtaDeviceTf *tf)
 {
 	guint32 lba24 = (tf->lbah << 16) | (tf->lbam << 8) | (tf->lbal);
 	guint32 lbah = tf->dev & 0x0f;
@@ -514,7 +514,7 @@ fu_ata_device_ioctl_sense_cb(FuIoctl *self, gpointer ptr, guint8 *buf, gsize buf
 
 static gboolean
 fu_ata_device_command(FuAtaDevice *self,
-		      struct ata_tf *tf,
+		      FuAtaDeviceTf *tf,
 		      gint dxfer_direction,
 		      guint timeout_ms,
 		      guint8 *dxferp,
@@ -647,7 +647,7 @@ static gboolean
 fu_ata_device_setup(FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	struct ata_tf tf = {0x0};
+	FuAtaDeviceTf tf = {0x0};
 	guint8 id[FU_ATA_IDENTIFY_SIZE] = {0x0};
 
 	/* get ID block */
@@ -670,7 +670,7 @@ static gboolean
 fu_ata_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
-	struct ata_tf tf = {0x0};
+	FuAtaDeviceTf tf = {0x0};
 
 	/* flush cache and put drive in standby to prepare to activate */
 	tf.dev = ATA_USING_LBA;
@@ -724,7 +724,7 @@ fu_ata_device_fw_download(FuAtaDevice *self,
 			  guint32 data_sz,
 			  GError **error)
 {
-	struct ata_tf tf = {0x0};
+	FuAtaDeviceTf tf = {0x0};
 	guint32 block_count = data_sz / FU_ATA_BLOCK_SIZE;
 	guint32 buffer_offset = addr / FU_ATA_BLOCK_SIZE;
 
