@@ -19,3 +19,16 @@ enum FuDellDockMstCmd {
     ReadFlash = 0x30,
     ReadMemory = 0x31,
 }
+
+enum FuDellDockMstType {
+    Unknown,
+    Panamera,
+    Cayenne,
+}
+
+enum FuDellDockMstBank {
+    0,
+    1,
+    ESM,
+    Cayenne,
+}
