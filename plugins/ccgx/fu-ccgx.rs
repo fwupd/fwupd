@@ -197,3 +197,67 @@ enum FuCcgxHpiRegPart {
     PddataRead = 4,     // read data memory
     PddataWrite = 8,    // write data memory
 }
+
+enum FuCcgxI2cDataConfig {
+    None = 0,
+    Stop = 1 << 0,
+    Nak = 1 << 1, // only for read
+}
+
+enum FuCcgxHpiDevReg {
+    DeviceMode = 0,
+    BootModeReason,
+    SiId,
+    SiIdLsb,
+    BlLastRow,
+    BlLastRowLsb,
+    IntrAddr,
+    JumpToBoot,
+    ResetAddr,
+    ResetCmd,
+    EnterFlashMode,
+    ValidateFwAddr,
+    FlashReadWrite,
+    FlashReadWriteCmd,
+    FlashRow,
+    FlashRowLsb,
+    AllVersion,
+    AllVersionByte1,
+    AllVersionByte2,
+    AllVersionByte3,
+    AllVersionByte4,
+    AllVersionByte5,
+    AllVersionByte6,
+    AllVersionByte7,
+    AllVersionByte8,
+    AllVersionByte9,
+    AllVersionByte10,
+    AllVersionByte11,
+    AllVersionByte12,
+    AllVersionByte13,
+    AllVersionByte14,
+    AllVersionByte15,
+    Fw2Version,
+    Fw2VersionByte1,
+    Fw2VersionByte2,
+    Fw2VersionByte3,
+    Fw2VersionByte4,
+    Fw2VersionByte5,
+    Fw2VersionByte6,
+    Fw2VersionByte7,
+    FwbinLoc,
+    Fw1BinLocLsb,
+    Fw2BinLocMsb,
+    Fw2BinLocLsb,
+    PortEnable,
+    Len,
+    Response = 0x007e,
+    FlashMem = 0x0200,
+}
+
+enum FuCcgxHpiRegSection {
+    Dev,    // device information
+    Port0,  // USB-PD Port 0
+    Port1,  // USB-PD Port 1
+    All,
+}
