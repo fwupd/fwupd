@@ -574,7 +574,7 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_SUPPORTED,
-						    "packet Type match failed: ");
+						    "packet type match failed");
 				return FALSE;
 			}
 		} else {
@@ -778,7 +778,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 
 	/* read HD1 (factory) header */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
-					  VLI_USBHUB_FLASHMAP_ADDR_HD1,
+					  FU_VLI_USBHUB_FLASHMAP_ADDR_HD1,
 					  self->st_hd1->buf->data,
 					  self->st_hd1->buf->len,
 					  error)) {
@@ -832,7 +832,7 @@ fu_vli_usbhub_device_ready(FuDevice *device, GError **error)
 	/* read HD2 (update) header */
 	if (self->update_protocol >= 0x2) {
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
-						  VLI_USBHUB_FLASHMAP_ADDR_HD2,
+						  FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 						  self->st_hd2->buf->data,
 						  self->st_hd2->buf->len,
 						  error)) {
@@ -978,7 +978,7 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 
 	/* write in chunks */
 	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
-				     VLI_USBHUB_FLASHMAP_ADDR_HD1,
+				     FU_VLI_USBHUB_FLASHMAP_ADDR_HD1,
 				     buf,
 				     bufsz,
 				     fu_progress_get_child(progress),
@@ -1017,22 +1017,22 @@ fu_vli_usbhub_device_hd1_recover(FuVliUsbhubDevice *self,
 
 	/* write new header block */
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
-					    VLI_USBHUB_FLASHMAP_ADDR_HD1,
+					    FU_VLI_USBHUB_FLASHMAP_ADDR_HD1,
 					    error)) {
 		g_prefix_error(error,
 			       "failed to erase header1 sector at 0x%x: ",
-			       (guint)VLI_USBHUB_FLASHMAP_ADDR_HD1);
+			       (guint)FU_VLI_USBHUB_FLASHMAP_ADDR_HD1);
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
-					   VLI_USBHUB_FLASHMAP_ADDR_HD1,
+					   FU_VLI_USBHUB_FLASHMAP_ADDR_HD1,
 					   st_hdr->buf->data,
 					   st_hdr->buf->len,
 					   progress,
 					   error)) {
 		g_prefix_error(error,
 			       "failed to write header1 block at 0x%x: ",
-			       (guint)VLI_USBHUB_FLASHMAP_ADDR_HD1);
+			       (guint)FU_VLI_USBHUB_FLASHMAP_ADDR_HD1);
 		return FALSE;
 	}
 
@@ -1069,13 +1069,13 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		    VLI_USBHUB_FLASHMAP_IDX_HD2) {
 			/* backup HD1 before recovering */
 			if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
-							    VLI_USBHUB_FLASHMAP_ADDR_HD2,
+							    FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 							    error)) {
 				g_prefix_error_literal(error, "failed to erase sector at hdr 1: ");
 				return FALSE;
 			}
 			if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
-							   VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
+							   FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
 							   self->st_hd1->buf->data,
 							   self->st_hd1->buf->len,
 							   progress,
@@ -1096,13 +1096,13 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		/* copy the header from the backup zone */
 		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
-						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
+						  FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
 						  self->st_hd1->buf->data,
 						  self->st_hd1->buf->len,
 						  error)) {
 			g_prefix_error(error,
 				       "failed to read root header from 0x%x: ",
-				       (guint)VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
+				       (guint)FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
 			return FALSE;
 		}
 		if (!fu_vli_usbhub_device_hd1_is_valid(self->st_hd1)) {
@@ -1126,7 +1126,7 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 		return FALSE;
 	}
 	hd2_fw_addr = (hd1_fw_sz + 0xfff) & 0xf000;
-	hd2_fw_addr += VLI_USBHUB_FLASHMAP_ADDR_FW;
+	hd2_fw_addr += FU_VLI_USBHUB_FLASHMAP_ADDR_FW;
 
 	/* get the size and offset of the update firmware */
 	buf_fw = g_bytes_get_data(fw, &buf_fwsz);
@@ -1179,13 +1179,13 @@ fu_vli_usbhub_device_update_v2(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
 	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd->buf));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
-					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
+					    FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
 		g_prefix_error_literal(error, "failed to erase sectors for HD2: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
-					   VLI_USBHUB_FLASHMAP_ADDR_HD2,
+					   FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					   st_hd->buf->data,
 					   st_hd->buf->len,
 					   fu_progress_get_child(progress),
@@ -1227,13 +1227,13 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 		    VLI_USBHUB_FLASHMAP_IDX_HD2) {
 			/* backup HD1 before recovering */
 			if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
-							    VLI_USBHUB_FLASHMAP_ADDR_HD2,
+							    FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 							    error)) {
 				g_prefix_error_literal(error, "failed to erase sector at hdr 1: ");
 				return FALSE;
 			}
 			if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
-							   VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
+							   FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
 							   self->st_hd1->buf->data,
 							   self->st_hd1->buf->len,
 							   progress,
@@ -1254,13 +1254,13 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 		/* copy the header from the backup zone */
 		g_info("HD1 was invalid, reading backup");
 		if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(self),
-						  VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
+						  FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP,
 						  self->st_hd1->buf->data,
 						  self->st_hd1->buf->len,
 						  error)) {
 			g_prefix_error(error,
 				       "failed to read root header from 0x%x: ",
-				       (guint)VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
+				       (guint)FU_VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
 			return FALSE;
 		}
 		if (!fu_vli_usbhub_device_hd1_is_valid(self->st_hd1)) {
@@ -1332,13 +1332,13 @@ fu_vli_usbhub_device_update_v3(FuVliUsbhubDevice *self,
 	fu_struct_vli_usbhub_hdr_set_next_ptr(st_hd, VLI_USBHUB_FLASHMAP_IDX_INVALID);
 	fu_struct_vli_usbhub_hdr_set_checksum(st_hd, fu_vli_usbhub_device_header_crc8(st_hd->buf));
 	if (!fu_vli_device_spi_erase_sector(FU_VLI_DEVICE(self),
-					    VLI_USBHUB_FLASHMAP_ADDR_HD2,
+					    FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					    error)) {
 		g_prefix_error_literal(error, "failed to erase sectors for HD2: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_write_block(FU_VLI_DEVICE(self),
-					   VLI_USBHUB_FLASHMAP_ADDR_HD2,
+					   FU_VLI_USBHUB_FLASHMAP_ADDR_HD2,
 					   st_hd->buf->data,
 					   st_hd->buf->len,
 					   fu_progress_get_child(progress),

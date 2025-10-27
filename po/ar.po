@@ -8,19 +8,21 @@
 # ver nos, 2025
 # zayed <zayed.alsaidi@gmail.com>, 2025
 # jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>, 2025.
+# Zayed Al-Saidi <zayed.alsaidi@gmail.com>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 16:10+0000\n"
-"Last-Translator: jonnysemon <jonnysemon@users.noreply.hosted.weblate.org>\n"
+"PO-Revision-Date: 2025-10-24 09:53+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Arabic <https://hosted.weblate.org/projects/fwupd/fwupd/ar/>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 5.14-dev\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -1792,7 +1794,7 @@ msgstr "عدد صحيح"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
-msgstr "Intel BootGuard"
+msgstr "انتل BootGuard"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * ACM means to verify the integrity of Initial Boot Block
@@ -2842,7 +2844,7 @@ msgstr "عطِّل الطرف البعيد بنجاح"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully disabled test devices"
-msgstr "عطِّل أجهزة الاختبار بنجاح"
+msgstr "عُطِّل أجهزة الاختبار بنجاح"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
@@ -2855,11 +2857,11 @@ msgstr "فُعِّل وُحُدّث الطرف البعيد بنجاح"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr "فعِّل الطرف البعيد بنجاح"
+msgstr "فُعِّل الطرف البعيد بنجاح"
 
 #. TRANSLATORS: comment explaining result of command
 msgid "Successfully enabled test devices"
-msgstr "فعِّل أجهزة الاختبار بنجاح"
+msgstr "فُعِّل أجهزة الاختبار بنجاح"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"

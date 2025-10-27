@@ -44,7 +44,7 @@ fu_huddly_usb_device_find_interface(FuHuddlyUsbDevice *self, GError **error)
 
 	intfs = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
 	if (intfs == NULL) {
-		g_prefix_error_literal(error, "could not find interface");
+		g_prefix_error_literal(error, "could not find interface: ");
 		return FALSE;
 	}
 	for (guint i = 0; i < intfs->len; i++) {

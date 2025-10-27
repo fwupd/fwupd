@@ -11,16 +11,20 @@
 # Francisco Serrador <serrador@protonmail.com>, 2022
 # Giovanni Alfredo Garciliano Diaz <giobeatle10@gmail.com>, 2024
 # Santiago FN, 2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Spanish (http://app.transifex.com/freedesktop/fwupd/language/es/)\n"
+"PO-Revision-Date: 2025-10-24 10:04+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/fwupd/fwupd/es/>\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: es\n"
-"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=(n == 1) ? 0 : ((n != 0 && n % 1000000 == 0) ? 1 : 2);\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -485,9 +489,9 @@ msgstr "Aplicando actualización…"
 #. * the domain administrator
 msgid "Approved firmware:"
 msgid_plural "Approved firmware:"
-msgstr[0] "Firmware aprobado"
-msgstr[1] "Firmware aprobado"
-msgstr[2] "Firmware aprobado"
+msgstr[0] "Firmware aprobado:"
+msgstr[1] "Firmware aprobado:"
+msgstr[2] "Firmware aprobado:"
 
 #. TRANSLATORS: command description
 msgid "Asks the daemon to quit"
@@ -1406,7 +1410,7 @@ msgstr "Bloqueo de Protección de Escritura Firmware"
 
 #. TRANSLATORS: longer description
 msgid "Firmware Write Protection protects device firmware memory from being tampered with."
-msgstr "Protección de Escritura del Firmware del de la memoria del firmware del dispositivo con el que es condonado. "
+msgstr "Protección de Escritura del Firmware del de la memoria del firmware del dispositivo con el que es condonado."
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
@@ -3212,7 +3216,7 @@ msgstr "Protección de memoria UEFI activada y bloqueada"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection enabled but not locked"
-msgstr "Protección de memoria UEFI activada pero no bloqueada "
+msgstr "Protección de memoria UEFI activada pero no bloqueada"
 
 #. TRANSLATORS: HSI event title
 msgid "UEFI memory protection is now locked"

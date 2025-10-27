@@ -9,26 +9,28 @@
 # F Bausch, 2024-2025
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018, 2025.
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2025
+# Richard Hughes <hughsient@gmail.com>, 2025.
+# LucasMZ <git@lucasmz.dev>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 16:10+0000\n"
-"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
+"PO-Revision-Date: 2025-10-26 05:02+0000\n"
+"Last-Translator: LucasMZ <git@lucasmz.dev>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/fwupd/fwupd/pt_BR/>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
-"X-Generator: Weblate 5.14-dev\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
-msgstr[1] "%.0f minutos restantes"
+msgstr[1] "%.0f de minutos restantes"
 msgstr[2] "%.0f minutos restantes"
 
 #. TRANSLATORS: BMC refers to baseboard management controller which
@@ -295,7 +297,7 @@ msgstr "versão %s"
 msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dia"
-msgstr[1] "%u dias"
+msgstr[1] "%u de dias"
 msgstr[2] "%u dias"
 
 #. TRANSLATORS: this is shown in the MOTD
@@ -303,7 +305,7 @@ msgstr[2] "%u dias"
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "%u dispositivo tem uma atualização de firmware disponível."
-msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
+msgstr[1] "%u de dispositivos têm uma atualização de firmware disponível."
 msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 
 #. TRANSLATORS: this is shown in the MOTD
@@ -311,7 +313,7 @@ msgstr[2] "%u dispositivos têm uma atualização de firmware disponível."
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "%u dispositivo não é a configuração mais conhecida."
-msgstr[1] "%u dispositivos não são a configuração mais conhecida."
+msgstr[1] "%u de dispositivos não são a configuração mais conhecida."
 msgstr[2] "%u dispositivos não são a configuração mais conhecida."
 
 #. TRANSLATORS: how many devices have published updates on
@@ -319,9 +321,9 @@ msgstr[2] "%u dispositivos não são a configuração mais conhecida."
 #, c-format
 msgid "%u device is supported in the enabled remotes (an update has been published)"
 msgid_plural "%u devices are supported in the enabled remotes (an update has been published)"
-msgstr[0] "%u dispositivo é suportado nos controles remotos habilitados (uma atualização foi publicada)"
-msgstr[1] "%u dispositivos são suportados nos controles remotos habilitados (uma atualização foi publicada)"
-msgstr[2] "%u dispositivos são suportados nos controles remotos habilitados (uma atualização foi publicada)"
+msgstr[0] "%u dispositivo é suportado nos remotos habilitados (uma atualização foi publicada)"
+msgstr[1] "%u de dispositivos são suportados nos remotos habilitados (uma atualização foi publicada)"
+msgstr[2] "%u dispositivos são suportados nos remotos habilitados (uma atualização foi publicada)"
 
 #. TRANSLATORS: how many devices could be updated in theory if
 #. we had the firmware locally
@@ -329,7 +331,7 @@ msgstr[2] "%u dispositivos são suportados nos controles remotos habilitados (um
 msgid "%u device is updatable"
 msgid_plural "%u devices are updatable"
 msgstr[0] "%u dispositivo é atualizável"
-msgstr[1] "%u dispositivos são atualizáveis"
+msgstr[1] "%u de dispositivos são atualizáveis"
 msgstr[2] "%u dispositivos são atualizáveis"
 
 #. TRANSLATORS: duration in minutes
@@ -337,7 +339,7 @@ msgstr[2] "%u dispositivos são atualizáveis"
 msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u hora"
-msgstr[1] "%u horas"
+msgstr[1] "%u de horas"
 msgstr[2] "%u horas"
 
 #. TRANSLATORS: duration in minutes
@@ -345,7 +347,7 @@ msgstr[2] "%u horas"
 msgid "%u minute"
 msgid_plural "%u minutes"
 msgstr[0] "%u minuto"
-msgstr[1] "%u minutos"
+msgstr[1] "%u de minutos"
 msgstr[2] "%u minutos"
 
 #. TRANSLATORS: duration in seconds
@@ -353,7 +355,7 @@ msgstr[2] "%u minutos"
 msgid "%u second"
 msgid_plural "%u seconds"
 msgstr[0] "%u segundo"
-msgstr[1] "%u segundos"
+msgstr[1] "%u de segundos"
 msgstr[2] "%u segundos"
 
 #. TRANSLATORS: device tests can be specific to a CPU type
@@ -361,7 +363,7 @@ msgstr[2] "%u segundos"
 msgid "%u test was skipped"
 msgid_plural "%u tests were skipped"
 msgstr[0] "%u teste foi ignorado"
-msgstr[1] "%u testes foram ignorado"
+msgstr[1] "%u de testes foram ignorados"
 msgstr[2] "%u testes foram ignorados"
 
 #. TRANSLATORS: first percentage is current value, 2nd percentage is the
@@ -1456,7 +1458,7 @@ msgstr "O firmware ainda não está bloqueado"
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "Os metadados do firmware não foram atualizados a %u dia e podem não estar atualizados."
-msgstr[1] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
+msgstr[1] "Os metadados do firmware não foram atualizados a %u de dias e podem não estar atualizados."
 msgstr[2] "Os metadados do firmware não foram atualizados a %u dias e podem não estar atualizados."
 
 #. TRANSLATORS: Title: if firmware updates are available
@@ -2853,9 +2855,9 @@ msgstr "Somas de verificação de dispositivo atualizadas com sucesso"
 #, c-format
 msgid "Successfully uploaded %u report"
 msgid_plural "Successfully uploaded %u reports"
-msgstr[0] "Enviado com sucesso %u relatório"
-msgstr[1] "Enviados com sucesso %u relatórios"
-msgstr[2] "Enviados com sucesso %u relatórios"
+msgstr[0] "%u relatório enviado com sucesso"
+msgstr[1] "%u de relatórios enviados com sucesso"
+msgstr[2] "%u relatórios enviados com sucesso"
 
 #. TRANSLATORS: success message when user verified device checksums
 msgid "Successfully verified device checksums"

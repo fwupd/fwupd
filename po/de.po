@@ -11,19 +11,20 @@
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2025
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
 # Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 13:48+0000\n"
-"Last-Translator: Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>\n"
+"PO-Revision-Date: 2025-10-24 10:02+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/fwupd/fwupd/de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14-dev\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format

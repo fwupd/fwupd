@@ -5639,7 +5639,6 @@ fu_plugin_engine_get_results_appstream_id_func(gconstpointer user_data)
 	FwupdRelease *release_default;
 	g_autoptr(FuDevice) device_tmp = fu_device_new(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
 	g_autoptr(FuHistory) history = fu_history_new(self->ctx);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuRelease) release = fu_release_new();

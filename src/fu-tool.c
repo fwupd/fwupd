@@ -749,7 +749,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -1759,7 +1759,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_unsupported->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -1770,7 +1770,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		    self->console,
 		    /* TRANSLATORS: message letting the user there is an update
 		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action: "));
+		    _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -4497,8 +4497,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 		return FALSE;
 
 	if (!fu_engine_modify_bios_settings(self->engine, settings, FALSE, error)) {
-		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error_literal(error, "failed to set BIOS setting: ");
+		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 

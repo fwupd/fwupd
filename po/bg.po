@@ -4,11 +4,12 @@
 #
 # Translators:
 # twlvnn kraftwerk <kraft_werk@tutanota.com>, 2025.
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 13:32+0000\n"
+"PO-Revision-Date: 2025-10-24 10:45+0000\n"
 "Last-Translator: twlvnn kraftwerk <kraft_werk@tutanota.com>\n"
 "Language-Team: Bulgarian <https://hosted.weblate.org/projects/fwupd/fwupd/bg/>\n"
 "Language: bg\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14-dev\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format

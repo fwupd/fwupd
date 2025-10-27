@@ -16,6 +16,27 @@
 
 #include "fu-tpm-eventlog-parser.h"
 
+typedef struct {
+	gint pcr;
+	gboolean dump;
+} FuUtil;
+
+static FuUtil *
+fu_tpm_eventlog_new(void)
+{
+	FuUtil *self = g_new0(FuUtil, 1);
+	self->pcr = -1;
+	return self;
+}
+
+static void
+fu_tpm_eventlog_free(FuUtil *self)
+{
+	g_free(self);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_tpm_eventlog_free)
+
 static gint
 fu_tpm_eventlog_sort_cb(gconstpointer a, gconstpointer b)
 {
@@ -29,7 +50,7 @@ fu_tpm_eventlog_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_tpm_eventlog_process(const gchar *fn, gint pcr, GError **error)
+fu_tpm_eventlog_process(FuUtil *self, const gchar *fn, GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
@@ -49,17 +70,23 @@ fu_tpm_eventlog_process(const gchar *fn, gint pcr, GError **error)
 		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
 		if (item->pcr > max_pcr)
 			max_pcr = item->pcr;
-		if (pcr >= 0 && item->pcr != pcr)
+		if (self->pcr >= 0 && item->pcr != self->pcr)
 			continue;
 		fu_tpm_eventlog_item_to_string(item, 0, str);
 		g_string_append(str, "\n");
+		if (self->dump) {
+			g_autofree gchar *blobfn =
+			    g_strdup_printf("tpm-pcr%02u-%03u.bin", item->pcr, i);
+			if (!fu_bytes_set_contents(blobfn, item->blob, error))
+				return FALSE;
+		}
 	}
-	if (pcr > max_pcr) {
+	if (self->pcr > max_pcr) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,
 			    "invalid PCR specified: %d",
-			    pcr);
+			    self->pcr);
 		return FALSE;
 	}
 	fwupd_codec_string_append(str, 0, "Reconstructed PCRs", "");
@@ -71,7 +98,7 @@ fu_tpm_eventlog_process(const gchar *fn, gint pcr, GError **error)
 			const gchar *csum = g_ptr_array_index(pcrs, j);
 			g_autofree gchar *title = NULL;
 			g_autofree gchar *pretty = NULL;
-			if (pcr >= 0 && i != (guint)pcr)
+			if (self->pcr >= 0 && i != (guint)self->pcr)
 				continue;
 			title = g_strdup_printf("PCR %x", i);
 			pretty = fwupd_checksum_format_for_display(csum);
@@ -90,26 +117,36 @@ main(int argc, char *argv[])
 	const gchar *fn;
 	gboolean verbose = FALSE;
 	gboolean interactive = isatty(fileno(stdout)) != 0;
-	gint pcr = -1;
+	g_autoptr(FuUtil) self = fu_tpm_eventlog_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
-	const GOptionEntry options[] = {{"verbose",
-					 'v',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &verbose,
-					 /* TRANSLATORS: command line option */
-					 N_("Show extra debugging information"),
-					 NULL},
-					{"pcr",
-					 'p',
-					 0,
-					 G_OPTION_ARG_INT,
-					 &pcr,
-					 /* TRANSLATORS: command line option */
-					 N_("Only show single PCR value"),
-					 NULL},
-					{NULL}};
+	const GOptionEntry options[] = {
+	    {"verbose",
+	     'v',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &verbose,
+	     /* TRANSLATORS: command line option */
+	     N_("Show extra debugging information"),
+	     NULL},
+	    {"dump",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &self->dump,
+	     /* TRANSLATORS: command line option */
+	     N_("Dump PCR contents to a file on disk"),
+	     NULL},
+	    {"pcr",
+	     'p',
+	     0,
+	     G_OPTION_ARG_INT,
+	     &self->pcr,
+	     /* TRANSLATORS: command line option */
+	     N_("Only show single PCR value"),
+	     NULL},
+	    {NULL},
+	};
 
 	setlocale(LC_ALL, "");
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
@@ -144,7 +181,7 @@ main(int argc, char *argv[])
 
 	/* allow user to chose a local file */
 	fn = argc <= 1 ? "/sys/kernel/security/tpm0/binary_bios_measurements" : argv[1];
-	if (!fu_tpm_eventlog_process(fn, pcr, &error)) {
+	if (!fu_tpm_eventlog_process(self, fn, &error)) {
 		/* TRANSLATORS: failed to read measurements file */
 		g_printerr("%s: %s\n", _("Failed to parse file"), error->message);
 		return EXIT_FAILURE;

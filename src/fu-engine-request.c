@@ -79,7 +79,7 @@ fu_engine_request_add_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
 gboolean
 fu_engine_request_has_flag(FuEngineRequest *self, FuEngineRequestFlags flag)
 {
-	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FU_ENGINE_REQUEST_FLAG_NONE);
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
 	return (self->flags & flag) > 0;
 }
 

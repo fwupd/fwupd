@@ -4,16 +4,20 @@
 #
 # Translators:
 # assar <asier.sarasua@gmail.com>, 2017,2023-2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Basque (http://app.transifex.com/freedesktop/fwupd/language/eu/)\n"
+"PO-Revision-Date: 2025-10-24 10:05+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Basque <https://hosted.weblate.org/projects/fwupd/fwupd/eu/>\n"
+"Language: eu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: eu\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -432,7 +436,7 @@ msgstr "Instalatu sinatu gabeko sistema-firmwarea"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Firmwarearen eguneratzea instalatzen..."
+msgstr "Firmwarearen eguneratzea instalatzen…"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"

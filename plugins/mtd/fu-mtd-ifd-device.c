@@ -91,9 +91,19 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 
 	if (self->img != NULL) {
 		FuIfdRegion region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
-		fu_device_set_name(device, fu_mtd_ifd_device_region_to_name(region));
-		fu_device_set_logical_id(device, fu_ifd_region_to_string(region));
-		fu_device_add_instance_str(device, "REGION", fu_ifd_region_to_string(region));
+		g_autofree gchar *name = g_strdup(fu_mtd_ifd_device_region_to_name(region));
+		g_autofree gchar *region_str = g_strdup(fu_ifd_region_to_string(region));
+
+		/* fallback to including the index */
+		if (name == NULL)
+			name = g_strdup_printf("Region %u", region);
+		if (region_str == NULL)
+			region_str = g_strdup_printf("%u", region);
+
+		/* always valid */
+		fu_device_set_name(device, name);
+		fu_device_set_logical_id(device, region_str);
+		fu_device_add_instance_str(device, "REGION", region_str);
 	}
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;

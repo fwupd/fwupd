@@ -1074,7 +1074,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
 	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
-	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 

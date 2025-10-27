@@ -273,7 +273,7 @@ fu_goodixtp_brlb_device_wait_flash_cb(FuDevice *device, gpointer user_data, GErr
 	guint8 hidbuf[1] = {0};
 
 	if (!fu_goodixtp_brlb_device_hid_read(self, 0x10011, hidbuf, 1, error)) {
-		g_prefix_error_literal(error, "failed to read 0x10011");
+		g_prefix_error_literal(error, "failed to read 0x10011: ");
 		return FALSE;
 	}
 	if (hidbuf[0] != 0xAA) {

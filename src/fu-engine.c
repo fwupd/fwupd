@@ -5159,7 +5159,6 @@ fu_engine_fixup_history_device_for_rel(FuEngine *self,
 {
 	FwupdRelease *release = fu_device_get_release_default(device);
 	const gchar *appstream_id;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) component = NULL;
 
 	component = xb_node_query_first(rel, "../..", error);
@@ -7900,7 +7899,7 @@ fu_engine_backend_device_added_run_plugin(FuEngine *self,
 	if (!fu_plugin_runner_backend_device_added(plugin, device, progress, error)) {
 #ifdef SUPPORTED_BUILD
 		/* sanity check */
-		if (*error == NULL) {
+		if (*error == NULL) { /* nocheck:error */
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,

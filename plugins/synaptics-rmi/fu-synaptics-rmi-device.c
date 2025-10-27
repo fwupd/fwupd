@@ -670,7 +670,7 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 				      guint timeout_ms,
-				      RmiDeviceWaitForIdleFlags flags,
+				      FuSynapticsRmiDeviceWaitForIdleFlags flags,
 				      GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE(self);
@@ -691,7 +691,7 @@ fu_synaptics_rmi_device_wait_for_idle(FuSynapticsRmiDevice *self,
 						   "failed to wait for attr: ");
 			return FALSE;
 		}
-	} else if ((flags & RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
+	} else if ((flags & FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34) == 0) {
 		/* device reported idle via an event */
 		return TRUE;
 	}

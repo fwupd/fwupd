@@ -2796,7 +2796,7 @@ fu_util_get_updates(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -3045,19 +3045,22 @@ fu_util_prompt_warning_composite(FuUtil *self, FwupdDevice *dev, FwupdRelease *r
 		/* do any releases match this checksum */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
-			if (fwupd_release_has_checksum(rel_tmp, rel_csum)) {
-				g_autofree gchar *title =
-				    g_strdup_printf("%s %s",
-						    fwupd_client_get_host_product(self->client),
-						    fwupd_client_get_host_product(self->client));
-				if (!fu_util_prompt_warning(self->console,
-							    dev_tmp,
-							    rel_tmp,
-							    title,
-							    error))
-					return FALSE;
-				break;
-			}
+			g_autofree gchar *title = NULL;
+			gint vercmp;
+
+			if (!fwupd_release_has_checksum(rel_tmp, rel_csum))
+				continue;
+			vercmp = fu_version_compare(fwupd_release_get_version(rel_tmp),
+						    fu_device_get_version(dev_tmp),
+						    fwupd_device_get_version_format(dev_tmp));
+			if ((self->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0 && vercmp == 0)
+				continue;
+			title = g_strdup_printf("%s %s",
+						fwupd_client_get_host_product(self->client),
+						fwupd_client_get_host_product(self->client));
+			if (!fu_util_prompt_warning(self->console, dev_tmp, rel_tmp, title, error))
+				return FALSE;
+			break;
 		}
 	}
 
@@ -3280,7 +3283,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no
 					  * device upgrade available due to missing on LVFS */
-					 _("Devices with no available firmware updates: "));
+					 _("Devices with no available firmware updates:"));
 		for (guint i = 0; i < devices_unsupported->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_unsupported, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -3291,7 +3294,7 @@ fu_util_update(FuUtil *self, gchar **values, GError **error)
 		    self->console,
 		    /* TRANSLATORS: message letting the user there is an update
 		     * waiting, but there is a reason it cannot be deployed */
-		    _("Devices with firmware updates that need user action: "));
+		    _("Devices with firmware updates that need user action:"));
 		for (guint i = 0; i < devices_pending->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_pending, i);
 			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
@@ -4856,14 +4859,13 @@ fu_util_show_plugin_warnings(FuUtil *self)
 static gboolean
 fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 {
-	g_autoptr(GHashTable) settings = fu_util_bios_settings_parse_argv(input, error);
+	g_autoptr(GHashTable) settings = NULL;
 
+	settings = fu_util_bios_settings_parse_argv(input, error);
 	if (settings == NULL)
 		return FALSE;
-
 	if (!fwupd_client_modify_bios_setting(self->client, settings, self->cancellable, error)) {
-		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error_literal(error, "failed to set BIOS setting: ");
+		g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 

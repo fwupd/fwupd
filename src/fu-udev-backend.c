@@ -732,7 +732,6 @@ fu_udev_backend_get_device_parent(FuBackend *backend,
 				  GError **error)
 {
 	FuUdevBackend *self = FU_UDEV_BACKEND(backend);
-	g_autofree gchar *devtype_new = NULL;
 	g_autofree gchar *sysfs_path = NULL;
 	g_autoptr(FuUdevDevice) device_new = NULL;
 

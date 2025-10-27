@@ -464,7 +464,6 @@ fu_uefi_plugin_no_flashes_func(void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(GError) error = NULL;
 
 	/* override ESP */
@@ -537,7 +536,6 @@ fu_uefi_plugin_nvram_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -705,7 +703,6 @@ fu_uefi_plugin_cod_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -818,12 +815,10 @@ fu_uefi_plugin_grub_func(void)
 	g_autoptr(GBytes) blob = g_bytes_new_static("GUIDGUIDGUIDGUID", 16);
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuEfiLoadOption) loadopt = fu_efi_load_option_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new_from_bytes(blob);
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FuVolume) esp = fu_uefi_plugin_fake_esp_new();
-	g_autoptr(GByteArray) buf_last = NULL;
 	g_autoptr(GError) error = NULL;
 
 #ifndef __x86_64__

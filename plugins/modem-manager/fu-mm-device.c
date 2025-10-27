@@ -647,7 +647,6 @@ static void
 fu_mm_device_ensure_payload_quectel(FuMmDevice *self)
 {
 	const gchar *version = fu_device_get_version(FU_DEVICE(self));
-	g_autofree gchar *name = NULL;
 	g_autoptr(GError) error_qsec = NULL;
 	g_autoptr(GError) error_qcfg = NULL;
 	g_autoptr(GBytes) blob = NULL;

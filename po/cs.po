@@ -12,15 +12,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-21 17:13+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
+"PO-Revision-Date: 2025-10-24 09:58+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
 "Language-Team: Czech <https://hosted.weblate.org/projects/fwupd/fwupd/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
-"X-Generator: Weblate 5.14-dev\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -224,7 +224,7 @@ msgstr "Aktualizace pro %s"
 #. TRANSLATORS: warn the user before updating, %1 is a device name
 #, c-format
 msgid "%s and all connected devices may not be usable while updating."
-msgstr "%s a k němu připojená zařízení nemusí být v průběhu aktualizace použitelná."
+msgstr "Po dobu aktualizace se může se stát, že %s a všechna k němu připojená zařízení nebude možné přechodně používat."
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
 #. %2 refers to a result value, e.g. "Invalid"
@@ -256,24 +256,24 @@ msgstr "%s v tuto chvíli není možné aktualizovat"
 #. * ThunderBolt 4 Dock" and %2 is "fwupdmgr activate"
 #, c-format
 msgid "%s is pending activation; use %s to complete the update."
-msgstr "%s čeká na aktivaci; dokončete aktualizaci spuštěním %s."
+msgstr "%s čeká na aktivaci – dokončete aktualizaci spuštěním %s."
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
-msgstr "režim pro výrobce v %s"
+msgstr "režim %s pro výrobce"
 
 #. TRANSLATORS: warn the user before
 #. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
-msgstr "Je třeba, aby %s zůstalo v průběhu aktualizace připojené, jinak hrozí poškození."
+msgstr "Je třeba, aby %s zůstalo v průběhu aktualizace připojené – jinak hrozí poškození."
 
 #. TRANSLATORS: warn the user before updating, %1 is a machine
 #. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
-msgstr "Je třeba, aby %s bylo po dobu aktualizace připojené ke zdroji napájení z elektrické sítě, jinak hrozí poškození."
+msgstr "Je třeba, aby %s bylo po dobu aktualizace připojené ke zdroji napájení z elektrické sítě – jinak hrozí poškození."
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -304,18 +304,18 @@ msgstr[3] "%u dny"
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "Je k dispozici novější firmware pro %u zařízení."
-msgstr[1] "Jsou k dispozici novější firmware pro %u zařízení."
-msgstr[2] "Jsou k dispozici novější firmware pro %u zařízení."
-msgstr[3] "Jsou k dispozici novější firmware pro %u zařízení."
+msgstr[1] "Jsou k dispozici novější firmwary pro %u zařízení."
+msgstr[2] "Jsou k dispozici novější firmwary pro %u zařízení."
+msgstr[3] "Jsou k dispozici novější firmwary pro %u zařízení."
 
 #. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device is not the best known configuration."
 msgid_plural "%u devices are not the best known configuration."
 msgstr[0] "Firmware na %u zařízení není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
-msgstr[1] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
-msgstr[2] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
-msgstr[3] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[1] "Firmwary na %u zařízeních nejsou na verzích, které by byly osvědčené v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[2] "Firmwary na %u zařízeních nejsou na verzích, které by byly osvědčené v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[3] "Firmwary na %u zařízeních nejsou na verzích, které by byly osvědčené v kombinaci s verzemi firmwarů ostatních zařízení."
 
 #. TRANSLATORS: how many devices have published updates on
 #. something like the LVFS
@@ -393,7 +393,7 @@ msgstr "AMD – zamezení znovupoužití dříve použitého"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "AMD Firmware Write Protection"
-msgstr "AMD – zamezení zápisu firmware"
+msgstr "AMD – ochrana zápisu firmware"
 
 #. TRANSLATORS: Title: if firmware enforces rollback protection
 msgid "AMD Secure Processor Rollback Protection"
@@ -420,7 +420,7 @@ msgstr "Aktivovat nový firmware na zařízení"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
-msgstr "Aktivace aktualizovaného firmwaru"
+msgstr "Aktivuje se aktualizovaný firmware"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update for"
@@ -453,7 +453,7 @@ msgstr "Všechny PCR registry jsou platné"
 
 #. TRANSLATORS: an application is preventing system updates
 msgid "All devices are prevented from update by system inhibit"
-msgstr "Aktualizaci veškerých zařízení je bráněno systémovým inhibitorem"
+msgstr "Aktualizaci veškerých zařízení je bráněno inhibitorem v systému"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -483,7 +483,7 @@ msgstr "Alternativní větev"
 
 #. TRANSLATORS: another application is updating the device already
 msgid "An update is in progress"
-msgstr "Probíhá aktualizace"
+msgstr "Aktualizace už probíhá"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -520,7 +520,7 @@ msgstr[3] "Schválené firmwary:"
 
 #. TRANSLATORS: command description
 msgid "Asks the daemon to quit"
-msgstr "Požádá proces služby aby se ukončila"
+msgstr "Požádá proces služby aby se ukončil"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -544,7 +544,7 @@ msgstr "K návratu na starší verzi firmwaru na tomto počítači je vyžadová
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to enable emulation data collection"
-msgstr "Pro zapnutí shromažďování dat emulace je vyžadováno ověření"
+msgstr "Pro zapnutí shromažďování dat emulace je vyžadováno ověření se"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to fix a host security issue"
@@ -1392,7 +1392,7 @@ msgstr "Atestace firmware kontroluje software zařízení pomocí referenční k
 
 #. TRANSLATORS: Title: firmware refers to the flash chip in the computer
 msgid "Firmware BIOS Descriptor"
-msgstr "BIOS popisovač firmware"
+msgstr "Popisovač ve firmware pro BIOS"
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Descriptor protects device firmware memory from being tampered with."
@@ -1400,7 +1400,7 @@ msgstr "Firmware BIOS Descriptor chrání paměť firmware zařízení proti úp
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "Firmware BIOS Region"
-msgstr "BIOS oblast firmware"
+msgstr "Oblast ve firmware pro BIOS"
 
 #. TRANSLATORS: longer description
 msgid "Firmware BIOS Region protects device firmware memory from being tampered with."
@@ -1412,7 +1412,7 @@ msgstr "Základní URI firmwaru"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "Služba D-Bus pro aktualizaci firmwaru"
+msgstr "D-Bus služba pro aktualizaci firmwaru"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
@@ -1420,7 +1420,7 @@ msgstr "Proces služby pro aktualizaci firmwaru"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "Firmware Updater Verification"
-msgstr "Ověřování nástroje pro aktualizaci firmware"
+msgstr "Ověřování nástrojů pro aktualizaci firmware"
 
 msgid "Firmware Updater Verification checks that software used for updating has not been tampered with."
 msgstr "Ověřování nástroje pro aktualizaci firmware kontroluje, že se software, použitým pro aktualizaci, nebylo manipulováno."
@@ -1777,10 +1777,10 @@ msgstr "Chráněno Intel BootGuard ACM"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard Error Policy"
-msgstr "Co Intel BootGuard udělá v případě chyb"
+msgstr "Co má Intel BootGuard udělat v případě chyb"
 
 msgid "Intel BootGuard Error Policy ensures the device does not continue to start if its device software has been tampered with."
-msgstr "Zásada chyb Intel BootGuard zajišťuje, že zařízení nebude pokračovat ve startu, pokud se software zařízení bylo manipulováno."
+msgstr "Zásada pro případ výskytu chyb Intel BootGuard zajišťuje, že zařízení nebude pokračovat ve startu, pokud se software zařízení bylo manipulováno."
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard Fuse"
@@ -1799,7 +1799,7 @@ msgstr "Ověřované zavádění s Intel BootGuard"
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
-msgstr "Co Intel BootGuard udělá v případě chyb"
+msgstr "Co má Intel BootGuard udělat v případě chyb"
 
 #. TRANSLATORS: longer description
 msgid "Intel BootGuard prevents unauthorized device software from operating when the device is started."
@@ -2027,7 +2027,7 @@ msgstr "Manifest klíče MEI"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine
 msgid "MEI manufacturing mode"
-msgstr "režim pro výrobce v MEI"
+msgstr "režim MEI pro výrobce"
 
 #. TRANSLATORS: Title: MEI = Intel Management Engine, and the
 #. * "override" is the physical PIN that can be driven to
@@ -2347,7 +2347,7 @@ msgstr "Ochrana přímého přístupu do paměti před startem operačního syst
 
 #. TRANSLATORS: longer description
 msgid "Pre-boot DMA protection prevents devices from accessing system memory after being connected to the computer."
-msgstr "Ochrana přímého přístupu do paměti (DMA) brání zařízení přistupovat k systémové paměti poté co jsou připojena k počítači."
+msgstr "Ochrana přímého přístupu do paměti (DMA) (před zavedením systému) brání zařízení přistupovat k systémové paměti poté co jsou připojena k počítači."
 
 #. TRANSLATORS: warning message
 msgid "Press unlock on the device to continue the update process."
@@ -2519,7 +2519,7 @@ msgstr "Zamezení instalace starší verze brání přechodu na starší verzi s
 #. * command name, e.g. `fwupdmgr get-upgrades`
 #, c-format
 msgid "Run `%s` for more information."
-msgstr "Podrobnosti získáte spuštěním „%s“."
+msgstr "Podrobnosti získáte spuštěním `%s`."
 
 #. TRANSLATORS: this is shown in the MOTD -- %1 is the
 #. * command name, e.g. `fwupdmgr sync`
@@ -2578,15 +2578,15 @@ msgstr "SMM režim uzamčen"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
-msgstr "Popisovač SPI BIOS"
+msgstr "Popisovač v SPI pro BIOS"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
-msgstr "Oblast SPI BIOS"
+msgstr "Oblast v SPI pro BIOS"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI lock"
-msgstr "SPI uzamčení"
+msgstr "uzamčení SPI"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI replays
 msgid "SPI replay protection"
@@ -2594,7 +2594,7 @@ msgstr "Ochrana SPI před replay"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
-msgstr "SPI zápis"
+msgstr "zápis do SPI"
 
 #. TRANSLATORS: Title: if hardware enforces control of SPI writes
 msgid "SPI write protection"
@@ -2878,7 +2878,7 @@ msgstr "Souhrn"
 
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Supervisor Mode Access Prevention"
-msgstr "Zabránění v přístupu k režimu supervizora"
+msgstr "Zabránění v přístupu k režimu supervizoru"
 
 #. TRANSLATORS: longer description
 msgid "Supervisor Mode Access Prevention ensures critical parts of device memory are not accessed by less secure programs."
@@ -3544,7 +3544,7 @@ msgstr "Měli byste ověřit že dokážete vrátit nastavení zpět z rozhraní
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr "Kompatibilita aktualizací firmware s připojenými zařízeními, či vámi používaným systémem, nemusí být poskytovatelem vámi používané distribuce ověřována."
+msgstr "Může být, že kompatibilita aktualizací firmware s připojenými zařízeními, či vámi používaným systémem, není poskytovatelem vámi používané distribuce ověřována."
 
 #. TRANSLATORS: %1 is the device vendor name
 #, c-format

@@ -9,6 +9,7 @@ import glob
 import sys
 import os
 import re
+import argparse
 from typing import List, Optional
 
 
@@ -107,11 +108,14 @@ def _camel_to_snake(name: str) -> str:
 
 
 class SourceFailure:
-    def __init__(self, fn=None, linecnt=None, message=None, nocheck=None):
+    def __init__(
+        self, fn=None, linecnt=None, message=None, nocheck=None, expected=False
+    ):
         self.fn: Optional[str] = fn
         self.linecnt: Optional[int] = linecnt
         self.message: Optional[str] = message
         self.nocheck: Optional[str] = nocheck
+        self.expected: bool = expected
 
 
 class Checker:
@@ -126,16 +130,45 @@ class Checker:
         self._current_linecnt: Optional[int] = None
         self._current_nocheck: Optional[str] = None
         self._gtype_parents: dict[str, str] = {}
+        self._expected_failure_prefixes: list[str] = []
+
+    def add_expected_failure(self, message_prefix: str):
+        self._expected_failure_prefixes.append(message_prefix)
+
+    def _should_process_line(self, line: str):
+
+        if self._current_nocheck:
+            if line.find(self._current_nocheck) != -1:
+                return False
+        if line.find("nocheck:expect") != -1:
+            return False
+        return True
 
     def add_failure(self, message=None):
+
+        # we were expecting this
+        expected: bool = False
+        for message_prefix in self._expected_failure_prefixes:
+            if message.startswith(message_prefix):
+                expected = True
+                break
+
+        # add
         self.failures.append(
             SourceFailure(
+                expected=expected,
                 fn=self._current_fn,
                 linecnt=self._current_linecnt,
                 message=message,
                 nocheck=self._current_nocheck,
             )
         )
+
+    def has_failure(self, message_prefix: str) -> bool:
+        for failure in self.failures:
+            if failure.message.startswith(message_prefix):
+                return True
+        return False
 
     def _test_line_function_names_private(self, func_name: str) -> None:
         valid_prefixes = ["_fwupd_", "_fu_", "_g_", "_xb_"]
@@ -220,7 +253,7 @@ class Checker:
 
         # skip!
         self._current_nocheck = "nocheck:name"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
 
         # parse
@@ -235,19 +268,21 @@ class Checker:
     def _test_line_missing_literal_task_return_new(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:error"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         idx = line.find("g_task_return_new_error(")
         if idx == -1:
             return
         sections = _split_args(line)
         if len(sections) == 4:
-            self.add_failure(f"missing literal, use g_task_return_new_error() instead")
+            self.add_failure(
+                f"missing literal, use g_task_return_new_error_literal() instead"
+            )
 
     def _test_line_missing_literal_prefix_error(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:error"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         idx = line.find("g_prefix_error(")
         if idx == -1:
@@ -255,13 +290,23 @@ class Checker:
         sections = _split_args(line)
         if len(sections) == 2:
             self.add_failure(f"missing literal, use g_prefix_error_literal() instead")
-        if len(sections) > 1 and not sections[1].endswith(': "'):
+
+    def _test_line_missing_error_suffixes(self, line: str) -> None:
+        # skip!
+        self._current_nocheck = "nocheck:error"
+        if not self._should_process_line(line):
+            return
+        idx = line.find("g_prefix_error")
+        if idx == -1:
+            return
+        sections = _split_args(line, delimiters=[",", "(", ")"])
+        if len(sections) > 2 and not sections[2].endswith(': "'):
             self.add_failure(f"missing ': ' suffix")
 
     def _test_line_missing_literal_set_error(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:error"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         idx = line.find("g_set_error(")
         if idx == -1:
@@ -279,7 +324,7 @@ class Checker:
     def _test_line_enums(self, line: str) -> None:
         # skip!
         self._current_nocheck = "nocheck:prefix"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
 
         # needs Fu prefix
@@ -305,7 +350,7 @@ class Checker:
         ]:
             return
         self._current_nocheck = "nocheck:static"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         if line.find(" = ") == -1:
             return
@@ -320,7 +365,7 @@ class Checker:
 
     def _test_rustgen_vars(self, line: str) -> None:
         self._current_nocheck = "nocheck:rustgen"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         if line.find("g_autoptr(FuStruct") == -1:
             return
@@ -333,7 +378,7 @@ class Checker:
         in_struct: bool = False
         for linecnt, line in enumerate(lines):
             self._current_linecnt = linecnt + 1
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             if line.find("struct ") != -1:
                 in_struct = True
@@ -353,7 +398,7 @@ class Checker:
     def _test_line_debug_fns(self, line: str) -> None:
         # no console output expected
         self._current_nocheck = "nocheck:print"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         if self._current_fn and os.path.basename(self._current_fn) in [
             "fu-console.c",
@@ -376,9 +421,9 @@ class Checker:
             if line.find(token) != -1:
                 self.add_failure(f"contains blocked token {token}: {msg}")
 
-    def _test_line_blocked_fns(self, line: str) -> None:
+    def _test_line_blocked_funcs(self, line: str) -> None:
         self._current_nocheck = "nocheck:blocked"
-        if line.find(self._current_nocheck) != -1:
+        if not self._should_process_line(line):
             return
         for token, msg in {
             "cbor_get_uint8(": "Use cbor_get_int() instead",
@@ -431,7 +476,7 @@ class Checker:
         magic_defines_limit = self.MAX_FILE_MAGIC_DEFINES
         magic_inlines_limit = self.MAX_FILE_MAGIC_INLINES
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 idx = line.find("nocheck:magic-defines=")
                 if idx != -1:
                     magic_defines_limit = int(line[idx + 22 :].split(" ")[0])
@@ -473,7 +518,7 @@ class Checker:
         for linecnt, line in enumerate(lines):
             self._current_linecnt = linecnt + 1
 
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
 
             # block ended
@@ -513,7 +558,7 @@ class Checker:
             ):
                 func_begin = linecnt
                 continue
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 func_begin = 0
                 continue
             if not func_begin:
@@ -533,18 +578,18 @@ class Checker:
         for linecnt, line in enumerate(lines):
             if line.startswith("#define"):
                 continue
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             self._current_linecnt = linecnt + 1
 
             # we're adding to the error
             if line.find("g_prefix_error") != -1:
                 if not linecnt_g_set_error:
-                    self.add_failure("uses g_prefix_error() without setting error")
+                    self.add_failure("uses g_prefix_error() without setting GError")
                     continue
                 if _number_non_empty_lines(lines[linecnt_g_set_error:linecnt]) > 5:
                     self.add_failure(
-                        "uses g_prefix_error() without setting error within 5 previous lines"
+                        "uses g_prefix_error() without setting GError within 5 previous lines"
                     )
                 continue
 
@@ -560,22 +605,28 @@ class Checker:
                     linecnt_g_set_error = linecnt
                     break
 
-    def _test_lines_gerror(self, lines: List[str]) -> None:
+    def _test_lines_gerror_domain(self, line: str) -> None:
         self._current_nocheck = "nocheck:error"
-        linecnt_g_set_error: int = 0
-        for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
-                continue
-            self._current_linecnt = linecnt + 1
 
-            # do not use G_IO_ERROR internally
-            if line.find("g_set_error") != -1:
-                linecnt_g_set_error = linecnt
-            if linecnt - linecnt_g_set_error < 5:
-                for error_domain in ["G_IO_ERROR", "G_FILE_ERROR"]:
-                    if line.find(error_domain) != -1:
-                        self.add_failure("uses g_set_error() without using FWUPD_ERROR")
-                        break
+        if not self._should_process_line(line):
+            return
+
+        # do not use G_IO_ERROR internally
+        if line.find("g_set_error") == -1:
+            return
+        for error_domain in ["G_IO_ERROR", "G_FILE_ERROR"]:
+            if line.find(error_domain) != -1:
+                self.add_failure("uses g_set_error() without using FWUPD_ERROR")
+                break
+
+    def _test_lines_gerror_deref(self, line: str) -> None:
+        self._current_nocheck = "nocheck:error"
+        if not self._should_process_line(line):
+            return
+
+        # do not use G_IO_ERROR internally
+        if line.find("(*error") != -1:
+            self.add_failure("dereferences GError; use error_local instead")
 
     def _test_lines_function_length(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:lines"
@@ -583,7 +634,7 @@ class Checker:
         func_begin: int = 0
         func_name: Optional[str] = None
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 func_begin = 0
                 continue
             if line.find("switch (") != -1:
@@ -639,7 +690,7 @@ class Checker:
 
         # also contains fu_firmware_set_version()
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             self._current_linecnt = linecnt + 1
             if line.find("fu_firmware_set_version(") != -1:
@@ -668,7 +719,7 @@ class Checker:
 
         # also contains fu_firmware_set_version()
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             self._current_linecnt = linecnt + 1
             if line.find("fu_device_set_version(") != -1:
@@ -676,19 +727,19 @@ class Checker:
                     "Use FuDeviceClass->convert_version rather than fu_device_set_version()"
                 )
 
-    def _test_lines_depth(self, lines: List[str]) -> None:
+    def _test_lines_nesting_depth(self, lines: List[str]) -> None:
         # check depth
         self._current_nocheck = "nocheck:depth"
         depth: int = 0
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             self._current_linecnt = linecnt + 1
             for char in line:
                 if char == "{":
                     depth += 1
                     if depth > 5:
-                        self.add_failure("is nested too deep")
+                        self.add_failure(f"is nested too deep {depth}/5")
                         success = False
                     continue
                 if char == "}":
@@ -704,12 +755,50 @@ class Checker:
             self.add_failure("nesting was weird")
             success = False
 
+    def _test_memread(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:rustgen"
+
+        if self._current_fn and os.path.basename(self._current_fn) in [
+            "fu-mem.c",
+            "fu-mem.h",
+        ]:
+            return
+        memread_cnt: int = 0
+        memwrite_cnt: int = 0
+        linecnt_last_read: int = 0
+        linecnt_last_write: int = 0
+        blocksz: int = 3
+        max_calls: int = 7
+        for linecnt, line in enumerate(lines):
+            if line.find(self._current_nocheck) != -1:
+                continue
+            if line.find("fu_memread_uint") != -1:
+                if linecnt - linecnt_last_read < blocksz:
+                    memread_cnt += 1
+                linecnt_last_read = linecnt
+            if line.find("fu_memwrite_uint") != -1:
+                if linecnt - linecnt_last_write < blocksz:
+                    memwrite_cnt += 1
+                linecnt_last_write = linecnt
+        if memread_cnt >= max_calls:
+            self._current_linecnt = linecnt_last_read
+            self.add_failure(
+                "Too many calls to fu_memread_uintXX() "
+                f"({memread_cnt}/{max_calls}) within {blocksz} lines, use rustgen"
+            )
+        if memwrite_cnt >= max_calls:
+            self._current_linecnt = linecnt_last_write
+            self.add_failure(
+                "Too many calls to fu_memwrite_uintXX() "
+                f"({memwrite_cnt}/{max_calls}) within {blocksz} lines, use rustgen"
+            )
+
     def _test_gobject_parents(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:name"
 
         gtype: Optional[str] = None
         for linecnt, line in enumerate(lines):
-            if line.find(self._current_nocheck) != -1:
+            if not self._should_process_line(line):
                 continue
             self._current_linecnt = linecnt + 1
             if line.find("G_DECLARE_FINAL_TYPE") != -1:
@@ -770,7 +859,7 @@ class Checker:
             self._current_linecnt = linecnt + 1
 
             # test for blocked functions
-            self._test_line_blocked_fns(line)
+            self._test_line_blocked_funcs(line)
 
             # test for debug lines
             self._test_line_debug_fns(line)
@@ -786,20 +875,29 @@ class Checker:
             self._test_line_missing_literal_prefix_error(line)
             self._test_line_missing_literal_set_error(line)
 
+            # test for missing : suffixes
+            self._test_line_missing_error_suffixes(line)
+
             # test for static variables
             self._test_static_vars(line)
 
             # test for rustgen variables
             self._test_rustgen_vars(line)
 
+            # using FUWPD_ERROR domains
+            self._test_lines_gerror_domain(line)
+
+            # using (*error)->message
+            self._test_lines_gerror_deref(line)
+
         # using too many hardcoded constants
         self._test_gobject_parents(lines)
 
+        # using too many memory reads/writes
+        self._test_memread(lines)
+
         # using too many hardcoded constants
         self._test_lines_magic_numbers(lines)
-
-        # using FUWPD_ERROR domains
-        self._test_lines_gerror(lines)
 
         # prefix with no set
         self._test_lines_gerror_not_set(lines)
@@ -811,7 +909,7 @@ class Checker:
         self._test_lines_gerror_prefix_not_set(lines)
 
         # not nesting too deep
-        self._test_lines_depth(lines)
+        self._test_lines_nesting_depth(lines)
 
         # functions too long
         self._test_lines_function_length(lines)
@@ -834,7 +932,7 @@ class Checker:
                 print(f"failed to read {fn}: {e}")
 
 
-def test_files() -> int:
+def test_files(fns_optional: list[str]) -> int:
     # test all C and H files
     rc: int = 0
 
@@ -842,8 +940,10 @@ def test_files() -> int:
 
     # use any file specified in argv, falling back to scanning the entire tree
     fns: List[str] = []
-    if len(sys.argv) > 1:
-        for fn in sys.argv[1:]:
+    if fns_optional:
+        for fn in fns_optional:
+            if fn.startswith("contrib/ci/tests"):
+                continue
             try:
                 ext: str = fn.rsplit(".", maxsplit=1)[1]
             except IndexError:
@@ -876,6 +976,61 @@ def test_files() -> int:
     return 1 if checker.failures else 0
 
 
+def unit_test(fn: str) -> int:
+
+    # load test file with any expected failures
+    rc: int = 0
+    checker = Checker()
+    with open(fn, "rb") as f:
+        lines = f.read().decode().split("\n")
+    for line in lines:
+        if line.startswith(" * nocheck:expect:"):
+            checker.add_expected_failure(line[19:])
+    checker.test_file(fn)
+
+    # any unexpected failures
+    for failure in checker.failures:
+        if not failure.expected:
+            print(f"{failure.fn} did not expect to see: {failure.message}")
+            rc += 1
+
+    # check we got the ones we wanted
+    for expect in checker._expected_failure_prefixes:
+        if not checker.has_failure(expect):
+            print(f"{fn} expected to see: {expect}")
+            rc += 1
+
+    # print what we did get
+    if rc:
+        for failure in checker.failures:
+            line: str = ""
+            if failure.fn:
+                line += failure.fn
+            if failure.linecnt:
+                line += f":{failure.linecnt}"
+            line += f": {failure.message}"
+            print(line)
+
+    return rc
+
+
+def unit_tests(fns: list[str]) -> int:
+
+    rc: int = 0
+    for fn in fns:
+        rc += unit_test(fn)
+    return rc
+
+
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Check source files")
+    parser.add_argument("--test", type=str, help="Run self tests")
+    args, argv = parser.parse_known_args()
+
+    if args.test:
+        fns: List[str] = glob.glob(f"{args.test}/*.[c|h]")
+        sys.exit(unit_tests(fns))
+
     # all done!
-    sys.exit(test_files())
+    sys.exit(test_files(argv))

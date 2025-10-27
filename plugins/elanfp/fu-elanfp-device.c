@@ -413,7 +413,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 				      TRUE,
 				      NULL,
 				      error)) {
-		g_prefix_error_literal(error, "failed to hardware reset ");
+		g_prefix_error_literal(error, "failed to hardware reset: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);

@@ -38,40 +38,40 @@ fu_test_fatal_handler_cb(const gchar *log_domain,
 	return log_level >= G_LOG_LEVEL_MESSAGE;
 }
 
-static gboolean
-fu_test_self_init(FuTest *self, GError **error)
+static void
+fu_test_self_init(FuTest *self)
 {
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
 
 	g_test_log_set_fatal_handler(fu_test_fatal_handler_cb, NULL);
 
 	ret = fu_context_load_quirks(ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
-				     error);
-	g_assert_no_error(*error);
+				     &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, error);
-	g_assert_no_error(*error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_context_reload_bios_settings(ctx, error);
-	g_assert_no_error(*error);
+	ret = fu_context_reload_bios_settings(ctx, &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	self->plugin_uefi_capsule =
 	    fu_plugin_new_from_gtype(fu_uefi_capsule_plugin_get_type(), ctx);
-	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, error);
-	g_assert_no_error(*error);
+	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, progress, &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	self->plugin_lenovo_thinklmi =
 	    fu_plugin_new_from_gtype(fu_lenovo_thinklmi_plugin_get_type(), ctx);
-	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, error);
-	g_assert_no_error(*error);
+	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, progress, &error);
+	g_assert_no_error(error);
 	g_assert_true(ret);
 	self->ctx = fu_plugin_get_context(self->plugin_lenovo_thinklmi);
-	return TRUE;
 }
 
 static FuDevice *
@@ -210,10 +210,7 @@ main(int argc, char **argv)
 	g_assert_cmpint(g_mkdir_with_parents("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	if (!fu_test_self_init(self, &error)) {
-		g_test_skip(error->message);
-		return 0;
-	}
+	fu_test_self_init(self);
 	g_test_add_data_func("/fwupd/plugin{lenovo-think-lmi:bootorder-locked}",
 			     self,
 			     fu_plugin_lenovo_thinklmi_bootorder_locked);

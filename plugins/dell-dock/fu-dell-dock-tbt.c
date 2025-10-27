@@ -19,13 +19,14 @@
 #include <string.h>
 
 #include "fu-dell-dock-common.h"
+#include "fu-dell-dock-struct.h"
 
 #define I2C_TBT_ADDRESS 0xa2
 
 const FuHIDI2CParameters tbt_base_settings = {
     .i2ctargetaddr = I2C_TBT_ADDRESS,
     .regaddrlen = 1,
-    .i2cspeed = I2C_SPEED_400K,
+    .i2cspeed = FU_DELL_DOCK_I2C_SPEED_400K,
 };
 
 /* TR Device ID */

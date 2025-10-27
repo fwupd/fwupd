@@ -4,16 +4,20 @@
 #
 # Translators:
 # Ilyas Bakirov <i.bakirov@gmail.com>, 2018
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Kyrgyz (http://www.transifex.com/freedesktop/fwupd/language/ky/)\n"
+"PO-Revision-Date: 2025-10-24 10:21+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Kyrgyz <https://hosted.weblate.org/projects/fwupd/fwupd/ky/>\n"
+"Language: ky\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ky\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -46,7 +50,7 @@ msgstr "Протокол"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "Окуулууда..."
+msgstr "Окуулууда…"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -64,7 +68,7 @@ msgstr "Белгисиз"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "Жазылууда..."
+msgstr "Жазылууда…"
 
 msgid "fwupd"
 msgstr "fwupd"

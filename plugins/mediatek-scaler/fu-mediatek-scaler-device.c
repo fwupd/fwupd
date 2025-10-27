@@ -348,7 +348,6 @@ fu_mediatek_scaler_device_verify_controller_type(FuMediatekScalerDevice *self, G
 {
 	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
-	g_autoptr(GError) error_local = NULL;
 	guint32 controller_type = 0;
 
 	fu_struct_ddc_cmd_set_opcode(st_req, FU_DDC_OPCODE_GET_VCP);
@@ -785,7 +784,7 @@ fu_mediatek_scaler_device_write_firmware_impl(FuMediatekScalerDevice *self,
 					  FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS,
 					  &helper_wchunk,
 					  error)) {
-			g_prefix_error_literal(error, "writing chunk exceeded the maximum retries");
+			g_prefix_error_literal(error, "writing chunk exceeded maximum retries: ");
 			return FALSE;
 		}
 

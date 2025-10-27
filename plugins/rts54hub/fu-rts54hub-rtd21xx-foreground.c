@@ -10,6 +10,7 @@
 
 #include "fu-rts54hub-device.h"
 #include "fu-rts54hub-rtd21xx-foreground.h"
+#include "fu-rts54hub-struct.h"
 
 struct _FuRts54hubRtd21xxForeground {
 	FuRts54hubRtd21xxDevice parent_instance;
@@ -98,7 +99,7 @@ fu_rts54hub_rtd21xx_foreground_detach_cb(FuDevice *device, gpointer user_data, G
 							&status,
 							error))
 		return FALSE;
-	if (status != ISP_STATUS_IDLE_SUCCESS) {
+	if (status != FU_RTS54HUB_RTD21XX_ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
@@ -289,7 +290,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to read project ID: ");
 		return FALSE;
 	}
-	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
+	if (read_buf[0] != FU_RTS54HUB_RTD21XX_ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_DATA,

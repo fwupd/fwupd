@@ -203,7 +203,11 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 	if (self->host_online_timer_id > 0)
 		g_source_remove(self->host_online_timer_id);
 	self->host_online_timer_id =
-	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
+	    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+				       5, /* seconds */
+				       fu_thunderbolt_controller_set_port_online_cb,
+				       g_object_ref(self),
+				       g_object_unref);
 	return TRUE;
 }
 

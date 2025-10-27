@@ -4,16 +4,20 @@
 #
 # Translators:
 # Fabio Tomat <f.t.public@gmail.com>, 2017-2018,2020,2023-2024
+# Richard Hughes <hughsient@gmail.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Friulian (http://app.transifex.com/freedesktop/fwupd/language/fur/)\n"
+"PO-Revision-Date: 2025-10-24 10:08+0000\n"
+"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"Language-Team: Friulian <https://hosted.weblate.org/projects/fwupd/fwupd/fur/>\n"
+"Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fur\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.14.1-dev\n"
 
 #. TRANSLATORS: more than a minute
 #, c-format
@@ -169,7 +173,7 @@ msgstr "I detais de autenticazion a son necessaris"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "La autenticazion e je necessarie par tornâ indaûr ae version precedente dal firmware suntun dispositîf estraibil "
+msgstr "La autenticazion e je necessarie par tornâ indaûr ae version precedente dal firmware suntun dispositîf estraibil"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
@@ -518,7 +522,7 @@ msgstr "Impussibil cjariâ il dbx di sisteme"
 
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
-msgstr " Impussibil blocâ"
+msgstr "Impussibil blocâ"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -904,7 +908,7 @@ msgstr "Monitore il demoni pai events"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
-msgstr " Al necessite di tornâ a inviâ il sisteme"
+msgstr "Al necessite di tornâ a inviâ il sisteme"
 
 #. TRANSLATORS: version number of new firmware
 msgid "New version"
@@ -1057,7 +1061,7 @@ msgstr "Inzorne i metadâts dal servidôr esterni"
 #. * %1 is the device name and %2 is a version string
 #, c-format
 msgid "Reinstall %s to %s?"
-msgstr "Tornâ a instalâ %s %s? "
+msgstr "Tornâ a instalâ %s %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1311,7 +1315,7 @@ msgstr "Suspend-to-ram"
 #. * %1 is the old branch name, %2 is the new branch name
 #, c-format
 msgid "Switch branch from %s to %s?"
-msgstr "Cambiâ ram di %s a %s? "
+msgstr "Cambiâ ram di %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
