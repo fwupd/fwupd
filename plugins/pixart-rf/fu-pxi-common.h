@@ -28,23 +28,23 @@
 #define FU_PXI_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
 /* pixart device model structure */
-struct ota_fw_dev_model {
+typedef struct {
 	guint8 status;
 	guint8 name[FU_PXI_DEVICE_MODEL_NAME_LEN];
 	guint8 type;
 	guint8 target;
 	guint8 version[5];
 	guint16 checksum;
-};
+} FuPixartRfOtaFwDevModel;
 
 /* pixart fw info structure */
-struct ota_fw_info {
+typedef struct {
 	guint8 status;
 	guint8 version[5];
 	guint16 checksum;
-};
+} FuPixartRfOtaFwInfo;
 
-struct ota_fw_state {
+typedef struct {
 	guint8 status;
 	guint8 new_flow;
 	guint16 offset;
@@ -53,7 +53,7 @@ struct ota_fw_state {
 	guint16 mtu_size;
 	guint16 prn_threshold;
 	guint8 spec_check_result;
-};
+} FuPixartRfOtaFwState;
 
 gboolean
 fu_pxi_composite_receiver_cmd(guint8 opcode,
@@ -64,9 +64,9 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 			      GError **error);
 
 void
-fu_pxi_ota_fw_state_to_string(struct ota_fw_state *fwstate, guint idt, GString *str);
+fu_pxi_ota_fw_state_to_string(FuPixartRfOtaFwState *fwstate, guint idt, GString *str);
 gboolean
-fu_pxi_ota_fw_state_parse(struct ota_fw_state *fwstate,
+fu_pxi_ota_fw_state_parse(FuPixartRfOtaFwState *fwstate,
 			  const guint8 *buf,
 			  gsize bufsz,
 			  gsize offset,

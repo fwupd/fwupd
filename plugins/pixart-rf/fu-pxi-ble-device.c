@@ -33,7 +33,7 @@
 
 struct _FuPxiBleDevice {
 	FuHidrawDevice parent_instance;
-	struct ota_fw_state fwstate;
+	FuPixartRfOtaFwState fwstate;
 	guint8 retransmit_id;
 	guint8 feature_report_id;
 	guint8 input_report_id;

@@ -13,7 +13,7 @@
 
 struct _FuPxiReceiverDevice {
 	FuHidrawDevice parent_instance;
-	struct ota_fw_state fwstate;
+	FuPixartRfOtaFwState fwstate;
 	guint8 sn;
 };
 
@@ -565,7 +565,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 
 static gboolean
 fu_pxi_receiver_device_get_peripheral_info(FuPxiReceiverDevice *self,
-					   struct ota_fw_dev_model *model,
+					   FuPixartRfOtaFwDevModel *model,
 					   guint idx,
 					   GError **error)
 {
@@ -703,7 +703,7 @@ fu_pxi_receiver_device_get_peripheral_num(FuPxiReceiverDevice *device,
 static gboolean
 fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, GError **error)
 {
-	struct ota_fw_dev_model model = {0x0};
+	FuPixartRfOtaFwDevModel model = {0x0};
 	guint16 hpac_ver = 0;
 	g_autofree gchar *model_name = NULL;
 	g_autofree gchar *model_version = NULL;

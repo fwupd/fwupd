@@ -22,9 +22,9 @@
 
 struct _FuPxiWirelessDevice {
 	FuDevice parent_instance;
-	struct ota_fw_state fwstate;
+	FuPixartRfOtaFwState fwstate;
 	guint8 sn;
-	struct ota_fw_dev_model model;
+	FuPixartRfOtaFwDevModel model;
 };
 
 G_DEFINE_TYPE(FuPxiWirelessDevice, fu_pxi_wireless_device, FU_TYPE_DEVICE)
@@ -799,7 +799,7 @@ fu_pxi_wireless_device_class_init(FuPxiWirelessDeviceClass *klass)
 }
 
 FuPxiWirelessDevice *
-fu_pxi_wireless_device_new(FuContext *ctx, struct ota_fw_dev_model *model)
+fu_pxi_wireless_device_new(FuContext *ctx, FuPixartRfOtaFwDevModel *model)
 {
 	FuPxiWirelessDevice *self = NULL;
 	self = g_object_new(FU_TYPE_PXI_WIRELESS_DEVICE, "context", ctx, NULL);
