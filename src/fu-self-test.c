@@ -50,6 +50,7 @@ typedef struct {
 	FuContext *ctx;
 } FuTest;
 
+/* nocheck:static */
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
 

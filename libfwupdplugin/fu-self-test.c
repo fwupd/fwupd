@@ -38,8 +38,11 @@
 #include "fu-udev-device-private.h"
 #include "fu-volume-private.h"
 
+/* nocheck:static */
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
+
+/* nocheck:magic-inlines=500 */
 
 static gboolean
 fu_test_hang_check_cb(gpointer user_data)
