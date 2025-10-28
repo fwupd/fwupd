@@ -818,19 +818,57 @@ fu_mtd_device_write_firmware(FuDevice *device,
 		return fu_mtd_device_write_stream(self, stream, off, progress, error);
 	}
 
-	/* write each area in order */
+	/* write each area in order, but only if the FMAP regions match device layout */
+	{
+		gboolean can_do_fmap = TRUE;
+		gsize off = fu_firmware_get_addr(firmware);
+
+		/* verify all regions exist and match start+end (offset+size) */
+		if (priv->fmap_firmware == NULL)
+			can_do_fmap = FALSE;
+		for (guint i = 0; can_do_fmap && i < priv->fmap_regions->len; i++) {
+			const gchar *fmap_region = g_ptr_array_index(priv->fmap_regions, i);
+			g_autoptr(FuFirmware) img_device = NULL;
+			g_autoptr(FuFirmware) img_firmware = NULL;
+
+			/* region must exist in provided firmware */
+			img_firmware = fu_firmware_get_image_by_id(firmware, fmap_region, NULL);
+			if (img_firmware == NULL) {
+				can_do_fmap = FALSE;
+				break;
+			}
+
+			/* and in the device FMAP */
+			img_device =
+			    fu_firmware_get_image_by_id(priv->fmap_firmware, fmap_region, NULL);
+			if (img_device == NULL) {
+				can_do_fmap = FALSE;
+				break;
+			}
+
+			/* start (offset) must match */
+			if (fu_firmware_get_offset(img_device) !=
+			    fu_firmware_get_offset(img_firmware)) {
+				can_do_fmap = FALSE;
+				break;
+			}
+
+			/* end must match -> enforce equal size */
+			if (fu_firmware_get_size(img_device) !=
+			    fu_firmware_get_size(img_firmware)) {
+				can_do_fmap = FALSE;
+				break;
+			}
+		}
+
+		/* fallback to blob-at-addr if FMAP not possible */
+		if (!can_do_fmap)
+			return fu_mtd_device_write_stream(self, stream, off, progress, error);
+	}
+
+	/* FMAP is valid; proceed writing each region */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, priv->fmap_regions->len);
-	/* if the provided firmware is not an FMAP container, fall back to blob-at-addr */
-	if (priv->fmap_regions->len > 0) {
-		const gchar *fmap_region0 = g_ptr_array_index(priv->fmap_regions, 0);
-		g_autoptr(FuFirmware) img0 =
-		    fu_firmware_get_image_by_id(firmware, fmap_region0, NULL);
-		if (img0 == NULL) {
-			gsize off = fu_firmware_get_addr(firmware);
-			return fu_mtd_device_write_stream(self, stream, off, progress, error);
-		}
-	}
 	for (guint i = 0; i < priv->fmap_regions->len; i++) {
 		const gchar *fmap_region = g_ptr_array_index(priv->fmap_regions, i);
 		g_autoptr(FuFirmware) img = NULL;
