@@ -77,6 +77,7 @@ fu_jabra_gnp_calculate_crc(GBytes *bytes)
 	return crc;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
@@ -128,6 +129,7 @@ fu_jabra_gnp_ensure_name(FuDevice *device, guint8 address, guint8 seq, GError **
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
@@ -182,6 +184,7 @@ fu_jabra_gnp_ensure_battery_level(FuDevice *device, guint8 address, guint8 seq, 
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 			  guint8 address,
@@ -229,6 +232,7 @@ fu_jabra_gnp_read_dfu_pid(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
@@ -292,6 +296,7 @@ fu_jabra_gnp_ensure_version(FuDevice *device, guint8 address, guint8 seq, GError
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 			       guint8 address,
@@ -348,6 +353,7 @@ fu_jabra_gnp_read_fwu_protocol(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_partition(FuDevice *device,
 			     guint8 address,
@@ -404,6 +410,7 @@ fu_jabra_gnp_write_partition(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {
@@ -455,6 +462,7 @@ fu_jabra_gnp_start(FuDevice *device, guint8 address, guint8 seq, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_flash_erase_done(FuDevice *device, guint8 address, GError **error)
 {
@@ -491,6 +499,7 @@ fu_jabra_gnp_flash_erase_done(FuDevice *device, guint8 address, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_crc(FuDevice *device,
 		       guint8 address,
@@ -552,6 +561,7 @@ fu_jabra_gnp_write_crc(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_extended_crc(FuDevice *device,
 				guint8 address,
@@ -614,6 +624,7 @@ fu_jabra_gnp_write_extended_crc(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
 fu_jabra_gnp_write_chunk(FuDevice *device,
 			 guint8 address,
@@ -658,6 +669,7 @@ fu_jabra_gnp_write_chunk(FuDevice *device,
 				    error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_chunks(FuDevice *device,
 			  guint8 address,
@@ -734,6 +746,7 @@ fu_jabra_gnp_write_chunks(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error)
 {
@@ -770,6 +783,7 @@ fu_jabra_gnp_read_verify_status(FuDevice *device, guint8 address, GError **error
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_version(FuDevice *device,
 			   guint8 address,
@@ -828,6 +842,7 @@ fu_jabra_gnp_write_version(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_jabra_gnp_write_dfu_from_squif(FuDevice *device, guint8 address, guint8 seq, GError **error)
 {

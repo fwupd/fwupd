@@ -206,7 +206,7 @@ fu_cros_ec_usb_device_do_xfer(FuCrosEcUsbDevice *self,
 }
 
 static gboolean
-fu_cros_ec_usb_device_flush(FuDevice *device, gpointer user_data, GError **error)
+fu_cros_ec_usb_device_flush_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	FuCrosEcUsbDevicePrivate *priv = GET_PRIVATE(self);
@@ -242,7 +242,7 @@ fu_cros_ec_usb_device_recovery(FuCrosEcUsbDevice *self, GError **error)
 {
 	/* flush all data from endpoint to recover in case of error */
 	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_cros_ec_usb_device_flush,
+			     fu_cros_ec_usb_device_flush_cb,
 			     FU_CROS_EC_SETUP_RETRY_CNT,
 			     NULL,
 			     error)) {

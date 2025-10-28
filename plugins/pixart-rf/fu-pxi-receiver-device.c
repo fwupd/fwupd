@@ -181,9 +181,8 @@ fu_pxi_receiver_device_get_cmd_response(FuPxiReceiverDevice *self,
 }
 
 static gboolean
-fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **error)
+fu_pxi_receiver_device_check_crc(FuPxiReceiverDevice *self, guint16 checksum, GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	guint8 buf[FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) receiver_device_cmd = g_byte_array_new();
@@ -232,9 +231,8 @@ fu_pxi_receiver_device_check_crc(FuDevice *device, guint16 checksum, GError **er
 }
 
 static gboolean
-fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError **error)
+fu_pxi_receiver_device_fw_object_create(FuPxiReceiverDevice *self, FuChunk *chk, GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	guint8 buf[FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) receiver_device_cmd = g_byte_array_new();
@@ -286,9 +284,8 @@ fu_pxi_receiver_device_fw_object_create(FuDevice *device, FuChunk *chk, GError *
 }
 
 static gboolean
-fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **error)
+fu_pxi_receiver_device_write_payload(FuPxiReceiverDevice *self, FuChunk *chk, GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) receiver_device_cmd = g_byte_array_new();
 
@@ -318,15 +315,14 @@ fu_pxi_receiver_device_write_payload(FuDevice *device, FuChunk *chk, GError **er
 }
 
 static gboolean
-fu_pxi_receiver_device_write_chunk(FuDevice *device, FuChunk *chk, GError **error)
+fu_pxi_receiver_device_write_chunk(FuPxiReceiverDevice *self, FuChunk *chk, GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	guint32 prn = 0;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
 	/* send create fw object command */
-	if (!fu_pxi_receiver_device_fw_object_create(device, chk, error))
+	if (!fu_pxi_receiver_device_fw_object_create(self, chk, error))
 		return FALSE;
 
 	/* write payload */
@@ -346,15 +342,13 @@ fu_pxi_receiver_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 		/* calculate checksum of each payload packet */
 		self->fwstate.checksum +=
 		    fu_sum16(fu_chunk_get_data(chk2), fu_chunk_get_data_sz(chk2));
-		if (!fu_pxi_receiver_device_write_payload(device, chk2, error))
+		if (!fu_pxi_receiver_device_write_payload(self, chk2, error))
 			return FALSE;
 		prn++;
 		/* check crc at fw when PRN over threshold write or
 		 * offset reach max object sz or write offset reach fw length */
 		if (prn >= self->fwstate.prn_threshold || i == fu_chunk_array_length(chunks) - 1) {
-			if (!fu_pxi_receiver_device_check_crc(device,
-							      self->fwstate.checksum,
-							      error))
+			if (!fu_pxi_receiver_device_check_crc(self, self->fwstate.checksum, error))
 				return FALSE;
 			prn = 0;
 		}
@@ -364,12 +358,11 @@ fu_pxi_receiver_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 }
 
 static gboolean
-fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
+fu_pxi_receiver_device_fw_upgrade(FuPxiReceiverDevice *self,
 				  FuFirmware *firmware,
 				  FuProgress *progress,
 				  GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	const gchar *version;
 	guint8 fw_version[5] = {0x0};
 	guint8 res[FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
@@ -435,7 +428,7 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 		return FALSE;
 
 	/* delay for wireless module device read command */
-	fu_device_sleep(device, 5); /* ms */
+	fu_device_sleep(FU_DEVICE(self), 5); /* ms */
 
 	if (!fu_pxi_receiver_device_get_cmd_response(self, res, sizeof(res), error))
 		return FALSE;
@@ -458,9 +451,8 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 }
 
 static gboolean
-fu_pxi_receiver_device_reset(FuDevice *device, GError **error)
+fu_pxi_receiver_device_reset(FuPxiReceiverDevice *self, GError **error)
 {
-	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	g_autoptr(GByteArray) receiver_device_cmd = g_byte_array_new();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new();
 
@@ -534,7 +526,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_pxi_receiver_device_write_chunk(device, chk, error))
+		if (!fu_pxi_receiver_device_write_chunk(self, chk, error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i + self->fwstate.offset + 1,
@@ -543,7 +535,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* fw upgrade command */
-	if (!fu_pxi_receiver_device_fw_upgrade(device,
+	if (!fu_pxi_receiver_device_fw_upgrade(self,
 					       firmware,
 					       fu_progress_get_child(progress),
 					       error))
@@ -554,7 +546,7 @@ fu_pxi_receiver_device_write_firmware(FuDevice *device,
 	fu_device_sleep(device, 5); /* ms */
 
 	/* send device reset command */
-	if (!fu_pxi_receiver_device_reset(device, error))
+	if (!fu_pxi_receiver_device_reset(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

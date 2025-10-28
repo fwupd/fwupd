@@ -17,7 +17,7 @@ struct _FuUefiGrubDevice {
 G_DEFINE_TYPE(FuUefiGrubDevice, fu_uefi_grub_device, FU_TYPE_UEFI_CAPSULE_DEVICE)
 
 static gboolean
-fu_uefi_grub_device_mkconfig(FuDevice *device,
+fu_uefi_grub_device_mkconfig(FuUefiCapsuleDevice *self,
 			     const gchar *esp_path,
 			     const gchar *target_app,
 			     GError **error)
@@ -36,7 +36,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 
 	/* find grub.conf */
 	fn_grub_cfg = g_build_filename(bootdir, "grub", "grub.cfg", NULL);
-	if (!fu_device_query_file_exists(FU_DEVICE(device), fn_grub_cfg, &exists_mkconfig, error))
+	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
 
 	/* try harder */
@@ -44,7 +44,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 		g_free(fn_grub_cfg);
 		fn_grub_cfg = g_build_filename(bootdir, "grub2", "grub.cfg", NULL);
 	}
-	if (!fu_device_query_file_exists(device, fn_grub_cfg, &exists_mkconfig, error))
+	if (!fu_device_query_file_exists(FU_DEVICE(self), fn_grub_cfg, &exists_mkconfig, error))
 		return FALSE;
 	if (!exists_mkconfig) {
 		g_set_error_literal(error,
@@ -202,7 +202,7 @@ fu_uefi_grub_device_write_firmware(FuDevice *device,
 	}
 
 	/* we are using GRUB instead of NVRAM variables */
-	return fu_uefi_grub_device_mkconfig(device, esp_path, target_app, error);
+	return fu_uefi_grub_device_mkconfig(self, esp_path, target_app, error);
 }
 
 static void

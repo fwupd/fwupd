@@ -193,13 +193,13 @@ fu_legion_hid2_device_setup_version(FuLegionHid2Device *self, GError **error)
 }
 
 static gboolean
-fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
+fu_legion_hid2_device_validate_descriptor(FuLegionHid2Device *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
 	if (descriptor == NULL)
 		return FALSE;
 	report = fu_hid_descriptor_find_report(descriptor,
@@ -229,9 +229,10 @@ fu_legion_hid2_device_validate_descriptor(FuDevice *device, GError **error)
 static gboolean
 fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 {
+	FuLegionHid2Device *self = FU_LEGION_HID2_DEVICE(device);
 	g_autoptr(GError) error_touchpad = NULL;
 
-	if (!fu_legion_hid2_device_validate_descriptor(device, error))
+	if (!fu_legion_hid2_device_validate_descriptor(self, error))
 		return FALSE;
 
 	if (!fu_legion_hid2_device_setup_version(FU_LEGION_HID2_DEVICE(device), error))

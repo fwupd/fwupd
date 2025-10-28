@@ -18,7 +18,7 @@ G_DECLARE_FINAL_TYPE(FuDellKestrelEc,
 		     FuDellKestrelHidDevice)
 
 FuDellKestrelEc *
-fu_dell_kestrel_ec_new(FuDevice *device, gboolean uod);
+fu_dell_kestrel_ec_new(FuUsbDevice *usb_device, gboolean uod);
 void
 fu_dell_kestrel_ec_enable_tbt_passive(FuDellKestrelEc *self);
 gboolean
@@ -50,7 +50,7 @@ fu_dell_kestrel_ec_devicetype_to_str(FuDellKestrelEcDevType dev_type,
 				     FuDellKestrelEcDevSubtype subtype,
 				     FuDellKestrelEcDevInstance instance);
 gboolean
-fu_dell_kestrel_ec_is_dock_ready4update(FuDevice *device, GError **error);
+fu_dell_kestrel_ec_is_dock_ready_for_update(FuDellKestrelEc *self, GError **error);
 gboolean
 fu_dell_kestrel_ec_is_dev_present(FuDellKestrelEc *self,
 				  FuDellKestrelEcDevType dev_type,

@@ -151,7 +151,7 @@ fu_rts54hub_rtd21xx_foreground_attach(FuDevice *device, FuProgress *progress, GE
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_foreground_exit(FuDevice *device, GError **error)
+fu_rts54hub_rtd21xx_foreground_exit_cb(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND(device);
@@ -185,10 +185,11 @@ fu_rts54hub_rtd21xx_foreground_setup(FuDevice *device, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* get version */
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_device_detach,
-					   (FuDeviceLockerFunc)fu_rts54hub_rtd21xx_foreground_exit,
-					   error);
+	locker =
+	    fu_device_locker_new_full(device,
+				      (FuDeviceLockerFunc)fu_device_detach,
+				      (FuDeviceLockerFunc)fu_rts54hub_rtd21xx_foreground_exit_cb,
+				      error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_rts54hub_rtd21xx_foreground_ensure_version_unlocked(self, error))

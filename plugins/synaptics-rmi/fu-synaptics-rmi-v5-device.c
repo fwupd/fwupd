@@ -25,14 +25,13 @@
 #define RMI_F34_ERASE_WAIT_MS (5 * 1000) /* ms */
 
 gboolean
-fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_synaptics_rmi_v5_device_detach(FuSynapticsRmiDevice *self, FuProgress *progress, GError **error)
 {
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	g_autoptr(GByteArray) enable_req = g_byte_array_new();
 
 	/* sanity check */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("already in bootloader mode, skipping");
 		return TRUE;
 	}
@@ -58,7 +57,7 @@ fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError
 		return FALSE;
 	}
 
-	fu_device_sleep(device, RMI_F34_ENABLE_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
 
@@ -132,12 +131,11 @@ fu_synaptics_rmi_v5_device_write_block(FuSynapticsRmiDevice *self,
 }
 
 static gboolean
-fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
+fu_synaptics_rmi_v5_device_secure_check(FuSynapticsRmiDevice *self,
 					GBytes *payload,
 					GBytes *signature,
 					GError **error)
 {
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFunction *f34;
 	guint16 rsa_pubkey_len = fu_synaptics_rmi_device_get_sig_size(self) / 8;
 	guint16 rsa_block_cnt = rsa_pubkey_len / 3;
@@ -231,13 +229,12 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 }
 
 gboolean
-fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
+fu_synaptics_rmi_v5_device_write_firmware(FuSynapticsRmiDevice *self,
 					  FuFirmware *firmware,
 					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFirmware *rmi_firmware = FU_SYNAPTICS_RMI_FIRMWARE(firmware);
@@ -262,7 +259,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "cfg-image");
 
 	/* we should be in bootloader mode now, but check anyway */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -319,7 +316,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		return FALSE;
 	signature_bin = fu_firmware_get_image_by_id_bytes(firmware, "sig", NULL);
 	if (signature_bin != NULL) {
-		if (!fu_synaptics_rmi_v5_device_secure_check(device,
+		if (!fu_synaptics_rmi_v5_device_secure_check(self,
 							     firmware_bin,
 							     signature_bin,
 							     error)) {
@@ -430,7 +427,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 			}
 			fu_progress_step_done(progress_child);
 		}
-		fu_device_sleep(device, 1000); /* ms */
+		fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
 	}
 	fu_progress_step_done(progress);
 

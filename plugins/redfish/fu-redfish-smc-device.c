@@ -94,9 +94,9 @@ fu_redfish_smc_device_get_parameters(FuRedfishSmcDevice *self)
 }
 
 static gboolean
-fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GError **error)
+fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progress, GError **error)
 {
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(device));
+	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
 	JsonObject *json_obj;
 	CURL *curl;
 	const gchar *location = NULL;
@@ -112,7 +112,7 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 		FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
 		&error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
-			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+			fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
@@ -127,7 +127,7 @@ fu_redfish_smc_device_start_update(FuDevice *device, FuProgress *progress, GErro
 			    fu_redfish_backend_get_push_uri_path(backend));
 		return FALSE;
 	}
-	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(device), location, progress, error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 
 static gboolean
@@ -217,7 +217,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-	if (!fu_redfish_smc_device_start_update(device, fu_progress_get_child(progress), error))
+	if (!fu_redfish_smc_device_start_update(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 	return TRUE;

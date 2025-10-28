@@ -647,13 +647,13 @@ fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
 }
 
 static gboolean
-fu_cfi_device_chip_select_assert(FuDevice *device, GError **error)
+fu_cfi_device_chip_select_assert_cb(FuDevice *device, GError **error)
 {
 	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), TRUE, error);
 }
 
 static gboolean
-fu_cfi_device_chip_select_deassert(FuDevice *device, GError **error)
+fu_cfi_device_chip_select_deassert_cb(FuDevice *device, GError **error)
 {
 	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), FALSE, error);
 }
@@ -674,8 +674,8 @@ fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error)
 	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	return fu_device_locker_new_full(FU_DEVICE(self),
-					 fu_cfi_device_chip_select_assert,
-					 fu_cfi_device_chip_select_deassert,
+					 fu_cfi_device_chip_select_assert_cb,
+					 fu_cfi_device_chip_select_deassert_cb,
 					 error);
 }
 

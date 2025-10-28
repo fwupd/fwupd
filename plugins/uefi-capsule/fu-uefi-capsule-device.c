@@ -572,9 +572,9 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_uefi_capsule_device_capture_efi_debugging(FuDevice *device)
+fu_uefi_capsule_device_capture_efi_debugging(FuUefiCapsuleDevice *self)
 {
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	g_autofree gchar *str = NULL;
 	g_autoptr(GBytes) buf = NULL;
@@ -647,7 +647,7 @@ fu_uefi_capsule_device_get_results(FuDevice *device, GError **error)
 
 	/* capture EFI binary debug output */
 	if (fu_device_has_private_flag(device, FU_UEFI_CAPSULE_DEVICE_FLAG_ENABLE_DEBUGGING))
-		fu_uefi_capsule_device_capture_efi_debugging(device);
+		fu_uefi_capsule_device_capture_efi_debugging(self);
 
 	/* just set the update error */
 	fu_uefi_capsule_device_set_status(self, priv->last_attempt_status);

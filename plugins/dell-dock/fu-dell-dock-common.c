@@ -18,6 +18,7 @@
 #include "fu-dell-dock-common.h"
 #include "fu-dell-dock-ec.h"
 
+/* nocheck:name */
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error)
 {
@@ -41,5 +42,5 @@ fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError
 	if (locker == NULL)
 		return FALSE;
 
-	return fu_dell_dock_ec_modify_lock(parent, target, enabled, error);
+	return fu_dell_dock_ec_modify_lock(FU_DELL_DOCK_EC(parent), target, enabled, error);
 }

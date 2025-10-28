@@ -80,12 +80,12 @@ fu_asus_hid_device_child_added_cb(FuDevice *device, FuDevice *child, gpointer us
 }
 
 static gboolean
-fu_asus_hid_device_validate_descriptor(FuDevice *device, GError **error)
+fu_asus_hid_device_validate_descriptor(FuAsusHidDevice *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
-	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
 	if (descriptor == NULL)
 		return FALSE;
 	report = fu_hid_descriptor_find_report(descriptor,
@@ -126,7 +126,7 @@ fu_asus_hid_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
-	if (!fu_asus_hid_device_validate_descriptor(device, error))
+	if (!fu_asus_hid_device_validate_descriptor(self, error))
 		return FALSE;
 
 	if (!fu_asus_hid_device_init_seq(self, error))

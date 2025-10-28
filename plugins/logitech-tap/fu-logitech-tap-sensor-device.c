@@ -64,7 +64,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_sensor_device_enable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 	g_autoptr(FuStructLogitechTapSensorHidReq) st = fu_struct_logitech_tap_sensor_hid_req_new();
@@ -85,7 +85,7 @@ fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_disable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_sensor_device_disable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 	g_autoptr(FuStructLogitechTapSensorHidReq) st = fu_struct_logitech_tap_sensor_hid_req_new();
@@ -122,11 +122,10 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 		return FALSE;
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(FU_DEVICE(self),
+					   fu_logitech_tap_sensor_device_enable_tde_cb,
+					   fu_logitech_tap_sensor_device_disable_tde_cb,
+					   error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -257,11 +256,11 @@ fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GEr
 	    FU_LOGITECH_TAP_SENSOR_HID_SERIAL_NUMBER_SET_REPORT_BYTE4);
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(
+	    FU_DEVICE(self),
+	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde_cb,
+	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde_cb,
+	    error);
 	if (locker == NULL)
 		return FALSE;
 

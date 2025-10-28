@@ -86,6 +86,7 @@ fu_dell_dock_hid_set_report_cb(FuDevice *device, gpointer user_data, GError **er
 					error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
 fu_dell_dock_hid_set_report(FuDevice *device, guint8 *outbuffer, GError **error)
 {
@@ -109,6 +110,7 @@ fu_dell_dock_hid_get_report_cb(FuDevice *device, gpointer user_data, GError **er
 					error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 static gboolean
 fu_dell_dock_hid_get_report(FuDevice *device, guint8 *inbuffer, GError **error)
 {
@@ -119,6 +121,7 @@ fu_dell_dock_hid_get_report(FuDevice *device, guint8 *inbuffer, GError **error)
 			       error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_get_hub_version(FuDevice *device, GError **error)
 {
@@ -150,6 +153,7 @@ fu_dell_dock_hid_get_hub_version(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_raise_mcu_clock(FuDevice *device, gboolean enable, GError **error)
 {
@@ -173,6 +177,7 @@ fu_dell_dock_hid_raise_mcu_clock(FuDevice *device, gboolean enable, GError **err
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_erase_bank(FuDevice *device, guint8 idx, GError **error)
 {
@@ -196,6 +201,7 @@ fu_dell_dock_hid_erase_bank(FuDevice *device, guint8 idx, GError **error)
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_write_flash(FuDevice *device,
 			     guint32 dwAddr,
@@ -226,6 +232,7 @@ fu_dell_dock_hid_write_flash(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_verify_update(FuDevice *device, gboolean *result, GError **error)
 {
@@ -254,6 +261,7 @@ fu_dell_dock_hid_verify_update(FuDevice *device, gboolean *result, GError **erro
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_i2c_write(FuDevice *device,
 			   const guint8 *input,
@@ -279,6 +287,7 @@ fu_dell_dock_hid_i2c_write(FuDevice *device,
 	return fu_dell_dock_hid_set_report(device, (guint8 *)&cmd_buffer, error);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_i2c_read(FuDevice *device,
 			  guint32 cmd,
@@ -313,6 +322,7 @@ fu_dell_dock_hid_i2c_read(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_tbt_wake(FuDevice *device, const FuHIDI2CParameters *parameters, GError **error)
 {
@@ -351,6 +361,7 @@ fu_dell_dock_hid_tbt_map_error(guint32 code)
 	return fwupd_strerror(EIO);
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_tbt_write(FuDevice *device,
 			   guint32 start_addr,
@@ -402,6 +413,7 @@ fu_dell_dock_hid_tbt_write(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- this should probably be implemented using an interface */
 gboolean
 fu_dell_dock_hid_tbt_authenticate(FuDevice *device,
 				  const FuHIDI2CParameters *parameters,

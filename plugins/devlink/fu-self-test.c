@@ -117,7 +117,7 @@ fu_devlink_plugin_flash_func(void)
 	gboolean ret;
 	const gchar *fw_content = "FWUPD_TEST_FIRMWARE_v2.0.0\nTest firmware for devlink device";
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuDevice) component = NULL;
+	g_autoptr(FuDevlinkComponent) component = NULL;
 	g_autoptr(FuDevlinkNetdevsim) ndsim = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -152,10 +152,10 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_nonnull(component);
 
 	/* set up parent-child relationship */
-	fu_device_add_child(device, component);
+	fu_device_add_child(device, FU_DEVICE(component));
 
 	/* set component version for testing */
-	fu_device_set_version(component, "1.0.0");
+	fu_device_set_version(FU_DEVICE(component), "1.0.0");
 
 	/* create firmware */
 	fw_data = g_bytes_new(fw_content, strlen(fw_content));
@@ -163,13 +163,16 @@ fu_devlink_plugin_flash_func(void)
 	fu_firmware_set_version(firmware, "2.0.0");
 
 	/* prepare the component */
-	ret = fu_device_prepare(component, progress, FWUPD_INSTALL_FLAG_NONE, &error_local);
+	ret = fu_device_prepare(FU_DEVICE(component),
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				&error_local);
 	g_assert_true(ret);
 
 	/* test firmware flashing on the fw.mgmt component */
 	g_test_message("Testing firmware flash for fw.mgmt component on netdevsim/%s",
 		       FU_DEVLINK_NETDEVSIM_DEVICE_NAME);
-	ret = fu_device_write_firmware(component,
+	ret = fu_device_write_firmware(FU_DEVICE(component),
 				       firmware,
 				       progress,
 				       FWUPD_INSTALL_FLAG_NONE,
@@ -180,7 +183,10 @@ fu_devlink_plugin_flash_func(void)
 	g_assert_cmpuint(fu_progress_get_percentage(progress), ==, 100);
 
 	/* cleanup the component */
-	ret = fu_device_cleanup(component, progress, FWUPD_INSTALL_FLAG_NONE, &error_local);
+	ret = fu_device_cleanup(FU_DEVICE(component),
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				&error_local);
 	g_assert_true(ret);
 }
 

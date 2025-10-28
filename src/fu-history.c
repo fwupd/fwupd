@@ -685,7 +685,7 @@ fu_history_convert_hash_to_string(GHashTable *hash)
 	return g_string_free(str, FALSE);
 }
 
-/* unset some flags we don't want to store */
+/* nocheck:name unset some flags we don't want to store */
 static FwupdDeviceFlags
 fu_history_get_device_flags_filtered(FuDevice *device)
 {

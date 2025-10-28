@@ -22,7 +22,7 @@ G_DECLARE_FINAL_TYPE(FuThunderboltRetimer,
 #define FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY 5000 /* ms */
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_offline(FuDevice *device, GError **error);
+fu_thunderbolt_retimer_set_parent_port_offline(FuThunderboltRetimer *self, GError **error);
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_online(FuDevice *device, GError **error);
+fu_thunderbolt_retimer_set_parent_port_online(FuThunderboltRetimer *self, GError **error);

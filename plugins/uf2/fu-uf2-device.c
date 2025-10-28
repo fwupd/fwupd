@@ -52,7 +52,7 @@ fu_uf2_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
+fu_uf2_device_probe_current_fw(FuUf2Device *self, GBytes *fw, GError **error)
 {
 	g_autofree gchar *csum_sha256 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_uf2_firmware_new();
@@ -62,15 +62,15 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 	if (!fu_firmware_parse_bytes(firmware, fw, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return FALSE;
 	if (fu_firmware_get_version(firmware) != NULL)
-		fu_device_set_version(device, fu_firmware_get_version(firmware));
+		fu_device_set_version(FU_DEVICE(self), fu_firmware_get_version(firmware));
 
 	/* add instance ID for quirks */
 	if (fu_firmware_get_idx(firmware) != 0x0) {
-		fu_device_add_instance_u32(device,
+		fu_device_add_instance_u32(FU_DEVICE(self),
 					   "FAMILY",
 					   (guint32)fu_firmware_get_idx(firmware));
 	}
-	(void)fu_device_build_instance_id_full(device,
+	(void)fu_device_build_instance_id_full(FU_DEVICE(self),
 					       FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					       NULL,
 					       "UF2",
@@ -82,8 +82,8 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 	if (fw_raw == NULL)
 		return FALSE;
 	csum_sha256 = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, fw_raw);
-	fu_device_add_checksum(device, csum_sha256);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_checksum(FU_DEVICE(self), csum_sha256);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 
 	/* success */
 	return TRUE;
@@ -315,7 +315,7 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	fw = fu_device_get_contents_bytes(device, fn2, G_MAXUINT32, NULL, NULL);
 	if (fw != NULL) {
-		if (!fu_uf2_device_probe_current_fw(device, fw, error))
+		if (!fu_uf2_device_probe_current_fw(self, fw, error))
 			return FALSE;
 	} else {
 		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);

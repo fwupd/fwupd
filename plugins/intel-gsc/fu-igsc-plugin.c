@@ -28,12 +28,12 @@ fu_igsc_plugin_init(FuIgscPlugin *self)
 }
 
 static gboolean
-fu_igsc_plugin_set_pci_power_policy(FuDevice *device, const gchar *val, GError **error)
+fu_igsc_plugin_set_pci_power_policy(FuIgscDevice *self, const gchar *val, GError **error)
 {
 	g_autoptr(FuDevice) parent = NULL;
 
 	/* get PCI parent */
-	parent = fu_device_get_backend_parent_with_subsystem(device, "pci", error);
+	parent = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
 	if (parent == NULL)
 		return FALSE;
 	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(parent),
@@ -46,11 +46,11 @@ fu_igsc_plugin_set_pci_power_policy(FuDevice *device, const gchar *val, GError *
 static gboolean
 fu_igsc_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *device_igsc = NULL;
+	FuIgscDevice *device_igsc = NULL;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		if (FU_IS_IGSC_DEVICE(device)) {
-			device_igsc = device;
+			device_igsc = FU_IGSC_DEVICE(device);
 			break;
 		}
 	}
@@ -65,11 +65,11 @@ fu_igsc_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **
 static gboolean
 fu_igsc_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
-	FuDevice *device_igsc = NULL;
+	FuIgscDevice *device_igsc = NULL;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		if (FU_IS_IGSC_DEVICE(device)) {
-			device_igsc = device;
+			device_igsc = FU_IGSC_DEVICE(device);
 			break;
 		}
 	}

@@ -863,8 +863,7 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 */
 	if (send_req) {
 		g_autoptr(GByteArray) device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
-			device);
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1011,8 +1010,7 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
 		device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
-			device);
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1223,8 +1221,7 @@ fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_d
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
 	device_request =
-	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(device,
-										      error);
+	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(self, error);
 	if (device_request == NULL)
 		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
@@ -1277,7 +1274,7 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
 	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
-	    device);
+	    self);
 	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
 	if (res == NULL)
 		return FALSE;

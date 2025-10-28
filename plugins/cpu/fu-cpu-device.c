@@ -122,7 +122,7 @@ fu_cpu_device_init(FuCpuDevice *self)
 }
 
 static gboolean
-fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
+fu_cpu_device_add_instance_ids(FuCpuDevice *self, GError **error)
 {
 	guint32 eax = 0;
 	guint32 family_id;
@@ -149,26 +149,33 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 		family_id += family_id_ext;
 
 	/* add GUIDs */
-	fu_device_add_instance_u4(device, "PRO", processor_id);
-	fu_device_add_instance_u8(device, "FAM", family_id);
-	fu_device_add_instance_u8(device, "MOD", model_id);
-	fu_device_add_instance_u4(device, "STP", stepping_id);
-	fu_device_build_instance_id_full(device,
+	fu_device_add_instance_u4(FU_DEVICE(self), "PRO", processor_id);
+	fu_device_add_instance_u8(FU_DEVICE(self), "FAM", family_id);
+	fu_device_add_instance_u8(FU_DEVICE(self), "MOD", model_id);
+	fu_device_add_instance_u4(FU_DEVICE(self), "STP", stepping_id);
+	fu_device_build_instance_id_full(FU_DEVICE(self),
 					 FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					 NULL,
 					 "CPUID",
 					 "PRO",
 					 "FAM",
 					 NULL);
-	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", NULL);
-	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", "STP", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "CPUID", "PRO", "FAM", "MOD", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self),
+				    NULL,
+				    "CPUID",
+				    "PRO",
+				    "FAM",
+				    "MOD",
+				    "STP",
+				    NULL);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_probe_manufacturer_id(FuDevice *device, GError **error)
+fu_cpu_device_probe_manufacturer_id(FuCpuDevice *self, GError **error)
 {
 	guint32 ebx = 0;
 	guint32 ecx = 0;
@@ -203,12 +210,12 @@ fu_cpu_device_probe_manufacturer_id(FuDevice *device, GError **error)
 			    sizeof(guint32),
 			    error))
 		return FALSE;
-	fu_device_set_vendor(device, fu_cpu_device_convert_vendor(str));
+	fu_device_set_vendor(FU_DEVICE(self), fu_cpu_device_convert_vendor(str));
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_probe_model(FuDevice *device, GError **error)
+fu_cpu_device_probe_model(FuCpuDevice *self, GError **error)
 {
 	guint32 eax = 0;
 	guint32 ebx = 0;
@@ -256,14 +263,13 @@ fu_cpu_device_probe_model(FuDevice *device, GError **error)
 				    error))
 			return FALSE;
 	}
-	fu_device_set_name(device, str);
+	fu_device_set_name(FU_DEVICE(self), str);
 	return TRUE;
 }
 
 static gboolean
-fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
+fu_cpu_device_probe_extended_features(FuCpuDevice *self, GError **error)
 {
-	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	guint32 ebx = 0;
 	guint32 ecx = 0;
 	guint32 edx = 0;
@@ -288,13 +294,14 @@ fu_cpu_device_probe_extended_features(FuDevice *device, GError **error)
 static gboolean
 fu_cpu_device_probe(FuDevice *device, GError **error)
 {
-	if (!fu_cpu_device_probe_manufacturer_id(device, error))
+	FuCpuDevice *self = FU_CPU_DEVICE(device);
+	if (!fu_cpu_device_probe_manufacturer_id(self, error))
 		return FALSE;
-	if (!fu_cpu_device_probe_model(device, error))
+	if (!fu_cpu_device_probe_model(self, error))
 		return FALSE;
-	if (!fu_cpu_device_probe_extended_features(device, error))
+	if (!fu_cpu_device_probe_extended_features(self, error))
 		return FALSE;
-	if (!fu_cpu_device_add_instance_ids(device, error))
+	if (!fu_cpu_device_add_instance_ids(self, error))
 		return FALSE;
 	return TRUE;
 }
@@ -440,10 +447,8 @@ fu_cpu_device_add_security_attrs_smap(FuCpuDevice *self, FuSecurityAttrs *attrs)
 
 #ifdef HAVE_UTSNAME_H
 static void
-fu_cpu_device_add_x86_64_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
+fu_cpu_device_add_x86_64_security_attrs(FuCpuDevice *self, FuSecurityAttrs *attrs)
 {
-	FuCpuDevice *self = FU_CPU_DEVICE(device);
-
 	/* only Intel */
 	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL)
 		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
@@ -457,6 +462,7 @@ static void
 fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 #ifdef HAVE_UTSNAME_H
+	FuCpuDevice *self = FU_CPU_DEVICE(device);
 	struct utsname name_tmp = {0};
 
 	if (uname(&name_tmp) < 0) {
@@ -465,7 +471,7 @@ fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 	}
 
 	if (g_strcmp0(name_tmp.machine, "x86_64") == 0)
-		fu_cpu_device_add_x86_64_security_attrs(device, attrs);
+		fu_cpu_device_add_x86_64_security_attrs(self, attrs);
 #endif
 }
 

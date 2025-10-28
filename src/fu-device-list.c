@@ -529,6 +529,7 @@ fu_device_list_remove_with_delay(FuDeviceItem *item)
 					item);
 }
 
+/* nocheck:name */
 static gboolean
 fu_device_list_should_remove_with_delay(FuDevice *device)
 {

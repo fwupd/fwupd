@@ -14,9 +14,8 @@
 #define RMI_F34_ERASE_WAIT_MS 10000 /* ms */
 
 gboolean
-fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_synaptics_rmi_v7_device_detach(FuSynapticsRmiDevice *self, FuProgress *progress, GError **error)
 {
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	g_autoptr(GByteArray) enable_req = g_byte_array_new();
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
@@ -53,7 +52,7 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 		return FALSE;
 	if (!fu_synaptics_rmi_device_poll_wait(self, error))
 		return FALSE;
-	fu_device_sleep(device, RMI_F34_ENABLE_WAIT_MS);
+	fu_device_sleep(FU_DEVICE(self), RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
 
@@ -551,13 +550,12 @@ fu_synaptics_rmi_v7_device_secure_check(FuSynapticsRmiDevice *self,
 }
 
 gboolean
-fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
+fu_synaptics_rmi_v7_device_write_firmware(FuSynapticsRmiDevice *self,
 					  FuFirmware *firmware,
 					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
 	g_autoptr(GBytes) bytes_bin = NULL;
@@ -611,7 +609,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	}
 
 	/* we should be in bootloader mode now, but check anyway */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,

@@ -527,10 +527,11 @@ fu_genesys_gl32xx_device_setup(FuDevice *device, GError **error)
 }
 
 static GBytes *
-fu_genesys_gl32xx_device_dump_bytes(FuDevice *device, FuProgress *progress, GError **error)
+fu_genesys_gl32xx_device_dump_bytes(FuGenesysGl32xxDevice *self,
+				    FuProgress *progress,
+				    GError **error)
 {
-	FuGenesysGl32xxDevice *self = FU_GENESYS_GL32XX_DEVICE(device);
-	const gsize fwsz = fu_device_get_firmware_size_max(device);
+	const gsize fwsz = fu_device_get_firmware_size_max(FU_DEVICE(self));
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autofree guint8 *buf = g_malloc0(fwsz);
 
@@ -569,7 +570,7 @@ fu_genesys_gl32xx_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 	if (locker == NULL)
 		return NULL;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fw = fu_genesys_gl32xx_device_dump_bytes(device, progress, error);
+	fw = fu_genesys_gl32xx_device_dump_bytes(self, progress, error);
 	if (fw == NULL)
 		return NULL;
 
@@ -718,7 +719,7 @@ fu_genesys_gl32xx_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify written data */
-	fw_read = fu_genesys_gl32xx_device_dump_bytes(device, progress, error);
+	fw_read = fu_genesys_gl32xx_device_dump_bytes(self, progress, error);
 	if (fw_read == NULL)
 		return FALSE;
 	fu_progress_step_done(progress);

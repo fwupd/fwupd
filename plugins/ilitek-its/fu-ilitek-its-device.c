@@ -491,15 +491,15 @@ fu_ilitek_its_device_io_channel_write(const gchar *fn, const gchar *buf, GError 
 }
 
 static FuDevice *
-fu_ilitek_its_device_get_backend_parent(FuDevice *device, GError **error)
+fu_ilitek_its_device_get_backend_parent(FuIlitekItsDevice *self, GError **error)
 {
-	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(device))) {
+	switch (fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self))) {
 	case FU_HIDRAW_BUS_TYPE_I2C:
-		return fu_device_get_backend_parent_with_subsystem(device, "i2c", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "i2c", error);
 	case FU_HIDRAW_BUS_TYPE_PCI:
-		return fu_device_get_backend_parent_with_subsystem(device, "pci", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", error);
 	case FU_HIDRAW_BUS_TYPE_USB:
-		return fu_device_get_backend_parent_with_subsystem(device, "usb", error);
+		return fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "usb", error);
 	default:
 		break;
 	}
@@ -508,12 +508,12 @@ fu_ilitek_its_device_get_backend_parent(FuDevice *device, GError **error)
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "unexpected bus type: 0x%x",
-		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(device)));
+		    fu_hidraw_device_get_bus_type(FU_HIDRAW_DEVICE(self)));
 	return NULL;
 }
 
 static gboolean
-fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
+fu_ilitek_its_device_rebind_driver(FuIlitekItsDevice *self, GError **error)
 {
 	const gchar *hid_id;
 	const gchar *driver;
@@ -524,10 +524,10 @@ fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
 	g_autoptr(FuUdevDevice) parent = NULL;
 
 	/* skip */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
 		return TRUE;
 
-	parent = FU_UDEV_DEVICE(fu_ilitek_its_device_get_backend_parent(device, error));
+	parent = FU_UDEV_DEVICE(fu_ilitek_its_device_get_backend_parent(self, error));
 	if (parent == NULL)
 		return FALSE;
 
@@ -548,7 +548,7 @@ fu_ilitek_its_device_rebind_driver(FuDevice *device, GError **error)
 	fn_bind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "bind", NULL);
 	fn_unbind = g_build_filename("/sys/bus/", subsystem, "drivers", driver, "unbind", NULL);
 
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	if (!fu_ilitek_its_device_io_channel_write(fn_unbind, hid_id, error))
 		return FALSE;
 	if (!fu_ilitek_its_device_io_channel_write(fn_bind, hid_id, error))
@@ -673,7 +673,7 @@ fu_ilitek_its_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		}
 
 		/* rebind driver to update report descriptor */
-		if (!fu_ilitek_its_device_rebind_driver(device, error))
+		if (!fu_ilitek_its_device_rebind_driver(self, error))
 			return FALSE;
 
 		break;
