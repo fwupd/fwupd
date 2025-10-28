@@ -779,7 +779,7 @@ mock_tree_prepare_for_update(FuThunderboltMockTree *node,
 	return ctx;
 }
 
-static FuThunderboltMockDevice root_one = {
+const FuThunderboltMockDevice root_one = {
 
     .name = "Laptop",
     .id = "0x23",
