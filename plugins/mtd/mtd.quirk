@@ -15,7 +15,7 @@ Flags = no-probe
 # Intel SPI Controller
 [MTD\NAME_BIOS]
 Name = Internal SPI Controller
-#FirmwareGType = FuIfdFirmware
+FirmwareGType = FuIfdFirmware
 [MTD\NAME_0000:00:1f.5]
 Name = PCH SPI Controller
 
