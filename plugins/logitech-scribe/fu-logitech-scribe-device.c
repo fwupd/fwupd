@@ -598,7 +598,7 @@ fu_logitech_scribe_device_ensure_version(FuLogitechScribeDevice *self, GError **
 						      error))
 		return FALSE;
 
-	/*  little-endian data. MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
+	/*  nocheck:endian -- MinorVersion byte 0, MajorVersion byte 1, BuildVersion byte 3 & 2 */
 	fwversion =
 	    (query_data[1] << 24) + (query_data[0] << 16) + (query_data[3] << 8) + query_data[2];
 	fu_device_set_version_raw(FU_DEVICE(self), fwversion);
