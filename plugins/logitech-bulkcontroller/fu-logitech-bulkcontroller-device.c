@@ -1212,7 +1212,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
@@ -1256,10 +1256,10 @@ fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_da
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_set_time(FuLogitechBulkcontrollerDevice *self, GError **error)
+fu_logitech_bulkcontroller_device_send_time(FuLogitechBulkcontrollerDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_logitech_bulkcontroller_device_set_time_cb,
+			       fu_logitech_bulkcontroller_device_send_time_cb,
 			       MAX_SETUP_RETRIES,
 			       NULL,
 			       error);
@@ -1433,7 +1433,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* set device time */
-	if (!fu_logitech_bulkcontroller_device_set_time(self, error)) {
+	if (!fu_logitech_bulkcontroller_device_send_time(self, error)) {
 		g_prefix_error_literal(error, "failed to set time: ");
 		return FALSE;
 	}

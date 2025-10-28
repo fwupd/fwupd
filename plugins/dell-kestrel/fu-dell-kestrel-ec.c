@@ -514,7 +514,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 }
 
 static gboolean
-fu_dell_kestrel_ec_set_dock_sku(FuDellKestrelEc *self, GError **error)
+fu_dell_kestrel_ec_ensure_dock_sku(FuDellKestrelEc *self, GError **error)
 {
 	if (self->base_type == FU_DELL_DOCK_BASE_TYPE_KESTREL) {
 		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
@@ -693,7 +693,7 @@ fu_dell_kestrel_ec_query_cb(FuDevice *device, gpointer user_data, GError **error
 		return FALSE;
 
 	/* set internal dock sku, must after dock info */
-	if (!fu_dell_kestrel_ec_set_dock_sku(self, error))
+	if (!fu_dell_kestrel_ec_ensure_dock_sku(self, error))
 		return FALSE;
 
 	return TRUE;

@@ -190,7 +190,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GError **error)
+fu_logitech_tap_sensor_device_ensure_version(FuLogitechTapSensorDevice *self, GError **error)
 {
 	guint32 version = 0;
 	g_autoptr(FuStructLogitechTapSensorHidReq) st_req =
@@ -233,7 +233,7 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError **error)
+fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GString) serial_number = g_string_new(NULL);
@@ -306,9 +306,9 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 
-	if (!fu_logitech_tap_sensor_device_set_version(self, error))
+	if (!fu_logitech_tap_sensor_device_ensure_version(self, error))
 		return FALSE;
-	if (!fu_logitech_tap_sensor_device_set_serial(self, error))
+	if (!fu_logitech_tap_sensor_device_ensure_serial(self, error))
 		return FALSE;
 	return TRUE;
 }

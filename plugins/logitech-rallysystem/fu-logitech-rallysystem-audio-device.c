@@ -22,8 +22,8 @@ G_DEFINE_TYPE(FuLogitechRallysystemAudioDevice,
 	      FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
-fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevice *self,
-						 GError **error)
+fu_logitech_rallysystem_audio_device_ensure_version(FuLogitechRallysystemAudioDevice *self,
+						    GError **error)
 {
 	guint8 buf[TOPOLOGY_DATA_LEN] = {0x3E, 0x0};
 	guint32 fwversion = 0;
@@ -51,8 +51,8 @@ fu_logitech_rallysystem_audio_device_set_version(FuLogitechRallysystemAudioDevic
 }
 
 static gboolean
-fu_logitech_rallysystem_audio_device_set_serial(FuLogitechRallysystemAudioDevice *self,
-						GError **error)
+fu_logitech_rallysystem_audio_device_ensure_serial(FuLogitechRallysystemAudioDevice *self,
+						   GError **error)
 {
 	guint8 buf_req[SERIAL_NUMBER_REQUEST_DATA_LEN] =
 	    {0x28, 0x85, 0x08, 0xBB, 0x1B, 0x00, 0x01, 0x30, 0, 0, 0, 0x0C};
@@ -102,9 +102,9 @@ static gboolean
 fu_logitech_rallysystem_audio_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechRallysystemAudioDevice *self = FU_LOGITECH_RALLYSYSTEM_AUDIO_DEVICE(device);
-	if (!fu_logitech_rallysystem_audio_device_set_version(self, error))
+	if (!fu_logitech_rallysystem_audio_device_ensure_version(self, error))
 		return FALSE;
-	if (!fu_logitech_rallysystem_audio_device_set_serial(self, error))
+	if (!fu_logitech_rallysystem_audio_device_ensure_serial(self, error))
 		return FALSE;
 	return TRUE;
 }
