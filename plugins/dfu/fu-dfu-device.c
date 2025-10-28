@@ -113,7 +113,7 @@ guint16
 fu_dfu_device_get_transfer_size(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT16);
 	return priv->transfer_size;
 }
 
@@ -129,7 +129,7 @@ guint16
 fu_dfu_device_get_version(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xffff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT16);
 	return priv->version;
 }
 
@@ -823,7 +823,7 @@ guint8
 fu_dfu_device_get_interface(FuDfuDevice *self)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), 0xff);
+	g_return_val_if_fail(FU_IS_DFU_DEVICE(self), G_MAXUINT8);
 	return priv->iface_number;
 }
 
