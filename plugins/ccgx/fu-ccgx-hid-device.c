@@ -77,7 +77,7 @@ fu_ccgx_hid_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_ccgx_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_ccgx_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

@@ -75,10 +75,10 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 }
 
 static gboolean
-fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_kestrel_hid_device_hid_set_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	GByteArray *buf = (GByteArray *)user_data;
-	return fu_hid_device_set_report(FU_HID_DEVICE(self),
+	return fu_hid_device_set_report(FU_HID_DEVICE(device),
 					0x0,
 					buf->data,
 					buf->len,
@@ -100,10 +100,10 @@ fu_dell_kestrel_hid_device_hid_set_report(FuDellKestrelHidDevice *self,
 }
 
 static gboolean
-fu_dell_kestrel_hid_device_get_report_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_dell_kestrel_hid_device_get_report_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 *inbuffer = (guint8 *)user_data;
-	return fu_hid_device_get_report(FU_HID_DEVICE(self),
+	return fu_hid_device_get_report(FU_HID_DEVICE(device),
 					0x0,
 					inbuffer,
 					192,

@@ -167,7 +167,7 @@ fu_mm_mhi_qcdm_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
-fu_mm_mhi_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_mhi_qcdm_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

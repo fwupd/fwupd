@@ -818,13 +818,13 @@ fu_bnr_dp_device_write_firmware(FuDevice *device,
 }
 
 static gchar *
-fu_bnr_dp_device_convert_version(FuDevice *self, guint64 version_raw)
+fu_bnr_dp_device_convert_version(FuDevice *device, guint64 version_raw)
 {
 	return fu_bnr_dp_version_to_string(version_raw);
 }
 
 static void
-fu_bnr_dp_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_bnr_dp_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

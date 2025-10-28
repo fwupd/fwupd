@@ -653,10 +653,10 @@ fu_igsc_device_wait_for_version(FuIgscDevice *self, GError **error)
 }
 
 static gboolean
-fu_igsc_device_reconnect_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_igsc_device_reconnect_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	fu_mei_device_disconnect(FU_MEI_DEVICE(self));
-	return fu_mei_device_connect(FU_MEI_DEVICE(self), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
+	fu_mei_device_disconnect(FU_MEI_DEVICE(device));
+	return fu_mei_device_connect(FU_MEI_DEVICE(device), FU_HECI_DEVICE_UUID_FWUPDATE, 0, error);
 }
 
 static gboolean
@@ -832,7 +832,7 @@ fu_igsc_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_igsc_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_igsc_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

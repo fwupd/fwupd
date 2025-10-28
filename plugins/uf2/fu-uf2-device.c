@@ -385,7 +385,7 @@ fu_uf2_device_replace(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_uf2_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uf2_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

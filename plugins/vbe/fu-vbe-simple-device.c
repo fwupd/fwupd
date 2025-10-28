@@ -442,7 +442,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 }
 
 static void
-fu_vbe_simple_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vbe_simple_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

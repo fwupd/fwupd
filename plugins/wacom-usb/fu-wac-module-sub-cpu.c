@@ -206,7 +206,7 @@ fu_wac_module_sub_cpu_write_firmware(FuDevice *device,
 }
 
 static FuFirmware *
-fu_wac_module_sub_cpu_prepare_firmware(FuDevice *self,
+fu_wac_module_sub_cpu_prepare_firmware(FuDevice *device,
 				       GInputStream *stream,
 				       FuProgress *progress,
 				       FuFirmwareParseFlags flags,

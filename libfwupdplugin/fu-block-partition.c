@@ -89,13 +89,13 @@ fu_block_partition_set_fs_label(FuBlockPartition *self, const gchar *fs_label, g
 }
 
 static void
-fu_block_partition_incorporate(FuDevice *self, FuDevice *donor)
+fu_block_partition_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuBlockPartition *uself = FU_BLOCK_PARTITION(self);
+	FuBlockPartition *uself = FU_BLOCK_PARTITION(device);
 	FuBlockPartition *udonor = FU_BLOCK_PARTITION(donor);
 	FuBlockPartitionPrivate *priv = GET_PRIVATE(uself);
 
-	g_return_if_fail(FU_IS_BLOCK_PARTITION(self));
+	g_return_if_fail(FU_IS_BLOCK_PARTITION(device));
 	g_return_if_fail(FU_IS_BLOCK_PARTITION(donor));
 
 	if (priv->fs_type == NULL)
