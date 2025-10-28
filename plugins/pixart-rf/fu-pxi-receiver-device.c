@@ -850,7 +850,7 @@ fu_pxi_receiver_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_pxi_receiver_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_pxi_receiver_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

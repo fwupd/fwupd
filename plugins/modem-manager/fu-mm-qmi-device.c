@@ -918,7 +918,7 @@ fu_mm_qmi_device_cleanup(FuDevice *device,
 }
 
 static void
-fu_mm_qmi_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_mm_qmi_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

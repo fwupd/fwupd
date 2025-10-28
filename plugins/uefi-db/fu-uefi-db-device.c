@@ -131,7 +131,7 @@ fu_uefi_db_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_uefi_db_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_uefi_db_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

@@ -1402,7 +1402,7 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_nordic_hid_cfg_channel_set_progress(FuDevice *self, FuProgress *progress)
+fu_nordic_hid_cfg_channel_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

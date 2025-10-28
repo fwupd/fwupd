@@ -627,13 +627,13 @@ fu_udev_device_invalidate(FuDevice *device)
 }
 
 static void
-fu_udev_device_incorporate(FuDevice *self, FuDevice *donor)
+fu_udev_device_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuUdevDevice *uself = FU_UDEV_DEVICE(self);
+	FuUdevDevice *uself = FU_UDEV_DEVICE(device);
 	FuUdevDevice *udonor = FU_UDEV_DEVICE(donor);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(uself);
 
-	g_return_if_fail(FU_IS_UDEV_DEVICE(self));
+	g_return_if_fail(FU_IS_UDEV_DEVICE(device));
 	g_return_if_fail(FU_IS_UDEV_DEVICE(donor));
 
 	if (priv->device_file == NULL)

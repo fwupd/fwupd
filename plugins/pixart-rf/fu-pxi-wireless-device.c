@@ -40,9 +40,9 @@ fu_pxi_wireless_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static FuPxiReceiverDevice *
-fu_pxi_wireless_device_get_parent(FuDevice *self, GError **error)
+fu_pxi_wireless_device_get_parent(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
+	FuDevice *parent = fu_device_get_parent(device);
 	if (parent == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent set");
 		return NULL;
@@ -765,7 +765,7 @@ fu_pxi_wireless_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_pxi_wireless_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_pxi_wireless_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

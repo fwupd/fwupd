@@ -243,6 +243,7 @@ fu_engine_requirements_check_vendor_id(FuEngine *self,
 	return TRUE;
 }
 
+/* nocheck:name */
 static gboolean
 _fu_device_has_guids_any(FuDevice *self, gchar **guids)
 {

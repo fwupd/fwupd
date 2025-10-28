@@ -721,6 +721,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 	g_debug("\n%s", str);
 }
 
+/* nocheck:name */
 static void
 _fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {

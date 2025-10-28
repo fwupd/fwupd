@@ -61,7 +61,7 @@ typedef struct {
 } FuSynapticsVmm9DeviceCommandHelper;
 
 static gboolean
-fu_synaptics_vmm9_device_command_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_synaptics_vmm9_device_command_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuSynapticsVmm9DeviceCommandHelper *helper =
 	    (FuSynapticsVmm9DeviceCommandHelper *)user_data;
@@ -70,7 +70,7 @@ fu_synaptics_vmm9_device_command_cb(FuDevice *self, gpointer user_data, GError *
 	g_autoptr(FuStructHidPayload) st_payload = NULL;
 
 	/* get, and parse */
-	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(device),
 				      FU_STRUCT_HID_GET_COMMAND_DEFAULT_ID,
 				      buf,
 				      sizeof(buf),
@@ -652,7 +652,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_synaptics_vmm9_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaptics_vmm9_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

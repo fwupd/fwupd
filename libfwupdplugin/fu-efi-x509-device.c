@@ -83,7 +83,7 @@ fu_efi_x509_device_convert_version(FuDevice *device, guint64 version_raw)
 }
 
 static FuFirmware *
-fu_efi_x509_device_prepare_firmware(FuDevice *self,
+fu_efi_x509_device_prepare_firmware(FuDevice *device,
 				    GInputStream *stream,
 				    FuProgress *progress,
 				    FuFirmwareParseFlags flags,
@@ -154,7 +154,7 @@ fu_efi_x509_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_efi_x509_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_efi_x509_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

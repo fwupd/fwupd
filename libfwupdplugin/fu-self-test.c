@@ -3922,9 +3922,9 @@ fu_firmware_build_func(void)
 }
 
 static gsize
-fu_test_firmware_dfuse_image_get_size(FuFirmware *self)
+fu_test_firmware_dfuse_image_get_size(FuFirmware *firmware)
 {
-	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(self, NULL);
+	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(firmware, NULL);
 	gsize length = 0;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
