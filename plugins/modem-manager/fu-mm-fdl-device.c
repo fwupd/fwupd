@@ -279,7 +279,7 @@ fu_mm_fdl_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mm_fdl_device_set_io_flags(FuMmFdlDevice *self, GError **error)
+fu_mm_fdl_device_ensure_io_flags(FuMmFdlDevice *self, GError **error)
 {
 #ifdef HAVE_TERMIOS_H
 	gint fd = fu_io_channel_unix_get_fd(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)));
@@ -311,7 +311,7 @@ fu_mm_fdl_device_open(FuDevice *device, GError **error)
 	/* FuUdevDevice->open */
 	if (!FU_DEVICE_CLASS(fu_mm_fdl_device_parent_class)->open(device, error))
 		return FALSE;
-	return fu_mm_fdl_device_set_io_flags(self, error);
+	return fu_mm_fdl_device_ensure_io_flags(self, error);
 }
 
 static gboolean

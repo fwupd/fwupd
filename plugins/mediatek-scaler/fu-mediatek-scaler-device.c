@@ -603,7 +603,7 @@ fu_mediatek_scaler_device_commit_firmware(FuMediatekScalerDevice *self,
 }
 
 static gboolean
-fu_mediatek_scaler_device_set_isp_reboot(FuMediatekScalerDevice *self, GError **error)
+fu_mediatek_scaler_device_isp_reboot(FuMediatekScalerDevice *self, GError **error)
 {
 	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GError) error_local = NULL;
@@ -846,7 +846,7 @@ fu_mediatek_scaler_device_write_firmware(FuDevice *device,
 	/* for bank 2 update */
 	if (fu_device_has_private_flag(device, FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY)) {
 		/* send reboot command to take effect immediately */
-		if (!(fu_mediatek_scaler_device_set_isp_reboot(self, error)))
+		if (!(fu_mediatek_scaler_device_isp_reboot(self, error)))
 			return FALSE;
 
 		/* ensure device is back */

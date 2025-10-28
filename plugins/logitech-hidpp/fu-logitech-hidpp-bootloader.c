@@ -224,7 +224,7 @@ fu_logitech_hidpp_bootloader_attach(FuDevice *device, FuProgress *progress, GErr
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidppBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_ensure_bl_version(FuLogitechHidppBootloader *self, GError **error)
 {
 	guint16 build;
 	guint8 major;
@@ -299,7 +299,7 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 	priv->flash_blocksize = fu_memread_uint16(req->data + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
-	return fu_logitech_hidpp_bootloader_set_bl_version(self, error);
+	return fu_logitech_hidpp_bootloader_ensure_bl_version(self, error);
 }
 
 gboolean
