@@ -1259,7 +1259,7 @@ guint8
 fu_dfu_target_get_alt_setting(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DFU_TARGET(self), 0xff);
+	g_return_val_if_fail(FU_IS_DFU_TARGET(self), G_MAXUINT8);
 	return priv->alt_setting;
 }
 
