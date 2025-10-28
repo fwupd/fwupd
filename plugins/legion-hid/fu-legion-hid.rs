@@ -19,15 +19,35 @@ enum FuLegionHidResponseStatus {
         Busy,
 }
 
+#[repr(u8)]
+enum FuLegionHidDeviceId {
+        Rx = 0x01,
+        Dongle,
+        GamepadL,
+        GamepadR,
+        GamepadL2,
+        GamepadR2,
+        GamepadL3,
+        GamepadR3,
+}
+
+#[repr(u8)]
+enum FuLegionHidCmdConstant {
+        Sn = 0x01,
+        UpgradeSendCmd = 0x01,
+        UpgradeSendData = 0x02,
+        OutputReportId = 0x05,
+}
+
 #[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidUpgradeCmd {
-        report_id: u8,
+        report_id: FuLegionHidCmdConstant = OutputReportId,
         length: u8,
         main_id: u8 = 0x53,
         sub_id: u8 = 0x11,
         device_id: u8,
-        param: u8,
+        param: FuLegionHidCmdConstant = UpgradeSendCmd,
         data: [u8; 58],
 }
 
@@ -38,16 +58,14 @@ struct FuStructLegionHidUpgradeStartParam {
         step: FuLegionHidUpgradeStep = Start,
         flag: u8 = 0x00,
         crc16: u16be,
-        size_high: u8,
-        size_mid: u8,
-        size_low: u8,
-        sn: u8 = 0x01,
+        size: u24be,
+        sn: FuLegionHidCmdConstant = Sn,
 }
 
 #[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidNormalCmd {
-        report_id: u8,
+        report_id: FuLegionHidCmdConstant = OutputReportId,
         length: u8,
         main_id: u8,
         sub_id: u8,

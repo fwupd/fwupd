@@ -16,20 +16,20 @@
 #define FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH 32
 #define FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH 64
 
-struct FuStructLegionHidUpgradeRetryParam {
+typedef struct FuLegionHidUpgradeRetryHelper {
 	GByteArray *res;
 	guint8 main_id;
 	guint8 sub_id;
 	guint8 dev_id;
 	guint8 step;
-};
+} FuLegionHidUpgradeRetryHelper;
 
-struct FuStructLegionHidNormalRetryParam {
+typedef struct FuLegionHidNormalRetryHelper {
 	GByteArray *res;
 	guint8 main_id;
 	guint8 sub_id;
 	guint8 dev_id;
-};
+} FuLegionHidNormalRetryHelper;
 
 #define FU_TYPE_LEGION_HID_DEVICE (fu_legion_hid_device_get_type())
 G_DECLARE_FINAL_TYPE(FuLegionHidDevice, fu_legion_hid_device, FU, LEGION_HID_DEVICE, FuHidrawDevice)
