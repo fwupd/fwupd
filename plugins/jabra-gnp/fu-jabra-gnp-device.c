@@ -284,9 +284,8 @@ fu_jabra_gnp_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_jabra_gnp_device_add_child(FuDevice *device, guint16 dfu_pid, GError **error)
+fu_jabra_gnp_device_add_child(FuJabraGnpDevice *self, guint16 dfu_pid, GError **error)
 {
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	g_autoptr(FuJabraGnpChildDevice) child = NULL;
 
 	/* sanity check */
@@ -350,7 +349,7 @@ fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 			return TRUE;
 		}
 		if (child_dfu_pid > 0x0) {
-			if (!fu_jabra_gnp_device_add_child(FU_DEVICE(self), child_dfu_pid, error)) {
+			if (!fu_jabra_gnp_device_add_child(self, child_dfu_pid, error)) {
 				g_prefix_error(
 				    error,
 				    "found child device with PID 0x%x, but failed to add as child "
@@ -366,7 +365,7 @@ fu_jabra_gnp_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_jabra_gnp_device_write_image(FuDevice *device,
+fu_jabra_gnp_device_write_image(FuJabraGnpDevice *self,
 				FuFirmware *firmware,
 				FuFirmware *img,
 				FuProgress *progress,
@@ -375,7 +374,6 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	const guint chunk_size = 52;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GInputStream) stream = NULL;
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -390,7 +388,7 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	stream = fu_firmware_get_stream(img, error);
 	if (stream == NULL)
 		return FALSE;
-	if (!fu_jabra_gnp_write_partition(device,
+	if (!fu_jabra_gnp_write_partition(FU_DEVICE(self),
 					  self->address,
 					  self->sequence_number,
 					  fu_firmware_get_idx(img),
@@ -399,12 +397,12 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* start erasing */
-	if (!fu_jabra_gnp_start(device, self->address, self->sequence_number, error))
+	if (!fu_jabra_gnp_start(FU_DEVICE(self), self->address, self->sequence_number, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* poll for erase done */
-	if (!fu_jabra_gnp_flash_erase_done(device, self->address, error))
+	if (!fu_jabra_gnp_flash_erase_done(FU_DEVICE(self), self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -417,7 +415,7 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	if (chunks == NULL)
 		return FALSE;
 	if (self->fwu_protocol == FU_JABRA_GNP_PROTOCOL_OTA) {
-		if (!fu_jabra_gnp_write_crc(device,
+		if (!fu_jabra_gnp_write_crc(FU_DEVICE(self),
 					    self->address,
 					    self->sequence_number,
 					    fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
@@ -428,7 +426,7 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	} else {
 		/* FU_JABRA_GNP_PROTOCOL_EXTENDED_OTA */
 		if (!fu_jabra_gnp_write_extended_crc(
-			device,
+			FU_DEVICE(self),
 			self->address,
 			self->sequence_number,
 			fu_jabra_gnp_image_get_crc32(FU_JABRA_GNP_IMAGE(img)),
@@ -437,7 +435,7 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 			error))
 			return FALSE;
 	}
-	if (!fu_jabra_gnp_write_chunks(device,
+	if (!fu_jabra_gnp_write_chunks(FU_DEVICE(self),
 				       self->address,
 				       chunks,
 				       fu_progress_get_child(progress),
@@ -446,13 +444,13 @@ fu_jabra_gnp_device_write_image(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify */
-	if (!fu_jabra_gnp_read_verify_status(device, self->address, error))
+	if (!fu_jabra_gnp_read_verify_status(FU_DEVICE(self), self->address, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* write version */
 	if (!fu_jabra_gnp_write_version(
-		device,
+		FU_DEVICE(self),
 		self->address,
 		self->sequence_number,
 		fu_jabra_gnp_firmware_get_version_data(FU_JABRA_GNP_FIRMWARE(firmware)),
@@ -492,7 +490,7 @@ fu_jabra_gnp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		if (!fu_jabra_gnp_device_write_image(device,
+		if (!fu_jabra_gnp_device_write_image(self,
 						     firmware,
 						     img,
 						     fu_progress_get_child(progress),

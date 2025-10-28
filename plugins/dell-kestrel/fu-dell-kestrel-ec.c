@@ -405,9 +405,8 @@ fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 }
 
 gboolean
-fu_dell_kestrel_ec_is_dock_ready4update(FuDevice *device, GError **error)
+fu_dell_kestrel_ec_is_dock_ready_for_update(FuDellKestrelEc *self, GError **error)
 {
-	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(device);
 	guint16 bitmask_fw_update_pending = 1 << 8;
 	guint32 dock_status = 0;
 
@@ -823,13 +822,15 @@ fu_dell_kestrel_ec_class_init(FuDellKestrelEcClass *klass)
 }
 
 FuDellKestrelEc *
-fu_dell_kestrel_ec_new(FuDevice *device, gboolean uod)
+fu_dell_kestrel_ec_new(FuUsbDevice *usb_device, gboolean uod)
 {
 	FuDellKestrelEc *self = NULL;
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(usb_device));
 
 	self = g_object_new(FU_TYPE_DELL_KESTREL_EC, "context", ctx, NULL);
-	fu_device_incorporate(FU_DEVICE(self), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(usb_device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	fu_device_set_logical_id(FU_DEVICE(self), "ec");
 	if (uod)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

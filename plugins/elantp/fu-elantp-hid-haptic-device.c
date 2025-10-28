@@ -41,7 +41,9 @@ fu_elantp_hid_haptic_device_get_parent(FuElantpHidHapticDevice *self, GError **e
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GError **error);
+fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
+				   FuProgress *progress,
+				   GError **error);
 
 static void
 fu_elantp_hid_haptic_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -793,7 +795,7 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* detach */
-	if (!fu_elantp_hid_haptic_device_detach(device, fu_progress_get_child(progress), error))
+	if (!fu_elantp_hid_haptic_device_detach(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -881,16 +883,17 @@ fu_elantp_hid_haptic_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_haptic_device_detach(FuDevice *device, FuProgress *progress, GError **error)
+fu_elantp_hid_haptic_device_detach(FuElantpHidHapticDevice *self,
+				   FuProgress *progress,
+				   GError **error)
 {
 	FuElantpHidDevice *parent;
-	FuElantpHidHapticDevice *self = FU_ELANTP_HID_HAPTIC_DEVICE(device);
 	guint8 buf[2] = {0x0};
 	guint16 ctrl;
 	guint16 tmp;
 
 	/* haptic EEPROM IAP process runs in the TP main code */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1132,7 +1135,7 @@ fu_elantp_hid_haptic_device_class_init(FuElantpHidHapticDeviceClass *klass)
 }
 
 FuElantpHidHapticDevice *
-fu_elantp_hid_haptic_device_new(FuDevice *device)
+fu_elantp_hid_haptic_device_new(void)
 {
 	FuElantpHidHapticDevice *self;
 	self = g_object_new(FU_TYPE_ELANTP_HID_HAPTIC_DEVICE, NULL);

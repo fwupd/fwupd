@@ -27,20 +27,20 @@ struct _FuDellDockHub {
 G_DEFINE_TYPE(FuDellDockHub, fu_dell_dock_hub, FU_TYPE_HID_DEVICE)
 
 void
-fu_dell_dock_hub_add_instance(FuDevice *device, guint8 dock_type)
+fu_dell_dock_hub_add_instance(FuDellDockHub *self, guint8 dock_type)
 {
 	g_autofree gchar *devid = NULL;
 
 	if (dock_type == DOCK_BASE_TYPE_ATOMIC) {
 		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&atomic_hub",
-					(guint)fu_device_get_vid(device),
-					(guint)fu_device_get_pid(device));
+					(guint)fu_device_get_vid(FU_DEVICE(self)),
+					(guint)fu_device_get_pid(FU_DEVICE(self)));
 	} else {
 		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
-					(guint)fu_device_get_vid(device),
-					(guint)fu_device_get_pid(device));
+					(guint)fu_device_get_vid(FU_DEVICE(self)),
+					(guint)fu_device_get_pid(FU_DEVICE(self)));
 	}
-	fu_device_add_instance_id(device, devid);
+	fu_device_add_instance_id(FU_DEVICE(self), devid);
 }
 
 static gboolean

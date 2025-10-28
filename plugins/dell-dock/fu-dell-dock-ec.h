@@ -24,26 +24,26 @@ FuDellDockEc *
 fu_dell_dock_ec_new(FuDevice *proxy);
 
 const gchar *
-fu_dell_dock_ec_get_module_type(FuDevice *device);
+fu_dell_dock_ec_get_module_type(FuDellDockEc *self);
 gboolean
-fu_dell_dock_ec_needs_tbt(FuDevice *device);
+fu_dell_dock_ec_needs_tbt(FuDellDockEc *self);
 gboolean
-fu_dell_dock_ec_tbt_passive(FuDevice *device);
+fu_dell_dock_ec_tbt_passive(FuDellDockEc *self);
 gboolean
-fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, GError **error);
+fu_dell_dock_ec_modify_lock(FuDellDockEc *self, guint8 target, gboolean unlocked, GError **error);
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error);
+fu_dell_dock_ec_reboot_dock(FuDellDockEc *self, GError **error);
 
 const gchar *
-fu_dell_dock_ec_get_mst_version(FuDevice *device);
+fu_dell_dock_ec_get_mst_version(FuDellDockEc *self);
 const gchar *
-fu_dell_dock_ec_get_tbt_version(FuDevice *device);
+fu_dell_dock_ec_get_tbt_version(FuDellDockEc *self);
 guint32
-fu_dell_dock_ec_get_status_version(FuDevice *device);
+fu_dell_dock_ec_get_status_version(FuDellDockEc *self);
 gboolean
-fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error);
+fu_dell_dock_ec_commit_package(FuDellDockEc *self, GBytes *blob_fw, GError **error);
 gboolean
-fu_dell_dock_ec_module_is_usb4(FuDevice *device);
+fu_dell_dock_ec_module_is_usb4(FuDellDockEc *self);
 guint8
-fu_dell_dock_ec_get_dock_type(FuDevice *device);
+fu_dell_dock_ec_get_dock_type(FuDellDockEc *self);

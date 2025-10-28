@@ -1634,13 +1634,12 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
+fu_logitech_hidpp_device_write_firmware_dfu(FuLogitechHidppDevice *self,
 					    FuFirmware *firmware,
 					    FuProgress *progress,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
-	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
 	const guint8 *data;
@@ -1693,13 +1692,12 @@ fu_logitech_hidpp_device_write_firmware_dfu(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
+fu_logitech_hidpp_device_write_firmware_rdfu(FuLogitechHidppDevice *self,
 					     FuFirmware *firmware,
 					     FuProgress *progress,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
-	FuLogitechHidppDevice *self = FU_LOGITECH_HIDPP_DEVICE(device);
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	FuLogitechRdfuFirmware *entity_fw = NULL;
 	guint8 idx;
@@ -1791,7 +1789,7 @@ fu_logitech_hidpp_device_write_firmware_rdfu(FuDevice *device,
 	if (!fu_logitech_hidpp_device_rdfu_apply_dfu(self, priv->cached_fw_entity, error))
 		return FALSE;
 
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
 }
@@ -1809,7 +1807,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	/* device should support either RDFU or DFU mode */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_RDFU);
 	if (idx != 0x00) {
-		return fu_logitech_hidpp_device_write_firmware_rdfu(device,
+		return fu_logitech_hidpp_device_write_firmware_rdfu(self,
 								    firmware,
 								    progress,
 								    flags,
@@ -1819,7 +1817,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, FU_LOGITECH_HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
-		return fu_logitech_hidpp_device_write_firmware_dfu(device,
+		return fu_logitech_hidpp_device_write_firmware_dfu(self,
 								   firmware,
 								   progress,
 								   flags,

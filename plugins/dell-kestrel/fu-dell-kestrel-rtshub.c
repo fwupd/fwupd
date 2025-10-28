@@ -260,9 +260,8 @@ fu_dell_kestrel_rtshub_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
+fu_dell_kestrel_rtshub_get_status(FuDellKestrelRtshub *self, GError **error)
 {
-	FuDellKestrelRtshub *self = FU_DELL_KESTREL_RTSHUB(device);
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructRtshubHidCmdBuf) st_cmd = fu_struct_rtshub_hid_cmd_buf_new();
 
@@ -290,7 +289,7 @@ fu_dell_kestrel_rtshub_get_status(FuDevice *device, GError **error)
 
 	/* version: index 10, subversion: index 11 */
 	version = g_strdup_printf("%x.%x", st_cmd->buf->data[10], st_cmd->buf->data[11]);
-	fu_device_set_version(device, version);
+	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* dual bank capability */
 	self->dual_bank = (st_cmd->buf->data[13] & 0xf0) == 0x80;
@@ -310,7 +309,7 @@ fu_dell_kestrel_rtshub_setup(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_dell_kestrel_rtshub_parent_class)->setup(device, error))
 		return FALSE;
 
-	if (!fu_dell_kestrel_rtshub_get_status(device, error))
+	if (!fu_dell_kestrel_rtshub_get_status(self, error))
 		return FALSE;
 
 	if (self->dual_bank)

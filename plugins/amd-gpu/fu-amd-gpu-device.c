@@ -228,21 +228,21 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 }
 
 static gboolean
-fu_amd_gpu_device_parse_version_string(FuDevice *device, const gchar *str, GError **error)
+fu_amd_gpu_device_parse_version_string(FuAmdGpuDevice *self, const gchar *str, GError **error)
 {
 	guint64 ver;
 	g_autoptr(GError) error_parse = NULL;
 
 	if (!fu_strtoull(str, &ver, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, &error_parse)) {
-		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+		if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE)) {
 			g_propagate_error(error, g_steal_pointer(&error_parse));
 			return FALSE;
 		}
 		g_info("unable to parse version from '%s': %s", str, error_parse->message);
-		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
-		fu_device_set_version(device, str); /* nocheck:set-version */
+		fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version(FU_DEVICE(self), str); /* nocheck:set-version */
 	} else {
-		fu_device_set_version_raw(device, ver);
+		fu_device_set_version_raw(FU_DEVICE(self), ver);
 	}
 
 	return TRUE;
@@ -271,7 +271,7 @@ fu_amd_gpu_device_setup(FuDevice *device, GError **error)
 	tokens =
 	    fu_strsplit((const gchar *)vbios_info.vbios_pn, sizeof(vbios_info.vbios_pn), "-", -1);
 	if (g_strv_length(tokens) >= 3) {
-		if (!fu_amd_gpu_device_parse_version_string(device, tokens[2], error))
+		if (!fu_amd_gpu_device_parse_version_string(self, tokens[2], error))
 			return FALSE;
 	}
 

@@ -419,10 +419,10 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, FuProgress *progress, GErro
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v5_device_detach(self, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v7_device_detach(self, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,

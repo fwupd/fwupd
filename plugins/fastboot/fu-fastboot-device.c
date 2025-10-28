@@ -47,9 +47,8 @@ fu_fastboot_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GError **error)
+fu_fastboot_device_write(FuFastbootDevice *self, const guint8 *buf, gsize buflen, GError **error)
 {
-	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	gboolean ret;
 	gsize actual_len = 0;
 	g_autofree guint8 *buf2 = NULL;
@@ -69,7 +68,7 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 					  error);
 
 	/* give device some time to handle action */
-	fu_device_sleep(device, self->operation_delay);
+	fu_device_sleep(FU_DEVICE(self), self->operation_delay);
 
 	if (!ret) {
 		g_prefix_error_literal(error, "failed to do bulk transfer: ");
@@ -87,7 +86,7 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 }
 
 static gboolean
-fu_fastboot_device_writestr(FuDevice *device, const gchar *str, GError **error)
+fu_fastboot_device_writestr(FuFastbootDevice *self, const gchar *str, GError **error)
 {
 	gsize buflen = strlen(str);
 	if (buflen > FASTBOOT_CMD_BUFSZ - 4) {
@@ -98,7 +97,7 @@ fu_fastboot_device_writestr(FuDevice *device, const gchar *str, GError **error)
 			    FASTBOOT_CMD_BUFSZ - 4);
 		return FALSE;
 	}
-	return fu_fastboot_device_write(device, (const guint8 *)str, buflen, error);
+	return fu_fastboot_device_write(self, (const guint8 *)str, buflen, error);
 }
 
 typedef enum {
@@ -107,13 +106,12 @@ typedef enum {
 } FuFastbootDeviceReadFlags;
 
 static gboolean
-fu_fastboot_device_read(FuDevice *device,
+fu_fastboot_device_read(FuFastbootDevice *self,
 			gchar **str,
 			FuProgress *progress,
 			FuFastbootDeviceReadFlags flags,
 			GError **error)
 {
-	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	guint retries = 1;
 
 	/* these commands may return INFO or take some time to complete */
@@ -136,7 +134,7 @@ fu_fastboot_device_read(FuDevice *device,
 						  NULL,
 						  &error_local);
 		/* give device some time to handle action */
-		fu_device_sleep(device, self->operation_delay);
+		fu_device_sleep(FU_DEVICE(self), self->operation_delay);
 
 		if (!ret) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
@@ -201,13 +199,14 @@ fu_fastboot_device_read(FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_getvar(FuDevice *device, const gchar *key, gchar **str, GError **error)
+fu_fastboot_device_getvar(FuFastbootDevice *self, const gchar *key, gchar **str, GError **error)
 {
 	g_autofree gchar *tmp = g_strdup_printf("getvar:%s", key);
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	if (!fu_fastboot_device_writestr(device, tmp, error))
+
+	if (!fu_fastboot_device_writestr(self, tmp, error))
 		return FALSE;
-	if (!fu_fastboot_device_read(device,
+	if (!fu_fastboot_device_read(self,
 				     str,
 				     progress,
 				     FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
@@ -219,27 +218,27 @@ fu_fastboot_device_getvar(FuDevice *device, const gchar *key, gchar **str, GErro
 }
 
 static gboolean
-fu_fastboot_device_cmd(FuDevice *device,
+fu_fastboot_device_cmd(FuFastbootDevice *self,
 		       const gchar *cmd,
 		       FuProgress *progress,
 		       FuFastbootDeviceReadFlags flags,
 		       GError **error)
 {
-	if (!fu_fastboot_device_writestr(device, cmd, error))
+	if (!fu_fastboot_device_writestr(self, cmd, error))
 		return FALSE;
-	if (!fu_fastboot_device_read(device, NULL, progress, flags, error))
+	if (!fu_fastboot_device_read(self, NULL, progress, flags, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_fastboot_device_flash(FuDevice *device,
+fu_fastboot_device_flash(FuFastbootDevice *self,
 			 const gchar *partition,
 			 FuProgress *progress,
 			 GError **error)
 {
 	g_autofree gchar *tmp = g_strdup_printf("flash:%s", partition);
-	return fu_fastboot_device_cmd(device,
+	return fu_fastboot_device_cmd(self,
 				      tmp,
 				      progress,
 				      FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL,
@@ -247,15 +246,17 @@ fu_fastboot_device_flash(FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, GError **error)
+fu_fastboot_device_download(FuFastbootDevice *self,
+			    GBytes *fw,
+			    FuProgress *progress,
+			    GError **error)
 {
-	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	gsize sz = g_bytes_get_size(fw);
 	g_autofree gchar *tmp = g_strdup_printf("download:%08x", (guint)sz);
 	g_autoptr(FuChunkArray) chunks = NULL;
 
 	/* tell the client the size of data to expect */
-	if (!fu_fastboot_device_cmd(device,
+	if (!fu_fastboot_device_cmd(self,
 				    tmp,
 				    progress,
 				    FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL,
@@ -277,14 +278,14 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 		chk = fu_chunk_array_index(chunks, i, error);
 		if (chk == NULL)
 			return FALSE;
-		if (!fu_fastboot_device_write(device,
+		if (!fu_fastboot_device_write(self,
 					      fu_chunk_get_data(chk),
 					      fu_chunk_get_data_sz(chk),
 					      error))
 			return FALSE;
 		fu_progress_step_done(progress);
 	}
-	if (!fu_fastboot_device_read(device,
+	if (!fu_fastboot_device_read(self,
 				     NULL,
 				     progress,
 				     FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL,
@@ -307,7 +308,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* product */
-	if (!fu_fastboot_device_getvar(device, "product", &product, error))
+	if (!fu_fastboot_device_getvar(self, "product", &product, error))
 		return FALSE;
 	if (product != NULL && product[0] != '\0') {
 		g_autofree gchar *tmp = g_strdup_printf("Fastboot %s", product);
@@ -315,7 +316,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* bootloader version */
-	if (!fu_fastboot_device_getvar(device, "version-bootloader", &version_bootloader, error))
+	if (!fu_fastboot_device_getvar(self, "version-bootloader", &version_bootloader, error))
 		return FALSE;
 	if (version_bootloader != NULL && version_bootloader[0] != '\0') {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
@@ -323,13 +324,13 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* serialno */
-	if (!fu_fastboot_device_getvar(device, "serialno", &serialno, error))
+	if (!fu_fastboot_device_getvar(self, "serialno", &serialno, error))
 		return FALSE;
 	if (serialno != NULL && serialno[0] != '\0')
 		fu_device_set_serial(device, serialno);
 
 	/* secure */
-	if (!fu_fastboot_device_getvar(device, "secure", &secure, error))
+	if (!fu_fastboot_device_getvar(self, "secure", &secure, error))
 		return FALSE;
 	if (secure != NULL && secure[0] != '\0') {
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
@@ -342,7 +343,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_fastboot_device_write_qfil_part(FuDevice *device,
+fu_fastboot_device_write_qfil_part(FuFastbootDevice *self,
 				   FuFirmware *firmware,
 				   XbNode *part,
 				   FuProgress *progress,
@@ -370,13 +371,13 @@ fu_fastboot_device_write_qfil_part(FuDevice *device,
 		partition += 2;
 
 	/* flash the partition */
-	if (!fu_fastboot_device_download(device, data, progress, error))
+	if (!fu_fastboot_device_download(self, data, progress, error))
 		return FALSE;
-	return fu_fastboot_device_flash(device, partition, progress, error);
+	return fu_fastboot_device_flash(self, partition, progress, error);
 }
 
 static gboolean
-fu_fastboot_device_write_motorola_part(FuDevice *device,
+fu_fastboot_device_write_motorola_part(FuFastbootDevice *self,
 				       FuFirmware *firmware,
 				       XbNode *part,
 				       FuProgress *progress,
@@ -410,7 +411,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		}
 
 		/* just has to be non-empty */
-		if (!fu_fastboot_device_getvar(device, var, &tmp, error))
+		if (!fu_fastboot_device_getvar(self, var, &tmp, error))
 			return FALSE;
 		if (tmp == NULL || tmp[0] == '\0') {
 			g_set_error(error,
@@ -441,7 +442,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		}
 
 		/* erase the partition */
-		return fu_fastboot_device_cmd(device,
+		return fu_fastboot_device_cmd(self,
 					      cmd,
 					      progress,
 					      FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
@@ -503,16 +504,16 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		}
 
 		/* flash the partition */
-		if (!fu_fastboot_device_download(device, data, progress, error))
+		if (!fu_fastboot_device_download(self, data, progress, error))
 			return FALSE;
-		return fu_fastboot_device_flash(device, partition, progress, error);
+		return fu_fastboot_device_flash(self, partition, progress, error);
 	}
 
 	/* dumb operation that doesn't expect a response */
 	if (g_strcmp0(op, "boot") == 0 || g_strcmp0(op, "continue") == 0 ||
 	    g_strcmp0(op, "reboot") == 0 || g_strcmp0(op, "reboot-bootloader") == 0 ||
 	    g_strcmp0(op, "powerdown") == 0) {
-		return fu_fastboot_device_cmd(device,
+		return fu_fastboot_device_cmd(self,
 					      op,
 					      progress,
 					      FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
@@ -525,7 +526,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_write_motorola(FuDevice *device,
+fu_fastboot_device_write_motorola(FuFastbootDevice *self,
 				  FuFirmware *firmware,
 				  FuProgress *progress,
 				  GError **error)
@@ -561,7 +562,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index(parts, i);
-		if (!fu_fastboot_device_write_motorola_part(device,
+		if (!fu_fastboot_device_write_motorola_part(self,
 							    firmware,
 							    part,
 							    fu_progress_get_child(progress),
@@ -575,7 +576,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_write_qfil(FuDevice *device,
+fu_fastboot_device_write_qfil(FuFastbootDevice *self,
 			      FuFirmware *firmware,
 			      FuProgress *progress,
 			      GError **error)
@@ -611,7 +612,7 @@ fu_fastboot_device_write_qfil(FuDevice *device,
 	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index(parts, i);
-		if (!fu_fastboot_device_write_qfil_part(device,
+		if (!fu_fastboot_device_write_qfil_part(self,
 							firmware,
 							part,
 							fu_progress_get_child(progress),
@@ -631,15 +632,16 @@ fu_fastboot_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
+	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	g_autoptr(FuFirmware) manifest = NULL;
 
 	/* load the manifest of operations */
 	manifest = fu_firmware_get_image_by_id(firmware, "partition_nand.xml", NULL);
 	if (manifest != NULL)
-		return fu_fastboot_device_write_qfil(device, firmware, progress, error);
+		return fu_fastboot_device_write_qfil(self, firmware, progress, error);
 	manifest = fu_firmware_get_image_by_id(firmware, "flashfile.xml", NULL);
 	if (manifest != NULL)
-		return fu_fastboot_device_write_motorola(device, firmware, progress, error);
+		return fu_fastboot_device_write_motorola(self, firmware, progress, error);
 
 	/* not supported */
 	g_set_error_literal(error,
@@ -683,7 +685,8 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_fastboot_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	if (!fu_fastboot_device_cmd(device,
+	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
+	if (!fu_fastboot_device_cmd(self,
 				    "reboot",
 				    progress,
 				    FU_FASTBOOT_DEVICE_READ_FLAG_NONE,

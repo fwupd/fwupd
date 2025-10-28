@@ -190,7 +190,7 @@ fu_dell_kestrel_plugin_backend_device_added(FuPlugin *plugin,
 
 		uod = fu_plugin_get_config_value_boolean(plugin,
 							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
-		ec_dev = fu_dell_kestrel_ec_new(device, uod);
+		ec_dev = fu_dell_kestrel_ec_new(FU_USB_DEVICE(device), uod);
 		if (ec_dev == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -397,7 +397,7 @@ fu_dell_kestrel_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, G
 		return FALSE;
 
 	/* check if dock is ready to process updates */
-	if (!fu_dell_kestrel_ec_is_dock_ready4update(ec_dev, error))
+	if (!fu_dell_kestrel_ec_is_dock_ready_for_update(FU_DELL_KESTREL_EC(ec_dev), error))
 		return FALSE;
 
 	/* own the dock */
