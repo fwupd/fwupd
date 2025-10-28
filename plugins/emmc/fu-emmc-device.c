@@ -393,8 +393,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 	check_sect_done = (ext_csd[EXT_CSD_FFU_FEATURES] & 1) > 0;
 
 	/* set CMD ARG */
-	arg = ext_csd[EXT_CSD_FFU_ARG_0] | ext_csd[EXT_CSD_FFU_ARG_1] << 8 |
-	      ext_csd[EXT_CSD_FFU_ARG_2] << 16 | ext_csd[EXT_CSD_FFU_ARG_3] << 24;
+	arg = fu_memread_uint32(ext_csd + EXT_CSD_FFU_ARG_0, G_LITTLE_ENDIAN);
 
 	/* prepare multi_cmd to be sent */
 	multi_cmdsz = sizeof(struct mmc_ioc_multi_cmd) + 4 * sizeof(struct mmc_ioc_cmd);
@@ -484,11 +483,8 @@ fu_emmc_device_write_firmware(FuDevice *device,
 		if (!fu_emmc_device_read_extcsd(self, ext_csd, sizeof(ext_csd), error))
 			return FALSE;
 
-		sect_done = ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_0] |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_1] << 8 |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_2] << 16 |
-			    ext_csd[EXT_CSD_NUM_OF_FW_SEC_PROG_3] << 24;
-
+		sect_done =
+		    fu_memread_uint32(ext_csd + EXT_CSD_NUM_OF_FW_SEC_PROG_0, G_LITTLE_ENDIAN);
 		if (sect_done != 0)
 			break;
 

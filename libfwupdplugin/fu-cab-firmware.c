@@ -141,11 +141,11 @@ fu_cab_firmware_compute_checksum(const guint8 *buf, gsize bufsz, guint32 *checks
 	for (gsize i = 0; i < bufsz; i += 4) {
 		gsize chunksz = bufsz - i;
 		if (G_LIKELY(chunksz >= 4)) {
-			/* 3,2,1,0 */
+			/* 3,2,1,0 nocheck:endian */
 			tmp ^= ((guint32)buf[i + 3] << 24) | ((guint32)buf[i + 2] << 16) |
 			       ((guint32)buf[i + 1] << 8) | (guint32)buf[i + 0];
 		} else if (chunksz == 3) {
-			/* 0,1,2 -- yes, weird */
+			/* 0,1,2 -- yes, weird, nocheck:endian */
 			tmp ^= ((guint32)buf[i + 0] << 16) | ((guint32)buf[i + 1] << 8) |
 			       (guint32)buf[i + 2];
 		} else if (chunksz == 2) {
