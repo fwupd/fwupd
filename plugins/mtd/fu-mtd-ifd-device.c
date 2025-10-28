@@ -16,6 +16,35 @@ struct _FuMtdIfdDevice {
 G_DEFINE_TYPE(FuMtdIfdDevice, fu_mtd_ifd_device, FU_TYPE_DEVICE)
 
 static void
+fu_mtd_ifd_device_set_bios_fallback_version(FuDevice *device)
+{
+	FuContext *ctx = fu_device_get_context(device);
+	const gchar *version;
+	const gchar *version_major;
+	const gchar *version_minor;
+
+	/* try SMBIOS BIOS version first */
+	version = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VERSION);
+	if (version != NULL) {
+		/* some Lenovo hardware requires a specific prefix for the EC,
+		 * so strip it before we use ensure-semver */
+		if (strlen(version) > 9 && g_str_has_prefix(version, "CBET"))
+			version += 9;
+		fu_device_set_version(device, version);
+		if (fu_device_get_version(device) != NULL)
+			return;
+	}
+
+	/* try major/minor components */
+	version_major = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
+	version_minor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
+	if (version_major != NULL && version_minor != NULL) {
+		g_autofree gchar *tmp = g_strdup_printf("%s.%s.0", version_major, version_minor);
+		fu_device_set_version(device, tmp);
+	}
+}
+
+static void
 fu_mtd_ifd_device_add_security_attr_desc(FuMtdIfdDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -117,6 +146,35 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;
 
+	/* ensure a usable version for comparison if metadata is absent */
+	if (fu_device_get_version(device) == NULL) {
+		FuDevice *proxy = fu_device_get_proxy_with_fallback(device);
+
+		/* Prefer parent (MTD) version first */
+		if (proxy != NULL) {
+			const gchar *ver_parent = fu_device_get_version(proxy);
+			if (ver_parent != NULL) {
+				fu_device_set_version_format(device, fu_device_get_version_format(proxy));
+				fu_device_set_version(device, ver_parent);
+			} else {
+				/* if parent only has a raw numeric version, convert to a
+				 * string for the child */
+				guint64 ver_raw = fu_device_get_version_raw(proxy);
+				if (ver_raw != G_MAXUINT64) {
+					g_autofree gchar *ver_str = g_strdup_printf("%" G_GUINT64_FORMAT, ver_raw);
+					fu_device_set_version_format(device, fu_device_get_version_format(proxy));
+					if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN)
+						fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_NUMBER);
+					fu_device_set_version(device, ver_str);
+				}
+			}
+		}
+
+		/* Fall back to SMBIOS DMI-derived version if nothing else available */
+		if (fu_device_get_version(device) == NULL)
+			fu_mtd_ifd_device_set_bios_fallback_version(device);
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -201,6 +259,8 @@ static void
 fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 {
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_COMPUTER);
+	/* default to plain string format; parent overrides when known */
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
