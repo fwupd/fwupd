@@ -18,7 +18,7 @@ struct _FuThunderboltRetimer {
 G_DEFINE_TYPE(FuThunderboltRetimer, fu_thunderbolt_retimer, FU_TYPE_THUNDERBOLT_DEVICE)
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_offline(FuThunderboltRetimer *self, GError **error)
+fu_thunderbolt_retimer_offline_parent_port(FuThunderboltRetimer *self, GError **error)
 {
 	g_autoptr(FuDevice) parent =
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
@@ -32,7 +32,7 @@ fu_thunderbolt_retimer_set_parent_port_offline(FuThunderboltRetimer *self, GErro
 }
 
 gboolean
-fu_thunderbolt_retimer_set_parent_port_online(FuThunderboltRetimer *self, GError **error)
+fu_thunderbolt_retimer_online_parent_port(FuThunderboltRetimer *self, GError **error)
 {
 	g_autoptr(FuDevice) parent =
 	    fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self),
@@ -80,14 +80,14 @@ fu_thunderbolt_retimer_attach(FuDevice *device, FuProgress *progress, GError **e
 
 	/* online */
 	fu_device_sleep(device, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
-	if (!fu_thunderbolt_retimer_set_parent_port_online(self, error))
+	if (!fu_thunderbolt_retimer_online_parent_port(self, error))
 		return FALSE;
 
 	/* retimer gets removed, which we ignore, due to no-auto-remove */
 	fu_device_sleep(device, 1000);
 
 	/* get the new retimer firmware version by rescanning */
-	if (!fu_thunderbolt_retimer_set_parent_port_offline(self, error))
+	if (!fu_thunderbolt_retimer_offline_parent_port(self, error))
 		return FALSE;
 
 	/* wait for it to re-appear */
