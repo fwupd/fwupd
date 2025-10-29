@@ -4291,7 +4291,7 @@ fu_firmware_linear_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	str = fu_firmware_to_string(firmware2);
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 
 	/* verify we got both images */
 	imgs = fu_firmware_get_images(firmware2);
@@ -5771,7 +5771,7 @@ fu_progress_func(void)
 	g_assert_cmpint(helper.updates, ==, 6);
 	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
 	str = fu_progress_traceback(progress);
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 }
 
 static void

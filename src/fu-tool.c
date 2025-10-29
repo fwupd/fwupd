@@ -398,6 +398,7 @@ fu_util_engine_device_added_cb(FuEngine *engine, FuDevice *device, FuUtil *self)
 {
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
+		/* nocheck:print */
 		g_debug("ADDED:\n%s", tmp);
 	}
 }
@@ -407,6 +408,7 @@ fu_util_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtil *sel
 {
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *tmp = fu_device_to_string(device);
+		/* nocheck:print */
 		g_debug("REMOVED:\n%s", tmp);
 	}
 }
@@ -6126,12 +6128,15 @@ main(int argc, char *argv[])
 					 _("Use %s for help"),
 					 "fwupdtool --help");
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_REACHABLE)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOT_REACHABLE;
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			/* nocheck:print */
 			g_info("%s\n", error->message);
 			return EXIT_NOT_FOUND;
 		}

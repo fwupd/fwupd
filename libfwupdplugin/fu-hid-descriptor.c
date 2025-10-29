@@ -90,7 +90,7 @@ fu_hid_descriptor_parse(FuFirmware *firmware,
 
 		/* only for debugging */
 		itemstr = fu_firmware_to_string(FU_FIRMWARE(item));
-		g_debug("add to table-state:\n%s", itemstr);
+		g_debug("add to table-state: %s", itemstr);
 
 		/* if there is a sane number of duplicate tokens then add to table */
 		if (fu_hid_report_item_get_kind(item) == FU_HID_ITEM_KIND_GLOBAL) {
