@@ -279,19 +279,31 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 	if (FU_IS_FMAP_FIRMWARE(firmware))
 		return fu_mtd_device_metadata_load_fmap(self, firmware, error);
 
-    /* add each IFD image as a sub-device */
-    imgs = fu_firmware_get_images(firmware);
-    if (FU_IS_IFD_FIRMWARE(firmware)) {
-        for (guint i = 0; i < imgs->len; i++) {
-            FuIfdImage *img = g_ptr_array_index(imgs, i);
-            g_autoptr(FuMtdIfdDevice) child =
-                fu_mtd_ifd_device_new(FU_DEVICE(self), img);
-            fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
-        }
-        /* Prefer uSWID inside the BIOS region if available */
-        if (fu_device_get_version(FU_DEVICE(self)) == NULL) {
-            g_autoptr(GError) local_error = NULL;
-            if (!fu_mtd_device_metadata_load_ifd_uswid(self, firmware, &local_error)) {
+	/* add each IFD image as a sub-device */
+	imgs = fu_firmware_get_images(firmware);
+	if (FU_IS_IFD_FIRMWARE(firmware)) {
+		for (guint i = 0; i < imgs->len; i++) {
+			FuIfdImage *img = g_ptr_array_index(imgs, i);
+			g_autoptr(FuMtdIfdDevice) child =
+			    fu_mtd_ifd_device_new(FU_DEVICE(self), img);
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+		}
+
+		/* If any region is not readable by the BIOS master, do not advertise
+		 * image verification on the parent MTD device as a whole. Some machines
+		 * (e.g. ME region) block reads, which breaks hash verification at parent level. */
+		for (guint i = 0; i < imgs->len; i++) {
+			FuIfdImage *img = g_ptr_array_index(imgs, i);
+			FuIfdAccess acc = fu_ifd_image_get_access(img, FU_IFD_REGION_BIOS);
+			if ((acc & FU_IFD_ACCESS_READ) == 0) {
+				fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+				break;
+			}
+		}
+		/* Prefer uSWID inside the BIOS region if available */
+		if (fu_device_get_version(FU_DEVICE(self)) == NULL) {
+			g_autoptr(GError) local_error = NULL;
+			if (!fu_mtd_device_metadata_load_ifd_uswid(self, firmware, &local_error)) {
                 g_debug("no uSWID in IFD BIOS region: %s",
                         local_error != NULL ? local_error->message : "not found");
                 /* Fall back to SMBIOS */

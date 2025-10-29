@@ -134,14 +134,17 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_str(device, "REGION", region_str);
 
 		/* Region is updatable via the parent MTD device if the BIOS master
-		 * (host CPU) has write permission for this specific region. */
+		 * (host CPU) has write permission for this region. */
 		{
-			FuIfdAccess acc = fu_ifd_image_get_access(self->img, region);
+			/* Note: FU_IFD_REGION_BIOS here refers to the BIOS master access bits,
+			 * not the BIOS flash region. */
+			FuIfdAccess acc = fu_ifd_image_get_access(self->img, FU_IFD_REGION_BIOS);
 			if ((acc & FU_IFD_ACCESS_WRITE) != 0) {
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 				fu_device_add_protocol(device, "org.infradead.mtd");
 			}
 		}
+
 	}
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;
@@ -212,7 +215,7 @@ fu_mtd_ifd_device_write_firmware(FuDevice *device,
 
 	region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
 	/* ensure the BIOS master (host CPU) has write permission to this region */
-	if ((fu_ifd_image_get_access(self->img, region) & FU_IFD_ACCESS_WRITE) == 0) {
+	if ((fu_ifd_image_get_access(self->img, FU_IFD_REGION_BIOS) & FU_IFD_ACCESS_WRITE) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
