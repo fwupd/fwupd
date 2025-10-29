@@ -62,6 +62,13 @@ struct FuStructLegionHidUpgradeStartParam {
         sn: FuLegionHidCmdConstant = Sn,
 }
 
+#[derive(New, Setters, Default)]
+#[repr(C, packed)]
+struct FuStructLegionHidUpgradePacket {
+        data: [u8; 32],
+        sn: FuLegionHidCmdConstant = Sn,
+}
+
 #[derive(New, Getters, Setters, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidNormalCmd {

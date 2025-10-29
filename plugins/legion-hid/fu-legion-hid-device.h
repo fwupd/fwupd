@@ -16,7 +16,7 @@
 #define FU_LEGION_HID_DEVICE_FW_PACKET_LENGTH 32
 #define FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH 64
 
-typedef struct FuLegionHidUpgradeRetryHelper {
+typedef struct {
 	GByteArray *res;
 	guint8 main_id;
 	guint8 sub_id;
@@ -24,7 +24,7 @@ typedef struct FuLegionHidUpgradeRetryHelper {
 	guint8 step;
 } FuLegionHidUpgradeRetryHelper;
 
-typedef struct FuLegionHidNormalRetryHelper {
+typedef struct {
 	GByteArray *res;
 	guint8 main_id;
 	guint8 sub_id;
