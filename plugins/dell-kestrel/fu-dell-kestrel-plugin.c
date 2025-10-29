@@ -361,15 +361,18 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 
 	/* update on connected, i.e., uod is false */
 	if (!fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
-		/* releasing the dock will activate devices immediately */
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *dev = g_ptr_array_index(devices, i);
 
+			/* release the dock will activate devices immediately */
 			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 				g_debug("uoc dropped needs-activation flag for %s",
 					fu_device_get_name(dev));
 			}
+
+			/* don't expect user manually replug */
+			fu_device_set_remove_delay(dev, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 		}
 	}
 
