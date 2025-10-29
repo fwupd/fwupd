@@ -66,7 +66,7 @@ fu_thunderbolt_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
-			return fu_thunderbolt_retimer_set_parent_port_offline(
+			return fu_thunderbolt_retimer_offline_parent_port(
 			    FU_THUNDERBOLT_RETIMER(dev),
 			    error);
 		}
@@ -83,7 +83,7 @@ fu_thunderbolt_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 		    fu_device_has_private_flag(dev, FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION) &&
 		    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_NO_AUTO_REMOVE)) {
 			fu_device_sleep(dev, FU_THUNDERBOLT_RETIMER_CLEANUP_DELAY);
-			return fu_thunderbolt_retimer_set_parent_port_online(
+			return fu_thunderbolt_retimer_online_parent_port(
 			    FU_THUNDERBOLT_RETIMER(dev),
 			    error);
 		}
