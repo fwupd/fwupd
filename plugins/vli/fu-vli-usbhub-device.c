@@ -478,7 +478,7 @@ fu_vli_usbhub_device_disable_u1u2(FuVliUsbhubDevice *self, GError **error)
 static gboolean
 fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 {
-	guint8 b811P812 = 0x0;
+	guint8 b811p812 = 0x0;
 	guint8 pkgtype = 0x0;
 	guint8 chipid1 = 0x0;
 	guint8 chipid2 = 0x0;
@@ -498,11 +498,11 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		return FALSE;
 	}
 	g_debug("chipver2 = 0x%02x", chipver2);
-	if (!fu_vli_usbhub_device_read_reg(self, 0xf800, &b811P812, error)) {
+	if (!fu_vli_usbhub_device_read_reg(self, 0xf800, &b811p812, error)) {
 		g_prefix_error_literal(error, "Read_811P812 failed: ");
 		return FALSE;
 	}
-	g_debug("b811P812 = 0x%02x", b811P812);
+	g_debug("b811p812 = 0x%02x", b811p812);
 	if (!fu_vli_usbhub_device_read_reg(self, 0xf88e, &chipid1, error)) {
 		g_prefix_error_literal(error, "Read_ChipID1 failed: ");
 		return FALSE;
@@ -618,14 +618,14 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL810);
 	} else if (tPid == 0x811) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL811);
-	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == 0) {
+	} else if ((b811p812 & ((1 << 5) | (1 << 4))) == 0) {
 		if (chipver == 0x10)
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL811PB0);
 		else
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL811PB3);
-	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == (1 << 4)) {
+	} else if ((b811p812 & ((1 << 5) | (1 << 4))) == (1 << 4)) {
 		fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL812Q4S);
-	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == ((1 << 5) | (1 << 4))) {
+	} else if ((b811p812 & ((1 << 5) | (1 << 4))) == ((1 << 5) | (1 << 4))) {
 		if (chipver == 0x10)
 			fu_vli_device_set_kind(FU_VLI_DEVICE(self), FU_VLI_DEVICE_KIND_VL812B0);
 		else

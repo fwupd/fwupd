@@ -154,7 +154,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 			return FALSE;
 	}
 	for (gint i = 3; i >= 0; --i) {
-		guint8 ucTwoBitArg = (arg >> (i * 2)) & 0x3;
+		guint8 uc_two_bit = (arg >> (i * 2)) & 0x3;
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
 							    FU_RMI_EDP_COMMAND_AUX_SET_RESOLUTION,
 							    50,
@@ -163,7 +163,7 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence(FuSynapticsRmiPs2Device *sel
 			return FALSE;
 		}
 		if (!fu_synaptics_rmi_ps2_device_write_byte(self,
-							    ucTwoBitArg,
+							    uc_two_bit,
 							    50,
 							    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 							    error))

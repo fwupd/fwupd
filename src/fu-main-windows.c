@@ -26,7 +26,7 @@ static FuDaemon *gDaemon = NULL;
 static void
 fu_main_svc_report_status(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
 {
-	static DWORD dwCheckPoint = 1;
+	static DWORD check_point = 1; /* nocheck:static */
 
 	gSvcStatus.dwCurrentState = dwCurrentState;
 	gSvcStatus.dwWin32ExitCode = dwWin32ExitCode;
@@ -40,7 +40,7 @@ fu_main_svc_report_status(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwW
 	if (dwCurrentState == SERVICE_RUNNING || dwCurrentState == SERVICE_STOPPED)
 		gSvcStatus.dwCheckPoint = 0;
 	else
-		gSvcStatus.dwCheckPoint = dwCheckPoint++;
+		gSvcStatus.dwCheckPoint = check_point++;
 
 	SetServiceStatus(gSvcStatusHandle, &gSvcStatus);
 }
