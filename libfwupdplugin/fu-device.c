@@ -425,7 +425,7 @@ fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 
 	/* do not let devices be updated until re-connected */
 	if (flag & FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
-		fu_device_inhibit(self, "unconnected", "Device has been removed");
+		fu_device_add_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 
 	/* reset this back to the default */
 	if (flag & FU_DEVICE_INTERNAL_FLAG_EXPLICIT_ORDER) {
@@ -458,7 +458,7 @@ fu_device_remove_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	g_return_if_fail(FU_IS_DEVICE(self));
 
 	if (flag & FU_DEVICE_INTERNAL_FLAG_UNCONNECTED)
-		fu_device_uninhibit(self, "unconnected");
+		fu_device_remove_problem(self, FWUPD_DEVICE_PROBLEM_UNREACHABLE);
 
 	priv->internal_flags &= ~flag;
 	g_object_notify(G_OBJECT(self), "internal-flags");
