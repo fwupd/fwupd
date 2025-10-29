@@ -171,9 +171,9 @@ fu_efi_lz77_decompressor_make_huffman_table(FuEfiLz77DecompressHelper *helper,
 	}
 
 	for (index = 1; index <= 16; index++) {
-		guint16 WordOfStart = start[index];
-		guint16 WordOfCount = count[index];
-		start[index + 1] = (guint16)(WordOfStart + (WordOfCount << (16 - index)));
+		guint16 word_of_start = start[index];
+		guint16 word_of_count = count[index];
+		start[index + 1] = (guint16)(word_of_start + (word_of_count << (16 - index)));
 	}
 
 	if (start[17] != 0) {

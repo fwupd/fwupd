@@ -637,7 +637,7 @@ mock_tree_detach(FuThunderboltMockTree *node)
 	node->bed = NULL;
 }
 
-typedef enum FuThunderboltTestUpdateResult {
+typedef enum {
 	UPDATE_SUCCESS = 0,
 	/* nvm_authenticate will report error condition */
 	UPDATE_FAIL_DEVICE_INTERNAL = 1,
@@ -837,7 +837,7 @@ typedef struct FuThunderboltTestParam {
 	const char *firmware_file;
 } FuThunderboltTestParam;
 
-typedef enum FuThunderboltTestFlags {
+typedef enum {
 	TEST_INITIALIZE_TREE = 1 << 0,
 	TEST_ATTACH = 1 << 1,
 	TEST_PREPARE_FIRMWARE = 1 << 2,
