@@ -141,6 +141,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 			FuIfdAccess acc = fu_ifd_image_get_access(self->img, FU_IFD_REGION_BIOS);
 			if ((acc & FU_IFD_ACCESS_WRITE) != 0) {
 				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 				fu_device_add_protocol(device, "org.infradead.mtd");
 			}
 		}
