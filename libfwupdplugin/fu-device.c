@@ -5553,7 +5553,7 @@ fu_device_write_firmware(FuDevice *self,
 
 	/* call vfunc */
 	str = fu_firmware_to_string(firmware);
-	g_info("installing onto %s:\n%s", fu_device_get_id(self), str);
+	g_info("%s", str);
 	g_set_object(&priv->progress, progress);
 	if (!device_class->write_firmware(self, firmware, priv->progress, flags, error))
 		return FALSE;

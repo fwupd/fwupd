@@ -187,7 +187,7 @@ fu_self_test_mock_snapd_easy_get_request(FuTestFixture *fixture, const gchar *en
 	g_assert_true(res == CURLE_OK);
 	g_assert_true(status_code == 200);
 
-	g_debug("rsp:\n%s", buf->data);
+	g_debug("rsp:%s", buf->data);
 
 	return g_bytes_new(buf->data, buf->len);
 }

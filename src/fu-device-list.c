@@ -718,7 +718,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 }
 
 /* nocheck:name */
@@ -812,7 +812,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 
 	/* we were waiting for this... */
 	fu_device_list_clear_wait_for_replug(self, item);
@@ -1057,7 +1057,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 
 		/* dump to console */
 		str = fwupd_codec_to_string(FWUPD_CODEC(self));
-		g_debug("\n%s", str);
+		g_debug("%s", str);
 
 		/* unset and build error string */
 		for (guint i = 0; i < devices_wfr2->len; i++) {

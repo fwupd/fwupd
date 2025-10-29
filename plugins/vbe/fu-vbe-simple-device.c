@@ -302,7 +302,7 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 
 	/* seek to correct address */
 	seek_to = self->area_start + store_offset + self->skip_offset;
-	g_debug("writing image '%s' bufsz 0x%x (skipping 0x%x) to store_offset 0x%x, seek 0x%x\n",
+	g_debug("writing image '%s' bufsz 0x%x (skipping 0x%x) to store_offset 0x%x, seek 0x%x",
 		fu_firmware_get_id(FU_FIRMWARE(img)),
 		(guint)bufsz,
 		(guint)self->skip_offset,
