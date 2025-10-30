@@ -61,10 +61,10 @@ fu_windows_efivars_supported(FuEfivars *efivars, GError **error)
 static gboolean
 fu_windows_efivars_is_running_under_wine(void)
 {
-	HKEY hKey = NULL;
-	LONG lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_READ, &hKey);
-	if (lResult == ERROR_SUCCESS) {
-		RegCloseKey(hKey);
+	HKEY key = NULL;
+	LONG rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Wine", 0, KEY_READ, &key);
+	if (rc == ERROR_SUCCESS) {
+		RegCloseKey(key);
 		return TRUE;
 	}
 	return FALSE;
@@ -93,19 +93,19 @@ fu_windows_efivars_get_data(FuEfivars *efivars,
 	}
 
 	do {
-		DWORD dwAttribubutes = 0;
+		DWORD attrs = 0;
 		DWORD rc = GetFirmwareEnvironmentVariableExA(name,
 							     guid_win32,
 							     buf->data,
 							     buf->len,
-							     &dwAttribubutes);
+							     &attrs);
 		if (rc > 0) {
 			if (data != NULL)
 				*data = g_byte_array_free(g_steal_pointer(&buf), FALSE);
 			if (data_sz != NULL)
 				*data_sz = rc;
 			if (attr != NULL)
-				*attr = dwAttribubutes;
+				*attr = attrs;
 			return TRUE;
 		}
 		if (rc == 0 && GetLastError() != ERROR_INSUFFICIENT_BUFFER)

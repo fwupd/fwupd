@@ -21,12 +21,6 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_rts54hub_rtd21xx_device_get_instance_private(o))
 
-typedef enum {
-	VENDOR_CMD_DISABLE = 0x00,
-	VENDOR_CMD_ENABLE = 0x01,
-	VENDOR_CMD_ACCESS_FLASH = 0x02,
-} VendorCmd;
-
 static void
 fu_rts54hub_rtd21xx_device_to_string(FuDevice *module, guint idt, GString *str)
 {
@@ -109,7 +103,7 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);
 	if (parent == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))
 		return FALSE;
 
 	if (target_addr != priv->target_addr) {
@@ -143,7 +137,7 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);
 	if (parent == NULL)
 		return FALSE;
-	if (!fu_rts54hub_device_vendor_cmd(parent, VENDOR_CMD_ENABLE, error))
+	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))
 		return FALSE;
 	if (target_addr != priv->target_addr) {
 		if (!fu_rts54hub_device_i2c_config(parent,

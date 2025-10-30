@@ -250,7 +250,7 @@ fu_logitech_rallysystem_tablehub_device_write_firmware(FuDevice *device,
 		sizeof(buf),
 		FU_LOGITECH_RALLYSYSTEM_TABLEHUB_DEVICE_IOCTL_TIMEOUT,
 		error)) {
-		g_prefix_error(
+		g_prefix_error_literal(
 		    error,
 		    "failed to receive set download mode response: please reboot the device: ");
 		return FALSE;
@@ -384,7 +384,7 @@ fu_logitech_rallysystem_tablehub_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_rallysystem_tablehub_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_rallysystem_tablehub_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

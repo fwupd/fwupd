@@ -55,9 +55,9 @@ udev_mock_add_usb4_port(UMockdevTestbed *bed, int id)
 	return path;
 }
 
-typedef struct MockDevice MockDevice;
+typedef struct FuThunderboltMockDevice FuThunderboltMockDevice;
 
-struct MockDevice {
+struct FuThunderboltMockDevice {
 	const char *name; /* sysfs: device_name */
 	const char *id;	  /* sysfs: device */
 	const char *nvm_version;
@@ -67,18 +67,18 @@ struct MockDevice {
 
 	int domain_id;
 
-	struct MockDevice *children;
+	struct FuThunderboltMockDevice *children;
 
 	/* optionally filled out */
 	const char *uuid;
 };
 
-typedef struct MockTree MockTree;
+typedef struct FuThunderboltMockTree FuThunderboltMockTree;
 
-struct MockTree {
-	const MockDevice *device;
+struct FuThunderboltMockTree {
+	const FuThunderboltMockDevice *device;
 
-	MockTree *parent;
+	FuThunderboltMockTree *parent;
 	GPtrArray *children;
 
 	gchar *sysfs_parent;
@@ -97,10 +97,10 @@ struct MockTree {
 	FuDevice *fu_device;
 };
 
-static MockTree *
-mock_tree_new(MockTree *parent, MockDevice *device, int *id)
+static FuThunderboltMockTree *
+mock_tree_new(FuThunderboltMockTree *parent, FuThunderboltMockDevice *device, int *id)
 {
-	MockTree *node = g_slice_new0(MockTree);
+	FuThunderboltMockTree *node = g_slice_new0(FuThunderboltMockTree);
 	int current_id = (*id)++;
 
 	node->device = device;
@@ -118,10 +118,10 @@ mock_tree_new(MockTree *parent, MockDevice *device, int *id)
 }
 
 static void
-mock_tree_free(MockTree *tree)
+mock_tree_free(FuThunderboltMockTree *tree)
 {
 	for (guint i = 0; i < tree->children->len; i++) {
-		MockTree *child = g_ptr_array_index(tree->children, i);
+		FuThunderboltMockTree *child = g_ptr_array_index(tree->children, i);
 		mock_tree_free(child);
 	}
 
@@ -155,22 +155,22 @@ mock_tree_free(MockTree *tree)
 	g_free(tree->nvm_non_active);
 	g_free(tree->path);
 	g_free(tree->sysfs_parent);
-	g_slice_free(MockTree, tree);
+	g_slice_free(FuThunderboltMockTree, tree);
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(MockTree, mock_tree_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuThunderboltMockTree, mock_tree_free);
 #pragma clang diagnostic pop
 
 static GPtrArray *
-mock_tree_init_children(MockTree *node, int *id)
+mock_tree_init_children(FuThunderboltMockTree *node, int *id)
 {
 	GPtrArray *children = g_ptr_array_new();
-	MockDevice *iter;
+	FuThunderboltMockDevice *iter;
 
 	for (iter = node->device->children; iter && iter->name; iter++) {
-		MockTree *child = mock_tree_new(node, iter, id);
+		FuThunderboltMockTree *child = mock_tree_new(node, iter, id);
 		g_ptr_array_add(children, child);
 		child->children = mock_tree_init_children(child, id);
 	}
@@ -178,10 +178,10 @@ mock_tree_init_children(MockTree *node, int *id)
 	return children;
 }
 
-static MockTree *
-mock_tree_init(MockDevice *device)
+static FuThunderboltMockTree *
+mock_tree_init(FuThunderboltMockDevice *device)
 {
-	MockTree *tree;
+	FuThunderboltMockTree *tree;
 	int devices = 0;
 
 	tree = mock_tree_new(NULL, device, &devices);
@@ -191,7 +191,7 @@ mock_tree_init(MockDevice *device)
 }
 
 static void
-mock_tree_dump(const MockTree *node, int level)
+mock_tree_dump(const FuThunderboltMockTree *node, int level)
 {
 	if (node->path) {
 		g_debug("%*s * %s [%s] at %s",
@@ -212,13 +212,13 @@ mock_tree_dump(const MockTree *node, int level)
 	}
 
 	for (guint i = 0; i < node->children->len; i++) {
-		const MockTree *child = g_ptr_array_index(node->children, i);
+		const FuThunderboltMockTree *child = g_ptr_array_index(node->children, i);
 		mock_tree_dump(child, level + 2);
 	}
 }
 
 static void
-mock_tree_firmware_verify(const MockTree *node, GBytes *data)
+mock_tree_firmware_verify(const FuThunderboltMockTree *node, GBytes *data)
 {
 	g_autoptr(GFile) nvm_device = NULL;
 	g_autoptr(GFile) nvm = NULL;
@@ -261,17 +261,20 @@ mock_tree_firmware_verify(const MockTree *node, GBytes *data)
 	g_assert_cmpstr(sum_data, ==, sum_disk);
 }
 
-typedef gboolean (*MockTreePredicate)(const MockTree *node, gpointer data);
+typedef gboolean (*FuThunderboltMockTreePredicate)(const FuThunderboltMockTree *node,
+						   gpointer data);
 
-static const MockTree *
-mock_tree_contains(const MockTree *node, MockTreePredicate predicate, gpointer data)
+static const FuThunderboltMockTree *
+mock_tree_contains(const FuThunderboltMockTree *node,
+		   FuThunderboltMockTreePredicate predicate,
+		   gpointer data)
 {
 	if (predicate(node, data))
 		return node;
 
 	for (guint i = 0; i < node->children->len; i++) {
-		const MockTree *child;
-		const MockTree *match;
+		const FuThunderboltMockTree *child;
+		const FuThunderboltMockTree *match;
 
 		child = g_ptr_array_index(node->children, i);
 		match = mock_tree_contains(child, predicate, data);
@@ -283,13 +286,15 @@ mock_tree_contains(const MockTree *node, MockTreePredicate predicate, gpointer d
 }
 
 static gboolean
-mock_tree_all(const MockTree *node, MockTreePredicate predicate, gpointer data)
+mock_tree_all(const FuThunderboltMockTree *node,
+	      FuThunderboltMockTreePredicate predicate,
+	      gpointer data)
 {
 	if (!predicate(node, data))
 		return FALSE;
 
 	for (guint i = 0; i < node->children->len; i++) {
-		const MockTree *child;
+		const FuThunderboltMockTree *child;
 
 		child = g_ptr_array_index(node->children, i);
 		if (!mock_tree_all(child, predicate, data))
@@ -300,20 +305,20 @@ mock_tree_all(const MockTree *node, MockTreePredicate predicate, gpointer data)
 }
 
 static gboolean
-mock_tree_compare_uuid(const MockTree *node, gpointer data)
+mock_tree_compare_uuid(const FuThunderboltMockTree *node, gpointer data)
 {
 	const gchar *uuid = (const gchar *)data;
 	return g_str_equal(node->uuid, uuid);
 }
 
-static const MockTree *
-mock_tree_find_uuid(const MockTree *root, const char *uuid)
+static const FuThunderboltMockTree *
+mock_tree_find_uuid(const FuThunderboltMockTree *root, const char *uuid)
 {
 	return mock_tree_contains(root, mock_tree_compare_uuid, (gpointer)uuid);
 }
 
 static gboolean
-mock_tree_node_have_fu_device(const MockTree *node, gpointer data)
+mock_tree_node_have_fu_device(const FuThunderboltMockTree *node, gpointer data)
 {
 	return node->fu_device != NULL;
 }
@@ -361,8 +366,8 @@ write_controller_fw(const gchar *nvm)
 static gboolean
 mock_tree_attach_device(gpointer user_data)
 {
-	MockTree *tree = (MockTree *)user_data;
-	const MockDevice *dev = tree->device;
+	FuThunderboltMockTree *tree = (FuThunderboltMockTree *)user_data;
+	const FuThunderboltMockDevice *dev = tree->device;
 	g_autofree gchar *idstr = NULL;
 	g_autofree gchar *authenticate = NULL;
 
@@ -409,7 +414,7 @@ mock_tree_attach_device(gpointer user_data)
 	write_controller_fw(tree->nvm_active);
 
 	for (guint i = 0; i < tree->children->len; i++) {
-		MockTree *child;
+		FuThunderboltMockTree *child;
 
 		child = g_ptr_array_index(tree->children, i);
 
@@ -422,15 +427,15 @@ mock_tree_attach_device(gpointer user_data)
 	return FALSE;
 }
 
-typedef struct SyncContext {
-	MockTree *tree;
+typedef struct {
+	FuThunderboltMockTree *tree;
 	GMainLoop *loop;
-} SyncContext;
+} FuThunderboltSyncContext;
 
 static gboolean
 on_sync_timeout(gpointer user_data)
 {
-	SyncContext *ctx = (SyncContext *)user_data;
+	FuThunderboltSyncContext *ctx = (FuThunderboltSyncContext *)user_data;
 	g_main_loop_quit(ctx->loop);
 	return FALSE;
 }
@@ -438,12 +443,12 @@ on_sync_timeout(gpointer user_data)
 static void
 sync_device_added(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
-	SyncContext *ctx = (SyncContext *)user_data;
-	MockTree *tree = ctx->tree;
+	FuThunderboltSyncContext *ctx = (FuThunderboltSyncContext *)user_data;
+	FuThunderboltMockTree *tree = ctx->tree;
 	const gchar *uuid = fu_device_get_physical_id(device);
-	MockTree *target;
+	FuThunderboltMockTree *target;
 
-	target = (MockTree *)mock_tree_find_uuid(tree, uuid);
+	target = (FuThunderboltMockTree *)mock_tree_find_uuid(tree, uuid);
 
 	if (target == NULL) {
 		g_critical("Got device that could not be matched: %s", uuid);
@@ -459,12 +464,12 @@ sync_device_added(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 static void
 sync_device_removed(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
-	SyncContext *ctx = (SyncContext *)user_data;
-	MockTree *tree = ctx->tree;
+	FuThunderboltSyncContext *ctx = (FuThunderboltSyncContext *)user_data;
+	FuThunderboltMockTree *tree = ctx->tree;
 	const gchar *uuid = fu_device_get_physical_id(device);
-	MockTree *target;
+	FuThunderboltMockTree *target;
 
-	target = (MockTree *)mock_tree_find_uuid(tree, uuid);
+	target = (FuThunderboltMockTree *)mock_tree_find_uuid(tree, uuid);
 
 	if (target == NULL) {
 		g_warning("Got device that could not be matched: %s", uuid);
@@ -480,12 +485,12 @@ sync_device_removed(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
-mock_tree_sync(MockTree *root, FuPlugin *plugin, int timeout_ms)
+mock_tree_sync(FuThunderboltMockTree *root, FuPlugin *plugin, int timeout_ms)
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
 	gulong id_add;
 	gulong id_del;
-	SyncContext ctx = {
+	FuThunderboltSyncContext ctx = {
 	    .tree = root,
 	    .loop = mainloop,
 	};
@@ -509,24 +514,23 @@ mock_tree_sync(MockTree *root, FuPlugin *plugin, int timeout_ms)
 	g_signal_handler_disconnect(plugin, id_del);
 }
 
-typedef struct AttachContext {
+typedef struct {
 	/* in */
-	MockTree *tree;
+	FuThunderboltMockTree *tree;
 	GMainLoop *loop;
 	/* out */
 	gboolean complete;
-
-} AttachContext;
+} FuThunderboltAttachContext;
 
 static void
 mock_tree_plugin_device_added(FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
-	AttachContext *ctx = (AttachContext *)user_data;
-	MockTree *tree = ctx->tree;
+	FuThunderboltAttachContext *ctx = (FuThunderboltAttachContext *)user_data;
+	FuThunderboltMockTree *tree = ctx->tree;
 	const gchar *uuid = fu_device_get_physical_id(device);
-	MockTree *target;
+	FuThunderboltMockTree *target;
 
-	target = (MockTree *)mock_tree_find_uuid(tree, uuid);
+	target = (FuThunderboltMockTree *)mock_tree_find_uuid(tree, uuid);
 
 	if (target == NULL) {
 		g_warning("Got device that could not be matched: %s", uuid);
@@ -542,11 +546,11 @@ mock_tree_plugin_device_added(FuPlugin *plugin, FuDevice *device, gpointer user_
 }
 
 static gboolean
-mock_tree_settle(MockTree *root, FuPlugin *plugin)
+mock_tree_settle(FuThunderboltMockTree *root, FuPlugin *plugin)
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
 	gulong id;
-	AttachContext ctx = {
+	FuThunderboltAttachContext ctx = {
 	    .tree = root,
 	    .loop = mainloop,
 	};
@@ -563,7 +567,7 @@ mock_tree_settle(MockTree *root, FuPlugin *plugin)
 }
 
 static gboolean
-mock_tree_attach(MockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
+mock_tree_attach(FuThunderboltMockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
 {
 	root->bed = g_object_ref(bed);
 	root->sysfs_parent = udev_mock_add_usb4_port(bed, 1);
@@ -575,9 +579,9 @@ mock_tree_attach(MockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
 }
 
 /* the unused parameter makes the function signature compatible
- * with 'MockTreePredicate' */
+ * with 'FuThunderboltMockTreePredicate' */
 static gboolean
-mock_tree_node_is_detached(const MockTree *node, gpointer unused)
+mock_tree_node_is_detached(const FuThunderboltMockTree *node, gpointer unused)
 {
 	gboolean ret = node->path == NULL;
 
@@ -597,7 +601,7 @@ mock_tree_node_is_detached(const MockTree *node, gpointer unused)
 }
 
 static void
-mock_tree_detach(MockTree *node)
+mock_tree_detach(FuThunderboltMockTree *node)
 {
 	UMockdevTestbed *bed;
 
@@ -605,7 +609,7 @@ mock_tree_detach(MockTree *node)
 		return;
 
 	for (guint i = 0; i < node->children->len; i++) {
-		MockTree *child = g_ptr_array_index(node->children, i);
+		FuThunderboltMockTree *child = g_ptr_array_index(node->children, i);
 		mock_tree_detach(child);
 		g_free(child->sysfs_parent);
 		child->sysfs_parent = NULL;
@@ -633,7 +637,7 @@ mock_tree_detach(MockTree *node)
 	node->bed = NULL;
 }
 
-typedef enum FuThunderboltTestUpdateResult {
+typedef enum {
 	UPDATE_SUCCESS = 0,
 	/* nvm_authenticate will report error condition */
 	UPDATE_FAIL_DEVICE_INTERNAL = 1,
@@ -641,7 +645,7 @@ typedef enum FuThunderboltTestUpdateResult {
 	UPDATE_FAIL_DEVICE_NOSHOW = 2
 } FuThunderboltTestUpdateResult;
 
-typedef struct UpdateContext {
+typedef struct FuThunderboltUpdateContext {
 	GFileMonitor *monitor;
 
 	FuThunderboltTestUpdateResult result;
@@ -650,12 +654,12 @@ typedef struct UpdateContext {
 	UMockdevTestbed *bed;
 	FuPlugin *plugin;
 
-	MockTree *node;
+	FuThunderboltMockTree *node;
 	gchar *version;
-} UpdateContext;
+} FuThunderboltUpdateContext;
 
 static void
-update_context_free(UpdateContext *ctx)
+update_context_free(FuThunderboltUpdateContext *ctx)
 {
 	if (ctx == NULL)
 		return;
@@ -672,14 +676,14 @@ update_context_free(UpdateContext *ctx)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(UpdateContext, update_context_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuThunderboltUpdateContext, update_context_free);
 #pragma clang diagnostic pop
 
 static gboolean
 reattach_tree(gpointer user_data)
 {
-	UpdateContext *ctx = (UpdateContext *)user_data;
-	MockTree *node = ctx->node;
+	FuThunderboltUpdateContext *ctx = (FuThunderboltUpdateContext *)user_data;
+	FuThunderboltMockTree *node = ctx->node;
 
 	g_debug("Mock update done, reattaching tree...");
 
@@ -696,7 +700,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 		     GFileMonitorEvent event_type,
 		     gpointer user_data)
 {
-	UpdateContext *ctx = (UpdateContext *)user_data;
+	FuThunderboltUpdateContext *ctx = (FuThunderboltUpdateContext *)user_data;
 	gboolean ok;
 	gsize len;
 	g_autofree gchar *data = NULL;
@@ -741,20 +745,20 @@ udev_file_changed_cb(GFileMonitor *monitor,
 	g_timeout_add(ctx->timeout, reattach_tree, ctx);
 }
 
-static UpdateContext *
-mock_tree_prepare_for_update(MockTree *node,
+static FuThunderboltUpdateContext *
+mock_tree_prepare_for_update(FuThunderboltMockTree *node,
 			     FuPlugin *plugin,
 			     const char *version,
 			     GBytes *fw_data,
 			     guint timeout_ms)
 {
-	UpdateContext *ctx;
+	FuThunderboltUpdateContext *ctx;
 	g_autoptr(GFile) dir = NULL;
 	g_autoptr(GFile) f = NULL;
 	g_autoptr(GError) error = NULL;
 	GFileMonitor *monitor;
 
-	ctx = g_new0(UpdateContext, 1);
+	ctx = g_new0(FuThunderboltUpdateContext, 1);
 	dir = g_file_new_for_path(node->path);
 	f = g_file_get_child(dir, "nvm_authenticate");
 
@@ -775,7 +779,7 @@ mock_tree_prepare_for_update(MockTree *node,
 	return ctx;
 }
 
-static MockDevice root_one = {
+const FuThunderboltMockDevice root_one = {
 
     .name = "Laptop",
     .id = "0x23",
@@ -783,22 +787,22 @@ static MockDevice root_one = {
     .nvm_parsed_version = "20.02",
 
     .children =
-	(MockDevice[]){
+	(FuThunderboltMockDevice[]){
 	    {
 		.name = "Thunderbolt Cable",
 		.id = "0x24",
 		.nvm_version = "20.0",
 		.nvm_parsed_version = "20.00",
 
-		.children = (MockDevice[]){{
-					       .name = "Thunderbolt Dock",
-					       .id = "0x25",
-					       .nvm_version = "10.0",
-					       .nvm_parsed_version = "10.00",
-					   },
-					   {
-					       NULL,
-					   }
+		.children = (FuThunderboltMockDevice[]){{
+							    .name = "Thunderbolt Dock",
+							    .id = "0x25",
+							    .nvm_version = "10.0",
+							    .nvm_parsed_version = "10.00",
+							},
+							{
+							    NULL,
+							}
 
 		},
 	    },
@@ -808,16 +812,16 @@ static MockDevice root_one = {
 		.nvm_version = "23.0",
 		.nvm_parsed_version = "23.00",
 
-		.children = (MockDevice[]){{
-					       .name = "Thunderbolt SSD",
-					       .id = "0x26",
+		.children = (FuThunderboltMockDevice[]){{
+							    .name = "Thunderbolt SSD",
+							    .id = "0x26",
 
-					       .nvm_version = "5.0",
-					       .nvm_parsed_version = "05.00",
-					   },
-					   {
-					       NULL,
-					   }},
+							    .nvm_version = "5.0",
+							    .nvm_parsed_version = "05.00",
+							},
+							{
+							    NULL,
+							}},
 	    },
 	    {
 		NULL,
@@ -826,14 +830,14 @@ static MockDevice root_one = {
 
 };
 
-typedef struct TestParam {
+typedef struct FuThunderboltTestParam {
 	gboolean initialize_tree;
 	gboolean attach_and_coldplug;
 
 	const char *firmware_file;
-} TestParam;
+} FuThunderboltTestParam;
 
-typedef enum FuThunderboltTestFlags {
+typedef enum {
 	TEST_INITIALIZE_TREE = 1 << 0,
 	TEST_ATTACH = 1 << 1,
 	TEST_PREPARE_FIRMWARE = 1 << 2,
@@ -844,26 +848,26 @@ typedef enum FuThunderboltTestFlags {
 #define TEST_INIT_FULL (GUINT_TO_POINTER(TEST_PREPARE_ALL))
 #define TEST_INIT_NONE (GUINT_TO_POINTER(0))
 
-typedef struct ThunderboltTest {
+typedef struct FuThunderboltTest {
 	UMockdevTestbed *bed;
 	FuPlugin *plugin;
 	FuContext *ctx;
 	GUdevClient *udev_client;
 
-	/* if TestParam::initialize_tree */
-	MockTree *tree;
+	/* if FuThunderboltTestParam::initialize_tree */
+	FuThunderboltMockTree *tree;
 
-	/* if TestParam::firmware_file is nonnull */
+	/* if FuThunderboltTestParam::firmware_file is nonnull */
 	GBytes *fw_data;
 	GInputStream *fw_stream;
 
-} ThunderboltTest;
+} FuThunderboltTest;
 
 static void
 fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 			       const gchar *action,
 			       GUdevDevice *udev_device,
-			       ThunderboltTest *tt)
+			       FuThunderboltTest *tt)
 {
 	if (g_strcmp0(action, "add") == 0) {
 		g_autoptr(FuUdevDevice) device = NULL;
@@ -890,14 +894,15 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 	if (g_strcmp0(action, "change") == 0) {
 		const gchar *uuid =
 		    g_udev_device_get_sysfs_attr(udev_device, "unique_id"); /* nocheck:blocked */
-		MockTree *target = (MockTree *)mock_tree_find_uuid(tt->tree, uuid);
+		FuThunderboltMockTree *target =
+		    (FuThunderboltMockTree *)mock_tree_find_uuid(tt->tree, uuid);
 		g_assert_nonnull(target);
 		fu_udev_device_emit_changed(FU_UDEV_DEVICE(target->fu_device));
 		return;
 	}
 }
 static void
-test_set_up(ThunderboltTest *tt, gconstpointer params)
+test_set_up(FuThunderboltTest *tt, gconstpointer params)
 {
 	FuThunderboltTestFlags flags = GPOINTER_TO_UINT(params);
 	gboolean ret;
@@ -970,7 +975,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 }
 
 static void
-test_tear_down(ThunderboltTest *tt, gconstpointer user_data)
+test_tear_down(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	g_object_unref(tt->plugin);
 	g_object_unref(tt->ctx);
@@ -987,11 +992,11 @@ test_tear_down(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static gboolean
-test_tree_uuids(const MockTree *node, gpointer data)
+test_tree_uuids(const FuThunderboltMockTree *node, gpointer data)
 {
-	const MockTree *root = (MockTree *)data;
+	const FuThunderboltMockTree *root = (FuThunderboltMockTree *)data;
 	const gchar *uuid = node->uuid;
-	const MockTree *found;
+	const FuThunderboltMockTree *found;
 
 	g_assert_nonnull(uuid);
 
@@ -1007,11 +1012,11 @@ test_tree_uuids(const MockTree *node, gpointer data)
 }
 
 static void
-test_tree(ThunderboltTest *tt, gconstpointer user_data)
+test_tree(FuThunderboltTest *tt, gconstpointer user_data)
 {
-	const MockTree *found;
+	const FuThunderboltMockTree *found;
 	gboolean ret;
-	g_autoptr(MockTree) tree = NULL;
+	g_autoptr(FuThunderboltMockTree) tree = NULL;
 
 	tree = mock_tree_init(&root_one);
 	g_assert_nonnull(tree);
@@ -1032,7 +1037,7 @@ test_tree(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
+test_image_validation(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *ctl_path = NULL;
@@ -1088,10 +1093,10 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_change_uevent(ThunderboltTest *tt, gconstpointer user_data)
+test_change_uevent(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
+	FuThunderboltMockTree *tree = tt->tree;
 	gboolean ret;
 	const gchar *version_after;
 
@@ -1116,15 +1121,15 @@ test_change_uevent(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_update_working(ThunderboltTest *tt, gconstpointer user_data)
+test_update_working(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
+	FuThunderboltMockTree *tree = tt->tree;
 	GBytes *fw_data = tt->fw_data;
 	gboolean ret;
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuThunderboltUpdateContext) up_ctx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
@@ -1169,10 +1174,10 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
+test_update_wd19(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
+	FuThunderboltMockTree *tree = tt->tree;
 	GBytes *fw_data = tt->fw_data;
 	gboolean ret;
 	const gchar *version_before;
@@ -1206,15 +1211,15 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
+test_update_fail(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
+	FuThunderboltMockTree *tree = tt->tree;
 	GBytes *fw_data = tt->fw_data;
 	gboolean ret;
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuThunderboltUpdateContext) up_ctx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
@@ -1260,14 +1265,14 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
-test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
+test_update_fail_nowshow(FuThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
+	FuThunderboltMockTree *tree = tt->tree;
 	GBytes *fw_data = tt->fw_data;
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuThunderboltUpdateContext) up_ctx = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
@@ -1307,48 +1312,48 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 
 	g_test_add("/thunderbolt/basic",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   NULL,
 		   test_set_up,
 		   test_tree,
 		   test_tear_down);
 
 	g_test_add("/thunderbolt/image-validation",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   TEST_INIT_NONE,
 		   test_set_up,
 		   test_image_validation,
 		   test_tear_down);
 
 	g_test_add("/thunderbolt/change-uevent",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   GUINT_TO_POINTER(TEST_INITIALIZE_TREE | TEST_ATTACH),
 		   test_set_up,
 		   test_change_uevent,
 		   test_tear_down);
 
 	g_test_add("/thunderbolt/update{working}",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   TEST_INIT_FULL,
 		   test_set_up,
 		   test_update_working,
 		   test_tear_down);
 
 	g_test_add("/thunderbolt/update{failing}",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   TEST_INIT_FULL,
 		   test_set_up,
 		   test_update_fail,
 		   test_tear_down);
 
 	g_test_add("/thunderbolt/update{failing-noshow}",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   TEST_INIT_FULL,
 		   test_set_up,
 		   test_update_fail_nowshow,
 		   test_tear_down);
 	g_test_add("/thunderbolt/update{delayed_activation}",
-		   ThunderboltTest,
+		   FuThunderboltTest,
 		   TEST_INIT_FULL,
 		   test_set_up,
 		   test_update_wd19,

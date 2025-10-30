@@ -191,7 +191,7 @@ fu_firmware_set_version_raw(FuFirmware *self, guint64 version_raw)
 	if (klass->convert_version != NULL) {
 		g_autofree gchar *version = klass->convert_version(self, version_raw);
 		if (version != NULL)
-			fu_firmware_set_version(self, version);
+			fu_firmware_set_version(self, version); /* nocheck:set-version */
 	}
 }
 
@@ -238,7 +238,7 @@ fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_form
 	/* convert this, now we know */
 	if (klass->convert_version != NULL && priv->version != NULL && priv->version_raw != 0) {
 		g_autofree gchar *version = klass->convert_version(self, priv->version_raw);
-		fu_firmware_set_version(self, version);
+		fu_firmware_set_version(self, version); /* nocheck:set-version */
 	}
 }
 
@@ -1241,7 +1241,7 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 	/* set attributes */
 	tmp = xb_node_query_text(n, "version", NULL);
 	if (tmp != NULL)
-		fu_firmware_set_version(self, tmp);
+		fu_firmware_set_version(self, tmp); /* nocheck:set-version */
 	tmp = xb_node_query_text(n, "version_format", NULL);
 	if (tmp != NULL) {
 		FwupdVersionFormat version_format = fwupd_version_format_from_string(tmp);

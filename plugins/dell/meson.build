@@ -6,6 +6,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 plugin_quirks += files('dell.quirk')
 
 plugin_builtin_dell = static_library('fu_plugin_dell',
+  rustgen.process('fu-dell.rs'),
   sources: [
     'fu-dell-plugin.c',
   ],

@@ -142,11 +142,9 @@ struct _FuGenesysUsbhubDevice {
 G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVICE)
 
 void
-fu_genesys_usbhub_device_set_hid_channel(FuDevice *device, FuDevice *channel)
+fu_genesys_usbhub_device_set_hid_channel(FuGenesysUsbhubDevice *self, FuDevice *channel)
 {
-	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-
-	g_return_if_fail(self);
+	g_return_if_fail(FU_IS_GENESYS_USBHUB_DEVICE(self));
 	g_return_if_fail(FU_IS_GENESYS_HUBHID_DEVICE(channel));
 
 	if (self->hid_channel != NULL) {
@@ -1738,10 +1736,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_genesys_usbhub_device_codesign_to_string(FuDevice *device, guint idt, GString *str)
+fu_genesys_usbhub_device_codesign_to_string(FuGenesysUsbhubDevice *self, guint idt, GString *str)
 {
-	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	guint64 fw_max_size = fu_device_get_firmware_size_max(device);
+	guint64 fw_max_size = fu_device_get_firmware_size_max(FU_DEVICE(self));
 	guint32 bank_addr1 = self->spec.fw_bank_addr[FW_BANK_1][FU_GENESYS_FW_TYPE_CODESIGN];
 	guint32 bank_addr2 = self->spec.fw_bank_addr[FW_BANK_2][FU_GENESYS_FW_TYPE_CODESIGN];
 	guint idt_detail = idt + 1;
@@ -1802,7 +1799,7 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 
 		if (i == FU_GENESYS_FW_TYPE_CODESIGN) {
 			if (self->has_codesign)
-				fu_genesys_usbhub_device_codesign_to_string(device, idt + 1, str);
+				fu_genesys_usbhub_device_codesign_to_string(self, idt + 1, str);
 			continue;
 		}
 

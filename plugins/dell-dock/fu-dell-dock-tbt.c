@@ -127,7 +127,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_dell_dock_ec_tbt_passive(fu_device_get_parent(device))) {
+	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(fu_device_get_parent(device)))) {
 		g_info("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
 						      &tbt_base_settings,
@@ -199,7 +199,7 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent(device);
-	version = fu_dell_dock_ec_get_tbt_version(parent);
+	version = fu_dell_dock_ec_get_tbt_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version(device, version);

@@ -267,7 +267,7 @@ fu_rts54hub_device_read_flash (FuRts54hubDevice *self,
 					    &actual_len,
 					    FU_RTS54HUB_DEVICE_TIMEOUT_RW,
 					    NULL, error)) {
-		g_prefix_error (error, "failed to read flash: ");
+		g_prefix_error_literal(error, "failed to read flash: ");
 		return FALSE;
 	}
 	if (actual_len != datasz) {
@@ -568,7 +568,7 @@ fu_rts54hub_device_prepare_firmware(FuDevice *device,
 }
 
 static void
-fu_rts54hub_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_rts54hub_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

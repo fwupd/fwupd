@@ -38,8 +38,11 @@
 #include "fu-udev-device-private.h"
 #include "fu-volume-private.h"
 
+/* nocheck:static */
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
+
+/* nocheck:magic-inlines=500 */
 
 static gboolean
 fu_test_hang_check_cb(gpointer user_data)
@@ -3922,9 +3925,9 @@ fu_firmware_build_func(void)
 }
 
 static gsize
-fu_test_firmware_dfuse_image_get_size(FuFirmware *self)
+fu_test_firmware_dfuse_image_get_size(FuFirmware *firmware)
 {
-	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(self, NULL);
+	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(firmware, NULL);
 	gsize length = 0;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -4288,7 +4291,7 @@ fu_firmware_linear_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	str = fu_firmware_to_string(firmware2);
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 
 	/* verify we got both images */
 	imgs = fu_firmware_get_images(firmware2);
@@ -4937,7 +4940,7 @@ typedef struct {
 } FuDeviceRetryHelper;
 
 static gboolean
-fu_device_retry_success(FuDevice *device, gpointer user_data, GError **error)
+fu_device_retry_success_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *)user_data;
 	helper->cnt_success++;
@@ -4945,7 +4948,7 @@ fu_device_retry_success(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-fu_device_retry_failed(FuDevice *device, gpointer user_data, GError **error)
+fu_device_retry_failed_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *)user_data;
 	helper->cnt_failed++;
@@ -4954,7 +4957,7 @@ fu_device_retry_failed(FuDevice *device, gpointer user_data, GError **error)
 }
 
 static gboolean
-fu_device_retry_success_3rd_try(FuDevice *device, gpointer user_data, GError **error)
+fu_device_retry_success_3rd_try_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *)user_data;
 	if (helper->cnt_failed == 2) {
@@ -4979,8 +4982,8 @@ fu_device_retry_success_func(void)
 	fu_device_retry_add_recovery(device,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     fu_device_retry_failed);
-	ret = fu_device_retry(device, fu_device_retry_success, 3, &helper, &error);
+				     fu_device_retry_failed_cb);
+	ret = fu_device_retry(device, fu_device_retry_success_cb, 3, &helper, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(helper.cnt_success, ==, 1);
@@ -5000,8 +5003,8 @@ fu_device_retry_failed_func(void)
 	fu_device_retry_add_recovery(device,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     fu_device_retry_success);
-	ret = fu_device_retry(device, fu_device_retry_failed, 3, &helper, &error);
+				     fu_device_retry_success_cb);
+	ret = fu_device_retry(device, fu_device_retry_failed_cb, 3, &helper, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_true(!ret);
 	g_assert_cmpint(helper.cnt_success, ==, 2); /* do not reset for the last failure */
@@ -5018,7 +5021,7 @@ fu_device_retry_hardware_func(void)
 	    .cnt_success = 0,
 	    .cnt_failed = 0,
 	};
-	ret = fu_device_retry(device, fu_device_retry_success_3rd_try, 3, &helper, &error);
+	ret = fu_device_retry(device, fu_device_retry_success_3rd_try_cb, 3, &helper, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(helper.cnt_success, ==, 1);
@@ -5768,7 +5771,7 @@ fu_progress_func(void)
 	g_assert_cmpint(helper.updates, ==, 6);
 	g_assert_cmpfloat_with_epsilon(fu_progress_get_duration(progress), 0.1f, 0.05);
 	str = fu_progress_traceback(progress);
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 }
 
 static void

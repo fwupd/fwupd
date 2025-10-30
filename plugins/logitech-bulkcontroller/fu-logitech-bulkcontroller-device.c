@@ -863,8 +863,7 @@ fu_logitech_bulkcontroller_device_ensure_info_cb(FuDevice *device,
 	 */
 	if (send_req) {
 		g_autoptr(GByteArray) device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
-			device);
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1011,8 +1010,7 @@ fu_logitech_bulkcontroller_device_verify_cb(FuDevice *device, gpointer user_data
 		g_autoptr(GByteArray) device_request = NULL;
 		g_debug("manually requesting as no pending request: %s", error_local->message);
 		device_request =
-		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(
-			device);
+		    fu_logitech_bulkcontroller_proto_manager_generate_get_device_info_request(self);
 		buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
 		if (buf == NULL)
 			return FALSE;
@@ -1212,7 +1210,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_logitech_bulkcontroller_device_send_time_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
@@ -1223,8 +1221,7 @@ fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_da
 
 	/* send SetDeviceTimeRequest to sync device clock with host */
 	device_request =
-	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(device,
-										      error);
+	    fu_logitech_bulkcontroller_proto_manager_generate_set_device_time_request(self, error);
 	if (device_request == NULL)
 		return FALSE;
 	buf = fu_logitech_bulkcontroller_device_sync_write(self, device_request, error);
@@ -1256,10 +1253,10 @@ fu_logitech_bulkcontroller_device_set_time_cb(FuDevice *device, gpointer user_da
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_set_time(FuLogitechBulkcontrollerDevice *self, GError **error)
+fu_logitech_bulkcontroller_device_send_time(FuLogitechBulkcontrollerDevice *self, GError **error)
 {
 	return fu_device_retry(FU_DEVICE(self),
-			       fu_logitech_bulkcontroller_device_set_time_cb,
+			       fu_logitech_bulkcontroller_device_send_time_cb,
 			       MAX_SETUP_RETRIES,
 			       NULL,
 			       error);
@@ -1277,7 +1274,7 @@ fu_logitech_bulkcontroller_device_transition_to_device_mode_cb(FuDevice *device,
 	g_autoptr(GByteArray) decoded_pkt = NULL;
 
 	req = fu_logitech_bulkcontroller_proto_manager_generate_transition_to_device_mode_request(
-	    device);
+	    self);
 	res = fu_logitech_bulkcontroller_device_sync_write(self, req, error);
 	if (res == NULL)
 		return FALSE;
@@ -1433,7 +1430,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* set device time */
-	if (!fu_logitech_bulkcontroller_device_set_time(self, error)) {
+	if (!fu_logitech_bulkcontroller_device_send_time(self, error)) {
 		g_prefix_error_literal(error, "failed to set time: ");
 		return FALSE;
 	}
@@ -1449,7 +1446,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 }
 
 static void
-fu_logitech_bulkcontroller_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_bulkcontroller_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

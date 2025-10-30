@@ -155,7 +155,7 @@ fu_wacom_raw_device_check_mode(FuWacomRawDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_raw_device_set_version_bootloader(FuWacomRawDevice *self, GError **error)
+fu_wacom_raw_device_ensure_version_bootloader(FuWacomRawDevice *self, GError **error)
 {
 	guint8 rsp_value = 0;
 	g_autofree gchar *version = NULL;
@@ -210,7 +210,7 @@ fu_wacom_raw_device_write_firmware(FuDevice *device,
 	/* we're in bootloader mode now */
 	if (!fu_wacom_raw_device_check_mode(self, error))
 		return FALSE;
-	if (!fu_wacom_raw_device_set_version_bootloader(self, error))
+	if (!fu_wacom_raw_device_ensure_version_bootloader(self, error))
 		return FALSE;
 
 	/* flash chunks */
@@ -364,7 +364,7 @@ fu_wacom_raw_device_replace(FuDevice *device, FuDevice *donor)
 }
 
 static void
-fu_wacom_raw_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_wacom_raw_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

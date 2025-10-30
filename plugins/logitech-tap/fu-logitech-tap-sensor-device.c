@@ -64,7 +64,7 @@ fu_logitech_tap_sensor_device_get_feature(FuLogitechTapSensorDevice *self,
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_sensor_device_enable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 	g_autoptr(FuStructLogitechTapSensorHidReq) st = fu_struct_logitech_tap_sensor_hid_req_new();
@@ -85,7 +85,7 @@ fu_logitech_tap_sensor_device_enable_tde(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_disable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_sensor_device_disable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 	g_autoptr(FuStructLogitechTapSensorHidReq) st = fu_struct_logitech_tap_sensor_hid_req_new();
@@ -122,11 +122,10 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 		return FALSE;
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(FU_DEVICE(self),
+					   fu_logitech_tap_sensor_device_enable_tde_cb,
+					   fu_logitech_tap_sensor_device_disable_tde_cb,
+					   error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -190,7 +189,7 @@ fu_logitech_tap_sensor_device_reboot_device(FuLogitechTapSensorDevice *self, GEr
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GError **error)
+fu_logitech_tap_sensor_device_ensure_version(FuLogitechTapSensorDevice *self, GError **error)
 {
 	guint32 version = 0;
 	g_autoptr(FuStructLogitechTapSensorHidReq) st_req =
@@ -233,7 +232,7 @@ fu_logitech_tap_sensor_device_set_version(FuLogitechTapSensorDevice *self, GErro
 }
 
 static gboolean
-fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError **error)
+fu_logitech_tap_sensor_device_ensure_serial(FuLogitechTapSensorDevice *self, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GString) serial_number = g_string_new(NULL);
@@ -257,11 +256,11 @@ fu_logitech_tap_sensor_device_set_serial(FuLogitechTapSensorDevice *self, GError
 	    FU_LOGITECH_TAP_SENSOR_HID_SERIAL_NUMBER_SET_REPORT_BYTE4);
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(
+	    FU_DEVICE(self),
+	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_enable_tde_cb,
+	    (FuDeviceLockerFunc)fu_logitech_tap_sensor_device_disable_tde_cb,
+	    error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -306,15 +305,15 @@ fu_logitech_tap_sensor_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechTapSensorDevice *self = FU_LOGITECH_TAP_SENSOR_DEVICE(device);
 
-	if (!fu_logitech_tap_sensor_device_set_version(self, error))
+	if (!fu_logitech_tap_sensor_device_ensure_version(self, error))
 		return FALSE;
-	if (!fu_logitech_tap_sensor_device_set_serial(self, error))
+	if (!fu_logitech_tap_sensor_device_ensure_serial(self, error))
 		return FALSE;
 	return TRUE;
 }
 
 static void
-fu_logitech_tap_sensor_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_tap_sensor_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

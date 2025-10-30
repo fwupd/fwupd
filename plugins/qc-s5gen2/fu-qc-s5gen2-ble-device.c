@@ -33,14 +33,14 @@
 typedef struct {
 	guint8 core;
 	guint8 dfu;
-} gaia_features_version_t;
+} FuQcS5gen2GaiaFeaturesVersion;
 
 struct _FuQcS5gen2BleDevice {
 	FuBluezDevice parent_instance;
 	guint16 vid_v3;
 	FuIOChannel *io_cmd;
 	gint32 mtu;
-	gaia_features_version_t feature;
+	FuQcS5gen2GaiaFeaturesVersion feature;
 };
 
 static void

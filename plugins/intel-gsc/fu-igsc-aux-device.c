@@ -174,7 +174,7 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_igsc_aux_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_igsc_aux_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

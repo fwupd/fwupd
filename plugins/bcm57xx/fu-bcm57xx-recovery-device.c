@@ -697,7 +697,7 @@ fu_bcm57xx_recovery_device_setup(FuDevice *device, GError **error)
 	} else {
 		guint32 bufver[4] = {0x0};
 		guint32 veraddr = 0;
-		g_autoptr(Bcm57xxVeritem) veritem = NULL;
+		g_autoptr(FuBcm57xxVeritem) veritem = NULL;
 
 		/* fall back to the string, e.g. '5719-v1.43' */
 		if (!fu_bcm57xx_recovery_device_nvram_read(self,
@@ -837,7 +837,7 @@ fu_bcm57xx_recovery_device_close(FuDevice *device, GError **error)
 }
 
 static void
-fu_bcm57xx_recovery_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_bcm57xx_recovery_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);

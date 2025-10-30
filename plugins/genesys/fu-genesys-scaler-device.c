@@ -588,9 +588,9 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 }
 
 static gboolean
-fu_genesys_scaler_device_set_isp_mode(FuDevice *device, gpointer user_data, GError **error)
+fu_genesys_scaler_device_set_isp_mode_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuGenesysScalerDevice *self = user_data;
+	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
 	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
 	guint8 data[] = {0x4d, 0x53, 0x54, 0x41, 0x52};
 
@@ -626,10 +626,10 @@ fu_genesys_scaler_device_enter_isp_mode(FuGenesysScalerDevice *self, GError **er
 	 */
 
 	if (!fu_device_retry_full(FU_DEVICE(self),
-				  fu_genesys_scaler_device_set_isp_mode,
+				  fu_genesys_scaler_device_set_isp_mode_cb,
 				  2,
 				  1000 /* 1ms */,
-				  self,
+				  NULL,
 				  error)) {
 		g_prefix_error_literal(error, "error entering ISP mode: ");
 		return FALSE;
@@ -1784,7 +1784,7 @@ fu_genesys_scaler_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_genesys_scaler_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_genesys_scaler_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

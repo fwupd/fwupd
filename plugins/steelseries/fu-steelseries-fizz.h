@@ -14,9 +14,6 @@
 #define FU_TYPE_STEELSERIES_FIZZ (fu_steelseries_fizz_get_type())
 G_DECLARE_FINAL_TYPE(FuSteelseriesFizz, fu_steelseries_fizz, FU, STEELSERIES_FIZZ, FuUsbDevice)
 
-FuSteelseriesFizz *
-fu_steelseries_fizz_new(FuDevice *self);
-
 #define FU_STEELSERIES_FIZZ_BATTERY_LEVEL_CHARGING_BIT 0x80U
 #define FU_STEELSERIES_FIZZ_BATTERY_LEVEL_STATUS_BITS  0x7fU
 

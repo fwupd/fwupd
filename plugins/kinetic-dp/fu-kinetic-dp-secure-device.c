@@ -137,7 +137,7 @@ fu_kinetic_dp_secure_device_send_kt_prop_cmd_cb(FuDevice *device,
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_INVALID_DATA,
-						    "chunk data CRC failed: ");
+						    "chunk data CRC failed");
 				return FALSE;
 			}
 			g_set_error(error,
@@ -1005,7 +1005,7 @@ fu_kinetic_dp_secure_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_kinetic_dp_secure_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_kinetic_dp_secure_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

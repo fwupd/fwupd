@@ -302,7 +302,7 @@ fu_vbe_simple_device_write_firmware_img(FuVbeSimpleDevice *self,
 
 	/* seek to correct address */
 	seek_to = self->area_start + store_offset + self->skip_offset;
-	g_debug("writing image '%s' bufsz 0x%x (skipping 0x%x) to store_offset 0x%x, seek 0x%x\n",
+	g_debug("writing image '%s' bufsz 0x%x (skipping 0x%x) to store_offset 0x%x, seek 0x%x",
 		fu_firmware_get_id(FU_FIRMWARE(img)),
 		(guint)bufsz,
 		(guint)self->skip_offset,
@@ -442,7 +442,7 @@ fu_vbe_simple_device_upload(FuDevice *device, FuProgress *progress, GError **err
 }
 
 static void
-fu_vbe_simple_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_vbe_simple_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

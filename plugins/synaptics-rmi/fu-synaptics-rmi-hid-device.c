@@ -419,10 +419,10 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, FuProgress *progress, GErro
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v5_device_detach(self, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
+		if (!fu_synaptics_rmi_v7_device_detach(self, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,
@@ -522,7 +522,7 @@ fu_synaptics_rmi_hid_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 }
 
 static void
-fu_synaptics_rmi_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_synaptics_rmi_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

@@ -181,13 +181,10 @@ fu_thunderbolt_device_activate(FuDevice *device, FuProgress *progress, GError **
 }
 
 static gboolean
-fu_thunderbolt_device_authenticate(FuDevice *device, GError **error)
+fu_thunderbolt_device_authenticate(FuThunderboltDevice *self, GError **error)
 {
-	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-
-	return fu_udev_device_write_sysfs(udev,
+	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(self),
 					  priv->auth_method,
 					  "1",
 					  FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
@@ -195,13 +192,10 @@ fu_thunderbolt_device_authenticate(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_flush_update(FuDevice *device, GError **error)
+fu_thunderbolt_device_flush_update(FuThunderboltDevice *self, GError **error)
 {
-	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	FuThunderboltDevicePrivate *priv = GET_PRIVATE(self);
-	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
-
-	return fu_udev_device_write_sysfs(udev,
+	return fu_udev_device_write_sysfs(FU_UDEV_DEVICE(self),
 					  priv->auth_method,
 					  "2",
 					  FU_THUNDERBOLT_DEVICE_WRITE_TIMEOUT,
@@ -350,7 +344,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 
 	/* flush the image if supported by kernel and/or device */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-		if (!fu_thunderbolt_device_flush_update(device, error))
+		if (!fu_thunderbolt_device_flush_update(self, error))
 			return FALSE;
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	}
@@ -363,7 +357,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	}
 
 	/* authenticate (possibly on unplug if device supports it) */
-	if (!fu_thunderbolt_device_authenticate(FU_DEVICE(self), error)) {
+	if (!fu_thunderbolt_device_authenticate(self, error)) {
 		g_prefix_error_literal(error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
@@ -396,7 +390,7 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 }
 
 static void
-fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_thunderbolt_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 17, "prepare-fw");

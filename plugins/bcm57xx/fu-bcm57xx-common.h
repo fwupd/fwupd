@@ -37,7 +37,7 @@ typedef struct {
 	gchar *branch;
 	gchar *version;
 	FwupdVersionFormat verfmt;
-} Bcm57xxVeritem;
+} FuBcm57xxVeritem;
 
 gboolean
 fu_bcm57xx_verify_crc(GInputStream *stream, GError **error);
@@ -46,7 +46,7 @@ fu_bcm57xx_verify_magic(GInputStream *stream, gsize offset, GError **error);
 
 /* parses stage1 version */
 void
-fu_bcm57xx_veritem_free(Bcm57xxVeritem *veritem);
-Bcm57xxVeritem *
+fu_bcm57xx_veritem_free(FuBcm57xxVeritem *veritem);
+FuBcm57xxVeritem *
 fu_bcm57xx_veritem_new(const guint8 *buf, gsize bufsz);
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(Bcm57xxVeritem, fu_bcm57xx_veritem_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuBcm57xxVeritem, fu_bcm57xx_veritem_free)

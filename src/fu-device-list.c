@@ -529,6 +529,7 @@ fu_device_list_remove_with_delay(FuDeviceItem *item)
 					item);
 }
 
+/* nocheck:name */
 static gboolean
 fu_device_list_should_remove_with_delay(FuDevice *device)
 {
@@ -718,9 +719,10 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 }
 
+/* nocheck:name */
 static void
 _fu_device_incorporate_problem_update_in_progress(FuDevice *self, FuDevice *donor)
 {
@@ -811,7 +813,7 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 
 	/* debug */
 	str = fwupd_codec_to_string(FWUPD_CODEC(self));
-	g_debug("\n%s", str);
+	g_debug("%s", str);
 
 	/* we were waiting for this... */
 	fu_device_list_clear_wait_for_replug(self, item);
@@ -1056,7 +1058,7 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 
 		/* dump to console */
 		str = fwupd_codec_to_string(FWUPD_CODEC(self));
-		g_debug("\n%s", str);
+		g_debug("%s", str);
 
 		/* unset and build error string */
 		for (guint i = 0; i < devices_wfr2->len; i++) {

@@ -459,9 +459,9 @@ fu_usb_device_open_internal(FuUsbDevice *self, GError **error)
 		rc = libusb_wrap_sys_device(usb_ctx, fd, &priv->handle);
 #else
 		g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "libusb_wrap_sys_device not available, can't wrap fd");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "libusb_wrap_sys_device not available, can't wrap fd");
 		return FALSE;
 #endif
 	}

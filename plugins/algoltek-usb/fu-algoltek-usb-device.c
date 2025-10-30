@@ -356,13 +356,13 @@ fu_algoltek_usb_device_ers(FuAlgoltekUsbDevice *self,
 }
 
 static gboolean
-fu_algoltek_usb_device_status_check_cb(FuDevice *self, gpointer user_data, GError **error)
+fu_algoltek_usb_device_status_check_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	guint8 update_status;
 	g_autoptr(GByteArray) update_status_array = NULL;
 
 	update_status_array =
-	    fu_algoltek_usb_device_rdr(FU_ALGOLTEK_USB_DEVICE(self), AG_UPDATE_STATUS, error);
+	    fu_algoltek_usb_device_rdr(FU_ALGOLTEK_USB_DEVICE(device), AG_UPDATE_STATUS, error);
 	if (update_status_array == NULL)
 		return FALSE;
 
@@ -590,7 +590,7 @@ fu_algoltek_usb_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_algoltek_usb_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_algoltek_usb_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

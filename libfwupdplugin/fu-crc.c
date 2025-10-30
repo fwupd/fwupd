@@ -77,7 +77,7 @@ fu_crc_reflect(guint32 data, guint bitwidth)
 	guint32 val = 0;
 	for (guint bit = 0; bit < bitwidth; bit++) {
 		if (data & 0x01)
-			val |= 1ul << ((bitwidth - 1) - bit);
+			val |= 1ul << ((bitwidth - 1) - bit); /* nocheck:blocked */
 		data = (data >> 1);
 	}
 	return val;

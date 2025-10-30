@@ -62,10 +62,7 @@ fu_logitech_tap_touch_device_get_feature_cb(FuDevice *device, gpointer user_data
 				   0x00U,
 				   &report_id,
 				   error)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to read report id: ");
+		g_prefix_error_literal(error, "failed to read report id: ");
 		return FALSE;
 	}
 	if (!ret) {
@@ -125,7 +122,7 @@ fu_logitech_tap_touch_device_hid_transfer(FuLogitechTapTouchDevice *self,
 }
 
 static gboolean
-fu_logitech_tap_touch_device_enable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_touch_device_enable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
 	g_autoptr(FuStructLogitechTapTouchHidReq) st = fu_struct_logitech_tap_touch_hid_req_new();
@@ -141,7 +138,7 @@ fu_logitech_tap_touch_device_enable_tde(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_tap_touch_device_disable_tde(FuDevice *device, GError **error)
+fu_logitech_tap_touch_device_disable_tde_cb(FuDevice *device, GError **error)
 {
 	FuLogitechTapTouchDevice *self = FU_LOGITECH_TAP_TOUCH_DEVICE(device);
 	g_autoptr(FuStructLogitechTapTouchHidReq) st = fu_struct_logitech_tap_touch_hid_req_new();
@@ -463,11 +460,10 @@ fu_logitech_tap_touch_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(FU_DEVICE(self),
+					   fu_logitech_tap_touch_device_enable_tde_cb,
+					   fu_logitech_tap_touch_device_disable_tde_cb,
+					   error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -497,7 +493,7 @@ fu_logitech_tap_touch_device_detach(FuDevice *device, FuProgress *progress, GErr
 	}
 
 	/* cannot use locker, device goes into bootloader mode here, looses connectivity */
-	if (!fu_logitech_tap_touch_device_enable_tde(device, error))
+	if (!fu_logitech_tap_touch_device_enable_tde_cb(device, error))
 		return FALSE;
 
 	if (!fu_logitech_tap_touch_device_get_mcu_mode(self, &mcu_mode, error))
@@ -781,11 +777,11 @@ fu_logitech_tap_touch_device_write_firmware(FuDevice *device,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* enable/disable TDE mode */
-	locker =
-	    fu_device_locker_new_full(FU_DEVICE(self),
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde,
-				      (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde,
-				      error);
+	locker = fu_device_locker_new_full(
+	    FU_DEVICE(self),
+	    (FuDeviceLockerFunc)fu_logitech_tap_touch_device_enable_tde_cb,
+	    (FuDeviceLockerFunc)fu_logitech_tap_touch_device_disable_tde_cb,
+	    error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -799,7 +795,7 @@ fu_logitech_tap_touch_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_logitech_tap_touch_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_logitech_tap_touch_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

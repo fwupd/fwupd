@@ -546,7 +546,7 @@ fu_kinetic_dp_puma_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_kinetic_dp_puma_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_kinetic_dp_puma_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");

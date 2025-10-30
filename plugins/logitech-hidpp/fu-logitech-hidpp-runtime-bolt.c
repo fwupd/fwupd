@@ -64,9 +64,10 @@ fu_logitech_hidpp_runtime_bolt_to_string(FuDevice *device, guint idt, GString *s
 }
 
 static FuLogitechHidppDevice *
-fu_logitech_hidpp_runtime_bolt_find_paired_device(FuDevice *device, guint16 hidpp_pid)
+fu_logitech_hidpp_runtime_bolt_find_paired_device(FuLogitechHidppRuntimeBolt *self,
+						  guint16 hidpp_pid)
 {
-	GPtrArray *children = fu_device_get_children(device);
+	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
 
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
@@ -119,7 +120,7 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 		reachable = TRUE;
 	hidpp_pid = (msg->data[1] << 8) | msg->data[2];
 
-	child = fu_logitech_hidpp_runtime_bolt_find_paired_device(FU_DEVICE(self), hidpp_pid);
+	child = fu_logitech_hidpp_runtime_bolt_find_paired_device(self, hidpp_pid);
 	if (child != NULL) {
 		g_autofree gchar *id_display = fu_device_get_id_display(FU_DEVICE(child));
 		g_debug("%s is reachable:%i", id_display, reachable);
@@ -175,10 +176,9 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 }
 
 static void
-fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
+fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuLogitechHidppRuntime *self)
 {
-	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
+	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(self);
 
 	for (guint i = 1; i <= bolt->pairing_slots; i++) {
 		g_autofree gchar *name = NULL;
@@ -204,7 +204,7 @@ fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 		if ((msg->data[1] & 0x40) == 0) {
 			/* paired device is reachable */
 			g_autoptr(FuLogitechHidppDevice) child = NULL;
-			child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(device));
+			child = fu_logitech_hidpp_device_new(FU_UDEV_DEVICE(self));
 			fu_device_set_install_duration(FU_DEVICE(child), 270);
 			fu_device_add_private_flag(FU_DEVICE(child),
 						   FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
@@ -217,7 +217,7 @@ fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 				continue;
 			if (!fu_device_setup(FU_DEVICE(child), &error_local))
 				continue;
-			fu_device_add_child(device, FU_DEVICE(child));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 		}
 	}
 }
@@ -333,11 +333,10 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
+fu_logitech_hidpp_runtime_bolt_setup_internal(FuLogitechHidppRuntime *self, GError **error)
 {
-	FuContext *ctx = fu_device_get_context(device);
-	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(self);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
 	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
@@ -387,7 +386,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 								   msg->data[1],
 								   msg->data[2],
 								   version_raw);
-			fu_device_set_version(device, version);
+			fu_device_set_version(FU_DEVICE(self), version);
 			break;
 		case 1:
 			/* bootloader */
@@ -402,7 +401,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 								   msg->data[1],
 								   msg->data[2],
 								   version_raw);
-			fu_device_set_version_bootloader(device, version);
+			fu_device_set_version_bootloader(FU_DEVICE(self), version);
 			break;
 		case 5:
 			/* SoftDevice */
@@ -410,13 +409,13 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			radio = fu_logitech_hidpp_radio_new(ctx, i);
 			fu_device_add_instance_u16(FU_DEVICE(radio),
 						   "VEN",
-						   fu_device_get_vid(device));
+						   fu_device_get_vid(FU_DEVICE(self)));
 			fu_device_add_instance_u16(FU_DEVICE(radio),
 						   "DEV",
-						   fu_device_get_pid(device));
+						   fu_device_get_pid(FU_DEVICE(self)));
 			fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", msg->data[0]);
 			fu_device_incorporate(FU_DEVICE(radio),
-					      FU_DEVICE(device),
+					      FU_DEVICE(self),
 					      FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 			fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
 			if (!fu_device_build_instance_id(FU_DEVICE(radio),
@@ -436,7 +435,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 				return FALSE;
 			g_string_append_printf(radio_version, "0x%.4x", version_raw);
 			fu_device_set_version(FU_DEVICE(radio), radio_version->str);
-			fu_device_add_child(device, FU_DEVICE(radio));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(radio));
 			break;
 		default:
 			break;
@@ -448,7 +447,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to enable notifications: ");
 		return FALSE;
 	}
-	fu_logitech_hidpp_runtime_bolt_poll_peripherals(device);
+	fu_logitech_hidpp_runtime_bolt_poll_peripherals(self);
 
 	/* success */
 	return TRUE;
@@ -457,6 +456,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 {
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(GError) error_local = NULL;
 	for (guint i = 0; i < 5; i++) {
 		g_clear_error(&error_local);
@@ -464,7 +464,7 @@ fu_logitech_hidpp_runtime_bolt_setup(FuDevice *device, GError **error)
 		 * the device first -- we can't use the SwID as this is a
 		 * HID++2.0 feature */
 		fu_device_sleep(device, 200); /* ms */
-		if (fu_logitech_hidpp_runtime_bolt_setup_internal(device, &error_local))
+		if (fu_logitech_hidpp_runtime_bolt_setup_internal(self, &error_local))
 			return TRUE;
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 			g_propagate_error(error, g_steal_pointer(&error_local));

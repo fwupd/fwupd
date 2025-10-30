@@ -461,7 +461,8 @@ fu_devlink_netlink_genl_family_get(FuDevlinkGenSocket *nlg,
 	    error);
 }
 
-/* open generic netlink socket for devlink family */
+/* nocheck:name
+ * open generic netlink socket for devlink family */
 FuDevlinkGenSocket *
 fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 {

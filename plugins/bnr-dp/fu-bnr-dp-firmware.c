@@ -47,7 +47,7 @@ fu_bnr_dp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static gchar *
-fu_bnr_dp_firmware_convert_version(FuFirmware *self, guint64 version_raw)
+fu_bnr_dp_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
 {
 	return fu_bnr_dp_version_to_string(version_raw);
 }

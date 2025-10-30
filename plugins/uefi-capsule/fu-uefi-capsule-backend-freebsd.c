@@ -129,7 +129,7 @@ fu_uefi_capsule_backend_freebsd_coldplug(FuBackend *backend, FuProgress *progres
 		return FALSE;
 	}
 
-	if (ioctl(efi_fd, EFIIOC_GET_TABLE, &table) == -1) {
+	if (ioctl(efi_fd, EFIIOC_GET_TABLE, &table) == -1) /* nocheck:blocked */ {
 		g_close(efi_fd, NULL);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

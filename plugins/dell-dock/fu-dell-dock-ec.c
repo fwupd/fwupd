@@ -143,7 +143,7 @@ struct _FuDellDockEc {
 };
 
 static gboolean
-fu_dell_dock_ec_get_status(FuDevice *device,
+fu_dell_dock_ec_get_status(FuDellDockEc *self,
 			   FuDellDockECFWUpdateStatus *status_out,
 			   GError **error);
 
@@ -159,36 +159,32 @@ fu_dell_dock_ec_test_valid_byte(const guint8 *str, gint index)
 }
 
 static void
-fu_dell_dock_ec_set_board(FuDevice *device)
+fu_dell_dock_ec_set_board(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	const gchar *summary = NULL;
 	g_autofree gchar *board_type_str = NULL;
 
 	board_type_str = g_strdup_printf("DellDockBoard%u", self->data->board_id);
-	summary = fu_device_get_metadata(device, board_type_str);
+	summary = fu_device_get_metadata(FU_DEVICE(self), board_type_str);
 	if (summary != NULL)
-		fu_device_set_summary(device, summary);
+		fu_device_set_summary(FU_DEVICE(self), summary);
 }
 
 gboolean
-fu_dell_dock_ec_module_is_usb4(FuDevice *device)
+fu_dell_dock_ec_module_is_usb4(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->data->module_type == MODULE_TYPE_130_USB4;
 }
 
 guint8
-fu_dell_dock_ec_get_dock_type(FuDevice *device)
+fu_dell_dock_ec_get_dock_type(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->base_type;
 }
 
 const gchar *
-fu_dell_dock_ec_get_module_type(FuDevice *device)
+fu_dell_dock_ec_get_module_type(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	switch (self->data->module_type) {
 	case MODULE_TYPE_45_TBT:
 		return "45 (TBT)";
@@ -212,9 +208,8 @@ fu_dell_dock_ec_get_module_type(FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_ec_needs_tbt(FuDevice *device)
+fu_dell_dock_ec_needs_tbt(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
 
 	/* check for TBT module type */
@@ -227,10 +222,8 @@ fu_dell_dock_ec_needs_tbt(FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_ec_tbt_passive(FuDevice *device)
+fu_dell_dock_ec_tbt_passive(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
-
 	if (self->passive_flow > 0) {
 		self->passive_flow |= PASSIVE_TBT_MASK;
 		return TRUE;
@@ -262,7 +255,7 @@ fu_dell_dock_ec_devicetype_to_str(guint device_type, guint sub_type)
 }
 
 static gboolean
-fu_dell_dock_ec_read(FuDevice *device, guint32 cmd, gsize length, GBytes **bytes, GError **error)
+fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **bytes, GError **error)
 {
 	/* The first byte of result data will be the size of the return,
 	hide this from callers */
@@ -270,11 +263,11 @@ fu_dell_dock_ec_read(FuDevice *device, guint32 cmd, gsize length, GBytes **bytes
 	g_autoptr(GBytes) bytes_local = NULL;
 	const guint8 *result;
 
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(fu_device_get_proxy(device) != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
+	g_return_val_if_fail(fu_device_get_proxy(FU_DEVICE(self)) != NULL, FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_read(fu_device_get_proxy(device),
+	if (!fu_dell_dock_hid_i2c_read(fu_device_get_proxy(FU_DEVICE(self)),
 				       cmd,
 				       result_length,
 				       &bytes_local,
@@ -300,13 +293,13 @@ fu_dell_dock_ec_read(FuDevice *device, guint32 cmd, gsize length, GBytes **bytes
 }
 
 static gboolean
-fu_dell_dock_ec_write(FuDevice *device, gsize length, guint8 *data, GError **error)
+fu_dell_dock_ec_write(FuDellDockEc *self, gsize length, guint8 *data, GError **error)
 {
-	g_return_val_if_fail(device != NULL, FALSE);
-	g_return_val_if_fail(fu_device_get_proxy(device) != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
+	g_return_val_if_fail(fu_device_get_proxy(FU_DEVICE(self)) != NULL, FALSE);
 	g_return_val_if_fail(length > 1, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_write(fu_device_get_proxy(device),
+	if (!fu_dell_dock_hid_i2c_write(fu_device_get_proxy(FU_DEVICE(self)),
 					data,
 					length,
 					&ec_base_settings,
@@ -319,16 +312,15 @@ fu_dell_dock_ec_write(FuDevice *device, gsize length, guint8 *data, GError **err
 }
 
 static gboolean
-fu_dell_dock_ec_is_valid_dock(FuDevice *device, GError **error)
+fu_dell_dock_ec_is_valid_dock(FuDellDockEc *self, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	const guint8 *result = NULL;
 	gsize sz = 0;
 	g_autoptr(GBytes) data = NULL;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(device, EC_CMD_GET_DOCK_TYPE, 1, &data, error)) {
+	if (!fu_dell_dock_ec_read(self, EC_CMD_GET_DOCK_TYPE, 1, &data, error)) {
 		g_prefix_error_literal(error, "Failed to query dock type: ");
 		return FALSE;
 	}
@@ -344,11 +336,11 @@ fu_dell_dock_ec_is_valid_dock(FuDevice *device, GError **error)
 
 	/* this will trigger setting up all the quirks */
 	if (self->base_type == DOCK_BASE_TYPE_SALOMON) {
-		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
+		fu_device_add_instance_id(FU_DEVICE(self), DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
 	}
 	if (self->base_type == DOCK_BASE_TYPE_ATOMIC) {
-		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
+		fu_device_add_instance_id(FU_DEVICE(self), DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
 		return TRUE;
 	}
 	g_set_error(error,
@@ -360,18 +352,17 @@ fu_dell_dock_ec_is_valid_dock(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
+fu_dell_dock_ec_get_dock_info(FuDellDockEc *self, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	const FuDellDockDockInfoHeader *header = NULL;
 	const FuDellDockEcQueryEntry *device_entry = NULL;
 	const FuDellDockEcAddrMap *map = NULL;
 	guint32 oldest_base_pd = 0;
 	g_autoptr(GBytes) data = NULL;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(device,
+	if (!fu_dell_dock_ec_read(self,
 				  EC_CMD_GET_DOCK_INFO,
 				  EXPECTED_DOCK_INFO_SIZE,
 				  &data,
@@ -496,20 +487,19 @@ fu_dell_dock_ec_get_dock_info(FuDevice *device, GError **error)
 	if (self->data->module_type == MODULE_TYPE_130_TBT ||
 	    self->data->module_type == MODULE_TYPE_45_TBT ||
 	    self->data->module_type == MODULE_TYPE_130_USB4) {
-		guint64 tmp = fu_device_get_install_duration(device);
-		fu_device_set_install_duration(device, tmp + 20);
+		guint64 tmp = fu_device_get_install_duration(FU_DEVICE(self));
+		fu_device_set_install_duration(FU_DEVICE(self), tmp + 20);
 	}
 
 	/* passive flow is default enabled for production docks */
 	self->passive_flow = PASSIVE_REBOOT_MASK;
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART);
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
+fu_dell_dock_ec_get_dock_data(FuDellDockEc *self, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GString) name = NULL;
 	gchar service_tag[8] = {0x00};
@@ -518,9 +508,9 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	g_autofree gchar *bundled_serial = NULL;
 	FuDellDockECFWUpdateStatus status;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(device, EC_CMD_GET_DOCK_DATA, length, &data, error)) {
+	if (!fu_dell_dock_ec_read(self, EC_CMD_GET_DOCK_DATA, length, &data, error)) {
 		g_prefix_error_literal(error, "Failed to query dock info: ");
 		return FALSE;
 	}
@@ -545,7 +535,7 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	/* guard against EC not yet ready and fail init */
 	name = g_string_new(self->data->marketing_name);
 	if (name->len > 0)
-		fu_device_set_name(device, name->str);
+		fu_device_set_name(FU_DEVICE(self), name->str);
 	else
 		g_warning("[EC bug] Invalid dock name detected");
 
@@ -556,26 +546,28 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	memcpy(service_tag, self->data->service_tag, 7); /* nocheck:blocked */
 	bundled_serial =
 	    g_strdup_printf("%s/%08" G_GUINT64_FORMAT, service_tag, self->data->module_serial);
-	fu_device_set_serial(device, bundled_serial);
+	fu_device_set_serial(FU_DEVICE(self), bundled_serial);
 
 	/* copy this for being able to send in next commit transaction */
 	self->raw_versions->pkg_version = self->data->dock_firmware_pkg_ver;
 
 	/* read if passive update pending */
-	if (!fu_dell_dock_ec_get_status(device, &status, error))
+	if (!fu_dell_dock_ec_get_status(self, &status, error))
 		return FALSE;
 
 	/* make sure this hardware spin matches our expectations */
 	if (self->data->board_id >= self->board_min) {
 		if (status != FW_UPDATE_IN_PROGRESS) {
-			fu_dell_dock_ec_set_board(device);
-			fu_device_uninhibit(device, "update-pending");
+			fu_dell_dock_ec_set_board(self);
+			fu_device_uninhibit(FU_DEVICE(self), "update-pending");
 		} else {
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 		}
 	} else {
-		fu_device_inhibit(device, "not-supported", "Utility does not support this board");
+		fu_device_inhibit(FU_DEVICE(self),
+				  "not-supported",
+				  "Utility does not support this board");
 	}
 
 	return TRUE;
@@ -611,12 +603,11 @@ fu_dell_dock_ec_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 gboolean
-fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, GError **error)
+fu_dell_dock_ec_modify_lock(FuDellDockEc *self, guint8 target, gboolean unlocked, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	guint32 cmd;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(FU_IS_DELL_DOCK_EC(self), FALSE);
 	g_return_val_if_fail(target != 0, FALSE);
 
 	cmd = EC_CMD_MODIFY_LOCK | /* cmd */
@@ -624,15 +615,15 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 	      target << 16 |	   /* device to operate on */
 	      unlocked << 24;	   /* unlock/lock */
 
-	if (!fu_dell_dock_ec_write(device, 4, (guint8 *)&cmd, error)) {
+	if (!fu_dell_dock_ec_write(self, 4, (guint8 *)&cmd, error)) {
 		g_prefix_error(error, "failed to unlock device %d: ", target);
 		return FALSE;
 	}
 	g_debug("Modified lock for %d to %d through %s (%s)",
 		target,
 		unlocked,
-		fu_device_get_name(device),
-		fu_device_get_id(device));
+		fu_device_get_name(FU_DEVICE(self)),
+		fu_device_get_id(FU_DEVICE(self)));
 
 	if (unlocked)
 		FU_BIT_SET(self->dock_unlock_status, target);
@@ -644,22 +635,23 @@ fu_dell_dock_ec_modify_lock(FuDevice *device, guint8 target, gboolean unlocked, 
 }
 
 static gboolean
-fu_dell_dock_ec_reset(FuDevice *device, GError **error)
+fu_dell_dock_ec_reset(FuDellDockEc *self, GError **error)
 {
 	guint16 cmd = EC_CMD_RESET;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 
-	return fu_dell_dock_ec_write(device, 2, (guint8 *)&cmd, error);
+	return fu_dell_dock_ec_write(self, 2, (guint8 *)&cmd, error);
 }
 
 static gboolean
 fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	FuDellDockECFWUpdateStatus status;
 
 	/* read if passive update pending */
-	if (!fu_dell_dock_ec_get_status(device, &status, error))
+	if (!fu_dell_dock_ec_get_status(self, &status, error))
 		return FALSE;
 
 	if (status != FW_UPDATE_IN_PROGRESS) {
@@ -667,39 +659,40 @@ fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "No firmware update pending for %s",
-			    fu_device_get_name(device));
+			    fu_device_get_name(FU_DEVICE(self)));
 		return FALSE;
 	}
 
-	return fu_dell_dock_ec_reset(device, error);
+	return fu_dell_dock_ec_reset(self, error);
 }
 
 gboolean
-fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error)
+fu_dell_dock_ec_reboot_dock(FuDellDockEc *self, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	guint32 cmd = EC_CMD_PASSIVE | /* cmd */
 		      1 << 8 |	       /* length of data arguments */
 		      self->passive_flow << 16;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 
 	g_info("activating passive flow (%x) for %s",
 	       self->passive_flow,
-	       fu_device_get_name(device));
-	return fu_dell_dock_ec_write(device, 3, (guint8 *)&cmd, error);
+	       fu_device_get_name(FU_DEVICE(self)));
+	return fu_dell_dock_ec_write(self, 3, (guint8 *)&cmd, error);
 }
 
 static gboolean
-fu_dell_dock_ec_get_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_out, GError **error)
+fu_dell_dock_ec_get_status(FuDellDockEc *self,
+			   FuDellDockECFWUpdateStatus *status_out,
+			   GError **error)
 {
 	g_autoptr(GBytes) data = NULL;
 	const guint8 *result = NULL;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 	g_return_val_if_fail(status_out != NULL, FALSE);
 
-	if (!fu_dell_dock_ec_read(device, EC_GET_FW_UPDATE_STATUS, 1, &data, error)) {
+	if (!fu_dell_dock_ec_read(self, EC_GET_FW_UPDATE_STATUS, 1, &data, error)) {
 		g_prefix_error_literal(error, "failed to read FW update status: ");
 		return FALSE;
 	}
@@ -717,35 +710,31 @@ fu_dell_dock_ec_get_status(FuDevice *device, FuDellDockECFWUpdateStatus *status_
 }
 
 const gchar *
-fu_dell_dock_ec_get_tbt_version(FuDevice *device)
+fu_dell_dock_ec_get_tbt_version(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->tbt_version;
 }
 
 const gchar *
-fu_dell_dock_ec_get_mst_version(FuDevice *device)
+fu_dell_dock_ec_get_mst_version(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->mst_version;
 }
 
 guint32
-fu_dell_dock_ec_get_status_version(FuDevice *device)
+fu_dell_dock_ec_get_status_version(FuDellDockEc *self)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->raw_versions->pkg_version;
 }
 
 gboolean
-fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error)
+fu_dell_dock_ec_commit_package(FuDellDockEc *self, GBytes *blob_fw, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	gsize length = 0;
 	const guint8 *data = g_bytes_get_data(blob_fw, &length);
 	g_autofree guint8 *payload = g_malloc0(length + 2);
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 	g_return_val_if_fail(blob_fw != NULL, FALSE);
 
 	if (length != sizeof(FuDellDockDockPackageFWVersion)) {
@@ -770,7 +759,7 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 	payload[1] = length;
 	memcpy(payload + 2, data, length); /* nocheck:blocked */
 
-	if (!fu_dell_dock_ec_write(device, length + 2, payload, error)) {
+	if (!fu_dell_dock_ec_write(self, length + 2, payload, error)) {
 		g_prefix_error_literal(error, "failed to query dock info: ");
 		return FALSE;
 	}
@@ -779,11 +768,11 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 }
 
 static gboolean
-fu_dell_dock_ec_write_fw(FuDevice *device,
-			 FuFirmware *firmware,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_dell_dock_ec_write_firmware(FuDevice *device,
+			       FuFirmware *firmware,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	gsize fw_size = 0;
@@ -794,7 +783,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	g_return_val_if_fail(device != NULL, FALSE);
+	g_return_val_if_fail(self != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
 
 	/* progress */
@@ -826,14 +815,14 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	}
 
 	g_info("writing EC firmware version %s", dynamic_version);
-	if (!fu_dell_dock_ec_modify_lock(device, self->unlock_target, TRUE, error))
+	if (!fu_dell_dock_ec_modify_lock(self, self->unlock_target, TRUE, error))
 		return FALSE;
 
-	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(device), TRUE, error))
+	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(FU_DEVICE(self)), TRUE, error))
 		return FALSE;
 
 	/* erase */
-	if (!fu_dell_dock_hid_erase_bank(fu_device_get_proxy(device), 0xff, error))
+	if (!fu_dell_dock_hid_erase_bank(fu_device_get_proxy(FU_DEVICE(self)), 0xff, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -843,7 +832,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 		if (fw_size - nwritten < write_size)
 			write_size = fw_size - nwritten;
 
-		if (!fu_dell_dock_hid_write_flash(fu_device_get_proxy(device),
+		if (!fu_dell_dock_hid_write_flash(fu_device_get_proxy(FU_DEVICE(self)),
 						  address,
 						  data,
 						  write_size,
@@ -858,16 +847,16 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	} while (nwritten < fw_size);
 	fu_progress_step_done(progress);
 
-	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(device), FALSE, error))
+	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(FU_DEVICE(self)), FALSE, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version(device, dynamic_version);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version(FU_DEVICE(self), dynamic_version);
 
 	/* activate passive behavior */
 	self->passive_flow |= PASSIVE_RESET_MASK;
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	return TRUE;
 }
 
@@ -913,25 +902,26 @@ fu_dell_dock_ec_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 }
 
 static gboolean
-fu_dell_dock_ec_query(FuDevice *device, GError **error)
+fu_dell_dock_ec_query(FuDellDockEc *self, GError **error)
 {
-	if (!fu_dell_dock_ec_get_dock_data(device, error))
+	if (!fu_dell_dock_ec_get_dock_data(self, error))
 		return FALSE;
 
-	return fu_dell_dock_ec_get_dock_info(device, error);
+	return fu_dell_dock_ec_get_dock_info(self, error);
 }
 
 static gboolean
 fu_dell_dock_ec_setup(FuDevice *device, GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* if query looks bad, wait a few seconds and retry */
-	if (!fu_dell_dock_ec_query(device, &error_local)) {
+	if (!fu_dell_dock_ec_query(self, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID)) {
 			g_warning("%s", error_local->message);
 			fu_device_sleep(device, 2000); /* ms */
-			if (!fu_dell_dock_ec_query(device, error))
+			if (!fu_dell_dock_ec_query(self, error))
 				return FALSE;
 		} else {
 			g_propagate_error(error, g_steal_pointer(&error_local));
@@ -955,7 +945,7 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 	if (!fu_device_open(fu_device_get_proxy(device), error))
 		return FALSE;
 	if (!self->data->dock_type)
-		return fu_dell_dock_ec_is_valid_dock(device, error);
+		return fu_dell_dock_ec_is_valid_dock(self, error);
 	return TRUE;
 }
 
@@ -984,7 +974,7 @@ fu_dell_dock_ec_finalize(GObject *object)
 }
 
 static void
-fu_dell_dock_ec_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_dock_ec_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -1015,7 +1005,7 @@ fu_dell_dock_ec_class_init(FuDellDockEcClass *klass)
 	device_class->setup = fu_dell_dock_ec_setup;
 	device_class->open = fu_dell_dock_ec_open;
 	device_class->close = fu_dell_dock_ec_close;
-	device_class->write_firmware = fu_dell_dock_ec_write_fw;
+	device_class->write_firmware = fu_dell_dock_ec_write_firmware;
 	device_class->set_quirk_kv = fu_dell_dock_ec_set_quirk_kv;
 	device_class->set_progress = fu_dell_dock_ec_set_progress;
 }

@@ -23,7 +23,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Download tarball
         if: matrix.os == 'fedora' || matrix.os == 'centos'
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         id: download
         with:
           name: tarball
@@ -37,7 +37,7 @@ jobs:
               -v $GITHUB_WORKSPACE:/github/workspace \
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
       - name: Save any applicable artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: ${{ matrix.os }}
           path: ${{ github.workspace }}/dist/*
@@ -52,7 +52,7 @@ jobs:
               docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest \
               contrib/ci/${{matrix.os}}-test.sh
       - name: Save any coverage data
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: coverage-${{ join(matrix.*, '-') }}
           path: ${{ github.workspace }}/coverage.xml
@@ -111,7 +111,7 @@ jobs:
         run: |
           echo "version=$(meson introspect build --projectinfo | jq -r .version)" >> $GITHUB_OUTPUT
       - name: Save tarball
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: tarball
           path: ${{ github.workspace }}/build/meson-dist/*xz
@@ -143,7 +143,7 @@ jobs:
     - name: configure
       run: ./contrib/ci/build_windows.sh
     - name: upload-artifact
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       with:
         name: windows
         path: |
@@ -184,7 +184,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         id: download
         with:
           name: ubuntu-x86_64
@@ -223,7 +223,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Download artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         id: download
         with:
           name: windows

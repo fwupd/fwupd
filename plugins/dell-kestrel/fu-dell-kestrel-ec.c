@@ -405,9 +405,8 @@ fu_dell_kestrel_ec_dock_data_cmd(FuDellKestrelEc *self, GError **error)
 }
 
 gboolean
-fu_dell_kestrel_ec_is_dock_ready4update(FuDevice *device, GError **error)
+fu_dell_kestrel_ec_is_dock_ready_for_update(FuDellKestrelEc *self, GError **error)
 {
-	FuDellKestrelEc *self = FU_DELL_KESTREL_EC(device);
 	guint16 bitmask_fw_update_pending = 1 << 8;
 	guint32 dock_status = 0;
 
@@ -514,7 +513,7 @@ fu_dell_kestrel_ec_run_passive_update(FuDellKestrelEc *self, GError **error)
 }
 
 static gboolean
-fu_dell_kestrel_ec_set_dock_sku(FuDellKestrelEc *self, GError **error)
+fu_dell_kestrel_ec_ensure_dock_sku(FuDellKestrelEc *self, GError **error)
 {
 	if (self->base_type == FU_DELL_DOCK_BASE_TYPE_KESTREL) {
 		g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st = NULL;
@@ -693,7 +692,7 @@ fu_dell_kestrel_ec_query_cb(FuDevice *device, gpointer user_data, GError **error
 		return FALSE;
 
 	/* set internal dock sku, must after dock info */
-	if (!fu_dell_kestrel_ec_set_dock_sku(self, error))
+	if (!fu_dell_kestrel_ec_ensure_dock_sku(self, error))
 		return FALSE;
 
 	return TRUE;
@@ -779,7 +778,7 @@ fu_dell_kestrel_ec_finalize(GObject *object)
 }
 
 static void
-fu_dell_kestrel_ec_set_progress(FuDevice *self, FuProgress *progress)
+fu_dell_kestrel_ec_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -823,13 +822,15 @@ fu_dell_kestrel_ec_class_init(FuDellKestrelEcClass *klass)
 }
 
 FuDellKestrelEc *
-fu_dell_kestrel_ec_new(FuDevice *device, gboolean uod)
+fu_dell_kestrel_ec_new(FuUsbDevice *usb_device, gboolean uod)
 {
 	FuDellKestrelEc *self = NULL;
-	FuContext *ctx = fu_device_get_context(device);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(usb_device));
 
 	self = g_object_new(FU_TYPE_DELL_KESTREL_EC, "context", ctx, NULL);
-	fu_device_incorporate(FU_DEVICE(self), device, FU_DEVICE_INCORPORATE_FLAG_ALL);
+	fu_device_incorporate(FU_DEVICE(self),
+			      FU_DEVICE(usb_device),
+			      FU_DEVICE_INCORPORATE_FLAG_ALL);
 	fu_device_set_logical_id(FU_DEVICE(self), "ec");
 	if (uod)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);

@@ -46,12 +46,12 @@ gboolean
 fu_console_setup(FuConsole *self, GError **error)
 {
 #ifdef _WIN32
-	HANDLE hOut;
-	DWORD dwMode = 0;
+	HANDLE out;
+	DWORD mode = 0;
 
 	/* enable VT sequences */
-	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hOut == INVALID_HANDLE_VALUE) {
+	out = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (out == INVALID_HANDLE_VALUE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -59,7 +59,7 @@ fu_console_setup(FuConsole *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	if (!GetConsoleMode(hOut, &dwMode)) {
+	if (!GetConsoleMode(out, &mode)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -67,8 +67,8 @@ fu_console_setup(FuConsole *self, GError **error)
 			    (guint)GetLastError());
 		return FALSE;
 	}
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	if (!SetConsoleMode(hOut, dwMode)) {
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(out, mode)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

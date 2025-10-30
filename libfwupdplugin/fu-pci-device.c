@@ -177,14 +177,14 @@ fu_pci_device_get_revision(FuPciDevice *self)
 }
 
 static void
-fu_pci_device_to_incorporate(FuDevice *self, FuDevice *donor)
+fu_pci_device_to_incorporate(FuDevice *device, FuDevice *donor)
 {
-	FuPciDevice *uself = FU_PCI_DEVICE(self);
+	FuPciDevice *uself = FU_PCI_DEVICE(device);
 	FuPciDevice *udonor = FU_PCI_DEVICE(donor);
 	FuPciDevicePrivate *priv = GET_PRIVATE(uself);
 	FuPciDevicePrivate *priv_donor = GET_PRIVATE(udonor);
 
-	g_return_if_fail(FU_IS_PCI_DEVICE(self));
+	g_return_if_fail(FU_IS_PCI_DEVICE(device));
 	g_return_if_fail(FU_IS_PCI_DEVICE(donor));
 
 	if (priv->class == 0x0)
