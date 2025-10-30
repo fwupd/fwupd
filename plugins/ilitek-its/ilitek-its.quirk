@@ -14,3 +14,7 @@ Plugin = ilitek_its
 # Lenovo X1 (FWID: 0x0037, EDID: CMN-1490)
 [HIDRAW\VEN_222A&DEV_54D7]
 Plugin = ilitek_its
+
+# ASUS CX9406 (FWID: 0x00AE)
+[HIDRAW\VEN_222A&DEV_55A3]
+Plugin = ilitek_its
