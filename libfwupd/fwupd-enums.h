@@ -837,20 +837,50 @@ typedef enum {
 
 /**
  * FwupdReleaseUrgency:
- * @FWUPD_RELEASE_URGENCY_UNKNOWN:		Unknown
- * @FWUPD_RELEASE_URGENCY_LOW:			Low
- * @FWUPD_RELEASE_URGENCY_MEDIUM:		Medium
- * @FWUPD_RELEASE_URGENCY_HIGH:			High
- * @FWUPD_RELEASE_URGENCY_CRITICAL:		Critical, e.g. a security fix
  *
  * The release urgency.
  **/
 typedef enum {
-	FWUPD_RELEASE_URGENCY_UNKNOWN,	/* Since: 1.4.0 */
-	FWUPD_RELEASE_URGENCY_LOW,	/* Since: 1.4.0 */
-	FWUPD_RELEASE_URGENCY_MEDIUM,	/* Since: 1.4.0 */
-	FWUPD_RELEASE_URGENCY_HIGH,	/* Since: 1.4.0 */
-	FWUPD_RELEASE_URGENCY_CRITICAL, /* Since: 1.4.0 */
+	/**
+	 * FWUPD_RELEASE_URGENCY_UNKNOWN:
+	 *
+	 * Unknown.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_RELEASE_URGENCY_UNKNOWN,
+	/**
+	 * FWUPD_RELEASE_URGENCY_LOW:
+	 *
+	 * Low.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_RELEASE_URGENCY_LOW,
+	/**
+	 * FWUPD_RELEASE_URGENCY_MEDIUM:
+	 *
+	 * Medium.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_RELEASE_URGENCY_MEDIUM,
+	/**
+	 * FWUPD_RELEASE_URGENCY_HIGH:
+	 *
+	 * High.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_RELEASE_URGENCY_HIGH,
+	/**
+	 * FWUPD_RELEASE_URGENCY_CRITICAL:
+	 *
+	 * Critical, e.g. a security fix.
+	 *
+	 * Since: 1.4.0
+	 */
+	FWUPD_RELEASE_URGENCY_CRITICAL,
 	/*< private >*/
 	FWUPD_RELEASE_URGENCY_LAST
 } FwupdReleaseUrgency;

@@ -16,18 +16,42 @@ G_DECLARE_FINAL_TYPE(FuIOChannel, fu_io_channel, FU, IO_CHANNEL, GObject)
 
 /**
  * FuIOChannelFlags:
- * @FU_IO_CHANNEL_FLAG_NONE:			No flags are set
- * @FU_IO_CHANNEL_FLAG_SINGLE_SHOT:		Only one read or write is expected
- * @FU_IO_CHANNEL_FLAG_FLUSH_INPUT:		Flush pending input before writing
- * @FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO:		Block waiting for the TTY
  *
  * The flags used when reading data from the TTY.
  **/
 typedef enum {
-	FU_IO_CHANNEL_FLAG_NONE = 0,		     /* Since: 1.2.2 */
-	FU_IO_CHANNEL_FLAG_SINGLE_SHOT = 1 << 0,     /* Since: 1.2.2 */
-	FU_IO_CHANNEL_FLAG_FLUSH_INPUT = 1 << 1,     /* Since: 1.2.2 */
-	FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO = 1 << 2, /* Since: 1.2.2 */
+	/**
+	 * FU_IO_CHANNEL_FLAG_NONE:
+	 *
+	 * No flags are set.
+	 *
+	 * Since: 1.2.2
+	 */
+	FU_IO_CHANNEL_FLAG_NONE = 0,
+	/**
+	 * FU_IO_CHANNEL_FLAG_SINGLE_SHOT:
+	 *
+	 * Only one read or write is expected.
+	 *
+	 * Since: 1.2.2
+	 */
+	FU_IO_CHANNEL_FLAG_SINGLE_SHOT = 1 << 0,
+	/**
+	 * FU_IO_CHANNEL_FLAG_FLUSH_INPUT:
+	 *
+	 * Flush pending input before writing.
+	 *
+	 * Since: 1.2.2
+	 */
+	FU_IO_CHANNEL_FLAG_FLUSH_INPUT = 1 << 1,
+	/**
+	 * FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO:
+	 *
+	 * Block waiting for the TTY.
+	 *
+	 * Since: 1.2.2
+	 */
+	FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO = 1 << 2,
 	/*< private >*/
 	FU_IO_CHANNEL_FLAG_LAST
 } FuIOChannelFlags;
