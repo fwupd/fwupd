@@ -58,7 +58,7 @@ fu_wac_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data,
 	if (g_strcmp0(cmd, "") == 0)
 		return TRUE;
 
-	/* Wacom-specific metadata */
+	/* custom metadata */
 	if (g_strcmp0(cmd, "WA") == 0) {
 		/* header info record */
 		if (token->len > 3 && memcmp(token->str + 2, "COM", 3) == 0) {

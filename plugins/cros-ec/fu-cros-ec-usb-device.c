@@ -723,7 +723,7 @@ fu_cros_ec_usb_device_jump_to_rw(FuCrosEcUsbDevice *self)
 		return TRUE;
 	}
 
-	/* Jump to rw may not work, so if we've reached here, initiate a
+	/* jump to rw may not work, so if we've reached here, initiate a
 	 * full reset using immediate reset */
 	fu_cros_ec_usb_device_reset_to_ro(self);
 

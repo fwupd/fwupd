@@ -228,7 +228,7 @@ fu_intel_usb4_device_operation(FuIntelUsb4Device *self,
 	gint max_tries = 100;
 	g_autoptr(FuStructIntelUsb4Mbox) st_regex = fu_struct_intel_usb4_mbox_new();
 
-	/* Write metadata register for operations that use it */
+	/* write metadata register for operations that use it */
 	switch (opcode) {
 	case FU_INTEL_USB4_OPCODE_NVM_WRITE:
 	case FU_INTEL_USB4_OPCODE_NVM_AUTH_WRITE:

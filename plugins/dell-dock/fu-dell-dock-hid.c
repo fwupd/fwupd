@@ -371,7 +371,7 @@ fu_dell_dock_hid_tbt_write(FuDevice *device,
 			   GError **error)
 {
 	FuTbtCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
+	    .cmd = HUB_CMD_READ_DATA, /* a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
@@ -420,7 +420,7 @@ fu_dell_dock_hid_tbt_authenticate(FuDevice *device,
 				  GError **error)
 {
 	FuTbtCmdBuffer cmd_buffer = {
-	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
+	    .cmd = HUB_CMD_READ_DATA, /* a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
 	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */

@@ -158,7 +158,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		}
 	}
 
-	/* If running under systemd unit, use the directory as a base */
+	/* if running under systemd unit, use the directory as a base */
 	if (g_getenv("RUNTIME_DIRECTORY") != NULL) {
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
@@ -314,7 +314,7 @@ fu_engine_integrity_measure_uefi(FuContext *ctx, GHashTable *self)
 		}
 	}
 
-	/* Boot#### */
+	/* UEFI Boot#### */
 	for (guint i = 0; i < 0xFF; i++) {
 		g_autoptr(GBytes) blob = fu_efivars_get_boot_data(efivars, i, NULL);
 		if (blob != NULL && g_bytes_get_size(blob) > 0) {

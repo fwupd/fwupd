@@ -109,7 +109,7 @@ fu_flashrom_plugin_device_set_bios_info(FuPlugin *plugin, FuDevice *device, GErr
 	if (bios_tables == NULL)
 		return FALSE;
 
-	/* Get SMBIOS data */
+	/* get SMBIOS data */
 	bios_blob = g_ptr_array_index(bios_tables, 0);
 	buf = g_bytes_get_data(bios_blob, &bufsz);
 	if (bufsz == 0)

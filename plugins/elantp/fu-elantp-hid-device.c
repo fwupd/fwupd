@@ -416,7 +416,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* The ic_page_count is based on 64 bytes/page. */
+	/* ic_page_count is based on 64 bytes/page */
 	fu_device_set_firmware_size(device, (guint64)self->ic_page_count * (guint64)64);
 
 	/* is in bootloader mode */

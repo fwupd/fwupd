@@ -72,7 +72,7 @@ fu_tpm_device_1_2_func(void)
 						      &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(attr1);
-	/* Some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
+	/* some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
 	g_assert_cmpint(fwupd_security_attr_get_result(attr1),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_VALID);

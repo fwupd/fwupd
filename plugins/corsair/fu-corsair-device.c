@@ -308,7 +308,7 @@ fu_corsair_device_reconnect_subdevice(FuCorsairDevice *self, GError **error)
 		return FALSE;
 	}
 
-	/* Wait some time to make sure that a subdevice was disconnected. */
+	/* wait some time to make sure that a subdevice was disconnected */
 	fu_device_sleep(FU_DEVICE(self), CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
 	if (!fu_device_retry_full(parent,

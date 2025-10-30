@@ -516,7 +516,7 @@ fu_nordic_hid_cfg_channel_index_peers_cmd(FuNordicHidCfgChannel *self,
 		return TRUE;
 	}
 
-	/* Peers available */
+	/* peers available */
 	if (!fu_nordic_hid_cfg_channel_cmd_receive(self, CONFIG_STATUS_SUCCESS, res, error)) {
 		g_prefix_error_literal(error, "INDEX_PEERS cmd_receive failed: ");
 		return FALSE;

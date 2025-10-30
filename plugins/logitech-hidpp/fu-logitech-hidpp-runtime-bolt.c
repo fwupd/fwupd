@@ -33,7 +33,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 	msg->device_id = FU_LOGITECH_HIDPP_DEVICE_IDX_RECEIVER;
 	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_LONG_REGISTER;
 	msg->function_id = BOLT_REGISTER_DFU_CONTROL;
-	msg->data[0] = 1; /* Enable DFU */
+	msg->data[0] = 1; /* enable DFU */
 	msg->data[4] = 'P';
 	msg->data[5] = 'R';
 	msg->data[6] = 'E';

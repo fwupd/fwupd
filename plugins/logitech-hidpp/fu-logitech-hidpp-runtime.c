@@ -38,7 +38,7 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidppRuntime *self, GEr
 	msg->sub_id = FU_LOGITECH_HIDPP_SUBID_SET_REGISTER;
 	msg->function_id = FU_LOGITECH_HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
 	msg->data[0] = 0x00;
-	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
+	msg->data[1] = 0x05; /* wireless + softwarepresent */
 	msg->data[2] = 0x00;
 	msg->hidpp_version = 1;
 	return fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error);
@@ -66,7 +66,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			return FALSE;
 		switch (fu_usb_device_get_release(FU_USB_DEVICE(device_usb)) & 0xFF00) {
 		case 0x1200:
-			/* Nordic */
+			/* nordic */
 			devid2 =
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
 					    fu_device_get_vid(device),
@@ -79,7 +79,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x01;
 			break;
 		case 0x2400:
-			/* Texas */
+			/* texas */
 			devid2 =
 			    g_strdup_printf("USB\\VID_%04X&PID_%04X",
 					    fu_device_get_vid(device),
@@ -92,7 +92,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			priv->version_bl_major = 0x03;
 			break;
 		case 0x0500:
-			/* Bolt */
+			/* bolt */
 			device_usb_iface =
 			    fu_device_get_backend_parent_with_subsystem(device,
 									"usb:usb_interface",

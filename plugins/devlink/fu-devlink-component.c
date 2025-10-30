@@ -91,8 +91,7 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 		g_autoptr(GStrvBuilder) keys_builder = g_strv_builder_new();
 		g_auto(GStrv) keys = NULL;
 
-		/* Future optimization: use g_strv_builder_addv() when available on all supported
-		   platforms. */
+		/* future optimization: use g_strv_builder_addv() when available */
 		for (j = 0; basekeys[j] != NULL; j++)
 			g_strv_builder_add(keys_builder, basekeys[j]);
 		for (j = 0; instance_keys[j] != NULL; j++)

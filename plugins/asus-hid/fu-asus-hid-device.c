@@ -236,7 +236,7 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 						 error))
 		return FALSE;
 
-	/* Maybe this command unlocks for flashing mode? */
+	/* maybe this command unlocks for flashing mode? */
 	previous_result = 0x0;
 	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE6);
 	fu_struct_asus_hid_pre_update_command_set_length(st, 0x0);

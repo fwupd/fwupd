@@ -165,7 +165,7 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 	g_autoptr(GError) error = NULL;
 
 	fu_byte_array_append_uint32(buf, 0x3A, G_LITTLE_ENDIAN); /* VariableTotalSize */
-	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* Reserved */
+	fu_byte_array_append_uint32(buf, 0xFF, G_LITTLE_ENDIAN); /* reserved */
 	ret = fwupd_guid_from_string(guidstr, &guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -173,7 +173,7 @@ fu_uefi_cod_device_build_efi_result(const gchar *guidstr)
 	g_byte_array_append(buf, timestamp, sizeof(timestamp)); /* CapsuleProcessed */
 	fu_byte_array_append_uint32(buf,
 				    FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_PWR_EVT_BATT,
-				    G_LITTLE_ENDIAN); /* Status */
+				    G_LITTLE_ENDIAN); /* status */
 	return g_bytes_new(buf->data, buf->len);
 }
 

@@ -565,7 +565,7 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 {
 	guint8 buf[2] = {0};
 
-	/* Need to add Wp control ? */
+	/* need to add wp control? */
 	fu_memwrite_uint16(buf, rc_cmd + offset, G_LITTLE_ENDIAN);
 	if (!fu_synaptics_mst_device_rc_set_command(self,
 						    FU_SYNAPTICS_MST_UPDC_CMD_FLASH_ERASE,

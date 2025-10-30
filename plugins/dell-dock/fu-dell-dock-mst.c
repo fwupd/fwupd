@@ -278,7 +278,7 @@ fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
 	guint32 tmp;
 
-	/* Trigger the write */
+	/* trigger the write */
 	tmp = MST_TRIGGER_WRITE;
 	if (!fu_dell_dock_mst_write_register(proxy,
 					     self->mst_rc_trigger_addr,
@@ -746,7 +746,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 	/* we need to write 4 byte increments over I2C so this differs from DP aux */
 	crc_offset = attribs->start + EEPROM_TAG_OFFSET + 12;
 
-	/* Read CRC byte to flip */
+	/* read CRC byte to flip */
 	if (!fu_dell_dock_mst_rc_command(self,
 					 FU_DELL_DOCK_MST_CMD_READ_FLASH,
 					 4,
@@ -927,7 +927,7 @@ fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 	fu_progress_step_done(progress);
 
 	progress_local = fu_dell_dock_mst_set_local_progress(progress, 2);
-	/* Write each bank in order */
+	/* write each bank in order */
 	for (guint phase = 0; phase < 2; phase++) {
 		g_debug("MST: Checking bank %u", order[phase]);
 		if (!fu_dell_dock_mst_checksum_bank(self, fw, order[phase], &checksum, error))
