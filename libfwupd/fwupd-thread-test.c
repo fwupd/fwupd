@@ -90,7 +90,7 @@ main(void)
 
 	/* only some of the CI targets have a DBus daemon */
 	if (!fwupd_thread_test_has_system_bus()) {
-		g_message("D-Bus system bus unavailable, skipping tests.");
+		g_message("D-Bus system bus unavailable, skipping tests");
 		return 0;
 	}
 

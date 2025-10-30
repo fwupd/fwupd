@@ -598,7 +598,7 @@ fu_kinetic_dp_secure_device_send_isp_drv(FuKineticDpSecureDevice *self,
 		return FALSE;
 	}
 
-	g_debug("sending ISP driver payload...");
+	g_debug("sending ISP driver payload…");
 	if (!fu_kinetic_dp_secure_device_execute_isp_drv(self, error)) {
 		g_prefix_error_literal(error, "ISP driver booting up failed: ");
 		return FALSE;

@@ -194,7 +194,7 @@ fu_huddly_usb_device_salute(FuHuddlyUsbDevice *self, GError **error)
 	g_autoptr(GByteArray) response = g_byte_array_new();
 	g_autofree gchar *str = NULL;
 
-	g_debug("send salute...");
+	g_debug("send salute…");
 	fu_byte_array_append_uint8(salutation, 0x00);
 
 	if (!fu_huddly_usb_device_bulk_write(self, salutation, NULL, error)) {

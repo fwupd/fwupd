@@ -227,7 +227,7 @@ fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
 	self->flash_id = 0;
 	self->flash_size = 0;
 	self->read_flash_prog_time = 10;
-	g_debug("wait for isp driver ready...");
+	g_debug("wait for isp driver ready…");
 
 	/* wait for the command to be processed */
 	if (!fu_device_retry_full(FU_DEVICE(self),
@@ -373,7 +373,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 	}
 
 	/* checking for flash erase done */
-	g_debug("waiting for flash erasing...");
+	g_debug("waiting for flash erasing…");
 	if (self->read_flash_prog_time)
 		fu_device_sleep(FU_DEVICE(self), self->read_flash_prog_time);
 	else

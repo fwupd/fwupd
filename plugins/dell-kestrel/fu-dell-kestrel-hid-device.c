@@ -226,7 +226,7 @@ fu_dell_kestrel_hid_device_write_firmware_pages(FuDellKestrelHidDevice *self,
 		if (page == NULL)
 			return FALSE;
 
-		g_debug("sending chunk: %u/%u, page: %u/%u.",
+		g_debug("sending chunk: %u/%u, page: %u/%u",
 			chunk_idx,
 			chunks_num - 1,
 			j,
