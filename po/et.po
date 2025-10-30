@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-08 22:17+0100\n"
-"PO-Revision-Date: 2025-10-24 10:46+0000\n"
-"Last-Translator: Richard Hughes <hughsient@gmail.com>\n"
+"PO-Revision-Date: 2025-10-30 04:26+0000\n"
+"Last-Translator: Priit Jõerüüt <jrthwlate@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Estonian <https://hosted.weblate.org/projects/fwupd/fwupd/et/>\n"
 "Language: et\n"
 "MIME-Version: 1.0\n"
@@ -65,14 +65,14 @@ msgstr ""
 
 #: libfwupdplugin/fu-bios-settings.c:339
 msgid "Enable"
-msgstr ""
+msgstr "Võta kasutusele"
 
 #. TRANSLATORS: if the remote is enabled
 #. TRANSLATORS: Suffix: the HSI result
 #: libfwupdplugin/fu-bios-settings.c:342 src/fu-util-common.c:2041
 #: src/fu-util-common.c:2191
 msgid "Enabled"
-msgstr ""
+msgstr "Kasutusel"
 
 #: policy/org.freedesktop.fwupd.policy.in:17
 msgid "Stop the fwupd service"
@@ -340,7 +340,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: plugins/uefi-dbx/fu-dbxtool.c:146 src/fu-util.c:5773 src/fu-util.c:5780
 msgid "FILENAME"
-msgstr ""
+msgstr "FAILINIMI"
 
 #. TRANSLATORS: command line option
 #: plugins/uefi-dbx/fu-dbxtool.c:153
@@ -350,7 +350,7 @@ msgstr ""
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 #: plugins/uefi-dbx/fu-dbxtool.c:155
 msgid "PATH"
-msgstr ""
+msgstr "ASUKOHT"
 
 #. TRANSLATORS: command line option
 #: plugins/uefi-dbx/fu-dbxtool.c:162
@@ -381,7 +381,7 @@ msgstr ""
 #. TRANSLATORS: the detected version number of the dbx
 #: plugins/uefi-dbx/fu-dbxtool.c:225
 msgid "Version"
-msgstr ""
+msgstr "Versioon"
 
 #. TRANSLATORS: user did not include a filename parameter
 #: plugins/uefi-dbx/fu-dbxtool.c:261
@@ -432,7 +432,7 @@ msgstr ""
 #. TRANSLATORS: success
 #: plugins/uefi-dbx/fu-dbxtool.c:335
 msgid "Done!"
-msgstr ""
+msgstr "Tehtud!"
 
 #. TRANSLATORS: user did not tell the tool what to do
 #: plugins/uefi-dbx/fu-dbxtool.c:342
@@ -455,17 +455,17 @@ msgstr ""
 #. TRANSLATORS: daemon is inactive
 #: src/fu-console.c:363
 msgid "Idle…"
-msgstr ""
+msgstr "Jõude…"
 
 #. TRANSLATORS: decompressing the firmware file
 #: src/fu-console.c:367
 msgid "Decompressing…"
-msgstr ""
+msgstr "Lahtipakkimisel…"
 
 #. TRANSLATORS: parsing the firmware information
 #: src/fu-console.c:371
 msgid "Loading…"
-msgstr ""
+msgstr "Laadin andmeid…"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 #: src/fu-console.c:375
@@ -475,32 +475,32 @@ msgstr ""
 #. TRANSLATORS: reading from the flash chips
 #: src/fu-console.c:379
 msgid "Reading…"
-msgstr ""
+msgstr "Loen andmeid…"
 
 #. TRANSLATORS: writing to the flash chips
 #: src/fu-console.c:383
 msgid "Writing…"
-msgstr ""
+msgstr "Kirjutan andmeid…"
 
 #. TRANSLATORS: erasing contents of the flash chips
 #: src/fu-console.c:387
 msgid "Erasing…"
-msgstr ""
+msgstr "Kustutan andmeid…"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 #: src/fu-console.c:391
 msgid "Verifying…"
-msgstr ""
+msgstr "Kontrollin salvestatu korrektsust…"
 
 #. TRANSLATORS: scheduling an update to be done on the next boot
 #: src/fu-console.c:395
 msgid "Scheduling…"
-msgstr ""
+msgstr "Ajastan järgmiseks käivituseks…"
 
 #. TRANSLATORS: downloading from a remote server
 #: src/fu-console.c:399
 msgid "Downloading…"
-msgstr ""
+msgstr "Laadin alla…"
 
 #. TRANSLATORS: waiting for user to authenticate
 #: src/fu-console.c:403
@@ -1488,37 +1488,37 @@ msgstr ""
 #. TRANSLATORS: this is when a device is hotplugged
 #: src/fu-tool.c:2790
 msgid "Device added:"
-msgstr ""
+msgstr "Sead on lisatud:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #: src/fu-tool.c:2805
 msgid "Device removed:"
-msgstr ""
+msgstr "Seade on eemaldatud:"
 
 #. TRANSLATORS: this is when a device has been updated
 #: src/fu-tool.c:2820
 msgid "Device changed:"
-msgstr ""
+msgstr "Seade on muudetud:"
 
 #. TRANSLATORS: this is when the daemon state changes
 #: src/fu-tool.c:2832
 msgid "Changed"
-msgstr ""
+msgstr "Olek on muutunud"
 
 #. TRANSLATORS: nothing found
 #: src/fu-tool.c:2890
 msgid "No firmware IDs found"
-msgstr ""
+msgstr "Ühtegi püsivara tunnust ei leidunud"
 
 #. TRANSLATORS: nothing found
 #: src/fu-tool.c:2920
 msgid "No firmware found"
-msgstr ""
+msgstr "Mitte mingit püsivara ei leidunud"
 
 #. TRANSLATORS: get interactive prompt
 #: src/fu-tool.c:2954
 msgid "Choose firmware"
-msgstr ""
+msgstr "Vali püsivara"
 
 #. TRANSLATORS: decompressing images from a container firmware
 #: src/fu-tool.c:3181
@@ -4235,7 +4235,7 @@ msgstr ""
 #. TRANSLATORS: remote filename base
 #: src/fu-util-common.c:2089
 msgid "Password"
-msgstr ""
+msgstr "Salasõna"
 
 #. TRANSLATORS: filename of the local file
 #: src/fu-util-common.c:2094
