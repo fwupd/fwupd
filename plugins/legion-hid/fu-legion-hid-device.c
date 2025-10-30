@@ -16,9 +16,9 @@ struct _FuLegionHidDevice {
 G_DEFINE_TYPE(FuLegionHidDevice, fu_legion_hid_device, FU_TYPE_HIDRAW_DEVICE)
 
 static gboolean
-fu_legion_hid_device_read_normal_response_retry_func(FuDevice *device,
-						     gpointer user_data,
-						     GError **error)
+fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *self,
+						   gpointer user_data,
+						   GError **error)
 {
 	FuLegionHidNormalRetryHelper *helper = (FuLegionHidNormalRetryHelper *)user_data;
 	GByteArray *res = helper->res;
@@ -27,7 +27,7 @@ fu_legion_hid_device_read_normal_response_retry_func(FuDevice *device,
 	guint8 dev_id = helper->dev_id;
 
 	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
-	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
 				 res->data,
 				 res->len,
 				 NULL,
@@ -55,7 +55,7 @@ fu_legion_hid_device_read_response(FuLegionHidDevice *self,
 				   GError **error)
 {
 	return fu_device_retry_full(FU_DEVICE(self),
-				    fu_legion_hid_device_read_normal_response_retry_func,
+				    fu_legion_hid_device_read_normal_response_retry_cb,
 				    10,
 				    0,
 				    (gpointer)helper,
@@ -63,9 +63,9 @@ fu_legion_hid_device_read_response(FuLegionHidDevice *self,
 }
 
 static gboolean
-fu_legion_hid_device_read_upgrade_response_retry_func(FuDevice *device,
-						      gpointer user_data,
-						      GError **error)
+fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *self,
+						    gpointer user_data,
+						    GError **error)
 {
 	FuLegionHidUpgradeRetryHelper *helper = (FuLegionHidUpgradeRetryHelper *)user_data;
 	GByteArray *res = helper->res;
@@ -76,7 +76,7 @@ fu_legion_hid_device_read_upgrade_response_retry_func(FuDevice *device,
 	gboolean is_valid_dev_id = FALSE;
 
 	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
-	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
+	if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
 				 res->data,
 				 res->len,
 				 NULL,
@@ -114,7 +114,7 @@ fu_legion_hid_device_read_upgrade_response(FuLegionHidDevice *self,
 					   GError **error)
 {
 	return fu_device_retry_full(FU_DEVICE(self),
-				    fu_legion_hid_device_read_upgrade_response_retry_func,
+				    fu_legion_hid_device_read_upgrade_response_retry_cb,
 				    120,
 				    0,
 				    (gpointer)helper,
@@ -595,7 +595,7 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_legion_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_legion_hid_device_set_progress(FuDevice *device, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
@@ -606,12 +606,12 @@ fu_legion_hid_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static gboolean
-fu_legion_hid_device_validate_descriptor(FuDevice *device, GError **error)
+fu_legion_hid_device_validate_descriptor(FuDevice *self, GError **error)
 {
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
-	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
+	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(self), error);
 	if (descriptor == NULL)
 		return FALSE;
 	report = fu_hid_descriptor_find_report(descriptor,
