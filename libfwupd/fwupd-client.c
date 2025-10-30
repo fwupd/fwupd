@@ -523,7 +523,7 @@ fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 	if (priv->status == status)
 		return;
 	priv->status = status;
-	g_debug("Emitting ::status-changed() [%s]", fwupd_status_to_string(priv->status));
+	g_debug("emitting ::status-changed() [%s]", fwupd_status_to_string(priv->status));
 	fwupd_client_object_notify(self, "status");
 }
 
@@ -695,7 +695,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	if (g_strcmp0(signal_name, "Changed") == 0) {
-		g_debug("Emitting ::changed()");
+		g_debug("emitting ::changed()");
 		fwupd_client_signal_emit_changed(self);
 		return;
 	}
@@ -705,7 +705,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceAdded]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-added(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-added(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_ADDED, G_OBJECT(dev));
 		return;
 	}
@@ -715,7 +715,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceRemoved]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-removed(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-removed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REMOVED, G_OBJECT(dev));
 		return;
 	}
@@ -725,7 +725,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to build FwupdDevice[DeviceChanged]: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-changed(%s)", fwupd_device_get_id(dev));
+		g_debug("emitting ::device-changed(%s)", fwupd_device_get_id(dev));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_CHANGED, G_OBJECT(dev));
 
 		/* invalidate request */
@@ -746,7 +746,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 			g_warning("failed to convert DeviceRequest: %s", error->message);
 			return;
 		}
-		g_debug("Emitting ::device-request(%s)", fwupd_request_get_id(req));
+		g_debug("emitting ::device-request(%s)", fwupd_request_get_id(req));
 		fwupd_client_signal_emit_object(self, SIGNAL_DEVICE_REQUEST, G_OBJECT(req));
 
 		/* we may need to invalidate this later */
@@ -758,7 +758,7 @@ fwupd_client_signal_cb(GDBusProxy *proxy,
 		}
 		return;
 	}
-	g_debug("Unknown signal name '%s' from %s", signal_name, sender_name);
+	g_debug("unknown signal name '%s' from %s", signal_name, sender_name);
 }
 
 /**

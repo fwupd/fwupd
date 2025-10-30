@@ -772,7 +772,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		if (crc_tag[3] != 0xff) {
 			guint32 sector = FLASH_SECTOR_ERASE_4K +
 					 (attribs->start + attribs->length - 0x1000) / 0x1000;
-			g_debug("Erasing 4k from sector 0x%x invalidate bank %u",
+			g_debug("erasing 4k from sector 0x%x invalidate bank %u",
 				sector,
 				bank_in_use);
 			/* offset for last 4k of bank# */
@@ -788,7 +788,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 			/* CRC8 is 0xff, set it to 0x00 */
 		} else {
 			guint32 write = 0x00;
-			g_debug("Writing 0x00 byte to 0x%x to invalidate bank %u",
+			g_debug("writing 0x00 byte to 0x%x to invalidate bank %u",
 				crc_offset,
 				bank_in_use);
 			if (!fu_dell_dock_mst_rc_command(self,

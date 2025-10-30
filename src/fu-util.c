@@ -323,7 +323,7 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 		return TRUE;
 	}
 
-	g_debug("All automatic: %d", all_automatic);
+	g_debug("all automatic: %d", all_automatic);
 	/* show the success and failures */
 	if (!self->assume_yes && !all_automatic) {
 		/* delimit */
@@ -4547,7 +4547,7 @@ static gboolean
 fu_util_sigint_cb(gpointer user_data)
 {
 	FuUtil *self = (FuUtil *)user_data;
-	g_debug("Handling SIGINT");
+	g_debug("handling SIGINT");
 	g_cancellable_cancel(self->cancellable);
 	return FALSE;
 }

@@ -685,7 +685,7 @@ reattach_tree(gpointer user_data)
 	FuThunderboltUpdateContext *ctx = (FuThunderboltUpdateContext *)user_data;
 	FuThunderboltMockTree *node = ctx->node;
 
-	g_debug("Mock update done, reattaching tree…");
+	g_debug("mock update done, reattaching tree…");
 
 	node->bed = g_object_ref(ctx->bed);
 	g_timeout_add(node->device->delay_ms, mock_tree_attach_device, node);
@@ -706,7 +706,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 	g_autofree gchar *data = NULL;
 	g_autoptr(GError) error = NULL;
 
-	g_debug("Got update trigger");
+	g_debug("got update trigger");
 	ok = g_file_monitor_cancel(monitor);
 	g_assert_true(ok);
 
@@ -720,7 +720,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 	/* verify the firmware is correct */
 	mock_tree_firmware_verify(ctx->node, ctx->data);
 
-	g_debug("Removing tree below and including: %s", ctx->node->path);
+	g_debug("removing tree below and including: %s", ctx->node->path);
 	mock_tree_detach(ctx->node);
 
 	ctx->node->nvm_authenticate = (guint)ctx->result;
@@ -731,7 +731,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 		ctx->node->nvm_version = g_strdup(ctx->version);
 	}
 
-	g_debug("Simulating update to '%s' with result: 0x%x",
+	g_debug("simulating update to '%s' with result: 0x%x",
 		ctx->version,
 		ctx->node->nvm_authenticate);
 
@@ -741,7 +741,7 @@ udev_file_changed_cb(GFileMonitor *monitor,
 		return;
 	}
 
-	g_debug("Device tree reattachment in %3.2f seconds", ctx->timeout / 1000.0);
+	g_debug("device tree reattachment in %3.2f seconds", ctx->timeout / 1000.0);
 	g_timeout_add(ctx->timeout, reattach_tree, ctx);
 }
 
@@ -1000,7 +1000,7 @@ test_tree_uuids(const FuThunderboltMockTree *node, gpointer data)
 
 	g_assert_nonnull(uuid);
 
-	g_debug("Looking for %s", uuid);
+	g_debug("looking for %s", uuid);
 
 	found = mock_tree_find_uuid(root, uuid);
 	g_assert_nonnull(node);

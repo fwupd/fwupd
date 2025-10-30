@@ -75,10 +75,10 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 					  buffer[self->blob_major_offset],
 					  buffer[self->blob_minor_offset]);
 	g_info("writing Thunderbolt firmware version %s", dynamic_version);
-	g_debug("Total Image size: %" G_GSIZE_FORMAT, image_size);
+	g_debug("total image size: %" G_GSIZE_FORMAT, image_size);
 
 	memcpy(&start_offset, buffer, sizeof(guint32)); /* nocheck:blocked */
-	g_debug("Header size 0x%x", start_offset);
+	g_debug("header size 0x%x", start_offset);
 	if (start_offset > image_size) {
 		g_set_error(error,
 			    FWUPD_ERROR,

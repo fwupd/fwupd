@@ -31,7 +31,7 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 	g_autoptr(GMainContextPusher) pusher = g_main_context_pusher_new(context);
 
 	g_assert_nonnull(pusher);
-	g_message("Calling fwupd_client_get_devices() in thread %p with main context %p",
+	g_message("calling fwupd_client_get_devices() in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
 	devices = fwupd_client_get_devices(self->client, NULL, &error_local);
@@ -94,7 +94,7 @@ main(void)
 		return 0;
 	}
 
-	g_message("Created FwupdClient in thread %p with main context %p",
+	g_message("created FwupdClient in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
 	g_signal_connect(G_APPLICATION(app),

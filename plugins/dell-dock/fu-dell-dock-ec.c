@@ -615,7 +615,7 @@ fu_dell_dock_ec_modify_lock(FuDellDockEc *self, guint8 target, gboolean unlocked
 		g_prefix_error(error, "failed to unlock device %d: ", target);
 		return FALSE;
 	}
-	g_debug("Modified lock for %d to %d through %s (%s)",
+	g_debug("modified lock for %d to %d through %s (%s)",
 		target,
 		unlocked,
 		fu_device_get_name(FU_DEVICE(self)),
@@ -743,7 +743,7 @@ fu_dell_dock_ec_commit_package(FuDellDockEc *self, GBytes *blob_fw, GError **err
 	}
 	memcpy(self->raw_versions, data, length); /* nocheck:blocked */
 
-	g_debug("Committing (%zu) bytes ", sizeof(FuDellDockDockPackageFWVersion));
+	g_debug("committing (%zu) bytes ", sizeof(FuDellDockDockPackageFWVersion));
 	g_debug("\tec_version: %x", self->raw_versions->ec_version);
 	g_debug("\tmst_version: %x", self->raw_versions->mst_version);
 	g_debug("\thub1_version: %x", self->raw_versions->hub1_version);
