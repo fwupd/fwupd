@@ -231,21 +231,24 @@ fu_dell_dock_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	const gchar *device_key = fu_device_get_id(device);
-	FuDevice *dev;
-	FuDevice *parent;
+	/* device will be activated on disconnected */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("dropped needs-activation flag: %s", fu_device_get_name(device));
+	}
 
-	/* only the device with bridge will be in cache */
-	dev = fu_plugin_cache_lookup(plugin, device_key);
-	if (dev == NULL)
-		return TRUE;
-	fu_plugin_cache_remove(plugin, device_key);
+	if (FU_IS_DELL_DOCK_EC(device)) {
+		GPtrArray *children = fu_device_get_children(device);
 
-	/* find the parent and ask daemon to remove whole chain  */
-	parent = fu_device_get_parent(dev);
-	if (parent != NULL && FU_IS_DELL_DOCK_EC(parent)) {
-		g_debug("Removing %s (%s)", fu_device_get_name(parent), fu_device_get_id(parent));
-		fu_plugin_device_remove(plugin, parent);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *dev = g_ptr_array_index(children, i);
+
+			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				g_debug("dropped needs-activation flag: %s",
+					fu_device_get_name(dev));
+			}
+		}
 	}
 
 	return TRUE;
