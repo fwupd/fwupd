@@ -786,7 +786,7 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 		if (self->bl_name != NULL) {
 			g_autofree gchar *tmp = g_strndup((const gchar *)res->data, res->data_len);
 
-			g_debug("Bootloader readout '%s' overrides bootloader from quirk '%s'",
+			g_debug("bootloader readout '%s' overrides bootloader from quirk '%s'",
 				tmp,
 				self->bl_name);
 			g_free(self->bl_name);

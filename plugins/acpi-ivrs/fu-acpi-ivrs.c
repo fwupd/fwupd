@@ -44,7 +44,7 @@ fu_acpi_ivrs_parse(FuFirmware *firmware,
 	}
 	if (!fu_input_stream_read_u8(stream, 0x24, &ivinfo, error))
 		return FALSE;
-	g_debug("Flags: 0x%02x", ivinfo);
+	g_debug("flags: 0x%02x", ivinfo);
 	self->remap_support = ivinfo & IVRS_DMA_REMAP_SUPPORT_FLAG;
 	return TRUE;
 }

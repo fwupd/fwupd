@@ -346,7 +346,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 		if (r->size == 0)
 			continue;
-		g_debug("Authenticode region %s: 0x%04x -> 0x%04x [0x%04x]",
+		g_debug("authenticode region %s: 0x%04x -> 0x%04x [0x%04x]",
 			r->name,
 			(guint)r->offset,
 			(guint)(r->offset + r->size),

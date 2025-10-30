@@ -1012,7 +1012,7 @@ fu_volume_new_by_kind(const gchar *kind, GError **error)
 	devices = fu_common_get_block_devices(error);
 	if (devices == NULL)
 		return NULL;
-	g_info("Looking for volumes of type %s", kind);
+	g_info("looking for volumes of type %s", kind);
 	volumes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
 		GDBusProxy *proxy_blk = g_ptr_array_index(devices, i);

@@ -177,7 +177,7 @@ fu_dbus_daemon_set_status(FuDbusDaemon *self, FwupdStatus status)
 		return;
 	self->status = status;
 
-	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
+	g_debug("emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	fu_dbus_daemon_emit_property_changed(self, "Status", g_variant_new_uint32(status));
 }
 
@@ -571,7 +571,7 @@ fu_dbus_daemon_progress_percentage_changed_cb(FuProgress *progress,
 		return;
 	self->percentage = percentage;
 
-	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
+	g_debug("emitting PropertyChanged('Percentage'='%u%%')", percentage);
 	fu_dbus_daemon_emit_property_changed(self, "Percentage", g_variant_new_uint32(percentage));
 }
 
@@ -2589,7 +2589,7 @@ fu_dbus_daemon_method_call(GDBusConnection *connection,
 
 	/* be helpful */
 	parameters_str = g_variant_print_string(parameters, NULL, TRUE);
-	g_debug("Called %s%s", method_name, parameters_str->str);
+	g_debug("called %s%s", method_name, parameters_str->str);
 
 	/* call the correct vfunc */
 	for (guint i = 0; i < G_N_ELEMENTS(method_funcs); i++) {

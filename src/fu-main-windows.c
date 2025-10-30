@@ -129,7 +129,7 @@ fu_main_console(int argc, char *argv[])
 	}
 
 	/* success */
-	g_message("Daemon ready for requests");
+	g_message("daemon ready for requests");
 	return EXIT_SUCCESS;
 }
 

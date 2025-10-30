@@ -160,7 +160,7 @@ fu_goodixtp_gtx8_firmware_parse(FuGoodixtpFirmware *self,
 					return FALSE;
 				if (!fu_memread_uint8_safe(buf, bufsz, cfg_offset, &cfg_ver, error))
 					return FALSE;
-				g_debug("Find a cfg match sensorID:ID=%d, cfg version=%d",
+				g_debug("find a cfg match sensorID:ID=%d, cfg version=%d",
 					sensor_id,
 					cfg_ver);
 				break;

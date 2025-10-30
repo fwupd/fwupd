@@ -350,7 +350,7 @@ fu_qc_s5gen2_ble_device_get_features(FuQcS5gen2BleDevice *self, gboolean next, G
 		switch (buf[i]) {
 		case FU_QC_GAIA_V3_FEATURES_CORE:
 			self->feature.core = buf[i + 1];
-			g_debug("Core feature version: %u", self->feature.core);
+			g_debug("core feature version: %u", self->feature.core);
 			break;
 		case FU_QC_GAIA_V3_FEATURES_DFU:
 			self->feature.dfu = buf[i + 1];

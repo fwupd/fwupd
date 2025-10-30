@@ -3736,7 +3736,7 @@ fu_engine_install_blob(FuEngine *self,
 
 	/* make the UI update */
 	fu_engine_emit_device_changed(self, device_id);
-	g_info("Updating %s took %f seconds", id_display, g_timer_elapsed(timer, NULL));
+	g_info("updating %s took %f seconds", id_display, g_timer_elapsed(timer, NULL));
 	return TRUE;
 }
 
