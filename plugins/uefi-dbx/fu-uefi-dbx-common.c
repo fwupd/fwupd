@@ -67,7 +67,7 @@ fu_uefi_dbx_signature_list_validate_filename(FuContext *ctx,
 		return TRUE;
 	}
 
-	/* Authenticode signature is present in dbx! */
+	/* authenticode signature is present in dbx! */
 	g_debug("fn=%s, checksum=%s", fn, checksum);
 	img = fu_firmware_get_image_by_checksum(FU_FIRMWARE(siglist), checksum, NULL);
 	if (img != NULL) {

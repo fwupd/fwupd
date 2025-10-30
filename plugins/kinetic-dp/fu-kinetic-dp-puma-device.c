@@ -323,7 +323,7 @@ fu_kinetic_dp_puma_device_enable_fw_update_mode(FuKineticDpPumaDevice *self,
 		guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
 		g_autoptr(FuStructKineticDpFlashInfo) st = NULL;
 
-		/* Puma takes about 18ms (Winbond EF13) to get ISP driver ready for flash info */
+		/* takes about 18ms (Winbond EF13) to get ISP driver ready for flash info */
 		fu_device_sleep(FU_DEVICE(self), 18);
 		if (!fu_device_retry_full(
 			FU_DEVICE(self),

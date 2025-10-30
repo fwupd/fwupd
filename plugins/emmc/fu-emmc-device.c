@@ -542,7 +542,7 @@ fu_emmc_device_write_firmware(FuDevice *device,
 				      FU_IOCTL_FLAG_NONE,
 				      error)) {
 			g_autoptr(GError) error_local = NULL;
-			/* In case multi-cmd ioctl failed before exiting from ffu mode */
+			/* in case multi-cmd ioctl failed before exiting from ffu mode */
 			g_prefix_error_literal(error, "multi-cmd failed setting install mode: ");
 			if (!fu_ioctl_execute(ioctl,
 					      MMC_IOC_CMD,

@@ -228,7 +228,7 @@ fu_dell_kestrel_ec_probe_subcomponents(FuDellKestrelEc *self, GError **error)
 	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_dpmux = NULL;
 	g_autoptr(FuStructDellKestrelDockInfoEcQueryEntry) st_wt = NULL;
 
-	/* Package */
+	/* package */
 	if (!fu_dell_kestrel_ec_probe_package(self, error))
 		return FALSE;
 

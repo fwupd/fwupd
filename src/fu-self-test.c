@@ -6776,7 +6776,7 @@ fu_engine_modify_bios_settings_func(gconstpointer user_data)
 	return;
 #endif
 
-	/* Load contrived attributes */
+	/* load contrived attributes */
 	test_dir = g_test_build_filename(G_TEST_DIST, "tests", "bios-attrs", NULL);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
@@ -6900,7 +6900,7 @@ fu_engine_modify_bios_settings_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* Read Only */
+	/* read only */
 	attr4 = fu_context_get_bios_setting(fu_engine_get_context(engine),
 					    "com.fwupd-internal.pending_reboot");
 	g_assert_nonnull(attr4);

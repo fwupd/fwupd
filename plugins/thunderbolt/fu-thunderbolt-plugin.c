@@ -42,7 +42,7 @@ fu_thunderbolt_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") != 0)
 		return;
 
-	/* Operating system will handle finishing updates later */
+	/* operating system will handle finishing updates later */
 	if (fu_plugin_get_config_value_boolean(plugin, "DelayedActivation") &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		g_info("turning on delayed activation for %s", fu_device_get_name(device));

@@ -17,15 +17,15 @@ struct _FuBnrDpFirmware {
 
 	/* mandatory XML header attributes, not part of payload. additionally, "Ver" (version) is
 	 * also mandatory */
-	guint64 device_id;	  /* Dev */
-	gchar *usage;		  /* Use */
-	gchar function;		  /* Fct */
-	guint64 variant;	  /* Var */
-	guint64 payload_length;	  /* Len */
-	guint16 payload_checksum; /* Chk */
-	gchar *material;	  /* Mat */
-	gchar *creation_date;	  /* Date (nullable) */
-	gchar *comment;		  /* Rem (nullable) */
+	guint64 device_id;	  /* dev */
+	gchar *usage;		  /* use */
+	gchar function;		  /* fct */
+	guint64 variant;	  /* var */
+	guint64 payload_length;	  /* len */
+	guint16 payload_checksum; /* chk */
+	gchar *material;	  /* mat */
+	gchar *creation_date;	  /* date (nullable) */
+	gchar *comment;		  /* rem (nullable) */
 };
 
 G_DEFINE_TYPE(FuBnrDpFirmware, fu_bnr_dp_firmware, FU_TYPE_FIRMWARE)

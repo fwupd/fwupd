@@ -69,7 +69,7 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 		return FALSE;
 	}
 
-	/* Remote Management */
+	/* remote management */
 	if (pid == DELL_KESTREL_USB_RMM_PID) {
 		g_autoptr(FuDellKestrelRmm) rmm_device = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;

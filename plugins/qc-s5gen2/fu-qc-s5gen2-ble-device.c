@@ -385,7 +385,7 @@ fu_qc_s5gen2_ble_device_get_serial(FuQcS5gen2BleDevice *self, GError **error)
 	if (!fu_qc_s5gen2_ble_device_recv(self, buf, sizeof(buf), &read_len, error))
 		return FALSE;
 
-	/* Check if response is valid */
+	/* check if response is valid */
 	st_res = fu_struct_qc_gaia_v3_serial_parse(buf, FU_STRUCT_QC_GAIA_V3_SERIAL_SIZE, 0, error);
 	if (st_res == NULL)
 		return FALSE;
@@ -461,7 +461,7 @@ fu_qc_s5gen2_ble_device_register_notification(FuQcS5gen2BleDevice *self, GError 
 	if (!fu_qc_s5gen2_ble_device_recv(self, buf, sizeof(buf), &read_len, error))
 		return FALSE;
 
-	/* Check if response is valid */
+	/* check if response is valid */
 	st_res = fu_struct_qc_gaia_v3_register_notification_ack_parse(
 	    buf,
 	    FU_STRUCT_QC_GAIA_V3_REGISTER_NOTIFICATION_ACK_SIZE,

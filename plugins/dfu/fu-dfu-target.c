@@ -150,10 +150,10 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 	case 'B': /* byte */
 	case ' ': /* byte, ST reference bootloader :/ */
 		break;
-	case 'K': /* Kilo */
+	case 'K': /* kilo */
 		sector_size *= 0x400;
 		break;
-	case 'M': /* Mega */
+	case 'M': /* mega */
 		sector_size *= 0x100000;
 		break;
 	default:
@@ -226,7 +226,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 	if (alt_name == NULL)
 		return TRUE;
 
-	/* From the Neo Freerunner */
+	/* from the Neo Freerunner */
 	if (g_str_has_prefix(alt_name, "RAM 0x")) {
 		FuDfuSector *sector;
 		guint64 addr_tmp = 0;
