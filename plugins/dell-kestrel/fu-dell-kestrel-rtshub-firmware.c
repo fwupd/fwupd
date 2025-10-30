@@ -98,6 +98,7 @@ static void
 fu_dell_kestrel_rtshub_firmware_init(FuDellKestrelRtshubFirmware *self)
 {
 	self->pid = 0;
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_NO_AUTO_DETECTION);
 }
 
 static void

@@ -100,10 +100,14 @@ fu_dell_kestrel_plugin_device_add(FuPlugin *plugin, FuDevice *device, GError **e
 	/* RTS usb hub devices */
 	if (pid == DELL_KESTREL_USB_RTS0_G1_PID || pid == DELL_KESTREL_USB_RTS0_G2_PID ||
 	    pid == DELL_KESTREL_USB_RTS5_G2_PID) {
-		g_autoptr(FuDellKestrelRtsHub) hub_device = NULL;
+		g_autoptr(FuDellKestrelRtshub) hub_device = NULL;
 		g_autoptr(FuDeviceLocker) locker = NULL;
+		gboolean uod = FALSE;
 
-		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type);
+		uod = fu_plugin_get_config_value_boolean(plugin,
+							 FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD);
+
+		hub_device = fu_dell_kestrel_rtshub_new(FU_USB_DEVICE(device), dock_type, uod);
 		if (hub_device == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -355,6 +359,23 @@ fu_dell_kestrel_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 	if (locker == NULL)
 		return FALSE;
 
+	/* update on connected, i.e., uod is false */
+	if (!fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD)) {
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *dev = g_ptr_array_index(devices, i);
+
+			/* release the dock will activate devices immediately */
+			if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				g_debug("uoc dropped needs-activation flag for %s",
+					fu_device_get_name(dev));
+			}
+
+			/* don't expect user manually replug */
+			fu_device_set_remove_delay(dev, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+		}
+	}
+
 	/* release the dock */
 	if (!fu_dell_kestrel_ec_own_dock(FU_DELL_KESTREL_EC(ec_dev), FALSE, error))
 		return FALSE;
@@ -406,6 +427,14 @@ fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device
 
 	if (parent == NULL)
 		return TRUE;
+
+	/* uod: device is managed to activate when disconnected */
+	if (fu_plugin_get_config_value_boolean(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD) &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("uod dropped needs-activation flag for %s", fu_device_get_name(device));
+	}
+
 	if (!FU_IS_DELL_KESTREL_EC(parent))
 		return TRUE;
 
@@ -451,7 +480,7 @@ fu_dell_kestrel_plugin_constructed(GObject *obj)
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_DELL_KESTREL_RTSHUB_FIRMWARE);
 
 	/* defaults changed here will also be reflected in the fwupd.conf man page */
-	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "true");
+	fu_plugin_set_config_default(plugin, FWUPD_DELL_KESTREL_PLUGIN_CONFIG_UOD, "false");
 }
 
 static void
