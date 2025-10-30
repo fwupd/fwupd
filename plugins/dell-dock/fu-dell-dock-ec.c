@@ -555,19 +555,15 @@ fu_dell_dock_ec_get_dock_data(FuDellDockEc *self, GError **error)
 	if (!fu_dell_dock_ec_get_status(self, &status, error))
 		return FALSE;
 
-	/* make sure this hardware spin matches our expectations */
-	if (self->data->board_id >= self->board_min) {
-		if (status != FW_UPDATE_IN_PROGRESS) {
-			fu_dell_dock_ec_set_board(self);
-			fu_device_uninhibit(FU_DEVICE(self), "update-pending");
-		} else {
-			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
-		}
+	/* record board id */
+	fu_dell_dock_ec_set_board(self);
+
+	/* check whether a firmware update is currently staged */
+	if (status != FW_UPDATE_IN_PROGRESS) {
+		fu_device_remove_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 	} else {
-		fu_device_inhibit(FU_DEVICE(self),
-				  "not-supported",
-				  "Utility does not support this board");
+		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
+		g_debug("found a staged firmware update for %s", fu_device_get_name(FU_DEVICE(self)));
 	}
 
 	return TRUE;
