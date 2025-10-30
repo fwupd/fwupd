@@ -195,7 +195,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 		return TRUE;
 	}
 	blob_new_safe = fu_strsafe_bytes(blob_new, 8000);
-	g_info("JSON %s for phase %s [%u]: %s...",
+	g_info("JSON %s for phase %s [%u]: %s…",
 	       blob_old == NULL ? "added" : "changed",
 	       fu_engine_emulator_phase_to_string(phase),
 	       write_cnt,

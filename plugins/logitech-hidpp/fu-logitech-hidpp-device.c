@@ -1622,7 +1622,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidppDevice *self,
 			}
 			return TRUE;
 		}
-		g_debug("got wrong packet, continue to wait...");
+		g_debug("got wrong packet, continue to wait…");
 	}
 
 	/* nothing in the queue */

@@ -614,7 +614,7 @@ fu_synaptics_vmm9_device_write_firmware(FuDevice *device,
 	/* if device reboot is not required */
 	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_SKIPS_RESTART)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_SKIP_VERSION_CHECK);
-		g_debug("skipped device reboot intentionally.");
+		g_debug("skipped device reboot intentionally");
 		return TRUE;
 	}
 

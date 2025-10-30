@@ -685,7 +685,7 @@ reattach_tree(gpointer user_data)
 	FuThunderboltUpdateContext *ctx = (FuThunderboltUpdateContext *)user_data;
 	FuThunderboltMockTree *node = ctx->node;
 
-	g_debug("Mock update done, reattaching tree...");
+	g_debug("Mock update done, reattaching tree…");
 
 	node->bed = g_object_ref(ctx->bed);
 	g_timeout_add(node->device->delay_ms, mock_tree_attach_device, node);

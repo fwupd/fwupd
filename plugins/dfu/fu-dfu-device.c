@@ -927,7 +927,7 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 	 * write -- there's no way to avoid blocking the daemon like this... */
 	if (fu_device_has_private_flag(FU_DEVICE(self),
 				       FU_DEVICE_PRIVATE_FLAG_ATTACH_EXTRA_RESET)) {
-		g_debug("blocking wait to work around Jabra hardware...");
+		g_debug("blocking wait to work around Jabra hardware…");
 		fu_device_sleep(device, 10000);
 	}
 
