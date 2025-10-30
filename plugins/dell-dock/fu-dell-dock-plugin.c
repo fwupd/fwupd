@@ -226,10 +226,29 @@ fu_dell_dock_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, G
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
+	/* device will be activated on disconnected */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		g_debug("dropped needs-activation flag: %s", fu_device_get_name(device));
+	}
+
 	parent = fu_device_get_parent(device);
-	if (parent != NULL && FU_IS_DELL_DOCK_EC(parent)) {
-		g_debug("Removing %s (%s)", fu_device_get_name(parent), fu_device_get_id(parent));
+	if (parent == NULL)
+		return TRUE;
+
+	/* remove the dock device tree */
+	if (FU_IS_DELL_DOCK_EC(parent)) {
+		g_autofree gchar *id_display = fu_device_get_id_display(parent);
+
+		/* device will be activated on disconnected */
+		if (fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			fu_device_remove_flag(parent, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+			g_debug("dropped needs-activation flag: %s", id_display);
+		}
+
+		/* remove parent */
 		fu_plugin_device_remove(plugin, parent);
+		g_debug("removed device: %s", id_display);
 	}
 
 	return TRUE;
