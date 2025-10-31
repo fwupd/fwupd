@@ -23,6 +23,7 @@
 
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
+#include "fu-dpaux-device.h"
 #include "fu-ioctl-private.h"
 #include "fu-output-stream.h"
 #include "fu-path.h"
@@ -45,6 +46,7 @@ typedef struct {
 	gchar *devtype;
 	guint64 number;
 	FuIOChannel *io_channel;
+	goffset current_offset;
 	FuIoChannelOpenFlags open_flags;
 	GHashTable *properties;
 	gboolean properties_valid;
@@ -1365,8 +1367,10 @@ fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* emulated */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		priv->current_offset = offset;
 		return TRUE;
+	}
 
 	/* not open! */
 	if (priv->io_channel == NULL) {
@@ -1523,7 +1527,12 @@ fu_udev_device_read(FuUdevDevice *self,
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
 	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
 				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
-		event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
+		if (FU_IS_DPAUX_DEVICE(self))
+			event_id = g_strdup_printf("Read:Length=0x%x,Offset=0x%x",
+						   (guint)bufsz,
+						   (guint)priv->current_offset);
+		else
+			event_id = g_strdup_printf("Read:Length=0x%x", (guint)bufsz);
 	}
 
 	/* emulated */
