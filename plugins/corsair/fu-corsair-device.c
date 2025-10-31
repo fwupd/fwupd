@@ -172,9 +172,8 @@ fu_corsair_device_get_version(FuCorsairDevice *self, GError **error)
 		   firmware will not be rejected because of older version. It is safe to always
 		   pass firmware because setup in bootloader mode can only happen during
 		   emergency update */
-		if (broken_by_flag || version_raw == G_MAXUINT32) {
+		if (broken_by_flag || version_raw == G_MAXUINT32)
 			version_raw = 0;
-		}
 	}
 
 	return fu_corsair_version_from_uint32(version_raw);
@@ -266,9 +265,8 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_corsair_device_reload(FuDevice *device, GError **error)
 {
-	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE)) {
+	if (fu_device_has_private_flag(device, FU_CORSAIR_DEVICE_FLAG_IS_SUBDEVICE))
 		return fu_corsair_device_setup(device, error);
-	}
 
 	/* USB devices will be reloaded by FWUPD after reenumeration */
 	return TRUE;
@@ -500,9 +498,8 @@ fu_corsair_device_poll(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, error)) {
+	if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, error))
 		return FALSE;
-	}
 
 	/* stop polling if a subdevice was added */
 	if (subdevice_added) {

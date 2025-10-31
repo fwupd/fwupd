@@ -5543,13 +5543,11 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* add update message if exists but device doesn't already have one */
 		update_message = fwupd_release_get_update_message(FWUPD_RELEASE(release));
-		if (fu_device_get_update_message(device) == NULL && update_message != NULL) {
+		if (fu_device_get_update_message(device) == NULL && update_message != NULL)
 			fu_device_set_update_message(device, update_message);
-		}
 		update_image = fwupd_release_get_update_image(FWUPD_RELEASE(release));
-		if (fu_device_get_update_image(device) == NULL && update_image != NULL) {
+		if (fu_device_get_update_image(device) == NULL && update_image != NULL)
 			fu_device_set_update_image(device, update_image);
-		}
 		update_request_id = fu_release_get_update_request_id(release);
 		if (fu_device_get_update_request_id(device) == NULL && update_request_id != NULL) {
 			fu_device_add_request_flag(device,
@@ -6291,9 +6289,8 @@ fu_engine_plugins_startup(FuEngine *self, FuProgress *progress)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		if (!fu_plugin_runner_startup(plugin, fu_progress_get_child(progress), &error)) {
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
-			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
-			}
 			g_info("disabling plugin because: %s", error->message);
 			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 		}
@@ -6311,9 +6308,8 @@ fu_engine_plugins_ready(FuEngine *self, FuProgress *progress)
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		if (!fu_plugin_runner_ready(plugin, fu_progress_get_child(progress), &error)) {
-			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
 				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
-			}
 			g_info("disabling plugin because: %s", error->message);
 			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_CHILD_FINISHED);
 		}
@@ -6743,9 +6739,8 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	}
 
 	/* no vendor-id, and so no way to lock it down! */
-	if (fu_device_is_updatable(device) && fu_device_get_vendor_ids(device)->len == 0) {
+	if (fu_device_is_updatable(device) && fu_device_get_vendor_ids(device)->len == 0)
 		fu_device_inhibit(device, "vendor-id", "No vendor ID set");
-	}
 
 	/* create new device */
 	fu_device_list_add(self->device_list, device);

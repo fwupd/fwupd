@@ -802,12 +802,10 @@ fu_coswid_firmware_write_payload(cbor_item_t *root,
 {
 	g_autoptr(cbor_item_t) item_payload = cbor_new_indefinite_map();
 	g_autoptr(cbor_item_t) item_file = cbor_new_indefinite_map();
-	if (payload->name != NULL) {
+	if (payload->name != NULL)
 		fu_coswid_write_tag_string(item_file, FU_COSWID_TAG_FS_NAME, payload->name);
-	}
-	if (payload->size != 0) {
+	if (payload->size != 0)
 		fu_coswid_write_tag_u64(item_file, FU_COSWID_TAG_SIZE, payload->size);
-	}
 	if (payload->hashes->len > 0) {
 		g_autoptr(cbor_item_t) item_hashes = cbor_new_indefinite_array();
 		for (guint j = 0; j < payload->hashes->len; j++) {

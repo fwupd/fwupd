@@ -6708,9 +6708,8 @@ fu_device_incorporate_instance_ids(FuDevice *self, FuDevice *donor)
 	no_generic_guids = fu_device_has_private_flag_quark(self, quarks[QUARK_NO_GENERIC_GUIDS]);
 	for (guint i = 0; i < priv_donor->instance_ids->len; i++) {
 		FuDeviceInstanceIdItem *item = g_ptr_array_index(priv_donor->instance_ids, i);
-		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 && no_generic_guids) {
+		if ((item->flags & FU_DEVICE_INSTANCE_FLAG_GENERIC) > 0 && no_generic_guids)
 			continue;
-		}
 		if (item->instance_id != NULL)
 			fu_device_add_instance_id_full(self, item->instance_id, item->flags);
 		else

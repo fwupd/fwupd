@@ -507,12 +507,10 @@ fu_synaptics_rmi_hid_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 	f34 = fu_synaptics_rmi_device_get_function(rmi_device, 0x34, error);
 	if (f34 == NULL)
 		return FALSE;
-	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
+	if (f34->function_version == 0x0 || f34->function_version == 0x1)
 		return fu_synaptics_rmi_v5_device_query_status(rmi_device, error);
-	}
-	if (f34->function_version == 0x2) {
+	if (f34->function_version == 0x2)
 		return fu_synaptics_rmi_v7_device_query_status(rmi_device, error);
-	}
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,

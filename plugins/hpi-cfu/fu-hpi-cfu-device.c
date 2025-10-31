@@ -827,9 +827,9 @@ fu_hpi_cfu_device_handler_set_status_report_22(FuHpiCfuDevice *self,
 
 	case FU_HPI_CFU_FIRMWARE_UPDATE_STATUS_SUCCESS:
 		g_debug("check_update_content: SUCCESS");
-		if (lastpacket) {
+		if (lastpacket)
 			self->state = FU_HPI_CFU_STATE_UPDATE_SUCCESS;
-		} else
+		else
 			self->state = FU_HPI_CFU_STATE_UPDATE_CONTENT;
 		break;
 	default:

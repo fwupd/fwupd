@@ -7924,9 +7924,8 @@ main(int argc, char **argv)
 	g_assert_true(ret);
 
 	/* tests go here */
-	if (g_test_slow()) {
+	if (g_test_slow())
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
-	}
 	g_test_add_func("/fwupd/idle", fu_idle_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
