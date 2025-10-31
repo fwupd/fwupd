@@ -61,6 +61,9 @@ typedef struct {
 	guint8 bootloader_id[2];
 	guint8 status_addr;
 	gboolean has_pubkey;
+	gboolean has_sbl;
+	guint16 sbl_version;
+	gboolean has_security;
 } FuSynapticsRmiFlash;
 
 #define RMI_F34_HAS_NEW_REG_MAP (1 << 0)
@@ -71,6 +74,7 @@ typedef struct {
 
 #define RMI_F34_ENABLE_WAIT_MS 300 /* ms */
 #define RMI_F34_IDLE_WAIT_MS   500 /* ms */
+#define RMI_F34_ENABLE_SBL_WAIT_MS 3000 /* ms */
 
 #define RMI_DEVICE_PAGE_SELECT_REGISTER 0xff
 #define RMI_DEVICE_BUS_SELECT_REGISTER	0xfe
@@ -135,3 +139,9 @@ fu_synaptics_rmi_device_enter_iep_mode(FuSynapticsRmiDevice *self,
 				       GError **error);
 gboolean
 fu_synaptics_rmi_device_write_bus_select(FuSynapticsRmiDevice *self, guint8 bus, GError **error);
+gboolean
+fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error);
+void
+fu_synaptics_rmi_device_set_previous_sbl_version(FuSynapticsRmiDevice *self, guint16 sbl_version);
+guint16
+fu_synaptics_rmi_device_get_previous_sbl_version(FuSynapticsRmiDevice *self);
