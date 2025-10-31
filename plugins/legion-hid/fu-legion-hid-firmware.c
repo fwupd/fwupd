@@ -95,9 +95,3 @@ fu_legion_hid_firmware_class_init(FuLegionHidFirmwareClass *klass)
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_legion_hid_firmware_parse;
 }
-
-FuFirmware *
-fu_legion_hid_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_LEGION_HID_FIRMWARE, NULL));
-}
