@@ -435,9 +435,8 @@ fu_cfu_device_setup(FuDevice *device, GError **error)
 		FuHidDescriptor *descriptor = g_ptr_array_index(descriptors, i);
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_cfu_device_verify_descriptor(self, descriptor, &error_local)) {
-			if (descriptors_error->len > 0) {
+			if (descriptors_error->len > 0)
 				g_string_append(descriptors_error, ", ");
-			}
 			g_string_append_printf(descriptors_error,
 					       "descriptor 0x%x: %s",
 					       i,

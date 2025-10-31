@@ -1061,6 +1061,70 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
+    def _test_small_conditionals_with_braces_node(self, node: Node) -> None:
+
+        # has previous conditional
+        idx = node.tokens_pre.find_fuzzy(["else", "if", "("])
+        if idx != -1:
+            return
+
+        # has conditional
+        idx = node.tokens_pre.find_fuzzy(["if", "("])
+        if idx == -1:
+            return
+
+        # multiline conditional can have braces
+        if node.linecnt_end - node.tokens_pre[idx].linecnt >= 3:
+            return
+
+        # inline struct
+        idx = node.tokens_pre.find_fuzzy(["@STRUCT"])
+        if idx != -1:
+            return
+
+        # nested
+        idx = node.tokens.find_fuzzy(["if", "("])
+        if idx != -1:
+            return
+
+        # not one line block
+        if len(node.tokens) < 2:
+            return
+        if node.tokens[1].linecnt != node.tokens[-1].linecnt:
+            return
+        limit: int = 70
+        if len("".join([token.data for token in node.tokens])) < limit:
+            token = node.tokens[1]
+            self.add_failure(
+                "no {} required for small single-line conditional",
+                linecnt=token.linecnt,
+            )
+
+    def _test_small_conditionals_with_braces(self, nodes: list[Node]) -> None:
+
+        # we need to parse the nodes in order
+        for idx, node in enumerate(nodes):
+            next_node_depth: int = 0
+            try:
+                next_node_depth = nodes[idx + 1].depth
+            except IndexError:
+                pass
+
+            # followed by else
+            try:
+                idx = nodes[idx + 1].tokens_pre.find_fuzzy(["else"])
+                if idx != -1:
+                    continue
+            except IndexError:
+                pass
+
+            # ignore if is nested deeper
+            if next_node_depth > node.depth:
+                continue
+
+            # check node
+            self._test_small_conditionals_with_braces_node(node)
+
     def _test_nesting_depth(self, node: Node) -> None:
 
         limit: int = 5
@@ -1235,6 +1299,7 @@ class Checker:
         # NULL != FALSE
         self._current_nocheck = "nocheck:lines"
         self._test_null_false_returns(nodes)
+        self._test_small_conditionals_with_braces(nodes)
 
         # using too many switch()
         self._current_nocheck = None

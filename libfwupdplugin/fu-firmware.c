@@ -1111,9 +1111,8 @@ fu_firmware_parse_stream(FuFirmware *self,
 		}
 		fu_firmware_set_bytes(self, blob);
 	}
-	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM) {
+	if (flags & FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM)
 		g_set_object(&priv->stream, partial_stream);
-	}
 
 	/* optional */
 	if (klass->tokenize != NULL) {
@@ -1638,9 +1637,8 @@ fu_firmware_write_chunk(FuFirmware *self, guint64 address, guint64 chunk_sz_max,
 
 	/* if we have less data than requested */
 	chunk_left = g_bytes_get_size(priv->bytes) - offset;
-	if (chunk_sz_max > chunk_left) {
+	if (chunk_sz_max > chunk_left)
 		return fu_bytes_new_offset(priv->bytes, offset, chunk_left, error);
-	}
 
 	/* check chunk */
 	return fu_bytes_new_offset(priv->bytes, offset, chunk_sz_max, error);

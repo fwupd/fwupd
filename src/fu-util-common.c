@@ -1013,9 +1013,8 @@ fu_util_time_to_str(guint64 tmp)
 static gchar *
 fu_util_device_flag_to_string(guint64 device_flag)
 {
-	if (device_flag == FWUPD_DEVICE_FLAG_NONE) {
+	if (device_flag == FWUPD_DEVICE_FLAG_NONE)
 		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_INTERNAL) {
 		/* TRANSLATORS: Device cannot be removed easily*/
 		return _("Internal device");
@@ -1165,9 +1164,8 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we can save all device enumeration events for emulation */
 		return _("Can tag for emulation");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return NULL;
-	}
 	return NULL;
 }
 

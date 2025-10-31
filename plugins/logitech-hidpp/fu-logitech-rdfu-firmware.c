@@ -195,9 +195,8 @@ fu_logitech_rdfu_firmware_entry_add(FuFirmware *firmware, JsonNode *node, GError
 	}
 	build_str = json_object_get_string_member_with_default(json_obj, "build", NULL);
 	/* should be in BCD format already but let's be tolerant to absent leading 0 */
-	if (!fu_strtoull(build_str, &build, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error)) {
+	if (!fu_strtoull(build_str, &build, 0, G_MAXUINT16, FU_INTEGER_BASE_16, error))
 		return FALSE;
-	}
 
 	/* skip "0x" prefix */
 	self->magic = fu_byte_array_from_string(magic_str + 2, error);

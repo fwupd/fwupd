@@ -292,9 +292,8 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 				       FU_COMMON_VERSION_DECODE_BCD(val >> 8),
 				       FU_COMMON_VERSION_DECODE_BCD(val));
 	}
-	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
+	if (kind == FWUPD_VERSION_FORMAT_PAIR)
 		return g_strdup_printf("%u.%u", (guint)(val >> 8) & 0xff, (guint)val & 0xff);
-	}
 	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
 		return g_strdup_printf("%u.%u.%u.%u",
 				       (guint)(val >> 12) & 0xF,
@@ -308,9 +307,8 @@ fu_version_from_uint16(guint16 val, FwupdVersionFormat kind)
 				       (guint)(val >> 8) & 0xF,
 				       (guint)val & 0xFF);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER || kind == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strdup_printf("%" G_GUINT16_FORMAT, val);
-	}
 	if (kind == FWUPD_VERSION_FORMAT_HEX) {
 		/* 0xAABB */
 		return g_strdup_printf("0x%04x", val);

@@ -153,9 +153,8 @@ fu_legion_hid2_device_setup_touchpad(FuLegionHid2Device *self, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_strtoull(tp_version, &version, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error)) {
+	if (!fu_strtoull(tp_version, &version, 0x0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
-	}
 
 	fu_device_set_version_raw(child, version);
 	fu_device_add_child(FU_DEVICE(self), child);
