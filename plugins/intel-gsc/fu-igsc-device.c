@@ -504,7 +504,8 @@ fu_igsc_device_update_end(FuIgscDevice *self, FuIgscFwuHeciPayloadType payload_t
 	}
 
 	/* we are not expecting a reply */
-	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
+	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
 		fu_dump_raw(G_LOG_DOMAIN, "MEI-write", st_req->buf->data, st_req->buf->len);
 		return fu_mei_device_write(FU_MEI_DEVICE(self),
 					   st_req->buf->data,
