@@ -587,6 +587,17 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
+    def _test_equals_true(self, node: Node) -> None:
+        """do not allow `if (foo == TRUE)`"""
+
+        idx = node.tokens_pre.find_fuzzy(["==", "TRUE", ")"])
+        if idx != -1:
+            token = node.tokens_pre[idx]
+            self.add_failure(
+                f"do not compare a boolean to TRUE",
+                linecnt=token.linecnt,
+            )
+
     def _test_device_display(self, node: Node) -> None:
         """use fu_device_get_id_display rather than the two different commands"""
 
@@ -1148,6 +1159,7 @@ class Checker:
             if self._should_process_node(node):
                 self._test_blocked_funcs(node)
                 self._test_device_display(node)
+                self._test_equals_true(node)
 
             # test for debug lines
             self._current_nocheck = "nocheck:print"
