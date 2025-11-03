@@ -42,7 +42,16 @@ jobs:
           name: ${{ matrix.os }}
           path: ${{ github.workspace }}/dist/*
           if-no-files-found: ignore
+      - name: Check if tests supported
+        id: supported
+        run: |
+          if [ -f contrib/ci/${{matrix.os}}-test.sh ]; then
+            echo "supported=true" >> $GITHUB_OUTPUT
+          else
+            echo "supported=false" >> $GITHUB_OUTPUT
+          fi
       - name: Test in container
+        if: steps.supported.outputs.supported == 'true'
         env:
           CI_NETWORK: true
           CI: true
