@@ -107,6 +107,7 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 
 	if (self->img != NULL) {
 		FuIfdRegion region = fu_firmware_get_idx(FU_FIRMWARE(self->img));
+		FuIfdAccess ifd_access = fu_ifd_image_get_access(self->img, FU_IFD_REGION_BIOS);
 		g_autofree gchar *name = g_strdup(fu_mtd_ifd_device_region_to_name(region));
 		g_autofree gchar *region_str = g_strdup(fu_ifd_region_to_string(region));
 
@@ -120,6 +121,11 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 		fu_device_set_name(device, name);
 		fu_device_set_logical_id(device, region_str);
 		fu_device_add_instance_str(device, "REGION", region_str);
+
+		/* region is updatable via the parent MTD device if the BIOS master
+		 * (host CPU) has write permission for this region */
+		if (ifd_access & FU_IFD_ACCESS_READ)
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	}
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;
