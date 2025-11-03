@@ -231,7 +231,7 @@ class Checker:
                     linecnt=token.linecnt,
                 )
 
-    def _test_param_self_native(self, node: Node) -> None:
+    def _test_param_self_native_device(self, node: Node) -> None:
         """use @self for native internal functions, not the basetype"""
 
         if self._current_fn and os.path.basename(self._current_fn) in [
@@ -254,6 +254,35 @@ class Checker:
             return
         self.add_failure(
             "native device functions should use self as the first parameter not device",
+            linecnt=token.linecnt,
+        )
+
+    def _test_param_self_native_firmware(self, node: Node) -> None:
+        """use @self for native internal functions, not the basetype"""
+
+        if self._current_fn and os.path.basename(self._current_fn) in [
+            "fu-firmware-progress.c",
+            "fu-self-test.c",
+        ]:
+            return
+        if self._current_fn and os.path.basename(self._current_fn).endswith(".h"):
+            return
+        if self._current_fn and os.path.basename(self._current_fn).endswith(
+            "-common.c"
+        ):
+            return
+        if node.depth != 0:
+            return
+        idx = node.tokens_pre.find_fuzzy(
+            ["@FUNCTION", "(", "FuFirmware", "~*", "firmware"]
+        )
+        if idx == -1:
+            return
+        token = node.tokens_pre[idx]
+        if token.data in self._klass_funcs:
+            return
+        self.add_failure(
+            "native firmware functions should use self as the first parameter not firmware",
             linecnt=token.linecnt,
         )
 
@@ -1182,7 +1211,8 @@ class Checker:
                 self._test_function_names_ensure(node)
                 self._test_param_self_device(node)
                 self._test_param_self_firmware(node)
-                self._test_param_self_native(node)
+                self._test_param_self_native_device(node)
+                self._test_param_self_native_firmware(node)
                 self._test_variable_case(node)
                 self._test_struct_member_case(node)
 

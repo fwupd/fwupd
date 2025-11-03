@@ -807,6 +807,7 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+/* nocheck:name -- should probably split out into new GType somehow */
 static gboolean
 fu_steelseries_sonic_parse_firmware(FuFirmware *firmware,
 				    FuFirmwareParseFlags flags,

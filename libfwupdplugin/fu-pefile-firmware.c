@@ -96,7 +96,7 @@ fu_pefile_firmware_region_sort_cb(gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_pefile_firmware_parse_section(FuFirmware *firmware,
+fu_pefile_firmware_parse_section(FuPefileFirmware *self,
 				 GInputStream *stream,
 				 guint idx,
 				 gsize hdr_offset,
@@ -206,7 +206,7 @@ fu_pefile_firmware_parse_section(FuFirmware *firmware,
 	}
 
 	/* success */
-	return fu_firmware_add_image(firmware, img, error);
+	return fu_firmware_add_image(FU_FIRMWARE(self), img, error);
 }
 
 static gboolean
@@ -312,7 +312,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 
 	/* read out each section */
 	for (guint idx = 0; idx < nr_sections; idx++) {
-		if (!fu_pefile_firmware_parse_section(firmware,
+		if (!fu_pefile_firmware_parse_section(self,
 						      stream,
 						      idx,
 						      offset,

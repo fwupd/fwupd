@@ -71,7 +71,7 @@ fu_firmware_patch_free(FuFirmwarePatch *ptch)
 
 /**
  * fu_firmware_add_flag:
- * @firmware: a #FuFirmware
+ * @self: a #FuFirmware
  * @flag: the firmware flag
  *
  * Adds a specific firmware flag to the firmware.
@@ -79,16 +79,16 @@ fu_firmware_patch_free(FuFirmwarePatch *ptch)
  * Since: 1.5.0
  **/
 void
-fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag)
+fu_firmware_add_flag(FuFirmware *self, FuFirmwareFlags flag)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(firmware);
-	g_return_if_fail(FU_IS_FIRMWARE(firmware));
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_FIRMWARE(self));
 	priv->flags |= flag;
 }
 
 /**
  * fu_firmware_has_flag:
- * @firmware: a #FuFirmware
+ * @self: a #FuFirmware
  * @flag: the firmware flag
  *
  * Finds if the firmware has a specific firmware flag.
@@ -98,10 +98,10 @@ fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag)
  * Since: 1.5.0
  **/
 gboolean
-fu_firmware_has_flag(FuFirmware *firmware, FuFirmwareFlags flag)
+fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag)
 {
-	FuFirmwarePrivate *priv = GET_PRIVATE(firmware);
-	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), FALSE);
 	return (priv->flags & flag) > 0;
 }
 

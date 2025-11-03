@@ -183,24 +183,24 @@ fu_efi_file_parse(FuFirmware *firmware,
 }
 
 static GBytes *
-fu_efi_file_write_sections(FuFirmware *firmware, GError **error)
+fu_efi_file_write_sections(FuEfiFile *self, GError **error)
 {
-	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
+	g_autoptr(GPtrArray) images = fu_firmware_get_images(FU_FIRMWARE(self));
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* sanity check */
-	if (fu_firmware_get_alignment(firmware) > FU_FIRMWARE_ALIGNMENT_1M) {
+	if (fu_firmware_get_alignment(FU_FIRMWARE(self)) > FU_FIRMWARE_ALIGNMENT_1M) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "alignment invalid, got 0x%02x",
-			    fu_firmware_get_alignment(firmware));
+			    fu_firmware_get_alignment(FU_FIRMWARE(self)));
 		return NULL;
 	}
 
 	/* no sections defined */
 	if (images->len == 0)
-		return fu_firmware_get_bytes_with_patches(firmware, error);
+		return fu_firmware_get_bytes_with_patches(FU_FIRMWARE(self), error);
 
 	/* add each section */
 	for (guint i = 0; i < images->len; i++) {
@@ -240,7 +240,7 @@ fu_efi_file_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) hdr_blob = NULL;
 
 	/* simple blob for now */
-	blob = fu_efi_file_write_sections(firmware, error);
+	blob = fu_efi_file_write_sections(self, error);
 	if (blob == NULL)
 		return NULL;
 	if (fu_firmware_get_id(firmware) != NULL) {

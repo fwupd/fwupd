@@ -65,6 +65,7 @@ fu_efi_guid_to_name(const gchar *guid)
 		return "Section:Acpi2Table";
 	return NULL;
 }
+
 /**
  * fu_efi_parse_sections:
  * @firmware: #FuFirmware

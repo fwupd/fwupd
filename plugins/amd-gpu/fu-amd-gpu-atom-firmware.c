@@ -78,9 +78,8 @@ fu_amd_gpu_atom_firmware_validate(FuFirmware *firmware,
 }
 
 const gchar *
-fu_amd_gpu_atom_firmware_get_vbios_pn(FuFirmware *firmware)
+fu_amd_gpu_atom_firmware_get_vbios_pn(FuAmdGpuAtomFirmware *self)
 {
-	FuAmdGpuAtomFirmware *self = FU_AMD_GPU_ATOM_FIRMWARE(firmware);
 	return self->part_number;
 }
 
