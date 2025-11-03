@@ -1,8 +1,5 @@
-/*
- * Copyright 2025 hya1711 <591770796@qq.com>
- *
- * SPDX-License-Identifier: LGPL-2.1-or-later
- */
+// Copyright 2025 hya1711 <591770796@qq.com>
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
 enum FuLegionHidUpgradeStep {
