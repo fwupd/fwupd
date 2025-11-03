@@ -1163,7 +1163,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	 * image file pushed. Device validates and uploads new image on inactive partition.
 	 * Restart sync cb, to get the update progress
 	 * Flush any kUpdateStateDownloading progress events, accumulated while busy sending
-	 * firmware image.
+	 * firmware image. Peripheral device needs higher delay
 	 * Normally status changes as follows:
 	 *  While image being pushed: kUpdateStateCurrent->kUpdateStateDownloading (~5minutes)
 	 *  After image push is complete: kUpdateStateDownloading->kUpdateStateReady
@@ -1172,11 +1172,15 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	 *  Upload finished: kUpdateStateUpdating->kUpdateStateCurrent (~5minutes)
 	 *  After upload is finished, device reboots itself
 	 */
-	self->is_sync_flush_events_in_progress = TRUE;
+	if (fu_device_has_private_flag(device,
+				       FU_LOGITECH_BULKCONTROLLER_DEVICE_FLAG_PHERIPHERAL_UPDATE))
+		self->is_sync_flush_events_in_progress = FALSE;
+	else
+		self->is_sync_flush_events_in_progress = TRUE;
 	if (!fu_device_retry_full(device,
 				  fu_logitech_bulkcontroller_device_verify_cb,
 				  5000, /* over 10 minutes */
-				  5,	/* ms */
+				  (self->is_sync_flush_events_in_progress) ? 5 : 250, /* ms */
 				  fu_progress_get_child(progress),
 				  error))
 		return FALSE;
