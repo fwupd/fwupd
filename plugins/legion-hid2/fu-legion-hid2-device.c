@@ -248,30 +248,6 @@ fu_legion_hid2_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_legion_hid2_device_prepare_firmware(FuDevice *device,
-				       GInputStream *stream,
-				       FuProgress *progress,
-				       FuFirmwareParseFlags flags,
-				       GError **error)
-{
-	guint32 version;
-	g_autoptr(FuFirmware) firmware = fu_legion_hid2_firmware_new();
-
-	/* sanity check */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
-	version = fu_legion_hid2_firmware_get_version(firmware);
-	if (fu_device_get_version_raw(device) > version) {
-		g_autofree gchar *version_str =
-		    fu_version_from_uint32(version, FWUPD_VERSION_FORMAT_QUAD);
-		g_info("downgrading to firmware %s", version_str);
-	}
-
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_legion_hid2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -308,6 +284,7 @@ fu_legion_hid2_device_init(FuLegionHid2Device *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-hid2");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID2_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -318,7 +295,6 @@ fu_legion_hid2_device_class_init(FuLegionHid2DeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->setup = fu_legion_hid2_device_setup;
-	device_class->prepare_firmware = fu_legion_hid2_device_prepare_firmware;
 	device_class->convert_version = fu_legion_hid2_device_convert_version;
 	device_class->detach = fu_legion_hid2_device_detach;
 }
