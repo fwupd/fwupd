@@ -23,3 +23,7 @@ Name = PCH SPI Controller
 [MTD\VEN_1677&DEV_28A4]
 Flags = ~needs-reboot,needs-shutdown,usable-during-update,unsigned-payload
 VersionFormat = number
+
+# Intel GPUs
+[MTD\DRIVER_xe]
+Flags = no-probe
