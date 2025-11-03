@@ -13,27 +13,9 @@
 
 struct _FuLegionHid2Firmware {
 	FuFirmware parent_instance;
-	guint32 version;
 };
 
 G_DEFINE_TYPE(FuLegionHid2Firmware, fu_legion_hid2_firmware, FU_TYPE_FIRMWARE)
-
-static void
-fu_legion_hid2_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
-{
-	FuLegionHid2Firmware *self = FU_LEGION_HID2_FIRMWARE(firmware);
-	g_autofree gchar *version =
-	    fu_version_from_uint32(self->version, FWUPD_VERSION_FORMAT_QUAD);
-
-	fu_xmlb_builder_insert_kv(bn, "version", version);
-}
-
-guint32
-fu_legion_hid2_firmware_get_version(FuFirmware *firmware)
-{
-	FuLegionHid2Firmware *self = FU_LEGION_HID2_FIRMWARE(firmware);
-	return self->version;
-}
 
 static gboolean
 fu_legion_hid2_firmware_parse(FuFirmware *firmware,
@@ -41,7 +23,6 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {
-	FuLegionHid2Firmware *self = FU_LEGION_HID2_FIRMWARE(firmware);
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(FuFirmware) img_sig = fu_firmware_new();
 	g_autoptr(GInputStream) stream_payload = NULL;
@@ -82,7 +63,8 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 	st_version = fu_struct_legion_hid2_version_parse_stream(stream, VERSION_OFFSET, error);
 	if (st_version == NULL)
 		return FALSE;
-	self->version = fu_struct_legion_hid2_version_get_version(st_version);
+	fu_firmware_set_version_raw(firmware,
+				    fu_struct_legion_hid2_version_get_version(st_version));
 
 	return TRUE;
 }
@@ -90,6 +72,13 @@ fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 static void
 fu_legion_hid2_firmware_init(FuLegionHid2Firmware *self)
 {
+	fu_firmware_set_version_format(FU_FIRMWARE(self), FWUPD_VERSION_FORMAT_QUAD);
+}
+
+static gchar *
+fu_legion_hid2_firmware_convert_version(FuFirmware *firmware, guint64 version_raw)
+{
+	return fu_version_from_uint32(version_raw, fu_firmware_get_version_format(firmware));
 }
 
 static void
@@ -97,11 +86,5 @@ fu_legion_hid2_firmware_class_init(FuLegionHid2FirmwareClass *klass)
 {
 	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS(klass);
 	firmware_class->parse = fu_legion_hid2_firmware_parse;
-	firmware_class->export = fu_legion_hid2_firmware_export;
-}
-
-FuFirmware *
-fu_legion_hid2_firmware_new(void)
-{
-	return FU_FIRMWARE(g_object_new(FU_TYPE_LEGION_HID2_FIRMWARE, NULL));
+	firmware_class->convert_version = fu_legion_hid2_firmware_convert_version;
 }

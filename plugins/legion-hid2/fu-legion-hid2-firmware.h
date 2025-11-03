@@ -17,6 +17,3 @@ G_DECLARE_FINAL_TYPE(FuLegionHid2Firmware,
 
 FuFirmware *
 fu_legion_hid2_firmware_new(void);
-
-guint32
-fu_legion_hid2_firmware_get_version(FuFirmware *firmware);

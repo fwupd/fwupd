@@ -108,22 +108,6 @@ fu_legion_hid2_iap_device_attach(FuDevice *device, FuProgress *progress, GError 
 	return TRUE;
 }
 
-static FuFirmware *
-fu_legion_hid2_iap_device_prepare_firmware(FuDevice *device,
-					   GInputStream *stream,
-					   FuProgress *progress,
-					   FuFirmwareParseFlags flags,
-					   GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_legion_hid2_firmware_new();
-
-	/* sanity check */
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
-		return NULL;
-
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_legion_hid2_iap_device_unlock_flash(FuLegionHid2IapDevice *self, GError **error)
 {
@@ -373,6 +357,7 @@ fu_legion_hid2_iap_device_init(FuLegionHid2IapDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-hid2");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID2_FIRMWARE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
@@ -383,7 +368,6 @@ static void
 fu_legion_hid2_iap_device_class_init(FuLegionHid2IapDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->prepare_firmware = fu_legion_hid2_iap_device_prepare_firmware;
 	device_class->write_firmware = fu_legion_hid2_iap_device_write_firmware;
 	device_class->attach = fu_legion_hid2_iap_device_attach;
 	device_class->set_progress = fu_legion_hid2_iap_device_set_progress;
