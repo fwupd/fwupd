@@ -48,7 +48,7 @@ if get_option('tests')
   )
   test('mtd-self-test', e, env: env)  # added to installed-tests
   install_data(
-    'tests/mtd-fmap.builder.xml',
+    ['tests/mtd-fmap.builder.xml', 'tests/mtd-ifd.builder.xml'],
     install_dir: installed_test_datadir,
   )
 endif

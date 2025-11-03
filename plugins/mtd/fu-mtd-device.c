@@ -718,7 +718,7 @@ fu_mtd_device_write_stream(FuMtdDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
 {
 	g_autoptr(GInputStream) img_stream = NULL;
@@ -726,7 +726,9 @@ fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progre
 	img_stream = fu_firmware_get_stream(img, error);
 	if (img_stream == NULL)
 		return FALSE;
-	g_debug("writing image %s", fu_firmware_get_id(img));
+	g_debug("writing image %s @0x%x",
+		fu_firmware_get_id(img),
+		(guint)fu_firmware_get_addr(img));
 	return fu_mtd_device_write_stream(self,
 					  img_stream,
 					  fu_firmware_get_addr(img),
@@ -880,7 +882,7 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
 		return fu_strtoull(value,
 				   &priv->metadata_size,
-				   0x100,
+				   0x0,
 				   FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
 				   FU_INTEGER_BASE_AUTO,
 				   error);
@@ -931,7 +933,6 @@ fu_mtd_device_init(FuMtdDevice *self)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
-	priv->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
 	priv->fmap_regions = g_ptr_array_new_with_free_func(g_free);
 	fu_device_set_summary(FU_DEVICE(self), "Memory Technology Device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
