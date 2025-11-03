@@ -105,6 +105,93 @@ fu_test_mtd_device_raw_func(void)
 }
 
 static void
+fu_test_mtd_device_ifd_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_bios = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
+	g_autoptr(FuFirmware) firmware_bios = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(NULL);
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* find correct device */
+	device = fu_test_mtd_find_mtdram(ctx, &error);
+	if (device == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
+	locker = fu_device_locker_new(device, &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
+	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("no permission to read mtdram device");
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+
+	/* write the IFD image */
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "mtd-ifd.builder.xml", NULL);
+	g_debug("loading from %s", filename);
+	ret = fu_firmware_build_from_filename(firmware, filename, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	blob = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(blob);
+	fu_firmware_set_bytes(firmware, blob);
+	ret = fu_device_write_firmware(device, firmware, progress, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* re-probe image */
+	ret = fu_device_set_quirk_kv(device,
+				     "MtdMetadataSize",
+				     "0",
+				     FU_CONTEXT_QUIRK_SOURCE_DB,
+				     &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	fu_device_set_firmware_gtype(device, FU_TYPE_IFD_FIRMWARE);
+	fu_device_probe_invalidate(device);
+	ret = fu_device_setup(device, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	device_bios = fu_device_get_child_by_logical_id(device, "bios", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_bios);
+
+	/* just for debugging */
+	str = fu_device_to_string(device);
+	g_debug("%s", str);
+
+	/* re-write just the BIOS */
+	firmware_bios = fu_firmware_get_image_by_id(firmware, "bios", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(device_bios);
+	ret = fu_device_write_firmware(device_bios,
+				       firmware_bios,
+				       progress,
+				       FWUPD_INSTALL_FLAG_NONE,
+				       &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
 fu_test_mtd_device_fmap_func(void)
 {
 	gboolean ret;
@@ -195,6 +282,7 @@ main(int argc, char **argv)
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func("/mtd/device{raw}", fu_test_mtd_device_raw_func);
+	g_test_add_func("/mtd/device{ifd}", fu_test_mtd_device_ifd_func);
 	g_test_add_func("/mtd/device{fmap}", fu_test_mtd_device_fmap_func);
 	return g_test_run();
 }

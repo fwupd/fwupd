@@ -14,3 +14,7 @@ G_DECLARE_DERIVABLE_TYPE(FuMtdDevice, fu_mtd_device, FU, MTD_DEVICE, FuUdevDevic
 struct _FuMtdDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
+
+gboolean
+fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
+    G_GNUC_NON_NULL(1, 2, 3);
