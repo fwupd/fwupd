@@ -281,7 +281,10 @@ fu_ifd_firmware_parse(FuFirmware *firmware,
 			g_prefix_error_literal(error, "failed to cut IFD image: ");
 			return FALSE;
 		}
-		if (i == FU_IFD_REGION_BIOS) {
+
+		/* do not parse all the EFI volumes if we only care about the structure */
+		if (i == FU_IFD_REGION_BIOS &&
+		    (flags & FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT) == 0) {
 			img = fu_ifd_bios_new();
 		} else {
 			img = fu_ifd_image_new();

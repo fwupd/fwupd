@@ -16,6 +16,7 @@ enum FuFirmwareParseFlags {
     CacheStream = 1 << 10,
     CacheBlob = 1 << 11,
     OnlyTrustPqSignatures = 1 << 12,
+    OnlyPartitionLayout = 1 << 13,
 }
 
 #[derive(ToString)]
