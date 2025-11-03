@@ -17,6 +17,22 @@ struct _FuMtdIfdDevice {
 G_DEFINE_TYPE(FuMtdIfdDevice, fu_mtd_ifd_device, FU_TYPE_DEVICE)
 
 static void
+fu_mtd_ifd_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuMtdIfdDevice *self = FU_MTD_IFD_DEVICE(device);
+	if (self->img != NULL) {
+		fwupd_codec_string_append_hex(str,
+					      idt,
+					      "ImgOffset",
+					      fu_firmware_get_addr(FU_FIRMWARE(self->img)));
+		fwupd_codec_string_append_hex(str,
+					      idt,
+					      "ImgSize",
+					      fu_firmware_get_size(FU_FIRMWARE(self->img)));
+	}
+}
+
+static void
 fu_mtd_ifd_device_add_security_attr_desc(FuMtdIfdDevice *self, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
@@ -123,6 +139,7 @@ static void
 fu_mtd_ifd_device_class_init(FuMtdIfdDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	device_class->to_string = fu_mtd_ifd_device_to_string;
 	device_class->probe = fu_mtd_ifd_device_probe;
 	device_class->add_security_attrs = fu_mtd_ifd_device_add_security_attrs;
 }
