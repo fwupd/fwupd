@@ -359,6 +359,8 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* MTD devices backed by PCI should use that for identification */
 	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
 	if (parent_device != NULL) {
+		const gchar *driver;
+
 		/* ensure the parent gets probed (needed for emulation) */
 		if (!fu_device_probe(parent_device, error))
 			return FALSE;
@@ -374,6 +376,19 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 			fu_device_set_version_raw(
 			    device,
 			    fu_pci_device_get_revision(FU_PCI_DEVICE(parent_device)));
+
+		/* sometimes we want to ignore whole-classes of devices, e.g. the xe GPUs */
+		driver = fu_udev_device_get_driver(FU_UDEV_DEVICE(parent_device));
+		if (driver != NULL) {
+			fu_device_add_instance_strsafe(device, "DRIVER", driver);
+			fu_device_build_instance_id_full(device,
+							 FU_DEVICE_INSTANCE_FLAG_QUIRKS |
+							     FU_DEVICE_INSTANCE_FLAG_GENERIC,
+							 NULL,
+							 "MTD",
+							 "DRIVER",
+							 NULL);
+		}
 
 		fu_device_add_instance_strsafe(device, "NAME", attr_name);
 		fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);

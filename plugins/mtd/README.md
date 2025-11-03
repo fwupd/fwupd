@@ -27,6 +27,7 @@ be used instead, e.g.
 * `MTD\NAME_Factory`
 * `MTD\VEN_1234&DEV_5678`
 * `MTD\VEN_1234&DEV_5678&NAME_Factory`
+* `MTD\DRIVER_xe` (quirk-only)
 
 If the `FirmwareGType` quirk is set for the device then the firmware is read back from the device at
 daemon startup and parsed for the version number.
