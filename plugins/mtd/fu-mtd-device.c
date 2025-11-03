@@ -221,6 +221,15 @@ fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
 			FuIfdImage *img = g_ptr_array_index(imgs, i);
 			g_autoptr(FuMtdIfdDevice) child =
 			    fu_mtd_ifd_device_new(FU_DEVICE(self), img);
+
+			/* if any region is not readable by the BIOS master, fwupd cannot do
+			 * verification on the parent MTD device as a whole */
+			if (!fu_device_probe(FU_DEVICE(child), error))
+				return FALSE;
+			if (!fu_device_has_flag(child, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
+				fu_device_remove_flag(FU_DEVICE(self),
+						      FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+			}
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
 		}
 		return TRUE;
