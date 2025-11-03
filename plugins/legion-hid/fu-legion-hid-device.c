@@ -29,21 +29,14 @@ typedef struct {
 	guint8 sub_id;
 	guint8 dev_id;
 	guint8 step;
-} FuLegionHidUpgradeRetryHelper;
-
-typedef struct {
-	GByteArray *res;
-	guint8 main_id;
-	guint8 sub_id;
-	guint8 dev_id;
-} FuLegionHidNormalRetryHelper;
+} FuLegionHidRetryHelper;
 
 static gboolean
 fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
 						   gpointer user_data,
 						   GError **error)
 {
-	FuLegionHidNormalRetryHelper *helper = (FuLegionHidNormalRetryHelper *)user_data;
+	FuLegionHidRetryHelper *helper = (FuLegionHidRetryHelper *)user_data;
 	GByteArray *res = helper->res;
 
 	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
@@ -73,7 +66,7 @@ fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
 
 static gboolean
 fu_legion_hid_device_read_response(FuLegionHidDevice *self,
-				   FuLegionHidNormalRetryHelper *helper,
+				   FuLegionHidRetryHelper *helper,
 				   GError **error)
 {
 	return fu_device_retry_full(FU_DEVICE(self),
@@ -89,7 +82,7 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 						    gpointer user_data,
 						    GError **error)
 {
-	FuLegionHidUpgradeRetryHelper *helper = (FuLegionHidUpgradeRetryHelper *)user_data;
+	FuLegionHidRetryHelper *helper = (FuLegionHidRetryHelper *)user_data;
 	GByteArray *res = helper->res;
 	gboolean is_valid_dev_id = FALSE;
 
@@ -130,7 +123,7 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 
 static gboolean
 fu_legion_hid_device_read_upgrade_response(FuLegionHidDevice *self,
-					   FuLegionHidUpgradeRetryHelper *helper,
+					   FuLegionHidRetryHelper *helper,
 					   GError **error)
 {
 	return fu_device_retry_full(FU_DEVICE(self),
@@ -148,7 +141,7 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 				   guint size,
 				   GError **error)
 {
-	FuLegionHidUpgradeRetryHelper helper = {0};
+	FuLegionHidRetryHelper helper = {0};
 	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
@@ -200,7 +193,7 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 					guint *max_size,
 					GError **error)
 {
-	FuLegionHidUpgradeRetryHelper helper = {0};
+	FuLegionHidRetryHelper helper = {0};
 	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
@@ -284,7 +277,7 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 		return FALSE;
 	send_size = ready_send_size;
 	if (ready_send_size % max_size == 0) {
-		FuLegionHidUpgradeRetryHelper helper = {0};
+		FuLegionHidRetryHelper helper = {0};
 		guint recieved_size;
 
 		helper.res = res;
@@ -361,7 +354,7 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 static gboolean
 fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError **error)
 {
-	FuLegionHidUpgradeRetryHelper helper = {0};
+	FuLegionHidRetryHelper helper = {0};
 	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
@@ -408,7 +401,7 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError *
 static guint
 fu_legion_hid_device_get_version(FuLegionHidDevice *self, guint8 id, GError **error)
 {
-	FuLegionHidNormalRetryHelper helper = {0};
+	FuLegionHidRetryHelper helper = {0};
 	guint version = 0;
 	guint8 content[] = {
 	    FU_LEGION_HID_CMD_CONSTANT_SN,
