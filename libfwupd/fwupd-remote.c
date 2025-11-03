@@ -545,7 +545,7 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		}
 		(void)curl_url_get(uri_tmp, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_basename(path);
-		path_new = g_build_filename(priv->firmware_base_uri, basename, path_suffix, NULL);
+		path_new = g_build_path("/", priv->firmware_base_uri, basename, path_suffix, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 	} else if (g_strstr_len(url_noauth, -1, "/") == NULL) {
@@ -564,11 +564,11 @@ fwupd_remote_build_uri(FwupdRemote *self,
 		}
 		(void)curl_url_get(uri, CURLUPART_PATH, &path, 0);
 		basename = g_path_get_dirname(path);
-		path_new = g_build_filename(basename, url_noauth, NULL);
+		path_new = g_build_path("/", basename, url_noauth, NULL);
 		(void)curl_url_set(uri, CURLUPART_URL, path_new, 0);
 
 	} else {
-		g_autofree gchar *url = g_build_filename(url_noauth, path_suffix, NULL);
+		g_autofree gchar *url = g_build_path("/", url_noauth, path_suffix, NULL);
 
 		/* a normal URI */
 		if (curl_url_set(uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
