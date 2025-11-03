@@ -60,7 +60,7 @@ fu_amd_gpu_psp_firmware_validate(FuFirmware *firmware,
 }
 
 static gboolean
-fu_amd_gpu_psp_firmware_parse_l2(FuFirmware *firmware,
+fu_amd_gpu_psp_firmware_parse_l2(FuAmdGpuPspFirmware *self,
 				 GInputStream *stream,
 				 gsize offset,
 				 GError **error)
@@ -85,7 +85,7 @@ fu_amd_gpu_psp_firmware_parse_l2(FuFirmware *firmware,
 }
 
 static gboolean
-fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
+fu_amd_gpu_psp_firmware_parse_l1(FuAmdGpuPspFirmware *self,
 				 GInputStream *stream,
 				 gsize offset,
 				 FuFirmwareParseFlags flags,
@@ -136,7 +136,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 		if (!fu_firmware_parse_stream(ish_img, stream, loc, flags, error))
 			return FALSE;
 		fu_firmware_set_addr(ish_img, loc);
-		if (!fu_firmware_add_image(firmware, ish_img, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), ish_img, error))
 			return FALSE;
 
 		/* parse the csm image */
@@ -177,7 +177,7 @@ fu_amd_gpu_psp_firmware_parse_l1(FuFirmware *firmware,
 			return FALSE;
 
 		/* parse the partition */
-		if (!fu_amd_gpu_psp_firmware_parse_l2(l2_img, stream, loc, error))
+		if (!fu_amd_gpu_psp_firmware_parse_l2(self, stream, loc, error))
 			return FALSE;
 
 		/* next entry */
@@ -201,7 +201,7 @@ fu_amd_gpu_psp_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	self->dir_location = fu_struct_efs_get_psp_dir_loc(st);
 
-	return fu_amd_gpu_psp_firmware_parse_l1(firmware, stream, self->dir_location, flags, error);
+	return fu_amd_gpu_psp_firmware_parse_l1(self, stream, self->dir_location, flags, error);
 }
 
 static void

@@ -18,7 +18,7 @@
 G_DEFINE_TYPE(FuSbatlevelSection, fu_sbatlevel_section, FU_TYPE_FIRMWARE);
 
 static gboolean
-fu_sbatlevel_section_add_entry(FuFirmware *firmware,
+fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 			       GInputStream *stream,
 			       gsize offset,
 			       const gchar *entry_name,
@@ -61,7 +61,7 @@ fu_sbatlevel_section_add_entry(FuFirmware *firmware,
 		g_prefix_error(error, "failed to parse %s: ", entry_name);
 		return FALSE;
 	}
-	if (!fu_firmware_add_image(firmware, entry_fw, error))
+	if (!fu_firmware_add_image(FU_FIRMWARE(self), entry_fw, error))
 		return FALSE;
 
 	/* success */
@@ -74,13 +74,14 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
+	FuSbatlevelSection *self = FU_SBATLEVEL_SECTION(firmware);
 	g_autoptr(FuStructSbatLevelSectionHeader) st = NULL;
 
 	st = fu_struct_sbat_level_section_header_parse_stream(stream, 0x0, error);
 	if (st == NULL)
 		return FALSE;
 	if (!fu_sbatlevel_section_add_entry(
-		firmware,
+		self,
 		stream,
 		sizeof(guint32) + fu_struct_sbat_level_section_header_get_previous(st),
 		"previous",
@@ -88,7 +89,7 @@ fu_sbatlevel_section_parse(FuFirmware *firmware,
 		flags,
 		error))
 		return FALSE;
-	if (!fu_sbatlevel_section_add_entry(firmware,
+	if (!fu_sbatlevel_section_add_entry(self,
 					    stream,
 					    sizeof(guint32) +
 						fu_struct_sbat_level_section_header_get_latest(st),

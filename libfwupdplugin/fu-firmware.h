@@ -103,9 +103,9 @@ fu_firmware_set_version_format(FuFirmware *self, FwupdVersionFormat version_form
 FwupdVersionFormat
 fu_firmware_get_version_format(FuFirmware *self) G_GNUC_NON_NULL(1);
 void
-fu_firmware_add_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_NON_NULL(1);
+fu_firmware_add_flag(FuFirmware *self, FuFirmwareFlags flag) G_GNUC_NON_NULL(1);
 gboolean
-fu_firmware_has_flag(FuFirmware *firmware, FuFirmwareFlags flag) G_GNUC_WARN_UNUSED_RESULT
+fu_firmware_has_flag(FuFirmware *self, FuFirmwareFlags flag) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);
 const gchar *
 fu_firmware_get_filename(FuFirmware *self) G_GNUC_NON_NULL(1);

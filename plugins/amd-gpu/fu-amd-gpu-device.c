@@ -315,7 +315,8 @@ fu_amd_gpu_device_prepare_firmware(FuDevice *device,
 	if (csm == NULL)
 		return NULL;
 
-	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(csm), PART_NUM_STR_SIZE);
+	fw_pn = fu_strsafe(fu_amd_gpu_atom_firmware_get_vbios_pn(FU_AMD_GPU_ATOM_FIRMWARE(csm)),
+			   PART_NUM_STR_SIZE);
 	if (g_strcmp0(fw_pn, self->vbios_pn) != 0) {
 		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error(error,

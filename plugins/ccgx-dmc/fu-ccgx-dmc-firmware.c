@@ -86,14 +86,13 @@ fu_ccgx_dmc_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static gboolean
-fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
+fu_ccgx_dmc_firmware_parse_segment(FuCcgxDmcFirmware *self,
 				   GInputStream *stream,
 				   FuCcgxDmcFirmwareRecord *img_rcd,
 				   gsize *seg_off,
 				   FuFirmwareParseFlags flags,
 				   GError **error)
 {
-	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
 	gsize row_off;
 	g_autoptr(GChecksum) csum = g_checksum_new(G_CHECKSUM_SHA256);
 
@@ -175,13 +174,12 @@ fu_ccgx_dmc_firmware_parse_segment(FuFirmware *firmware,
 }
 
 static gboolean
-fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
+fu_ccgx_dmc_firmware_parse_image(FuCcgxDmcFirmware *self,
 				 guint8 image_count,
 				 GInputStream *stream,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
-	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE(firmware);
 	gsize img_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE;
 	gsize seg_off = FU_STRUCT_CCGX_DMC_FWCT_INFO_SIZE +
 			image_count * FU_STRUCT_CCGX_DMC_FWCT_IMAGE_INFO_SIZE;
@@ -228,7 +226,7 @@ fu_ccgx_dmc_firmware_parse_image(FuFirmware *firmware,
 				return FALSE;
 
 			/* parse segment */
-			if (!fu_ccgx_dmc_firmware_parse_segment(firmware,
+			if (!fu_ccgx_dmc_firmware_parse_segment(self,
 								stream,
 								img_rcd,
 								&seg_off,
@@ -317,7 +315,7 @@ fu_ccgx_dmc_firmware_parse(FuFirmware *firmware,
 
 	/* parse image */
 	hdr_image_count = fu_struct_ccgx_dmc_fwct_info_get_image_count(st_hdr);
-	if (!fu_ccgx_dmc_firmware_parse_image(firmware, hdr_image_count, stream, flags, error))
+	if (!fu_ccgx_dmc_firmware_parse_image(self, hdr_image_count, stream, flags, error))
 		return FALSE;
 
 	/* success */

@@ -195,6 +195,7 @@ fu_genesys_usbhub_firmware_calculate_size(GInputStream *stream, gsize *size, GEr
 	return TRUE;
 }
 
+/* nocheck:name */
 gboolean
 fu_genesys_usbhub_firmware_ensure_version(FuFirmware *firmware, GError **error)
 {

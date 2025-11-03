@@ -60,7 +60,9 @@ fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 
 /* simple validation of the image */
 static gboolean
-fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware, GInputStream *stream, GError **error)
+fu_nordic_hid_firmware_mcuboot_validate(FuNordicHidFirmwareMcuboot *self,
+					GInputStream *stream,
+					GError **error)
 {
 	guint32 magic;
 	guint16 hdr_size;
@@ -116,7 +118,7 @@ fu_nordic_hid_firmware_mcuboot_validate(FuFirmware *firmware, GInputStream *stre
 		return FALSE;
 	version = g_strdup_printf("%u.%u.%u.%u", ver_major, ver_minor, ver_rev, ver_build_nr);
 
-	fu_firmware_set_version(firmware, version);
+	fu_firmware_set_version(FU_FIRMWARE(self), version);
 
 	return TRUE;
 }
@@ -127,10 +129,11 @@ fu_nordic_hid_firmware_mcuboot_parse(FuFirmware *firmware,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {
+	FuNordicHidFirmwareMcuboot *self = FU_NORDIC_HID_FIRMWARE_MCUBOOT(firmware);
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_mcuboot_parent_class)
 		 ->parse(firmware, stream, flags, error))
 		return FALSE;
-	return fu_nordic_hid_firmware_mcuboot_validate(firmware, stream, error);
+	return fu_nordic_hid_firmware_mcuboot_validate(self, stream, error);
 }
 
 static void

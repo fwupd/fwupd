@@ -29,7 +29,7 @@ fu_acpi_phat_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilder
 }
 
 static gboolean
-fu_acpi_phat_record_parse(FuFirmware *firmware,
+fu_acpi_phat_record_parse(FuAcpiPhat *self,
 			  GInputStream *stream,
 			  gsize *offset,
 			  FuFirmwareParseFlags flags,
@@ -74,7 +74,7 @@ fu_acpi_phat_record_parse(FuFirmware *firmware,
 		fu_firmware_set_version_raw(firmware_rcd, revision);
 		if (!fu_firmware_parse_stream(firmware_rcd, partial_stream, 0x0, flags, error))
 			return FALSE;
-		if (!fu_firmware_add_image(firmware, firmware_rcd, error))
+		if (!fu_firmware_add_image(FU_FIRMWARE(self), firmware_rcd, error))
 			return FALSE;
 	}
 
@@ -189,7 +189,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 
 	/* platform telemetry records */
 	for (gsize offset_tmp = 36; offset_tmp < length;) {
-		if (!fu_acpi_phat_record_parse(firmware, stream, &offset_tmp, flags, error))
+		if (!fu_acpi_phat_record_parse(self, stream, &offset_tmp, flags, error))
 			return FALSE;
 	}
 
