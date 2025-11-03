@@ -19,6 +19,7 @@ struct _FuNvmeDevice {
 	guint pci_depth;
 	guint64 write_block_size;
 	guint serial_suffix;
+	guint8 commit_slot;
 };
 
 #define FU_NVME_COMMIT_ACTION_CA0 0b000 /* replace only */
@@ -39,6 +40,7 @@ fu_nvme_device_to_string(FuDevice *device, guint idt, GString *str)
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	fwupd_codec_string_append_int(str, idt, "PciDepth", self->pci_depth);
 	fwupd_codec_string_append_int(str, idt, "SerialSuffix", self->serial_suffix);
+	fwupd_codec_string_append_int(str, idt, "CommitSlot", self->commit_slot);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -160,14 +162,13 @@ fu_nvme_device_identify_ctrl(FuNvmeDevice *self, guint8 *buf, gsize bufsz, GErro
 
 static gboolean
 fu_nvme_device_fw_commit(FuNvmeDevice *self,
-			 guint8 slot,
 			 guint8 action,
 			 guint8 bpid,
 			 GError **error)
 {
 	struct nvme_admin_cmd cmd = {
 	    .opcode = 0x10,
-	    .cdw10 = (bpid << 31) | (action << 3) | slot,
+	    .cdw10 = (bpid << 31) | (action << 3) | self->commit_slot,
 	};
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, NULL, 0, error);
 }
@@ -485,7 +486,6 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3))
 		commit_action = FU_NVME_COMMIT_ACTION_CA3;
 	if (!fu_nvme_device_fw_commit(self,
-				      0x00, /* let controller choose */
 				      commit_action,
 				      0x00, /* boot partition identifier */
 				      error)) {
@@ -507,6 +507,13 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
 			return FALSE;
 		self->write_block_size = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "NvmeCommitSlot") == 0) {
+		guint64 tmp = 0;
+		if (!fu_strtoull(value, &tmp, 0, 8, FU_INTEGER_BASE_AUTO, error))
+			return FALSE;
+		self->commit_slot = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "NvmeSerialSuffixChars") == 0) {

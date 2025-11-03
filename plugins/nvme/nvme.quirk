@@ -54,6 +54,7 @@ Flags = needs-shutdown
 # Lexar
 [NVME\VEN_1D97]
 Flags = ensure-semver,commit-ca3
+NvmeCommitSlot = 1
 NvmeSerialSuffixChars = 5
 
 [NVME\VEN_144D&DEV_A80A&VER_2B2QGXA7]

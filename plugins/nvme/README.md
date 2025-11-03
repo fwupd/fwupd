@@ -71,6 +71,12 @@ The number of characters of the serial number to use for `SNSUFFIX` in the insta
 
 Since: 2.0.17
 
+### NvmeCommitSlot
+
+The firmware "slot" to use when committing the firmware. Defaults to 0, which is where the controller chooses.
+
+Since: 2.0.17
+
 ### `Flags=force-align`
 
 Force alignment of the firmware file.
