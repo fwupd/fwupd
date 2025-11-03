@@ -147,7 +147,8 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	if (!fu_firmware_parse_stream(firmware,
 				      stream_partial,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
 				      error)) {
 		g_prefix_error_literal(error, "failed to parse image: ");
 		return NULL;
