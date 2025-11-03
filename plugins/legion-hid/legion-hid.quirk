@@ -1,0 +1,26 @@
+# Copyright 2025 hya1711 <591770796@qq.com>
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+[HIDRAW\VEN_17EF&DEV_61EB]
+Plugin = legion_hid
+GType = FuLegionHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EB
+Name = Legion Go 2
+
+[HIDRAW\VEN_17EF&DEV_61EC]
+Plugin = legion_hid
+GType = FuLegionHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EC
+Name = Legion Go 2
+
+[HIDRAW\VEN_17EF&DEV_61ED]
+Plugin = legion_hid
+GType = FuLegionHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_61ED
+Name = Legion Go 2
+
+[HIDRAW\VEN_17EF&DEV_61EE]
+Plugin = legion_hid
+GType = FuLegionHidDevice
+CounterpartGuid = HIDRAW\VEN_17EF&DEV_61EE
+Name = Legion Go 2
