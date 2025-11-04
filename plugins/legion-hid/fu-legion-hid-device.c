@@ -11,6 +11,9 @@
 
 struct _FuLegionHidDevice {
 	FuHidrawDevice parent_instance;
+	guint32 mcu_version;
+	guint32 left_version;
+	guint32 right_version;
 };
 
 G_DEFINE_TYPE(FuLegionHidDevice, fu_legion_hid_device, FU_TYPE_HIDRAW_DEVICE)
@@ -27,9 +30,18 @@ typedef struct {
 	GByteArray *res;
 	guint8 main_id;
 	guint8 sub_id;
-	guint8 dev_id;
+	FuLegionHidDeviceId dev_id;
 	guint8 step;
 } FuLegionHidRetryHelper;
+
+static void
+fu_legion_hid_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
+	fwupd_codec_string_append_int(str, idt, "McuVersion", self->mcu_version);
+	fwupd_codec_string_append_int(str, idt, "LeftVersion", self->left_version);
+	fwupd_codec_string_append_int(str, idt, "RightVersion", self->right_version);
+}
 
 static gboolean
 fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
@@ -84,7 +96,7 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 {
 	FuLegionHidRetryHelper *helper = (FuLegionHidRetryHelper *)user_data;
 	GByteArray *res = helper->res;
-	gboolean is_valid_dev_id = FALSE;
+	g_autoptr(FuStructLegionHidUpgradeRsp) st_rsp = NULL;
 
 	g_byte_array_set_size(res, FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	if (!fu_udev_device_read(FU_UDEV_DEVICE(device),
@@ -95,25 +107,45 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 				 FU_IO_CHANNEL_FLAG_NONE,
 				 error))
 		return FALSE;
-
-	is_valid_dev_id = (res->data[4] == helper->dev_id) ||
-			  (res->data[4] == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L &&
-			   (helper->dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L2 ||
-			    helper->dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L3)) ||
-			  (res->data[4] == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R &&
-			   (helper->dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R2 ||
-			    helper->dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R3));
-
-	if (res->data[2] != helper->main_id || res->data[3] != helper->sub_id || !is_valid_dev_id ||
-	    res->data[7] != helper->step || res->data[9] == FU_LEGION_HID_RESPONSE_STATUS_BUSY) {
+	st_rsp = fu_struct_legion_hid_upgrade_rsp_parse(res->data, res->len, 0x0, error);
+	if (st_rsp == NULL) {
+		g_prefix_error_literal(error, "device report start command failed: ");
+		return FALSE;
+	}
+	if (fu_struct_legion_hid_upgrade_rsp_get_main_id(st_rsp) != helper->main_id) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
-			    "response mismatch filter(%u, %u, %u, %u), retrying...",
-			    helper->main_id,
-			    helper->sub_id,
-			    helper->dev_id,
+			    "response main ID was 0x%x, expected 0x%x",
+			    fu_struct_legion_hid_upgrade_rsp_get_main_id(st_rsp),
+			    helper->main_id);
+		return FALSE;
+	}
+	if (fu_struct_legion_hid_upgrade_rsp_get_sub_id(st_rsp) != helper->sub_id) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
+			    "response sub ID was 0x%x, expected 0x%x",
+			    fu_struct_legion_hid_upgrade_rsp_get_sub_id(st_rsp),
+			    helper->sub_id);
+		return FALSE;
+	}
+	if (fu_struct_legion_hid_upgrade_rsp_get_step(st_rsp) != helper->step) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
+			    "response step was 0x%x, expected 0x%x",
+			    fu_struct_legion_hid_upgrade_rsp_get_step(st_rsp),
 			    helper->step);
+		return FALSE;
+	}
+	if (fu_struct_legion_hid_upgrade_rsp_get_id(st_rsp) != helper->dev_id) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BUSY,
+			    "response dev ID was 0x%x, expected 0x%x",
+			    fu_struct_legion_hid_upgrade_rsp_get_id(st_rsp),
+			    helper->dev_id);
 		return FALSE;
 	}
 
@@ -136,13 +168,12 @@ fu_legion_hid_device_read_upgrade_response(FuLegionHidDevice *self,
 
 static gboolean
 fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
-				   guint8 id,
+				   FuLegionHidDeviceId id,
 				   guint16 crc16,
 				   guint size,
 				   GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
-	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
 	g_autoptr(FuStructLegionHidUpgradeStartParam) st_content =
@@ -171,30 +202,16 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 	helper.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	helper.dev_id = id;
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_START;
-	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
-		return FALSE;
-	status = res->data[9];
-	if (status != FU_LEGION_HID_RESPONSE_STATUS_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "device report start command failed with %u",
-			    status);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_legion_hid_device_read_upgrade_response(self, &helper, error);
 }
 
 static gboolean
 fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
-					guint8 id,
-					guint *max_size,
+					FuLegionHidDeviceId id,
+					guint16 *max_size,
 					GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
-	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
 	guint8 content[] = {
@@ -223,15 +240,6 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_QUERY_SIZE;
 	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
 		return FALSE;
-	status = res->data[9];
-	if (status == FU_LEGION_HID_RESPONSE_STATUS_FAIL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "device report query size command failed with %u",
-			    status);
-		return FALSE;
-	}
 	if (max_size != NULL)
 		*max_size = fu_memread_uint16(res->data + 9, G_BIG_ENDIAN);
 
@@ -241,8 +249,8 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 
 static gboolean
 fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
-					      guint8 id,
-					      guint max_size,
+					      FuLegionHidDeviceId id,
+					      guint16 max_size,
 					      guint *send_size,
 					      FuChunk *chk,
 					      GError **error)
@@ -278,7 +286,7 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 	*send_size = ready_send_size;
 	if (ready_send_size % max_size == 0) {
 		FuLegionHidRetryHelper helper = {0};
-		guint recieved_size;
+		guint32 recieved_size = 0;
 
 		helper.res = res;
 		helper.main_id = fu_struct_legion_hid_upgrade_cmd_get_main_id(st_cmd);
@@ -287,7 +295,13 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 		helper.step = FU_LEGION_HID_UPGRADE_STEP_WRITE_DATA;
 		if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
 			return FALSE;
-		recieved_size = fu_memread_uint32(res->data + 10, G_BIG_ENDIAN);
+		if (!fu_memread_uint32_safe(res->data,
+					    res->len,
+					    FU_STRUCT_LEGION_HID_UPGRADE_RSP_SIZE,
+					    &recieved_size,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
 		if (recieved_size != *send_size) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -305,8 +319,8 @@ fu_legion_hid_device_upgrade_write_data_chunk(FuLegionHidDevice *self,
 
 static gboolean
 fu_legion_hid_device_upgrade_write_data_chunks(FuLegionHidDevice *self,
-					       guint8 id,
-					       guint max_size,
+					       FuLegionHidDeviceId id,
+					       guint16 max_size,
 					       FuChunkArray *chunks,
 					       GError **error)
 {
@@ -333,8 +347,8 @@ fu_legion_hid_device_upgrade_write_data_chunks(FuLegionHidDevice *self,
 
 static gboolean
 fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
-					guint8 id,
-					guint max_size,
+					FuLegionHidDeviceId id,
+					guint16 max_size,
 					GBytes *payload,
 					GError **error)
 {
@@ -359,12 +373,12 @@ fu_legion_hid_device_upgrade_write_data(FuLegionHidDevice *self,
 }
 
 static gboolean
-fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError **error)
+fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, FuLegionHidDeviceId id, GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
-	guint8 status = 0;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
+	g_autoptr(FuStructLegionHidUpgradeRsp) st_rsp = NULL;
 	guint8 content[] = {
 	    0x02,
 	    FU_LEGION_HID_UPGRADE_STEP_VERIFY,
@@ -389,27 +403,16 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, guint8 id, GError *
 	helper.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	helper.dev_id = id;
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_VERIFY;
-	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
-		return FALSE;
-	status = res->data[9];
-	if (status != FU_LEGION_HID_RESPONSE_STATUS_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "device report verify command failed with %u",
-			    status);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_legion_hid_device_read_upgrade_response(self, &helper, error);
 }
 
-static guint
-fu_legion_hid_device_get_version(FuLegionHidDevice *self, guint8 id, GError **error)
+static gboolean
+fu_legion_hid_device_get_version(FuLegionHidDevice *self,
+				 FuLegionHidDeviceId id,
+				 guint32 *version,
+				 GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
-	guint version = 0;
 	guint8 content[] = {
 	    FU_LEGION_HID_CMD_CONSTANT_SN,
 	};
@@ -421,14 +424,14 @@ fu_legion_hid_device_get_version(FuLegionHidDevice *self, guint8 id, GError **er
 	fu_struct_legion_hid_normal_cmd_set_sub_id(st_cmd, 0x01);
 	fu_struct_legion_hid_normal_cmd_set_device_id(st_cmd, id);
 	if (!fu_struct_legion_hid_normal_cmd_set_data(st_cmd, content, sizeof(content), error))
-		return version;
+		return FALSE;
 	if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
 				  st_cmd->buf->data,
 				  st_cmd->buf->len,
 				  FU_LEGION_HID_DEVICE_IO_TIMEOUT,
 				  FU_IO_CHANNEL_FLAG_NONE,
 				  error))
-		return version;
+		return FALSE;
 
 	res = g_byte_array_sized_new(FU_LEGION_HID_DEVICE_FW_REPORT_LENGTH);
 	helper.res = res;
@@ -436,83 +439,102 @@ fu_legion_hid_device_get_version(FuLegionHidDevice *self, guint8 id, GError **er
 	helper.sub_id = fu_struct_legion_hid_normal_cmd_get_sub_id(st_cmd);
 	helper.dev_id = id;
 	if (!fu_legion_hid_device_read_response(self, &helper, error))
-		return version;
-
-	version = fu_memread_uint32(res->data + 13, G_BIG_ENDIAN);
-	return version;
-}
-
-static guint
-fu_legion_hid_device_get_version_ex(FuLegionHidDevice *self, guint8 id, GError **error)
-{
-	guint version = 0;
-	guint max_try_times = 10;
-
-	for (guint i = 0; i < max_try_times; ++i) {
-		g_clear_error(error);
-		version = fu_legion_hid_device_get_version(self, id, error);
-		if (version > 0)
-			break;
-		fu_device_sleep(FU_DEVICE(self), FU_LEGION_HID_DEVICE_REBOOT_WAIT_TIME / 5);
-	}
-
-	return version;
-}
-
-static gboolean
-fu_legion_hid_device_ensure_version(FuLegionHidDevice *self, GError **error)
-{
-	guint mcu_version, left_version, right_version, final_version;
-	char version[32] = {0};
-
-	mcu_version = fu_legion_hid_device_get_version_ex(self, FU_LEGION_HID_DEVICE_ID_RX, error);
-	if (mcu_version == 0)
 		return FALSE;
-	left_version =
-	    fu_legion_hid_device_get_version_ex(self, FU_LEGION_HID_DEVICE_ID_GAMEPAD_L, error);
-	if (left_version == 0)
+	if (!fu_memread_uint32_safe(res->data, res->len, 13, version, G_BIG_ENDIAN, error))
 		return FALSE;
-	right_version =
-	    fu_legion_hid_device_get_version_ex(self, FU_LEGION_HID_DEVICE_ID_GAMEPAD_R, error);
-	if (right_version == 0)
-		return FALSE;
-
-	final_version = mcu_version + left_version + right_version;
-	g_snprintf(version, sizeof(version), "%u", final_version);
-	fu_device_set_version(FU_DEVICE(self), version);
 	return TRUE;
 }
 
-static guint8
+typedef struct {
+	FuLegionHidDeviceId id;
+	guint32 *version;
+} FuLegionHidDeviceVersionHelper;
+
+static gboolean
+fu_legion_hid_device_get_version_retry_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
+	FuLegionHidDeviceVersionHelper *helper = (FuLegionHidDeviceVersionHelper *)user_data;
+	return fu_legion_hid_device_get_version(self, helper->id, helper->version, error);
+}
+
+static gboolean
+fu_legion_hid_device_get_version_retry(FuLegionHidDevice *self,
+				       FuLegionHidDeviceId id,
+				       guint32 *version,
+				       GError **error)
+{
+	FuLegionHidDeviceVersionHelper helper = {
+	    .id = id,
+	    .version = version,
+	};
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_legion_hid_device_get_version_retry_cb,
+				    10,
+				    2000,
+				    &helper,
+				    error);
+}
+
+static gboolean
+fu_legion_hid_device_ensure_versions(FuLegionHidDevice *self, GError **error)
+{
+	/* MCU */
+	if (!fu_legion_hid_device_get_version_retry(self,
+						    FU_LEGION_HID_DEVICE_ID_RX,
+						    &self->mcu_version,
+						    error))
+		return FALSE;
+
+	/* left */
+	if (!fu_legion_hid_device_get_version_retry(self,
+						    FU_LEGION_HID_DEVICE_ID_GAMEPAD_L,
+						    &self->left_version,
+						    error))
+		return FALSE;
+
+	/* right */
+	if (!fu_legion_hid_device_get_version_retry(self,
+						    FU_LEGION_HID_DEVICE_ID_GAMEPAD_R,
+						    &self->right_version,
+						    error))
+		return FALSE;
+
+	/* success */
+	fu_device_set_version_raw(FU_DEVICE(self),
+				  self->mcu_version + self->left_version + self->right_version);
+	return TRUE;
+}
+
+static FuLegionHidDeviceId
 fu_legion_hid_device_get_id(GByteArray *buffer)
 {
 	guint offset = 0;
-	guint8 id = 0;
 
 	if (buffer->len < FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH + FU_LEGION_HID_DEVICE_FW_ID_LENGTH)
-		return 0;
+		return FU_LEGION_HID_DEVICE_ID_UNKNOWN;
 
 	offset =
 	    buffer->len - FU_LEGION_HID_DEVICE_FW_SIGNED_LENGTH - FU_LEGION_HID_DEVICE_FW_ID_LENGTH;
-	for (guint i = 0; i < FU_LEGION_HID_DEVICE_FW_ID_LENGTH; ++i) {
-		id = buffer->data[offset + i];
+	for (guint i = 0; i < FU_LEGION_HID_DEVICE_FW_ID_LENGTH; i++) {
+		FuLegionHidDeviceId id = buffer->data[offset + i];
 		if (id == FU_LEGION_HID_DEVICE_ID_DONGLE ||
 		    id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L3 ||
 		    id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R3)
 			return id;
 	}
 
-	return 0;
+	return FU_LEGION_HID_DEVICE_ID_UNKNOWN;
 }
 
 static gboolean
 fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmware, GError **error)
 {
+	FuLegionHidDeviceId id = 0;
+	guint16 crc16 = 0;
+	guint16 max_size = 0;
 	g_autoptr(GBytes) payload = NULL;
 	g_autoptr(GByteArray) array = NULL;
-	guint8 id = 0;
-	guint16 crc16 = 0;
-	guint max_size = 0;
 
 	payload = fu_firmware_get_bytes(firmware, error);
 	if (payload == NULL)
@@ -522,7 +544,7 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 	fu_byte_array_append_bytes(array, payload);
 
 	id = fu_legion_hid_device_get_id(array);
-	if (id == 0) {
+	if (id == FU_LEGION_HID_DEVICE_ID_UNKNOWN) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -531,19 +553,16 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 	}
 
 	crc16 = fu_crc16(FU_CRC_KIND_B16_XMODEM, array->data, array->len);
-
 	if (!fu_legion_hid_device_upgrade_start(self, id, crc16, array->len, error))
 		return FALSE;
-
 	if (!fu_legion_hid_device_upgrade_query_size(self, id, &max_size, error))
 		return FALSE;
-
 	if (!fu_legion_hid_device_upgrade_write_data(self, id, max_size, payload, error))
 		return FALSE;
-
 	if (!fu_legion_hid_device_upgrade_verify(self, id, error))
 		return FALSE;
 
+	/* success */
 	return TRUE;
 }
 
@@ -566,28 +585,23 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 	img_mcu = fu_firmware_get_image_by_id(firmware, "DeviceIDRx", error);
 	if (img_mcu != NULL) {
 		guint raw_version = fu_firmware_get_version_raw(img_mcu);
-		guint mcu_version = fu_legion_hid_device_get_version(self, 1, error);
-		if (raw_version > mcu_version) {
+		if (raw_version > self->mcu_version) {
 			mcu_need_upgrade = TRUE;
 			device_count++;
 		}
 	}
-
 	img_left = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadL", error);
 	if (img_left != NULL) {
 		guint raw_version = fu_firmware_get_version_raw(img_left);
-		guint left_version = fu_legion_hid_device_get_version(self, 3, error);
-		if (raw_version > left_version) {
+		if (raw_version > self->left_version) {
 			left_need_upgrade = TRUE;
 			device_count++;
 		}
 	}
-
 	img_right = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadR", error);
 	if (img_right != NULL) {
 		guint raw_version = fu_firmware_get_version_raw(img_right);
-		guint right_version = fu_legion_hid_device_get_version(self, 4, error);
-		if (raw_version > right_version) {
+		if (raw_version > self->right_version) {
 			right_need_upgrade = TRUE;
 			device_count++;
 		}
@@ -634,11 +648,18 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 		 * If only the controller is updated, the MCU will not restart,
 		 * so the version number needs to be reset.
 		 */
-		if (!fu_legion_hid_device_ensure_version(self, error))
+		/* FIXME: is this needed? it should be already be done by the daemon... */
+		if (!fu_legion_hid_device_ensure_versions(self, error))
 			return FALSE;
 	}
 
 	return TRUE;
+}
+
+static gchar *
+fu_legion_hid_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	return g_strdup_printf("%u", (guint)version_raw);
 }
 
 static void
@@ -659,6 +680,7 @@ fu_legion_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
+	/* FIXME: can this be moved to ->probe() */
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL)
 		return FALSE;
@@ -674,7 +696,8 @@ fu_legion_hid_device_setup(FuDevice *device, GError **error)
 	if (report == NULL)
 		return FALSE;
 
-	return fu_legion_hid_device_ensure_version(self, error);
+	/* get MCU, left and right versions */
+	return fu_legion_hid_device_ensure_versions(self, error);
 }
 
 static void
@@ -684,6 +707,8 @@ fu_legion_hid_device_class_init(FuLegionHidDeviceClass *klass)
 	device_class->setup = fu_legion_hid_device_setup;
 	device_class->write_firmware = fu_legion_hid_device_write_firmware;
 	device_class->set_progress = fu_legion_hid_device_set_progress;
+	device_class->convert_version = fu_legion_hid_device_convert_version;
+	device_class->to_string = fu_legion_hid_device_to_string;
 }
 
 static void
