@@ -738,7 +738,7 @@ fu_input_stream_find(GInputStream *stream,
 	g_return_val_if_fail(bufsz < blocksz, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	while (offset_cur < bufsz) {
+	while (TRUE) {
 		g_autoptr(GByteArray) buf_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
