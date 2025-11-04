@@ -12,8 +12,6 @@
 #include "fu-nvme-device.h"
 #include "fu-nvme-struct.h"
 
-#define FU_NVME_ID_CTRL_SIZE 0x1000
-
 struct _FuNvmeDevice {
 	FuPciDevice parent_instance;
 	guint pci_depth;
@@ -262,58 +260,65 @@ fu_nvme_device_set_serial(FuNvmeDevice *self, const gchar *serial, GError **erro
 }
 
 static gboolean
-fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
+fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize bufsz, GError **error)
 {
+	guint8 frmw;
 	guint8 fawr;
 	guint8 fwug;
 	guint8 nfws;
 	guint8 s1ro;
-	g_autofree gchar *gu = NULL;
+	const fwupd_guid_t *gu;
 	g_autofree gchar *mn = NULL;
+	g_autofree gchar *mn_stripped = NULL;
 	g_autofree gchar *sn = NULL;
-	g_autofree gchar *sr = NULL;
+	g_autofree gchar *fr = NULL;
+	g_autoptr(FuStructNvmeIdCtrl) st = NULL;
 
 	/* wrong size */
-	if (sz != FU_NVME_ID_CTRL_SIZE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "failed to parse blob, expected 0x%04x bytes",
-			    (guint)FU_NVME_ID_CTRL_SIZE);
+	st = fu_struct_nvme_id_ctrl_parse(buf, bufsz, 0x0, error);
+	if (st == NULL)
 		return FALSE;
-	}
 
-	/* get sanitized string from CNS -- see the following doc for offsets:
-	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
-	mn = fu_nvme_device_get_string_safe(buf, 24, 63);
+	/* get sanitized string from CNS -- see NVM-Express-1_3c-2018.05.24-Ratified.pdf */
+	mn = fu_struct_nvme_id_ctrl_get_mn(st);
 	if (mn != NULL) {
-		fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", mn);
-		fu_device_set_name(FU_DEVICE(self), mn);
+		mn_stripped = fu_strstrip(mn);
+		if (mn_stripped[0] != '\0') {
+			fu_device_add_instance_strsafe(FU_DEVICE(self), "NAME", mn_stripped);
+			fu_device_set_name(FU_DEVICE(self), mn_stripped);
+		}
 	}
-	sn = fu_nvme_device_get_string_safe(buf, 4, 23);
+	sn = fu_struct_nvme_id_ctrl_get_sn(st);
 	if (sn != NULL) {
-		if (!fu_nvme_device_set_serial(self, sn, error))
+		g_autofree gchar *str = fu_strstrip(sn);
+		if (!fu_nvme_device_set_serial(self, str, error))
 			return FALSE;
 	}
-	sr = fu_nvme_device_get_string_safe(buf, 64, 71);
-	if (sr != NULL)
-		fu_device_set_version(FU_DEVICE(self), sr);
+	fr = fu_struct_nvme_id_ctrl_get_fr(st);
+	if (fr != NULL) {
+		g_autofree gchar *str = fu_strstrip(fr);
+		if (str[0] != '\0')
+			fu_device_set_version(FU_DEVICE(self), fr);
+	}
 
-	/* firmware update granularity (FWUG) */
-	fwug = buf[319];
+	/* firmware update granularity */
+	fwug = fu_struct_nvme_id_ctrl_get_fwug(st);
 	if (fwug != 0x00 && fwug != 0xff)
 		self->write_block_size = ((guint64)fwug) * 0x1000;
 
 	/* firmware slot information */
-	fawr = (buf[260] & 0x10) >> 4;
-	nfws = (buf[260] & 0x0e) >> 1;
-	s1ro = buf[260] & 0x01;
+	frmw = fu_struct_nvme_id_ctrl_get_frmw(st);
+	fawr = (frmw & 0x10) >> 4;
+	nfws = (frmw & 0x0e) >> 1;
+	s1ro = frmw & 0x01;
 	g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
-	/* FRU globally unique identifier (FGUID) */
-	gu = fu_nvme_device_get_guid_safe(buf, 127);
-	if (gu != NULL)
-		fu_device_add_instance_id(FU_DEVICE(self), gu);
+	/* FRU globally unique identifier */
+	gu = fu_struct_nvme_id_ctrl_get_fguid(st);
+	if (fu_common_guid_is_plausible((const guint8 *)gu)) {
+		g_autofree gchar *guid = fwupd_guid_to_string(gu, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+		fu_device_add_instance_id(FU_DEVICE(self), guid);
+	}
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the
@@ -321,9 +326,9 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fu_nvme_device_parse_cns_maybe_dell(self, buf);
 
 	/* fall back to the device description */
-	if (mn != NULL && fu_device_get_guids(FU_DEVICE(self))->len == 0) {
+	if (mn_stripped != NULL && fu_device_get_guids(FU_DEVICE(self))->len == 0) {
 		g_debug("no vendor GUID, falling back to mn");
-		fu_device_add_instance_id(FU_DEVICE(self), mn);
+		fu_device_add_instance_id(FU_DEVICE(self), mn_stripped);
 	}
 	return TRUE;
 }
@@ -395,7 +400,7 @@ static gboolean
 fu_nvme_device_setup(FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
-	guint8 buf[FU_NVME_ID_CTRL_SIZE] = {0x0};
+	guint8 buf[FU_STRUCT_NVME_ID_CTRL_SIZE] = {0x0};
 
 	/* get and parse CNS */
 	if (!fu_nvme_device_identify_ctrl(self, buf, sizeof(buf), error)) {
