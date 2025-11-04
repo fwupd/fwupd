@@ -27,6 +27,10 @@ struct _FuNvmeDevice {
 #define FU_NVME_DEVICE_FLAG_FORCE_ALIGN "force-align"
 #define FU_NVME_DEVICE_FLAG_COMMIT_CA3	"commit-ca3"
 
+#define FU_NVME_LOG_FW_SLOT 0x03
+
+#define FU_NVME_FW_SLOT_INFO_AFI_FWUP (1u << 3)
+
 G_DEFINE_TYPE(FuNvmeDevice, fu_nvme_device, FU_TYPE_PCI_DEVICE)
 
 #define FU_NVME_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
@@ -188,6 +192,60 @@ fu_nvme_device_fw_download(FuNvmeDevice *self,
 	if (buf_mut == NULL)
 		return FALSE;
 	return fu_nvme_device_submit_admin_passthru(self, &cmd, buf_mut, bufsz, error);
+}
+
+static FuStructNvmeFwSlotInfoLog *
+fu_nvme_device_get_fw_slot_info(FuNvmeDevice *self, GError **error)
+{
+	guint8 buf[FU_STRUCT_NVME_FW_SLOT_INFO_LOG_SIZE] = {0};
+	guint32 numd = (sizeof(buf) >> 2) - 1;
+	struct nvme_admin_cmd cmd = {
+	    .opcode = 0x02,
+	    .nsid = 0xffffffff,
+	    .addr = 0x0, /* memory address of data */
+	    .data_len = sizeof(buf),
+	    .cdw10 = (numd << 16) | FU_NVME_LOG_FW_SLOT,
+	};
+
+	if (!fu_nvme_device_submit_admin_passthru(self, &cmd, buf, sizeof(buf), error))
+		return NULL;
+	return fu_struct_nvme_fw_slot_info_log_parse(buf, sizeof(buf), 0x0, error);
+}
+
+static gboolean
+fu_nvme_device_wait_for_fw_download_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	FuNvmeDevice *self = FU_NVME_DEVICE(device);
+	g_autoptr(FuStructNvmeFwSlotInfoLog) st_log = NULL;
+
+	st_log = fu_nvme_device_get_fw_slot_info(self, error);
+	if (st_log == NULL)
+		return FALSE;
+	if (fu_struct_nvme_fw_slot_info_log_get_afi(st_log) & FU_NVME_FW_SLOT_INFO_AFI_FWUP) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_TIMED_OUT,
+				    "download still marked in-progress");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_nvme_device_wait_for_fw_download(FuNvmeDevice *self, GError **error)
+{
+	/* preserve compat with older emulation files */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.0.17"))
+		return TRUE;
+	return fu_device_retry_full(FU_DEVICE(self),
+				    fu_nvme_device_wait_for_fw_download_cb,
+				    600,
+				    100, /* ms */
+				    NULL,
+				    error);
 }
 
 static void
@@ -485,6 +543,12 @@ fu_nvme_device_write_firmware(FuDevice *device,
 						(gsize)fu_chunk_array_length(chunks));
 	}
 	fu_progress_step_done(progress);
+
+	/* wait */
+	if (!fu_nvme_device_wait_for_fw_download(self, error)) {
+		g_prefix_error_literal(error, "firmware download did not complete: ");
+		return FALSE;
+	}
 
 	/* commit */
 	if (fu_device_has_private_flag(device, FU_NVME_DEVICE_FLAG_COMMIT_CA3))

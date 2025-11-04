@@ -153,3 +153,11 @@ struct FuStructNvmeIdCtrl {
     nanagrpid: u32le,
     reserved: [u8; 3744],
 }
+
+#[derive(Parse)]
+struct FuStructNvmeFwSlotInfoLog {
+    afi: u8,
+    _reserved1[]: [u8; 7],
+    frs: [u64le; 7],
+    _reserved2[]: [u8; 448],
+}
