@@ -143,9 +143,20 @@ fu_mtd_ifd_device_init(FuMtdIfdDevice *self)
 }
 
 static void
+fu_mtd_ifd_device_finalize(GObject *object)
+{
+	FuMtdIfdDevice *self = FU_MTD_IFD_DEVICE(object);
+	if (self->img != NULL)
+		g_object_unref(self->img);
+	G_OBJECT_CLASS(fu_mtd_ifd_device_parent_class)->finalize(object);
+}
+
+static void
 fu_mtd_ifd_device_class_init(FuMtdIfdDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_mtd_ifd_device_finalize;
 	device_class->to_string = fu_mtd_ifd_device_to_string;
 	device_class->probe = fu_mtd_ifd_device_probe;
 	device_class->add_security_attrs = fu_mtd_ifd_device_add_security_attrs;
