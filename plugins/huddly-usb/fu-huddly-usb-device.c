@@ -93,7 +93,7 @@ fu_huddly_usb_device_bulk_write(FuHuddlyUsbDevice *self,
 						 src->data + offset,
 						 chunk_size,
 						 &transmitted,
-						 2000,
+						 3000,
 						 NULL,
 						 error)) {
 			return FALSE;
