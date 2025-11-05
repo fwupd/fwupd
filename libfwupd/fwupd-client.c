@@ -5465,7 +5465,7 @@ fwupd_client_download_http(FwupdClient *self, CURL *curl, const gchar *url, GErr
 		if (g_str_is_ascii(str)) {
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
+				    FWUPD_ERROR_INVALID_FILE,
 				    "Failed to download due to server limit: %s",
 				    str);
 			return NULL;
