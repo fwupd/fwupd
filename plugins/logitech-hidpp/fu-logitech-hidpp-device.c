@@ -101,7 +101,7 @@ fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_KEYBOARD)
 		return FU_DEVICE_ICON_INPUT_KEYBOARD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_REMOTE_CONTROL)
-		return FU_DEVICE_ICON_PDA; // ish
+		return FU_DEVICE_ICON_PDA; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_NUMPAD)
 		return FU_DEVICE_ICON_INPUT_DIALPAD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_MOUSE)
@@ -109,9 +109,9 @@ fu_logitech_hidpp_device_get_icon(FuLogitechHidppDeviceKind kind)
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TOUCHPAD)
 		return FU_DEVICE_ICON_INPUT_TOUCHPAD;
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_TRACKBALL)
-		return FU_DEVICE_ICON_INPUT_MOUSE; // ish
+		return FU_DEVICE_ICON_INPUT_MOUSE; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_PRESENTER)
-		return FU_DEVICE_ICON_PDA; // ish
+		return FU_DEVICE_ICON_PDA; /* ish */
 	if (kind == FU_LOGITECH_HIDPP_DEVICE_KIND_RECEIVER)
 		return FU_DEVICE_ICON_USB_RECEIVER;
 	return NULL;

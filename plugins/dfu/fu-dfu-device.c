@@ -657,7 +657,6 @@ fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **e
 					    &error_local)) {
 		/* some devices just reboot and stall the endpoint :/ */
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
-		    //		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_debug("ignoring while detaching: %s", error_local->message);
 		} else {

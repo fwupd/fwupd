@@ -341,13 +341,14 @@ fu_steelseries_fizz_gen2_is_updatable(FuSteelseriesFizzImpl *self, FuDevice *dev
 	if (!fu_device_emit_request(device, request, NULL, error))
 		return FALSE;
 
-	/* FIXME: return commented as soon as we have support of simultaneous connections */
-	// fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG); /* 40 sec */
-	// fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
-	// fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/*
+	 * FIXME: return commented as soon as we have support of simultaneous connections:
+	 * fu_device_set_remove_delay(device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	 * fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REPLUG_MATCH_GUID);
+	 * fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	 */
 
 	/* success */
-	// return TRUE;
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,

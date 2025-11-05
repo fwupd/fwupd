@@ -154,8 +154,7 @@ fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_flag(fu_device_get_proxy(FU_DEVICE(self)),
 			       FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_autofree gchar *recovery_str = g_strdup_printf("%d", self->idx);
-		// RC71LS = 0
-		// RC71LM = 1
+		/* RC71LS = 0, RC71LM = 1 */
 		fu_device_add_instance_strsafe(FU_DEVICE(self), "RECOVERY", recovery_str);
 		fu_device_build_instance_id(FU_DEVICE(self),
 					    NULL,
