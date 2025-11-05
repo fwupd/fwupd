@@ -5144,7 +5144,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
-			      "failed to parse * BOS descriptor: *did not find magic*");
+			      "failed to parse * BOS descriptor: *invalid UUID*");
 #endif
 
 	/* load the JSON into the backend */

@@ -42,6 +42,7 @@ struct _FuFirmwareClass {
 				     FuFirmwareParseFlags flags,
 				     GError **error);
 	gchar *(*convert_version)(FuFirmware *self, guint64 version_raw);
+	void (*add_magic)(FuFirmware *self);
 };
 
 /**
@@ -69,7 +70,7 @@ struct _FuFirmwareClass {
  **/
 #define FU_FIRMWARE_ID_HEADER "header"
 
-#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (32 * 1024 * 1024)
+#define FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX (64 * 1024)
 
 FuFirmware *
 fu_firmware_new(void);
@@ -157,6 +158,9 @@ void
 fu_firmware_set_alignment(FuFirmware *self, FuFirmwareAlignment alignment) G_GNUC_NON_NULL(1);
 void
 fu_firmware_add_chunk(FuFirmware *self, FuChunk *chk) G_GNUC_NON_NULL(1);
+void
+fu_firmware_add_magic(FuFirmware *self, const guint8 *buf, gsize bufsz, gsize offset)
+    G_GNUC_NON_NULL(1, 2);
 GPtrArray *
 fu_firmware_get_chunks(FuFirmware *self, GError **error) G_GNUC_NON_NULL(1);
 FuFirmware *
