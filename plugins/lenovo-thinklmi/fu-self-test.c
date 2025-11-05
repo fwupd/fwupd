@@ -181,7 +181,6 @@ main(int argc, char **argv)
 	g_autofree gchar *confdir = NULL;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
-	g_autoptr(GError) error = NULL;
 
 	(void)g_setenv("G_TEST_SRCDIR", SRCDIR, FALSE);
 	g_test_init(&argc, &argv, NULL);
