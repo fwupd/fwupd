@@ -738,7 +738,7 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 static gchar *
 fu_legion_hid_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	return g_strdup_printf("%u", (guint)version_raw);
+	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
 }
 
 static void
@@ -759,10 +759,7 @@ fu_legion_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
-	/*
-	 * If the following code is placed inside the probe function,
-	 * fwupd will report an error.
-	 */
+	/* device needs to be open, hence not in ->probe() */
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL)
 		return FALSE;
