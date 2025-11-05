@@ -52,16 +52,16 @@ struct FuStructLegionHidUpgradeCmd {
 #[derive(Parse, Default)]
 #[repr(C, packed)]
 struct FuStructLegionHidUpgradeRsp {
-    _unknown0: u8, // FIXME?!
-    _unknown1: u8, // FIXME?!
+    report_id: u8,
+    length: u8,
     main_id: u8,
     sub_id: u8,
     id: FuLegionHidDeviceId,
-    _unknown5: u8, // FIXME?!
-    _unknown6: u8, // FIXME?!
+    param: u8,
+    data_length: u8,
     step: u8,
-    _unknown8: u8, // FIXME?!
-    response: FuLegionHidResponseStatus == Ok,
+    reserved: u8,
+    response: FuLegionHidResponseStatus,
 }
 
 #[derive(New, Getters, Default)]

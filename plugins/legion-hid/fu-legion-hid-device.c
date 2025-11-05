@@ -90,6 +90,22 @@ fu_legion_hid_device_read_response(FuLegionHidDevice *self,
 }
 
 static gboolean
+fu_legion_hid_device_check_upgrade_device_id(guint8 rsp_id, guint8 dev_id)
+{
+	if (rsp_id == dev_id)
+		return TRUE;
+	if (rsp_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L &&
+	    (dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L2 ||
+	     dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_L3))
+		return TRUE;
+	if (rsp_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R &&
+	    (dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R2 ||
+	     dev_id == FU_LEGION_HID_DEVICE_ID_GAMEPAD_R3))
+		return TRUE;
+	return FALSE;
+}
+
+static gboolean
 fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 						    gpointer user_data,
 						    GError **error)
@@ -109,7 +125,7 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 		return FALSE;
 	st_rsp = fu_struct_legion_hid_upgrade_rsp_parse(res->data, res->len, 0x0, error);
 	if (st_rsp == NULL) {
-		g_prefix_error_literal(error, "device report start command failed: ");
+		g_prefix_error_literal(error, "device report upgrade command failed: ");
 		return FALSE;
 	}
 	if (fu_struct_legion_hid_upgrade_rsp_get_main_id(st_rsp) != helper->main_id) {
@@ -139,13 +155,23 @@ fu_legion_hid_device_read_upgrade_response_retry_cb(FuDevice *device,
 			    helper->step);
 		return FALSE;
 	}
-	if (fu_struct_legion_hid_upgrade_rsp_get_id(st_rsp) != helper->dev_id) {
+	if (!fu_legion_hid_device_check_upgrade_device_id(
+		fu_struct_legion_hid_upgrade_rsp_get_id(st_rsp),
+		helper->dev_id)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_BUSY,
 			    "response dev ID was 0x%x, expected 0x%x",
 			    fu_struct_legion_hid_upgrade_rsp_get_id(st_rsp),
 			    helper->dev_id);
+		return FALSE;
+	}
+	if (fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp) ==
+	    FU_LEGION_HID_RESPONSE_STATUS_BUSY) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BUSY,
+				    "response report device is busy");
 		return FALSE;
 	}
 
@@ -174,6 +200,7 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 				   GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
+	g_autoptr(FuStructLegionHidUpgradeRsp) st_rsp = NULL;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
 	g_autoptr(FuStructLegionHidUpgradeStartParam) st_content =
@@ -202,7 +229,23 @@ fu_legion_hid_device_upgrade_start(FuLegionHidDevice *self,
 	helper.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	helper.dev_id = id;
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_START;
-	return fu_legion_hid_device_read_upgrade_response(self, &helper, error);
+	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
+		return FALSE;
+	st_rsp = fu_struct_legion_hid_upgrade_rsp_parse(res->data, res->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	if (fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp) !=
+	    FU_LEGION_HID_RESPONSE_STATUS_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report start command failed with %u",
+			    fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -212,6 +255,7 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 					GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
+	g_autoptr(FuStructLegionHidUpgradeRsp) st_rsp = NULL;
 	g_autoptr(GByteArray) res = NULL;
 	g_autoptr(FuStructLegionHidUpgradeCmd) st_cmd = fu_struct_legion_hid_upgrade_cmd_new();
 	guint8 content[] = {
@@ -240,8 +284,27 @@ fu_legion_hid_device_upgrade_query_size(FuLegionHidDevice *self,
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_QUERY_SIZE;
 	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
 		return FALSE;
-	if (max_size != NULL)
-		*max_size = fu_memread_uint16(res->data + 9, G_BIG_ENDIAN);
+	st_rsp = fu_struct_legion_hid_upgrade_rsp_parse(res->data, res->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	if (fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp) ==
+	    FU_LEGION_HID_RESPONSE_STATUS_FAIL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report query size command failed with %u",
+			    fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp));
+		return FALSE;
+	}
+	if (max_size != NULL) {
+		if (!fu_memread_uint16_safe(res->data,
+					    res->len,
+					    FU_STRUCT_LEGION_HID_UPGRADE_RSP_OFFSET_RESPONSE,
+					    max_size,
+					    G_BIG_ENDIAN,
+					    error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -403,7 +466,23 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, FuLegionHidDeviceId
 	helper.sub_id = fu_struct_legion_hid_upgrade_cmd_get_sub_id(st_cmd);
 	helper.dev_id = id;
 	helper.step = FU_LEGION_HID_UPGRADE_STEP_VERIFY;
-	return fu_legion_hid_device_read_upgrade_response(self, &helper, error);
+	if (!fu_legion_hid_device_read_upgrade_response(self, &helper, error))
+		return FALSE;
+	st_rsp = fu_struct_legion_hid_upgrade_rsp_parse(res->data, res->len, 0x0, error);
+	if (st_rsp == NULL)
+		return FALSE;
+	if (fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp) !=
+	    FU_LEGION_HID_RESPONSE_STATUS_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "device report verify command failed with %u",
+			    fu_struct_legion_hid_upgrade_rsp_get_response(st_rsp));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -648,7 +727,7 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 		 * If only the controller is updated, the MCU will not restart,
 		 * so the version number needs to be reset.
 		 */
-		/* FIXME: is this needed? it should be already be done by the daemon... */
+		/* If the version is not reset, fwupd will report an update failure. */
 		if (!fu_legion_hid_device_ensure_versions(self, error))
 			return FALSE;
 	}
@@ -680,7 +759,10 @@ fu_legion_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
 
-	/* FIXME: can this be moved to ->probe() */
+	/*
+	 * If the following code is placed inside the probe function,
+	 * fwupd will report an error.
+	 */
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
 	if (descriptor == NULL)
 		return FALSE;
