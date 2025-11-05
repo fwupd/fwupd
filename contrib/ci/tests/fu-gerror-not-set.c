@@ -11,6 +11,7 @@ fu_gerror_not_set_test(void)
 {
 	g_autoptr(GError) error = NULL;
 	if (0) {
+		/* should set before prefix */
 		g_prefix_error_literal(error, "test: ");
 	}
 }
