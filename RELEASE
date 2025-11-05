@@ -26,6 +26,7 @@ Update translations with `ninja-build fwupd-pot`
 # MAKE SURE THIS IS CORRECT
 export release_ver="2.0.17"
 
+ninja fwupd-pot
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
 <wait>
