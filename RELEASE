@@ -24,7 +24,7 @@ Update translations with `ninja-build fwupd-pot`
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="2.0.17"
+export release_ver="2.0.18"
 
 ninja fwupd-pot
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
