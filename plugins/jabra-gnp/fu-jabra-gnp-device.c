@@ -14,97 +14,23 @@
 #include "fu-jabra-gnp-struct.h"
 
 struct _FuJabraGnpDevice {
-	FuUsbDevice parent_instance;
+	FuHidDevice parent_instance;
 	guint8 fwu_protocol;
-	guint8 iface_hid;
 	guint8 sequence_number;
 	guint8 address;
-	guint8 epin;
 	guint16 dfu_pid;
 };
 
-G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_USB_DEVICE)
-
-guint8
-fu_jabra_gnp_device_get_iface_hid(FuJabraGnpDevice *self)
-{
-	g_return_val_if_fail(FU_IS_JABRA_GNP_DEVICE(self), G_MAXUINT8);
-	return self->iface_hid;
-}
-
-guint8
-fu_jabra_gnp_device_get_epin(FuJabraGnpDevice *self)
-{
-	g_return_val_if_fail(FU_IS_JABRA_GNP_DEVICE(self), G_MAXUINT8);
-	return self->epin;
-}
+G_DEFINE_TYPE(FuJabraGnpDevice, fu_jabra_gnp_device, FU_TYPE_HID_DEVICE)
 
 static void
 fu_jabra_gnp_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	fwupd_codec_string_append_hex(str, idt, "FwuProtocol", self->fwu_protocol);
-	fwupd_codec_string_append_hex(str, idt, "IfaceHid", self->iface_hid);
 	fwupd_codec_string_append_hex(str, idt, "SequenceNumber", self->sequence_number);
 	fwupd_codec_string_append_hex(str, idt, "Address", self->address);
 	fwupd_codec_string_append_hex(str, idt, "DfuPid", self->dfu_pid);
-}
-
-static guint8
-_fu_usb_device_get_interface_for_class(FuUsbDevice *usb_device, guint8 intf_class, GError **error)
-{
-	g_autoptr(GPtrArray) intfs = NULL;
-	intfs = fu_usb_device_get_interfaces(usb_device, error);
-	if (intfs == NULL)
-		return 0xFF;
-	for (guint i = 0; i < intfs->len; i++) {
-		FuUsbInterface *intf = g_ptr_array_index(intfs, i);
-		if (fu_usb_interface_get_class(intf) == intf_class)
-			return fu_usb_interface_get_number(intf);
-	}
-	return 0xFF;
-}
-
-static gboolean
-fu_jabra_gnp_device_probe(FuDevice *device, GError **error)
-{
-	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
-	g_autoptr(GPtrArray) ifaces = NULL;
-
-	ifaces = fu_usb_device_get_interfaces(FU_USB_DEVICE(self), error);
-	if (ifaces == NULL) {
-		g_prefix_error_literal(error, "update interface not found: ");
-		return FALSE;
-	}
-
-	for (guint i = 0; i < ifaces->len; i++) {
-		FuUsbInterface *iface = g_ptr_array_index(ifaces, i);
-		if (fu_usb_interface_get_class(iface) == FU_USB_CLASS_HID) {
-			FuUsbEndpoint *ep1;
-			g_autoptr(GPtrArray) endpoints = fu_usb_interface_get_endpoints(iface);
-
-			if (endpoints == NULL || endpoints->len < 1)
-				continue;
-			ep1 = g_ptr_array_index(endpoints, 0);
-			self->epin = fu_usb_endpoint_get_address(ep1);
-		}
-	}
-	if (self->epin == 0x0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "update endpoints not found");
-		return FALSE;
-	}
-
-	self->iface_hid =
-	    _fu_usb_device_get_interface_for_class(FU_USB_DEVICE(self), FU_USB_CLASS_HID, error);
-	if (self->iface_hid == 0xFF) {
-		g_prefix_error_literal(error, "cannot find HID interface: ");
-		return FALSE;
-	}
-	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->iface_hid);
-	return TRUE;
 }
 
 gboolean
@@ -112,20 +38,13 @@ fu_jabra_gnp_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpDevice *self = FU_JABRA_GNP_DEVICE(device);
 	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
-	FuUsbDevice *target = FU_USB_DEVICE(self);
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(target),
-					    FU_USB_DIRECTION_HOST_TO_DEVICE,
-					    FU_USB_REQUEST_TYPE_CLASS,
-					    FU_USB_RECIPIENT_INTERFACE,
-					    0x09,
-					    0x0200 | FU_JABRA_GNP_IFACE,
-					    self->iface_hid,
-					    tx_data->buf->data,
-					    tx_data->buf->len,
-					    NULL,
-					    tx_data->timeout,
-					    NULL, /* cancellable */
-					    error)) {
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(self),
+				      0x0,
+				      tx_data->buf->data,
+				      tx_data->buf->len,
+				      tx_data->timeout,
+				      FU_HID_DEVICE_FLAG_AUTODETECT_EPS,
+				      error)) {
 		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
 	}
@@ -140,29 +59,28 @@ fu_jabra_gnp_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 	    {FU_JABRA_GNP_IFACE, 0x00, self->address, 0x00, 0x0A, 0x12, 0x02};
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
-	FuUsbDevice *target = FU_USB_DEVICE(self);
-	if (!fu_usb_device_interrupt_transfer(target,
-					      self->epin,
-					      rx_data->rxbuf,
-					      FU_JABRA_GNP_BUF_SIZE,
-					      NULL,
-					      rx_data->timeout,
-					      NULL, /* cancellable */
-					      error)) {
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+				      0x00,
+				      rx_data->rxbuf,
+				      FU_JABRA_GNP_BUF_SIZE,
+				      rx_data->timeout,
+				      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+					  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      error)) {
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
 	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[5] == match_buf[5] &&
 	    rx_data->rxbuf[6] == match_buf[6]) {
 		/* battery report, ignore and rx again */
-		if (!fu_usb_device_interrupt_transfer(target,
-						      self->epin,
-						      rx_data->rxbuf,
-						      FU_JABRA_GNP_BUF_SIZE,
-						      NULL,
-						      rx_data->timeout,
-						      NULL, /* cancellable */
-						      error)) {
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
+					      0x00,
+					      rx_data->rxbuf,
+					      sizeof(rx_data->rxbuf) / sizeof(rx_data->rxbuf[0]),
+					      rx_data->timeout,
+					      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+						  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+					      error)) {
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
@@ -554,6 +472,7 @@ fu_jabra_gnp_device_init(FuJabraGnpDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.jabra.gnp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_JABRA_GNP_FIRMWARE);
+	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_AUTODETECT_EPS);
 }
 
 static void
@@ -562,7 +481,6 @@ fu_jabra_gnp_device_class_init(FuJabraGnpDeviceClass *klass)
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->to_string = fu_jabra_gnp_device_to_string;
 	device_class->prepare_firmware = fu_jabra_gnp_device_prepare_firmware;
-	device_class->probe = fu_jabra_gnp_device_probe;
 	device_class->setup = fu_jabra_gnp_device_setup;
 	device_class->write_firmware = fu_jabra_gnp_device_write_firmware;
 	device_class->set_quirk_kv = fu_jabra_gnp_device_set_quirk_kv;

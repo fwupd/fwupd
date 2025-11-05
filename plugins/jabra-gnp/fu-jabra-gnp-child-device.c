@@ -45,19 +45,13 @@ fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **e
 {
 	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
 	FuJabraGnpDevice *parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device));
-	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent),
-					    FU_USB_DIRECTION_HOST_TO_DEVICE,
-					    FU_USB_REQUEST_TYPE_CLASS,
-					    FU_USB_RECIPIENT_INTERFACE,
-					    0x09,
-					    0x0200 | FU_JABRA_GNP_IFACE,
-					    fu_jabra_gnp_device_get_iface_hid(parent),
-					    tx_data->buf->data,
-					    tx_data->buf->len,
-					    NULL,
-					    tx_data->timeout,
-					    NULL, /* cancellable */
-					    error)) {
+	if (!fu_hid_device_set_report(FU_HID_DEVICE(parent),
+				      0x0,
+				      tx_data->buf->data,
+				      tx_data->buf->len,
+				      tx_data->timeout,
+				      FU_HID_DEVICE_FLAG_AUTODETECT_EPS,
+				      error)) {
 		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
 	}
@@ -80,34 +74,32 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
 	FuJabraGnpDevice *parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device));
-
-	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(parent),
-					      fu_jabra_gnp_device_get_epin(parent),
-					      rx_data->rxbuf,
-					      FU_JABRA_GNP_BUF_SIZE,
-					      NULL,
-					      rx_data->timeout,
-					      NULL, /* cancellable */
-					      error)) {
+	if (!fu_hid_device_get_report(FU_HID_DEVICE(parent),
+				      0x00,
+				      rx_data->rxbuf,
+				      FU_JABRA_GNP_BUF_SIZE,
+				      rx_data->timeout,
+				      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+					  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+				      error)) {
 		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
 	if (rx_data->rxbuf[2] == match_buf[2] && rx_data->rxbuf[3] == match_buf[3] &&
 	    rx_data->rxbuf[5] == match_buf[5] && rx_data->rxbuf[6] == match_buf[6]) {
-		/* battery report, ignpre and rx again */
-		if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(parent),
-						      0x81,
-						      rx_data->rxbuf,
-						      FU_JABRA_GNP_BUF_SIZE,
-						      NULL,
-						      rx_data->timeout,
-						      NULL, /* cancellable */
-						      error)) {
+		/* battery report, ignore and rx again */
+		if (!fu_hid_device_get_report(FU_HID_DEVICE(parent),
+					      0x00,
+					      rx_data->rxbuf,
+					      sizeof(rx_data->rxbuf) / sizeof(rx_data->rxbuf[0]),
+					      rx_data->timeout,
+					      FU_HID_DEVICE_FLAG_AUTODETECT_EPS |
+						  FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
+					      error)) {
 			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
 	}
-
 	if (fu_memcmp_safe(rx_data->rxbuf,
 			   sizeof(rx_data->rxbuf),
 			   0,
