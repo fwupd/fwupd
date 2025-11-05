@@ -59,7 +59,7 @@ fu_dell_kestrel_hid_device_fwup_pkg_new(FuChunk *chk,
 							 FU_DELL_KESTREL_HID_EXT_FWUPDATE);
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_chunk_sz(
 	    st_fwbuf,
-	    7 + chk_datasz); // 7 = sizeof(command)
+	    7 + chk_datasz); /* 7 = sizeof(command) */
 
 	/* command */
 	fu_struct_dell_kestrel_hid_fw_update_pkg_set_sub_cmd(st_fwbuf,

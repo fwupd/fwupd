@@ -394,7 +394,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memwrite_uint16_safe(buf->data,
 				     buf->len,
 				     GENESYS_USBHUB_VERSION_OFFSET,
-				     0x1234, // TODO: parse from firmware version string
+				     0x1234, /* TODO: parse from firmware version string */
 				     G_BIG_ENDIAN,
 				     error))
 		return NULL;

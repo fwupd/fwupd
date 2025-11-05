@@ -171,7 +171,7 @@ fu_msgpack_binary_stream_func(void)
 static void
 fu_msgpack_parse_binary_func(void)
 {
-	// 64 bit float 100.0099
+	/* 64 bit float 100.0099 */
 	const guchar data[] = {0xCB, 0x40, 0x59, 0x00, 0xA2, 0x33, 0x9C, 0x0E, 0xBF};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error = NULL;

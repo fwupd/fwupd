@@ -915,7 +915,7 @@ fu_bluez_device_method_acquire(FuBluezDevice *self,
 						       g_variant_new("(@a{sv})", opt_variant),
 						       G_DBUS_CALL_FLAGS_NONE,
 						       -1,
-						       NULL, // fd list
+						       NULL, /* fd list */
 						       &out_fd_list,
 						       NULL,
 						       error);

@@ -269,7 +269,7 @@ fu_pefile_firmware_parse(FuFirmware *firmware,
 	    "chksum->cert-table",
 	    offset + FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM,
 	    FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_CERTIFICATE_TABLE -
-		FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM); // end
+		FU_STRUCT_PE_COFF_OPTIONAL_HEADER64_OFFSET_SUBSYSTEM); /* end */
 
 	/* verify optional extra header */
 	if (fu_struct_pe_coff_file_header_get_size_of_optional_header(st_coff) > 0) {
