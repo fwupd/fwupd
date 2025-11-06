@@ -274,13 +274,13 @@ main(int argc, char **argv)
 	/* find correct device */
 	self->device = fu_test_mtd_find_mtdram(self->ctx, &error);
 	if (self->device == NULL) {
-		g_test_skip(error->message);
+		g_print("skipping tests: %s\n", error->message);
 		return 0;
 	}
 	locker = fu_device_locker_new(self->device, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND) ||
 	    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-		g_test_skip("no permission to read mtdram device");
+		g_print("skipping tests: %s\n", error->message);
 		return 0;
 	}
 	g_assert_no_error(error);
