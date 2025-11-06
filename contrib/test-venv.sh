@@ -3,6 +3,7 @@
 VENV=$(dirname $0)/..
 BUILD=${VENV}/build
 INSTALLED_TESTS=${VENV}/dist/share/installed-tests/fwupd
+SUDO=$(which sudo)
 export G_TEST_BUILDDIR=${INSTALLED_TESTS}
 export G_TEST_SRCDIR=${INSTALLED_TESTS}
 export GI_TYPELIB_PATH=${BUILD}/libfwupd
@@ -12,6 +13,12 @@ export PATH=${VENV}/bin:$PATH
 
 echo "Build time test suite"
 ninja -C ${BUILD} test
+
+echo "Testing mtd-self-test"
+${SUDO} modprobe mtdram
+ENV="G_TEST_BUILDDIR=${G_TEST_BUILDDIR} \
+     G_TEST_SRCDIR=${G_TEST_SRCDIR}"
+${SUDO} ${ENV} ${VENV}/dist/libexec/installed-tests/fwupd/mtd-self-test
 
 echo "Testing fwupdtool.sh"
 ${INSTALLED_TESTS}/fwupdtool.sh
