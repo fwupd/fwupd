@@ -6486,7 +6486,7 @@ fu_strsplit_stream_func(void)
 static void
 fu_input_stream_find_func(void)
 {
-	const gchar *haystack = "I write free software. Firmware troublemaker.";
+	const gchar *haystack = "I write free software. Firmware troublemaker, writing Firmware.";
 	const gchar *needle1 = "Firmware";
 	const gchar *needle2 = "XXX";
 	gboolean ret;
@@ -6496,14 +6496,33 @@ fu_input_stream_find_func(void)
 
 	stream =
 	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle1, strlen(needle1), &offset, &error);
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(offset, ==, 23);
 
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle2, strlen(needle2), &offset, &error);
+	/* find second match */
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   44,
+				   &offset,
+				   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 54);
+
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle2,
+				   strlen(needle2),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
