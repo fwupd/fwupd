@@ -60,6 +60,7 @@ struct FuUtil {
 	GMainLoop *loop;
 	GOptionContext *context;
 	FuContext *ctx;
+	GSource *source_sigint;
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgress *progress;
@@ -321,13 +322,34 @@ fu_util_sigint_cb(gpointer user_data)
 #endif
 
 static void
-fu_util_setup_signal_handlers(FuUtil *self)
+fu_util_handle_sigint_start(FuUtil *self)
 {
 #ifdef HAVE_GIO_UNIX
-	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
-	g_source_set_callback(source, fu_util_sigint_cb, self, NULL);
-	g_source_attach(g_steal_pointer(&source), self->main_ctx);
+	if (self->source_sigint != NULL)
+		return;
+	self->source_sigint = g_unix_signal_source_new(SIGINT);
+	g_source_set_callback(self->source_sigint, fu_util_sigint_cb, self, NULL);
+	g_source_attach(self->source_sigint, self->main_ctx);
 #endif
+}
+
+static void
+fu_util_handle_sigint_stop(FuUtil *self)
+{
+	if (self->source_sigint == NULL)
+		return;
+	g_source_destroy(self->source_sigint);
+	self->source_sigint = NULL;
+}
+
+static void
+fu_util_context_flags_notify_cb(FuContext *ctx, GParamSpec *pspec, FuUtil *self)
+{
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT)) {
+		fu_util_handle_sigint_start(self);
+	} else {
+		fu_util_handle_sigint_stop(self);
+	}
 }
 
 static void
@@ -355,6 +377,8 @@ fu_util_private_free(FuUtil *self)
 		g_object_unref(self->progress);
 	if (self->context != NULL)
 		g_option_context_free(self->context);
+	if (self->source_sigint != NULL)
+		g_source_destroy(self->source_sigint);
 	if (self->lock_fd >= 0)
 		g_close(self->lock_fd, NULL);
 	g_ptr_array_unref(self->post_requests);
@@ -5965,7 +5989,6 @@ main(int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	self->cancellable = g_cancellable_new();
-	fu_util_setup_signal_handlers(self);
 	g_signal_connect(G_CANCELLABLE(self->cancellable),
 			 "cancelled",
 			 G_CALLBACK(fu_util_cancelled_cb),
@@ -6078,6 +6101,10 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	self->ctx = fu_context_new();
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::flags",
+			 G_CALLBACK(fu_util_context_flags_notify_cb),
+			 self);
 	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
