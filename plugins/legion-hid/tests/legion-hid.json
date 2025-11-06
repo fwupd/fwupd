@@ -1,0 +1,18 @@
+{
+  "name": "Legion Hid device",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "403dcd84a46cc1c8874607380ce84a964d1fc32da5a63169c6787db547d4d79f-LegionGo2_MCU_116504366.cab",
+      "emulation-file": "@enumeration_datadir@/legion-hid-setup.json",
+      "components": [
+        {
+          "version": "116504366",
+          "guids": [
+            "81ad5a9e-6804-5c65-9082-2910aa257c24"
+          ]
+        }
+      ]
+    }
+  ]
+}
