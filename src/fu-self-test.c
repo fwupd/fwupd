@@ -3790,6 +3790,13 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	g_autofree gchar *rundir = fu_path_from_kind(FU_PATH_KIND_RUNDIR);
+	g_autofree gchar *reboot_file = NULL;
+
+	/* create rundir */
+	ret = fu_path_mkdir(rundir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -3855,6 +3862,9 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
+
+	reboot_file = g_build_filename(rundir, "reboot-required", NULL);
+	g_assert_true(g_file_test(reboot_file, G_FILE_TEST_EXISTS));
 }
 
 typedef struct {
@@ -8002,6 +8012,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_RUNDIR", "/tmp/fwupd-self-test/run", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
 	sysfsdir = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);

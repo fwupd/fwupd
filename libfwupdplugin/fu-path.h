@@ -30,6 +30,7 @@
  * /usr/share/polkit-1/actions/)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
  * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
+ * @FU_PATH_KIND_RUNDIR:		The runtime directory (IE /run)
  * @FU_PATH_KIND_LOCKDIR:		The lock directory (IE /run/lock)
  * @FU_PATH_KIND_SYSFSDIR_FW_ATTRIB	The firmware attributes directory (IE
  * /sys/class/firmware-attributes)
@@ -73,6 +74,7 @@ typedef enum {
 	FU_PATH_KIND_POLKIT_ACTIONS,
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
 	FU_PATH_KIND_ACPI_TABLES,
+	FU_PATH_KIND_RUNDIR,
 	FU_PATH_KIND_LOCKDIR,
 	FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
 	FU_PATH_KIND_FIRMWARE_SEARCH,
