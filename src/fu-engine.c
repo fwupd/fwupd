@@ -2614,10 +2614,17 @@ fu_engine_create_reboot_required_file(GError **error)
 
 	/* append "fwupd" to reboot-required.pkgs if not already present */
 	if (g_file_get_contents(reboot_required_pkgs_path, &existing_content, NULL, NULL)) {
+		g_auto(GStrv) lines = NULL;
+		
 		/* check if fwupd is already in the file */
-		if (existing_content != NULL && strstr(existing_content, "fwupd") != NULL) {
-			g_debug("fwupd already in %s", reboot_required_pkgs_path);
-			return TRUE;
+		if (existing_content != NULL) {
+			lines = g_strsplit(existing_content, "\n", -1);
+			for (guint i = 0; lines[i] != NULL; i++) {
+				if (g_strcmp0(lines[i], "fwupd") == 0) {
+					g_debug("fwupd already in %s", reboot_required_pkgs_path);
+					return TRUE;
+				}
+			}
 		}
 		g_string_append(new_content, existing_content);
 	}
