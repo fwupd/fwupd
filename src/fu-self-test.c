@@ -3855,6 +3855,11 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
+
+#ifndef _WIN32
+	/* check that /run/reboot-required was created */
+	g_assert_true(g_file_test("/run/reboot-required", G_FILE_TEST_EXISTS));
+#endif
 }
 
 typedef struct {
