@@ -138,6 +138,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		if (!fu_input_stream_find(stream,
 					  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
 					  FU_STRUCT_FMAP_SIZE_SIGNATURE,
+					  0x0,
 					  &priv->signature_offset,
 					  error))
 			return FALSE;
