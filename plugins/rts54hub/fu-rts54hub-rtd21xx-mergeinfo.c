@@ -343,10 +343,10 @@ fu_rts54hub_rtd21xx_mergeinfo_attach(FuDevice *device, FuProgress *progress, GEr
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_mergeinfo_exit(FuDevice *device, GError **error)
+fu_rts54hub_rtd21xx_mergeinfo_exit_cb(FuDevice *device, GError **error)
 {
-	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
+	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -370,10 +370,11 @@ fu_rts54hub_rtd21xx_mergeinfo_setup(FuDevice *device, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* get version */
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_device_detach,
-					   (FuDeviceLockerFunc)fu_rts54hub_rtd21xx_mergeinfo_exit,
-					   error);
+	locker =
+	    fu_device_locker_new_full(device,
+				      (FuDeviceLockerFunc)fu_device_detach,
+				      (FuDeviceLockerFunc)fu_rts54hub_rtd21xx_mergeinfo_exit_cb,
+				      error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_rts54hub_rtd21xx_mergeinfo_ensure_version(self, error))
@@ -415,7 +416,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	if (locker == NULL)
 		return FALSE;
 
-	// get version x.x.x.x
+	/* get version x.x.x.x */
 	version_str = fu_firmware_get_version(firmware);
 
 	if (version_str == NULL) {
@@ -426,7 +427,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	// convert x.x.x.x to merge_version
+	/* convert x.x.x.x to merge_version */
 	if (fu_device_get_version_format(FU_DEVICE(self)) == FWUPD_VERSION_FORMAT_QUAD) {
 		if (sscanf(version_str,
 			   "%hhu.%hhu.%hhu.%hhu",
