@@ -42,3 +42,4 @@ fwupdtool.txt
 *.nix
 /.direnv
 /.envrc
+subprojects/.wraplock
