@@ -1403,6 +1403,7 @@ fu_coswid_firmware_init(FuCoswidFirmware *self)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_payload_free);
 	priv->entities =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_entity_free);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 }
 
 static void
