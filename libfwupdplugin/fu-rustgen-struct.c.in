@@ -615,7 +615,10 @@ static {{obj.name}} *
     g_autoptr({{obj.name}}) st = {{obj.c_method('NewInternal')}}();
     st->buf = fu_input_stream_read_byte_array(stream, offset, {{obj.size}}, NULL, error);
     if (st->buf == NULL) {
-        g_prefix_error(error, "{{obj.name}} failed read of 0x%x: ", (guint) {{obj.size}});
+        g_prefix_error(error,
+                       "{{obj.name}} failed read @0x%x of 0x%x: ",
+                       (guint) offset,
+                       (guint) {{obj.size}});
         return NULL;
     }
     if (st->buf->len != {{obj.size}}) {

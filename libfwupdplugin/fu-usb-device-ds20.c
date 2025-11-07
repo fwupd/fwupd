@@ -167,14 +167,16 @@ fu_usb_device_ds20_parse(FuFirmware *firmware,
 
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	for (gsize off = 0; off < streamsz; off += FU_STRUCT_DS20_SIZE) {
+	for (gsize off = offset; off < streamsz; off += FU_STRUCT_DS20_SIZE) {
 		g_autofree FuUsbDeviceDs20Item *dsinfo = g_new0(FuUsbDeviceDs20Item, 1);
 		g_autoptr(FuStructDs20) st = NULL;
 
 		/* parse */
 		st = fu_struct_ds20_parse_stream(stream, off, error);
-		if (st == NULL)
+		if (st == NULL) {
+			g_prefix_error(error, "failed at offset 0x%x: ", (guint)off);
 			return FALSE;
+		}
 		dsinfo->platform_ver = fu_struct_ds20_get_platform_ver(st);
 		dsinfo->total_length = fu_struct_ds20_get_total_length(st);
 		dsinfo->vendor_code = fu_struct_ds20_get_vendor_code(st);

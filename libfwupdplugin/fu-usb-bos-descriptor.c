@@ -172,7 +172,7 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* parse */
-	st = fu_usb_bos_hdr_parse_stream(stream, 0x0, error);
+	st = fu_usb_bos_hdr_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	self->bos_cap.bLength = fu_usb_bos_hdr_get_length(st);
