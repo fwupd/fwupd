@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuLegionHid2Firmware, fu_legion_hid2_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_legion_hid2_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
+			      gsize offset,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

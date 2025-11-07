@@ -27,10 +27,10 @@ G_DEFINE_TYPE(FuIfdBios, fu_ifd_bios, FU_TYPE_IFD_IMAGE)
 static gboolean
 fu_ifd_bios_parse(FuFirmware *firmware,
 		  GInputStream *stream,
+		  gsize offset,
 		  FuFirmwareParseFlags flags,
 		  GError **error)
 {
-	gsize offset = 0;
 	gsize streamsz = 0;
 	guint img_cnt = 0;
 

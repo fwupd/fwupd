@@ -222,6 +222,7 @@ fu_efi_x509_signature_get_subject_vendor(FuEfiX509Signature *self)
 static gboolean
 fu_efi_x509_signature_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -231,7 +232,7 @@ fu_efi_x509_signature_parse(FuFirmware *firmware,
 
 	/* set bytes */
 	if (!FU_FIRMWARE_CLASS(fu_efi_x509_signature_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse certificate */

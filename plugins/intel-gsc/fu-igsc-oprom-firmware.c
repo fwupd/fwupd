@@ -79,6 +79,7 @@ fu_igsc_oprom_firmware_match_device(FuIgscOpromFirmware *self,
 static gboolean
 fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -89,7 +90,7 @@ fu_igsc_oprom_firmware_parse(FuFirmware *firmware,
 
 	/* FuOpromFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_oprom_firmware_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* check sanity */

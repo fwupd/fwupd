@@ -45,6 +45,7 @@ fu_synaptics_vmm9_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_synaptics_vmm9_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {

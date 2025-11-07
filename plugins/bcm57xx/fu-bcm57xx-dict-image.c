@@ -30,6 +30,7 @@ fu_bcm57xx_dict_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 static gboolean
 fu_bcm57xx_dict_image_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

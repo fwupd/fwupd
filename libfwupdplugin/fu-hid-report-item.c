@@ -55,6 +55,7 @@ fu_hid_report_item_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 static gboolean
 fu_hid_report_item_parse(FuFirmware *firmware,
 			 GInputStream *stream,
+			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

@@ -232,12 +232,12 @@ fu_genesys_usbhub_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
 	FuGenesysUsbhubFirmware *self = FU_GENESYS_USBHUB_FIRMWARE(firmware);
 	gsize code_size = 0;
-	gsize offset = 0;
 	gsize streamsz = 0;
 	guint32 static_ts_offset = 0;
 	g_autoptr(GInputStream) stream_trunc = NULL;

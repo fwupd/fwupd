@@ -41,10 +41,10 @@ fu_efi_vss2_variable_store_validate(FuFirmware *firmware,
 static gboolean
 fu_efi_vss2_variable_store_parse(FuFirmware *firmware,
 				 GInputStream *stream,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
-	gsize offset = 0x0;
 	g_autoptr(FuStructEfiVss2VariableStoreHeader) st = NULL;
 
 	st = fu_struct_efi_vss2_variable_store_header_parse_stream(stream, offset, error);

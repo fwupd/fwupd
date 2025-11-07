@@ -138,13 +138,13 @@ fu_efi_volume_parse_nvram_evsa(FuEfiVolume *self,
 static gboolean
 fu_efi_volume_parse(FuFirmware *firmware,
 		    GInputStream *stream,
+		    gsize offset,
 		    FuFirmwareParseFlags flags,
 		    GError **error)
 {
 	FuEfiVolume *self = FU_EFI_VOLUME(firmware);
 	FuEfiVolumePrivate *priv = GET_PRIVATE(self);
 	gsize blockmap_sz = 0;
-	gsize offset = 0;
 	gsize streamsz = 0;
 	guint16 hdr_length = 0;
 	guint32 attrs = 0;

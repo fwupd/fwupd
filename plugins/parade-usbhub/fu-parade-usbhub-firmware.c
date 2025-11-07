@@ -28,6 +28,7 @@ fu_parade_usbhub_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_parade_usbhub_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
+				gsize offset,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -47,7 +48,11 @@ fu_parade_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* read out FW#1 version */
-	if (!fu_input_stream_read_u32(stream, 0x41000, &version_raw, G_LITTLE_ENDIAN, error))
+	if (!fu_input_stream_read_u32(stream,
+				      offset + 0x41000,
+				      &version_raw,
+				      G_LITTLE_ENDIAN,
+				      error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, version_raw);
 

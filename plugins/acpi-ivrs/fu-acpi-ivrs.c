@@ -22,6 +22,7 @@ G_DEFINE_TYPE(FuAcpiIvrs, fu_acpi_ivrs, FU_TYPE_ACPI_TABLE)
 static gboolean
 fu_acpi_ivrs_parse(FuFirmware *firmware,
 		   GInputStream *stream,
+		   gsize offset,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {
@@ -30,7 +31,7 @@ fu_acpi_ivrs_parse(FuFirmware *firmware,
 
 	/* FuAcpiTable->parse */
 	if (!FU_FIRMWARE_CLASS(fu_acpi_ivrs_parent_class)
-		 ->parse(FU_FIRMWARE(self), stream, flags, error))
+		 ->parse(FU_FIRMWARE(self), stream, offset, flags, error))
 		return FALSE;
 
 	/* check signature and read flags */

@@ -222,6 +222,7 @@ fu_kinetic_dp_puma_firmware_parse_app_fw(FuKineticDpPumaFirmware *self,
 static gboolean
 fu_kinetic_dp_puma_firmware_parse(FuFirmware *firmware,
 				  GInputStream *stream,
+				  gsize offset,
 				  FuFirmwareParseFlags flags,
 				  GError **error)
 {

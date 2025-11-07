@@ -55,6 +55,7 @@ fu_focalfp_firmware_compute_checksum_cb(const guint8 *buf,
 static gboolean
 fu_focalfp_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
+			  gsize offset,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {

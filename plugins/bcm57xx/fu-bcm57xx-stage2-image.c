@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU_TYPE_FIRMWARE)
 static gboolean
 fu_bcm57xx_stage2_image_parse(FuFirmware *image,
 			      GInputStream *stream,
+			      gsize offset,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

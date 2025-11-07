@@ -49,6 +49,7 @@ fu_efi_ftw_store_validate(FuFirmware *firmware, GInputStream *stream, gsize offs
 static gboolean
 fu_efi_ftw_store_parse(FuFirmware *firmware,
 		       GInputStream *stream,
+		       gsize offset,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

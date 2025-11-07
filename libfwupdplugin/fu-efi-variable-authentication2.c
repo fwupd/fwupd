@@ -165,19 +165,20 @@ fu_efi_variable_authentication2_parse_pkcs7_certs(FuEfiVariableAuthentication2 *
 static gboolean
 fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 				      GInputStream *stream,
+				      gsize offset,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {
 	FuEfiVariableAuthentication2 *self = FU_EFI_VARIABLE_AUTHENTICATION2(firmware);
-	gsize offset = FU_STRUCT_EFI_TIME_SIZE;
 	g_autoptr(FuStructEfiVariableAuthentication2) st = NULL;
 	g_autoptr(FuStructEfiWinCertificate) st_wincert = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
 	gboolean offset_tmp = 0;
 
-	st = fu_struct_efi_variable_authentication2_parse_stream(stream, 0x0, error);
+	st = fu_struct_efi_variable_authentication2_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
+	offset += FU_STRUCT_EFI_TIME_SIZE;
 
 	/* parse the EFI_SIGNATURE_LIST blob past the EFI_TIME + WIN_CERTIFICATE */
 	st_wincert = fu_struct_efi_variable_authentication2_get_auth_info(st);
@@ -202,7 +203,7 @@ fu_efi_variable_authentication2_parse(FuFirmware *firmware,
 	if (partial_stream == NULL)
 		return FALSE;
 	return FU_FIRMWARE_CLASS(fu_efi_variable_authentication2_parent_class)
-	    ->parse(firmware, partial_stream, flags, error);
+	    ->parse(firmware, partial_stream, 0x0, flags, error);
 }
 
 static GByteArray *

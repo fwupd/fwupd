@@ -65,6 +65,7 @@ fu_bcm57xx_firmware_parse_header(FuBcm57xxFirmware *self, GInputStream *stream, 
 static FuFirmware *
 fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self,
 			       GInputStream *stream,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -94,6 +95,7 @@ fu_bcm57xx_firmware_parse_info(FuBcm57xxFirmware *self,
 static FuFirmware *
 fu_bcm57xx_firmware_parse_stage1(FuBcm57xxFirmware *self,
 				 GInputStream *stream,
+				 gsize offset,
 				 guint32 *out_stage1_sz,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
@@ -159,6 +161,7 @@ static FuFirmware *
 fu_bcm57xx_firmware_parse_stage2(FuBcm57xxFirmware *self,
 				 GInputStream *stream,
 				 guint32 stage1_sz,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {
@@ -210,6 +213,7 @@ static gboolean
 fu_bcm57xx_firmware_parse_dict(FuBcm57xxFirmware *self,
 			       GInputStream *stream,
 			       guint idx,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
@@ -306,6 +310,7 @@ fu_bcm57xx_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 			  GInputStream *stream,
+			  gsize offset,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -382,7 +387,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 						  error);
 	if (stream_info == NULL)
 		return FALSE;
-	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, flags, error);
+	img_info = fu_bcm57xx_firmware_parse_info(self, stream_info, 0x0, flags, error);
 	if (img_info == NULL) {
 		g_prefix_error_literal(error, "failed to parse info: ");
 		return FALSE;
@@ -420,7 +425,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* stage1 */
-	img_stage1 = fu_bcm57xx_firmware_parse_stage1(self, stream, &stage1_sz, flags, error);
+	img_stage1 =
+	    fu_bcm57xx_firmware_parse_stage1(self, stream, offset, &stage1_sz, flags, error);
 	if (img_stage1 == NULL) {
 		g_prefix_error_literal(error, "failed to parse stage1: ");
 		return FALSE;
@@ -429,7 +435,8 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* stage2 */
-	img_stage2 = fu_bcm57xx_firmware_parse_stage2(self, stream, stage1_sz, flags, error);
+	img_stage2 =
+	    fu_bcm57xx_firmware_parse_stage2(self, stream, offset, stage1_sz, flags, error);
 	if (img_stage2 == NULL) {
 		g_prefix_error_literal(error, "failed to parse stage2: ");
 		return FALSE;
@@ -439,7 +446,7 @@ fu_bcm57xx_firmware_parse(FuFirmware *firmware,
 
 	/* dictionaries, e.g. APE */
 	for (guint i = 0; i < 8; i++) {
-		if (!fu_bcm57xx_firmware_parse_dict(self, stream, i, flags, error)) {
+		if (!fu_bcm57xx_firmware_parse_dict(self, stream, offset, i, flags, error)) {
 			g_prefix_error(error, "failed to parse dict 0x%x: ", i);
 			return FALSE;
 		}

@@ -112,12 +112,13 @@ fu_synaptics_rmi_firmware_export(FuFirmware *firmware,
 static gboolean
 fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				    GInputStream *stream,
+				    gsize offset,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	guint16 container_id;
 	guint32 cntrs_len;
-	guint32 offset;
+	guint32 offset_tmp;
 	guint32 cntr_addr;
 	guint8 product_id[RMI_PRODUCT_ID_LENGTH] = {0x0};
 	gsize bufsz = 0;
@@ -127,7 +128,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
-	fw = fu_input_stream_read_bytes(stream, 0, G_MAXSIZE, NULL, error);
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
@@ -162,13 +163,13 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 			    (guint)FU_RMI_CONTAINER_ID_TOP_LEVEL);
 		return FALSE;
 	}
-	offset = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
-	if (offset > bufsz - sizeof(guint32) - st_dsc->buf->len) {
+	offset_tmp = fu_struct_rmi_container_descriptor_get_content_address(st_dsc);
+	if (offset_tmp > bufsz - sizeof(guint32) - st_dsc->buf->len) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
 			    "image offset invalid, got 0x%x, size 0x%x",
-			    (guint)offset,
+			    (guint)offset_tmp,
 			    (guint)bufsz);
 		return FALSE;
 	}
@@ -182,7 +183,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 			    (guint)RMI_IMG_MAX_CONTAINERS);
 		return FALSE;
 	}
-	g_debug("offset=0x%x (cntrs_len=%u)", offset, cntrs_len);
+	g_debug("offset=0x%x (cntrs_len=%u)", offset_tmp, cntrs_len);
 
 	for (guint32 i = 0; i < cntrs_len; i++) {
 		guint32 content_addr;
@@ -190,7 +191,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 		guint32 length;
 		g_autoptr(FuStructRmiContainerDescriptor) st_dsc2 = NULL;
 
-		if (!fu_memread_uint32_safe(buf, bufsz, offset, &addr, G_LITTLE_ENDIAN, error))
+		if (!fu_memread_uint32_safe(buf, bufsz, offset_tmp, &addr, G_LITTLE_ENDIAN, error))
 			return FALSE;
 		g_debug("parsing RmiContainerDescriptor at 0x%x", addr);
 
@@ -344,7 +345,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 				container_id);
 			break;
 		}
-		offset += 4;
+		offset_tmp += 4;
 	}
 	if (product_id[0] != '\0') {
 		g_free(self->product_id);
@@ -356,6 +357,7 @@ fu_synaptics_rmi_firmware_parse_v10(FuSynapticsRmiFirmware *self,
 static gboolean
 fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 				    GInputStream *stream,
+				    gsize offset,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -409,6 +411,7 @@ fu_synaptics_rmi_firmware_parse_v0x(FuSynapticsRmiFirmware *self,
 static gboolean
 fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
+				gsize offset,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
@@ -419,13 +422,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* maybe stream later */
-	fw = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, NULL, error);
+	fw = fu_input_stream_read_bytes(stream, offset, G_MAXSIZE, NULL, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data(fw, &bufsz);
 
 	/* sanity check */
-	st_img = fu_struct_rmi_img_parse_stream(stream, 0x0, error);
+	st_img = fu_struct_rmi_img_parse_stream(stream, offset, error);
 	if (st_img == NULL)
 		return FALSE;
 	if (bufsz % 2 != 0) {
@@ -480,13 +483,13 @@ fu_synaptics_rmi_firmware_parse(FuFirmware *firmware,
 	case 6:
 		if ((self->io & 0x10) >> 1)
 			self->sig_size = fu_struct_rmi_img_get_signature_size(st_img);
-		if (!fu_synaptics_rmi_firmware_parse_v0x(self, stream, flags, error))
+		if (!fu_synaptics_rmi_firmware_parse_v0x(self, stream, offset, flags, error))
 			return FALSE;
 		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_0X;
 		break;
 	case 16:
 	case 17:
-		if (!fu_synaptics_rmi_firmware_parse_v10(self, stream, flags, error))
+		if (!fu_synaptics_rmi_firmware_parse_v10(self, stream, offset, flags, error))
 			return FALSE;
 		self->kind = FU_SYNAPTICS_RMI_FIRMWARE_KIND_10;
 		break;

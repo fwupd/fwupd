@@ -210,6 +210,7 @@ fu_ihex_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data
 static gboolean
 fu_ihex_firmware_tokenize(FuFirmware *firmware,
 			  GInputStream *stream,
+			  gsize offset,
 			  FuFirmwareParseFlags flags,
 			  GError **error)
 {
@@ -221,6 +222,7 @@ fu_ihex_firmware_tokenize(FuFirmware *firmware,
 static gboolean
 fu_ihex_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
+		       gsize offset,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {

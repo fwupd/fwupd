@@ -907,6 +907,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
  * fu_firmware_tokenize:
  * @self: a #FuFirmware
  * @stream: a #GInputStream
+ * @offset: an offset in bytes
  * @flags: #FuFirmwareParseFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -922,6 +923,7 @@ fu_firmware_get_checksum(FuFirmware *self, GChecksumType csum_kind, GError **err
 gboolean
 fu_firmware_tokenize(FuFirmware *self,
 		     GInputStream *stream,
+		     gsize offset,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
@@ -933,7 +935,7 @@ fu_firmware_tokenize(FuFirmware *self,
 
 	/* optionally subclassed */
 	if (klass->tokenize != NULL)
-		return klass->tokenize(self, stream, flags, error);
+		return klass->tokenize(self, stream, offset, flags, error);
 	return TRUE;
 }
 
@@ -1161,13 +1163,13 @@ fu_firmware_parse_stream(FuFirmware *self,
 
 	/* optional */
 	if (klass->tokenize != NULL) {
-		if (!klass->tokenize(self, partial_stream, flags, error))
+		if (!klass->tokenize(self, partial_stream, 0x0, flags, error))
 			return FALSE;
 	}
 
 	/* optional */
 	if (klass->parse != NULL)
-		return klass->parse(self, partial_stream, flags, error);
+		return klass->parse(self, partial_stream, 0x0, flags, error);
 
 	/* verify alignment */
 	if (streamsz % (1ull << priv->alignment) != 0) {

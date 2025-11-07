@@ -13,6 +13,7 @@ G_DEFINE_TYPE(FuUsbDescriptor, fu_usb_descriptor, FU_TYPE_FIRMWARE)
 static gboolean
 fu_usb_descriptor_parse(FuFirmware *firmware,
 			GInputStream *stream,
+			gsize offset,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {

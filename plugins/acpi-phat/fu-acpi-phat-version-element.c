@@ -32,6 +32,7 @@ fu_acpi_phat_version_element_export(FuFirmware *firmware,
 static gboolean
 fu_acpi_phat_version_element_parse(FuFirmware *firmware,
 				   GInputStream *stream,
+				   gsize offset,
 				   FuFirmwareParseFlags flags,
 				   GError **error)
 {

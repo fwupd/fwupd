@@ -267,11 +267,11 @@ fu_redfish_smbios_parse_over_ip(FuRedfishSmbios *self,
 static gboolean
 fu_redfish_smbios_parse(FuFirmware *firmware,
 			GInputStream *stream,
+			gsize offset,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	FuRedfishSmbios *self = FU_REDFISH_SMBIOS(firmware);
-	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(FuStructRedfishSmbiosType42) st = NULL;
 

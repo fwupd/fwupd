@@ -215,6 +215,7 @@ fu_dfu_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {
@@ -271,6 +272,7 @@ fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 static gboolean
 fu_dfu_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -280,7 +282,7 @@ fu_dfu_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GBytes) contents = NULL;
 
 	/* parse footer */
-	if (!fu_dfu_firmware_parse_footer(self, stream, flags, error))
+	if (!fu_dfu_firmware_parse_footer(self, stream, offset, flags, error))
 		return FALSE;
 
 	/* trim footer off */

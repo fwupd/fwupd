@@ -202,11 +202,11 @@ fu_efi_signature_list_validate(FuFirmware *firmware,
 static gboolean
 fu_efi_signature_list_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
 	FuEfiSignatureList *self = FU_EFI_SIGNATURE_LIST(firmware);
-	gsize offset = 0;
 	gsize streamsz = 0;
 
 	/* parse each EFI_SIGNATURE_LIST */

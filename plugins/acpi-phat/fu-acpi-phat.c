@@ -98,6 +98,7 @@ fu_acpi_phat_validate(FuFirmware *firmware, GInputStream *stream, gsize offset, 
 static gboolean
 fu_acpi_phat_parse(FuFirmware *firmware,
 		   GInputStream *stream,
+		   gsize offset,
 		   FuFirmwareParseFlags flags,
 		   GError **error)
 {

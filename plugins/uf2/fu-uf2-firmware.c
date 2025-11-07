@@ -174,6 +174,7 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 static gboolean
 fu_uf2_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

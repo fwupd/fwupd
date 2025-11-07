@@ -22,6 +22,7 @@ G_DEFINE_TYPE(FuSynapticsCapeSnglFirmware,
 static gboolean
 fu_synaptics_cape_sngl_firmware_parse(FuFirmware *firmware,
 				      GInputStream *stream,
+				      gsize offset,
 				      FuFirmwareParseFlags flags,
 				      GError **error)
 {

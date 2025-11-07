@@ -41,6 +41,7 @@ fu_nordic_hid_firmware_get_checksum(FuFirmware *firmware, GChecksumType csum_kin
 static gboolean
 fu_nordic_hid_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

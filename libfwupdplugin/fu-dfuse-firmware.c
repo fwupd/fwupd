@@ -109,17 +109,17 @@ fu_dfuse_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize off
 static gboolean
 fu_dfuse_firmware_parse(FuFirmware *firmware,
 			GInputStream *stream,
+			gsize offset,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {
 	FuDfuFirmware *dfu_firmware = FU_DFU_FIRMWARE(firmware);
-	gsize offset = 0;
 	gsize streamsz = 0;
 	guint8 targets = 0;
 	g_autoptr(FuStructDfuseHdr) st_hdr = NULL;
 
 	/* DFU footer first */
-	if (!fu_dfu_firmware_parse_footer(dfu_firmware, stream, flags, error))
+	if (!fu_dfu_firmware_parse_footer(dfu_firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse */

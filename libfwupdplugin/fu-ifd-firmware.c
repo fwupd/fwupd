@@ -173,6 +173,7 @@ fu_ifd_firmware_region_to_access(FuIfdRegion region, guint32 flash_master, gbool
 static gboolean
 fu_ifd_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

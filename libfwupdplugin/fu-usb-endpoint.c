@@ -190,6 +190,7 @@ fu_usb_endpoint_get_direction(FuUsbEndpoint *self)
 static gboolean
 fu_usb_endpoint_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -197,7 +198,8 @@ fu_usb_endpoint_parse(FuFirmware *firmware,
 	g_autoptr(FuUsbEndpointHdr) st = NULL;
 
 	/* FuUsbDescriptor */
-	if (!FU_FIRMWARE_CLASS(fu_usb_endpoint_parent_class)->parse(firmware, stream, flags, error))
+	if (!FU_FIRMWARE_CLASS(fu_usb_endpoint_parent_class)
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse */

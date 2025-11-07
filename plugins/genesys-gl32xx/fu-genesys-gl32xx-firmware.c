@@ -22,6 +22,7 @@ G_DEFINE_TYPE(FuGenesysGl32xxFirmware, fu_genesys_gl32xx_firmware, FU_TYPE_FIRMW
 static gboolean
 fu_genesys_gl32xx_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {

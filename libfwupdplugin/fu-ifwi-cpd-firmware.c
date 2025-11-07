@@ -53,12 +53,12 @@ static gboolean
 fu_ifwi_cpd_firmware_parse_manifest(FuIfwiCpdFirmware *self,
 				    FuFirmware *firmware,
 				    GInputStream *stream,
+				    gsize offset,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
 	gsize streamsz = 0;
 	guint32 size;
-	gsize offset = 0;
 	guint64 version_raw = 0;
 	g_autoptr(FuStructIfwiCpdManifest) st_mhd = NULL;
 
@@ -152,13 +152,13 @@ fu_ifwi_cpd_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
+			   gsize offset,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
 	FuIfwiCpdFirmware *self = FU_IFWI_CPD_FIRMWARE(firmware);
 	FuIfwiCpdFirmwarePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuStructIfwiCpd) st_hdr = NULL;
-	gsize offset = 0;
 	guint32 num_of_entries;
 
 	/* other header fields */
@@ -224,6 +224,7 @@ fu_ifwi_cpd_firmware_parse(FuFirmware *firmware,
 			if (!fu_ifwi_cpd_firmware_parse_manifest(self,
 								 img,
 								 partial_stream,
+								 0x0,
 								 flags,
 								 error))
 				return FALSE;

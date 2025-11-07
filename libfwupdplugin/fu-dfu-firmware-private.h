@@ -16,5 +16,6 @@ fu_dfu_firmware_append_footer(FuDfuFirmware *self, GBytes *contents, GError **er
 gboolean
 fu_dfu_firmware_parse_footer(FuDfuFirmware *self,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error) G_GNUC_NON_NULL(1, 2);

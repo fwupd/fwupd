@@ -59,6 +59,7 @@ fu_igsc_code_firmware_parse_imgi(FuIgscCodeFirmware *self, GInputStream *stream,
 static gboolean
 fu_igsc_code_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -85,7 +86,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
-		 ->parse(firmware, stream, flags, error)) {
+		 ->parse(firmware, stream, offset, flags, error)) {
 		g_prefix_error_literal(error, "failed to parse as FuIfwiFptFirmware: ");
 		return FALSE;
 	}

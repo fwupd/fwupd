@@ -602,6 +602,7 @@ fu_efi_lz77_decompressor_internal(FuEfiLz77DecompressHelper *helper,
 static gboolean
 fu_efi_lz77_decompressor_parse(FuFirmware *firmware,
 			       GInputStream *stream,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

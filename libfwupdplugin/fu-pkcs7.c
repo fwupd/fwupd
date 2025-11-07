@@ -63,6 +63,7 @@ fu_pkcs7_parse_x509_certificate(FuPkcs7 *self, gnutls_datum_t *data, GError **er
 static gboolean
 fu_pkcs7_parse(FuFirmware *firmware,
 	       GInputStream *stream,
+	       gsize offset,
 	       FuFirmwareParseFlags flags,
 	       GError **error)
 {

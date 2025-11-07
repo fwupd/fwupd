@@ -129,6 +129,7 @@ fu_vli_usbhub_firmware_parse_version(FuVliUsbhubFirmware *self,
 static gboolean
 fu_vli_usbhub_firmware_parse(FuFirmware *firmware,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

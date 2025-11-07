@@ -30,11 +30,11 @@ fu_algoltek_usb_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_algoltek_usb_firmware_parse(FuFirmware *firmware,
 			       GInputStream *stream,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	g_autofree gchar *version = NULL;
-	gsize offset = 0;
 	g_autoptr(FuFirmware) img_isp = fu_firmware_new();
 	g_autoptr(FuFirmware) img_payload = fu_firmware_new();
 	g_autoptr(FuStructAlgoltekProductIdentity) st = NULL;

@@ -113,6 +113,7 @@ fu_oprom_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize off
 static gboolean
 fu_oprom_firmware_parse(FuFirmware *firmware,
 			GInputStream *stream,
+			gsize offset,
 			FuFirmwareParseFlags flags,
 			GError **error)
 {

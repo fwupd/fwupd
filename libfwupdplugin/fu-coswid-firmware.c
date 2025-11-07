@@ -625,6 +625,7 @@ fu_coswid_firmware_free(void *ptr)
 static gboolean
 fu_coswid_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
+			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

@@ -124,6 +124,7 @@ fu_telink_dfu_archive_load_file(FuTelinkDfuArchive *self,
 static gboolean
 fu_telink_dfu_archive_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

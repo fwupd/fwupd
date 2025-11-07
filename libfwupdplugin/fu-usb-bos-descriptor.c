@@ -159,6 +159,7 @@ fu_usb_bos_descriptor_get_capability(FuUsbBosDescriptor *self)
 static gboolean
 fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {
@@ -167,7 +168,7 @@ fu_usb_bos_descriptor_parse(FuFirmware *firmware,
 
 	/* FuUsbDescriptor */
 	if (!FU_FIRMWARE_CLASS(fu_usb_bos_descriptor_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse */

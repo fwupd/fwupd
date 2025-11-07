@@ -18,6 +18,7 @@ G_DEFINE_TYPE(FuSteelseriesFirmware, fu_steelseries_firmware, FU_TYPE_FIRMWARE)
 static gboolean
 fu_steelseries_firmware_parse(FuFirmware *firmware,
 			      GInputStream *stream,
+			      gsize offset,
 			      FuFirmwareParseFlags flags,
 			      GError **error)
 {

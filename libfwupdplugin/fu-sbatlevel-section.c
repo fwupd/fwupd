@@ -71,6 +71,7 @@ fu_sbatlevel_section_add_entry(FuSbatlevelSection *self,
 static gboolean
 fu_sbatlevel_section_parse(FuFirmware *firmware,
 			   GInputStream *stream,
+			   gsize offset,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {

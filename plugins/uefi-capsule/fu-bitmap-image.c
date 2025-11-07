@@ -28,6 +28,7 @@ fu_bitmap_image_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuil
 static gboolean
 fu_bitmap_image_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

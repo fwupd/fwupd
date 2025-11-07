@@ -122,6 +122,7 @@ fu_logitech_tap_touch_firmware_calculate_basic_cb(const guint8 *buf,
 static gboolean
 fu_logitech_tap_touch_firmware_parse(FuFirmware *firmware,
 				     GInputStream *stream,
+				     gsize offset,
 				     FuFirmwareParseFlags flags,
 				     GError **error)
 {

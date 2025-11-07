@@ -177,6 +177,7 @@ fu_csv_firmware_parse_line_cb(GString *token, guint token_idx, gpointer user_dat
 static gboolean
 fu_csv_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {

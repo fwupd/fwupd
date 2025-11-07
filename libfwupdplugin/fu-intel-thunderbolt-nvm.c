@@ -353,6 +353,7 @@ fu_intel_thunderbolt_nvm_missing_needed_drom(FuIntelThunderboltNvm *self)
 static gboolean
 fu_intel_thunderbolt_nvm_parse(FuFirmware *firmware,
 			       GInputStream *stream,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {

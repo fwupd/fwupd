@@ -98,11 +98,11 @@ fu_efi_vss_auth_variable_lookup_image_gtype(FuEfiVssAuthVariable *self)
 static gboolean
 fu_efi_vss_auth_variable_parse(FuFirmware *firmware,
 			       GInputStream *stream,
+			       gsize offset,
 			       FuFirmwareParseFlags flags,
 			       GError **error)
 {
 	FuEfiVssAuthVariable *self = FU_EFI_VSS_AUTH_VARIABLE(firmware);
-	gsize offset = 0x0;
 	GType img_gtype;
 	g_autoptr(FuStructEfiVssAuthVariableHeader) st = NULL;
 	g_autoptr(GByteArray) buf_name = NULL;

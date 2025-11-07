@@ -38,6 +38,7 @@ fu_intel_thunderbolt_firmware_nvm_valid_farb_pointer(guint32 pointer)
 static gboolean
 fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 				    GInputStream *stream,
+				    gsize offset,
 				    FuFirmwareParseFlags flags,
 				    GError **error)
 {
@@ -76,7 +77,7 @@ fu_intel_thunderbolt_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 	return FU_FIRMWARE_CLASS(fu_intel_thunderbolt_firmware_parent_class)
-	    ->parse(firmware, partial_stream, flags, error);
+	    ->parse(firmware, partial_stream, 0x0, flags, error);
 }
 
 static GByteArray *

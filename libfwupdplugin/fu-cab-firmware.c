@@ -107,6 +107,7 @@ fu_cab_firmware_set_only_basename(FuCabFirmware *self, gboolean only_basename)
 
 typedef struct {
 	GInputStream *stream;
+	gsize offset;
 	FuFirmwareParseFlags parse_flags;
 	gsize rsvd_folder;
 	gsize rsvd_block;
@@ -519,7 +520,10 @@ fu_cab_firmware_validate(FuFirmware *firmware, GInputStream *stream, gsize offse
 }
 
 static FuCabFirmwareParseHelper *
-fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flags, GError **error)
+fu_cab_firmware_parse_helper_new(GInputStream *stream,
+				 gsize offset,
+				 FuFirmwareParseFlags flags,
+				 GError **error)
 {
 	int zret;
 	g_autoptr(FuCabFirmwareParseHelper) helper = g_new0(FuCabFirmwareParseHelper, 1);
@@ -538,6 +542,7 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flag
 	}
 
 	helper->stream = g_object_ref(stream);
+	helper->offset = offset;
 	helper->parse_flags = flags;
 	helper->folder_data = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	helper->decompress_bufsz = FU_CAB_FIRMWARE_DECOMPRESS_BUFSZ;
@@ -547,12 +552,12 @@ fu_cab_firmware_parse_helper_new(GInputStream *stream, FuFirmwareParseFlags flag
 static gboolean
 fu_cab_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
 	FuCabFirmware *self = FU_CAB_FIRMWARE(firmware);
 	gsize off_cffile = 0;
-	gsize offset = 0;
 	gsize streamsz = 0;
 	g_autoptr(FuStructCabHeader) st = NULL;
 	g_autoptr(FuCabFirmwareParseHelper) helper = NULL;
@@ -619,7 +624,7 @@ fu_cab_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* create helper */
-	helper = fu_cab_firmware_parse_helper_new(stream, flags, error);
+	helper = fu_cab_firmware_parse_helper_new(stream, offset, flags, error);
 	if (helper == NULL)
 		return FALSE;
 

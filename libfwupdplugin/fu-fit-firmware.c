@@ -213,6 +213,7 @@ fu_fit_firmware_verify_hash(FuFitFirmware *self,
 static gboolean
 fu_fit_firmware_verify_image(FuFitFirmware *self,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmware *img,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
@@ -291,6 +292,7 @@ fu_fit_firmware_verify_configuration(FuFitFirmware *self,
 static gboolean
 fu_fit_firmware_parse(FuFirmware *firmware,
 		      GInputStream *stream,
+		      gsize offset,
 		      FuFirmwareParseFlags flags,
 		      GError **error)
 {
@@ -302,7 +304,8 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	g_autoptr(GPtrArray) img_cfgs_array = NULL;
 
 	/* FuFdtFirmware->parse */
-	if (!FU_FIRMWARE_CLASS(fu_fit_firmware_parent_class)->parse(firmware, stream, flags, error))
+	if (!FU_FIRMWARE_CLASS(fu_fit_firmware_parent_class)
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* sanity check */
@@ -322,7 +325,7 @@ fu_fit_firmware_parse(FuFirmware *firmware,
 	img_images_array = fu_firmware_get_images(img_images);
 	for (guint i = 0; i < img_images_array->len; i++) {
 		FuFirmware *img = g_ptr_array_index(img_images_array, i);
-		if (!fu_fit_firmware_verify_image(self, stream, img, flags, error))
+		if (!fu_fit_firmware_verify_image(self, stream, offset, img, flags, error))
 			return FALSE;
 	}
 

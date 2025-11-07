@@ -112,12 +112,13 @@ fu_nordic_hid_firmware_b0_read_fwinfo(FuNordicHidFirmwareB0 *self,
 static gboolean
 fu_nordic_hid_firmware_b0_parse(FuFirmware *firmware,
 				GInputStream *stream,
+				gsize offset,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuNordicHidFirmwareB0 *self = FU_NORDIC_HID_FIRMWARE_B0(firmware);
 	if (!FU_FIRMWARE_CLASS(fu_nordic_hid_firmware_b0_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 	return fu_nordic_hid_firmware_b0_read_fwinfo(self, stream, error);
 }

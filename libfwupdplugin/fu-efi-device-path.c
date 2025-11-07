@@ -90,6 +90,7 @@ fu_efi_device_path_set_subtype(FuEfiDevicePath *self, guint8 subtype)
 static gboolean
 fu_efi_device_path_parse(FuFirmware *firmware,
 			 GInputStream *stream,
+			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {
@@ -100,7 +101,7 @@ fu_efi_device_path_parse(FuFirmware *firmware,
 	g_autoptr(FuStructEfiDevicePath) st = NULL;
 
 	/* parse */
-	st = fu_struct_efi_device_path_parse_stream(stream, 0x0, error);
+	st = fu_struct_efi_device_path_parse_stream(stream, offset, error);
 	if (st == NULL)
 		return FALSE;
 	if (fu_struct_efi_device_path_get_length(st) < FU_STRUCT_EFI_DEVICE_PATH_SIZE) {

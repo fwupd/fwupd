@@ -29,6 +29,7 @@ G_DEFINE_TYPE(FuAmdKriaSomEeprom, fu_amd_kria_som_eeprom, FU_TYPE_FIRMWARE)
 static gboolean
 fu_amd_kria_som_eeprom_parse(FuFirmware *firmware,
 			     GInputStream *stream,
+			     gsize offset,
 			     FuFirmwareParseFlags flags,
 			     GError **error)
 {

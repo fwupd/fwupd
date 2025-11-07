@@ -70,6 +70,7 @@ fu_efi_guid_to_name(const gchar *guid)
  * fu_efi_parse_sections:
  * @firmware: #FuFirmware
  * @stream: a #GInputStream
+ * @offset: offset in bytes
  * @flags: #FuFirmwareParseFlags
  * @error: (nullable): optional return location for an error
  *

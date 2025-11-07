@@ -249,12 +249,12 @@ fu_efi_section_parse_freeform_subtype_guid(FuEfiSection *self,
 static gboolean
 fu_efi_section_parse(FuFirmware *firmware,
 		     GInputStream *stream,
+		     gsize offset,
 		     FuFirmwareParseFlags flags,
 		     GError **error)
 {
 	FuEfiSection *self = FU_EFI_SECTION(firmware);
 	FuEfiSectionPrivate *priv = GET_PRIVATE(self);
-	gsize offset = 0;
 	gsize streamsz = 0;
 	gsize stlen = 0;
 	guint32 size;

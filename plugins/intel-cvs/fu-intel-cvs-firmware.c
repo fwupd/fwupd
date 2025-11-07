@@ -39,6 +39,7 @@ fu_intel_cvs_firmware_validate(FuFirmware *firmware,
 static gboolean
 fu_intel_cvs_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

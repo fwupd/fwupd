@@ -98,6 +98,7 @@ fu_jabra_gnp_firmware_parse_info(FuJabraGnpFirmware *self, XbSilo *silo, GError 
 static gboolean
 fu_jabra_gnp_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

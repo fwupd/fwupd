@@ -19,6 +19,7 @@ G_DEFINE_TYPE(FuGenesysScalerFirmware, fu_genesys_scaler_firmware, FU_TYPE_FIRMW
 static gboolean
 fu_genesys_scaler_firmware_parse(FuFirmware *firmware,
 				 GInputStream *stream,
+				 gsize offset,
 				 FuFirmwareParseFlags flags,
 				 GError **error)
 {

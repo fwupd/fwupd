@@ -226,6 +226,7 @@ fu_logitech_rdfu_firmware_compare_payload(gconstpointer item, gconstpointer payl
 static gboolean
 fu_logitech_rdfu_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
+				gsize offset,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {

@@ -33,6 +33,7 @@ fu_fresco_pd_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, 
 static gboolean
 fu_fresco_pd_firmware_parse(FuFirmware *firmware,
 			    GInputStream *stream,
+			    gsize offset,
 			    FuFirmwareParseFlags flags,
 			    GError **error)
 {

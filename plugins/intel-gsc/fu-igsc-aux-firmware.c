@@ -112,6 +112,7 @@ fu_igsc_aux_firmware_parse_info(FuIgscAuxFirmware *self, GError **error)
 static gboolean
 fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
+			   gsize offset,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {
@@ -124,7 +125,7 @@ fu_igsc_aux_firmware_parse(FuFirmware *firmware,
 
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_aux_firmware_parent_class)
-		 ->parse(firmware, stream, flags, error))
+		 ->parse(firmware, stream, offset, flags, error))
 		return FALSE;
 
 	/* parse data section */

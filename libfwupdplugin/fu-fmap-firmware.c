@@ -123,12 +123,12 @@ fu_fmap_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GInputStream *stream,
+		       gsize offset,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize offset;
 	gsize streamsz = 0;
 	guint32 nareas;
 	g_autoptr(FuStructFmap) st_hdr = NULL;
@@ -138,7 +138,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		if (!fu_input_stream_find(stream,
 					  (const guint8 *)FU_STRUCT_FMAP_DEFAULT_SIGNATURE,
 					  FU_STRUCT_FMAP_SIZE_SIGNATURE,
-					  0x0,
+					  offset,
 					  &priv->signature_offset,
 					  error))
 			return FALSE;
@@ -171,7 +171,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 				    "number of areas invalid");
 		return FALSE;
 	}
-	offset = priv->signature_offset + st_hdr->buf->len;
+	offset += priv->signature_offset + st_hdr->buf->len;
 	for (gsize i = 0; i < nareas; i++) {
 		guint32 area_offset;
 		guint32 area_size;

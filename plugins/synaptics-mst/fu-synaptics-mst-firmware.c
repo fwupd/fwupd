@@ -78,6 +78,7 @@ fu_synaptics_mst_firmware_detect_family(FuSynapticsMstFirmware *self,
 static gboolean
 fu_synaptics_mst_firmware_parse(FuFirmware *firmware,
 				GInputStream *stream,
+				gsize offset,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {

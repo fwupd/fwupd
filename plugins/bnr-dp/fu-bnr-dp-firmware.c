@@ -270,6 +270,7 @@ fu_bnr_dp_firmware_payload_parse(FuBnrDpFirmware *self,
 static gboolean
 fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 			 GInputStream *stream,
+			 gsize offset,
 			 FuFirmwareParseFlags flags,
 			 GError **error)
 {

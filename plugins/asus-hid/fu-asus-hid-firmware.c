@@ -33,6 +33,7 @@ fu_asus_hid_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 static gboolean
 fu_asus_hid_firmware_parse(FuFirmware *firmware,
 			   GInputStream *stream,
+			   gsize offset,
 			   FuFirmwareParseFlags flags,
 			   GError **error)
 {

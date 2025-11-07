@@ -71,6 +71,7 @@ fu_efi_file_hdr_checksum8(GBytes *blob)
 static gboolean
 fu_efi_file_parse(FuFirmware *firmware,
 		  GInputStream *stream,
+		  gsize offset,
 		  FuFirmwareParseFlags flags,
 		  GError **error)
 {
