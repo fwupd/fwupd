@@ -118,6 +118,13 @@ fu_linear_firmware_parse(FuFirmware *firmware,
 		fu_firmware_set_offset(img, offset);
 		if (!fu_firmware_add_image(firmware, img, error))
 			return FALSE;
+		if (fu_firmware_get_size(img) == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_DATA,
+					    "child image had no defined size");
+			return FALSE;
+		}
 
 		/* next! */
 		offset += fu_firmware_get_size(img);
