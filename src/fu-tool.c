@@ -3150,7 +3150,7 @@ fu_util_firmware_parse(FuUtil *self, gchar **values, GError **error)
 
 	/* does firmware specify an internal size */
 	firmware = g_object_new(gtype, NULL);
-	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_HAS_STORED_SIZE)) {
+	if (fu_firmware_has_flag(firmware, FU_FIRMWARE_FLAG_ALLOW_LINEAR)) {
 		g_autoptr(FuFirmware) firmware_linear = fu_linear_firmware_new(gtype);
 		g_autoptr(GPtrArray) imgs = NULL;
 		if (!fu_firmware_parse_stream(firmware_linear,
