@@ -38,6 +38,25 @@
     <binary>fwupdtool</binary>
   </provides>
   <releases>
+    <release version="1.9.33" date="2025-11-07">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add offline dbx hashes for 20250902</li>
+          <li>Allow installing archives named as .CAB rather than .cab</li>
+          <li>Clean up the fwupdtool lock file every time</li>
+          <li>Fix the pending-activation dell-dock problem</li>
+          <li>Fix the Thunderbolt controller rushing to finalize before onlining</li>
+          <li>Ignore ilan dell-kestrel errors on writing the last page</li>
+          <li>Only set the update error if not already setting a problem</li>
+          <li>Relax the usi-dock DMC child device checks for new firmware</li>
+          <li>Set commit-ca3 for Lexar SSDs</li>
+          <li>Support very old versions of UDisks</li>
+          <li>Turn off RTS hub firmware dell-kestrel auto-detection</li>
+          <li>Use the 'unreachable' problem for the unconnected device state</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.32" date="2025-09-08">
       <description>
         <p>This release fixes the following bugs:</p>
