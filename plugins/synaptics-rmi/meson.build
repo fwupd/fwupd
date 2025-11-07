@@ -1,4 +1,4 @@
-if gnutls.found() and host_machine.system() == 'linux'
+if gnutls.found() and host_machine.system() in ['linux', 'android']
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
