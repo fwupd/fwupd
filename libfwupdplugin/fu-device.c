@@ -584,6 +584,36 @@ fu_device_add_possible_plugin(FuDevice *self, const gchar *plugin)
 }
 
 /**
+ * fu_device_remove_possible_plugin:
+ * @self: a #FuDevice
+ * @plugin: a plugin name, e.g. `dfu`
+ *
+ * Removes a plugin name to the list of plugins that *might* be able to handle this
+ * device. This is typically called from a quirk handler.
+ *
+ * Missing plugin names are ignored.
+ *
+ * Since: 2.0.18
+ **/
+void
+fu_device_remove_possible_plugin(FuDevice *self, const gchar *plugin)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(plugin != NULL);
+
+	/* remove if exists */
+	for (guint i = 0; i < priv->possible_plugins->len; i++) {
+		const gchar *plugin_tmp = g_ptr_array_index(priv->possible_plugins, i);
+		if (g_strcmp0(plugin, plugin_tmp) == 0) {
+			g_ptr_array_remove_index(priv->possible_plugins, i);
+			break;
+		}
+	}
+}
+
+/**
  * fu_device_retry_add_recovery:
  * @self: a #FuDevice
  * @domain: a #GQuark, or %0 for all domains
@@ -2310,8 +2340,14 @@ fu_device_set_quirk_kv(FuDevice *self,
 
 	if (g_strcmp0(key, FU_QUIRKS_PLUGIN) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
-		for (guint i = 0; sections[i] != NULL; i++)
-			fu_device_add_possible_plugin(self, sections[i]);
+		for (guint i = 0; sections[i] != NULL; i++) {
+			const gchar *plugin = sections[i];
+			if (g_str_has_prefix(plugin, "~")) {
+				fu_device_remove_possible_plugin(self, plugin + 1);
+				continue;
+			}
+			fu_device_add_possible_plugin(self, plugin);
+		}
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FLAGS) == 0) {
