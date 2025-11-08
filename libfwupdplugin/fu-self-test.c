@@ -6758,6 +6758,40 @@ fu_plugin_efi_signature_list_func(void)
 }
 
 static void
+fu_device_possible_plugin_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	ret = fu_device_set_quirk_kv(device, "Plugin", "dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* duplicate */
+	ret = fu_device_set_quirk_kv(device, "Plugin", "dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* something else */
+	ret = fu_device_set_quirk_kv(device, "Plugin", "abc", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* remove the other thing */
+	ret =
+	    fu_device_set_quirk_kv(device, "Plugin", "~dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify */
+	possible_plugins = fu_device_get_possible_plugins(device);
+	g_assert_cmpint(possible_plugins->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "abc");
+}
+
+static void
 fu_device_id_display_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -7440,6 +7474,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
 	g_test_add_func("/fwupd/device{id-for-display}", fu_device_id_display_func);
+	g_test_add_func("/fwupd/device{possible-plugin}", fu_device_possible_plugin_func);
 	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
 	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);
