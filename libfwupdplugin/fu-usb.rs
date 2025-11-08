@@ -71,14 +71,14 @@ enum FuUsbDescriptorKind {
     SsEndpointCompanion = 0x30,
 }
 
-#[derive(ParseStream, Parse)]
+#[derive(ParseStream, ParseBytes, Parse)]
 #[repr(C, packed)]
 struct FuUsbBaseHdr {
     length: u8,
     descriptor_type: FuUsbDescriptorKind,
 }
 
-#[derive(ParseStream, Default)]
+#[derive(ParseBytes, Default)]
 #[repr(C, packed)]
 struct FuUsbDeviceHdr {
     length: u8,
