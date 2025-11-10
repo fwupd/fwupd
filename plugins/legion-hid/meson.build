@@ -11,6 +11,7 @@ plugin_builtins += static_library('fu_plugin_legion_hid',
   rustgen.process('fu-legion-hid.rs'),
   sources: [
     'fu-legion-hid-plugin.c',
+    'fu-legion-hid-child.c',
     'fu-legion-hid-device.c',
     'fu-legion-hid-firmware.c'
   ],

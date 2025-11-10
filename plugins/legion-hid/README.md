@@ -21,6 +21,11 @@ These devices use the standard DeviceInstanceId values, e.g.
 
 * `HIDRAW\VEN_17EF&DEV_61EB`
 
+Additionally, for child devices two custom instance IDs are created:
+
+* `HIDRAW\VEN_17EF&DEV_61EB&CHILD_LEFT`
+* `HIDRAW\VEN_17EF&DEV_61EB&CHILD_RIGHT`
+
 ## Update Behavior
 
 The device will restart after update.

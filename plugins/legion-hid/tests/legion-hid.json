@@ -8,7 +8,7 @@
       "emulation-file": "@enumeration_datadir@/legion-hid-setup.json",
       "components": [
         {
-          "version": "116504366",
+          "version": "250925A",
           "guids": [
             "81ad5a9e-6804-5c65-9082-2910aa257c24"
           ]

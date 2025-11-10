@@ -44,7 +44,7 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_mcu, stream_mcu, 0x00, flags, error))
 		return FALSE;
-	fu_firmware_set_id(img_mcu, "DeviceIDRx");
+	fu_firmware_set_id(img_mcu, FU_LEGION_HID_FIRMWARE_ID_MCU);
 	fu_firmware_set_version_raw(img_mcu,
 				    fu_struct_legion_hid_bin_header_get_mcu_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_mcu, error))
@@ -61,7 +61,7 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_left, stream_left, 0x00, flags, error))
 		return FALSE;
-	fu_firmware_set_id(img_left, "DeviceIDGamepadL");
+	fu_firmware_set_id(img_left, FU_LEGION_HID_FIRMWARE_ID_LEFT);
 	fu_firmware_set_version_raw(img_left,
 				    fu_struct_legion_hid_bin_header_get_left_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_left, error))
@@ -78,7 +78,7 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	if (!fu_firmware_parse_stream(img_right, stream_right, 0x00, flags, error))
 		return FALSE;
-	fu_firmware_set_id(img_right, "DeviceIDGamepadR");
+	fu_firmware_set_id(img_right, FU_LEGION_HID_FIRMWARE_ID_RIGHT);
 	fu_firmware_set_version_raw(img_right,
 				    fu_struct_legion_hid_bin_header_get_right_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_right, error))

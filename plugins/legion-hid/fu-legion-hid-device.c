@@ -3,17 +3,15 @@
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+
 #include "config.h"
 
 #include "fu-legion-hid-device.h"
+#include "fu-legion-hid-child.h"
 #include "fu-legion-hid-firmware.h"
-#include "fu-legion-hid-struct.h"
 
 struct _FuLegionHidDevice {
 	FuHidrawDevice parent_instance;
-	guint32 mcu_version;
-	guint32 left_version;
-	guint32 right_version;
 };
 
 G_DEFINE_TYPE(FuLegionHidDevice, fu_legion_hid_device, FU_TYPE_HIDRAW_DEVICE)
@@ -33,15 +31,6 @@ typedef struct {
 	FuLegionHidDeviceId dev_id;
 	guint8 step;
 } FuLegionHidRetryHelper;
-
-static void
-fu_legion_hid_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
-	fwupd_codec_string_append_int(str, idt, "McuVersion", self->mcu_version);
-	fwupd_codec_string_append_int(str, idt, "LeftVersion", self->left_version);
-	fwupd_codec_string_append_int(str, idt, "RightVersion", self->right_version);
-}
 
 static gboolean
 fu_legion_hid_device_read_normal_response_retry_cb(FuDevice *device,
@@ -532,10 +521,10 @@ fu_legion_hid_device_upgrade_verify(FuLegionHidDevice *self, FuLegionHidDeviceId
 }
 
 static gboolean
-fu_legion_hid_device_get_version(FuLegionHidDevice *self,
-				 FuLegionHidDeviceId id,
-				 guint32 *version,
-				 GError **error)
+fu_legion_hid_device_get_version_internal(FuLegionHidDevice *self,
+					  FuLegionHidDeviceId id,
+					  guint32 *version,
+					  GError **error)
 {
 	FuLegionHidRetryHelper helper = {0};
 	guint8 content[] = {
@@ -576,59 +565,29 @@ typedef struct {
 } FuLegionHidDeviceVersionHelper;
 
 static gboolean
-fu_legion_hid_device_get_version_retry_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_legion_hid_device_get_version_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
 	FuLegionHidDeviceVersionHelper *helper = (FuLegionHidDeviceVersionHelper *)user_data;
-	return fu_legion_hid_device_get_version(self, helper->id, helper->version, error);
+	return fu_legion_hid_device_get_version_internal(self, helper->id, helper->version, error);
 }
 
-static gboolean
-fu_legion_hid_device_get_version_retry(FuLegionHidDevice *self,
-				       FuLegionHidDeviceId id,
-				       guint32 *version,
-				       GError **error)
+gboolean
+fu_legion_hid_device_get_version(FuLegionHidDevice *self,
+				 FuLegionHidDeviceId id,
+				 guint32 *version,
+				 GError **error)
 {
 	FuLegionHidDeviceVersionHelper helper = {
 	    .id = id,
 	    .version = version,
 	};
 	return fu_device_retry_full(FU_DEVICE(self),
-				    fu_legion_hid_device_get_version_retry_cb,
+				    fu_legion_hid_device_get_version_cb,
 				    10,
 				    2000,
 				    &helper,
 				    error);
-}
-
-static gboolean
-fu_legion_hid_device_ensure_versions(FuLegionHidDevice *self, GError **error)
-{
-	/* MCU */
-	if (!fu_legion_hid_device_get_version_retry(self,
-						    FU_LEGION_HID_DEVICE_ID_RX,
-						    &self->mcu_version,
-						    error))
-		return FALSE;
-
-	/* left */
-	if (!fu_legion_hid_device_get_version_retry(self,
-						    FU_LEGION_HID_DEVICE_ID_GAMEPAD_L,
-						    &self->left_version,
-						    error))
-		return FALSE;
-
-	/* right */
-	if (!fu_legion_hid_device_get_version_retry(self,
-						    FU_LEGION_HID_DEVICE_ID_GAMEPAD_R,
-						    &self->right_version,
-						    error))
-		return FALSE;
-
-	/* success */
-	fu_device_set_version_raw(FU_DEVICE(self),
-				  self->mcu_version + self->left_version + self->right_version);
-	return TRUE;
 }
 
 static FuLegionHidDeviceId
@@ -652,7 +611,7 @@ fu_legion_hid_device_get_id(GByteArray *buffer)
 	return FU_LEGION_HID_DEVICE_ID_UNKNOWN;
 }
 
-static gboolean
+gboolean
 fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmware, GError **error)
 {
 	FuLegionHidDeviceId id = 0;
@@ -699,92 +658,24 @@ fu_legion_hid_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
-	gboolean left_need_upgrade = FALSE;
-	gboolean mcu_need_upgrade = FALSE;
-	gboolean right_need_upgrade = FALSE;
-	guint device_count = 0;
-	g_autoptr(FuFirmware) img_mcu = NULL;
-	g_autoptr(FuFirmware) img_left = NULL;
-	g_autoptr(FuFirmware) img_right = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 
-	img_mcu = fu_firmware_get_image_by_id(firmware, "DeviceIDRx", error);
-	if (img_mcu != NULL) {
-		guint raw_version = fu_firmware_get_version_raw(img_mcu);
-		if (raw_version > self->mcu_version) {
-			mcu_need_upgrade = TRUE;
-			device_count++;
-		}
-	}
-	img_left = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadL", error);
-	if (img_left != NULL) {
-		guint raw_version = fu_firmware_get_version_raw(img_left);
-		if (raw_version > self->left_version) {
-			left_need_upgrade = TRUE;
-			device_count++;
-		}
-	}
-	img_right = fu_firmware_get_image_by_id(firmware, "DeviceIDGamepadR", error);
-	if (img_right != NULL) {
-		guint raw_version = fu_firmware_get_version_raw(img_right);
-		if (raw_version > self->right_version) {
-			right_need_upgrade = TRUE;
-			device_count++;
-		}
+	img = fu_firmware_get_image_by_id(firmware, FU_LEGION_HID_FIRMWARE_ID_MCU, error);
+	if (img == NULL)
+		return FALSE;
+	if (!fu_legion_hid_device_execute_upgrade(self, img, error)) {
+		g_prefix_error_literal(error, "execute upgrade mcu failed: ");
+		return FALSE;
 	}
 
-	if (device_count > 0) {
-		fu_progress_set_id(progress, G_STRLOC);
-		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, NULL);
-		for (guint i = 0; i < device_count; ++i)
-			fu_progress_add_step(progress,
-					     FWUPD_STATUS_DEVICE_WRITE,
-					     90 / device_count,
-					     NULL);
-
-		fu_progress_step_done(progress);
-	}
-
-	if (left_need_upgrade) {
-		if (!fu_legion_hid_device_execute_upgrade(self, img_left, error)) {
-			g_prefix_error_literal(error, "execute upgrade left gamepad failed: ");
-			return FALSE;
-		}
-		fu_device_sleep(FU_DEVICE(self), FU_LEGION_HID_DEVICE_REBOOT_WAIT_TIME);
-		fu_progress_step_done(progress);
-	}
-
-	if (right_need_upgrade) {
-		if (!fu_legion_hid_device_execute_upgrade(self, img_right, error)) {
-			g_prefix_error_literal(error, "execute upgrade right gamepad failed: ");
-			return FALSE;
-		}
-		fu_device_sleep(FU_DEVICE(self), FU_LEGION_HID_DEVICE_REBOOT_WAIT_TIME);
-		fu_progress_step_done(progress);
-	}
-
-	if (mcu_need_upgrade) {
-		if (!fu_legion_hid_device_execute_upgrade(self, img_mcu, error)) {
-			g_prefix_error_literal(error, "execute upgrade mcu failed: ");
-			return FALSE;
-		}
-		fu_progress_step_done(progress);
-	} else {
-		/*
-		 * If only the controller is updated, the MCU will not restart,
-		 * so the version number needs to be reset.
-		 */
-		/* If the version is not reset, fwupd will report an update failure. */
-		if (!fu_legion_hid_device_ensure_versions(self, error))
-			return FALSE;
-	}
-
+	/* success */
 	return TRUE;
 }
 
 static gchar *
 fu_legion_hid_device_convert_version(FuDevice *device, guint64 version_raw)
 {
-	return fu_version_from_uint32(version_raw, fu_device_get_version_format(device));
+	return g_strdup_printf("%X", (guint)version_raw);
 }
 
 static void
@@ -802,8 +693,11 @@ static gboolean
 fu_legion_hid_device_setup(FuDevice *device, GError **error)
 {
 	FuLegionHidDevice *self = FU_LEGION_HID_DEVICE(device);
+	guint32 version = 0;
 	g_autoptr(FuHidDescriptor) descriptor = NULL;
 	g_autoptr(FuHidReport) report = NULL;
+	g_autoptr(FuLegionHidChild) child_left = NULL;
+	g_autoptr(FuLegionHidChild) child_right = NULL;
 
 	/* device needs to be open, hence not in ->probe() */
 	descriptor = fu_hidraw_device_parse_descriptor(FU_HIDRAW_DEVICE(device), error);
@@ -821,8 +715,25 @@ fu_legion_hid_device_setup(FuDevice *device, GError **error)
 	if (report == NULL)
 		return FALSE;
 
-	/* get MCU, left and right versions */
-	return fu_legion_hid_device_ensure_versions(self, error);
+	/* MCU */
+	if (!fu_legion_hid_device_get_version(self, FU_LEGION_HID_DEVICE_ID_RX, &version, error))
+		return FALSE;
+	fu_device_set_version_raw(FU_DEVICE(self), version);
+
+	/* left */
+	child_left = fu_legion_hid_child_new(device, FU_LEGION_HID_DEVICE_ID_GAMEPAD_L);
+	fu_device_set_logical_id(FU_DEVICE(child_left), FU_LEGION_HID_FIRMWARE_ID_LEFT);
+	fu_device_set_name(FU_DEVICE(child_left), "Left");
+	fu_device_add_child(device, FU_DEVICE(child_left));
+
+	/* right */
+	child_right = fu_legion_hid_child_new(device, FU_LEGION_HID_DEVICE_ID_GAMEPAD_R);
+	fu_device_set_logical_id(FU_DEVICE(child_right), FU_LEGION_HID_FIRMWARE_ID_RIGHT);
+	fu_device_set_name(FU_DEVICE(child_right), "Right");
+	fu_device_add_child(device, FU_DEVICE(child_right));
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -833,7 +744,6 @@ fu_legion_hid_device_class_init(FuLegionHidDeviceClass *klass)
 	device_class->write_firmware = fu_legion_hid_device_write_firmware;
 	device_class->set_progress = fu_legion_hid_device_set_progress;
 	device_class->convert_version = fu_legion_hid_device_convert_version;
-	device_class->to_string = fu_legion_hid_device_to_string;
 }
 
 static void
@@ -843,7 +753,7 @@ fu_legion_hid_device_init(FuLegionHidDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-hid");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID_FIRMWARE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
