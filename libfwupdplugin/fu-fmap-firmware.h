@@ -20,9 +20,3 @@ struct _FuFmapFirmwareClass {
 
 FuFirmware *
 fu_fmap_firmware_new(void);
-
-gsize
-fu_fmap_firmware_get_signature_offset(FuFmapFirmware *self) G_GNUC_NON_NULL(1);
-void
-fu_fmap_firmware_set_signature_offset(FuFmapFirmware *self, gsize signature_offset)
-    G_GNUC_NON_NULL(1);
