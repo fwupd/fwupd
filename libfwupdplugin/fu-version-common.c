@@ -401,6 +401,17 @@ _g_ascii_is_digits(const gchar *str)
 	return TRUE;
 }
 
+static gboolean
+_g_ascii_is_xdigits(const gchar *str)
+{
+	g_return_val_if_fail(str != NULL, FALSE);
+	for (gsize i = 0; str[i] != '\0'; i++) {
+		if (!g_ascii_isxdigit(str[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 static guint
 fu_version_format_number_sections(FwupdVersionFormat fmt)
 {
@@ -591,6 +602,8 @@ fu_version_guess_format(const gchar *version)
 	if (sz == 1) {
 		if (g_str_has_prefix(version, "0x") || _g_ascii_is_digits(version))
 			return FWUPD_VERSION_FORMAT_NUMBER;
+		if (_g_ascii_is_xdigits(version))
+			return FWUPD_VERSION_FORMAT_HEX;
 		return FWUPD_VERSION_FORMAT_PLAIN;
 	}
 
@@ -655,6 +668,12 @@ fu_version_verify_format(const gchar *version, FwupdVersionFormat fmt, GError **
 	/* nothing we can check for */
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
 		return TRUE;
+
+	/* hex */
+	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
+		if (_g_ascii_is_xdigits(version))
+			return TRUE;
+	}
 
 	/* check the base format */
 	fmt_guess = fu_version_guess_format(version);
