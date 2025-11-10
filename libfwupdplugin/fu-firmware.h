@@ -26,6 +26,11 @@ struct _FuFirmwareClass {
 			  GInputStream *stream,
 			  FuFirmwareParseFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*parse_full)(FuFirmware *self,
+			       GInputStream *stream,
+			       gsize offset,
+			       FuFirmwareParseFlags flags,
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 	GByteArray *(*write)(FuFirmware *self, GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void (*export)(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
 	gboolean (*tokenize)(FuFirmware *self,

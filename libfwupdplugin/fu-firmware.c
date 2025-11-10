@@ -1166,7 +1166,9 @@ fu_firmware_parse_stream(FuFirmware *self,
 	}
 
 	/* optional */
-	if (klass->parse != NULL)
+	if (klass->parse_full != NULL)
+		return klass->parse_full(self, seekable_stream, offset, flags, error);
+	else if (klass->parse != NULL)
 		return klass->parse(self, partial_stream, flags, error);
 
 	/* verify alignment */

@@ -4008,9 +4008,6 @@ fu_firmware_fmap_func(void)
 	ret = fu_firmware_build_from_filename(firmware, filename, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_fmap_firmware_get_signature_offset(FU_FMAP_FIRMWARE(firmware)),
-			==,
-			0x10);
 
 	/* check image count */
 	images = fu_firmware_get_images(firmware);

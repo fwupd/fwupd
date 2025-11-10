@@ -212,10 +212,9 @@ fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError
 	g_autoptr(GPtrArray) imgs = NULL;
 
 	/* parse as firmware image */
-	fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware), priv->fmap_offset);
 	if (!fu_firmware_parse_stream(firmware,
 				      stream,
-				      0x0,
+				      priv->fmap_offset,
 				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
 					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
 				      error)) {
@@ -887,8 +886,7 @@ fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 
 	/* parse FMAP header */
-	fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware), priv->fmap_offset);
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, priv->fmap_offset, flags, error))
 		return NULL;
 
 	/* check each FMAP area in order */
