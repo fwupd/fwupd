@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "403dcd84a46cc1c8874607380ce84a964d1fc32da5a63169c6787db547d4d79f-LegionGo2_MCU_116504366.cab",
+      "emulation-url": "76f768c828c3d84f6671315bf9de1c5f6458ada377ddb8195d9903777c0e5c4f-1.zip",
       "emulation-file": "@enumeration_datadir@/legion-hid-setup.json",
       "components": [
         {
