@@ -498,14 +498,29 @@ fu_version_guess_format_func(void)
 {
 	g_assert_cmpint(fu_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_HEX);
 	g_assert_cmpint(fu_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
 	g_assert_cmpint(fu_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpint(fu_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
 	g_assert_cmpint(fu_version_guess_format("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
 	g_assert_cmpint(fu_version_guess_format("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint(fu_version_guess_format("1A"), ==, FWUPD_VERSION_FORMAT_HEX);
 	g_assert_cmpint(fu_version_guess_format("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+}
+
+static void
+fu_version_verify_format_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_version_verify_format("1A", FWUPD_VERSION_FORMAT_HEX, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_version_verify_format("1A", FWUPD_VERSION_FORMAT_NUMBER, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
 }
 
 static void
@@ -7355,6 +7370,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
+	g_test_add_func("/fwupd/common{version-verify-format}", fu_version_verify_format_func);
 	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
 	g_test_add_func("/fwupd/common{strtoll}", fu_strtoll_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
