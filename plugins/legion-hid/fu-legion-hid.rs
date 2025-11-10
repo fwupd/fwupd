@@ -61,7 +61,22 @@ struct FuStructLegionHidUpgradeRsp {
     data_length: u8,
     step: u8,
     reserved: u8,
-    response: FuLegionHidResponseStatus,
+    response: FuLegionHidResponseStatus == Ok,
+}
+
+#[derive(Parse, Default)]
+#[repr(C, packed)]
+struct FuStructLegionHidUpgradeQuerySizeRsp {
+    report_id: u8,
+    length: u8,
+    main_id: u8,
+    sub_id: u8,
+    id: FuLegionHidDeviceId,
+    param: u8,
+    data_length: u8,
+    step: u8,
+    reserved: u8,
+    response: u8,
 }
 
 #[derive(New, Getters, Default)]
