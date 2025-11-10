@@ -360,7 +360,7 @@ fu_mtd_device_ensure_version_smbios_fallback(FuMtdDevice *self, GError **error)
 		}
 
 		/* generic string */
-		if (fu_device_get_version_format(device_target) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		if (fu_device_get_version_format(device_target) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 			fu_device_set_version_format(device_target,
 						     fu_version_guess_format(version));
 		}
