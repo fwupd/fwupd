@@ -127,11 +127,23 @@ fu_mtd_ifd_device_probe(FuDevice *device, GError **error)
 		if (ifd_access & FU_IFD_ACCESS_READ)
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 		if (ifd_access & FU_IFD_ACCESS_WRITE) {
+			FuDevice *parent = fu_device_get_parent(device);
+
+			/* only writable if the backing MTD device is writable */
+			if (parent == NULL ||
+			    !fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+				g_debug("ignoring write access to %s as parent is read-only",
+					fu_device_get_name(device));
+				goto build_instance_id;
+			}
+
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 			fu_device_add_protocol(device, "org.infradead.mtd");
 		}
 	}
+
+build_instance_id:
 	if (!fu_device_build_instance_id(device, error, "IFD", "REGION", NULL))
 		return FALSE;
 
