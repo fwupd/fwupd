@@ -853,6 +853,16 @@ fu_device_new(FuContext *ctx);
  * Since: 2.0.15
  */
 #define FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX "parent-name-prefix"
+/**
+ * FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT:
+ *
+ * Allow the device version to be specified as an integer in the release XML.
+ *
+ * NOTE: This has only ever been a best-effort fallback for ESRT-derived UEFI devices.
+ *
+ * Since: 2.0.18
+ */
+#define FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT "lazy-verfmt"
 
 /* standard icons */
 

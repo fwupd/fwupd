@@ -318,6 +318,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_INSTALL_LOOP_RESTART,
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
 	    FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX,
+	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))
@@ -3612,6 +3613,34 @@ fu_device_set_version_lowest_raw(FuDevice *self, guint64 version_raw)
 		if (version != NULL)
 			fu_device_set_version_lowest(self, version);
 	}
+}
+
+/**
+ * fu_device_convert_version:
+ * @self: a #FuDevice
+ * @version_raw: an integer
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts the integer version to a string version, using the device-specific converter.
+ *
+ * Returns: a string value, or %NULL for error.
+ *
+ * Since: 2.0.18
+ **/
+gchar *
+fu_device_convert_version(FuDevice *self, guint64 version_raw, GError **error)
+{
+	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+
+	if (device_class->convert_version == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "->convert_version not implemented");
+		return NULL;
+	}
+	return device_class->convert_version(self, version_raw);
 }
 
 /* private */
