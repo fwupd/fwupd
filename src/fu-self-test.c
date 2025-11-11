@@ -7409,9 +7409,11 @@ fu_remote_local_func(void)
 static void
 fu_remote_list_repair_func(void)
 {
-	FwupdRemote *remote;
 	gboolean ret;
 	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
+	g_autoptr(FwupdRemote) remote1 = NULL;
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote3 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
@@ -7420,23 +7422,26 @@ fu_remote_list_repair_func(void)
 	g_assert_true(ret);
 
 	/* check .gz converted to .zst */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote1 = fu_remote_list_get_by_id(remote_list, "legacy-lvfs", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote1);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote1),
 			==,
 			"http://localhost/stable.xml.zst");
 
 	/* check .xz converted to .zst */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote2 = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote2);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote2),
 			==,
 			"http://localhost/stable.xml.zst");
 
 	/* check non-LVFS remote NOT .gz converted to .xz */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote3 = fu_remote_list_get_by_id(remote_list, "legacy", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote3);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote3),
 			==,
 			"http://localhost/stable.xml.gz");
 }

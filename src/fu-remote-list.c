@@ -277,9 +277,9 @@ fu_remote_list_is_remote_origin_lvfs(FwupdRemote *remote)
 static gboolean
 fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **error)
 {
-	FwupdRemote *remote_tmp;
 	g_autofree gchar *remotesdir = NULL;
 	g_autoptr(FwupdRemote) remote = fu_remote_new();
+	g_autoptr(FwupdRemote) remote_tmp = NULL;
 
 	/* set directory to store data */
 	remotesdir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
@@ -293,7 +293,7 @@ fu_remote_list_add_for_file(FuRemoteList *self, const gchar *filename, GError **
 	}
 
 	/* does it already exist */
-	remote_tmp = fu_remote_list_get_by_id(self, fwupd_remote_get_id(remote));
+	remote_tmp = fu_remote_list_get_by_id(self, fwupd_remote_get_id(remote), NULL);
 	if (remote_tmp != NULL) {
 		g_debug("remote %s already added from %s",
 			fwupd_remote_get_id(remote),
@@ -425,23 +425,17 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 			     const gchar *value,
 			     GError **error)
 {
-	FwupdRemote *remote;
 	const gchar *filename;
 	g_autofree gchar *filename_new = NULL;
 	g_autofree gchar *value_old = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 
 	/* check remote is valid */
-	remote = fu_remote_list_get_by_id(self, remote_id);
-	if (remote == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "remote %s not found",
-			    remote_id);
+	remote = fu_remote_list_get_by_id(self, remote_id, error);
+	if (remote == NULL)
 		return FALSE;
-	}
 
 	/* modify the remote */
 	filename = fwupd_remote_get_filename_source(remote);
@@ -512,12 +506,12 @@ fu_remote_list_depsolve_order_before(FuRemoteList *self)
 		if (order == NULL)
 			continue;
 		for (guint j = 0; order[j] != NULL; j++) {
-			FwupdRemote *remote2;
+			g_autoptr(FwupdRemote) remote2 = NULL;
 			if (g_strcmp0(order[j], fwupd_remote_get_id(remote)) == 0) {
 				g_debug("ignoring self-dep remote %s", order[j]);
 				continue;
 			}
-			remote2 = fu_remote_list_get_by_id(self, order[j]);
+			remote2 = fu_remote_list_get_by_id(self, order[j], NULL);
 			if (remote2 == NULL) {
 				g_debug("ignoring unfound remote %s", order[j]);
 				continue;
@@ -545,12 +539,12 @@ fu_remote_list_depsolve_order_after(FuRemoteList *self)
 		if (order == NULL)
 			continue;
 		for (guint j = 0; order[j] != NULL; j++) {
-			FwupdRemote *remote2;
+			g_autoptr(FwupdRemote) remote2 = NULL;
 			if (g_strcmp0(order[j], fwupd_remote_get_id(remote)) == 0) {
 				g_debug("ignoring self-dep remote %s", order[j]);
 				continue;
 			}
-			remote2 = fu_remote_list_get_by_id(self, order[j]);
+			remote2 = fu_remote_list_get_by_id(self, order[j], NULL);
 			if (remote2 == NULL) {
 				g_debug("ignoring unfound remote %s", order[j]);
 				continue;
@@ -746,14 +740,17 @@ fu_remote_list_get_all(FuRemoteList *self)
 }
 
 FwupdRemote *
-fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id)
+fu_remote_list_get_by_id(FuRemoteList *self, const gchar *remote_id, GError **error)
 {
 	g_return_val_if_fail(FU_IS_REMOTE_LIST(self), NULL);
+	g_return_val_if_fail(remote_id != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index(self->array, i);
 		if (g_strcmp0(remote_id, fwupd_remote_get_id(remote)) == 0)
-			return remote;
+			return g_object_ref(remote);
 	}
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "remote %s not found", remote_id);
 	return NULL;
 }
 
