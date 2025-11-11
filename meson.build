@@ -850,6 +850,7 @@ rustgen = generator(
   ),
   arguments: [
     join_paths(meson.project_source_root(), 'libfwupdplugin', 'rustgen.py'),
+    '--use', 'fwupd:@0@'.format(join_paths(meson.project_source_root(), 'libfwupdplugin')),
     '@INPUT@',
     '@OUTPUT0@',
     '@OUTPUT1@',
