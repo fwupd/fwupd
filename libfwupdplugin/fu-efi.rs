@@ -3,6 +3,7 @@
 
 // EFI_STATUS is u64le on 64-bit and u32le on 32-bit -- but be pragmatic
 #[repr(u64le)]
+#[derive(ToString)]
 enum FuEfiStatus {
     Success             = 0,
     LoadError           = 1,
