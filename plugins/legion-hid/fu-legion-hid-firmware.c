@@ -45,6 +45,8 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_mcu, stream_mcu, 0x00, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_mcu, FU_LEGION_HID_FIRMWARE_ID_MCU);
+	fu_firmware_set_offset(img_mcu, offset);
+	fu_firmware_set_version_format(img_mcu, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_firmware_set_version_raw(img_mcu,
 				    fu_struct_legion_hid_bin_header_get_mcu_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_mcu, error))
@@ -62,6 +64,8 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_left, stream_left, 0x00, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_left, FU_LEGION_HID_FIRMWARE_ID_LEFT);
+	fu_firmware_set_offset(img_left, offset);
+	fu_firmware_set_version_format(img_left, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_firmware_set_version_raw(img_left,
 				    fu_struct_legion_hid_bin_header_get_left_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_left, error))
@@ -79,6 +83,8 @@ fu_legion_hid_firmware_parse(FuFirmware *firmware,
 	if (!fu_firmware_parse_stream(img_right, stream_right, 0x00, flags, error))
 		return FALSE;
 	fu_firmware_set_id(img_right, FU_LEGION_HID_FIRMWARE_ID_RIGHT);
+	fu_firmware_set_offset(img_right, offset);
+	fu_firmware_set_version_format(img_right, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_firmware_set_version_raw(img_right,
 				    fu_struct_legion_hid_bin_header_get_right_version(st_header));
 	if (!fu_firmware_add_image(firmware, img_right, error))
