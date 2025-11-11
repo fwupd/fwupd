@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <glib/gi18n-lib.h>
+
 #ifdef HAVE_MTD_USER_H
 #include <mtd/mtd-user.h>
 #endif
@@ -21,6 +23,8 @@ typedef struct {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
+	gboolean spi_bios_locked_valid;
+	gboolean spi_bios_locked;
 
 	/* FMAP specific */
 	GPtrArray *fmap_regions;
@@ -32,6 +36,59 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_mtd_device_get_instance_private(o))
 
 #define FU_MTD_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
+#define FU_MTD_DEVICE_INHIBIT_ID_BIOS_LOCK "bios-lock"
+#define FU_MTD_DEVICE_SPI_ATTR_BIOS_LOCKED "intel_spi_bios_locked"
+
+static gchar *
+fu_mtd_device_find_spi_attr(FuMtdDevice *self, const gchar *basename)
+{
+	const gchar *syspath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
+	gchar *dir;
+
+	if (syspath == NULL)
+		return NULL;
+
+	dir = g_path_get_dirname(syspath);
+	while (dir != NULL && dir[0] != '\0') {
+		g_autofree gchar *fn = g_build_filename(dir, basename, NULL);
+
+		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			gchar *result = g_steal_pointer(&fn);
+			g_free(dir);
+			return result;
+		}
+
+		gchar *parent = g_path_get_dirname(dir);
+		if (g_strcmp0(parent, dir) == 0) {
+			g_free(parent);
+			break;
+		}
+		g_free(dir);
+		dir = parent;
+	}
+	g_free(dir);
+	return NULL;
+}
+
+static gboolean
+fu_mtd_device_spi_attr_read_bool(FuMtdDevice *self, const gchar *basename, gboolean *value)
+{
+	g_autofree gchar *fn = fu_mtd_device_find_spi_attr(self, basename);
+
+	if (fn == NULL)
+		return FALSE;
+	g_autofree gchar *contents = NULL;
+	gsize len = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!g_file_get_contents(fn, &contents, &len, &error_local)) {
+		g_debug("failed to read %s: %s", fn, error_local->message);
+		return FALSE;
+	}
+
+	*value = g_ascii_strtoll(contents, NULL, 10) != 0;
+	return TRUE;
+}
 
 static void
 fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -573,6 +630,27 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	if (!fu_strtoull(attr_size, &size, 0, G_MAXUINT64, FU_INTEGER_BASE_AUTO, error))
 		return FALSE;
 	fu_device_set_firmware_size_max(device, size);
+
+	if (fu_mtd_device_spi_attr_read_bool(self,
+					     FU_MTD_DEVICE_SPI_ATTR_BIOS_LOCKED,
+					     &priv->spi_bios_locked)) {
+		priv->spi_bios_locked_valid = TRUE;
+		if (priv->spi_bios_locked)
+			g_debug("intel_spi_bios_locked set for %s", fu_device_get_name(device));
+	}
+
+	if (priv->spi_bios_locked_valid) {
+		if (priv->spi_bios_locked) {
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_LOCKED);
+			fu_device_inhibit(
+			    FU_DEVICE(self),
+			    FU_MTD_DEVICE_INHIBIT_ID_BIOS_LOCK,
+			    _("Disable BIOS Lock / SMM_BWP in firmware setup to allow updates"));
+		} else {
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_LOCKED);
+			fu_device_uninhibit(FU_DEVICE(self), FU_MTD_DEVICE_INHIBIT_ID_BIOS_LOCK);
+		}
+	}
 #ifdef HAVE_MTD_USER_H
 	if ((flags & MTD_NO_ERASE) == 0) {
 		g_autofree gchar *attr_erasesize = NULL;
@@ -591,8 +669,14 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 			return FALSE;
 	}
 	if (flags & MTD_WRITEABLE) {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+		if (!priv->spi_bios_locked_valid || !priv->spi_bios_locked) {
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self),
+						     FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+		} else {
+			g_debug("keeping %s read-only as intel_spi_bios_locked is asserted",
+				fu_device_get_name(device));
+		}
 	}
 #endif
 
@@ -1086,6 +1170,7 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
