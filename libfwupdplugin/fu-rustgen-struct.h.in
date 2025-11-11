@@ -10,6 +10,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC({{obj.name}}, {{obj.c_method('Unref')}})
 {%- if obj.export('New') == Export.PUBLIC %}
 {{obj.name}} *{{obj.c_method('New')}}(void) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
+{%- if obj.export('NewInternal') == Export.PUBLIC %}
+{{obj.name}} *{{obj.c_method('NewInternal')}}(void) G_GNUC_WARN_UNUSED_RESULT;
+{%- endif %}
 {%- if obj.export('Parse') == Export.PUBLIC %}
 {{obj.name}} *{{obj.c_method('Parse')}}(const guint8 *buf, gsize bufsz, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
@@ -27,6 +30,9 @@ gboolean {{obj.c_method('ValidateBytes')}}(GBytes *blob, gsize offset, GError **
 {%- endif %}
 {%- if obj.export('ValidateStream') == Export.PUBLIC %}
 gboolean {{obj.c_method('ValidateStream')}}(GInputStream *stream, gsize offset, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
+{%- endif %}
+{%- if obj.export('ValidateInternal') == Export.PUBLIC %}
+gboolean {{obj.c_method('ValidateInternal')}}({{obj.name}} *st, GError **error) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;
 {%- endif %}
 {%- if obj.export('ToString') == Export.PUBLIC %}
 gchar *{{obj.c_method('ToString')}}(const {{obj.name}} *st) G_GNUC_NON_NULL(1) G_GNUC_WARN_UNUSED_RESULT;

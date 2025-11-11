@@ -28,7 +28,10 @@ void
 
 {%- set export = obj.export('NewInternal') %}
 {%- if export in [Export.PUBLIC, Export.PRIVATE] %}
-static {{obj.name}} *
+/**
+ * {{obj.c_method('NewInternal')}}: (skip):
+ **/
+{{export.value}}{{obj.name}} *
 {{obj.c_method('NewInternal')}}(void)
 {
     {{obj.name}} *st = g_new0({{obj.name}}, 1);
