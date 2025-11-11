@@ -146,6 +146,18 @@ fu_rts54hub_rtd21xx_foreground_attach(FuDevice *device, FuProgress *progress, GE
 	 * it can be queried again */
 	fu_device_sleep_full(device, 60000, progress); /* ms */
 
+	/* target addr change to 0x6A, need config target addr to 0x6A*/
+	if (!fu_rts54hub_device_i2c_config(FU_RTS54HUB_RTD21XX_DEVICE(self),
+					   0x6A,
+					   1,
+					   FU_RTS54HUB_I2C_SPEED_200K,
+					   error)) {
+		g_prefix_error_literal(error, "failed to config target addr to 0x6A: ");
+		return FALSE;
+	}
+
+	priv->target_addr = 0x6A;
+
 	/* success */
 	return TRUE;
 }
