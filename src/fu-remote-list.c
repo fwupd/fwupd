@@ -736,7 +736,7 @@ GPtrArray *
 fu_remote_list_get_all(FuRemoteList *self)
 {
 	g_return_val_if_fail(FU_IS_REMOTE_LIST(self), NULL);
-	return self->array;
+	return g_ptr_array_ref(self->array);
 }
 
 FwupdRemote *

@@ -4259,9 +4259,9 @@ fu_engine_load_metadata_store_local(FuEngine *self,
 static gboolean
 fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
-	GPtrArray *remotes;
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
 	g_autoptr(GFile) xmlb = NULL;
+	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 
 	/* clear existing silo */
@@ -4401,7 +4401,7 @@ fu_engine_remote_list_ensure_p2p_policy_remote(FuEngine *self, FwupdRemote *remo
 static void
 fu_engine_config_changed_cb(FuEngineConfig *config, FuEngine *self)
 {
-	GPtrArray *remotes = fu_remote_list_get_all(self->remote_list);
+	g_autoptr(GPtrArray) remotes = fu_remote_list_get_all(self->remote_list);
 
 	fu_idle_set_timeout(self->idle, fu_engine_config_get_idle_timeout(config));
 
@@ -5361,7 +5361,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 GPtrArray *
 fu_engine_get_remotes(FuEngine *self, GError **error)
 {
-	GPtrArray *remotes;
+	g_autoptr(GPtrArray) remotes = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
