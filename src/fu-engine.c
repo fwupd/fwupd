@@ -625,14 +625,16 @@ fu_engine_add_remote(FuEngine *self, FwupdRemote *remote)
 static void
 fu_engine_release_remote_id_changed_cb(FuRelease *release, GParamSpec *pspec, FuEngine *self)
 {
-	FwupdRemote *remote;
-	const gchar *remote_id = fwupd_release_get_remote_id(FWUPD_RELEASE(release));
+	const gchar *remote_id;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error_local = NULL;
 
+	remote_id = fwupd_release_get_remote_id(FWUPD_RELEASE(release));
 	if (remote_id == NULL)
 		return;
-	remote = fu_remote_list_get_by_id(self->remote_list, remote_id);
+	remote = fu_remote_list_get_by_id(self->remote_list, remote_id, &error_local);
 	if (remote == NULL) {
-		g_warning("no remote found for %s", remote_id);
+		g_warning("%s", error_local->message);
 		return;
 	}
 	fu_release_set_remote(release, remote);
@@ -998,15 +1000,15 @@ fu_engine_modify_remote(FuEngine *self,
 gboolean
 fu_engine_clean_remote(FuEngine *self, const gchar *remote_id, GError **error)
 {
-	FwupdRemote *remote = fu_remote_list_get_by_id(self->remote_list, remote_id);
-	if (remote == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "remote %s not found",
-			    remote_id);
+	g_autoptr(FwupdRemote) remote = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(remote_id != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	remote = fu_remote_list_get_by_id(self->remote_list, remote_id, error);
+	if (remote == NULL)
 		return FALSE;
-	}
 	if (!fu_remote_clean(remote, error))
 		return FALSE;
 	fu_engine_metadata_changed(self);
@@ -2559,7 +2561,6 @@ fu_engine_add_release_plugin_metadata(FuEngine *self,
 static gboolean
 fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 {
-	FwupdRemote *remote_tmp = fu_remote_list_get_by_id(self->remote_list, "backup");
 	g_autofree gchar *localstatepkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	g_autofree gchar *backupdir = g_build_filename(localstatepkg, "backup", NULL);
 	g_autofree gchar *backupdir_uri = g_strdup_printf("file://%s", backupdir);
@@ -2569,6 +2570,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	g_autofree gchar *archive_basename = g_strdup_printf("%s.cab", archive_checksum);
 	g_autofree gchar *archive_fn = g_build_filename(backupdir, archive_basename, NULL);
 	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(FwupdRemote) remote_tmp = NULL;
 
 	/* save archive if required */
 	if (!g_file_test(archive_fn, G_FILE_TEST_EXISTS)) {
@@ -2578,6 +2580,7 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	}
 
 	/* already exists as an enabled remote */
+	remote_tmp = fu_remote_list_get_by_id(self->remote_list, "backup", NULL);
 	if (remote_tmp != NULL && fwupd_remote_has_flag(remote_tmp, FWUPD_REMOTE_FLAG_ENABLED))
 		return TRUE;
 
@@ -4599,7 +4602,7 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 				GBytes *bytes_sig,
 				GError **error)
 {
-	FwupdRemote *remote;
+	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) istream = NULL;
 	g_autoptr(GPtrArray) results = NULL;
@@ -4617,15 +4620,9 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* check remote is valid */
-	remote = fu_remote_list_get_by_id(self->remote_list, remote_id);
-	if (remote == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "remote %s not found",
-			    remote_id);
+	remote = fu_remote_list_get_by_id(self->remote_list, remote_id, error);
+	if (remote == NULL)
 		return FALSE;
-	}
 	if (!fwupd_remote_has_flag(remote, FWUPD_REMOTE_FLAG_ENABLED)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
