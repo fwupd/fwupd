@@ -136,6 +136,12 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 				continue;
 			}
 
+			/* skip devices with failed updates */
+			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED ||
+			    fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+				continue;
+			}
+
 			/* get the releases for this device */
 			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 				continue;
@@ -149,6 +155,13 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 			for (guint i = 0; i < devices->len; i++) {
 				FwupdDevice *dev = g_ptr_array_index(devices, i);
 				g_autoptr(FwupdRelease) rel = NULL;
+
+				/* skip devices with failed updates */
+				if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED ||
+				    fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+					continue;
+				}
+
 				if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 					continue;
 				rel = fu_engine_get_release_with_tag(self,
