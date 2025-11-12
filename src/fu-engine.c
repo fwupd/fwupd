@@ -2104,8 +2104,8 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 	 * glibc-2.40-17.fc41.i686 on kernel-6.12.9-200.fc41.x86_64 */
 	tmp = (const gchar *)getauxval(AT_PLATFORM);
 	if (tmp == NULL) {
-		g_debug("no AT_PLATFORM, so using CpuArchitecture for platform");
 		tmp = name_tmp.machine;
+		g_debug("no AT_PLATFORM, so using CpuArchitecture (%s) for platform", tmp);
 	}
 	g_hash_table_insert(hash, g_strdup("PlatformArchitecture"), g_strdup(tmp));
 #endif
