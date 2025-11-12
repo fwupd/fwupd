@@ -111,6 +111,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	const gchar *host_bkc = fu_engine_get_host_bkc(self);
 	guint upgrade_count = 0;
 	guint sync_count = 0;
+	guint reboot_count = 0;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
@@ -128,6 +129,12 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		for (guint i = 0; i < devices->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices, i);
 			g_autoptr(GPtrArray) rels = NULL;
+
+			/* check if device needs reboot to complete update */
+			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+				reboot_count++;
+				continue;
+			}
 
 			/* get the releases for this device */
 			if (!fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
@@ -171,8 +178,21 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	if (!fu_path_mkdir_parent(target, error))
 		return FALSE;
 
-	/* nag about syncing or updating, but never both */
-	if (sync_count > 0) {
+	/* nag about reboot first, then syncing or updating, but never both */
+	if (reboot_count > 0) {
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       ngettext("%u device has been updated and needs a reboot.",
+						"%u devices have been updated and need a reboot.",
+						reboot_count),
+				       reboot_count);
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       _("Reboot to complete the update."));
+		g_string_append(str, "\n\n");
+	} else if (sync_count > 0) {
 		g_string_append(str, "\n");
 		g_string_append_printf(str,
 				       /* TRANSLATORS: this is shown in the MOTD */
