@@ -1297,6 +1297,10 @@ fu_util_device_problem_to_string(FwupdClient *client, FwupdDevice *dev, FwupdDev
 		/* TRANSLATORS: firmware is signed with insecure key */
 		return g_strdup(_("System has been signed with an insecure key"));
 	}
+	if (problem == FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED) {
+		/* TRANSLATORS: firmware is locked from the BIOS */
+		return g_strdup(_("Device firmware has been locked "));
+	}
 	return NULL;
 }
 

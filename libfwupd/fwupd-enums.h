@@ -727,6 +727,14 @@ typedef enum {
 	 * Since: 2.0.17
 	 */
 	FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM = 1ull << 13,
+	/**
+	 * FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED:
+	 *
+	 * The firmware is locked in the system setup.
+	 *
+	 * Since: 2.0.18
+	 */
+	FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED = 1ull << 14,
 
 	/**
 	 * FWUPD_DEVICE_PROBLEM_UNKNOWN:
