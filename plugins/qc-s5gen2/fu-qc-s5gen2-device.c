@@ -699,9 +699,7 @@ fu_qc_s5gen2_device_write_firmware(FuDevice *device,
 		g_autoptr(GError) error_local = NULL;
 
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		fu_qc_s5gen2_device_cmd_transfer_complete(self, &error_local);
-
-		if (error_local != NULL)
+		if (!fu_qc_s5gen2_device_cmd_transfer_complete(self, &error_local))
 			g_debug("expected error during auto reboot: %s", error_local->message);
 
 		self->resume_point = FU_QC_RESUME_POINT_POST_REBOOT;
