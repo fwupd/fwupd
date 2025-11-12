@@ -2459,6 +2459,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
+		fu_engine_update_motd_reset(self);
 		return FALSE;
 	}
 
