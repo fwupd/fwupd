@@ -48,6 +48,7 @@ typedef struct {
 	guint depth;
 	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
+	GPtrArray *magic;   /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
@@ -818,6 +819,35 @@ fu_firmware_add_chunk(FuFirmware *self, FuChunk *chk)
 }
 
 /**
+ * fu_firmware_add_magic:
+ * @self: a #FuFirmware
+ * @buf: some data
+ * @bufsz: sizeof @buf
+ * @offset: offset to start parsing, typically 0x0
+ *
+ * Adds a possible magic signature to the image.
+ *
+ * Since: 2.0.18
+ **/
+void
+fu_firmware_add_magic(FuFirmware *self, const guint8 *buf, gsize bufsz, gsize offset)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autofree FuFirmwarePatch *patch = g_new0(FuFirmwarePatch, 1);
+
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(buf != NULL);
+	g_return_if_fail(bufsz != 0);
+
+	if (priv->magic == NULL)
+		priv->magic =
+		    g_ptr_array_new_with_free_func((GDestroyNotify)fu_firmware_patch_free);
+	patch->blob = g_bytes_new(buf, bufsz);
+	patch->offset = offset;
+	g_ptr_array_add(priv->magic, g_steal_pointer(&patch));
+}
+
+/**
  * fu_firmware_get_checksum:
  * @self: a #FuPlugin
  * @csum_kind: a checksum type, e.g. %G_CHECKSUM_SHA256
@@ -941,11 +971,13 @@ fu_firmware_check_compatible(FuFirmware *self,
 static gboolean
 fu_firmware_validate_for_offset(FuFirmware *self,
 				GInputStream *stream,
-				gsize *offset,
+				gsize offset,
+				gsize *offset_found,
 				FuFirmwareParseFlags flags,
 				GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize streamsz = 0;
 
 	/* not implemented */
@@ -955,38 +987,50 @@ fu_firmware_validate_for_offset(FuFirmware *self,
 	/* fuzzing */
 	if (!fu_firmware_has_flag(self, FU_FIRMWARE_FLAG_ALWAYS_SEARCH) &&
 	    (flags & FU_FIRMWARE_PARSE_FLAG_NO_SEARCH) > 0) {
-		if (!klass->validate(self, stream, *offset, error))
-			return FALSE;
-		return TRUE;
+		return klass->validate(self, stream, offset, error);
 	}
 
-	/* limit the size of firmware we search */
+	/* try all the magic values, if provided */
+	if (priv->magic != NULL) {
+		for (guint i = 0; i < priv->magic->len; i++) {
+			FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
+			gsize offset_tmp = 0;
+			g_debug("searching for 0x%x bytes of magic",
+				(guint)g_bytes_get_size(patch->blob));
+			if (fu_input_stream_find(stream,
+						 g_bytes_get_data(patch->blob, NULL),
+						 g_bytes_get_size(patch->blob),
+						 offset,
+						 &offset_tmp,
+						 NULL)) {
+				offset_tmp -= patch->offset;
+				g_debug("found magic @0x%x", (guint)offset_tmp);
+				if (offset_found != NULL)
+					*offset_found = offset_tmp;
+				return klass->validate(self, stream, *offset_found, error);
+			}
+		}
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "failed to find magic bytes");
+		return FALSE;
+	}
+
+	/* limit the size of firmware we search as brute force is expensive */
 	if (!fu_input_stream_size(stream, &streamsz, error))
 		return FALSE;
-	if (streamsz > FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX) {
-		if (!klass->validate(self, stream, *offset, error)) {
-			g_prefix_error(error,
-				       "failed to search for magic as firmware size was 0x%x and "
-				       "limit was 0x%x: ",
-				       (guint)streamsz,
-				       (guint)FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX);
-			return FALSE;
-		}
-		return TRUE;
-	}
-
-	/* increment the offset, looking for the magic */
-	for (gsize offset_tmp = *offset; offset_tmp < streamsz; offset_tmp++) {
-		if (klass->validate(self, stream, offset_tmp, NULL)) {
-			fu_firmware_set_offset(self, offset_tmp);
-			*offset = offset_tmp;
-			return TRUE;
+	if (streamsz < FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX) {
+		for (gsize offset_tmp = offset; offset_tmp < streamsz; offset_tmp++) {
+			if (klass->validate(self, stream, offset_tmp, NULL)) {
+				*offset_found = offset_tmp;
+				return TRUE;
+			}
 		}
 	}
 
-	/* did not find what we were looking for */
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "did not find magic");
-	return FALSE;
+	/* check in more detail */
+	return klass->validate(self, stream, offset, error);
 }
 
 /**
@@ -1054,8 +1098,9 @@ fu_firmware_parse_stream(FuFirmware *self,
 	}
 
 	/* optional */
-	if (!fu_firmware_validate_for_offset(self, seekable_stream, &offset, flags, error))
+	if (!fu_firmware_validate_for_offset(self, seekable_stream, offset, &offset, flags, error))
 		return FALSE;
+	fu_firmware_set_offset(self, offset);
 
 	/* save stream size */
 	priv->streamsz = streamsz - offset;
@@ -1121,7 +1166,9 @@ fu_firmware_parse_stream(FuFirmware *self,
 	}
 
 	/* optional */
-	if (klass->parse != NULL)
+	if (klass->parse_full != NULL)
+		return klass->parse_full(self, seekable_stream, offset, flags, error);
+	else if (klass->parse != NULL)
 		return klass->parse(self, partial_stream, flags, error);
 
 	/* verify alignment */
@@ -2358,6 +2405,17 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 		}
 	}
 
+	/* magic */
+	if (priv->magic != NULL && priv->magic->len > 0) {
+		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert(bn, "magic", NULL);
+		for (guint i = 0; i < priv->magic->len; i++) {
+			FuFirmwarePatch *patch = g_ptr_array_index(priv->magic, i);
+			g_autofree gchar *str = fu_bytes_to_string(patch->blob);
+			g_autofree gchar *offset = g_strdup_printf("0x%x", (guint)patch->offset);
+			xb_builder_node_insert_text(bp, "data", str, "offset", offset, NULL);
+		}
+	}
+
 	/* vfunc */
 	if (klass->export != NULL)
 		klass->export(self, flags, bn);
@@ -2461,6 +2519,15 @@ fu_firmware_init(FuFirmware *self)
 }
 
 static void
+fu_firmware_constructed(GObject *obj)
+{
+	FuFirmware *self = FU_FIRMWARE(obj);
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
+	if (klass->add_magic != NULL)
+		klass->add_magic(self);
+}
+
+static void
 fu_firmware_finalize(GObject *object)
 {
 	FuFirmware *self = FU_FIRMWARE(object);
@@ -2476,6 +2543,8 @@ fu_firmware_finalize(GObject *object)
 		g_ptr_array_unref(priv->chunks);
 	if (priv->patches != NULL)
 		g_ptr_array_unref(priv->patches);
+	if (priv->magic != NULL)
+		g_ptr_array_unref(priv->magic);
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->parent), (gpointer *)&priv->parent);
 	g_ptr_array_unref(priv->images);
@@ -2491,6 +2560,7 @@ fu_firmware_class_init(FuFirmwareClass *klass)
 	object_class->finalize = fu_firmware_finalize;
 	object_class->get_property = fu_firmware_get_property;
 	object_class->set_property = fu_firmware_set_property;
+	object_class->constructed = fu_firmware_constructed;
 
 	/**
 	 * FuFirmware:parent:

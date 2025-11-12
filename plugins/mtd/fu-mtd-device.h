@@ -14,3 +14,9 @@ G_DECLARE_DERIVABLE_TYPE(FuMtdDevice, fu_mtd_device, FU, MTD_DEVICE, FuUdevDevic
 struct _FuMtdDeviceClass {
 	FuUdevDeviceClass parent_class;
 };
+
+#define FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK "smbios-version-fallback"
+
+gboolean
+fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
+    G_GNUC_NON_NULL(1, 2, 3);

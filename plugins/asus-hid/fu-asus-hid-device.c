@@ -178,7 +178,7 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 						 error))
 		return FALSE;
 
-	// TODO save some bits from result here for data for next command
+	/* TODO save some bits from result here for data for next command */
 	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE2);
 	fu_struct_asus_hid_pre_update_command_set_length(st, 1);
 	if (!fu_asus_hid_device_transfer_feature(self,
@@ -188,7 +188,7 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 						 error))
 		return FALSE;
 
-	// TODO save some bits from result here for data for next command
+	/* TODO save some bits from result here for data for next command */
 	previous_result = 0x1;
 	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE3);
 	fu_struct_asus_hid_pre_update_command_set_length(st, 1);
@@ -219,7 +219,7 @@ fu_asus_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error
 						 error))
 		return FALSE;
 
-	// TODO save some bits from result here for data for next command
+	/* TODO save some bits from result here for data for next command */
 
 	previous_result = 0x2;
 	fu_struct_asus_hid_pre_update_command_set_cmd(st, FU_ASUS_HID_COMMAND_PRE_UPDATE5);
@@ -357,7 +357,7 @@ static void
 fu_asus_hid_device_init(FuAsusHidDevice *self)
 {
 	/* TODO: automatic backup */
-	// fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL);
+	/* fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL); */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_remove_delay(FU_DEVICE(self), 10000);
 	self->child_added_id = g_signal_connect(FU_DEVICE(self),

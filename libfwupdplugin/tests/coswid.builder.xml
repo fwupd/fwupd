@@ -5,6 +5,8 @@
   <product>fwupdx64</product>
   <summary>EFI helpers to install system firmware</summary>
   <colloquial_version>1.3-3-g1d0c69f</colloquial_version>
+  <persistent_id>org.fwupd.fwupd-efi</persistent_id>
+  <device_id>SI_BIOS</device_id>
   <link>
     <rel>license</rel>
     <href>https://spdx.org/licenses/LGPL-2.0.html</href>

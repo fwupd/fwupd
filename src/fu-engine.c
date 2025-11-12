@@ -2596,6 +2596,44 @@ fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 	return fu_remote_save_to_filename(remote, remotes_fn, NULL, error);
 }
 
+static gboolean
+fu_engine_create_reboot_required_file(GError **error)
+{
+	g_autofree gchar *rundir = fu_path_from_kind(FU_PATH_KIND_RUNDIR);
+	g_autofree gchar *reboot_required_path = g_build_filename(rundir, "reboot-required", NULL);
+	g_autofree gchar *reboot_required_pkgs_path =
+	    g_build_filename(rundir, "reboot-required.pkgs", NULL);
+	g_autoptr(GString) new_content = g_string_new(NULL);
+
+	if (!g_file_test(rundir, G_FILE_TEST_IS_DIR))
+		return TRUE;
+
+	if (!g_file_set_contents(reboot_required_path, "", 0, error))
+		return FALSE;
+
+	if (g_file_test(reboot_required_pkgs_path, G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *existing_content = NULL;
+
+		if (!g_file_get_contents(reboot_required_pkgs_path, &existing_content, NULL, error))
+			return FALSE;
+		if (existing_content != NULL) {
+			g_auto(GStrv) lines = g_strsplit(existing_content, "\n", -1);
+			for (guint i = 0; lines[i] != NULL; i++) {
+				if (g_strcmp0(lines[i], "fwupd") == 0)
+					return TRUE;
+			}
+		}
+		g_string_append(new_content, existing_content);
+	}
+
+	g_string_append(new_content, "fwupd\n");
+
+	return g_file_set_contents(reboot_required_pkgs_path,
+				   new_content->str,
+				   new_content->len,
+				   error);
+}
+
 /**
  * fu_engine_install_release:
  * @self: a #FuEngine
@@ -2730,6 +2768,8 @@ fu_engine_install_release(FuEngine *self,
 	/* update state (which updates the database if required) */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
+		if (!fu_engine_create_reboot_required_file(error))
+			return FALSE;
 		if (g_strcmp0(fu_device_get_plugin(device), "test") == 0) {
 			g_debug("not setting needs-reboot for test device");
 		} else {

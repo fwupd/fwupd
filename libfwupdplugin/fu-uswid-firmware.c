@@ -290,6 +290,15 @@ fu_uswid_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static void
+fu_uswid_firmware_add_magic(FuFirmware *firmware)
+{
+	fu_firmware_add_magic(firmware,
+			      (const guint8 *)FU_STRUCT_USWID_DEFAULT_MAGIC,
+			      sizeof(fwupd_guid_t),
+			      0x0);
+}
+
+static void
 fu_uswid_firmware_init(FuUswidFirmware *self)
 {
 	FuUswidFirmwarePrivate *priv = GET_PRIVATE(self);
@@ -310,6 +319,7 @@ fu_uswid_firmware_class_init(FuUswidFirmwareClass *klass)
 	firmware_class->write = fu_uswid_firmware_write;
 	firmware_class->build = fu_uswid_firmware_build;
 	firmware_class->export = fu_uswid_firmware_export;
+	firmware_class->add_magic = fu_uswid_firmware_add_magic;
 }
 
 /**

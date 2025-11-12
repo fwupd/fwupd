@@ -95,6 +95,7 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 	gboolean secureboot_enabled = FALSE;
 	gboolean source_path_exists = FALSE;
 	gboolean source_path_signed_exists = FALSE;
+	g_autoptr(GError) error_local = NULL;
 
 	suffix = fu_uefi_bootmgr_get_suffix(error);
 	if (suffix == NULL)
@@ -107,8 +108,8 @@ fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **err
 	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
 	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
 
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
-		return NULL;
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+		g_debug("ignoring: %s", error_local->message);
 	if (secureboot_enabled) {
 		if (!source_path_signed_exists) {
 			g_set_error(error,

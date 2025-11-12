@@ -198,3 +198,7 @@ Remember: Plugins should be upstream!
 
 * `fu_firmware_add_image_full()`: Use `fu_firmware_add_image()` instead.
 * `fu_firmware_add_image()`: Add a `GError` and check the return value.
+
+## 2.0.18
+
+* `fu_input_stream_find()`: Add a start offset, typically `0x0`.

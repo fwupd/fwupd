@@ -1325,6 +1325,9 @@
     <distro id="darwin">
       <package>virtualenv</package>
     </distro>
+    <distro id="freebsd">
+      <package>py311-virtualenv</package>
+    </distro>
   </dependency>
   <dependency id="python3-dbusmock">
     <distro id="debian">
@@ -1611,6 +1614,16 @@
     </distro>
     <distro id="freebsd">
       <package>sqlite3</package>
+    </distro>
+  </dependency>
+  <dependency id="python3-sqlite3">
+    <distro id="freebsd">
+      <package>py311-sqlite3</package>
+    </distro>
+  </dependency>
+  <dependency id="efivar">
+    <distro id="freebsd">
+      <package>efivar</package>
     </distro>
   </dependency>
   <dependency id="systemd">

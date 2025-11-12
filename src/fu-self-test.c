@@ -591,6 +591,119 @@ fu_engine_requirements_not_hardware_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_phased_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <phased_update>10</phased_update>"
+			   "    <id compare=\"ge\" version=\"2.0.17\">org.freedesktop.fwupd</id>\n"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* do not include into seed */
+	g_assert_cmpstr(fu_engine_get_host_machine_id(engine), ==, NULL);
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	fu_release_set_remote(release, remote);
+	fwupd_remote_set_mtime(remote, 12340);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check this still passes as we're ignoring */
+	fwupd_remote_set_mtime(remote, 12345);
+	ret = fu_engine_requirements_check(engine,
+					   release,
+					   FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS,
+					   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check this now fails */
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	g_clear_error(&error);
+
+	/* user disabled this */
+	fwupd_remote_add_flag(remote, FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_engine_requirements_phased_old_fwupd_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <phased_update>10</phased_update>"
+			   "    <id compare=\"ge\" version=\"2.0.16\">org.freedesktop.fwupd</id>\n"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* do not include into seed */
+	g_assert_cmpstr(fu_engine_get_host_machine_id(engine), ==, NULL);
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	fu_release_set_remote(release, remote);
+	fwupd_remote_set_mtime(remote, 12340);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* check this fails because the fwupd requirement is too low */
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+}
+
+static void
 fu_engine_requirements_version_require_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -3677,6 +3790,13 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	g_autofree gchar *rundir = fu_path_from_kind(FU_PATH_KIND_RUNDIR);
+	g_autofree gchar *reboot_file = NULL;
+
+	/* create rundir */
+	ret = fu_path_mkdir(rundir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -3742,6 +3862,9 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
+
+	reboot_file = g_build_filename(rundir, "reboot-required", NULL);
+	g_assert_true(g_file_test(reboot_file, G_FILE_TEST_EXISTS));
 }
 
 typedef struct {
@@ -5021,7 +5144,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
-			      "failed to parse * BOS descriptor: *did not find magic*");
+			      "failed to parse * BOS descriptor: *invalid UUID*");
 #endif
 
 	/* load the JSON into the backend */
@@ -7889,6 +8012,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_RUNDIR", "/tmp/fwupd-self-test/run", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
 	sysfsdir = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
@@ -8069,6 +8193,12 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{requirements-not-hardware}",
 			     self,
 			     fu_engine_requirements_not_hardware_func);
+	g_test_add_data_func("/fwupd/engine{requirements-phased}",
+			     self,
+			     fu_engine_requirements_phased_func);
+	g_test_add_data_func("/fwupd/engine{requirements-phased-old-fwpud}",
+			     self,
+			     fu_engine_requirements_phased_old_fwupd_func);
 	g_test_add_data_func("/fwupd/engine{requirements-version-require}",
 			     self,
 			     fu_engine_requirements_version_require_func);

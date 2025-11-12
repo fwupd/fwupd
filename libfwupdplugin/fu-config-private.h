@@ -19,6 +19,8 @@ FuConfig *
 fu_config_new(void);
 gboolean
 fu_config_load(FuConfig *self, FuConfigLoadFlags flags, GError **error) G_GNUC_NON_NULL(1);
+void
+fu_config_set_basename(FuConfig *self, const gchar *basename) G_GNUC_NON_NULL(1);
 gboolean
 fu_config_reset_defaults(FuConfig *self, const gchar *section, GError **error)
     G_GNUC_NON_NULL(1, 2);

@@ -14,6 +14,7 @@ fu_nesting_depth_test(void)
 			if (3) {
 				if (4) {
 					if (5) {
+						/* this is crazy */
 						g_debug("foo");
 					}
 				}

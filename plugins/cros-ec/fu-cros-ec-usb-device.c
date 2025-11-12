@@ -483,6 +483,40 @@ fu_cros_ec_usb_device_transfer_block_cb(FuDevice *device, gpointer user_data, GE
 	fu_struct_cros_ec_update_frame_header_set_cmd_block_base(
 	    st_ufh,
 	    fu_chunk_get_address(helper->block));
+
+	if (fu_device_has_private_flag(device,
+				       FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED)) {
+		/* sets the the first 32 bits of the SHA256 digest */
+		guint32 digest_val = 0;
+		guint8 digest[SHA256_DIGEST_LENGTH] = {0};
+		gsize out_len = SHA256_DIGEST_LENGTH;
+		g_autoptr(GChecksum) checksum = g_checksum_new(G_CHECKSUM_SHA256);
+
+		g_checksum_update(checksum,
+				  fu_chunk_get_data(helper->block),
+				  fu_chunk_get_data_sz(helper->block));
+		g_checksum_get_digest(checksum, digest, &out_len);
+
+		/* copy the first 4 bytes of the SHA256 digest into digest_val
+		 *
+		 * NOTE: We use fu_memcpy_safe() instead of fu_memread_uint32_safe() because
+		 * we want to preserve the raw byte order here. The endianness conversion
+		 * will be handled later when setting the value in the struct,
+		 * replicating the behavior of hammerd.
+		 */
+		if (!fu_memcpy_safe((guint8 *)&digest_val,
+				    sizeof(digest_val),
+				    0x0,
+				    (const guint8 *)digest,
+				    sizeof(digest),
+				    0x0,
+				    sizeof(digest_val),
+				    error))
+			return FALSE;
+
+		fu_struct_cros_ec_update_frame_header_set_cmd_block_digest(st_ufh, digest_val);
+	}
+
 	if (!fu_cros_ec_usb_device_do_xfer(self,
 					   st_ufh->buf->data,
 					   st_ufh->buf->len,
@@ -1010,6 +1044,8 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED);
 }
 
 static void

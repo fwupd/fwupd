@@ -595,6 +595,16 @@ class Checker:
                         f"{func} should not use sentence case", linecnt=token.linecnt
                     )
 
+    def _test_comment_cpp(self, node: Node) -> None:
+        """/* C comments please */"""
+        idx = node.tokens.find_fuzzy(["//"])
+        if idx != -1:
+            token = node.tokens[idx]
+            self.add_failure(
+                f"use C style comments, not C++, e.g. /* this */",
+                linecnt=token.linecnt,
+            )
+
     def _test_comment_lower_case(self, node: Node) -> None:
         """single line comments are supposed to be lowercase"""
         idx: int = 0
@@ -1262,6 +1272,7 @@ class Checker:
                 self._test_debug_fullstops(node)
                 self._test_debug_sentence_case(node)
                 self._test_comment_lower_case(node)
+                self._test_comment_cpp(node)
 
             # not nesting too deep
             self._current_nocheck = "nocheck:depth"

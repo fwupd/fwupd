@@ -92,6 +92,14 @@ avoid dumping a huge amount of MTD data to access a tiny chunk of data.
 
 Since: 1.9.1
 
+### `Flags=smbios-version-fallback`
+
+Fall back to the SMBIOS reported version if no version metadata could be found.
+This uses a version from the DMI BIOS version string, falling back to a `pair` version format
+using the BIOS major and minor release.
+
+Since: 2.0.18
+
 ## Vendor ID Security
 
 The vendor ID is set from the system vendor, for example `DMI:LENOVO`

@@ -466,9 +466,10 @@ fu_uefi_capsule_device_check_asset(FuUefiCapsuleDevice *self, GError **error)
 	FuEfivars *efivars = fu_context_get_efivars(ctx);
 	gboolean secureboot_enabled = FALSE;
 	g_autofree gchar *source_app = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, error))
-		return FALSE;
+	if (!fu_efivars_get_secure_boot(efivars, &secureboot_enabled, &error_local))
+		g_debug("ignoring: %s", error_local->message);
 
 	/* if fwupd-efi isn't in use, skip checks for the signed binary */
 	if (!fu_device_has_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_USE_FWUPD_EFI))

@@ -53,6 +53,8 @@ Vendor = Sandisk
 Vendor = Qualcomm
 [PCI\VEN_1987]
 Vendor = Phison
+[PCI\VEN_1CC4]
+Vendor = UnionMemory
 [PCI\VEN_1D50]
 Vendor = OpenMoko
 [PCI\VEN_1D97]

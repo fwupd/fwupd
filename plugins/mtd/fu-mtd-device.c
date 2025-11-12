@@ -59,25 +59,13 @@ fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
 	return NULL;
 }
 
-static FuFirmware *
-fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
+static GInputStream *
+fu_mtd_device_read_stream(FuMtdDevice *self, FuProgress *progress, GError **error)
 {
-	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceEvent *event = NULL;
-	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
 	g_autofree gchar *event_id = NULL;
-	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
 	g_autoptr(GInputStream) stream = NULL;
-	g_autoptr(GInputStream) stream_partial = NULL;
-
-	/* pass the hint along */
-	if (firmware_gtype == FU_TYPE_FMAP_FIRMWARE) {
-		fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware),
-						      priv->fmap_offset);
-		g_set_object(&priv->fmap_firmware, firmware);
-	}
 
 	/* need event ID */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -95,14 +83,7 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		blob = fu_device_event_get_bytes(event, "Data", error);
 		if (blob == NULL)
 			return NULL;
-		if (!fu_firmware_parse_bytes(firmware,
-					     blob,
-					     0x0,
-					     FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
-					     error)) {
-			return NULL;
-		}
-		return g_steal_pointer(&firmware);
+		return g_memory_input_stream_new_from_bytes(blob);
 	}
 
 	/* save */
@@ -123,31 +104,37 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 		g_prefix_error_literal(error, "failed to open device: ");
 		return NULL;
 	}
-	if (priv->fmap_offset == 0 && priv->metadata_size > 0) {
-		stream_partial = fu_partial_input_stream_new(stream,
-							     priv->metadata_offset,
-							     priv->metadata_size,
-							     error);
-		if (stream_partial == NULL)
-			return NULL;
-	} else {
-		stream_partial = g_object_ref(stream);
-	}
 
 	/* save response */
 	if (event != NULL) {
 		g_autoptr(GBytes) blob = NULL;
-		blob = fu_input_stream_read_bytes(stream_partial, 0x0, G_MAXSIZE, progress, error);
+		blob = fu_input_stream_read_bytes(stream, 0x0, G_MAXSIZE, progress, error);
 		if (blob == NULL)
 			return NULL;
 		fu_device_event_set_bytes(event, "Data", blob);
 	}
 
+	/* success */
+	return g_steal_pointer(&stream);
+}
+
+static FuFirmware *
+fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
+	g_autoptr(GInputStream) stream = NULL;
+
 	/* parse as firmware image */
+	stream = fu_mtd_device_read_stream(self, progress, error);
+	if (stream == NULL)
+		return NULL;
 	if (!fu_firmware_parse_stream(firmware,
-				      stream_partial,
+				      stream,
 				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
 				      error)) {
 		g_prefix_error_literal(error, "failed to parse image: ");
 		return NULL;
@@ -166,8 +153,147 @@ fu_mtd_device_metadata_ensure_version_from_image(FuMtdDevice *self,
 		fu_device_set_version(FU_DEVICE(self), /* nocheck:set-version */
 				      fu_firmware_get_version(firmware));
 	}
-	if (fu_firmware_get_version_raw(firmware) != G_MAXUINT64) {
+	if (fu_firmware_get_version_raw(firmware) != G_MAXUINT64)
 		fu_device_set_version_raw(FU_DEVICE(self), fu_firmware_get_version_raw(firmware));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mtd_device_metadata_load_uswid(FuMtdDevice *self, GInputStream *stream, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuFirmware) img0 = NULL;
+	g_autoptr(FuFirmware) firmware = fu_uswid_firmware_new();
+	g_autoptr(GInputStream) stream_partial = NULL;
+
+	/* cut it down to something reasonable, then parse */
+	if (priv->metadata_offset > 0 || priv->metadata_size > 0) {
+		stream_partial = fu_partial_input_stream_new(
+		    stream,
+		    priv->metadata_offset,
+		    priv->metadata_size > 0 ? priv->metadata_size
+					    : FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
+		    error);
+		if (stream_partial == NULL)
+			return FALSE;
+	} else {
+		stream_partial = g_object_ref(stream);
+	}
+	if (!fu_firmware_parse_stream(firmware,
+				      stream_partial,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse uSWID: ");
+		return FALSE;
+	}
+
+	/* coSWID */
+	img0 = fu_firmware_get_image_by_idx(firmware, 0, error);
+	if (img0 == NULL) {
+		g_prefix_error_literal(error, "no coSWID image: ");
+		return FALSE;
+	}
+
+	/* success */
+	return fu_mtd_device_metadata_ensure_version_from_image(self, img0, error);
+}
+
+static gboolean
+fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, GInputStream *stream, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
+	g_autoptr(FuFirmware) firmware_sbom = fu_uswid_firmware_new();
+	g_autoptr(FuFirmware) img0 = NULL;
+	g_autoptr(GInputStream) stream_sbom = NULL;
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	/* parse as firmware image */
+	if (!fu_firmware_parse_stream(firmware,
+				      stream,
+				      priv->fmap_offset,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse image: ");
+		return FALSE;
+	}
+	stream_sbom = fu_firmware_get_image_by_id_stream(firmware, "SBOM", error);
+	if (stream_sbom == NULL) {
+		g_prefix_error_literal(error, "no SBOM image: ");
+		return FALSE;
+	}
+
+	if (!fu_firmware_parse_stream(firmware_sbom,
+				      stream_sbom,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_NONE,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse uSWID from FMAP SBOM image: ");
+		return FALSE;
+	}
+
+	/* coSWID, so find correct image */
+	imgs = fu_firmware_get_images(firmware_sbom);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuFirmware *img = g_ptr_array_index(imgs, i);
+		if (g_strcmp0(fu_coswid_firmware_get_persistent_id(FU_COSWID_FIRMWARE(img)),
+			      "org.coreboot.rocks") == 0 ||
+		    g_strcmp0(fu_coswid_firmware_get_device_id(FU_COSWID_FIRMWARE(img)),
+			      "SI_BIOS") == 0) {
+			return fu_mtd_device_metadata_ensure_version_from_image(self, img, error);
+		}
+	}
+
+	/* fallback to the *first* image */
+	img0 = fu_firmware_get_image_by_idx(firmware_sbom, 0, error);
+	if (img0 == NULL) {
+		g_prefix_error_literal(error, "no first image: ");
+		return FALSE;
+	}
+
+	/* success */
+	return fu_mtd_device_metadata_ensure_version_from_image(self, img0, error);
+}
+
+static gboolean
+fu_mtd_device_metadata_load_ifd(FuMtdDevice *self, GInputStream *stream, GError **error)
+{
+	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
+	g_autoptr(GPtrArray) imgs = NULL;
+
+	if (!fu_firmware_parse_stream(firmware,
+				      stream,
+				      0x0,
+				      FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM |
+					  FU_FIRMWARE_PARSE_FLAG_ONLY_PARTITION_LAYOUT,
+				      error)) {
+		g_prefix_error_literal(error, "failed to parse image: ");
+		return FALSE;
+	}
+	imgs = fu_firmware_get_images(firmware);
+	for (guint i = 0; i < imgs->len; i++) {
+		FuIfdImage *img = g_ptr_array_index(imgs, i);
+		g_autoptr(FuMtdIfdDevice) child = fu_mtd_ifd_device_new(FU_DEVICE(self), img);
+
+		/* if any region is not readable by the BIOS master, fwupd cannot do
+		 * verification on the parent MTD device as a whole */
+		if (!fu_device_probe(FU_DEVICE(child), error))
+			return FALSE;
+		if (!fu_device_has_flag(child, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
+			fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+		}
+		fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+	}
+
+	/* also allow uSWID SBOMs, but only if specified */
+	if (priv->metadata_offset > 0 || priv->metadata_size > 0) {
+		if (!fu_mtd_device_metadata_load_uswid(self, stream, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -175,79 +301,96 @@ fu_mtd_device_metadata_ensure_version_from_image(FuMtdDevice *self,
 }
 
 static gboolean
-fu_mtd_device_metadata_load_fmap(FuMtdDevice *self, FuFirmware *firmware, GError **error)
+fu_mtd_device_metadata_load_versions(FuMtdDevice *self, GError **error)
 {
-	g_autoptr(FuFirmware) img = fu_uswid_firmware_new();
-	g_autoptr(FuFirmware) img0 = NULL;
+	GType firmware_gtype = fu_device_get_firmware_gtype(FU_DEVICE(self));
 	g_autoptr(GInputStream) stream = NULL;
 
-	stream = fu_firmware_get_image_by_id_stream(firmware, "SBOM", error);
+	/* read firmware from stream */
+	stream = fu_mtd_device_read_stream(self, NULL, error);
 	if (stream == NULL)
 		return FALSE;
-	if (!fu_firmware_parse_stream(img, stream, 0x0, FU_FIRMWARE_PARSE_FLAG_NONE, error)) {
-		g_prefix_error_literal(error, "failed to parse uSWID from FMAP SBOM image: ");
-		return FALSE;
-	}
-	img0 = fu_firmware_get_image_by_idx(img, 0, error);
-	if (img0 == NULL)
-		return FALSE;
+
+	/* read FMAP, which may have an SBOM section */
+	if (firmware_gtype == FU_TYPE_FMAP_FIRMWARE)
+		return fu_mtd_device_metadata_load_fmap(self, stream, error);
+
+	/* add each IFD image as a sub-device */
+	if (firmware_gtype == FU_TYPE_IFD_FIRMWARE)
+		return fu_mtd_device_metadata_load_ifd(self, stream, error);
+
+	/* just search entire image */
+	if (firmware_gtype == FU_TYPE_USWID_FIRMWARE)
+		return fu_mtd_device_metadata_load_uswid(self, stream, error);
 
 	/* success */
-	return fu_mtd_device_metadata_ensure_version_from_image(self, img0, error);
+	return TRUE;
 }
 
 static gboolean
-fu_mtd_device_metadata_load(FuMtdDevice *self, GError **error)
+fu_mtd_device_ensure_version_smbios_fallback(FuMtdDevice *self, GError **error)
 {
-	GPtrArray *instance_ids;
-	g_autoptr(FuFirmware) firmware_child = NULL;
-	g_autoptr(GPtrArray) imgs = NULL;
-	g_autoptr(FuFirmware) firmware = NULL;
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	const gchar *version;
+	const gchar *version_major;
+	const gchar *version_minor;
+	g_autoptr(FuDevice) device_target = NULL;
 
-	/* read firmware from stream */
-	firmware = fu_mtd_device_read_firmware(FU_DEVICE(self), NULL, error);
-	if (firmware == NULL)
-		return FALSE;
+	/* use the BIOS child if present, otherwise set on the parent device */
+	device_target = fu_device_get_child_by_logical_id(FU_DEVICE(self), "bios", NULL);
+	if (device_target == NULL)
+		device_target = g_object_ref(FU_DEVICE(self));
 
-	/* read SBOM image */
-	if (FU_IS_FMAP_FIRMWARE(firmware))
-		return fu_mtd_device_metadata_load_fmap(self, firmware, error);
+	/* SMBIOS BIOS version */
+	version = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VERSION);
+	if (version != NULL) {
+		/* some Lenovo hardware requires a specific prefix for the EC,
+		 * so strip it before we use ensure-semver */
+		if (strlen(version) > 9 && g_str_has_prefix(version, "CBET"))
+			version += 9;
 
-	/* add each IFD image as a sub-device */
-	imgs = fu_firmware_get_images(firmware);
-	if (FU_IS_IFD_FIRMWARE(firmware)) {
-		for (guint i = 0; i < imgs->len; i++) {
-			FuIfdImage *img = g_ptr_array_index(imgs, i);
-			g_autoptr(FuMtdIfdDevice) child =
-			    fu_mtd_ifd_device_new(FU_DEVICE(self), img);
-			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(child));
+		/* weird Lenovo version in format 'N3VET59W (1.59 )' */
+		if (g_pattern_match_simple("???????? (*.*)", version)) {
+			fu_device_add_private_flag(device_target,
+						   FU_DEVICE_PRIVATE_FLAG_ENSURE_SEMVER);
+			fu_device_set_version_format(device_target, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version(device_target, version + 8);
+			return TRUE;
 		}
+
+		/* generic string */
+		if (fu_device_get_version_format(device_target) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+			fu_device_set_version_format(device_target,
+						     fu_version_guess_format(version));
+		}
+		fu_device_set_version(device_target, version);
 		return TRUE;
 	}
 
-	/* find the firmware child that matches any of the device GUID, then use the first
-	 * child that have a version, and finally use the main firmware as a fallback */
-	instance_ids = fu_device_get_instance_ids(FU_DEVICE(self));
-	for (guint i = 0; i < instance_ids->len; i++) {
-		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
-		g_autofree gchar *guid = fwupd_guid_hash_string(instance_id);
-		firmware_child = fu_firmware_get_image_by_id(firmware, guid, NULL);
-		if (firmware_child != NULL)
-			break;
-	}
-	for (guint i = 0; i < imgs->len; i++) {
-		FuFirmware *firmare_tmp = g_ptr_array_index(imgs, i);
-		if (fu_firmware_get_version(firmare_tmp) != NULL ||
-		    fu_firmware_get_version_raw(firmare_tmp) != 0) {
-			firmware_child = g_object_ref(firmare_tmp);
-			break;
-		}
-	}
-	if (firmware_child == NULL)
-		firmware_child = g_object_ref(firmware);
+	/* BIOS [hex] major/minor release */
+	version_major = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
+	version_minor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
+	if (version_major != NULL && version_minor != NULL) {
+		guint64 major = 0;
+		guint64 minor = 0;
+		g_autofree gchar *tmp = NULL;
 
-	/* copy over the version */
-	return fu_mtd_device_metadata_ensure_version_from_image(self, firmware_child, error);
+		if (!fu_strtoull(version_major, &major, 0x0, G_MAXUINT, FU_INTEGER_BASE_16, error))
+			return FALSE;
+		if (!fu_strtoull(version_minor, &minor, 0x0, G_MAXUINT, FU_INTEGER_BASE_16, error))
+			return FALSE;
+		tmp = g_strdup_printf("%u.%u", (guint)major, (guint)minor);
+		fu_device_set_version_format(device_target, FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version(device_target, tmp);
+		return TRUE;
+	}
+
+	/* no version for you */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no SMBIOS MTD fallback values");
+	return FALSE;
 }
 
 static gboolean
@@ -276,9 +419,16 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 	/* nothing to do */
 	if (fu_device_get_firmware_gtype(device) == G_TYPE_INVALID)
 		return TRUE;
-	if (!fu_mtd_device_metadata_load(self, &error_local)) {
+	if (!fu_mtd_device_metadata_load_versions(self, &error_local)) {
 		g_debug("no version metadata found: %s", error_local->message);
 		return TRUE;
+	}
+
+	/* no version was found */
+	if (fu_device_get_version(device) == NULL &&
+	    fu_device_has_private_flag(device, FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK)) {
+		if (!fu_mtd_device_ensure_version_smbios_fallback(self, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -708,7 +858,7 @@ fu_mtd_device_write_stream(FuMtdDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progress, GError **error)
 {
 	g_autoptr(GInputStream) img_stream = NULL;
@@ -716,7 +866,9 @@ fu_mtd_device_write_image(FuMtdDevice *self, FuFirmware *img, FuProgress *progre
 	img_stream = fu_firmware_get_stream(img, error);
 	if (img_stream == NULL)
 		return FALSE;
-	g_debug("writing image %s", fu_firmware_get_id(img));
+	g_debug("writing image %s @0x%x",
+		fu_firmware_get_id(img),
+		(guint)fu_firmware_get_addr(img));
 	return fu_mtd_device_write_stream(self,
 					  img_stream,
 					  fu_firmware_get_addr(img),
@@ -734,8 +886,7 @@ fu_mtd_device_fmap_prepare_firmware(FuMtdDevice *self,
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new();
 
 	/* parse FMAP header */
-	fu_fmap_firmware_set_signature_offset(FU_FMAP_FIRMWARE(firmware), priv->fmap_offset);
-	if (!fu_firmware_parse_stream(firmware, stream, 0x0, flags, error))
+	if (!fu_firmware_parse_stream(firmware, stream, priv->fmap_offset, flags, error))
 		return NULL;
 
 	/* check each FMAP area in order */
@@ -839,8 +990,10 @@ fu_mtd_device_write_firmware(FuDevice *device,
 		g_autoptr(FuFirmware) img = NULL;
 
 		img = fu_firmware_get_image_by_id(firmware, fmap_region, error);
-		if (img == NULL)
+		if (img == NULL) {
+			g_prefix_error(error, "no FMAP region %s: ", fmap_region);
 			return FALSE;
+		}
 		if (!fu_mtd_device_write_image(self, img, fu_progress_get_child(progress), error)) {
 			g_prefix_error(error, "failed to write %s: ", fmap_region);
 			return FALSE;
@@ -870,7 +1023,7 @@ fu_mtd_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 	if (g_strcmp0(key, "MtdMetadataSize") == 0) {
 		return fu_strtoull(value,
 				   &priv->metadata_size,
-				   0x100,
+				   0x0,
 				   FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX,
 				   FU_INTEGER_BASE_AUTO,
 				   error);
@@ -921,7 +1074,6 @@ fu_mtd_device_init(FuMtdDevice *self)
 {
 	FuMtdDevicePrivate *priv = GET_PRIVATE(self);
 	g_type_ensure(FU_TYPE_USWID_FIRMWARE);
-	priv->metadata_size = FU_FIRMWARE_SEARCH_MAGIC_BUFSZ_MAX;
 	priv->fmap_regions = g_ptr_array_new_with_free_func(g_free);
 	fu_device_set_summary(FU_DEVICE(self), "Memory Technology Device");
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
@@ -934,6 +1086,8 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);

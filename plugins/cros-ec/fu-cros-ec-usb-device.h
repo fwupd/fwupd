@@ -22,7 +22,8 @@ struct _FuCrosEcUsbDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
 
-#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN		 "ro-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN		 "rw-written"
-#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO	 "rebooting-to-ro"
-#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL		 "special"
+#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN		     "ro-written"
+#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN		     "rw-written"
+#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO	     "rebooting-to-ro"
+#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL		     "special"
+#define FU_CROS_EC_USB_DEVICE_FLAG_CMD_BLOCK_DIGEST_REQUIRED "cmd-block-digest-required"

@@ -36,6 +36,7 @@ typedef struct {
 	GKeyFile *keyfile;
 	GHashTable *default_values;
 	GPtrArray *items; /* (element-type FuConfigItem) */
+	gchar *basename;
 } FuConfigPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -706,6 +707,26 @@ fu_config_get_value_u64(FuConfig *self, const gchar *section, const gchar *key)
 	return value;
 }
 
+/**
+ * fu_config_set_basename:
+ * @self: a #FuConfig
+ * @basename: (nullable): a file basename, typically, `fwupd.conf`
+ *
+ * Sets the name of the filename to load.
+ *
+ * Since: 2.0.18
+ **/
+void
+fu_config_set_basename(FuConfig *self, const gchar *basename)
+{
+	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONFIG(self));
+	if (g_strcmp0(priv->basename, basename) == 0)
+		return;
+	g_free(priv->basename);
+	priv->basename = g_strdup(basename);
+}
+
 static gboolean
 fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable, GError **error)
 {
@@ -713,7 +734,7 @@ fu_config_add_location(FuConfig *self, const gchar *dirname, gboolean is_mutable
 	g_autoptr(FuConfigItem) item = g_new0(FuConfigItem, 1);
 
 	item->is_mutable = is_mutable;
-	item->filename = g_build_filename(dirname, "fwupd.conf", NULL);
+	item->filename = g_build_filename(dirname, priv->basename, NULL);
 	item->file = g_file_new_for_path(item->filename);
 
 	/* is writable */
@@ -795,6 +816,7 @@ static void
 fu_config_init(FuConfig *self)
 {
 	FuConfigPrivate *priv = GET_PRIVATE(self);
+	priv->basename = g_strdup("fwupd.conf");
 	priv->keyfile = g_key_file_new();
 	priv->items = g_ptr_array_new_with_free_func((GDestroyNotify)fu_config_item_free);
 	priv->default_values = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -805,6 +827,7 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 	FuConfigPrivate *priv = GET_PRIVATE(self);
+	g_free(priv->basename);
 	g_key_file_unref(priv->keyfile);
 	g_ptr_array_unref(priv->items);
 	g_hash_table_unref(priv->default_values);

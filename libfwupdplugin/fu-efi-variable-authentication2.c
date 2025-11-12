@@ -224,6 +224,16 @@ fu_efi_variable_authentication2_write(FuFirmware *firmware, GError **error)
 }
 
 static void
+fu_efi_variable_authentication2_add_magic(FuFirmware *firmware)
+{
+	fu_firmware_add_magic(firmware,
+			      (const guint8 *)FU_STRUCT_EFI_WIN_CERTIFICATE_DEFAULT_GUID,
+			      sizeof(fwupd_guid_t),
+			      FU_STRUCT_EFI_VARIABLE_AUTHENTICATION2_OFFSET_AUTH_INFO +
+				  FU_STRUCT_EFI_WIN_CERTIFICATE_OFFSET_GUID);
+}
+
+static void
 fu_efi_variable_authentication2_init(FuEfiVariableAuthentication2 *self)
 {
 	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALWAYS_SEARCH);
@@ -249,4 +259,5 @@ fu_efi_variable_authentication2_class_init(FuEfiVariableAuthentication2Class *kl
 	firmware_class->parse = fu_efi_variable_authentication2_parse;
 	firmware_class->export = fu_efi_variable_authentication2_export;
 	firmware_class->write = fu_efi_variable_authentication2_write;
+	firmware_class->add_magic = fu_efi_variable_authentication2_add_magic;
 }

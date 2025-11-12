@@ -171,7 +171,7 @@ fu_msgpack_binary_stream_func(void)
 static void
 fu_msgpack_parse_binary_func(void)
 {
-	// 64 bit float 100.0099
+	/* 64 bit float 100.0099 */
 	const guchar data[] = {0xCB, 0x40, 0x59, 0x00, 0xA2, 0x33, 0x9C, 0x0E, 0xBF};
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GError) error = NULL;
@@ -4008,9 +4008,6 @@ fu_firmware_fmap_func(void)
 	ret = fu_firmware_build_from_filename(firmware, filename, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_fmap_firmware_get_signature_offset(FU_FMAP_FIRMWARE(firmware)),
-			==,
-			0x10);
 
 	/* check image count */
 	images = fu_firmware_get_images(firmware);
@@ -6501,7 +6498,7 @@ fu_strsplit_stream_func(void)
 static void
 fu_input_stream_find_func(void)
 {
-	const gchar *haystack = "I write free software. Firmware troublemaker.";
+	const gchar *haystack = "I write free software. Firmware troublemaker, writing Firmware.";
 	const gchar *needle1 = "Firmware";
 	const gchar *needle2 = "XXX";
 	gboolean ret;
@@ -6511,14 +6508,33 @@ fu_input_stream_find_func(void)
 
 	stream =
 	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle1, strlen(needle1), &offset, &error);
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(offset, ==, 23);
 
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle2, strlen(needle2), &offset, &error);
+	/* find second match */
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   44,
+				   &offset,
+				   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 54);
+
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle2,
+				   strlen(needle2),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }

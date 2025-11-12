@@ -289,6 +289,7 @@ fu_bnr_dp_firmware_parse(FuFirmware *firmware,
 	if (!fu_input_stream_find(stream,
 				  header_separator,
 				  sizeof(header_separator),
+				  0x0,
 				  &separator_idx,
 				  error))
 		return FALSE;

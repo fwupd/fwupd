@@ -104,5 +104,6 @@ gboolean
 fu_input_stream_find(GInputStream *stream,
 		     const guint8 *buf,
 		     gsize bufsz,
-		     gsize *offset,
+		     gsize offset,
+		     gsize *offset_found,
 		     GError **error) G_GNUC_NON_NULL(1, 2);

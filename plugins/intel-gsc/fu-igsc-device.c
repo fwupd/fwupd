@@ -504,7 +504,8 @@ fu_igsc_device_update_end(FuIgscDevice *self, FuIgscFwuHeciPayloadType payload_t
 	}
 
 	/* we are not expecting a reply */
-	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW) {
+	if (payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_GFX_FW ||
+	    payload_type == FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA) {
 		fu_dump_raw(G_LOG_DOMAIN, "MEI-write", st_req->buf->data, st_req->buf->len);
 		return fu_mei_device_write(FU_MEI_DEVICE(self),
 					   st_req->buf->data,
@@ -849,7 +850,7 @@ fu_igsc_device_init(FuIgscDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INSTALL_PARENT_FIRST);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_SAVE_INTO_BACKUP_REMOTE);
 	fu_device_set_summary(FU_DEVICE(self), "Discrete Graphics Card");

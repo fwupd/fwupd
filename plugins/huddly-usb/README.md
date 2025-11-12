@@ -5,7 +5,7 @@ title: Plugin: Huddly Usb
 ## Introduction
 
 This plugin supports performing firmware upgrades on Huddly L1 and S1 video conferencing cameras
-connected via the Huddly USB adapter.
+connected via the Huddly USB adapter, as well as the Huddly C1 video bar.
 
 ## Firmware Format
 

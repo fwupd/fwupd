@@ -12,6 +12,7 @@ fu_null_false_returns(gpointer foo)
 {
 	g_return_val_if_fail(foo != NULL, NULL);
 	if (1) {
+		/* something here */
 		return G_MAXUINT32;
 	}
 	return NULL;

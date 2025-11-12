@@ -463,6 +463,12 @@ fu_path_from_kind(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename(basedir, "etc", PACKAGE_NAME, NULL);
+	/* /run */
+	case FU_PATH_KIND_RUNDIR:
+		tmp = g_getenv("FWUPD_RUNDIR");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		return g_strdup("/run");
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
 		tmp = g_getenv("FWUPD_LOCKDIR");

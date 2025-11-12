@@ -1,0 +1,6 @@
+<firmware gtype="FuUswidFirmware">
+  <id>SBOM</id>
+  <firmware gtype="FuCoswidFirmware">
+    <version>456</version>
+  </firmware>
+</firmware>
