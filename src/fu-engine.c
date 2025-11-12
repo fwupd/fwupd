@@ -2360,6 +2360,7 @@ fu_engine_install_releases(FuEngine *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
+	gboolean ret = FALSE;
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
@@ -2402,7 +2403,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error_literal(error, "failed to prepare composite action: ");
-		return FALSE;
+		goto out;
 	}
 
 	/* all authenticated, so install all the things */
@@ -2420,7 +2421,7 @@ fu_engine_install_releases(FuEngine *self,
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
-			return FALSE;
+			goto out;
 		}
 		fu_progress_step_done(progress);
 	}
@@ -2453,9 +2454,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
-		/* make the UI update to clear MOTD for failed updates */
-		fu_engine_emit_changed(self);
-		return FALSE;
+		goto out;
 	}
 
 	/* for online updates, verify the version changed if not a re-install */
@@ -2473,22 +2472,25 @@ fu_engine_install_releases(FuEngine *self,
 			continue;
 		}
 		if (!fu_engine_install_release_version_check(self, release, device_new, error))
-			return FALSE;
+			goto out;
 	}
 
 	/* upload to Passim */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
 		if (!fu_engine_publish_release(self, release, error))
-			return FALSE;
+			goto out;
 	}
 
 	/* allow capturing setup again */
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_SETUP);
 
+	/* success */
+	ret = TRUE;
+out:
 	/* make the UI update */
 	fu_engine_emit_changed(self);
-	return TRUE;
+	return ret;
 }
 
 static void
