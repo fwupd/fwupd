@@ -2420,8 +2420,6 @@ fu_engine_install_releases(FuEngine *self,
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
-			/* make the UI update to clear MOTD for failed updates */
-			fu_engine_emit_changed(self);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2474,21 +2472,15 @@ fu_engine_install_releases(FuEngine *self,
 			g_info("failed to find new device: %s", error_local->message);
 			continue;
 		}
-		if (!fu_engine_install_release_version_check(self, release, device_new, error)) {
-			/* make the UI update to clear MOTD for failed updates */
-			fu_engine_emit_changed(self);
+		if (!fu_engine_install_release_version_check(self, release, device_new, error))
 			return FALSE;
-		}
 	}
 
 	/* upload to Passim */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		if (!fu_engine_publish_release(self, release, error)) {
-			/* make the UI update to clear MOTD for failed updates */
-			fu_engine_emit_changed(self);
+		if (!fu_engine_publish_release(self, release, error))
 			return FALSE;
-		}
 	}
 
 	/* allow capturing setup again */
