@@ -17,7 +17,7 @@
 #define HID_EP_IN  0x82
 #define HID_EP_OUT 0x01
 
-#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 0 /* ms */
+#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 500 /* ms */
 
 struct _FuQcS5gen2HidDevice {
 	FuHidDevice parent_instance;
