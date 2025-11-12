@@ -458,8 +458,9 @@ fu_legion_hid_device_upgrade_write_data_chunks(FuLegionHidDevice *self,
 					       FuChunkArray *chunks,
 					       GError **error)
 {
+	guint send_size = 0;
+
 	for (guint i = 0; i < fu_chunk_array_length(chunks); i++) {
-		guint send_size = 0;
 		g_autoptr(FuChunk) chk = NULL;
 
 		chk = fu_chunk_array_index(chunks, i, error);
