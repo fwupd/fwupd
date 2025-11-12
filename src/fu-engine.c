@@ -6138,16 +6138,6 @@ fu_engine_get_upgrades(FuEngine *self,
 		return NULL;
 	}
 
-	/* don't show upgrades if update failed */
-	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_FAILED ||
-	    fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "An update has failed");
-		return NULL;
-	}
-
 	/* get all the releases for the device */
 	releases_tmp = fu_engine_get_releases_for_device(self, request, device, error);
 	if (releases_tmp == NULL)
