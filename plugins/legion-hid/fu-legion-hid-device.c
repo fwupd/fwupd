@@ -661,6 +661,11 @@ fu_legion_hid_device_execute_upgrade(FuLegionHidDevice *self, FuFirmware *firmwa
 		return FALSE;
 	if (!fu_legion_hid_device_upgrade_verify(self, id, error))
 		return FALSE;
+	/*
+	 * Waiting for the controller to reconnect to the MCU
+	 */
+	if (id != FU_LEGION_HID_DEVICE_ID_RX && id != FU_LEGION_HID_DEVICE_ID_DONGLE)
+		fu_device_sleep(FU_DEVICE(self), FU_LEGION_HID_DEVICE_REBOOT_WAIT_TIME);
 
 	/* success */
 	return TRUE;
