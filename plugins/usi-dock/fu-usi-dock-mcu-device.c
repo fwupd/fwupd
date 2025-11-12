@@ -42,7 +42,7 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize bufsz,
 			  GError **error)
 {
-	g_autoptr(FuStructUsiDockMcuCmdReq) st = fu_struct_usi_dock_mcu_cmd_req_new();
+	g_autoptr(GByteArray) st = fu_struct_usi_dock_mcu_cmd_req_new();
 
 	fu_struct_usi_dock_mcu_cmd_req_set_length(st, 0x3 + bufsz);
 	fu_struct_usi_dock_mcu_cmd_req_set_tag3(st, tag2);
@@ -73,7 +73,7 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 			  GError **error)
 {
 	guint8 buf[64] = {0};
-	g_autoptr(FuStructUsiDockMcuCmdRes) st_rsp = NULL;
+	g_autoptr(GByteArray) st_rsp = NULL;
 
 	if (!fu_hid_device_get_report(FU_HID_DEVICE(self),
 				      USB_HID_REPORT_ID2,
@@ -432,28 +432,56 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 static gboolean
 fu_usi_dock_mcu_device_reset_usb2(FuUsiDockMcuDevice *self, GError **error)
 {
-	FuDevice *proxy = NULL;
-	g_autoptr(FuDevice) device_usb2 = NULL;
+	g_autofree gchar *sysfs_path = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDevice) parent_dev = NULL;
+	FuBackend *backend = NULL;
 
-	device_usb2 = fu_usi_dock_mcu_device_find_child(self, FU_USI_DOCK_FIRMWARE_IDX_USB2);
-	if (device_usb2 == NULL) {
-		g_debug("no USB2 MCU child, ignoring");
-		return TRUE;
-	}
-	proxy = fu_device_get_proxy(device_usb2);
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no USB2 proxy");
+	/* Get backend */
+	backend =
+	    fu_context_get_backend_by_name(fu_device_get_context(FU_DEVICE(self)), "udev", error);
+
+	if (!FU_IS_BACKEND(backend)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to create FuBackend");
 		return FALSE;
 	}
-	g_debug("doing manual USB2 reset");
-	locker = fu_device_locker_new(proxy, error);
-	if (locker == NULL) {
-		g_prefix_error_literal(error, "failed to open USB2 proxy: ");
+
+	sysfs_path = g_path_get_dirname(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)));
+
+	/* Create parent USB device */
+	parent_dev = fu_backend_create_device(backend, sysfs_path, error);
+	if (parent_dev == NULL) {
+		g_prefix_error(error, "create usb2 hub device(%s) failed: ", sysfs_path);
+		g_warning("create usb2 hub failed: %s", (*error)->message);
 		return FALSE;
 	}
-	if (!fu_usb_device_reset(FU_USB_DEVICE(proxy), error)) {
-		g_prefix_error_literal(error, "failed to reset USB2 proxy: ");
+
+	/* wait for device stabled */
+	fu_device_sleep(parent_dev, 10000);
+
+	if (!g_file_test(sysfs_path, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "parent sysfs path not found: %s",
+			    sysfs_path);
+		g_info(" parent hub disappeared!");
+		return FALSE;
+	}
+
+	/* open parent device */
+	g_debug("open USB2 hub");
+	locker = fu_device_locker_new(parent_dev, error);
+	if (locker == NULL)
+		return FALSE;
+	g_info("reset usb2 hub");
+
+	/* Reset */
+	if (!fu_usb_device_reset(FU_USB_DEVICE(parent_dev), error)) {
+		g_prefix_error_literal(error, "failed to reset parent hub: ");
 		return FALSE;
 	}
 
@@ -473,11 +501,7 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 
 	/* get status and component versions */
 	if (!fu_usi_dock_mcu_device_get_status(self, &error_local)) {
-		/* FIXME: check the error code */
-		g_warning("XXX FIXME error, please verify: %s [%i]",
-			  error_local->message,
-			  error_local->code);
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BUSY)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			/* work around FL5801-1Q2 errata by resetting U2 */
 			if (!fu_usi_dock_mcu_device_reset_usb2(self, error))
 				return FALSE;
@@ -502,7 +526,7 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
-	g_autoptr(FuStructUsiDockHidReq) st_req = fu_struct_usi_dock_hid_req_new();
+	g_autoptr(GByteArray) st_req = fu_struct_usi_dock_hid_req_new();
 
 	fu_struct_usi_dock_hid_req_set_length(st_req, fu_chunk_get_data_sz(chk));
 	fu_struct_usi_dock_hid_req_set_tag3(st_req, FU_USI_DOCK_TAG2_MASS_DATA_SPI);
@@ -854,20 +878,6 @@ fu_usi_dock_mcu_device_insert_cb(gpointer user_data)
 }
 
 static void
-fu_usi_dock_mcu_device_version_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
-{
-	/* new firmware is able to avoid the manual replug */
-	if (fu_device_get_vid(device) == 0x17EF && fu_device_get_pid(device) == 0x30B4 &&
-	    fu_version_compare(fu_device_get_version(device),
-			       "10.18",
-			       fu_device_get_version_format(device)) >= 0) {
-		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
-	} else {
-		fu_device_add_request_flag(device, FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
-	}
-}
-
-static void
 fu_usi_dock_mcu_device_internal_flags_notify_cb(FuDevice *device,
 						GParamSpec *pspec,
 						gpointer user_data)
@@ -917,6 +927,29 @@ fu_usi_dock_mcu_device_replace(FuDevice *device, FuDevice *donor)
 		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
 }
 
+static gboolean
+fu_usi_dock_mcu_device_prepare(FuDevice *device,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
+{
+	if (!FU_IS_DEVICE(device)) {
+		g_warning("Invalid FuDevice passed to fu_usi_dock_mcu_device_prepare");
+		return FALSE;
+	}
+
+	if (fu_device_has_guid(device, USI_DOCK_40B0_DEVID) &&
+	    fu_version_compare(fu_device_get_version(device),
+			       USI_DOCK_NOREPLUG_MIN_VERSION,
+			       fu_device_get_version_format(device)) >= 0) {
+		fu_device_add_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
+	} else {
+		fu_device_remove_private_flag(device, FU_USI_DOCK_DEVICE_FLAG_NO_REPLUG);
+	}
+
+	return TRUE;
+}
+
 static void
 fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -938,13 +971,10 @@ fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);
 	g_signal_connect(FWUPD_DEVICE(self),
 			 "notify::private-flags",
 			 G_CALLBACK(fu_usi_dock_mcu_device_internal_flags_notify_cb),
-			 NULL);
-	g_signal_connect(FWUPD_DEVICE(self),
-			 "notify::version",
-			 G_CALLBACK(fu_usi_dock_mcu_device_version_notify_cb),
 			 NULL);
 
 	fu_device_register_private_flag(FU_DEVICE(self), FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP);
@@ -972,4 +1002,5 @@ fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 	device_class->cleanup = fu_usi_dock_mcu_device_cleanup;
 	device_class->reload = fu_usi_dock_mcu_device_reload;
 	device_class->replace = fu_usi_dock_mcu_device_replace;
+	device_class->prepare = fu_usi_dock_mcu_device_prepare;
 }
