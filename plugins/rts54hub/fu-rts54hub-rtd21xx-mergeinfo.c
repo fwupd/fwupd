@@ -66,16 +66,18 @@ static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(FuRts54hubRtd21xxMergeinfo *self, GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
-	guint8 buf_request[2] = {0x00};
+	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
 
 	/* check DDC/CI communication */
-	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
-	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_COMMUNICATION;
+	fu_struct_rts54_hub_ddc_pkt_set_second_opcode(
+	    st,
+	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_COMMUNICATION);
+
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
-						    buf_request,
-						    sizeof(buf_request),
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
@@ -109,17 +111,19 @@ static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_ensure_version(FuRts54hubRtd21xxMergeinfo *self, GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
-	guint8 buf_request[2] = {0x00};
 	guint32 version_raw = 0;
+	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
 
 	/* read merge version */
-	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
-	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION;
+	fu_struct_rts54_hub_ddc_pkt_set_second_opcode(
+	    st,
+	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION);
+
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
-						    buf_request,
-						    sizeof(buf_request),
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
@@ -160,16 +164,18 @@ fu_rts54hub_rtd21xx_mergeinfo_read_version(FuRts54hubRtd21xxMergeinfo *self,
 					   GError **error)
 {
 	guint8 buf_reply[16] = {0x00};
-	guint8 buf_request[2] = {0x00};
+	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
 
 	/* read merge version */
-	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
-	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION;
+	fu_struct_rts54_hub_ddc_pkt_set_second_opcode(
+	    st,
+	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_GET_VERSION);
+
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
-						    buf_request,
-						    sizeof(buf_request),
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;
@@ -209,7 +215,8 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 					    gsize buf_version_sz,
 					    GError **error)
 {
-	guint8 buf_request[6] = {0x00};
+	g_autoptr(FuStructRts54HubDdcWriteMergeInfoPkt) st =
+	    fu_struct_rts54_hub_ddc_write_merge_info_pkt_new();
 
 	if (buf_version_sz != VERSION_NUMBER_COUNT) {
 		g_set_error_literal(error,
@@ -220,26 +227,19 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 	}
 
 	/* write merge version */
-	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
-	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_SET_VERSION;
-
-	if (!fu_memcpy_safe(buf_request,
-			    6,
-			    0x2, /* dst */
-			    buf_version,
-			    buf_version_sz,
-			    0, /* src */
-			    buf_version_sz,
-			    error)) {
-		g_prefix_error_literal(error, "memcpy merge version fail: ");
-		return FALSE;
-	}
+	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_second_opcode(
+	    st,
+	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_SET_VERSION);
+	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_major_version(st, buf_version[0]);
+	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_minor_version(st, buf_version[1]);
+	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_patch_version(st, buf_version[2]);
+	fu_struct_rts54_hub_ddc_write_merge_info_pkt_set_build_version(st, buf_version[3]);
 
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
-						    buf_request,
-						    sizeof(buf_request),
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 		g_prefix_error_literal(error, "failed to write merge fw version: ");
 		return FALSE;
@@ -251,16 +251,18 @@ fu_rts54hub_rtd21xx_mergeinfo_write_version(FuRts54hubRtd21xxMergeinfo *self,
 static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_restore_state(FuRts54hubRtd21xxMergeinfo *self, GError **error)
 {
-	guint8 buf_request[2] = {0x00};
 	guint8 temp = 0;
+	g_autoptr(FuStructRts54HubDdcPkt) st = fu_struct_rts54_hub_ddc_pkt_new();
 
-	buf_request[0] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_FIRST;
-	buf_request[1] = FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_DDCCI_TO_DEBUG;
+	fu_struct_rts54_hub_ddc_pkt_set_second_opcode(
+	    st,
+	    FU_RTS54_HUB_MERGE_INFO_DDCCI_OPCODE_DDCCI_TO_DEBUG);
+
 	if (!fu_rts54hub_rtd21xx_device_ddcci_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						    DDCCI_TARGET_ADDR,
 						    DDCCI_COMM_SUB_ADDR,
-						    buf_request,
-						    sizeof(buf_request),
+						    st->buf->data,
+						    st->buf->len,
 						    error)) {
 		g_prefix_error_literal(error, "failed to DDC/CI communication with fw: ");
 		return FALSE;

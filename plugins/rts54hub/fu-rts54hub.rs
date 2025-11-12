@@ -54,3 +54,21 @@ enum FuRts54HubMergeInfoDdcciOpcode {
         GetVersion = 0x99,
         SetVersion = 0xBB,
 }
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructRts54HubDdcPkt {
+    first_opcode: u8 = 0x77,
+    second_opcode: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructRts54HubDdcWriteMergeInfoPkt {
+    first_opcode: u8 = 0x77,
+    second_opcode: u8,
+    major_version: u8,
+    minor_version: u8,
+    patch_version: u8,
+    build_version: u8,
+}
