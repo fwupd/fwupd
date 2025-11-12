@@ -27,3 +27,6 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 FuDevice *
 fu_usi_dock_mcu_device_find_child(FuUsiDockMcuDevice *self, FuUsiDockFirmwareIdx chip_idx)
     G_GNUC_NON_NULL(1);
+
+#define USI_DOCK_40B0_DEVID	      "USB\\VID_17EF&PID_30B4&CID_40B0"
+#define USI_DOCK_NOREPLUG_MIN_VERSION "10.18"
