@@ -394,6 +394,66 @@ fu_mtd_device_ensure_version_smbios_fallback(FuMtdDevice *self, GError **error)
 }
 
 static gboolean
+fu_mtd_device_ensure_lockout_inhibit(FuMtdDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) parent_device = NULL;
+	struct {
+		const gchar *attr;
+		const gchar *logical_id;
+	} lockouts[] = {
+	    {"intel_spi_protected", NULL},
+	    {"intel_spi_bios_locked", "bios"},
+	};
+
+	/* preserve compat with older emulation files */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) &&
+	    !fu_device_check_fwupd_version(FU_DEVICE(self), "2.0.18"))
+		return TRUE;
+
+	/* look for PCI parent */
+	parent_device = fu_device_get_backend_parent_with_subsystem(FU_DEVICE(self), "pci", NULL);
+	if (parent_device == NULL)
+		return TRUE;
+	if (!fu_device_probe(parent_device, error))
+		return FALSE;
+	for (guint i = 0; i < G_N_ELEMENTS(lockouts); i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_autofree gchar *value = NULL;
+
+		value = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(parent_device),
+						  lockouts[i].attr,
+						  FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
+						  &error_local);
+		if (value == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+				g_debug("ignoring: %s", error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+		if (g_strcmp0(value, "1") != 0)
+			continue;
+		if (lockouts[i].logical_id != NULL) {
+			g_autoptr(FuDevice) child_device = NULL;
+			child_device = fu_device_get_child_by_logical_id(FU_DEVICE(self),
+									 lockouts[i].logical_id,
+									 error);
+			if (child_device == NULL)
+				return FALSE;
+			fu_device_add_problem(child_device, FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+		} else {
+			fu_device_add_problem(FU_DEVICE(self),
+					      FWUPD_DEVICE_PROBLEM_FIRMWARE_LOCKED);
+			break;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
@@ -430,6 +490,10 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 		if (!fu_mtd_device_ensure_version_smbios_fallback(self, error))
 			return FALSE;
 	}
+
+	/* prevented by policy */
+	if (!fu_mtd_device_ensure_lockout_inhibit(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -1086,6 +1150,7 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_INHIBIT_CHILDREN);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_MTD_DEVICE_FLAG_SMBIOS_VERSION_FALLBACK);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
