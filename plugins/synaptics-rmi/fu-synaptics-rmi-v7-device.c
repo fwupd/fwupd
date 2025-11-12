@@ -19,6 +19,9 @@ fu_synaptics_rmi_v7_device_detach(FuSynapticsRmiDevice *self, FuProgress *progre
 	g_autoptr(GByteArray) enable_req = g_byte_array_new();
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
+	FuSynapticsRmiFunction *f01;
+	g_autoptr(GByteArray) f01_basic = NULL;
+	fu_synaptics_rmi_device_set_previous_sbl_version(self, 0);
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
@@ -28,6 +31,30 @@ fu_synaptics_rmi_v7_device_detach(FuSynapticsRmiDevice *self, FuProgress *progre
 	/* disable interrupts */
 	if (!fu_synaptics_rmi_device_disable_irqs(self, error))
 		return FALSE;
+
+	if (flash->has_sbl) {
+		if (!fu_synaptics_rmi_v7_device_enter_sbl(self, error)) {
+			g_prefix_error_literal(error, "failed to enter SBL mode: ");
+			return FALSE;
+		}
+
+		f01 = fu_synaptics_rmi_device_get_function(self, 0x01, error);
+		if (f01 == NULL) {
+			g_prefix_error_literal(error, "f01 not found: ");
+			return FALSE;
+		}
+		f01_basic = fu_synaptics_rmi_device_read(self, f01->query_base, 11, error);
+		if (f01_basic == NULL) {
+			g_prefix_error_literal(error, "failed to read the basic query: ");
+			return FALSE;
+		}
+		fu_synaptics_rmi_device_set_previous_sbl_version(self,
+								 f01_basic->data[2] << 8 |
+								     f01_basic->data[3]);
+		g_debug("SBL version: %d.%d",
+			fu_synaptics_rmi_device_get_previous_sbl_version(self) >> 8,
+			fu_synaptics_rmi_device_get_previous_sbl_version(self) & 0xff);
+	}
 
 	/* enter BL */
 	fu_byte_array_append_uint8(enable_req, FU_RMI_PARTITION_ID_BOOTLOADER);
@@ -235,6 +262,8 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 		g_prefix_error(error, "failed to wait for idle @0x%x: ", address);
 		return FALSE;
 	}
+	if (!fu_synaptics_rmi_device_poll_wait(self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -564,10 +593,29 @@ fu_synaptics_rmi_v7_device_write_firmware(FuSynapticsRmiDevice *self,
 	g_autoptr(GBytes) bytes_fld = NULL;
 	g_autoptr(GBytes) bytes_afe = NULL;
 	g_autoptr(GBytes) bytes_displayconfig = NULL;
+	g_autoptr(GBytes) bytes_sbl = NULL;
+	g_autoptr(GByteArray) f34_query = NULL;
+	guint16 f34_sblmsl = 0;
+	guint16 previous_sbl_version = fu_synaptics_rmi_device_get_previous_sbl_version(self);
+	gboolean need_update_sbl = FALSE;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	if (flash->bootloader_id[1] > 8) {
+	if (flash->bootloader_id[1] >= 10 && flash->bootloader_id[0] >= 1) {
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 0, "verify-signature");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fixed-location-data");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 4, "flash-config");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 4, "sbl");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 9, NULL);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 81, "core-code");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "core-config");
+		fu_progress_add_step(progress,
+				     FWUPD_STATUS_DEVICE_WRITE,
+				     0,
+				     "external-touch-afe-config");
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0, "display-config");
+	} else if (flash->bootloader_id[1] > 8) {
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 0, "verify-signature");
 		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "fixed-location-data");
@@ -637,6 +685,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuSynapticsRmiDevice *self,
 	bytes_fld = fu_firmware_get_image_by_id_bytes(firmware, "fixed-location-data", NULL);
 	bytes_afe = fu_firmware_get_image_by_id_bytes(firmware, "afe-config", NULL);
 	bytes_displayconfig = fu_firmware_get_image_by_id_bytes(firmware, "display-config", NULL);
+	bytes_sbl = fu_firmware_get_image_by_id_bytes(firmware, "sbl", NULL);
 
 	/* disable powersaving */
 	if (!fu_synaptics_rmi_device_disable_sleep(self, error))
@@ -677,6 +726,80 @@ fu_synaptics_rmi_v7_device_write_firmware(FuSynapticsRmiDevice *self,
 								error))
 			return FALSE;
 		fu_progress_step_done(progress);
+	}
+
+	/* check whether it need to update SBL for BL > v10.1 */
+	if (flash->bootloader_id[1] >= 10 && flash->bootloader_id[0] >= 1) {
+		if (bytes_sbl != NULL) {
+			if (flash->has_sbl) {
+				f34_query = fu_synaptics_rmi_device_read(
+				    self,
+				    f34->query_base + (flash->has_security ? 10 : 8),
+				    2,
+				    error);
+				if (f34_query == NULL) {
+					g_prefix_error_literal(error,
+							       "failed to read the F34 query: ");
+					return FALSE;
+				}
+
+				if (!fu_memread_uint16_safe(f34_query->data,
+							    2,
+							    0,
+							    &f34_sblmsl,
+							    G_LITTLE_ENDIAN,
+							    error)) {
+					g_prefix_error_literal(
+					    error,
+					    "failed to parse the previous SBL version: ");
+					return FALSE;
+				}
+
+				if (f34_sblmsl > previous_sbl_version) {
+					g_debug("updating SBL from version %d.%d to %d.%d",
+						previous_sbl_version >> 8,
+						previous_sbl_version & 0xff,
+						f34_sblmsl >> 8,
+						f34_sblmsl & 0xff);
+					need_update_sbl = TRUE;
+				}
+			} else {
+				g_debug("updating SBL for the first time to version %d.%d",
+					f34_sblmsl >> 8,
+					f34_sblmsl & 0xff);
+				need_update_sbl = TRUE;
+			}
+
+			if (need_update_sbl) {
+				/* need update SBL */
+				g_debug("erasing SBL partition");
+				if (!fu_synaptics_rmi_v7_device_erase_partition(
+					self,
+					FU_RMI_PARTITION_ID_BOOTLOADER,
+					error))
+					return FALSE;
+				if (!fu_synaptics_rmi_v7_device_write_partition(
+					self,
+					firmware,
+					"sbl",
+					FU_RMI_PARTITION_ID_BOOTLOADER,
+					bytes_sbl,
+					fu_progress_get_child(progress),
+					error))
+					return FALSE;
+			} else
+				g_debug("skipping SBL update");
+
+			if (!fu_synaptics_rmi_v7_device_enter_sbl(self, error)) {
+				g_prefix_error_literal(error, "failed to enter SBL mode: ");
+				return FALSE;
+			}
+
+			fu_progress_step_done(progress);
+		} else {
+			/* no SBL image */
+			fu_progress_step_done(progress);
+		}
 	}
 
 	/* erase all */
@@ -865,12 +988,14 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 	return TRUE;
 }
 
+/* nocheck:memread */
 gboolean
 fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
 	guint8 offset;
+	guint16 supported_partitions;
 	g_autoptr(GByteArray) f34_data0 = NULL;
 	g_autoptr(GByteArray) f34_dataX = NULL;
 
@@ -884,6 +1009,7 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
+	flash->has_security = (f34_data0->data[0] & 0x40) ? TRUE : FALSE;
 	offset = (f34_data0->data[0] & 0b00000111) + 1;
 	f34_dataX = fu_synaptics_rmi_device_read(self, f34->query_base + offset, 21, error);
 	if (f34_dataX == NULL)
@@ -928,6 +1054,16 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 				    G_LITTLE_ENDIAN,
 				    error))
 		return FALSE;
+	if (!fu_memread_uint16_safe(f34_dataX->data,
+				    f34_dataX->len,
+				    0x11,
+				    &supported_partitions,
+				    G_LITTLE_ENDIAN,
+				    error)) {
+		g_prefix_error_literal(error, "Supported_partitions failed: ");
+		return FALSE;
+	} else
+		flash->has_sbl = (supported_partitions >> FU_RMI_PARTITION_ID_BOOTLOADER) & 0x0001;
 
 	/* sanity check */
 	if ((guint32)flash->block_size * (guint32)flash->config_length > G_MAXUINT16) {
@@ -941,6 +1077,8 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	}
 
 	/* read flash config */
+	if (flash->bootloader_id[1] >= 10)
+		return TRUE;
 	return fu_synaptics_rmi_v7_device_read_flash_config(self, error);
 }
 
@@ -1034,6 +1172,60 @@ fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **err
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "flash hardware failure");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_synaptics_rmi_v7_device_enter_sbl(FuSynapticsRmiDevice *self, GError **error)
+{
+	g_autoptr(GByteArray) enable_req = g_byte_array_new();
+	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
+	FuSynapticsRmiFunction *f34;
+
+	/* f34 */
+	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
+	if (f34 == NULL)
+		return FALSE;
+
+	/* disable interrupts */
+	if (!fu_synaptics_rmi_device_disable_irqs(self, error))
+		return FALSE;
+
+	/* enter BL */
+	fu_byte_array_append_uint8(enable_req, FU_RMI_PARTITION_ID_BOOTLOADER);
+	fu_byte_array_append_uint32(enable_req, 0x0, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint8(enable_req, FU_SYNAPTICS_RMI_FLASH_CMD_ENTER_BL);
+	fu_byte_array_append_uint8(enable_req, flash->bootloader_id[0]);
+	fu_byte_array_append_uint8(enable_req, flash->bootloader_id[1]);
+	fu_byte_array_append_uint8(enable_req, 0x1);
+	if (!fu_synaptics_rmi_device_write(self,
+					   f34->data_base + 1,
+					   enable_req,
+					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					   error)) {
+		g_prefix_error_literal(error, "failed to enable programming: ");
+		return FALSE;
+	}
+
+	/* wait for idle */
+	if (!fu_synaptics_rmi_device_wait_for_idle(self,
+						   RMI_F34_ENABLE_WAIT_MS,
+						   FU_SYNAPTICS_RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   error))
+		return FALSE;
+	if (!fu_synaptics_rmi_device_poll_wait(self, error))
+		return FALSE;
+	fu_device_sleep(FU_DEVICE(self), RMI_F34_ENABLE_SBL_WAIT_MS);
+
+	if (!fu_synaptics_rmi_device_scan_pdt(self, error)) {
+		g_prefix_error_literal(error, "failed to scan PDT: ");
+		return FALSE;
+	}
+
+	if (!fu_synaptics_rmi_v7_device_setup(self, error)) {
+		g_prefix_error_literal(error, "failed to do v7 setup: ");
 		return FALSE;
 	}
 	return TRUE;
