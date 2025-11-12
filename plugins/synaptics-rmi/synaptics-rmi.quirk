@@ -14,3 +14,9 @@ GType = FuSynapticsRmiPs2Device
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiPs2Device
 InstallDuration = 236
+
+# ALSO
+[HIDRAW\VEN_06CB&DEV_96E7]
+Plugin = synaptics_rmi
+GType = FuSynapticsRmiHidDevice
+Vendor = Synaptics
