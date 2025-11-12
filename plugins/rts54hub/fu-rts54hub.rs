@@ -58,14 +58,14 @@ enum FuRts54HubMergeInfoDdcciOpcode {
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructRts54HubDdcPkt {
-    first_opcode: u8 = 0x77,
+    first_opcode: FuRts54HubMergeInfoDdcciOpcode = First,
     second_opcode: u8,
 }
 
 #[derive(New, Default)]
 #[repr(C, packed)]
 struct FuStructRts54HubDdcWriteMergeInfoPkt {
-    first_opcode: u8 = 0x77,
+    first_opcode: FuRts54HubMergeInfoDdcciOpcode = First,
     second_opcode: u8,
     major_version: u8,
     minor_version: u8,
