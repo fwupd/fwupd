@@ -2420,6 +2420,8 @@ fu_engine_install_releases(FuEngine *self,
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
+			/* make the UI update to clear MOTD for failed updates */
+			fu_engine_emit_changed(self);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2453,6 +2455,8 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
+		/* make the UI update to clear MOTD for failed updates */
+		fu_engine_emit_changed(self);
 		return FALSE;
 	}
 
@@ -2470,15 +2474,21 @@ fu_engine_install_releases(FuEngine *self,
 			g_info("failed to find new device: %s", error_local->message);
 			continue;
 		}
-		if (!fu_engine_install_release_version_check(self, release, device_new, error))
+		if (!fu_engine_install_release_version_check(self, release, device_new, error)) {
+			/* make the UI update to clear MOTD for failed updates */
+			fu_engine_emit_changed(self);
 			return FALSE;
+		}
 	}
 
 	/* upload to Passim */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		if (!fu_engine_publish_release(self, release, error))
+		if (!fu_engine_publish_release(self, release, error)) {
+			/* make the UI update to clear MOTD for failed updates */
+			fu_engine_emit_changed(self);
 			return FALSE;
+		}
 	}
 
 	/* allow capturing setup again */
@@ -6133,6 +6143,16 @@ fu_engine_get_upgrades(FuEngine *self,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
 				    "A reboot is pending");
+		return NULL;
+	}
+
+	/* don't show upgrades if update failed */
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_FAILED ||
+	    fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "An update has failed");
 		return NULL;
 	}
 
