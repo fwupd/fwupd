@@ -2360,7 +2360,6 @@ fu_engine_install_releases(FuEngine *self,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
-	gboolean ret = FALSE;
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
@@ -2403,7 +2402,8 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error_literal(error, "failed to prepare composite action: ");
-		goto out;
+		fu_engine_emit_changed(self);
+		return FALSE;
 	}
 
 	/* all authenticated, so install all the things */
