@@ -3770,7 +3770,7 @@ fu_device_inhibit_full(FuDevice *self,
 		GPtrArray *children = fu_device_get_children(self);
 		for (guint i = 0; i < children->len; i++) {
 			FuDevice *child = g_ptr_array_index(children, i);
-			fu_device_inhibit(child, inhibit_id, reason);
+			fu_device_inhibit_full(child, problem, inhibit_id, reason);
 		}
 	}
 }
@@ -5293,7 +5293,9 @@ fu_device_to_string_impl(FuDevice *self, guint idt, GString *str)
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
 			g_autofree gchar *val =
-			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
+			    g_strdup_printf("[%s] %s",
+					    inhibit->inhibit_id,
+					    inhibit->reason != NULL ? inhibit->reason : "");
 			fwupd_codec_string_append(str, idt, "Inhibit", val);
 		}
 	}
