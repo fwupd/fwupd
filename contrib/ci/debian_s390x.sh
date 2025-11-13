@@ -17,7 +17,6 @@ cd build
 meson setup .. \
     --cross-file s390x_cross.txt \
     --werror \
-    -Dplugin_flashrom=disabled \
     -Dplugin_modem_manager=disabled \
     -Dintrospection=false \
     -Dlibxmlb:introspection=false \

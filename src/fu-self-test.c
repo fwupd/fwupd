@@ -1509,7 +1509,6 @@ fu_engine_plugin_gtypes_func(gconstpointer user_data)
 	    "linux_tainted",
 	};
 	const gchar *external_plugins[] = {
-	    "flashrom",
 	    "modem-manager",
 	};
 
