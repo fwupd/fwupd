@@ -2421,7 +2421,8 @@ fu_engine_install_releases(FuEngine *self,
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
-			goto out;
+			fu_engine_emit_changed(self);
+			return FALSE;
 		}
 		fu_progress_step_done(progress);
 	}
@@ -2454,7 +2455,8 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
-		goto out;
+		fu_engine_emit_changed(self);
+		return FALSE;
 	}
 
 	/* for online updates, verify the version changed if not a re-install */
@@ -2471,26 +2473,27 @@ fu_engine_install_releases(FuEngine *self,
 			g_info("failed to find new device: %s", error_local->message);
 			continue;
 		}
-		if (!fu_engine_install_release_version_check(self, release, device_new, error))
-			goto out;
+		if (!fu_engine_install_release_version_check(self, release, device_new, error)) {
+			fu_engine_emit_changed(self);
+			return FALSE;
+		}
 	}
 
 	/* upload to Passim */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		if (!fu_engine_publish_release(self, release, error))
-			goto out;
+		if (!fu_engine_publish_release(self, release, error)) {
+			fu_engine_emit_changed(self);
+			return FALSE;
+		}
 	}
 
 	/* allow capturing setup again */
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_SETUP);
 
-	/* success */
-	ret = TRUE;
-out:
 	/* make the UI update */
 	fu_engine_emit_changed(self);
-	return ret;
+	return TRUE;
 }
 
 static void
