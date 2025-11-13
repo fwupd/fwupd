@@ -644,25 +644,6 @@ if build_standalone
   conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 endif
 
-flashrom = get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux')
-libflashrom = disabler()
-if build_standalone
-  libflashrom = dependency(
-    'flashrom',
-    fallback: ['flashrom', 'flashrom_dep'],
-    required: flashrom,
-  )
-  if libflashrom.type_name() == 'pkgconfig' and cc.has_function(
-    'flashrom_set_progress_callback_v2',
-    dependencies: libflashrom,
-  )
-    conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
-  endif
-  allow_flashrom = flashrom.allowed() and libflashrom.found()
-else
-  allow_flashrom = false
-endif
-
 logind = dependency(
   'systemd', 'libelogind',
   required: get_option('logind').disable_auto_if(host_machine.system() != 'linux'),
@@ -671,7 +652,6 @@ logind = dependency(
 if logind.found()
   conf.set('HAVE_LOGIND', '1')
 endif
-
 if libsystemd.found()
   systemd = dependency(
     'systemd',
