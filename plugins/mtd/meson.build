@@ -54,6 +54,6 @@ if get_option('tests')
       'tests/mtd-uswid.builder.xml',
       'tests/mtd-fwupd.conf',
     ],
-    install_dir: join_paths(installed_test_datadir, 'tests', 'mtd'),
+    install_dir: join_paths(installed_test_datadir, 'tests'),
   )
 endif
