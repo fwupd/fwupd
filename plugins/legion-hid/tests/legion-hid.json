@@ -1,14 +1,13 @@
 {
-  "name": "Legion Hid device",
+  "name": "Legion Go2 device",
   "interactive": false,
   "steps": [
     {
-      "url": "7b3b916db811c39d416dbd1f0e259b533bcad326f2466a3e03f3aa57ff01b60d-LegionGo2_MCU_116504366.cab",
-      "emulation-url": "76f768c828c3d84f6671315bf9de1c5f6458ada377ddb8195d9903777c0e5c4f-1.zip",
-      "emulation-file": "@enumeration_datadir@/legion-hid-setup.json",
+      "url": "c6751cb3154b682ca3c39908531b4c306af30885dbf0742dead8f1cd3e97899b-2025112_LegionGo2_MCU_116504366.cab",
+      "emulation-url": "7ca8960c243a4926c424401b30b94a95af1b2abef6d87e100b091d751c7b4027-emulation.zip",
       "components": [
         {
-          "version": "250925A",
+          "version": "250926A",
           "guids": [
             "81ad5a9e-6804-5c65-9082-2910aa257c24"
           ]
