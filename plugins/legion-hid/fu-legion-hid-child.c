@@ -24,8 +24,10 @@ fu_legion_hid_child_write_firmware(FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
+	FuLegionHidChild *self = FU_LEGION_HID_CHILD(device);
 	FuLegionHidDevice *hid_device = FU_LEGION_HID_DEVICE(fu_device_get_proxy(device));
 	g_autoptr(FuFirmware) img = NULL;
+	guint32 version = 0;
 
 	img = fu_firmware_get_image_by_id(firmware, fu_device_get_logical_id(device), error);
 	if (img == NULL)
@@ -34,6 +36,14 @@ fu_legion_hid_child_write_firmware(FuDevice *device,
 		g_prefix_error(error, "execute %s failed: ", fu_device_get_logical_id(device));
 		return FALSE;
 	}
+	/*
+	 * If only the controller is updated, the MCU will not restart,
+	 * so the version number needs to be reset.If the version is not reset,
+	 * fwupd will report an update failure.
+	 */
+	if (!fu_legion_hid_device_get_version(hid_device, self->id, &version, error))
+		return FALSE;
+	fu_device_set_version_raw(device, version);
 
 	/* success */
 	return TRUE;
