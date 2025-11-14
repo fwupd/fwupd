@@ -1,0 +1,18 @@
+{
+  "name": "Legion Go2 device",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "c6751cb3154b682ca3c39908531b4c306af30885dbf0742dead8f1cd3e97899b-2025112_LegionGo2_MCU_116504366.cab",
+      "emulation-url": "7ca8960c243a4926c424401b30b94a95af1b2abef6d87e100b091d751c7b4027-emulation.zip",
+      "components": [
+        {
+          "version": "250926A",
+          "guids": [
+            "81ad5a9e-6804-5c65-9082-2910aa257c24"
+          ]
+        }
+      ]
+    }
+  ]
+}
