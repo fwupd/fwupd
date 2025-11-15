@@ -52,10 +52,3 @@ This plugin requires ioctl `HIDIOCSFEATURE` and `HIDIOCGFEATURE` access.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.5.5`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Sam Chen: @sam412081go

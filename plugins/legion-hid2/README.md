@@ -38,10 +38,3 @@ This plugin requires read/write access to `/dev/bus/usb`.
 This plugin has been available since fwupd version `2.0.0`.
 
 Since: 2.0.0
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-@superm1

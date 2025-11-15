@@ -192,11 +192,3 @@ This plugin has been available since fwupd version `1.2.0`.
       I2C~~~USB1
       I2C~~~USB2
 ```
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Crag Wang: @CragW
-* Mario Limonciello: @superm1

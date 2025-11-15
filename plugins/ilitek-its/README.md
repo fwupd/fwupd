@@ -60,10 +60,3 @@ This plugin requires ioctl `HIDIOCSFEATURE` and read access to `/dev/hidraw`.
 ## Version Considerations
 
 This plugin has been available since fwupd version `2.0.14`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Joe Hong: @ILITEK-JoeHung

@@ -48,10 +48,3 @@ This plugin requires:
 ## Version Considerations
 
 This plugin has been available since fwupd version `2.0.8`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Richard Hughes: @hughsie

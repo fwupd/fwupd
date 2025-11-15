@@ -46,10 +46,3 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x03F0`
 ## Version Considerations
 
 This plugin has been available since fwupd version `2.0.0`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Pena Christian <christian.a.pena@hp.com>

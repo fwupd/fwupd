@@ -47,10 +47,3 @@ This plugin uses the following plugin-specific quirks:
 The number of MCUs connected to the USB endpoint.
 
 Since: 2.0.0
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-@superm1

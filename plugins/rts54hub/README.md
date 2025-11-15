@@ -52,10 +52,3 @@ This plugin uses the following plugin-specific quirks:
 Defines the amount of data transferred in a single USB transaction, defaulting to 4096 bytes.
 
 Since: 2.0.11
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Ricky Wu: @AnyProblem

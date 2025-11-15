@@ -64,10 +64,3 @@ This flag tells device that it is a child device. All subdevice behavior tweaks 
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.8.0`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Andrii Dushko: @dushko-devx

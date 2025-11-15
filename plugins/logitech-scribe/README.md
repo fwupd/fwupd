@@ -45,10 +45,3 @@ This plugin requires the `UVCIOC_CTRL_QUERY` ioctl interface.
 ## Version Considerations
 
 This plugin has been available since fwupd version `1.8.8`.
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Sanjay Sheth: @vcdmp

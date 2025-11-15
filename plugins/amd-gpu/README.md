@@ -63,10 +63,3 @@ interfaces with the hardware.
       PSP ~~~ kernel
       kernel ~~~ fwupdengine
 ```
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Mario Limonciello: @superm1

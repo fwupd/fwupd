@@ -140,10 +140,3 @@ This plugin has been available since fwupd version `1.3.6`.
       gpu<--DDC/I2C-->MST
       MST---SPI
 ```
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Apollo Ling: @ApolloLing
