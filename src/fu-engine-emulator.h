@@ -18,6 +18,9 @@ G_DECLARE_FINAL_TYPE(FuEngineEmulator, fu_engine_emulator, FU, ENGINE_EMULATOR, 
 /* the maximum times a device can use FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED */
 #define FU_ENGINE_EMULATOR_WRITE_COUNT_MAX 5
 
+/* the maximum number of composite devices */
+#define FU_ENGINE_EMULATOR_COMPOSITE_MAX 10
+
 FuEngineEmulator *
 fu_engine_emulator_new(FuEngine *engine) G_GNUC_NON_NULL(1);
 gboolean
@@ -28,11 +31,13 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
     G_GNUC_NON_NULL(1, 2);
 gboolean
 fu_engine_emulator_load_phase(FuEngineEmulator *self,
+			      guint composite_cnt,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_emulator_save_phase(FuEngineEmulator *self,
+			      guint composite_cnt,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error) G_GNUC_NON_NULL(1);
