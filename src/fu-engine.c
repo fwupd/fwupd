@@ -131,6 +131,7 @@ struct _FuEngine {
 	guint update_motd_id;
 	FuEngineEmulatorPhase emulator_phase;
 	guint emulator_write_cnt;
+	guint emulator_composite_cnt;
 	FuEngineLoadFlags load_flags;
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
@@ -2165,6 +2166,7 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 	}
 	if (any_emulated) {
 		if (!fu_engine_emulator_load_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2180,6 +2182,7 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error)
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2220,6 +2223,7 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	}
 	if (any_emulated) {
 		if (!fu_engine_emulator_load_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2235,6 +2239,7 @@ fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error)
 	/* save to emulated phase */
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) && !any_emulated) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -2410,6 +2415,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_progress_set_steps(progress, releases->len);
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
+		self->emulator_composite_cnt = i;
 		if (!fu_engine_install_release(self,
 					       release,
 					       fu_progress_get_child(progress),
@@ -2886,6 +2892,7 @@ fu_engine_get_device(FuEngine *self, const gchar *device_id, GError **error)
 		if (device_old != NULL &&
 		    fu_device_has_flag(device_old, FWUPD_DEVICE_FLAG_EMULATED)) {
 			if (!fu_engine_emulator_load_phase(self->emulation,
+							   self->emulator_composite_cnt,
 							   self->emulator_phase,
 							   self->emulator_write_cnt,
 							   error))
@@ -3056,6 +3063,7 @@ fu_engine_prepare(FuEngine *self,
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -3104,6 +3112,7 @@ fu_engine_cleanup(FuEngine *self,
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT,
 						   error))
@@ -3180,6 +3189,7 @@ fu_engine_detach(FuEngine *self,
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   self->emulator_write_cnt,
 						   error))
@@ -3233,6 +3243,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, G
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   self->emulator_write_cnt,
 						   error))
@@ -3331,6 +3342,7 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   self->emulator_write_cnt,
 						   error))
@@ -3431,6 +3443,7 @@ fu_engine_write_firmware(FuEngine *self,
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SAVE_EVENTS) &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   self->emulator_write_cnt,
 						   error))
@@ -6811,6 +6824,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_engine_emulator_save_phase(self->emulation,
+						   self->emulator_composite_cnt,
 						   self->emulator_phase,
 						   self->emulator_write_cnt,
 						   &error_local))
