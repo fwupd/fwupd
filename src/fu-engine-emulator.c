@@ -23,12 +23,20 @@ G_DEFINE_TYPE(FuEngineEmulator, fu_engine_emulator, G_TYPE_OBJECT)
 
 enum { PROP_0, PROP_ENGINE, PROP_LAST };
 
+/* [composite_cnt:]{phase}[-write_cnt].json */
 static gchar *
-fu_engine_emulator_phase_to_filename(FuEngineEmulatorPhase phase, guint write_cnt)
+fu_engine_emulator_phase_to_filename(guint composite_cnt,
+				     FuEngineEmulatorPhase phase,
+				     guint write_cnt)
 {
-	if (write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT)
-		return g_strdup_printf("%s.json", fu_engine_emulator_phase_to_string(phase));
-	return g_strdup_printf("%s-%u.json", fu_engine_emulator_phase_to_string(phase), write_cnt);
+	g_autoptr(GString) fn = g_string_new(NULL);
+	if (composite_cnt != 0)
+		g_string_append_printf(fn, "%u:", composite_cnt);
+	g_string_append(fn, fu_engine_emulator_phase_to_string(phase));
+	if (write_cnt != FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT)
+		g_string_append_printf(fn, "-%u", write_cnt);
+	g_string_append(fn, ".json");
+	return g_string_free(g_steal_pointer(&fn), FALSE);
 }
 
 gboolean
@@ -105,16 +113,21 @@ fu_engine_emulator_load_json_blob(FuEngineEmulator *self, GBytes *json_blob, GEr
 
 gboolean
 fu_engine_emulator_load_phase(FuEngineEmulator *self,
+			      guint composite_cnt,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error)
 {
 	GBytes *json_blob;
-	g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
+	g_autofree gchar *fn = NULL;
 
+	fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
 	json_blob = g_hash_table_lookup(self->phase_blobs, fn);
-	if (json_blob == NULL)
+	if (json_blob == NULL) {
+		g_debug("emulator not loading %s, as not found", fn);
 		return TRUE;
+	}
+	g_debug("emulator loading %s", fn);
 	return fu_engine_emulator_load_json_blob(self, json_blob, error);
 }
 
@@ -150,13 +163,14 @@ fu_engine_emulator_to_json(FuEngineEmulator *self, GPtrArray *devices, JsonBuild
 
 gboolean
 fu_engine_emulator_save_phase(FuEngineEmulator *self,
+			      guint composite_cnt,
 			      FuEngineEmulatorPhase phase,
 			      guint write_cnt,
 			      GError **error)
 {
 	GBytes *blob_old;
 	g_autofree gchar *blob_new_safe = NULL;
-	g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
+	g_autofree gchar *fn = NULL;
 	g_autoptr(GBytes) blob_new = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GOutputStream) ostream = g_memory_output_stream_new_resizable();
@@ -175,6 +189,8 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 	json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 
+	fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
+	g_debug("saving %s", fn);
 	blob_old = g_hash_table_lookup(self->phase_blobs, fn);
 	if (!json_generator_to_stream(json_generator, ostream, NULL, error))
 		return FALSE;
@@ -209,6 +225,7 @@ fu_engine_emulator_save_phase(FuEngineEmulator *self,
 static gboolean
 fu_engine_emulator_load_phases(FuEngineEmulator *self,
 			       FuArchive *archive,
+			       guint composite_cnt,
 			       guint write_cnt,
 			       gboolean *got_json,
 			       GError **error)
@@ -216,10 +233,11 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 	for (FuEngineEmulatorPhase phase = FU_ENGINE_EMULATOR_PHASE_SETUP;
 	     phase < FU_ENGINE_EMULATOR_PHASE_LAST;
 	     phase++) {
-		g_autofree gchar *fn = fu_engine_emulator_phase_to_filename(phase, write_cnt);
+		g_autofree gchar *fn = NULL;
 		g_autoptr(GBytes) blob = NULL;
 
 		/* not found */
+		fn = fu_engine_emulator_phase_to_filename(composite_cnt, phase, write_cnt);
 		blob = fu_archive_lookup_by_fn(archive, fn, NULL);
 		if (blob == NULL || g_bytes_get_size(blob) == 0)
 			continue;
@@ -227,7 +245,7 @@ fu_engine_emulator_load_phases(FuEngineEmulator *self,
 		g_info("emulation for phase %s [%u]",
 		       fu_engine_emulator_phase_to_string(phase),
 		       write_cnt);
-		if (write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT &&
+		if (composite_cnt == 0 && write_cnt == FU_ENGINE_EMULATOR_WRITE_COUNT_DEFAULT &&
 		    phase == FU_ENGINE_EMULATOR_PHASE_SETUP) {
 			if (!fu_engine_emulator_load_json_blob(self, blob, error))
 				return FALSE;
@@ -272,9 +290,18 @@ fu_engine_emulator_load(FuEngineEmulator *self, GInputStream *stream, GError **e
 	}
 
 	/* load JSON files from archive */
-	for (guint write_cnt = 0; write_cnt < FU_ENGINE_EMULATOR_WRITE_COUNT_MAX; write_cnt++) {
-		if (!fu_engine_emulator_load_phases(self, archive, write_cnt, &got_json, error))
-			return FALSE;
+	for (guint composite_cnt = 0; composite_cnt < FU_ENGINE_EMULATOR_COMPOSITE_MAX;
+	     composite_cnt++) {
+		for (guint write_cnt = 0; write_cnt < FU_ENGINE_EMULATOR_WRITE_COUNT_MAX;
+		     write_cnt++) {
+			if (!fu_engine_emulator_load_phases(self,
+							    archive,
+							    composite_cnt,
+							    write_cnt,
+							    &got_json,
+							    error))
+				return FALSE;
+		}
 	}
 	if (!got_json) {
 		g_set_error_literal(error,
