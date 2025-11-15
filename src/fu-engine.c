@@ -2402,6 +2402,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_PREPARE);
 	if (!fu_engine_composite_prepare(self, devices, error)) {
 		g_prefix_error_literal(error, "failed to prepare composite action: ");
+		fu_engine_emit_changed(self);
 		return FALSE;
 	}
 
@@ -2420,6 +2421,7 @@ fu_engine_install_releases(FuEngine *self,
 				g_warning("failed to cleanup failed composite action: %s",
 					  error_local->message);
 			}
+			fu_engine_emit_changed(self);
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -2453,6 +2455,7 @@ fu_engine_install_releases(FuEngine *self,
 	fu_engine_set_emulator_phase(self, FU_ENGINE_EMULATOR_PHASE_COMPOSITE_CLEANUP);
 	if (!fu_engine_composite_cleanup(self, devices_new, error)) {
 		g_prefix_error_literal(error, "failed to cleanup composite action: ");
+		fu_engine_emit_changed(self);
 		return FALSE;
 	}
 
@@ -2470,15 +2473,19 @@ fu_engine_install_releases(FuEngine *self,
 			g_info("failed to find new device: %s", error_local->message);
 			continue;
 		}
-		if (!fu_engine_install_release_version_check(self, release, device_new, error))
+		if (!fu_engine_install_release_version_check(self, release, device_new, error)) {
+			fu_engine_emit_changed(self);
 			return FALSE;
+		}
 	}
 
 	/* upload to Passim */
 	for (guint i = 0; i < releases->len; i++) {
 		FuRelease *release = g_ptr_array_index(releases, i);
-		if (!fu_engine_publish_release(self, release, error))
+		if (!fu_engine_publish_release(self, release, error)) {
+			fu_engine_emit_changed(self);
 			return FALSE;
+		}
 	}
 
 	/* allow capturing setup again */
