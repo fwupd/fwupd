@@ -53,7 +53,6 @@ plugins = {
   'emmc': false,
   'ep963x': false,
   'fastboot': false,
-  'flashrom': false,
   'focalfp': false,
   'fpc': false,
   'framework-qmk': false,

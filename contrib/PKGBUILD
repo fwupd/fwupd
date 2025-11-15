@@ -13,7 +13,6 @@ license=(LGPL-2.1-or-later)
 depends=(
   bash
   curl
-  flashrom
   fwupd-efi
   gcc-libs
   glib2

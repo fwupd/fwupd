@@ -89,7 +89,6 @@ parts:
                        -Dintrospection=disabled,
                        -Dman=false,
                        -Dpython=/usr/bin/python3,
-                       -Dplugin_flashrom=disabled,
                        -Defi_os_dir=fwupd,
                        "-Dlibxmlb:gtkdoc=false",
                        "-Dlibxmlb:introspection=false",

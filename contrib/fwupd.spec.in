@@ -31,11 +31,6 @@
 %global have_uefi 1
 %endif
 
-# flashrom is only available on these arches
-%ifarch i686 x86_64 armv7hl aarch64 ppc64le riscv64
-%global have_flashrom 1
-%endif
-
 %ifarch i686 x86_64
 %global have_msr 1
 %endif
@@ -98,9 +93,6 @@ BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: pkgconfig(bash-completion)
 BuildRequires: git-core
-%if 0%{?have_flashrom}
-BuildRequires: flashrom-devel >= 1.2-2
-%endif
 BuildRequires: libdrm-devel
 # For fu-polkit-test
 BuildRequires: polkit
@@ -158,9 +150,6 @@ Recommends: passim
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager
 %endif
-%if 0%{?have_flashrom}
-Recommends: %{name}-plugin-flashrom
-%endif
 %if 0%{?have_uefi}
 Recommends: %{name}-efi
 Recommends: %{name}-plugin-uefi-capsule-data
@@ -193,16 +182,6 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 %description plugin-modem-manager
 This provides the optional package which is only required on hardware that
 might have mobile broadband hardware. It is probably not required on servers.
-%endif
-
-%if 0%{?have_flashrom}
-%package plugin-flashrom
-Summary: fwupd plugin using flashrom
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description plugin-flashrom
-This provides the optional package which is only required on hardware that
-can be flashed using flashrom. It is probably not required on servers.
 %endif
 
 %if 0%{?have_uefi}
@@ -290,11 +269,6 @@ cd -
     -Dtests=true \
 %else
     -Dtests=false \
-%endif
-%if 0%{?have_flashrom}
-    -Dplugin_flashrom=enabled \
-%else
-    -Dplugin_flashrom=disabled \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=enabled \
@@ -434,10 +408,6 @@ systemctl --no-reload preset fwupd-refresh.timer &>/dev/null || :
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager
 %{_libdir}/fwupd-%{version}/libfu_plugin_modem_manager.so
-%endif
-%if 0%{?have_flashrom}
-%files plugin-flashrom
-%{_libdir}/fwupd-%{version}/libfu_plugin_flashrom.so
 %endif
 %if 0%{?have_uefi}
 %files plugin-uefi-capsule-data
