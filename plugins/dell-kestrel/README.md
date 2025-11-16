@@ -116,10 +116,3 @@ when the user manually unplugs the dock cable. Default: false.
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
-
-## Owners
-
-Anyone can submit a pull request to modify this plugin, but the following people should be
-consulted before making major or functional changes:
-
-* Crag Wang: @CragW
