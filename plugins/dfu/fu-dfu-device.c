@@ -313,7 +313,7 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 			g_info("DFU v1.1 assumed");
 			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		} else {
-			g_warning("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
+			g_debug("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
 			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		}
 
