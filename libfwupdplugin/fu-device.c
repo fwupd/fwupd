@@ -6151,13 +6151,8 @@ fu_device_close_internal(FuDevice *self, GError **error)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	/* not yet open */
-	if (priv->open_refcount == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "cannot close device, refcount already zero");
-		return FALSE;
-	}
+	if (priv->open_refcount == 0)
+		return TRUE;
 	if (!g_atomic_int_dec_and_test(&priv->open_refcount))
 		return TRUE;
 
