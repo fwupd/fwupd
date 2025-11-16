@@ -8160,6 +8160,7 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 void
 fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 
 	if (fu_device_get_created_usec(self) != 0) {
@@ -8176,8 +8177,17 @@ fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
 	}
 
 	/* subclassed */
-	if (device_class->add_json != NULL)
+	if (device_class->add_json != NULL) {
 		device_class->add_json(self, builder, flags);
+		return;
+	}
+
+	/* proxy */
+	if (priv->proxy != NULL) {
+		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
+		if (device_class->add_json != NULL)
+			device_class->add_json(priv->proxy, builder, flags);
+	}
 }
 
 /* private; used to load an emulated device */
@@ -8186,6 +8196,7 @@ fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error)
 {
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
 	if (tmp != NULL) {
@@ -8201,9 +8212,14 @@ fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error)
 	}
 
 	/* subclassed */
-	if (device_class->from_json != NULL) {
-		if (!device_class->from_json(self, json_object, error))
-			return FALSE;
+	if (device_class->from_json != NULL)
+		return device_class->from_json(self, json_object, error);
+
+	/* proxy */
+	if (priv->proxy != NULL) {
+		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
+		if (device_class->from_json != NULL)
+			return device_class->from_json(priv->proxy, json_object, error);
 	}
 
 	/* success */
