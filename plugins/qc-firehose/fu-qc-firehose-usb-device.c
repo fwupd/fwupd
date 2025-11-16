@@ -264,6 +264,8 @@ fu_qc_firehose_usb_device_impl_write_firmware(FuDevice *device,
 static void
 fu_qc_firehose_usb_device_replace(FuDevice *device, FuDevice *donor)
 {
+	if (!FU_IS_QC_FIREHOSE_USB_DEVICE(donor))
+		return;
 	if (fu_device_has_private_flag(donor, FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP))
 		fu_device_add_private_flag(device, FU_QC_FIREHOSE_USB_DEVICE_NO_ZLP);
 }
