@@ -150,7 +150,7 @@ class EnumItem:
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
-        if name_snake.endswith("flags"):
+        if name_snake.endswith("flags") or name_snake.endswith("attrs"):
             name_snake = name_snake[:-1]
         return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
