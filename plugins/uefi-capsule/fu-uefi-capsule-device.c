@@ -318,8 +318,9 @@ fu_uefi_capsule_device_clear_status(FuUefiCapsuleDevice *self, GError **error)
 				 varname,
 				 data,
 				 datasz,
-				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				 error)) {
 		g_prefix_error_literal(error, "could not set EfiUpdateInfo: ");
 		return FALSE;
@@ -448,8 +449,9 @@ fu_uefi_capsule_device_write_update_info(FuUefiCapsuleDevice *self,
 				 varname,
 				 st_inf->buf->data,
 				 st_inf->buf->len,
-				 FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-				     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+				     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				 error)) {
 		g_prefix_error(error, "could not set DP_BUF with %s: ", capsule_path);
 		return FALSE;
@@ -617,9 +619,9 @@ fu_uefi_capsule_device_perhaps_enable_debugging(FuUefiCapsuleDevice *self, GErro
 					 "FWUPDATE_VERBOSE",
 					 &data,
 					 sizeof(data),
-					 FU_EFIVARS_ATTR_NON_VOLATILE |
-					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+					     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					 error)) {
 			g_prefix_error_literal(error, "failed to enable debugging: ");
 			return FALSE;

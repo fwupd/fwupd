@@ -230,12 +230,12 @@ fu_linux_efivars_get_data(FuEfivars *efivars,
 			  const gchar *name,
 			  guint8 **data,
 			  gsize *data_sz,
-			  guint32 *attr,
+			  FuEfiVariableAttrs *attr,
 			  GError **error)
 {
 	gssize attr_sz;
 	gssize data_sz_tmp;
-	guint32 attr_tmp;
+	FuEfiVariableAttrs attr_tmp;
 	guint64 sz;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -469,7 +469,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 			  const gchar *name,
 			  const guint8 *data,
 			  gsize sz,
-			  guint32 attr,
+			  FuEfiVariableAttrs attr,
 			  GError **error)
 {
 	int fd;
@@ -490,7 +490,7 @@ fu_linux_efivars_set_data(FuEfivars *efivars,
 	}
 
 	/* open file for writing, optionally append */
-	if (attr & FU_EFIVARS_ATTR_APPEND_WRITE)
+	if (attr & FU_EFI_VARIABLE_ATTR_APPEND_WRITE)
 		open_wflags |= O_APPEND;
 	fd = open(fn, open_wflags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (fd < 0) {

@@ -4769,7 +4769,8 @@ fu_efivar_func(void)
 				  "Test",
 				  (guint8 *)"1",
 				  1,
-				  FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				  FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				      FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4783,7 +4784,9 @@ fu_efivar_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(sz, ==, 1);
-	g_assert_cmpint(attr, ==, FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS);
+	g_assert_cmpint(attr,
+			==,
+			FU_EFI_VARIABLE_ATTR_NON_VOLATILE | FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS);
 	g_assert_cmpint(data[0], ==, '1');
 
 	/* check free space again */
@@ -5399,7 +5402,7 @@ fu_security_attrs_compare_func(void)
 typedef enum {
 	FU_FIRMWARE_BUILDER_FLAG_NONE,
 	FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE = 1 << 0,
-} FuFirmwareBuilderFlags;
+} G_GNUC_FLAG_ENUM FuFirmwareBuilderFlags;
 
 static void
 fu_firmware_builder_round_trip_func(void)

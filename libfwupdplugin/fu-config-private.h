@@ -13,7 +13,7 @@ typedef enum {
 	FU_CONFIG_LOAD_FLAG_WATCH_FILES = 1 << 0,
 	FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS = 1 << 1,
 	FU_CONFIG_LOAD_FLAG_MIGRATE_FILES = 1 << 2,
-} FuConfigLoadFlags;
+} G_GNUC_FLAG_ENUM FuConfigLoadFlags;
 
 FuConfig *
 fu_config_new(void);

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include "fwupd-build.h"
 
 G_BEGIN_DECLS
 
@@ -236,7 +236,7 @@ typedef enum {
 	FWUPD_FEATURE_FLAG_REQUESTS_NON_GENERIC = 1 << 9, /* Since: 1.9.8 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdFeatureFlags;
+} G_GNUC_FLAG_ENUM FwupdFeatureFlags;
 
 /**
  * FwupdDeviceFlags:
@@ -597,7 +597,7 @@ typedef enum {
 	 */
 	/*< private >*/
 	FWUPD_DEVICE_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdDeviceFlags;
+} G_GNUC_FLAG_ENUM FwupdDeviceFlags;
 
 /**
  * FwupdDeviceProblem:
@@ -745,7 +745,7 @@ typedef enum {
 	 * Since: 1.8.1
 	 */
 	FWUPD_DEVICE_PROBLEM_UNKNOWN = G_MAXUINT64,
-} FwupdDeviceProblem;
+} G_GNUC_FLAG_ENUM FwupdDeviceProblem;
 
 /**
  * FwupdReleaseFlags:
@@ -841,7 +841,7 @@ typedef enum {
 	 * Since: 1.2.6
 	 */
 	FWUPD_RELEASE_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdReleaseFlags;
+} G_GNUC_FLAG_ENUM FwupdReleaseFlags;
 
 /**
  * FwupdReleaseUrgency:
@@ -1090,7 +1090,7 @@ typedef enum {
 	 * Since: 1.5.0
 	 */
 	FWUPD_PLUGIN_FLAG_UNKNOWN = G_MAXUINT64
-} FwupdPluginFlags;
+} G_GNUC_FLAG_ENUM FwupdPluginFlags;
 
 /**
  * FwupdInstallFlags:
@@ -1188,7 +1188,7 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_ONLY_EMULATED = 1 << 10,
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdInstallFlags;
+} G_GNUC_FLAG_ENUM FwupdInstallFlags;
 
 /**
  * FwupdSelfSignFlags:
@@ -1222,7 +1222,7 @@ typedef enum {
 	FWUPD_SELF_SIGN_FLAG_ADD_CERT = 1 << 1,
 	/*< private >*/
 	FWUPD_SELF_SIGN_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdSelfSignFlags;
+} G_GNUC_FLAG_ENUM FwupdSelfSignFlags;
 
 /**
  * FwupdUpdateState:

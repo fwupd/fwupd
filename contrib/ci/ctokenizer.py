@@ -385,6 +385,10 @@ class Tokenizer:
 
         for token in self.tokens:
 
+            # ignore __attribute__
+            if token.data == "G_GNUC_FLAG_ENUM":
+                continue
+
             # start, end or continue
             if token.data == "{":
                 if stack:

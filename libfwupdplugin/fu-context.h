@@ -177,7 +177,7 @@ typedef enum {
 	 * Since: 2.0.0
 	 **/
 	FU_CONTEXT_FLAG_LOADED_UNKNOWN = G_MAXUINT64,
-} FuContextFlags;
+} G_GNUC_FLAG_ENUM FuContextFlags;
 
 void
 fu_context_add_flag(FuContext *context, FuContextFlags flag) G_GNUC_NON_NULL(1);

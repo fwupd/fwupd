@@ -38,7 +38,7 @@ typedef enum {
 	FU_RTS54HUB_VENDOR_CMD_NONE = 0x00,
 	FU_RTS54HUB_VENDOR_CMD_STATUS = 1 << 0,
 	FU_RTS54HUB_VENDOR_CMD_FLASH = 1 << 1,
-} FuRts54hubVendorCmd;
+} G_GNUC_FLAG_ENUM FuRts54hubVendorCmd;
 
 static void
 fu_rts54hub_device_to_string(FuDevice *device, guint idt, GString *str)

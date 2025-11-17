@@ -27,7 +27,7 @@
 typedef enum {
 	FU_MM_DEVICE_PORT_FLAG_NONE = 0,
 	FU_MM_DEVICE_PORT_FLAG_MAKE_RAW = 1 << 0,
-} FuMmDevicePortFlags;
+} G_GNUC_FLAG_ENUM FuMmDevicePortFlags;
 
 typedef struct {
 	MMModemPortType type;

@@ -18,7 +18,7 @@ typedef enum {
 	FU_CPU_DEVICE_FLAG_IBT = 1 << 1,
 	FU_CPU_DEVICE_FLAG_TME = 1 << 2,
 	FU_CPU_DEVICE_FLAG_SMAP = 1 << 3,
-} FuCpuDeviceFlag;
+} G_GNUC_FLAG_ENUM FuCpuDeviceFlag;
 
 struct _FuCpuDevice {
 	FuDevice parent_instance;

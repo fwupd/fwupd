@@ -315,9 +315,9 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 					 "OsIndications",
 					 (guint8 *)&os_indications,
 					 sizeof(os_indications),
-					 FU_EFIVARS_ATTR_NON_VOLATILE |
-					     FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-					     FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					 FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+					     FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+					     FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					 error)) {
 			g_prefix_error_literal(error, "Could not set OsIndications: ");
 			return FALSE;

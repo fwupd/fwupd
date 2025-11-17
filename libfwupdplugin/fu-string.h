@@ -91,7 +91,7 @@ fu_strsplit_stream(GInputStream *stream,
 typedef enum {
 	FU_UTF_CONVERT_FLAG_NONE = 0,
 	FU_UTF_CONVERT_FLAG_APPEND_NUL = 1 << 0,
-} FuUtfConvertFlags;
+} G_GNUC_FLAG_ENUM FuUtfConvertFlags;
 
 gchar *
 fu_utf16_to_utf8_byte_array(GByteArray *array, FuEndianType endian, GError **error)
