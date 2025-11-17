@@ -195,9 +195,9 @@ fu_uefi_bootmgr_setup_bootnext_with_loadopt(FuEfivars *efivars,
 					       FU_EFIVARS_GUID_EFI_GLOBAL,
 					       boot_next_name,
 					       loadopt_blob,
-					       FU_EFIVARS_ATTR_NON_VOLATILE |
-						   FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS |
-						   FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+					       FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+						   FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS |
+						   FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 					       error)) {
 			g_prefix_error(error, "could not set boot variable %s: ", boot_next_name);
 			return FALSE;

@@ -21,7 +21,7 @@ typedef enum {
 	FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE = 0,
 	FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE = 1 << 0,
 	FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE = 1 << 1,
-} FuSynapticsRmiDeviceFlags;
+} G_GNUC_FLAG_ENUM FuSynapticsRmiDeviceFlags;
 
 struct _FuSynapticsRmiDeviceClass {
 	FuUdevDeviceClass parent_class;

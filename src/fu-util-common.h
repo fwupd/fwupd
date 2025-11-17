@@ -23,7 +23,7 @@
 typedef enum {
 	FU_UTIL_CMD_FLAG_NONE = 0,
 	FU_UTIL_CMD_FLAG_IS_ALIAS = 1 << 0,
-} FuUtilCmdFlags;
+} G_GNUC_FLAG_ENUM FuUtilCmdFlags;
 
 typedef struct FuUtil FuUtil;
 typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
@@ -41,7 +41,7 @@ typedef enum {
 	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS = 1 << 1,
 	/*< private >*/
 	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
-} FuSecurityAttrToStringFlags;
+} G_GNUC_FLAG_ENUM FuSecurityAttrToStringFlags;
 
 /* node with refcounted data */
 typedef GNode FuUtilNode;

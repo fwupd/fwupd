@@ -53,7 +53,7 @@ typedef enum {
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER = 1 << 0,
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_NO_REPLY = 1 << 1,
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_IGNORE_REPLY = 1 << 2,
-} FuSynapticsVmm9DeviceCommandFlags;
+} G_GNUC_FLAG_ENUM FuSynapticsVmm9DeviceCommandFlags;
 
 typedef struct {
 	guint8 *buf;

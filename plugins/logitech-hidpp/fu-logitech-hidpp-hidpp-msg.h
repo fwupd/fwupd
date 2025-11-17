@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include <fwupd.h>
 
 typedef enum {
 	FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_NONE,
@@ -17,7 +17,7 @@ typedef enum {
 	FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_RETRY_STUCK = 1 << 4,
 	/*< private >*/
 	FU_LOGITECH_HIDPP_HIDPP_MSG_FLAG_LAST
-} FuLogitechHidppHidppMsgFlags;
+} G_GNUC_FLAG_ENUM FuLogitechHidppHidppMsgFlags;
 
 typedef struct __attribute__((packed)) { /* nocheck:blocked */
 	guint8 report_id;

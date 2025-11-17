@@ -388,7 +388,7 @@ enum FuEfiVariableState {
 
 #[derive(ToString, FromString, Bitfield)]
 #[repr(u32le)]
-enum FuEfiVariableAttributes {
+enum FuEfiVariableAttrs {
     None                              = 0x00000000,
     NonVolatile                       = 0x00000001,
     BootserviceAccess                 = 0x00000002,
@@ -406,7 +406,7 @@ struct FuStructEfiVssAuthVariableHeader {
     start_id: u16le = 0x55AA,
     state: FuEfiVariableState,
     reserved: u8,
-    attributes: FuEfiVariableAttributes,
+    attributes: FuEfiVariableAttrs,
     monotonic_counter: u64le,
     timestamp: FuStructEfiTime,
     pubkey_index: u32le,

@@ -23,7 +23,7 @@ typedef enum {
 	FU_CONTEXT_HWID_FLAG_LOAD_DARWIN = 1 << 5,
 	FU_CONTEXT_HWID_FLAG_WATCH_FILES = 1 << 6,
 	FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS = 1 << 7,
-} FuContextHwidFlags;
+} G_GNUC_FLAG_ENUM FuContextHwidFlags;
 
 #define FU_CONTEXT_HWID_FLAG_LOAD_ALL                                                              \
 	(FU_CONTEXT_HWID_FLAG_LOAD_CONFIG | FU_CONTEXT_HWID_FLAG_LOAD_SMBIOS |                     \

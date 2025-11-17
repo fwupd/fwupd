@@ -13,7 +13,7 @@
 typedef struct {
 	gchar *guid;
 	gchar *name;
-	guint32 attr;
+	FuEfiVariableAttrs attr;
 	GByteArray *buf;
 } FuDummyEfivarsKey;
 
@@ -111,7 +111,7 @@ fu_dummy_efivars_get_data(FuEfivars *efivars,
 			  const gchar *name,
 			  guint8 **data,
 			  gsize *data_sz,
-			  guint32 *attr,
+			  FuEfiVariableAttrs *attr,
 			  GError **error)
 {
 	FuDummyEfivars *self = FU_DUMMY_EFIVARS(efivars);
@@ -176,7 +176,7 @@ fu_dummy_efivars_set_data(FuEfivars *efivars,
 			  const gchar *name,
 			  const guint8 *data,
 			  gsize sz,
-			  guint32 attr,
+			  FuEfiVariableAttrs attr,
 			  GError **error)
 {
 	FuDummyEfivars *self = FU_DUMMY_EFIVARS(efivars);

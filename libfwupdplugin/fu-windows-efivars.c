@@ -76,7 +76,7 @@ fu_windows_efivars_get_data(FuEfivars *efivars,
 			    const gchar *name,
 			    guint8 **data,
 			    gsize *data_sz,
-			    guint32 *attr,
+			    FuEfiVariableAttrs *attr,
 			    GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
@@ -229,7 +229,7 @@ fu_windows_efivars_set_data(FuEfivars *efivars,
 			    const gchar *name,
 			    const guint8 *data,
 			    gsize sz,
-			    guint32 attr,
+			    FuEfiVariableAttrs attr,
 			    GError **error)
 {
 	g_autofree gchar *guid_win32 = g_strdup_printf("{%s}", guid);

@@ -55,7 +55,7 @@ fu_uefi_dbx_zero_func(void)
 					      FU_EFIVARS_GUID_EFI_GLOBAL,
 					      "KEK",
 					      blob,
-					      FU_EFIVARS_ATTR_NON_VOLATILE,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -65,7 +65,7 @@ fu_uefi_dbx_zero_func(void)
 					      FU_EFIVARS_GUID_SECURITY_DATABASE,
 					      "dbx",
 					      blob,
-					      FU_EFIVARS_ATTR_NON_VOLATILE,
+					      FU_EFI_VARIABLE_ATTR_NON_VOLATILE,
 					      &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

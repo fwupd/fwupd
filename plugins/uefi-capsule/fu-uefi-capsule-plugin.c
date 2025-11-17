@@ -210,28 +210,6 @@ fu_uefi_capsule_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError 
 	return fu_uefi_capsule_device_clear_status(device_uefi, error);
 }
 
-static gchar *
-fu_uefi_capsule_plugin_efivars_attrs_to_string(guint32 attrs)
-{
-	const gchar *data[7] = {0};
-	guint idx = 0;
-	if (attrs & FU_EFIVARS_ATTR_NON_VOLATILE)
-		data[idx++] = "non-volatile";
-	if (attrs & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS)
-		data[idx++] = "bootservice-access";
-	if (attrs & FU_EFIVARS_ATTR_RUNTIME_ACCESS)
-		data[idx++] = "runtime-access";
-	if (attrs & FU_EFIVARS_ATTR_HARDWARE_ERROR_RECORD)
-		data[idx++] = "hardware-error-record";
-	if (attrs & FU_EFIVARS_ATTR_AUTHENTICATED_WRITE_ACCESS)
-		data[idx++] = "authenticated-write-access";
-	if (attrs & FU_EFIVARS_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS)
-		data[idx++] = "time-based-authenticated-write-access";
-	if (attrs & FU_EFIVARS_ATTR_APPEND_WRITE)
-		data[idx++] = "append-write";
-	return g_strjoinv(",", (gchar **)data);
-}
-
 static void
 fu_uefi_capsule_plugin_add_security_attrs_secureboot(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -300,10 +278,10 @@ fu_uefi_capsule_plugin_add_security_attrs_bootservices(FuPlugin *plugin, FuSecur
 					  error_local->message);
 				continue;
 			}
-			if ((data_attr & FU_EFIVARS_ATTR_BOOTSERVICE_ACCESS) > 0 &&
-			    (data_attr & FU_EFIVARS_ATTR_RUNTIME_ACCESS) == 0) {
+			if ((data_attr & FU_EFI_VARIABLE_ATTR_BOOTSERVICE_ACCESS) > 0 &&
+			    (data_attr & FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS) == 0) {
 				g_autofree gchar *flags =
-				    fu_uefi_capsule_plugin_efivars_attrs_to_string(data_attr);
+				    fu_efi_variable_attrs_to_string(data_attr);
 				g_debug("%s-%s attr of size 0x%x had flags %s",
 					name,
 					guids[j],
