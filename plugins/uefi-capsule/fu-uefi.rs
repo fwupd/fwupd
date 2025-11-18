@@ -1,6 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+use fwupd::efi::FuEfiCapsuleHeaderFlags
 use fwupd::efi::FuEfiStatus
 use fwupd::efi::FuStructEfiTime
 
