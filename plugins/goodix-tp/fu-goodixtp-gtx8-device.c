@@ -520,8 +520,7 @@ fu_goodixtp_gtx8_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuGoodixtpGtx8Device *self = FU_GOODIXTP_GTX8_DEVICE(device);
-	FuGoodixtpFirmware *firmware_goodixtp = FU_GOODIXTP_FIRMWARE(firmware);
-	guint32 fw_ver = fu_goodixtp_firmware_get_version(firmware_goodixtp);
+	guint32 fw_ver = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* progress */

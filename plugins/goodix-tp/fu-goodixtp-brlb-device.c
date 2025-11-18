@@ -473,7 +473,7 @@ fu_goodixtp_brlb_device_write_firmware(FuDevice *device,
 				       GError **error)
 {
 	FuGoodixtpBrlbDevice *self = FU_GOODIXTP_BRLB_DEVICE(device);
-	guint32 fw_ver = fu_goodixtp_firmware_get_version(FU_GOODIXTP_FIRMWARE(firmware));
+	guint32 fw_ver = fu_firmware_get_version_raw(firmware);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
 
 	/* progress */
