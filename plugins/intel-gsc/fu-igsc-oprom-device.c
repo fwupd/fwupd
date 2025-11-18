@@ -126,14 +126,16 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
 	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
-	guint16 vid = fu_device_get_vid(FU_DEVICE(igsc_parent));
-	guint16 pid = fu_device_get_pid(FU_DEVICE(igsc_parent));
-	guint16 subsys_vendor_id = fu_igsc_device_get_ssvid(igsc_parent);
-	guint16 subsys_device_id = fu_igsc_device_get_ssdid(igsc_parent);
 	g_autoptr(GInputStream) stream_igsc = NULL;
 	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
 	g_autoptr(FuFirmware) firmware_oprom = NULL;
 	g_autoptr(FuFirmware) fw_linear = fu_linear_firmware_new(FU_TYPE_OPROM_FIRMWARE);
+
+	/* sanity check */
+	if (igsc_parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no IGSC parent");
+		return NULL;
+	}
 
 	/* parse container */
 	if (!fu_firmware_parse_stream(fw_linear, stream, 0x0, flags, error))
@@ -180,10 +182,10 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 		if (fu_igsc_device_get_oprom_code_devid_enforcement(igsc_parent)) {
 			if (!fu_igsc_oprom_firmware_match_device(
 				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
-				vid,
-				pid,
-				subsys_vendor_id,
-				subsys_device_id,
+				fu_device_get_vid(FU_DEVICE(igsc_parent)),
+				fu_device_get_pid(FU_DEVICE(igsc_parent)),
+				fu_igsc_device_get_ssvid(igsc_parent),
+				fu_igsc_device_get_ssdid(igsc_parent),
 				error))
 				return NULL;
 		} else {
@@ -209,14 +211,15 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 		if (fu_igsc_oprom_firmware_has_allowlist(FU_IGSC_OPROM_FIRMWARE(firmware_igsc))) {
 			if (!fu_igsc_oprom_firmware_match_device(
 				FU_IGSC_OPROM_FIRMWARE(firmware_igsc),
-				vid,
-				pid,
-				subsys_vendor_id,
-				subsys_device_id,
+				fu_device_get_vid(FU_DEVICE(igsc_parent)),
+				fu_device_get_pid(FU_DEVICE(igsc_parent)),
+				fu_igsc_device_get_ssvid(igsc_parent),
+				fu_igsc_device_get_ssdid(igsc_parent),
 				error))
 				return NULL;
 		} else {
-			if (subsys_vendor_id != 0x0 || subsys_device_id != 0x0) {
+			if (fu_igsc_device_get_ssvid(igsc_parent) != 0x0 ||
+			    fu_igsc_device_get_ssdid(igsc_parent) != 0x0) {
 				g_set_error_literal(error,
 						    FWUPD_ERROR,
 						    FWUPD_ERROR_NOT_SUPPORTED,
