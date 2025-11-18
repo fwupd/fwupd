@@ -1163,7 +1163,6 @@ static gboolean
 fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 {
 #ifdef HAVE_HSI
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *xen_privileged_fn = NULL;
 
 	if (g_getenv("UMOCKDEV_DIR") != NULL)
@@ -1171,10 +1170,12 @@ fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 	if (fu_daemon_get_machine_kind(FU_DAEMON(self)) == FU_DAEMON_MACHINE_KIND_PHYSICAL)
 		return TRUE;
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB);
 	/* privileged xen can access most hardware */
-	xen_privileged_fn =
-	    g_build_filename(sysfsfwdir, "hypervisor", "start_flags", "privileged", NULL);
+	xen_privileged_fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+					  "hypervisor",
+					  "start_flags",
+					  "privileged",
+					  NULL);
 	if (g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
 		g_autofree gchar *contents = NULL;
 

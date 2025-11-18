@@ -316,15 +316,13 @@ static GBytes *
 fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
 {
 	const gchar *const *langs = g_get_language_names();
-	g_autofree gchar *datadir_pkg = NULL;
 	g_autofree gchar *filename_archive = NULL;
 	g_autofree gchar *langs_str = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GInputStream) stream_archive = NULL;
 
 	/* load archive */
-	datadir_pkg = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-	filename_archive = g_build_filename(datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
+	filename_archive = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "uefi-capsule-ux.tar.xz", NULL);
 	stream_archive = fu_input_stream_from_path(filename_archive, error);
 	if (stream_archive == NULL)
 		return NULL;
@@ -354,7 +352,7 @@ fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error
 		    FWUPD_ERROR_NOT_SUPPORTED,
 		    "failed to get splash file for %s in %s",
 		    langs_str,
-		    datadir_pkg);
+		    filename_archive);
 	return NULL;
 }
 
@@ -802,13 +800,11 @@ static FuFirmware *
 fu_uefi_capsule_plugin_parse_acpi_uefi(FuUefiCapsulePlugin *self, GError **error)
 {
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *path = NULL;
 	g_autoptr(FuFirmware) firmware = fu_acpi_uefi_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* if we have a table, parse it and validate it */
-	path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename(path, "UEFI", NULL);
+	fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, "UEFI", NULL);
 	file = g_file_new_for_path(fn);
 	if (!fu_firmware_parse_file(firmware, file, FU_FIRMWARE_PARSE_FLAG_NONE, error))
 		return NULL;

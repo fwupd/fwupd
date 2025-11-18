@@ -295,16 +295,15 @@ fu_tpm_plugin_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *str = NULL;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
 	g_autofree guint8 *buf = NULL;
 
 	/* do not show a warning if no TPM exists, or the kernel is too old */
-	fn = g_build_filename(sysfsdir,
-			      "kernel",
-			      "security",
-			      "tpm0",
-			      "binary_bios_measurements",
-			      NULL);
+	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR,
+			   "kernel",
+			   "security",
+			   "tpm0",
+			   "binary_bios_measurements",
+			   NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, so skipping", fn);
 		return TRUE;
@@ -347,12 +346,10 @@ static gboolean
 fu_tpm_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuTpmPlugin *self = FU_TPM_PLUGIN(plugin);
-	g_autofree gchar *sysfstpmdir = NULL;
 	g_autofree gchar *fn_pcrs = NULL;
 
 	/* look for TPM v1.2 */
-	sysfstpmdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_TPM);
-	fn_pcrs = g_build_filename(sysfstpmdir, "tpm0", "pcrs", NULL);
+	fn_pcrs = fu_path_build(FU_PATH_KIND_SYSFSDIR_TPM, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {
 		self->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));
 		g_object_set(self->tpm_device, "device-file", fn_pcrs, NULL);

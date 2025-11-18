@@ -27,14 +27,12 @@ fu_uefi_bgrt_setup(FuUefiBgrt *self, GError **error)
 	guint64 version;
 	g_autofree gchar *bgrtdir = NULL;
 	g_autofree gchar *imagefn = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(FuBitmapImage) bmp_image = fu_bitmap_image_new();
 	g_autoptr(GFile) file = NULL;
 
 	g_return_val_if_fail(FU_IS_UEFI_BGRT(self), FALSE);
 
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	bgrtdir = g_build_filename(sysfsfwdir, "acpi", "bgrt", NULL);
+	bgrtdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "acpi", "bgrt", NULL);
 	if (!g_file_test(bgrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -3633,7 +3633,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *history_db = NULL;
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
@@ -3648,8 +3647,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* delete history */
-	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	history_db = g_build_filename(localstatedir, "pending.db", NULL);
+	history_db = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "pending.db", NULL);
 	(void)g_unlink(history_db);
 
 	/* no metadata in daemon */

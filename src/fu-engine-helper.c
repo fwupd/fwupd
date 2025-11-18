@@ -170,8 +170,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
-		g_autofree gchar *directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-		target = g_build_filename(directory, MOTD_DIR, MOTD_FILE, NULL);
+		target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, MOTD_DIR, MOTD_FILE, NULL);
 	}
 
 	/* create the directory and file, even if zero devices; we want an empty file then */
@@ -239,7 +238,6 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 	g_autoptr(JsonNode) root = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autofree gchar *data = NULL;
-	g_autofree gchar *directory = NULL;
 	g_autofree gchar *target = NULL;
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
@@ -265,8 +263,7 @@ fu_engine_update_devices_file(FuEngine *self, GError **error)
 		return FALSE;
 	}
 
-	directory = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	target = g_build_filename(directory, "devices.json", NULL);
+	target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
 	return g_file_set_contents(target, data, (gssize)len, error);
 }
 
@@ -280,7 +277,6 @@ fu_engine_integrity_add_measurement(GHashTable *self, const gchar *id, GBytes *b
 static void
 fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 {
-	g_autofree gchar *path = fu_path_from_kind(FU_PATH_KIND_ACPI_TABLES);
 	const gchar *tables[] = {
 	    "SLIC",
 	    "MSDM",
@@ -288,7 +284,7 @@ fu_engine_integrity_measure_acpi(FuContext *ctx, GHashTable *self)
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS(tables); i++) {
-		g_autofree gchar *fn = g_build_filename(path, tables[i], NULL);
+		g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_ACPI_TABLES, tables[i], NULL);
 		g_autoptr(GBytes) blob = NULL;
 
 		blob = fu_bytes_get_contents(fn, NULL);

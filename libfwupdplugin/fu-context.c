@@ -80,17 +80,14 @@ fu_context_get_fdt_file(GError **error)
 {
 	g_autofree gchar *fdtfn_local = NULL;
 	g_autofree gchar *fdtfn_sys = NULL;
-	g_autofree gchar *localstatedir_pkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *sysfsdir = NULL;
 
 	/* look for override first, fall back to system value */
-	fdtfn_local = g_build_filename(localstatedir_pkg, "system.dtb", NULL);
+	fdtfn_local = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "system.dtb", NULL);
 	if (g_file_test(fdtfn_local, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_local);
 
 	/* actual hardware value */
-	sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	fdtfn_sys = g_build_filename(sysfsdir, "fdt", NULL);
+	fdtfn_sys = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "fdt", NULL);
 	if (g_file_test(fdtfn_sys, G_FILE_TEST_EXISTS))
 		return g_file_new_for_path(fdtfn_sys);
 

@@ -166,8 +166,7 @@ fu_util_lock(FuUtil *self, GError **error)
 	if (use_user) {
 		lockfn = fu_util_get_user_cache_path("fwupdtool");
 	} else {
-		g_autofree gchar *lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
-		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+		lockfn = fu_path_build(FU_PATH_KIND_LOCKDIR, "fwupdtool", NULL);
 	}
 	if (!fu_path_mkdir_parent(lockfn, error))
 		return FALSE;
