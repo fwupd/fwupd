@@ -4,6 +4,7 @@
   "steps": [
     {
       "url": "d14216c9300ca87f4a2f50ea72bf2c18a8358f8edfd9afb9af5a4bc4b5d9d320-intel-arc-b580-21.1161.cab",
+      "emulation-url": "1e4fd1a62bdb6000187ab6627c2cca7f8b381fd5021b972dd93e72eafaa79185-emulation.zip",
       "components": [
         {
           "name": "FwCode",
