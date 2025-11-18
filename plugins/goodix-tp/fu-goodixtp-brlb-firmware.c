@@ -122,7 +122,7 @@ fu_goodixtp_brlb_firmware_parse(FuGoodixtpFirmware *self,
 	}
 
 	version = (fu_struct_goodix_brlb_hdr_get_vid(st) << 8) | cfg_ver;
-	fu_goodixtp_firmware_set_version(self, version);
+	fu_firmware_set_version_raw(FU_FIRMWARE(self), version);
 	return TRUE;
 }
 

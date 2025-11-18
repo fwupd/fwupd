@@ -18,8 +18,3 @@ G_DECLARE_DERIVABLE_TYPE(FuGoodixtpFirmware,
 struct _FuGoodixtpFirmwareClass {
 	FuFirmwareClass parent_class;
 };
-
-guint32
-fu_goodixtp_firmware_get_version(FuGoodixtpFirmware *self);
-void
-fu_goodixtp_firmware_set_version(FuGoodixtpFirmware *self, guint32 version);
