@@ -11,14 +11,7 @@
 #endif
 
 #include "fu-cpu-device.h"
-
-typedef enum {
-	FU_CPU_DEVICE_FLAG_NONE = 0,
-	FU_CPU_DEVICE_FLAG_SHSTK = 1 << 0,
-	FU_CPU_DEVICE_FLAG_IBT = 1 << 1,
-	FU_CPU_DEVICE_FLAG_TME = 1 << 2,
-	FU_CPU_DEVICE_FLAG_SMAP = 1 << 3,
-} G_GNUC_FLAG_ENUM FuCpuDeviceFlag;
+#include "fu-cpu-struct.h"
 
 struct _FuCpuDevice {
 	FuDevice parent_instance;
@@ -37,22 +30,10 @@ static void
 fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasSHSTK",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasIBT",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasTME",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_TME));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasSMAP",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SMAP));
+	if (self->flags != FU_CPU_DEVICE_FLAG_NONE) {
+		g_autofree gchar *flags_str = fu_cpu_device_flag_to_string(self->flags);
+		fwupd_codec_string_append(str, idt, "Flags", flags_str);
+	}
 }
 
 static const gchar *
