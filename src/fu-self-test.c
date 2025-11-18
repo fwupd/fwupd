@@ -1325,6 +1325,7 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	device = g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
 	g_assert_nonnull(device);
 	fu_device_set_plugin(device, "test");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
 
 	/* version convert */
 	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -1363,6 +1364,12 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 		if (locker != NULL)
 			g_debug("did ->probe() and ->setup()!");
 	}
+
+	/* ->prepare() and ->cleanup */
+	if (fu_device_prepare(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+		g_debug("did ->prepare()");
+	if (fu_device_cleanup(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+		g_debug("did ->cleanup()");
 
 	/* ->prepare_firmware() */
 	firmware = fu_device_prepare_firmware(device,
