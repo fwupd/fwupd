@@ -406,15 +406,13 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 					 error);
 #else
 	g_autofree gchar *path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail(FU_IS_SMBIOS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* DMI */
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	path = g_build_filename(sysfsfwdir, "dmi", "tables", NULL);
+	path = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "dmi", "tables", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
 		g_set_error(error,
 			    FWUPD_ERROR,

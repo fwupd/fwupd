@@ -1406,7 +1406,6 @@ fu_plugin_config_func(void)
 	GStatBuf statbuf = {0};
 	gboolean ret;
 	gint rc;
-	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
@@ -1424,9 +1423,8 @@ fu_plugin_config_func(void)
 
 	/* remove existing file */
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
-	conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	fu_plugin_set_name(plugin, "test");
-	fn = g_build_filename(conf_dir, "fwupd.conf", NULL);
+	fn = fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "fwupd.conf", NULL);
 	ret = fu_path_mkdir_parent(fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1782,8 +1780,7 @@ fu_quirks_vendor_ids_func(void)
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
 	g_autofree gchar *guid4 = fwupd_guid_hash_string("PCI\\VEN_8086&DEV_0007");
 	g_autofree gchar *guid5 = fwupd_guid_hash_string("USB\\VID_8086&PID_0001");
-	g_autofree gchar *datadata = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	g_autofree gchar *quirksdb = g_build_filename(datadata, "quirks.db", NULL);
+	g_autofree gchar *quirksdb = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.db", NULL);
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
 

@@ -382,8 +382,8 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		if (file == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-		g_autofree gchar *xmlbfn = g_build_filename(cachedirpkg, "quirks.xmlb", NULL);
+		g_autofree gchar *xmlbfn =
+		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.xmlb", NULL);
 		file = g_file_new_for_path(xmlbfn);
 	}
 	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
@@ -834,7 +834,6 @@ fu_quirks_db_sqlite3_exec(FuQuirks *self, const gchar *sql, GError **error)
 static gboolean
 fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
-	g_autofree gchar *vendor_ids_dir = fu_path_from_kind(FU_PATH_KIND_DATADIR_VENDOR_IDS);
 	g_autoptr(sqlite3_stmt) stmt_insert = NULL;
 	g_autoptr(sqlite3_stmt) stmt_query = NULL;
 	g_autoptr(GString) fn_mtimes = g_string_new("quirks");
@@ -866,7 +865,8 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		const FuQuirksDbItem *item = &map[i];
 		guint64 mtime;
-		g_autofree gchar *fn = g_build_filename(vendor_ids_dir, item->fn, NULL);
+		g_autofree gchar *fn =
+		    fu_path_build(FU_PATH_KIND_DATADIR_VENDOR_IDS, item->fn, NULL);
 		g_autoptr(GFile) file = g_file_new_for_path(fn);
 		g_autoptr(GFileInfo) info = NULL;
 
@@ -931,7 +931,8 @@ fu_quirks_db_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	/* populate database */
 	for (guint i = 0; i < G_N_ELEMENTS(map); i++) {
 		const FuQuirksDbItem *item = &map[i];
-		g_autofree gchar *fn = g_build_filename(vendor_ids_dir, item->fn, NULL);
+		g_autofree gchar *fn =
+		    fu_path_build(FU_PATH_KIND_DATADIR_VENDOR_IDS, item->fn, NULL);
 		g_autoptr(FuQuirksDbHelper) helper = g_new0(FuQuirksDbHelper, 1);
 		g_autoptr(GFile) file = g_file_new_for_path(fn);
 		g_autoptr(GInputStream) stream = NULL;
@@ -992,8 +993,7 @@ gboolean
 fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
 #ifdef HAVE_SQLITE
-	g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	g_autofree gchar *quirksdb = g_build_filename(cachedirpkg, "quirks.db", NULL);
+	g_autofree gchar *quirksdb = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.db", NULL);
 #endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);

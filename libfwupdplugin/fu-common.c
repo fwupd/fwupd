@@ -117,8 +117,7 @@ fu_cpu_get_attrs(GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *procpath = fu_path_from_kind(FU_PATH_KIND_PROCFS);
-	g_autofree gchar *fn = g_build_filename(procpath, "cpuinfo", NULL);
+	g_autofree gchar *fn = fu_path_build(FU_PATH_KIND_PROCFS, "cpuinfo", NULL);
 	g_autoptr(GHashTable) hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);

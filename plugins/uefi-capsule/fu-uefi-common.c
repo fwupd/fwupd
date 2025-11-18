@@ -33,8 +33,7 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 	    {32, "arm"},
 #endif
 	    {0, NULL}};
-	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	g_autofree gchar *sysfsefidir = g_build_filename(sysfsfwdir, "efi", NULL);
+	g_autofree gchar *sysfsefidir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", NULL);
 	firmware_bits = fu_uefi_read_file_as_uint64(sysfsefidir, "fw_platform_size");
 	if (firmware_bits == 0) {
 		g_set_error(error,
@@ -141,11 +140,12 @@ fu_uefi_get_framebuffer_size(guint32 *width, guint32 *height, GError **error)
 {
 	guint32 height_tmp;
 	guint32 width_tmp;
-	g_autofree gchar *sysfsdriverdir = NULL;
 	g_autofree gchar *fbdir = NULL;
 
-	sysfsdriverdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_DRIVERS);
-	fbdir = g_build_filename(sysfsdriverdir, "efi-framebuffer", "efi-framebuffer.0", NULL);
+	fbdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_DRIVERS,
+			      "efi-framebuffer",
+			      "efi-framebuffer.0",
+			      NULL);
 	if (!g_file_test(fbdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

@@ -61,11 +61,9 @@ static gboolean
 fu_linux_lockdown_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
 	FuLinuxLockdownPlugin *self = FU_LINUX_LOCKDOWN_PLUGIN(plugin);
-	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
 
-	path = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_SECURITY);
-	fn = g_build_filename(path, "lockdown", NULL);
+	fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_SECURITY, "lockdown", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

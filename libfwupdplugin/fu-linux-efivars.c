@@ -35,8 +35,7 @@ G_DEFINE_TYPE(FuLinuxEfivars, fu_linux_efivars, FU_TYPE_EFIVARS)
 static gchar *
 fu_linux_efivars_get_path(void)
 {
-	g_autofree gchar *sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	return g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
+	return fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "efivars", NULL);
 }
 
 static gchar *

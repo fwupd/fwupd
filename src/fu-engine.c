@@ -1726,8 +1726,8 @@ fu_engine_check_trust(FuEngine *self, FuRelease *release, GError **error)
 	g_debug("checking trust of %s", str);
 	if (fu_engine_config_get_only_trusted(self->config) &&
 	    !fu_release_has_flag(release, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)) {
-		g_autofree gchar *sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-		g_autofree gchar *fn = g_build_filename(sysconfdir, "fwupd.conf", NULL);
+		g_autofree gchar *fn =
+		    fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "fwupd.conf", NULL);
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
@@ -1942,8 +1942,8 @@ static gboolean
 fu_engine_get_report_metadata_selinux(GHashTable *hash, GError **error)
 {
 	g_autofree gchar *buf = NULL;
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR);
-	g_autofree gchar *filename = g_build_filename(sysfsdir, "fs", "selinux", "enforce", NULL);
+	g_autofree gchar *filename =
+	    fu_path_build(FU_PATH_KIND_SYSFSDIR, "fs", "selinux", "enforce", NULL);
 
 	if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
 		g_debug("no %s, skipping", filename);
@@ -2570,11 +2570,10 @@ fu_engine_add_release_plugin_metadata(FuEngine *self,
 static gboolean
 fu_engine_save_into_backup_remote(FuEngine *self, GBytes *fw, GError **error)
 {
-	g_autofree gchar *localstatepkg = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	g_autofree gchar *backupdir = g_build_filename(localstatepkg, "backup", NULL);
+	g_autofree gchar *backupdir = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "backup", NULL);
 	g_autofree gchar *backupdir_uri = g_strdup_printf("file://%s", backupdir);
-	g_autofree gchar *remotes_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_REMOTES);
-	g_autofree gchar *remotes_fn = g_build_filename(remotes_path, "backup.conf", NULL);
+	g_autofree gchar *remotes_fn =
+	    fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_REMOTES, "backup.conf", NULL);
 	g_autofree gchar *archive_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, fw);
 	g_autofree gchar *archive_basename = g_strdup_printf("%s.cab", archive_checksum);
 	g_autofree gchar *archive_fn = g_build_filename(backupdir, archive_basename, NULL);
@@ -4241,8 +4240,7 @@ fu_engine_load_metadata_store_local(FuEngine *self,
 				    FuPathKind path_kind,
 				    GError **error)
 {
-	g_autofree gchar *fn = fu_path_from_kind(path_kind);
-	g_autofree gchar *metadata_path = g_build_filename(fn, "local.d", NULL);
+	g_autofree gchar *metadata_path = fu_path_build(path_kind, "local.d", NULL);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) metadata_fns = NULL;
 
@@ -4384,8 +4382,8 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		if (xmlb == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-		g_autofree gchar *xmlbfn = g_build_filename(cachedirpkg, "metadata.xmlb", NULL);
+		g_autofree gchar *xmlbfn =
+		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "metadata.xmlb", NULL);
 		xmlb = g_file_new_for_path(xmlbfn);
 	}
 	self->silo = xb_builder_ensure(builder, xmlb, compile_flags, NULL, error);
@@ -7828,8 +7826,8 @@ static gboolean
 fu_engine_apply_default_bios_settings_policy(FuEngine *self, GError **error)
 {
 	const gchar *tmp;
-	g_autofree gchar *base = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
-	g_autofree gchar *dirname = g_build_filename(base, "bios-settings.d", NULL);
+	g_autofree gchar *dirname =
+	    fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "bios-settings.d", NULL);
 	g_autoptr(FuBiosSettings) new_bios_settings = fu_bios_settings_new();
 	g_autoptr(GHashTable) hashtable = NULL;
 	g_autoptr(GDir) dir = NULL;
@@ -8424,8 +8422,7 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 		GFileMonitor *monitor;
 		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *base = fu_path_from_kind(path_kinds[i]);
-		g_autofree gchar *fn = g_build_filename(base, "local.d", NULL);
+		g_autofree gchar *fn = fu_path_build(path_kinds[i], "local.d", NULL);
 
 		file = g_file_new_for_path(fn);
 		monitor = g_file_monitor_directory(file, G_FILE_MONITOR_NONE, NULL, &error_local);
@@ -8805,8 +8802,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		if (g_file_test(host_emulate, G_FILE_TEST_EXISTS)) {
 			fn = g_strdup(host_emulate);
 		} else {
-			g_autofree gchar *datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-			fn = g_build_filename(datadir, "host-emulate.d", host_emulate, NULL);
+			fn = fu_path_build(FU_PATH_KIND_DATADIR_PKG,
+					   "host-emulate.d",
+					   host_emulate,
+					   NULL);
 		}
 		if (!fu_engine_load_host_emulation(self, fn, error)) {
 			g_prefix_error_literal(error, "failed to load emulated host: ");
@@ -9197,7 +9196,6 @@ fu_engine_constructed(GObject *obj)
 	g_autofree gchar *keyring_path = NULL;
 	g_autofree gchar *pkidir_fw = NULL;
 	g_autofree gchar *pkidir_md = NULL;
-	g_autofree gchar *sysconfdir = NULL;
 
 	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
@@ -9283,10 +9281,9 @@ fu_engine_constructed(GObject *obj)
 	jcat_context_blob_kind_allow(self->jcat_context, JCAT_BLOB_KIND_GPG);
 	keyring_path = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	jcat_context_set_keyring_path(self->jcat_context, keyring_path);
-	sysconfdir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR);
-	pkidir_fw = g_build_filename(sysconfdir, "pki", "fwupd", NULL);
+	pkidir_fw = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "pki", "fwupd", NULL);
 	jcat_context_add_public_keys(self->jcat_context, pkidir_fw);
-	pkidir_md = g_build_filename(sysconfdir, "pki", "fwupd-metadata", NULL);
+	pkidir_md = fu_path_build(FU_PATH_KIND_SYSCONFDIR, "pki", "fwupd-metadata", NULL);
 	jcat_context_add_public_keys(self->jcat_context, pkidir_md);
 
 	/* add some runtime versions of things the daemon depends on */

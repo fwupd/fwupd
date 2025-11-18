@@ -452,11 +452,11 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 	if (!g_key_file_save_to_file(keyfile, filename, &error_local)) {
 		if (g_error_matches(error_local, G_FILE_ERROR, G_FILE_ERROR_PERM)) {
 			g_autofree gchar *basename = g_path_get_basename(filename);
-			g_autofree gchar *remotesdir_mut =
-			    fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 
-			filename_new =
-			    g_build_filename(remotesdir_mut, "remotes.d", basename, NULL);
+			filename_new = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG,
+						     "remotes.d",
+						     basename,
+						     NULL);
 			if (!fu_path_mkdir_parent(filename_new, error))
 				return FALSE;
 			g_info("falling back from %s to %s", filename, filename_new);
@@ -626,13 +626,11 @@ static gboolean
 fu_remote_list_load_metainfos(XbBuilder *builder, GError **error)
 {
 	const gchar *fn;
-	g_autofree gchar *datadir = NULL;
 	g_autofree gchar *metainfo_path = NULL;
 	g_autoptr(GDir) dir = NULL;
 
 	/* pkg metainfo dir */
-	datadir = fu_path_from_kind(FU_PATH_KIND_DATADIR_PKG);
-	metainfo_path = g_build_filename(datadir, "metainfo", NULL);
+	metainfo_path = fu_path_build(FU_PATH_KIND_DATADIR_PKG, "metainfo", NULL);
 	if (!g_file_test(metainfo_path, G_FILE_TEST_EXISTS))
 		return TRUE;
 
@@ -720,8 +718,8 @@ fu_remote_list_load(FuRemoteList *self, FuRemoteListLoadFlags flags, GError **er
 		if (xmlb == NULL)
 			return FALSE;
 	} else {
-		g_autofree gchar *cachedirpkg = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-		g_autofree gchar *xmlbfn = g_build_filename(cachedirpkg, "metainfo.xmlb", NULL);
+		g_autofree gchar *xmlbfn =
+		    fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "metainfo.xmlb", NULL);
 		xmlb = g_file_new_for_path(xmlbfn);
 	}
 	self->silo = xb_builder_ensure(builder, xmlb, compile_flags, NULL, error);

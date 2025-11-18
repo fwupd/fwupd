@@ -36,12 +36,11 @@ typedef enum {
 static gboolean
 fu_powerd_plugin_create_suspend_file(GError **error)
 {
-	g_autofree gchar *lockdir = NULL;
 	g_autofree gchar *inhibitsuspend_filename = NULL;
 	g_autofree gchar *getpid_str = NULL;
 
-	lockdir = fu_path_from_kind(FU_PATH_KIND_LOCKDIR);
-	inhibitsuspend_filename = g_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
+	inhibitsuspend_filename =
+	    fu_path_build(FU_PATH_KIND_LOCKDIR, "power_override", "fwupd.lock", NULL);
 	getpid_str = g_strdup_printf("%d", getpid());
 	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
 		g_prefix_error_literal(error, "lock file unable to be created: ");
