@@ -1110,6 +1110,21 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	}
 }
 
+static gboolean
+fu_context_is_hypervisor(void)
+{
+	const gchar *flags;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+
+	cpu_attrs = fu_cpu_get_attrs(NULL);
+	if (cpu_attrs == NULL)
+		return FALSE;
+	flags = g_hash_table_lookup(cpu_attrs, "flags");
+	if (flags == NULL)
+		return FALSE;
+	return g_strstr_len(flags, -1, "hypervisor") != NULL;
+}
+
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
@@ -1155,7 +1170,8 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-fde");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
 	/* required always */
 	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
@@ -1197,6 +1213,10 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_step_done(progress);
 
 	fu_context_detect_full_disk_encryption(self);
+	fu_progress_step_done(progress);
+
+	if (fu_context_is_hypervisor())
+		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_HYPERVISOR);
 	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);

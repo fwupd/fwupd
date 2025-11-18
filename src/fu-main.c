@@ -72,35 +72,6 @@ fu_main_memory_monitor_warning_cb(GMemoryMonitor *memory_monitor,
 		g_warning("failed to stop daemon, will wait: %s\n", error->message);
 }
 
-static gboolean
-fu_main_is_hypervisor(void)
-{
-	const gchar *flags;
-	g_autoptr(GHashTable) cpu_attrs = NULL;
-
-	cpu_attrs = fu_cpu_get_attrs(NULL);
-	if (cpu_attrs == NULL)
-		return FALSE;
-	flags = g_hash_table_lookup(cpu_attrs, "flags");
-	if (flags == NULL)
-		return FALSE;
-	return g_strstr_len(flags, -1, "hypervisor") != NULL;
-}
-
-static gboolean
-fu_main_is_container(void)
-{
-	g_autofree gchar *buf = NULL;
-	gsize bufsz = 0;
-	if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
-		return FALSE;
-	if (g_strstr_len(buf, (gssize)bufsz, "docker") != NULL)
-		return TRUE;
-	if (g_strstr_len(buf, (gssize)bufsz, "lxc") != NULL)
-		return TRUE;
-	return FALSE;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -149,15 +120,6 @@ main(int argc, char *argv[])
 	if (!g_option_context_parse(context, &argc, &argv, &error)) {
 		g_printerr("Failed to parse command line: %s\n", error->message);
 		return EXIT_FAILURE;
-	}
-
-	/* detect the machine kind */
-	if (fu_main_is_hypervisor()) {
-		fu_daemon_set_machine_kind(daemon, FU_DAEMON_MACHINE_KIND_VIRTUAL);
-	} else if (fu_main_is_container()) {
-		fu_daemon_set_machine_kind(daemon, FU_DAEMON_MACHINE_KIND_CONTAINER);
-	} else {
-		fu_daemon_set_machine_kind(daemon, FU_DAEMON_MACHINE_KIND_PHYSICAL);
 	}
 
 #ifdef FWUPD_DBUS_SOCKET_ADDRESS

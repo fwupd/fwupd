@@ -168,6 +168,14 @@ typedef enum {
 	 * Since: 2.0.17
 	 **/
 	FU_CONTEXT_FLAG_INSECURE_UEFI = 1u << 8,
+	/**
+	 * FU_CONTEXT_FLAG_IS_HYPERVISOR:
+	 *
+	 * The system is running in a virtualized environment
+	 *
+	 * Since: 2.0.18
+	 **/
+	FU_CONTEXT_FLAG_IS_HYPERVISOR = 1u << 9,
 
 	/**
 	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:

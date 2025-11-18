@@ -52,8 +52,11 @@ fu_bios_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
 	esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
 	if (!g_file_test(esrt_path, G_FILE_TEST_IS_DIR)) {
-		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);
-		fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		/* don't show the warning in a hypervisor as capsule updates are not expected */
+		if (!fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR)) {
+			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);
+			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		}
 		return TRUE;
 	}
 

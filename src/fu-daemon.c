@@ -41,7 +41,7 @@ fu_daemon_get_engine(FuDaemon *self)
 	return priv->engine;
 }
 
-void
+static void
 fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind)
 {
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
@@ -162,12 +162,28 @@ fu_daemon_check_syscall_filtering(GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_daemon_is_container(void)
+{
+	g_autofree gchar *buf = NULL;
+	gsize bufsz = 0;
+
+	if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
+		return FALSE;
+	if (g_strstr_len(buf, (gssize)bufsz, "docker") != NULL)
+		return TRUE;
+	if (g_strstr_len(buf, (gssize)bufsz, "lxc") != NULL)
+		return TRUE;
+	return FALSE;
+}
+
 gboolean
 fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 {
 	FuDaemonClass *klass = FU_DAEMON_GET_CLASS(self);
 	FuDaemonPrivate *priv = GET_PRIVATE(self);
 	FuEngine *engine = fu_daemon_get_engine(self);
+	FuContext *ctx = fu_engine_get_context(engine);
 	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
 	guint timer_max_ms;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
@@ -197,6 +213,14 @@ fu_daemon_setup(FuDaemon *self, const gchar *socket_address, GError **error)
 	/* proxy on */
 	if (!klass->setup(self, socket_address, progress, error))
 		return FALSE;
+
+	/* detect the machine kind from context */
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR))
+		fu_daemon_set_machine_kind(self, FU_DAEMON_MACHINE_KIND_VIRTUAL);
+	else if (fu_daemon_is_container())
+		fu_daemon_set_machine_kind(self, FU_DAEMON_MACHINE_KIND_CONTAINER);
+	else
+		fu_daemon_set_machine_kind(self, FU_DAEMON_MACHINE_KIND_PHYSICAL);
 
 	/* how did we do */
 	timer_max_ms = fu_config_get_value_u64(FU_CONFIG(fu_engine_get_config(engine)),
