@@ -31,36 +31,15 @@ fu_pci_bcr_plugin_to_string(FuPlugin *plugin, guint idt, GString *str)
 }
 
 static void
-fu_pci_bcr_plugin_set_updatable(FuPlugin *plugin, FuDevice *dev)
-{
-	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	if ((self->bcr & BCR_WPD) == 0 && (self->bcr & BCR_BLE) > 0) {
-		fu_device_inhibit(dev, "bcr-locked", "BIOS locked");
-	} else {
-		fu_device_uninhibit(dev, "bcr-locked");
-	}
-}
-
-static void
 fu_pci_bcr_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	if (g_strcmp0(fu_device_get_plugin(dev), "cpu") == 0 ||
-	    g_strcmp0(fu_device_get_plugin(dev), "flashrom") == 0) {
+	if (g_strcmp0(fu_device_get_plugin(dev), "cpu")) {
 		guint tmp = fu_device_get_metadata_integer(dev, "PciBcrAddr");
 		if (tmp != G_MAXUINT && self->bcr_addr != tmp) {
 			g_info("overriding BCR addr from 0x%02x to 0x%02x", self->bcr_addr, tmp);
 			self->bcr_addr = tmp;
 		}
-	}
-	if (g_strcmp0(fu_device_get_plugin(dev), "flashrom") == 0 &&
-	    fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
-		/* PCI\VEN_8086 added first */
-		if (self->has_device) {
-			fu_pci_bcr_plugin_set_updatable(plugin, dev);
-			return;
-		}
-		fu_plugin_cache_add(plugin, "main-system-firmware", dev);
 	}
 }
 
@@ -68,13 +47,10 @@ static void
 fu_pci_bcr_plugin_add_security_attr_bioswe(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
-	if (msf_device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
@@ -99,13 +75,10 @@ static void
 fu_pci_bcr_plugin_add_security_attr_ble(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_BLE);
-	if (msf_device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fu_security_attrs_append(attrs, attr);
 
@@ -129,13 +102,10 @@ static void
 fu_pci_bcr_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fu_plugin_security_attr_new(plugin, FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
-	if (msf_device != NULL)
-		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
 	fwupd_security_attr_set_result_success(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 	fu_security_attrs_append(attrs, attr);
 
@@ -162,7 +132,6 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 				       GError **error)
 {
 	FuPciBcrPlugin *self = FU_PCI_BCR_PLUGIN(plugin);
-	FuDevice *device_msf;
 	g_autofree gchar *device_file = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -193,11 +162,6 @@ fu_pci_bcr_plugin_backend_device_added(FuPlugin *plugin,
 		g_prefix_error_literal(error, "could not read BCR: ");
 		return FALSE;
 	}
-
-	/* main-system-firmware device added first, probably from flashrom */
-	device_msf = fu_plugin_cache_lookup(plugin, "main-system-firmware");
-	if (device_msf != NULL)
-		fu_pci_bcr_plugin_set_updatable(plugin, device_msf);
 
 	/* success */
 	self->has_device = TRUE;

@@ -128,11 +128,6 @@ option(
   description: 'Passim support',
 )
 option(
-  'plugin_flashrom',
-  type: 'feature',
-  description: 'flashrom support',
-)
-option(
   'plugin_modem_manager',
   type: 'feature',
   description: 'ModemManager support',

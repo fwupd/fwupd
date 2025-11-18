@@ -481,32 +481,6 @@
       <package variant="aarch64" />
     </distro>
   </dependency>
-  <dependency id="libflashrom-dev">
-    <distro id="arch">
-      <package variant="x86_64">flashrom</package>
-    </distro>
-    <distro id="fedora">
-      <package variant="x86_64">flashrom-devel</package>
-      <package variant="aarch64">flashrom-devel</package>
-    </distro>
-    <distro id="centos">
-      <package variant="x86_64">flashrom-devel</package>
-    </distro>
-    <distro id="debian">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control>
-        <exclusive>ia64</exclusive>
-      </control>
-      <package variant="x86_64" />
-      <package variant="aarch64" />
-    </distro>
-  </dependency>
   <dependency id="gettext">
     <distro id="centos">
       <package variant="x86_64" />
