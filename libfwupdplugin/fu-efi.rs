@@ -444,3 +444,10 @@ struct FuStructShimHiveItem {
     // key string, no trailing NUL
     // value string, no trailing NUL
 }
+
+#[repr(u32le)]
+enum FuEfiCapsuleHeaderFlags {
+    PersistAcrossReset  = 1 << 16,
+    PopulateSystemTable = 1 << 17,
+    InitiateReset       = 1 << 18,
+}

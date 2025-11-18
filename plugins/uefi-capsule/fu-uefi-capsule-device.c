@@ -240,6 +240,23 @@ fu_uefi_capsule_device_get_capsule_flags(FuUefiCapsuleDevice *self)
 	return priv->capsule_flags;
 }
 
+static void
+fu_uefi_capsule_device_set_capsule_flags(FuUefiCapsuleDevice *self, guint32 capsule_flags)
+{
+	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+
+#ifdef __x86_64__
+	if ((capsule_flags & (FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET |
+			      FU_EFI_CAPSULE_HEADER_FLAG_INITIATE_RESET)) == 0) {
+		capsule_flags |= FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET;
+		capsule_flags |= FU_EFI_CAPSULE_HEADER_FLAG_INITIATE_RESET;
+		g_debug("adding PersistAcrossReset and InitiateReset as missing in ESRT");
+	}
+#endif
+
+	priv->capsule_flags = capsule_flags;
+}
+
 const gchar *
 fu_uefi_capsule_device_get_guid(FuUefiCapsuleDevice *self)
 {
@@ -724,7 +741,7 @@ fu_uefi_capsule_device_set_property(GObject *object,
 		priv->kind = g_value_get_uint(value);
 		break;
 	case PROP_CAPSULE_FLAGS:
-		priv->capsule_flags = g_value_get_uint(value);
+		fu_uefi_capsule_device_set_capsule_flags(self, g_value_get_uint(value));
 		break;
 	case PROP_FW_VERSION:
 		priv->fw_version = g_value_get_uint(value);

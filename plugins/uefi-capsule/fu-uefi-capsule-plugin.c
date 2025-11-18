@@ -402,7 +402,7 @@ fu_uefi_capsule_plugin_write_splash_data(FuUefiCapsulePlugin *self,
 		return FALSE;
 
 	fu_struct_efi_capsule_header_set_flags(st_cap,
-					       EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET);
+					       FU_EFI_CAPSULE_HEADER_FLAG_PERSIST_ACROSS_RESET);
 	if (!fwupd_guid_from_string(FU_EFIVARS_GUID_UX_CAPSULE,
 				    &guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,

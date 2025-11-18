@@ -350,7 +350,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev1), ==, 65586);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev1), ==, 65582);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev1), ==, 18472960);
-	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev1), ==, 0xfe);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev1) & 0xFF, ==, 0xFE);
 	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev1),
 			==,
 			FU_UEFI_CAPSULE_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
@@ -367,7 +367,7 @@ fu_uefi_plugin_no_coalesce_func(void)
 	g_assert_cmpint(fu_uefi_capsule_device_get_version(dev2), ==, 3090287969);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_lowest(dev2), ==, 1);
 	g_assert_cmpint(fu_uefi_capsule_device_get_version_error(dev2), ==, 0);
-	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev2), ==, 32784);
+	g_assert_cmpint(fu_uefi_capsule_device_get_capsule_flags(dev2) & 0xFF, ==, 0x10);
 	g_assert_cmpint(fu_uefi_capsule_device_get_status(dev2),
 			==,
 			FU_UEFI_CAPSULE_DEVICE_STATUS_SUCCESS);
