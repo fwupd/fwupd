@@ -1307,11 +1307,13 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
+	g_autoptr(GInputStream) stream = g_memory_input_stream_new();
 	const gchar *nolocker[] = {
 	    "FuPciPspDevice",
 	    "FuSynapticsRmiPs2Device",
@@ -1360,6 +1362,22 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
 		if (locker != NULL)
 			g_debug("did ->probe() and ->setup()!");
+	}
+
+	/* ->prepare_firmware() */
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress_tmp,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      NULL);
+	if (firmware != NULL) {
+		if (fu_device_write_firmware(device,
+					     firmware,
+					     progress_tmp,
+					     FWUPD_INSTALL_FLAG_FORCE,
+					     NULL)) {
+			g_debug("did ->write_firmware()!");
+		}
 	}
 }
 
