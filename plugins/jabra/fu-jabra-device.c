@@ -48,14 +48,21 @@ fu_jabra_device_prepare(FuDevice *device,
 			GError **error)
 {
 	FuJabraDevice *self = FU_JABRA_DEVICE(device);
-	gsize magiclen = strlen(self->magic);
+	gsize magiclen;
 	guint8 adr = 0x00;
 	guint8 rep = 0x00;
 	guint8 iface_hid;
 	guint8 buf[33] = {0x00};
 	g_autoptr(GError) error_local = NULL;
 
+	/* sanity check */
+	if (self->magic == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no magic");
+		return FALSE;
+	}
+
 	/* parse string and create magic packet */
+	magiclen = strlen(self->magic);
 	if (!fu_firmware_strparse_uint8_safe(self->magic, magiclen, 0, &rep, error))
 		return FALSE;
 	if (!fu_firmware_strparse_uint8_safe(self->magic, magiclen, 2, &adr, error))

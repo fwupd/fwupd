@@ -495,6 +495,12 @@ fu_uefi_capsule_device_prepare(FuDevice *device,
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
 
+	/* sanity check */
+	if (priv->esp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP");
+		return FALSE;
+	}
+
 	/* mount if required */
 	priv->esp_locker = fu_volume_locker_new(priv->esp, error);
 	if (priv->esp_locker == NULL)
@@ -511,6 +517,12 @@ fu_uefi_capsule_device_cleanup(FuDevice *device,
 {
 	FuUefiCapsuleDevice *self = FU_UEFI_CAPSULE_DEVICE(device);
 	FuUefiCapsuleDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* sanity check */
+	if (priv->esp_locker == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no ESP locker");
+		return FALSE;
+	}
 
 	/* unmount ESP if we opened it */
 	if (!fu_volume_locker_close(priv->esp_locker, error))
