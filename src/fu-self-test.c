@@ -189,6 +189,12 @@ fu_util_func(void)
 			break;
 		g_assert_nonnull(fu_util_release_flag_to_string(i));
 	}
+	for (FwupdRequestFlags i = 1; i < G_MAXUINT64; i <<= 1) {
+		tmp = fwupd_request_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_nonnull(fu_util_request_flag_to_string(i));
+	}
 	for (FwupdPluginFlags i = 1; i < G_MAXUINT64; i <<= 1) {
 		g_autofree gchar *str = NULL;
 		if (i == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE || i == FWUPD_PLUGIN_FLAG_USER_WARNING)
