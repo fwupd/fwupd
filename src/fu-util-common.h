@@ -116,6 +116,8 @@ gchar *
 fu_util_plugin_flag_to_string(FwupdPluginFlags plugin_flag);
 const gchar *
 fu_util_release_flag_to_string(FwupdReleaseFlags release_flag);
+const gchar *
+fu_util_request_flag_to_string(FwupdRequestFlags request_flag);
 gint
 fu_util_plugin_name_sort_cb(FwupdPlugin **item1, FwupdPlugin **item2);
 gchar *

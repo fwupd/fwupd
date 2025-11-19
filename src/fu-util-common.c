@@ -1169,8 +1169,8 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	return NULL;
 }
 
-static gchar *
-fu_util_request_flag_to_string(guint64 request_flag)
+const gchar *
+fu_util_request_flag_to_string(FwupdRequestFlags request_flag)
 {
 	if (request_flag == FWUPD_REQUEST_FLAG_NONE)
 		return NULL;

@@ -194,7 +194,7 @@ typedef enum {
 	 * Since: 1.8.6
 	 */
 	FWUPD_REQUEST_FLAG_UNKNOWN = G_MAXUINT64,
-} FwupdRequestFlags;
+} G_GNUC_FLAG_ENUM FwupdRequestFlags;
 
 const gchar *
 fwupd_request_kind_to_string(FwupdRequestKind kind);
