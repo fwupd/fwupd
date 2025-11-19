@@ -1775,7 +1775,7 @@ fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 	return _("Unknown");
 }
 
-static const gchar *
+const gchar *
 fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 {
 	if (release_flag == FWUPD_RELEASE_FLAG_NONE)

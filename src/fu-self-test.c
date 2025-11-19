@@ -183,6 +183,12 @@ fu_util_func(void)
 		str = fu_util_device_problem_to_string(client, device, i);
 		g_assert_nonnull(str);
 	}
+	for (FwupdReleaseFlags i = 1; i < G_MAXUINT64; i <<= 1) {
+		tmp = fwupd_release_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_nonnull(fu_util_release_flag_to_string(i));
+	}
 }
 
 static void
