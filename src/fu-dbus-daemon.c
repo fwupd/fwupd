@@ -1163,40 +1163,38 @@ static gboolean
 fu_dbus_daemon_hsi_supported(FuDbusDaemon *self, GError **error)
 {
 #ifdef HAVE_HSI
-	g_autofree gchar *xen_privileged_fn = NULL;
+	FuEngine *engine = fu_daemon_get_engine(FU_DAEMON(self));
+	FuContext *ctx = fu_engine_get_context(engine);
 
 	if (g_getenv("UMOCKDEV_DIR") != NULL)
 		return TRUE;
-	if (fu_daemon_get_machine_kind(FU_DAEMON(self)) == FU_DAEMON_MACHINE_KIND_PHYSICAL)
-		return TRUE;
 
-	/* privileged xen can access most hardware */
-	xen_privileged_fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
-					  "hypervisor",
-					  "start_flags",
-					  "privileged",
-					  NULL);
-	if (g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
-		g_autofree gchar *contents = NULL;
-
-		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
-			if (g_strcmp0(contents, "1") == 0)
-				return TRUE;
-		}
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_CONTAINER)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for container");
+		return FALSE;
+	}
+	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR) &&
+	    !fu_context_has_flag(ctx, FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "HSI unavailable for unprivileged hypervisor");
+		return FALSE;
 	}
 
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "HSI unavailable for hypervisor");
+	/* success */
+	return TRUE;
 #else
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "HSI support not enabled");
 
-#endif
 	return FALSE;
+#endif
 }
 
 static void
