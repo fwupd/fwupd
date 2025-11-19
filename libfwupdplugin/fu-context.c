@@ -1107,6 +1107,65 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	}
 }
 
+static void
+fu_context_detect_container(FuContext *self)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+
+	if (!g_file_get_contents("/proc/1/cgroup", &buf, &bufsz, NULL))
+		return;
+	if (g_strstr_len(buf, (gssize)bufsz, "docker") != NULL) {
+		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_CONTAINER);
+		return;
+	}
+	if (g_strstr_len(buf, (gssize)bufsz, "lxc") != NULL) {
+		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_CONTAINER);
+		return;
+	}
+}
+
+static void
+fu_context_detect_hypervisor_privileged(FuContext *self)
+{
+	g_autofree gchar *xen_privileged_fn = NULL;
+
+	/* privileged xen can access most hardware */
+	xen_privileged_fn = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+					  "hypervisor",
+					  "start_flags",
+					  "privileged",
+					  NULL);
+	if (!g_file_test(xen_privileged_fn, G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *contents = NULL;
+		if (g_file_get_contents(xen_privileged_fn, &contents, NULL, NULL)) {
+			if (g_strcmp0(contents, "1") == 0) {
+				fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_HYPERVISOR_PRIVILEGED);
+				return;
+			}
+		}
+	}
+}
+
+static void
+fu_context_detect_hypervisor(FuContext *self)
+{
+	const gchar *flags;
+	g_autoptr(GHashTable) cpu_attrs = NULL;
+
+	cpu_attrs = fu_cpu_get_attrs(NULL);
+	if (cpu_attrs == NULL)
+		return;
+	flags = g_hash_table_lookup(cpu_attrs, "flags");
+	if (flags == NULL)
+		return;
+	if (g_strstr_len(flags, -1, "hypervisor") != NULL) {
+		fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_HYPERVISOR);
+		fu_context_detect_hypervisor_privileged(self);
+		return;
+	}
+}
+
 /**
  * fu_context_load_hwinfo:
  * @self: a #FuContext
@@ -1129,6 +1188,7 @@ fu_context_load_hwinfo(FuContext *self,
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
+	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
 	struct {
@@ -1152,7 +1212,8 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "hwids-setup");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 3, "set-flags");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-fde");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "detect-hypervisor-container");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 93, "reload-bios-settings");
 
 	/* required always */
 	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
@@ -1194,6 +1255,28 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_step_done(progress);
 
 	fu_context_detect_full_disk_encryption(self);
+	fu_progress_step_done(progress);
+
+	/* allow overriding for development */
+	if (machine_kind != NULL) {
+		if (g_strcmp0(machine_kind, "physical") == 0) {
+			/* nothing to do */
+		} else if (g_strcmp0(machine_kind, "container") == 0) {
+			fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_CONTAINER);
+		} else if (g_strcmp0(machine_kind, "virtual") == 0) {
+			fu_context_add_flag(self, FU_CONTEXT_FLAG_IS_HYPERVISOR);
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "invalid machine kind specified: %s",
+				    machine_kind);
+			return FALSE;
+		}
+	} else {
+		fu_context_detect_hypervisor(self);
+		fu_context_detect_container(self);
+	}
 	fu_progress_step_done(progress);
 
 	fu_context_add_udev_subsystem(self, "firmware-attributes", NULL);

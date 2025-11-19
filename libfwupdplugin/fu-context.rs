@@ -1,6 +1,7 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#[derive(Bitfield)]
 enum FuContextFlags {
     None                    = 0,
     SaveEvents              = 1 << 0, // so that they can be replayed to emulate devices
@@ -12,6 +13,9 @@ enum FuContextFlags {
     IgnoreEfivarsFreeSpace  = 1 << 6, // ignore the free space requirement for db, dbx, etc
     NoIdleSources           = 1 << 7,
     InsecureUefi            = 1 << 8,
+    IsHypervisor            = 1 << 9,
+    IsHypervisorPrivileged  = 1 << 10, // privileged xen can access most hardware
+    IsContainer             = 1 << 11,
 }
 
 enum FuContextHwidFlags {
