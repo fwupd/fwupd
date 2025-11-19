@@ -7653,6 +7653,41 @@ fu_engine_report_metadata_func(gconstpointer user_data)
 }
 
 static void
+fu_engine_error_array_func(void)
+{
+	g_autoptr(GPtrArray) arr1 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr2 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr3 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr4 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GError) error1 = NULL;
+	g_autoptr(GError) error2 = NULL;
+	g_autoptr(GError) error3 = NULL;
+	g_autoptr(GError) error4 = NULL;
+
+	/* fallback */
+	error1 = fu_engine_error_array_get_best(arr1);
+	g_assert_error(error1, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+
+	/* get the most important single error */
+	g_ptr_array_add(arr2, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, ""));
+	error2 = fu_engine_error_array_get_best(arr2);
+	g_assert_error(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+
+	/* version same */
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_SAME, ""));
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_SAME, ""));
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, ""));
+	error3 = fu_engine_error_array_get_best(arr3);
+	g_assert_error(error3, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+
+	/* already have newer versions */
+	g_ptr_array_add(arr4, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_NEWER, ""));
+	g_ptr_array_add(arr4, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_NEWER, ""));
+	error4 = fu_engine_error_array_get_best(arr4);
+	g_assert_error(error4, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+}
+
+static void
 fu_engine_machine_hash_func(void)
 {
 	gsize sz = 0;
@@ -8204,6 +8239,7 @@ main(int argc, char **argv)
 			     self,
 			     fu_device_list_replug_user_func);
 	g_test_add_func("/fwupd/engine{machine-hash}", fu_engine_machine_hash_func);
+	g_test_add_func("/fwupd/engine{error-array}", fu_engine_error_array_func);
 	g_test_add_data_func("/fwupd/engine{report-metadata}",
 			     self,
 			     fu_engine_report_metadata_func);
