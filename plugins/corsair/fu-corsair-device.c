@@ -244,14 +244,14 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	if (self->subdevice_id != NULL &&
 	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		gboolean subdevice_added = FALSE;
-		g_autoptr(GError) local_error = NULL;
+		g_autoptr(GError) error_local = NULL;
 
 		/* Give some time to a subdevice to get connected to the receiver.
 		 * Without this delay a subdevice may be not present even if it is
 		 * turned on. */
 		fu_device_sleep(device, CORSAIR_SUBDEVICE_FIRST_POLL_DELAY);
-		if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, &local_error)) {
-			g_warning("error polling subdevice: %s", local_error->message);
+		if (!fu_corsair_device_poll_subdevice(self, &subdevice_added, &error_local)) {
+			g_warning("error polling subdevice: %s", error_local->message);
 		} else {
 			/* start polling if a subdevice was not added */
 			if (!subdevice_added)
