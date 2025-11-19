@@ -38,6 +38,7 @@
 #include "fu-remote.h"
 #include "fu-security-attrs-private.h"
 #include "fu-usb-backend.h"
+#include "fu-util-common.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -165,6 +166,23 @@ fu_client_list_func(void)
 	/* emulate disconnect */
 	fu_client_remove_flag(client, FU_CLIENT_FLAG_ACTIVE);
 	g_assert_false(fu_client_has_flag(client, FU_CLIENT_FLAG_ACTIVE));
+}
+
+static void
+fu_util_func(void)
+{
+	const gchar *tmp;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(FwupdDevice) device = fwupd_device_new();
+
+	for (FwupdDeviceProblem i = 1; i < G_MAXUINT64; i <<= 1) {
+		g_autofree gchar *str = NULL;
+		tmp = fwupd_device_problem_to_string(i);
+		if (tmp == NULL)
+			break;
+		str = fu_util_device_problem_to_string(client, device, i);
+		g_assert_nonnull(str);
+	}
 }
 
 static void
@@ -8129,6 +8147,7 @@ main(int argc, char **argv)
 	if (g_test_slow())
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	g_test_add_func("/fwupd/idle", fu_idle_func);
+	g_test_add_func("/fwupd/util", fu_util_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
 	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
