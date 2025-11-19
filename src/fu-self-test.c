@@ -7601,6 +7601,21 @@ fu_config_migrate_1_7_func(void)
 }
 
 static void
+fu_engine_integrity_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) integrity = NULL;
+
+	integrity = fu_engine_integrity_new(self->ctx, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(integrity);
+	str = fu_engine_integrity_to_string(integrity);
+	g_debug("%s", str);
+}
+
+static void
 fu_engine_report_metadata_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -8192,6 +8207,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{report-metadata}",
 			     self,
 			     fu_engine_report_metadata_func);
+	g_test_add_data_func("/fwupd/engine{integrity}", self, fu_engine_integrity_func);
 	g_test_add_data_func("/fwupd/engine{require-hwid}", self, fu_engine_require_hwid_func);
 	g_test_add_data_func("/fwupd/engine{requires-reboot}",
 			     self,
