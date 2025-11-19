@@ -483,7 +483,12 @@ fu_devlink_netlink_gen_socket_open(FuDevice *device, GError **error)
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_EMULATED)) {
 			/* skip actual socket operations if emulated */
 			/* create dummy pipe for emulation */
-			if (!g_unix_open_pipe(nlg->pipe_fds, O_CLOEXEC, error)) {
+#if GLIB_CHECK_VERSION(2, 77, 0)
+			int flags = O_CLOEXEC;
+#else
+			int flags = FD_CLOEXEC;
+#endif
+			if (!g_unix_open_pipe(nlg->pipe_fds, flags, error)) {
 				g_prefix_error_literal(error,
 						       "failed to create pipe for emulation: ");
 				return NULL;
