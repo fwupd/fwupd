@@ -1005,19 +1005,21 @@ fu_uefi_update_info_func(void)
 static void
 fu_uefi_shim_detection_func(void)
 {
-	g_autofree gchar *shim_path = NULL;
 	g_autofree gchar *tmpdir = NULL;
 	g_autofree gchar *os_dir = NULL;
 	g_autofree gchar *systemd_dir = NULL;
+	g_autoptr(GError) error = NULL;
+#if defined(__x86_64__)
+	g_autofree gchar *shim_path = NULL;
 	g_autofree gchar *os_shim_file = NULL;
 	g_autofree gchar *os_id = NULL;
-	g_autoptr(GError) error = NULL;
 
 	/* get the current OS ID */
 	os_id = g_get_os_info(G_OS_INFO_KEY_ID);
 	if (os_id == NULL) {
 		os_id = g_strdup("unknown");
 	}
+#endif
 
 	/* create a temporary ESP structure that matches the issue description */
 	tmpdir = g_dir_make_tmp("fwupd-uefi-shim-test-XXXXXX", &error);
@@ -1028,12 +1030,11 @@ fu_uefi_shim_detection_func(void)
 	systemd_dir = g_build_filename(tmpdir, "EFI", "systemd", NULL);
 	g_assert_cmpint(g_mkdir_with_parents(systemd_dir, 0755), ==, 0);
 
+#if defined(__x86_64__)
 	/* create EFI/{OS_ID} directory with shim (whatever OS we're running on) */
 	os_dir = g_build_filename(tmpdir, "EFI", os_id, NULL);
 	g_assert_cmpint(g_mkdir_with_parents(os_dir, 0755), ==, 0);
 
-	/* test on x64 architecture - if it's not x64, skip the test */
-#if defined(__x86_64__)
 	/* create shimx64.efi in os directory */
 	os_shim_file = g_build_filename(os_dir, "shimx64.efi", NULL);
 	g_assert_true(g_file_set_contents(os_shim_file, "fake shim", -1, &error));
@@ -1064,11 +1065,13 @@ fu_uefi_shim_detection_func(void)
 static void
 fu_uefi_shim_detection_systemd_func(void)
 {
-	g_autofree gchar *shim_path = NULL;
 	g_autofree gchar *tmpdir = NULL;
 	g_autofree gchar *systemd_dir = NULL;
-	g_autofree gchar *systemd_shim_file = NULL;
 	g_autoptr(GError) error = NULL;
+#if defined(__x86_64__)
+	g_autofree gchar *shim_path = NULL;
+	g_autofree gchar *systemd_shim_file = NULL;
+#endif
 
 	/* create a temporary ESP structure where shim is in systemd directory */
 	tmpdir = g_dir_make_tmp("fwupd-uefi-shim-systemd-test-XXXXXX", &error);
@@ -1079,7 +1082,6 @@ fu_uefi_shim_detection_systemd_func(void)
 	systemd_dir = g_build_filename(tmpdir, "EFI", "systemd", NULL);
 	g_assert_cmpint(g_mkdir_with_parents(systemd_dir, 0755), ==, 0);
 
-	/* test on x64 architecture - if it's not x64, skip the test */
 #if defined(__x86_64__)
 	/* create shimx64.efi in systemd directory */
 	systemd_shim_file = g_build_filename(systemd_dir, "shimx64.efi", NULL);

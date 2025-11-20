@@ -10,8 +10,6 @@
 #include "fu-uefi-capsule-device.h"
 #include "fu-uefi-common.h"
 
-static gboolean fu_uefi_get_os_paths(gchar **os_release_id_out, gchar **id_like_out);
-
 static const gchar *
 fu_uefi_bootmgr_get_suffix(GError **error)
 {
@@ -108,30 +106,27 @@ fu_uefi_find_esp_path_for_shim(const gchar *esp_base, const gchar *filename)
 {
 	g_autofree gchar *os_release_id = NULL;
 	g_autofree gchar *id_like = NULL;
-	const gchar *search_paths[] = {NULL,
-				       NULL,
-				       NULL,
-				       NULL}; /* systemd, os_id, id_like paths, NULL terminator */
-	guint search_idx = 0;
+	g_autoptr(GPtrArray) search_paths = g_ptr_array_new_with_free_func(NULL);
 
 	/* first try systemd directory */
-	search_paths[search_idx++] = "systemd";
+	g_ptr_array_add(search_paths, (gpointer) "systemd");
 
 	/* get OS identification info */
 	fu_uefi_get_os_paths(&os_release_id, &id_like);
 	if (os_release_id != NULL)
-		search_paths[search_idx++] = os_release_id;
+		g_ptr_array_add(search_paths, os_release_id);
 
 	if (id_like != NULL) {
 		/* only check the first ID_LIKE entry for simplicity */
 		g_auto(GStrv) split = g_strsplit(id_like, " ", -1);
 		if (split[0] != NULL)
-			search_paths[search_idx++] = split[0];
+			g_ptr_array_add(search_paths, split[0]);
 	}
 
 	/* search in each directory for the shim file */
-	for (guint i = 0; search_paths[i] != NULL; i++) {
-		g_autofree gchar *esp_path = g_build_filename("EFI", search_paths[i], NULL);
+	for (guint i = 0; i < search_paths->len; i++) {
+		const gchar *search_path = g_ptr_array_index(search_paths, i);
+		g_autofree gchar *esp_path = g_build_filename("EFI", search_path, NULL);
 		g_autofree gchar *full_dir_path = g_build_filename(esp_base, esp_path, NULL);
 		g_autofree gchar *full_file_path = g_build_filename(full_dir_path, filename, NULL);
 
@@ -160,11 +155,11 @@ fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error
 	if (g_strcmp0(cmd, "shim") == 0) {
 		base = fu_uefi_find_esp_path_for_shim(esp_path, filename);
 		if (base != NULL)
-			return g_strdup_printf("%s/%s", base, filename);
+			return g_build_filename(base, filename, NULL);
 	}
 
 	base = fu_uefi_get_esp_path_for_os(esp_path);
-	return g_strdup_printf("%s/%s", base, filename);
+	return g_build_filename(base, filename, NULL);
 }
 
 /**
