@@ -1005,6 +1005,7 @@ fu_uefi_update_info_func(void)
 static void
 fu_uefi_shim_detection_func(void)
 {
+	gboolean ret;
 	const gchar *suffix;
 	g_autofree gchar *shim_filename = NULL;
 	g_autofree gchar *shim_path = NULL;
@@ -1015,14 +1016,11 @@ fu_uefi_shim_detection_func(void)
 	g_autofree gchar *os_id = NULL;
 	g_autofree gchar *expected_suffix = NULL;
 	g_autoptr(GError) error = NULL;
-	gboolean ret;
 
 	/* get the arch suffix dynamically */
 	suffix = fu_uefi_bootmgr_get_suffix(&error);
-	if (suffix == NULL) {
-		g_test_skip("cannot determine architecture suffix for test");
-		return;
-	}
+	g_assert_no_error(error);
+	g_assert_nonnull(suffix);
 
 	/* build the shim filename */
 	shim_filename = g_strdup_printf("shim%s.efi", suffix);
@@ -1071,6 +1069,7 @@ fu_uefi_shim_detection_func(void)
 static void
 fu_uefi_shim_detection_systemd_func(void)
 {
+	gboolean ret;
 	const gchar *suffix;
 	g_autofree gchar *shim_filename = NULL;
 	g_autofree gchar *shim_path = NULL;
@@ -1079,14 +1078,11 @@ fu_uefi_shim_detection_systemd_func(void)
 	g_autofree gchar *systemd_shim_file = NULL;
 	g_autofree gchar *expected_path = NULL;
 	g_autoptr(GError) error = NULL;
-	gboolean ret;
 
 	/* get the arch suffix dynamically */
 	suffix = fu_uefi_bootmgr_get_suffix(&error);
-	if (suffix == NULL) {
-		g_test_skip("cannot determine architecture suffix for test");
-		return;
-	}
+	g_assert_no_error(error);
+	g_assert_nonnull(suffix);
 
 	/* build the shim filename */
 	shim_filename = g_strdup_printf("shim%s.efi", suffix);
