@@ -23,16 +23,15 @@ G_DEFINE_TYPE(FuSynapticsRmiPs2Device, fu_synaptics_rmi_ps2_device, FU_TYPE_SYNA
 static gboolean
 fu_synaptics_rmi_ps2_device_read_ack(FuSynapticsRmiPs2Device *self, guint8 *pbuf, GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	for (guint i = 0; i < 60; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_io_channel_read_raw(io_channel,
-					    pbuf,
-					    0x1,
-					    NULL,
-					    10,
-					    FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					    &error_local)) {
+		if (!fu_udev_device_read(FU_UDEV_DEVICE(self),
+					 pbuf,
+					 0x1,
+					 NULL,
+					 10,
+					 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+					 &error_local)) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_TIMED_OUT)) {
 				g_warning("read timed out: %u", i);
 				fu_device_sleep(FU_DEVICE(self), 1); /* ms */
@@ -54,15 +53,14 @@ fu_synaptics_rmi_ps2_device_read_byte(FuSynapticsRmiPs2Device *self,
 				      guint timeout,
 				      GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	g_return_val_if_fail(timeout > 0, FALSE);
-	return fu_io_channel_read_raw(io_channel,
-				      pbuf,
-				      0x1,
-				      NULL,
-				      timeout,
-				      FU_IO_CHANNEL_FLAG_NONE,
-				      error);
+	return fu_udev_device_read(FU_UDEV_DEVICE(self),
+				   pbuf,
+				   0x1,
+				   NULL,
+				   timeout,
+				   FU_IO_CHANNEL_FLAG_NONE,
+				   error);
 }
 
 /* write a single byte to the touchpad and the read the acknowledge */
@@ -73,20 +71,19 @@ fu_synaptics_rmi_ps2_device_write_byte(FuSynapticsRmiPs2Device *self,
 				       FuSynapticsRmiDeviceFlags flags,
 				       GError **error)
 {
-	FuIOChannel *io_channel = fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self));
 	gboolean do_write = TRUE;
 	g_return_val_if_fail(timeout > 0, FALSE);
 	for (guint i = 0;; i++) {
 		guint8 res = 0;
 		g_autoptr(GError) error_local = NULL;
 		if (do_write) {
-			if (!fu_io_channel_write_raw(io_channel,
-						     &buf,
-						     sizeof(buf),
-						     timeout,
-						     FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
-							 FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-						     error))
+			if (!fu_udev_device_write(FU_UDEV_DEVICE(self),
+						  &buf,
+						  sizeof(buf),
+						  timeout,
+						  FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
+						      FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
+						  error))
 				return FALSE;
 		}
 		do_write = FALSE;
