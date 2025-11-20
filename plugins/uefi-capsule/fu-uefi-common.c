@@ -155,11 +155,11 @@ fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error
 	if (g_strcmp0(cmd, "shim") == 0) {
 		base = fu_uefi_find_esp_path_for_shim(esp_path, filename);
 		if (base != NULL)
-			return g_build_filename(base, filename, NULL);
+			return g_build_path("/", base, filename, NULL);
 	}
 
 	base = fu_uefi_get_esp_path_for_os(esp_path);
-	return g_build_filename(base, filename, NULL);
+	return g_build_path("/", base, filename, NULL);
 }
 
 /**
