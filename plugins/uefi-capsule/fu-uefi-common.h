@@ -21,6 +21,8 @@
 
 gchar *
 fu_uefi_get_esp_app_path(const gchar *esp_path, const gchar *cmd, GError **error);
+const gchar *
+fu_uefi_bootmgr_get_suffix(GError **error);
 gchar *
 fu_uefi_get_built_app_path(FuEfivars *efivars, const gchar *binary, GError **error);
 gboolean

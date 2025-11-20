@@ -1015,34 +1015,17 @@ fu_uefi_shim_detection_func(void)
 	g_autofree gchar *os_id = NULL;
 	g_autofree gchar *expected_suffix = NULL;
 	g_autoptr(GError) error = NULL;
+	gboolean ret;
 
 	/* get the arch suffix dynamically */
-	suffix = fu_uefi_get_esp_app_path(NULL, "shim", &error);
+	suffix = fu_uefi_bootmgr_get_suffix(&error);
 	if (suffix == NULL) {
 		g_test_skip("cannot determine architecture suffix for test");
 		return;
 	}
-	g_clear_error(&error);
 
-	/* extract just the suffix part (e.g., "x64" from any path returned) */
-	shim_filename = g_strdup_printf("shim%s.efi",
-#if defined(__x86_64__)
-					"x64"
-#elif defined(__aarch64__)
-					"aa64"
-#elif defined(__loongarch_lp64)
-					"loongarch64"
-#elif (defined(__riscv) && __riscv_xlen == 64)
-					"riscv64"
-#elif defined(__i386__) || defined(__i686__)
-					"ia32"
-#elif defined(__arm__)
-					"arm"
-#else
-					""
-#endif
-	);
-
+	/* build the shim filename */
+	shim_filename = g_strdup_printf("shim%s.efi", suffix);
 	expected_suffix = g_strdup_printf("/%s", shim_filename);
 
 	/* get the current OS ID */
@@ -1080,16 +1063,15 @@ fu_uefi_shim_detection_func(void)
 	g_assert_false(g_str_has_prefix(shim_path, "EFI/systemd/"));
 
 	/* cleanup */
-	{
-		gboolean ret = fu_path_rmtree(tmpdir, &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
-	}
+	ret = fu_path_rmtree(tmpdir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
 fu_uefi_shim_detection_systemd_func(void)
 {
+	const gchar *suffix;
 	g_autofree gchar *shim_filename = NULL;
 	g_autofree gchar *shim_path = NULL;
 	g_autofree gchar *tmpdir = NULL;
@@ -1097,30 +1079,17 @@ fu_uefi_shim_detection_systemd_func(void)
 	g_autofree gchar *systemd_shim_file = NULL;
 	g_autofree gchar *expected_path = NULL;
 	g_autoptr(GError) error = NULL;
+	gboolean ret;
 
 	/* get the arch suffix dynamically */
-	shim_filename = g_strdup_printf("shim%s.efi",
-#if defined(__x86_64__)
-					"x64"
-#elif defined(__aarch64__)
-					"aa64"
-#elif defined(__loongarch_lp64)
-					"loongarch64"
-#elif (defined(__riscv) && __riscv_xlen == 64)
-					"riscv64"
-#elif defined(__i386__) || defined(__i686__)
-					"ia32"
-#elif defined(__arm__)
-					"arm"
-#else
-					""
-#endif
-	);
-
-	if (g_strcmp0(shim_filename, "shim.efi") == 0) {
+	suffix = fu_uefi_bootmgr_get_suffix(&error);
+	if (suffix == NULL) {
 		g_test_skip("cannot determine architecture suffix for test");
 		return;
 	}
+
+	/* build the shim filename */
+	shim_filename = g_strdup_printf("shim%s.efi", suffix);
 
 	/* create a temporary ESP structure where shim is in systemd directory */
 	tmpdir = g_dir_make_tmp("fwupd-uefi-shim-systemd-test-XXXXXX", &error);
@@ -1146,11 +1115,9 @@ fu_uefi_shim_detection_systemd_func(void)
 	g_assert_cmpstr(shim_path, ==, expected_path);
 
 	/* cleanup */
-	{
-		gboolean ret = fu_path_rmtree(tmpdir, &error);
-		g_assert_no_error(error);
-		g_assert_true(ret);
-	}
+	ret = fu_path_rmtree(tmpdir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 int
