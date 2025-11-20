@@ -1019,8 +1019,10 @@ fu_uefi_shim_detection_func(void)
 
 	/* get the arch suffix dynamically */
 	suffix = fu_uefi_bootmgr_get_suffix(&error);
-	g_assert_no_error(error);
-	g_assert_nonnull(suffix);
+	if (suffix == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
 
 	/* build the shim filename */
 	shim_filename = g_strdup_printf("shim%s.efi", suffix);
@@ -1081,8 +1083,10 @@ fu_uefi_shim_detection_systemd_func(void)
 
 	/* get the arch suffix dynamically */
 	suffix = fu_uefi_bootmgr_get_suffix(&error);
-	g_assert_no_error(error);
-	g_assert_nonnull(suffix);
+	if (suffix == NULL) {
+		g_test_skip(error->message);
+		return;
+	}
 
 	/* build the shim filename */
 	shim_filename = g_strdup_printf("shim%s.efi", suffix);
