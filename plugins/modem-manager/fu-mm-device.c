@@ -140,36 +140,27 @@ fu_mm_device_set_device_file(FuMmDevice *self, MMModemPortType port_type, GError
 	return FALSE;
 }
 
-static gboolean
-fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
-{
-	g_autoptr(FuIOChannel) io = NULL;
-	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
-	if (io == NULL)
-		return FALSE;
-	return fu_io_channel_write_raw(io,
-				       (const guint8 *)buf,
-				       strlen(buf),
-				       1000,
-				       FU_IO_CHANNEL_FLAG_NONE,
-				       error);
-}
-
 gboolean
 fu_mm_device_set_autosuspend_delay(FuMmDevice *self, guint timeout_ms, GError **error)
 {
-	g_autofree gchar *autosuspend_delay_filename = NULL;
 	g_autofree gchar *buf = g_strdup_printf("%u", timeout_ms);
+	g_autoptr(GError) error_local = NULL;
 
-	/* autosuspend delay updated for a proper firmware update */
-	autosuspend_delay_filename = g_build_filename(fu_device_get_physical_id(FU_DEVICE(self)),
-						      "/power/autosuspend_delay_ms",
-						      NULL);
-	if (!g_file_test(autosuspend_delay_filename, G_FILE_TEST_EXISTS)) {
-		g_debug("%s does not exist, so skipping", autosuspend_delay_filename);
-		return TRUE;
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(self),
+					"power/autosuspend_delay_ms",
+					buf,
+					1000,
+					&error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("autosuspend_delay_ms does not exist, so skipping");
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
-	return fu_mm_device_writeln(autosuspend_delay_filename, buf, error);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
