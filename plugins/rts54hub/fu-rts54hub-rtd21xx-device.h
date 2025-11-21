@@ -37,6 +37,22 @@ gboolean
 fu_rts54hub_rtd21xx_device_read_status_raw(FuRts54hubRtd21xxDevice *self,
 					   guint8 *status,
 					   GError **error);
+
+gboolean
+fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
+				     guint8 target_addr,
+				     guint8 sub_addr,
+				     const guint8 *data,
+				     gsize datasz,
+				     GError **error);
+
+gboolean
+fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
+				       guint8 target_addr,
+				       guint8 sub_addr,
+				       const guint8 *data,
+				       gsize datasz,
+				       GError **error);
 gboolean
 fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    guint8 target_addr,
@@ -45,9 +61,9 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 				    gsize datasz,
 				    GError **error);
 gboolean
-fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
-				     guint8 target_addr,
-				     guint8 sub_addr,
-				     const guint8 *data,
-				     gsize datasz,
-				     GError **error);
+fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
+				      guint8 target_addr,
+				      guint8 sub_addr,
+				      guint8 *data,
+				      gsize datasz,
+				      GError **error);

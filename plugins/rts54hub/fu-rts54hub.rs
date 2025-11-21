@@ -45,3 +45,30 @@ enum FuRts54hubRtd21xxFgIspCmd {
     FwUpdateReset,
     FwUpdateExit,
 }
+
+#[repr(u8)]
+enum FuRts54HubMergeInfoDdcciOpcode {
+        Communication = 0x11,
+        DdcciToDebug = 0x55,
+        First = 0x77,
+        GetVersion = 0x99,
+        SetVersion = 0xBB,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructRts54HubDdcPkt {
+    first_opcode: FuRts54HubMergeInfoDdcciOpcode = First,
+    second_opcode: u8,
+}
+
+#[derive(New, Default)]
+#[repr(C, packed)]
+struct FuStructRts54HubDdcWriteMergeInfoPkt {
+    first_opcode: FuRts54HubMergeInfoDdcciOpcode = First,
+    second_opcode: u8,
+    major_version: u8,
+    minor_version: u8,
+    patch_version: u8,
+    build_version: u8,
+}
