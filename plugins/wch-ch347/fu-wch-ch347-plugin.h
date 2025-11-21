@@ -8,4 +8,4 @@
 
 #include <fwupdplugin.h>
 
-G_DECLARE_FINAL_TYPE(FuCh347Plugin, fu_ch347_plugin, FU, CH347_PLUGIN, FuPlugin)
+G_DECLARE_FINAL_TYPE(FuWchCh347Plugin, fu_wch_ch347_plugin, FU, WCH_CH347_PLUGIN, FuPlugin)

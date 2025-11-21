@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/ch347-setup.json",
+      "emulation-file": "@enumeration_datadir@/wch-ch347-setup.json",
       "components": [
         {
           "version": "1.40",

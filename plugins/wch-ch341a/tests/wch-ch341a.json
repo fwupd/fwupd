@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/ch341a-setup.json",
+      "emulation-file": "@enumeration_datadir@/wch-ch341a-setup.json",
       "components": [
         {
           "version": "3.4",

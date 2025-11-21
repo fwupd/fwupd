@@ -4,7 +4,7 @@ title: Plugin: CH341A
 
 ## Introduction
 
-The CH341A is an affordable SPI programmer.
+The CH341A is an affordable SPI programmer by WinChipHead.
 
 The assumed map between UIO command bits, pins on CH341A chip and pins on SPI chip:
 
@@ -24,9 +24,9 @@ You must perform the 3.3V signal output modification if you are using the CH341A
 chips. The CH341A has a design flaw that outputs 5V on the MISO and MOSI pins even when VCC is 3V
 which will almost certainly be out-of-specification for the device you are trying to program.
 
-![CH341A Signal Output Modification](ch341a-vmod.png)
+![CH341A Signal Output Modification](wch-ch341a-vmod.png)
 
-See [this guide](https://www.chucknemeth.com/usb-devices/ch341a/3v-ch341a-mod) for more details.
+See [this guide](https://www.chucknemeth.com/usb-devices/wch-ch341a/3v-wch-ch341a-mod) for more details.
 
 ## Firmware Format
 
@@ -46,8 +46,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 The device programs devices in raw mode, and can best be used with `fwupdtool`.
 
-To write an image, use `sudo fwupdtool --plugins ch341a install-blob firmware.bin` and to backup
-the contents of a SPI device use `sudo fwupdtool --plugins ch341a firmware-dump backup.bin`
+To write an image, use `sudo fwupdtool --plugins wch-ch341a install-blob firmware.bin` and to backup
+the contents of a SPI device use `sudo fwupdtool --plugins wch-ch341a firmware-dump backup.bin`
 
 ## Vendor ID Security
 

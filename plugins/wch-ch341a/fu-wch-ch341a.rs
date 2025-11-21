@@ -1,7 +1,7 @@
 // Copyright 2025 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuCh341aCmd {
+enum FuWchCh341aCmd {
     SetOutput = 0xA1,
     IoAddr = 0xA2,
     PrintOut = 0xA3,
@@ -11,7 +11,7 @@ enum FuCh341aCmd {
     UioStream = 0xAB,
 }
 
-enum FuCh341aCmdI2c {
+enum FuWchCh341aCmdI2c {
     StmStart = 0x74,
     StmStop = 0x75,
     StmOut = 0x80,
@@ -23,7 +23,7 @@ enum FuCh341aCmdI2c {
     StmEnd = 0x00,
 }
 
-enum FuCh341aCmdUio {
+enum FuWchCh341aCmdUio {
     StmIn = 0x00,
     StmDir = 0x40,
     StmOut = 0x80,
@@ -31,7 +31,7 @@ enum FuCh341aCmdUio {
     StmEnd = 0x20,
 }
 
-enum FuCh341aStmI2cSpeed {
+enum FuWchCh341aStmI2cSpeed {
     Low = 0x00,
     Standard = 0x01,
     Fast = 0x02,

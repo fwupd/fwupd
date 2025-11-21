@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[repr(u8)]
-enum FuCh347CmdSpi {
+enum FuWchCh347CmdSpi {
     SetCfg = 0xC0,
     CsCtrl = 0xC1,
     OutIn  = 0xC2,
@@ -13,7 +13,7 @@ enum FuCh347CmdSpi {
 
 #[derive(New, Getters)]
 #[repr(C, packed)]
-struct FuStructCh347Req {
-    cmd: FuCh347CmdSpi,
+struct FuStructWchCh347Req {
+    cmd: FuWchCh347CmdSpi,
     payloadsz: u16le,
 }
