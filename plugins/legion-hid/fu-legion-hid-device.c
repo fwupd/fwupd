@@ -578,6 +578,13 @@ fu_legion_hid_device_get_version_internal(FuLegionHidDevice *self,
 		return FALSE;
 	if (!fu_memread_uint32_safe(res->data, res->len, 13, version, G_BIG_ENDIAN, error))
 		return FALSE;
+	if (*version == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "version 0 is invalid");
+		return FALSE;
+	}
 	return TRUE;
 }
 
