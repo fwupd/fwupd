@@ -4,7 +4,7 @@ title: Plugin: CH347
 
 ## Introduction
 
-The CH347 is an affordable SPI programmer.
+The CH347 is an affordable SPI programmer by WinChipHead.
 
 ## Firmware Format
 
@@ -24,8 +24,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 The device programs devices in raw mode, and can best be used with `fwupdtool`.
 
-To write an image, use `sudo fwupdtool --plugins ch347 install-blob firmware.bin` and to backup
-the contents of a SPI device use `sudo fwupdtool --plugins ch347 firmware-dump backup.bin`
+To write an image, use `sudo fwupdtool --plugins wch-ch347 install-blob firmware.bin` and to backup
+the contents of a SPI device use `sudo fwupdtool --plugins wch-ch347 firmware-dump backup.bin`
 
 ## Vendor ID Security
 
