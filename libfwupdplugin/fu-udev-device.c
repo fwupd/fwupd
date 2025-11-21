@@ -122,7 +122,7 @@ fu_udev_device_ensure_bind_id(FuUdevDevice *self, GError **error)
 		priv->bind_id = fu_udev_device_read_property(self, "HID_PHYS", error);
 		return priv->bind_id != NULL;
 	}
-	if (g_strcmp0(priv->subsystem, "usb") == 0) {
+	if (g_strcmp0(priv->subsystem, "usb") == 0 || g_strcmp0(priv->subsystem, "i2c") == 0) {
 		priv->bind_id = g_path_get_basename(fu_udev_device_get_sysfs_path(self));
 		return TRUE;
 	}
