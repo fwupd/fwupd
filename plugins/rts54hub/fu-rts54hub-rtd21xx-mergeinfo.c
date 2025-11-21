@@ -308,13 +308,6 @@ fu_rts54hub_rtd21xx_mergeinfo_detach_cb(FuDevice *device, gpointer user_data, GE
 static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new(FU_DEVICE(parent), error);
-	if (locker == NULL)
-		return FALSE;
 	return fu_device_retry_full(device,
 				    fu_rts54hub_rtd21xx_mergeinfo_detach_cb,
 				    10,
@@ -344,13 +337,6 @@ static gboolean
 fu_rts54hub_rtd21xx_mergeinfo_exit_cb(FuDevice *device, GError **error)
 {
 	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
-	FuRts54hubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new(FU_DEVICE(parent), error);
-	if (locker == NULL)
-		return FALSE;
 
 	if (!fu_rts54hub_rtd21xx_mergeinfo_restore_state(self, error)) {
 		g_prefix_error_literal(error, "failed to restore state in attach: ");
@@ -399,24 +385,16 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 	guint8 read_buf[VERSION_NUMBER_COUNT] = {0x0};
 	guint8 merge_version[VERSION_NUMBER_COUNT] = {0x00};
 	const gchar *version_str = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, "write");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 50, "read");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10, "finish");
-
-	/* open device */
-	locker = fu_device_locker_new(FU_DEVICE(self), error);
-	if (locker == NULL)
-		return FALSE;
 
 	/* get version x.x.x.x */
 	version_str = fu_firmware_get_version(firmware);
-
 	if (version_str == NULL) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
