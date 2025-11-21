@@ -18,10 +18,12 @@ enum FuRts54hubI2cSpeed {
     800K,
 }
 
-enum FuRts54hubRtd21xxVendorCmd {
-    Disable,
-    Enable,
-    AccessFlash,
+#[repr(u8)]
+#[derive(Bitfield, ToString)]
+enum FuRts54hubVendorCmd {
+    None = 0,
+    Enable = 1 << 0,
+    AccessFlash = 1 << 1,
 }
 
 enum FuRts54hubRtd21xxBgIspCmd {

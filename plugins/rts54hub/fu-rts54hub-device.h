@@ -15,7 +15,7 @@
 G_DECLARE_FINAL_TYPE(FuRts54hubDevice, fu_rts54hub_device, FU, RTS54HUB_DEVICE, FuUsbDevice)
 
 gboolean
-fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self, guint8 value, GError **error);
+fu_rts54hub_device_vendor_cmd(FuRts54hubDevice *self, FuRts54hubVendorCmd value, GError **error);
 gboolean
 fu_rts54hub_device_i2c_config(FuRts54hubDevice *self,
 			      guint8 target_addr,
