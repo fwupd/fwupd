@@ -14,7 +14,7 @@ typedef enum {
 	FU_TPM_EVENTLOG_PARSER_FLAG_NONE = 0,
 	FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS = 1 << 0,
 	FU_TPM_EVENTLOG_PARSER_FLAG_LAST
-} FuTpmEventlogParserFlags;
+} G_GNUC_FLAG_ENUM FuTpmEventlogParserFlags;
 
 GPtrArray *
 fu_tpm_eventlog_parser_new(const guint8 *buf,

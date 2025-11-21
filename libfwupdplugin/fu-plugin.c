@@ -737,7 +737,6 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		g_autoptr(GBytes) fw_old = NULL;
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *fn = NULL;
-		g_autofree gchar *localstatedir = NULL;
 
 		/* progress */
 		fu_progress_set_id(progress, G_STRLOC);
@@ -750,10 +749,9 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 			g_prefix_error_literal(error, "failed to backup old firmware: ");
 			return FALSE;
 		}
-		localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		fn = g_strdup_printf("%s.bin", fu_device_get_version(device));
-		path = g_build_filename(
-		    localstatedir,
+		path = fu_path_build(
+		    FU_PATH_KIND_LOCALSTATEDIR_PKG,
 		    "backup",
 		    fu_device_get_id(device),
 		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",

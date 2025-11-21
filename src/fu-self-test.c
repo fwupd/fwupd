@@ -38,6 +38,7 @@
 #include "fu-remote.h"
 #include "fu-security-attrs-private.h"
 #include "fu-usb-backend.h"
+#include "fu-util-common.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -165,6 +166,45 @@ fu_client_list_func(void)
 	/* emulate disconnect */
 	fu_client_remove_flag(client, FU_CLIENT_FLAG_ACTIVE);
 	g_assert_false(fu_client_has_flag(client, FU_CLIENT_FLAG_ACTIVE));
+}
+
+static void
+fu_util_func(void)
+{
+	const gchar *tmp;
+	g_autoptr(FwupdClient) client = fwupd_client_new();
+	g_autoptr(FwupdDevice) device = fwupd_device_new();
+
+	for (FwupdDeviceProblem i = 1; i < G_MAXUINT64; i <<= 1) {
+		g_autofree gchar *str = NULL;
+		tmp = fwupd_device_problem_to_string(i);
+		if (tmp == NULL)
+			break;
+		str = fu_util_device_problem_to_string(client, device, i);
+		g_assert_nonnull(str);
+	}
+	for (FwupdReleaseFlags i = 1; i < G_MAXUINT64; i <<= 1) {
+		tmp = fwupd_release_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_nonnull(fu_util_release_flag_to_string(i));
+	}
+	for (FwupdRequestFlags i = 1; i < G_MAXUINT64; i <<= 1) {
+		tmp = fwupd_request_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		g_assert_nonnull(fu_util_request_flag_to_string(i));
+	}
+	for (FwupdPluginFlags i = 1; i < G_MAXUINT64; i <<= 1) {
+		g_autofree gchar *str = NULL;
+		if (i == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE || i == FWUPD_PLUGIN_FLAG_USER_WARNING)
+			continue;
+		tmp = fwupd_plugin_flag_to_string(i);
+		if (tmp == NULL)
+			break;
+		str = fu_util_plugin_flag_to_string(i);
+		g_assert_nonnull(str);
+	}
 }
 
 static void
@@ -1307,11 +1347,13 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
+	g_autoptr(GInputStream) stream = g_memory_input_stream_new();
 	const gchar *nolocker[] = {
 	    "FuPciPspDevice",
 	    "FuSynapticsRmiPs2Device",
@@ -1323,6 +1365,7 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	device = g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
 	g_assert_nonnull(device);
 	fu_device_set_plugin(device, "test");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_EMULATED);
 
 	/* version convert */
 	if (fu_device_get_version_format(device) != FWUPD_VERSION_FORMAT_UNKNOWN)
@@ -1360,6 +1403,28 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
 		if (locker != NULL)
 			g_debug("did ->probe() and ->setup()!");
+	}
+
+	/* ->prepare() and ->cleanup */
+	if (fu_device_prepare(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+		g_debug("did ->prepare()");
+	if (fu_device_cleanup(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
+		g_debug("did ->cleanup()");
+
+	/* ->prepare_firmware() */
+	firmware = fu_device_prepare_firmware(device,
+					      stream,
+					      progress_tmp,
+					      FU_FIRMWARE_PARSE_FLAG_NONE,
+					      NULL);
+	if (firmware != NULL) {
+		if (fu_device_write_firmware(device,
+					     firmware,
+					     progress_tmp,
+					     FWUPD_INSTALL_FLAG_FORCE,
+					     NULL)) {
+			g_debug("did ->write_firmware()!");
+		}
 	}
 }
 
@@ -3633,7 +3698,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *history_db = NULL;
 	g_autoptr(FuCabinet) cabinet = NULL;
 	g_autoptr(FuDevice) device = fu_device_new(self->ctx);
@@ -3648,8 +3712,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 
 	/* delete history */
-	localstatedir = fu_path_from_kind(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	history_db = g_build_filename(localstatedir, "pending.db", NULL);
+	history_db = fu_path_build(FU_PATH_KIND_LOCALSTATEDIR_PKG, "pending.db", NULL);
 	(void)g_unlink(history_db);
 
 	/* no metadata in daemon */
@@ -3790,6 +3853,13 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
+	g_autofree gchar *rundir = fu_path_from_kind(FU_PATH_KIND_RUNDIR);
+	g_autofree gchar *reboot_file = NULL;
+
+	/* create rundir */
+	ret = fu_path_mkdir(rundir, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* no metadata in daemon */
 	fu_engine_set_silo(engine, silo_empty);
@@ -3855,6 +3925,9 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
+
+	reboot_file = g_build_filename(rundir, "reboot-required", NULL);
+	g_assert_true(g_file_test(reboot_file, G_FILE_TEST_EXISTS));
 }
 
 typedef struct {
@@ -5134,7 +5207,7 @@ fu_backend_usb_invalid_func(gconstpointer user_data)
 			      "*invalid platform version 0x0000000a, expected >= 0x00010805*");
 	g_test_expect_message("FuUsbDevice",
 			      G_LOG_LEVEL_WARNING,
-			      "failed to parse * BOS descriptor: *did not find magic*");
+			      "failed to parse * BOS descriptor: *invalid UUID*");
 #endif
 
 	/* load the JSON into the backend */
@@ -7399,9 +7472,11 @@ fu_remote_local_func(void)
 static void
 fu_remote_list_repair_func(void)
 {
-	FwupdRemote *remote;
 	gboolean ret;
 	g_autoptr(FuRemoteList) remote_list = fu_remote_list_new();
+	g_autoptr(FwupdRemote) remote1 = NULL;
+	g_autoptr(FwupdRemote) remote2 = NULL;
+	g_autoptr(FwupdRemote) remote3 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_remote_list_set_lvfs_metadata_format(remote_list, "zst");
@@ -7410,23 +7485,26 @@ fu_remote_list_repair_func(void)
 	g_assert_true(ret);
 
 	/* check .gz converted to .zst */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote1 = fu_remote_list_get_by_id(remote_list, "legacy-lvfs", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote1);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote1),
 			==,
 			"http://localhost/stable.xml.zst");
 
 	/* check .xz converted to .zst */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote2 = fu_remote_list_get_by_id(remote_list, "legacy-lvfs-xz", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote2);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote2),
 			==,
 			"http://localhost/stable.xml.zst");
 
 	/* check non-LVFS remote NOT .gz converted to .xz */
-	remote = fu_remote_list_get_by_id(remote_list, "legacy");
-	g_assert_nonnull(remote);
-	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
+	remote3 = fu_remote_list_get_by_id(remote_list, "legacy", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(remote3);
+	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote3),
 			==,
 			"http://localhost/stable.xml.gz");
 }
@@ -7563,6 +7641,21 @@ fu_config_migrate_1_7_func(void)
 }
 
 static void
+fu_engine_integrity_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GHashTable) integrity = NULL;
+
+	integrity = fu_engine_integrity_new(self->ctx, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(integrity);
+	str = fu_engine_integrity_to_string(integrity);
+	g_debug("%s", str);
+}
+
+static void
 fu_engine_report_metadata_func(gconstpointer user_data)
 {
 	FuTest *self = (FuTest *)user_data;
@@ -7597,6 +7690,41 @@ fu_engine_report_metadata_func(gconstpointer user_data)
 		if (value == NULL)
 			g_warning("no %s in metadata", keys_exist[i]);
 	}
+}
+
+static void
+fu_engine_error_array_func(void)
+{
+	g_autoptr(GPtrArray) arr1 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr2 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr3 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GPtrArray) arr4 = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
+	g_autoptr(GError) error1 = NULL;
+	g_autoptr(GError) error2 = NULL;
+	g_autoptr(GError) error3 = NULL;
+	g_autoptr(GError) error4 = NULL;
+
+	/* fallback */
+	error1 = fu_engine_error_array_get_best(arr1);
+	g_assert_error(error1, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+
+	/* get the most important single error */
+	g_ptr_array_add(arr2, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, ""));
+	error2 = fu_engine_error_array_get_best(arr2);
+	g_assert_error(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+
+	/* version same */
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_SAME, ""));
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_SAME, ""));
+	g_ptr_array_add(arr3, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, ""));
+	error3 = fu_engine_error_array_get_best(arr3);
+	g_assert_error(error3, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+
+	/* already have newer versions */
+	g_ptr_array_add(arr4, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_NEWER, ""));
+	g_ptr_array_add(arr4, g_error_new_literal(FWUPD_ERROR, FWUPD_ERROR_VERSION_NEWER, ""));
+	error4 = fu_engine_error_array_get_best(arr4);
+	g_assert_error(error4, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 }
 
 static void
@@ -8002,6 +8130,7 @@ main(int argc, char **argv)
 	(void)g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	(void)g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
+	(void)g_setenv("FWUPD_RUNDIR", "/tmp/fwupd-self-test/run", TRUE);
 	(void)g_setenv("FWUPD_SYSFSFWATTRIBDIR", testdatadir, TRUE);
 	(void)g_setenv("FWUPD_PROCFS", testdatadir, TRUE);
 	sysfsdir = g_test_build_filename(G_TEST_DIST, "tests", "sys", NULL);
@@ -8040,6 +8169,7 @@ main(int argc, char **argv)
 	if (g_test_slow())
 		g_test_add_data_func("/fwupd/console", self, fu_console_func);
 	g_test_add_func("/fwupd/idle", fu_idle_func);
+	g_test_add_func("/fwupd/util", fu_util_func);
 	g_test_add_func("/fwupd/client-list", fu_client_list_func);
 	g_test_add_func("/fwupd/remote{download}", fu_remote_download_func);
 	g_test_add_func("/fwupd/remote{base-uri}", fu_remote_baseuri_func);
@@ -8150,9 +8280,11 @@ main(int argc, char **argv)
 			     self,
 			     fu_device_list_replug_user_func);
 	g_test_add_func("/fwupd/engine{machine-hash}", fu_engine_machine_hash_func);
+	g_test_add_func("/fwupd/engine{error-array}", fu_engine_error_array_func);
 	g_test_add_data_func("/fwupd/engine{report-metadata}",
 			     self,
 			     fu_engine_report_metadata_func);
+	g_test_add_data_func("/fwupd/engine{integrity}", self, fu_engine_integrity_func);
 	g_test_add_data_func("/fwupd/engine{require-hwid}", self, fu_engine_require_hwid_func);
 	g_test_add_data_func("/fwupd/engine{requires-reboot}",
 			     self,

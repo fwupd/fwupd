@@ -218,7 +218,14 @@ fu_wac_module_cleanup(FuDevice *device,
 		      GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(parent, error);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* sanity check */
+	if (parent == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+		return FALSE;
+	}
+	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_cleanup(parent, progress, flags, error);

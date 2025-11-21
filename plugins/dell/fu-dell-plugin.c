@@ -168,7 +168,6 @@ fu_dell_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 static gboolean
 fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 {
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
 	if (!fu_dell_plugin_supported(plugin, error)) {
@@ -181,8 +180,7 @@ fu_dell_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	 *
 	 * Once unlocked, that will enable flashing capsules here too.
 	 */
-	sysfsfwdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	esrtdir = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
+	esrtdir = fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "esrt", NULL);
 	if (!g_file_test(esrtdir, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

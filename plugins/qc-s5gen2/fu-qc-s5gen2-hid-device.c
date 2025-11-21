@@ -17,9 +17,7 @@
 #define HID_EP_IN  0x82
 #define HID_EP_OUT 0x01
 
-#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 0 /* ms */
-
-#define FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE 255
+#define FU_QC_S5GEN2_HID_DEVICE_TIMEOUT 500 /* ms */
 
 struct _FuQcS5gen2HidDevice {
 	FuHidDevice parent_instance;
@@ -157,7 +155,7 @@ fu_qc_s5gen2_hid_device_cmd_req_connect(FuQcS5gen2Impl *impl, GError **error)
 static gboolean
 fu_qc_s5gen2_hid_device_data_size(FuQcS5gen2Impl *impl, gsize *data_sz, GError **error)
 {
-	if (FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE <= FU_STRUCT_QC_DATA_SIZE + 2) {
+	if (FU_STRUCT_QC_HID_DATA_TRANSFER_SIZE <= FU_STRUCT_QC_DATA_SIZE + 2) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
@@ -165,7 +163,7 @@ fu_qc_s5gen2_hid_device_data_size(FuQcS5gen2Impl *impl, gsize *data_sz, GError *
 		return FALSE;
 	}
 
-	*data_sz = FU_QC_S5GEN2_HID_DEVICE_MAX_TRANSFER_SIZE - FU_STRUCT_QC_DATA_SIZE - 2;
+	*data_sz = FU_STRUCT_QC_HID_DATA_TRANSFER_SIZE - FU_STRUCT_QC_DATA_SIZE - 2;
 	return TRUE;
 }
 

@@ -40,7 +40,7 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_AUTODETECT_EPS = 1 << 6,
 	/*< private >*/
 	FU_HID_DEVICE_FLAG_LAST
-} FuHidDeviceFlags;
+} G_GNUC_FLAG_ENUM FuHidDeviceFlags;
 
 void
 fu_hid_device_add_flag(FuHidDevice *self, FuHidDeviceFlags flag) G_GNUC_NON_NULL(1);

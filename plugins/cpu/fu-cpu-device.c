@@ -11,14 +11,7 @@
 #endif
 
 #include "fu-cpu-device.h"
-
-typedef enum {
-	FU_CPU_DEVICE_FLAG_NONE = 0,
-	FU_CPU_DEVICE_FLAG_SHSTK = 1 << 0,
-	FU_CPU_DEVICE_FLAG_IBT = 1 << 1,
-	FU_CPU_DEVICE_FLAG_TME = 1 << 2,
-	FU_CPU_DEVICE_FLAG_SMAP = 1 << 3,
-} FuCpuDeviceFlag;
+#include "fu-cpu-struct.h"
 
 struct _FuCpuDevice {
 	FuDevice parent_instance;
@@ -37,22 +30,10 @@ static void
 fu_cpu_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasSHSTK",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SHSTK));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasIBT",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_IBT));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasTME",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_TME));
-	fwupd_codec_string_append_bool(str,
-				       idt,
-				       "HasSMAP",
-				       fu_cpu_device_has_flag(self, FU_CPU_DEVICE_FLAG_SMAP));
+	if (self->flags != FU_CPU_DEVICE_FLAG_NONE) {
+		g_autofree gchar *flags_str = fu_cpu_device_flag_to_string(self->flags);
+		fwupd_codec_string_append(str, idt, "Flags", flags_str);
+	}
 }
 
 static const gchar *
@@ -369,7 +350,6 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 {
 	gint exit_status = 0xff;
 	g_autofree gchar *toolfn = NULL;
-	g_autofree gchar *dir = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(FwupdSecurityAttr) cet_plat_attr = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -389,8 +369,7 @@ fu_cpu_device_add_security_attrs_cet_active(FuCpuDevice *self, FuSecurityAttrs *
 	fu_security_attrs_append(attrs, attr);
 
 	/* check that userspace has been compiled for CET support */
-	dir = fu_path_from_kind(FU_PATH_KIND_LIBEXECDIR_PKG);
-	toolfn = g_build_filename(dir, "fwupd-detect-cet", NULL);
+	toolfn = fu_path_build(FU_PATH_KIND_LIBEXECDIR_PKG, "fwupd-detect-cet", NULL);
 	if (!g_spawn_command_line_sync(toolfn, NULL, NULL, &exit_status, &error_local)) {
 		g_warning("failed to test CET: %s", error_local->message);
 		return;

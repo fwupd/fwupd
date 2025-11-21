@@ -498,14 +498,29 @@ fu_version_guess_format_func(void)
 {
 	g_assert_cmpint(fu_version_guess_format(NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format(""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint(fu_version_guess_format("1234ac"), ==, FWUPD_VERSION_FORMAT_HEX);
 	g_assert_cmpint(fu_version_guess_format("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
 	g_assert_cmpint(fu_version_guess_format("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpint(fu_version_guess_format("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
 	g_assert_cmpint(fu_version_guess_format("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint(fu_version_guess_format("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
 	g_assert_cmpint(fu_version_guess_format("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint(fu_version_guess_format("1A"), ==, FWUPD_VERSION_FORMAT_HEX);
 	g_assert_cmpint(fu_version_guess_format("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+}
+
+static void
+fu_version_verify_format_func(void)
+{
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_version_verify_format("1A", FWUPD_VERSION_FORMAT_HEX, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_version_verify_format("1A", FWUPD_VERSION_FORMAT_NUMBER, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_false(ret);
 }
 
 static void
@@ -557,8 +572,7 @@ fu_device_open_refcount_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_device_close(device, &error);
-	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
-	g_assert_false(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -1392,7 +1406,6 @@ fu_plugin_config_func(void)
 	GStatBuf statbuf = {0};
 	gboolean ret;
 	gint rc;
-	g_autofree gchar *conf_dir = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *value = NULL;
 	g_autofree gchar *value_missing = NULL;
@@ -1410,9 +1423,8 @@ fu_plugin_config_func(void)
 
 	/* remove existing file */
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test/etc/fwupd", TRUE);
-	conf_dir = fu_path_from_kind(FU_PATH_KIND_SYSCONFDIR_PKG);
 	fu_plugin_set_name(plugin, "test");
-	fn = g_build_filename(conf_dir, "fwupd.conf", NULL);
+	fn = fu_path_build(FU_PATH_KIND_SYSCONFDIR_PKG, "fwupd.conf", NULL);
 	ret = fu_path_mkdir_parent(fn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1768,8 +1780,7 @@ fu_quirks_vendor_ids_func(void)
 	g_autofree gchar *guid3 = fwupd_guid_hash_string("PNP\\VID_ICO");
 	g_autofree gchar *guid4 = fwupd_guid_hash_string("PCI\\VEN_8086&DEV_0007");
 	g_autofree gchar *guid5 = fwupd_guid_hash_string("USB\\VID_8086&PID_0001");
-	g_autofree gchar *datadata = fu_path_from_kind(FU_PATH_KIND_CACHEDIR_PKG);
-	g_autofree gchar *quirksdb = g_build_filename(datadata, "quirks.db", NULL);
+	g_autofree gchar *quirksdb = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "quirks.db", NULL);
 	g_autoptr(FuQuirks) quirks = fu_quirks_new(ctx);
 	g_autoptr(GError) error = NULL;
 
@@ -3993,9 +4004,6 @@ fu_firmware_fmap_func(void)
 	ret = fu_firmware_build_from_filename(firmware, filename, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert_cmpint(fu_fmap_firmware_get_signature_offset(FU_FMAP_FIRMWARE(firmware)),
-			==,
-			0x10);
 
 	/* check image count */
 	images = fu_firmware_get_images(firmware);
@@ -4758,7 +4766,8 @@ fu_efivar_func(void)
 				  "Test",
 				  (guint8 *)"1",
 				  1,
-				  FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS,
+				  FU_EFI_VARIABLE_ATTR_NON_VOLATILE |
+				      FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS,
 				  &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -4772,7 +4781,9 @@ fu_efivar_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(sz, ==, 1);
-	g_assert_cmpint(attr, ==, FU_EFIVARS_ATTR_NON_VOLATILE | FU_EFIVARS_ATTR_RUNTIME_ACCESS);
+	g_assert_cmpint(attr,
+			==,
+			FU_EFI_VARIABLE_ATTR_NON_VOLATILE | FU_EFI_VARIABLE_ATTR_RUNTIME_ACCESS);
 	g_assert_cmpint(data[0], ==, '1');
 
 	/* check free space again */
@@ -5388,7 +5399,7 @@ fu_security_attrs_compare_func(void)
 typedef enum {
 	FU_FIRMWARE_BUILDER_FLAG_NONE,
 	FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE = 1 << 0,
-} FuFirmwareBuilderFlags;
+} G_GNUC_FLAG_ENUM FuFirmwareBuilderFlags;
 
 static void
 fu_firmware_builder_round_trip_func(void)
@@ -6486,7 +6497,7 @@ fu_strsplit_stream_func(void)
 static void
 fu_input_stream_find_func(void)
 {
-	const gchar *haystack = "I write free software. Firmware troublemaker.";
+	const gchar *haystack = "I write free software. Firmware troublemaker, writing Firmware.";
 	const gchar *needle1 = "Firmware";
 	const gchar *needle2 = "XXX";
 	gboolean ret;
@@ -6496,14 +6507,33 @@ fu_input_stream_find_func(void)
 
 	stream =
 	    g_memory_input_stream_new_from_data((const guint8 *)haystack, strlen(haystack), NULL);
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle1, strlen(needle1), &offset, &error);
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(offset, ==, 23);
 
-	ret =
-	    fu_input_stream_find(stream, (const guint8 *)needle2, strlen(needle2), &offset, &error);
+	/* find second match */
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle1,
+				   strlen(needle1),
+				   44,
+				   &offset,
+				   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 54);
+
+	ret = fu_input_stream_find(stream,
+				   (const guint8 *)needle2,
+				   strlen(needle2),
+				   0x0,
+				   &offset,
+				   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_false(ret);
 }
@@ -6724,6 +6754,40 @@ fu_plugin_efi_signature_list_func(void)
 	g_assert_cmpint(sigs_newest->len, ==, 1);
 	sig = g_ptr_array_index(sigs_newest, 0);
 	g_assert_cmpint(fu_firmware_get_version_raw(FU_FIRMWARE(sig)), ==, 2024);
+}
+
+static void
+fu_device_possible_plugin_func(void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	ret = fu_device_set_quirk_kv(device, "Plugin", "dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* duplicate */
+	ret = fu_device_set_quirk_kv(device, "Plugin", "dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* something else */
+	ret = fu_device_set_quirk_kv(device, "Plugin", "abc", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* remove the other thing */
+	ret =
+	    fu_device_set_quirk_kv(device, "Plugin", "~dfu", FU_CONTEXT_QUIRK_SOURCE_FILE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* verify */
+	possible_plugins = fu_device_get_possible_plugins(device);
+	g_assert_cmpint(possible_plugins->len, ==, 1);
+	g_assert_cmpstr(g_ptr_array_index(possible_plugins, 0), ==, "abc");
 }
 
 static void
@@ -7336,6 +7400,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_string_append_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_version_guess_format_func);
+	g_test_add_func("/fwupd/common{version-verify-format}", fu_version_verify_format_func);
 	g_test_add_func("/fwupd/common{strtoull}", fu_strtoull_func);
 	g_test_add_func("/fwupd/common{strtoll}", fu_strtoll_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
@@ -7408,6 +7473,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
 	g_test_add_func("/fwupd/device{id-for-display}", fu_device_id_display_func);
+	g_test_add_func("/fwupd/device{possible-plugin}", fu_device_possible_plugin_func);
 	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
 	g_test_add_func("/fwupd/device{event}", fu_device_event_func);
 	g_test_add_func("/fwupd/device{event-uncompressed}", fu_device_event_uncompressed_func);

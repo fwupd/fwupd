@@ -18,8 +18,7 @@ G_DEFINE_TYPE(FuUefiMokPlugin, fu_uefi_mok_plugin, FU_TYPE_PLUGIN)
 static gchar *
 fu_uefi_mok_plugin_get_filename(void)
 {
-	g_autofree gchar *sysfsdir = fu_path_from_kind(FU_PATH_KIND_SYSFSDIR_FW);
-	return g_build_filename(sysfsdir, "efi", "mok-variables", "HSIStatus", NULL);
+	return fu_path_build(FU_PATH_KIND_SYSFSDIR_FW, "efi", "mok-variables", "HSIStatus", NULL);
 }
 
 static gboolean

@@ -126,8 +126,10 @@ fu_coswid_firmware_parse_meta(cbor_item_t *item, gpointer user_data, GError **er
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse meta tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_SUMMARY) {
 			g_free(priv->summary);
 			priv->summary = fu_coswid_read_string(pairs[i].value, error);
@@ -171,8 +173,10 @@ fu_coswid_firmware_parse_evidence(cbor_item_t *item, gpointer user_data, GError 
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse evidence tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_DEVICE_ID) {
 			g_free(priv->device_id);
 			priv->device_id = fu_coswid_read_string(pairs[i].value, error);
@@ -202,8 +206,10 @@ fu_coswid_firmware_parse_link(cbor_item_t *item, gpointer user_data, GError **er
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse link tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_HREF) {
 			g_free(link->href);
 			link->href = fu_coswid_read_string(pairs[i].value, error);
@@ -303,8 +309,10 @@ fu_coswid_firmware_parse_file(cbor_item_t *item, gpointer user_data, GError **er
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse file tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_FS_NAME) {
 			g_free(payload->name);
 			payload->name = fu_coswid_read_string(pairs[i].value, error);
@@ -359,8 +367,10 @@ fu_coswid_firmware_parse_path_elements(cbor_item_t *item, gpointer user_data, GE
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse elements tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_FILE) {
 			if (!fu_coswid_parse_one_or_many(pairs[i].value,
 							 fu_coswid_firmware_parse_file,
@@ -386,8 +396,10 @@ fu_coswid_firmware_parse_directory(cbor_item_t *item, gpointer user_data, GError
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse directory tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_PATH_ELEMENTS) {
 			if (!fu_coswid_parse_one_or_many(pairs[i].value,
 							 fu_coswid_firmware_parse_path_elements,
@@ -413,8 +425,10 @@ fu_coswid_firmware_parse_payload(cbor_item_t *item, gpointer user_data, GError *
 	struct cbor_pair *pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse payload tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_FILE) {
 			if (!fu_coswid_parse_one_or_many(pairs[i].value,
 							 fu_coswid_firmware_parse_file,
@@ -536,8 +550,10 @@ fu_coswid_firmware_parse_entity(cbor_item_t *item, gpointer user_data, GError **
 
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse entity tag %u: ", (guint)i);
 			return FALSE;
+		}
 		if (tag_id == FU_COSWID_TAG_ENTITY_NAME) {
 			if (!fu_coswid_firmware_parse_entity_name(entity, pairs[i].value, error))
 				return FALSE;
@@ -654,8 +670,10 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 	pairs = cbor_map_handle(item);
 	for (gsize i = 0; i < cbor_map_size(item); i++) {
 		FuCoswidTag tag_id = 0;
-		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error))
+		if (!fu_coswid_read_tag(pairs[i].key, &tag_id, error)) {
+			g_prefix_error(error, "failed to parse root tag %u: ", (guint)i);
 			return FALSE;
+		}
 
 		/* identity can be specified as a string or in binary */
 		if (tag_id == FU_COSWID_TAG_TAG_ID) {
@@ -1385,6 +1403,7 @@ fu_coswid_firmware_init(FuCoswidFirmware *self)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_payload_free);
 	priv->entities =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fu_coswid_firmware_entity_free);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_ALLOW_LINEAR);
 }
 
 static void

@@ -27,18 +27,6 @@ G_DEFINE_TYPE(FuSynapticsVmm9Device, fu_synaptics_vmm9_device, FU_TYPE_HID_DEVIC
 #define FU_SYNAPTICS_VMM9_CTRL_BUSY_MASK 0x80
 #define FU_SYNAPTICS_VMM9_BUSY_POLL	 10 /* ms */
 
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_CHIP_SERIAL	0x20200D3C /* 0x4 bytes, %02x */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_TRIGGER		0x2020A024 /* write 0xF5000000 to reset */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_MCU_BOOTLOADER_STS 0x2020A030 /* bootloader status */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_MCU_FW_VERSION	0x2020A038 /* 0x4 bytes, maj.min.mic.? */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_FIRMWARE_BUILD	0x2020A084 /* 0x4 bytes, be */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_COMMAND		0x2020B000
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_OFFSET		0x2020B004
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_LENGTH		0x2020B008
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_RC_DATA		0x2020B010 /* until 0x2020B02C */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_FIRMWARE_NAME	0x90000230 /* 0xF bytes, ASCII */
-#define FU_SYNAPTICS_VMM9_MEM_OFFSET_BOARD_ID		0x9000014E /* 0x2 bytes, customer.hardware */
-
 static void
 fu_synaptics_vmm9_device_to_string(FuDevice *device, guint idt, GString *str)
 {
@@ -53,7 +41,7 @@ typedef enum {
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_FULL_BUFFER = 1 << 0,
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_NO_REPLY = 1 << 1,
 	FU_SYNAPTICS_VMM9_COMMAND_FLAG_IGNORE_REPLY = 1 << 2,
-} FuSynapticsVmm9DeviceCommandFlags;
+} G_GNUC_FLAG_ENUM FuSynapticsVmm9DeviceCommandFlags;
 
 typedef struct {
 	guint8 *buf;

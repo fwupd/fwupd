@@ -884,12 +884,15 @@ fu_usb_device_probe_bos_descriptor(FuUsbDevice *self, FuUsbBosDescriptor *bos, G
 	return TRUE;
 }
 
-static GInputStream *
-fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, GError **error)
+static GBytes *
+fu_usb_device_load_descriptor(FuUsbDevice *self, const gchar *basename, GError **error)
 {
 	FuDeviceEvent *event = NULL;
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
 	g_autofree gchar *event_id = NULL;
 	g_autofree gchar *fn = NULL;
+	g_autoptr(GBytes) data = NULL;
 
 	/* build event key either for load or save */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
@@ -900,8 +903,6 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
-		g_autoptr(GBytes) data = NULL;
-
 		/* lots of old emulations don't have this, returning FWUPD_ERROR_NOT_FOUND */
 		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
 		if (event == NULL)
@@ -909,7 +910,7 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 		data = fu_device_event_get_bytes(event, "Data", error);
 		if (data == NULL)
 			return NULL;
-		return g_memory_input_stream_new_from_bytes(data);
+		return g_steal_pointer(&data);
 	}
 
 	/* save */
@@ -928,32 +929,35 @@ fu_usb_device_load_descriptor_stream(FuUsbDevice *self, const gchar *basename, G
 			    fn);
 		return NULL;
 	}
+	if (!g_file_get_contents(fn, &buf, &bufsz, error)) {
+		fwupd_error_convert(error);
+		return NULL;
+	}
+	data = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
+	if (data == NULL)
+		return NULL;
 
 	/* save */
-	if (event != NULL) {
-		g_autoptr(GBytes) data = fu_bytes_get_contents(fn, error);
-		if (data == NULL)
-			return NULL;
+	if (event != NULL)
 		fu_device_event_set_bytes(event, "Data", data);
-	}
 
 	/* success */
-	return fu_input_stream_from_path(fn, error);
+	return g_steal_pointer(&data);
 }
 
 static gboolean
-fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GInputStream *stream, GError **error)
+fu_usb_device_parse_bos_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuFirmware) firmware = fu_linear_firmware_new(FU_TYPE_USB_BOS_DESCRIPTOR);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	if (!fu_firmware_parse_stream(firmware,
-				      stream,
-				      0x0,
-				      FU_FIRMWARE_PARSE_FLAG_NONE,
-				      &error_local)) {
+	if (!fu_firmware_parse_bytes(firmware,
+				     blob,
+				     0x0,
+				     FU_FIRMWARE_PARSE_FLAG_NONE,
+				     &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA)) {
 			g_debug("ignoring: %s", error_local->message);
@@ -1027,19 +1031,18 @@ fu_usb_device_ensure_bos_descriptors(FuUsbDevice *self, GError **error)
 		libusb_free_bos_descriptor(bos);
 	} else {
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
 		/* this is optional */
-		stream =
-		    fu_usb_device_load_descriptor_stream(self, "bos_descriptors", &error_local);
-		if (stream == NULL) {
+		blob = fu_usb_device_load_descriptor(self, "bos_descriptors", &error_local);
+		if (blob == NULL) {
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) &&
 			    !g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
 			}
 		} else {
-			if (!fu_usb_device_parse_bos_descriptor(self, stream, error))
+			if (!fu_usb_device_parse_bos_descriptor(self, blob, error))
 				return FALSE;
 		}
 	}
@@ -1758,17 +1761,14 @@ fu_usb_device_reset(FuUsbDevice *self, GError **error)
 }
 
 static gboolean
-fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError **error)
+fu_usb_device_parse_descriptor(FuUsbDevice *self, GBytes *blob, GError **error)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	gsize offset = 0;
-	gsize streamsz = 0;
 	g_autoptr(FuUsbDeviceHdr) st = NULL;
 	g_autoptr(FuUsbInterface) iface_last = NULL;
 
-	if (!fu_input_stream_size(stream, &streamsz, error))
-		return FALSE;
-	st = fu_usb_device_hdr_parse_stream(stream, offset, error);
+	st = fu_usb_device_hdr_parse_bytes(blob, offset, error);
 	if (st == NULL)
 		return FALSE;
 	priv->desc.bLength = fu_usb_device_hdr_get_length(st);
@@ -1787,13 +1787,13 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 	priv->desc.bNumConfigurations = fu_usb_device_hdr_get_num_configurations(st);
 
 	offset += fu_usb_device_hdr_get_length(st);
-	while (offset < streamsz) {
+	while (offset < g_bytes_get_size(blob)) {
 		FuUsbDescriptorKind descriptor_kind;
 		g_autoptr(FuUsbBaseHdr) st_base = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* this is common to all descriptor types */
-		st_base = fu_usb_base_hdr_parse_stream(stream, offset, &error_local);
+		st_base = fu_usb_base_hdr_parse_bytes(blob, offset, &error_local);
 		if (st_base == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
 				break;
@@ -1808,20 +1808,20 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 		if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_CONFIG) {
 			g_autoptr(FuUsbConfigDescriptor) cfg_descriptor =
 			    fu_usb_config_descriptor_new();
-			if (!fu_firmware_parse_stream(FU_FIRMWARE(cfg_descriptor),
-						      stream,
-						      offset,
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
-						      error))
+			if (!fu_firmware_parse_bytes(FU_FIRMWARE(cfg_descriptor),
+						     blob,
+						     offset,
+						     FU_FIRMWARE_PARSE_FLAG_NONE,
+						     error))
 				return FALSE;
 			g_ptr_array_add(priv->cfg_descriptors, g_steal_pointer(&cfg_descriptor));
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_INTERFACE) {
 			g_autoptr(FuUsbInterface) iface = g_object_new(FU_TYPE_USB_INTERFACE, NULL);
-			if (!fu_firmware_parse_stream(FU_FIRMWARE(iface),
-						      stream,
-						      offset,
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
-						      error))
+			if (!fu_firmware_parse_bytes(FU_FIRMWARE(iface),
+						     blob,
+						     offset,
+						     FU_FIRMWARE_PARSE_FLAG_NONE,
+						     error))
 				return FALSE;
 			fu_usb_device_add_interface_internal(self, iface);
 
@@ -1830,9 +1830,9 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			    FU_USB_CLASS_APPLICATION_SPECIFIC) {
 				g_autoptr(FuUsbDescriptor) img =
 				    g_object_new(FU_TYPE_USB_DESCRIPTOR, NULL);
-				if (!fu_firmware_parse_stream(
+				if (!fu_firmware_parse_bytes(
 					FU_FIRMWARE(img),
-					stream,
+					blob,
 					offset + fu_usb_base_hdr_get_length(st_base),
 					FU_FIRMWARE_PARSE_FLAG_CACHE_BLOB,
 					error))
@@ -1847,11 +1847,11 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			g_set_object(&iface_last, iface);
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_ENDPOINT) {
 			g_autoptr(FuUsbEndpoint) ep = g_object_new(FU_TYPE_USB_ENDPOINT, NULL);
-			if (!fu_firmware_parse_stream(FU_FIRMWARE(ep),
-						      stream,
-						      offset,
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
-						      error))
+			if (!fu_firmware_parse_bytes(FU_FIRMWARE(ep),
+						     blob,
+						     offset,
+						     FU_FIRMWARE_PARSE_FLAG_NONE,
+						     error))
 				return FALSE;
 			if (iface_last == NULL) {
 				g_warning("endpoint 0x%x without prior interface, ignoring",
@@ -1861,11 +1861,11 @@ fu_usb_device_parse_descriptor(FuUsbDevice *self, GInputStream *stream, GError *
 			}
 		} else if (descriptor_kind == FU_USB_DESCRIPTOR_KIND_HID) {
 			g_autoptr(FuUsbHidDescriptor) hid_descriptor = fu_usb_hid_descriptor_new();
-			if (!fu_firmware_parse_stream(FU_FIRMWARE(hid_descriptor),
-						      stream,
-						      offset,
-						      FU_FIRMWARE_PARSE_FLAG_NONE,
-						      error))
+			if (!fu_firmware_parse_bytes(FU_FIRMWARE(hid_descriptor),
+						     blob,
+						     offset,
+						     FU_FIRMWARE_PARSE_FLAG_NONE,
+						     error))
 				return FALSE;
 			if (iface_last == NULL) {
 				g_warning("hid descriptor without prior interface, ignoring");
@@ -1918,16 +1918,16 @@ fu_usb_device_ensure_interfaces(FuUsbDevice *self, GError **error)
 		libusb_free_config_descriptor(config);
 	} else {
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GInputStream) stream = NULL;
+		g_autoptr(GBytes) blob = NULL;
 
-		stream = fu_usb_device_load_descriptor_stream(self, "descriptors", &error_local);
-		if (stream == NULL) {
+		blob = fu_usb_device_load_descriptor(self, "descriptors", &error_local);
+		if (blob == NULL) {
 			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 				g_propagate_error(error, g_steal_pointer(&error_local));
 				return FALSE;
 			}
 		} else {
-			if (!fu_usb_device_parse_descriptor(self, stream, error))
+			if (!fu_usb_device_parse_descriptor(self, blob, error))
 				return FALSE;
 		}
 	}

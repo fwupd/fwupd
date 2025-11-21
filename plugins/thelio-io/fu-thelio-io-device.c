@@ -59,30 +59,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	const gchar *devpath;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FuIOChannel) io_channel = NULL;
-	const guint8 buf[] = {'1', '\n'};
-
-	devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
-	if (G_UNLIKELY(devpath == NULL)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Could not determine sysfs path for device");
-		return FALSE;
-	}
-
-	fn = g_build_filename(devpath, "bootloader", NULL);
-	io_channel = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
-	if (io_channel == NULL)
-		return FALSE;
-	if (!fu_io_channel_write_raw(io_channel,
-				     buf,
-				     sizeof(buf),
-				     500,
-				     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-				     error))
+	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "bootloader", "1\n", 500, error))
 		return FALSE;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;

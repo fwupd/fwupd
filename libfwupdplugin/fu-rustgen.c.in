@@ -10,6 +10,10 @@
 #include "fu-string.h"
 {%- endif %}
 
+{%- for header_basename in import_headers %}
+#include "{{header_basename}}"
+{%- endfor %}
+
 #ifdef G_LOG_DOMAIN
   #undef G_LOG_DOMAIN
 #endif

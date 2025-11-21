@@ -131,7 +131,7 @@ typedef enum {
 	 * Since: 2.0.17
 	 */
 	FWUPD_REMOTE_FLAG_NO_PHASED_UPDATES = 1 << 6,
-} FwupdRemoteFlags;
+} G_GNUC_FLAG_ENUM FwupdRemoteFlags;
 
 FwupdRemoteKind
 fwupd_remote_kind_from_string(const gchar *kind);

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "fu-daemon-struct.h"
 #include "fu-engine.h"
 
 #define FU_TYPE_DAEMON (fu_daemon_get_type())
@@ -39,10 +38,6 @@ fu_daemon_stop(FuDaemon *self, GError **error) G_GNUC_NON_NULL(1);
 
 FuEngine *
 fu_daemon_get_engine(FuDaemon *self) G_GNUC_NON_NULL(1);
-FuDaemonMachineKind
-fu_daemon_get_machine_kind(FuDaemon *self) G_GNUC_NON_NULL(1);
-void
-fu_daemon_set_machine_kind(FuDaemon *self, FuDaemonMachineKind machine_kind) G_GNUC_NON_NULL(1);
 void
 fu_daemon_set_update_in_progress(FuDaemon *self, gboolean update_in_progress) G_GNUC_NON_NULL(1);
 gboolean

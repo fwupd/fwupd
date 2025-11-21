@@ -15,7 +15,7 @@ typedef enum {
 	FU_POLKIT_AUTHORITY_CHECK_FLAG_NONE = 0,
 	FU_POLKIT_AUTHORITY_CHECK_FLAG_ALLOW_USER_INTERACTION = 1 << 0,
 	FU_POLKIT_AUTHORITY_CHECK_FLAG_USER_IS_TRUSTED = 1 << 1,
-} FuPolkitAuthorityCheckFlags;
+} G_GNUC_FLAG_ENUM FuPolkitAuthorityCheckFlags;
 
 FuPolkitAuthority *
 fu_polkit_authority_new(void);

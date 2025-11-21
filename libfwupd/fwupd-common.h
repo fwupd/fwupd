@@ -68,7 +68,7 @@ typedef enum {
 	FWUPD_GUID_FLAG_MIXED_ENDIAN = 1 << 1,
 	/*< private >*/
 	FWUPD_GUID_FLAG_LAST
-} FwupdGuidFlags;
+} G_GNUC_FLAG_ENUM FwupdGuidFlags;
 
 /* GObject Introspection does not understand typedefs with sizes */
 #ifdef __GI_SCANNER__

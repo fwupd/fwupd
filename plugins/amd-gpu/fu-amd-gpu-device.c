@@ -87,8 +87,7 @@ fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GErro
 		return FALSE;
 	while ((f = g_dir_read_name(dir))) {
 		if (g_str_has_prefix(f, "card")) {
-			g_autofree gchar *devbase = fu_path_from_kind(FU_PATH_KIND_DEVFS);
-			device_file = g_build_filename(devbase, "dri", f, NULL);
+			device_file = fu_path_build(FU_PATH_KIND_DEVFS, "dri", f, NULL);
 			break;
 		}
 	}

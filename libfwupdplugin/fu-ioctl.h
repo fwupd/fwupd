@@ -24,7 +24,7 @@ typedef enum {
 	FU_IOCTL_FLAG_RETRY = 1 << 0,
 	/*< private >*/
 	FU_IOCTL_FLAG_LAST
-} FuIoctlFlags;
+} G_GNUC_FLAG_ENUM FuIoctlFlags;
 
 typedef gboolean (*FuIoctlFixupFunc)(FuIoctl *self,
 				     gpointer ptr,

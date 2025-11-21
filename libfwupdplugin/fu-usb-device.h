@@ -26,7 +26,7 @@ struct _FuUsbDeviceClass {
 typedef enum {
 	FU_USB_DEVICE_CLAIM_FLAG_NONE = 0,
 	FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER = 1 << 0,
-} FuUsbDeviceClaimFlags;
+} G_GNUC_FLAG_ENUM FuUsbDeviceClaimFlags;
 
 guint8
 fu_usb_device_get_bus(FuUsbDevice *self) G_GNUC_NON_NULL(1);

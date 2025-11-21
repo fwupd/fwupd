@@ -82,6 +82,12 @@ fu_udev_device_write_bytes(FuUdevDevice *self,
 			   FuIOChannelFlags flags,
 			   GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
 gboolean
+fu_udev_device_write_byte_array(FuUdevDevice *self,
+				GByteArray *buf,
+				guint timeout_ms,
+				FuIOChannelFlags flags,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1, 2);
+gboolean
 fu_udev_device_read(FuUdevDevice *self,
 		    guint8 *buf,
 		    gsize bufsz,
@@ -95,6 +101,12 @@ fu_udev_device_read_bytes(FuUdevDevice *self,
 			  guint timeout_ms,
 			  FuIOChannelFlags flags,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
+GByteArray *
+fu_udev_device_read_byte_array(FuUdevDevice *self,
+			       gsize count,
+			       guint timeout_ms,
+			       FuIOChannelFlags flags,
+			       GError **error) G_GNUC_WARN_UNUSED_RESULT G_GNUC_NON_NULL(1);
 gboolean
 fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT
     G_GNUC_NON_NULL(1);

@@ -267,7 +267,8 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 					      "device_name",
 					      FU_UDEV_DEVICE_ATTR_READ_TIMEOUT_DEFAULT,
 					      NULL);
-		fu_device_set_name(device, attr_device_name);
+		if (attr_device_name != NULL)
+			fu_device_set_name(device, attr_device_name);
 	}
 
 	/* set the controller name */
