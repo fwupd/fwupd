@@ -18,12 +18,6 @@
 #include "fu-genesys-usbhub-firmware.h"
 #include "fu-genesys-usbhub-struct.h"
 
-/*
- * NOTE: DO NOT ALLOW ANY MORE MAGIC CONSTANTS IN THIS FILE
- * nocheck:magic-inlines=85
- * nocheck:magic-defines=16
- */
-
 #define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER "has-mstar-scaler"
 #define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY	"has-public-key"
 
@@ -120,7 +114,7 @@ struct _FuGenesysUsbhubDevice {
 	 * Also, to fulfill dual bank mechanism, we shall keep at last one fw bank is right.
 	 *
 	 * For this purpose, we usually backup bank1 (right fw) to bank2, and update fw to bank1.
-	 * In rare case - boot-up on bank2, we can update fw to bank1 and skip backup.
+	 * In rare case - bootup on bank2, we can update fw to bank1 and skip backup.
 	 */
 	gboolean backup_hub_fw_bank1;
 	GBytes *hub_fw_bank1_data; /* restore hub bank1 fw for backup */
@@ -961,7 +955,7 @@ fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_nu
 
 	/* validate and parse public-key */
 	if (self->has_hw_codesign) {
-		/* initiator device has ECDSA key and signature only */
+		/* master device has ECDSA key and signature only */
 		if (fu_struct_genesys_fw_ecdsa_public_key_validate(buf, bufsz, 0, NULL)) {
 			self->codesign = FU_GENESYS_FW_CODESIGN_ECDSA;
 			self->st_codesign =
@@ -981,7 +975,7 @@ fu_genesys_usbhub_device_get_public_key(FuGenesysUsbhubDevice *self, int bank_nu
 			    fu_struct_genesys_fw_rsa_public_key_text_parse(buf, bufsz, 0, error);
 			self->st_public_key = g_byte_array_ref(self->st_codesign);
 		} else if (fu_struct_genesys_fw_codesign_info_ecdsa_validate(buf, bufsz, 0, NULL)) {
-			/* target device has completely ECDSA codesign info */
+			/* slave device has completely ECDSA codesign info */
 			gsize keysz = 0;
 			const guint8 *key = NULL;
 

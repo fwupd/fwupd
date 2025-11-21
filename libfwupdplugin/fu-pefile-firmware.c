@@ -16,6 +16,7 @@
 #include "fu-csv-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-linear-firmware.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-pefile-firmware.h"
 #include "fu-pefile-struct.h"

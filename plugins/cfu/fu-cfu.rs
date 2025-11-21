@@ -74,7 +74,7 @@ struct FuStructCfuOfferRsp {
 }
 
 #[repr(u8)]
-enum FuCfuContentFlags {
+enum FuCfuContentFlag {
     Verify = 0x08,
     TestReplaceFilesystem = 0x20,
     LastBlock = 0x40,
@@ -101,7 +101,7 @@ enum FuCfuContentStatus {
 #[derive(New, Getters)]
 #[repr(C, packed)]
 struct FuStructCfuContentReq {
-    flags: FuCfuContentFlags,
+    flags: FuCfuContentFlag,
     data_length: u8,
     seq_number: u16le,
     address: u32le,

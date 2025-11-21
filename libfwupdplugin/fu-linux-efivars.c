@@ -23,6 +23,7 @@
 
 #include "fwupd-error.h"
 
+#include "fu-common.h"
 #include "fu-linux-efivars.h"
 #include "fu-path.h"
 

@@ -12,6 +12,8 @@
 
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
+#include "fu-common.h"
+#include "fu-input-stream.h"
 #include "fu-mem.h"
 
 /**

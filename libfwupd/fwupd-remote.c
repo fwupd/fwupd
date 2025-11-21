@@ -11,6 +11,7 @@
 
 #include "fwupd-binder-variant-hack.h"
 #include "fwupd-codec.h"
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"

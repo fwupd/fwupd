@@ -51,8 +51,6 @@ fu_engine_config_get_test_devices(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 gboolean
 fu_engine_config_get_ignore_requirements(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 gboolean
-fu_engine_config_get_ignore_efivars_free_space(FuEngineConfig *self) G_GNUC_NON_NULL(1);
-gboolean
 fu_engine_config_get_release_dedupe(FuEngineConfig *self) G_GNUC_NON_NULL(1);
 FuReleasePriority
 fu_engine_config_get_release_priority(FuEngineConfig *self) G_GNUC_NON_NULL(1);

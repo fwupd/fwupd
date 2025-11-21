@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
 #include "fu-common.h"
 #include "fu-edid-struct.h"
 #include "fu-edid.h"

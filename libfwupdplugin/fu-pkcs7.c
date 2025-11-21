@@ -14,6 +14,7 @@
 
 #include "fu-input-stream.h"
 #include "fu-pkcs7.h"
+#include "fu-string.h"
 #include "fu-x509-certificate.h"
 
 #ifdef HAVE_GNUTLS

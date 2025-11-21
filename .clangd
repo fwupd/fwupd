@@ -1,5 +1,0 @@
-CompileFlags:
-    CompilationDatabase: venv/build
-Diagnostics:
-  Includes:
-    IgnoreHeader: config\.h

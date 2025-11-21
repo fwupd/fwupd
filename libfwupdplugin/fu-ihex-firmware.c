@@ -11,6 +11,8 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
+#include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
 #include "fu-mem.h"

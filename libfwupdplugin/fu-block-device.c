@@ -17,6 +17,7 @@
 
 #include "fu-block-device.h"
 #include "fu-dump.h"
+#include "fu-usb-device.h"
 
 /**
  * FuBlockDevice

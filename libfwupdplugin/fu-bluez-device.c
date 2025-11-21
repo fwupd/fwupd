@@ -15,6 +15,7 @@
 #include "fu-bluez-device.h"
 #include "fu-dump.h"
 #include "fu-firmware-common.h"
+#include "fu-string.h"
 
 #define DEFAULT_PROXY_TIMEOUT 5000
 

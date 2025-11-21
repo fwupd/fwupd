@@ -2,7 +2,6 @@
 Checks: "-*,\
 bugprone-*,\
 -bugprone-assignment-in-if-condition,\
--bugprone-casting-through-void,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-implicit-widening-of-multiplication-result,\
 -bugprone-macro-parentheses,\
@@ -11,8 +10,6 @@ bugprone-*,\
 -bugprone-reserved-identifier,\
 -bugprone-too-small-loop-variable,\
 -bugprone-unchecked-optional-access,\
--bugprone-multi-level-pointer-conversion,\
--bugprone-multi-level-implicit-pointer-conversion,\
 misc-*,\
 -misc-confusable-identifiers,\
 -misc-const-correctness,\

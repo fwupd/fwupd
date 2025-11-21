@@ -16,6 +16,7 @@
 #include "fu-efivars-private.h"
 #include "fu-mem.h"
 #include "fu-pefile-firmware.h"
+#include "fu-volume-private.h"
 
 G_DEFINE_TYPE(FuEfivars, fu_efivars, G_TYPE_OBJECT)
 

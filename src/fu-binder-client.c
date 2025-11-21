@@ -75,12 +75,10 @@ struct FuUtilPrivate {
 	FwupdReleaseFlags filter_release_exclude;
 };
 
-typedef struct FuUtilPrivate FuUtilPrivate;
-
 typedef struct self {
 	GMainLoop *loop;
 	gulong death_id;
-} FuUtilBinder;
+} FuUtil;
 
 static void
 fu_util_private_free(FuUtilPrivate *priv)
@@ -112,12 +110,12 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
 #pragma clang diagnostic pop
 
 static void
-fu_util_binder_free(FuUtilBinder *self)
+fu_self_free(FuUtil *self)
 {
 	g_free(self);
 }
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilBinder, fu_util_binder_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_self_free)
 
 /* Attempts to set error from the parcel status
  * sets error and returns FALSE if the header is invalid or contains an error
@@ -387,17 +385,11 @@ fu_util_build_device_tree_node(FuUtilPrivate *priv, FuUtilNode *root, FwupdDevic
 		g_node_append_data(root_child, g_object_ref(fwupd_device_get_release_default(dev)));
 }
 
-typedef struct {
-	FuUtilPrivate *priv;
-	GPtrArray *devs;
-} FuUtilTraverseData;
-
 // Taken from FuUtil
 static gboolean
 fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
 {
-	FuUtilTraverseData *data = (FuUtilTraverseData *)user_data;
-	FuUtilPrivate *priv = data->priv;
+	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
 	FwupdDevice *dev = n->data;
 
 	/* root node */
@@ -419,7 +411,7 @@ fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
 				      priv->filter_device_include,
 				      priv->filter_device_exclude))
 		g_clear_object(&n->data);
-	else if (!priv->show_all && !fu_util_is_interesting_device(data->devs, dev))
+	else if (!priv->show_all && !fu_util_is_interesting_device(dev))
 		g_clear_object(&n->data);
 
 	/* continue */
@@ -430,8 +422,6 @@ fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
 static void
 fu_util_build_device_tree(FuUtilPrivate *priv, FuUtilNode *root, GPtrArray *devs)
 {
-	FuUtilTraverseData data = {priv, devs};
-
 	/* add the top-level parents */
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
@@ -457,13 +447,12 @@ fu_util_build_device_tree(FuUtilPrivate *priv, FuUtilNode *root, GPtrArray *devs
 	}
 
 	/* prune children that are not updatable */
-	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, &data);
+	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, priv);
 }
 
 static gboolean
-fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
+fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilPrivate *priv = (FuUtilPrivate *)self;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) devs = fu_util_get_devices_call(priv, error);
 
@@ -522,9 +511,8 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 }
 
 static gboolean
-fu_util_local_install(FuUtil *self, gchar **values, GError **error)
+fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilPrivate *priv = (FuUtilPrivate *)self;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -584,9 +572,8 @@ fu_util_print_error(FuUtilPrivate *priv, const GError *error)
 }
 
 static gboolean
-fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
+fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilPrivate *priv = (FuUtilPrivate *)self;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
@@ -610,9 +597,8 @@ fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_refresh(FuUtil *self, gchar **values, GError **error)
+fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilPrivate *priv = (FuUtilPrivate *)self;
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -639,9 +625,8 @@ fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
+fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FuUtilPrivate *priv = (FuUtilPrivate *)self;
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
@@ -951,7 +936,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilBinderThreadData, fu_util_binder_thread_data
 int
 main(int argc, char *argv[])
 {
-	g_autoptr(FuUtilBinder) self = g_new0(FuUtilBinder, 1);
+	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();

@@ -9,13 +9,9 @@
 
 #include "config.h"
 
-#include <libusb.h>
-
 #include "fu-context-private.h"
 #include "fu-usb-backend.h"
-#ifndef HAVE_UDEV
 #include "fu-usb-device-private.h"
-#endif
 
 struct _FuUsbBackend {
 	FuBackend parent_instance;

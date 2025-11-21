@@ -14,7 +14,9 @@
 #include "fu-coswid-firmware.h"
 #include "fu-input-stream.h"
 #include "fu-lzma-common.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
+#include "fu-string.h"
 #include "fu-uswid-firmware.h"
 #include "fu-uswid-struct.h"
 

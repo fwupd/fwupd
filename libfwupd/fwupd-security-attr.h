@@ -9,6 +9,7 @@
 #include <glib-object.h>
 
 #include "fwupd-build.h"
+#include "fwupd-enums.h"
 
 G_BEGIN_DECLS
 

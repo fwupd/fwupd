@@ -15,6 +15,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-usb-config-descriptor-private.h"
 
 struct _FuUsbConfigDescriptor {

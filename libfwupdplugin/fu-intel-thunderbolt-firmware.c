@@ -14,6 +14,7 @@
 #include "fu-byte-array.h"
 #include "fu-input-stream.h"
 #include "fu-intel-thunderbolt-firmware.h"
+#include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 
 /**

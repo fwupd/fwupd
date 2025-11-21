@@ -8,9 +8,7 @@
 
 #include "config.h"
 
-#ifdef HOST_MACHINE_SYSTEM_DARWIN
 #include "fu-context-private.h"
-#endif
 #include "fu-hwids-private.h"
 
 gboolean

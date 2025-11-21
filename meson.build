@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version: '2.0.13',
+  version: '2.0.12',
   license: 'LGPL-2.1-or-later',
   meson_version: '>=1.3.0',
   default_options: ['warning_level=2', 'c_std=c17'],
@@ -612,10 +612,6 @@ conf.set_quoted('MOTD_DIR', motd_dir)
 
 conf.set_quoted('FU_DEFAULT_P2P_POLICY', get_option('p2p_policy'))
 
-if get_option('plugin_uefi_capsule_splash')
-  conf.set('FWUPD_UEFI_CAPSULE_SPLASH_ENABLED', '1')
-endif
-
 configure_file(
   output: 'config.h',
   configuration: conf
@@ -694,14 +690,14 @@ umockdev_integration_tests = get_option('umockdev_tests')                     \
                               .disable_auto_if(not introspection.allowed())   \
                               .disable_auto_if(not run_sanitize_unsafe_tests) \
                               .disable_auto_if(dbusmock.returncode() != 0)
-dependency('umockdev-1.0', required: get_option('umockdev_tests'))
+umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
 
 if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')
 endif
 
-allow_uefi = host_machine.system() in ['linux', 'freebsd'] and \
-             host_machine.cpu_family() in ['x86', 'x86_64', 'aarch64', 'riscv64', 'loongarch64']
+allow_uefi_capsule = host_machine.system() in ['linux', 'freebsd'] and \
+                     host_machine.cpu_family() in ['x86', 'x86_64', 'aarch64', 'riscv64', 'loongarch64']
 
 subdir('generate-build')
 subdir('libfwupd')

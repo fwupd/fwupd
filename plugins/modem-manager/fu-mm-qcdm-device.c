@@ -10,10 +10,6 @@
 
 #include "fu-mm-qcdm-device.h"
 
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#endif
-
 G_DEFINE_TYPE(FuMmQcdmDevice, fu_mm_qcdm_device, FU_TYPE_MM_DEVICE)
 
 static gboolean
@@ -94,51 +90,6 @@ fu_mm_qcdm_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mm_qcdm_device_set_io_flags(FuMmQcdmDevice *self, GError **error)
-{
-#ifdef HAVE_TERMIOS_H
-	gint fd = fu_io_channel_unix_get_fd(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)));
-	struct termios tio;
-
-	if (tcgetattr(fd, &tio) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "could not get termios attributes");
-		return FALSE;
-	}
-
-	cfmakeraw(&tio);
-
-	if (tcsetattr(fd, TCSANOW, &tio) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "could not set termios attributes");
-		return FALSE;
-	}
-
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <termios.h> not found");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_mm_qcdm_device_open(FuDevice *device, GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-
-	if (!FU_DEVICE_CLASS(fu_mm_qcdm_device_parent_class)->open(device, error))
-		return FALSE;
-	return fu_mm_qcdm_device_set_io_flags(self, error);
-}
-
-static gboolean
 fu_mm_qcdm_device_prepare(FuDevice *device,
 			  FuProgress *progress,
 			  FwupdInstallFlags flags,
@@ -184,7 +135,6 @@ static void
 fu_mm_qcdm_device_class_init(FuMmQcdmDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->open = fu_mm_qcdm_device_open;
 	device_class->probe = fu_mm_qcdm_device_probe;
 	device_class->detach = fu_mm_qcdm_device_detach;
 	device_class->prepare = fu_mm_qcdm_device_prepare;

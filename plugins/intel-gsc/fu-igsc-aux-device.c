@@ -10,6 +10,7 @@
 #include "fu-igsc-aux-device.h"
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-device.h"
+#include "fu-igsc-heci.h"
 
 struct _FuIgscAuxDevice {
 	FuDevice parent_instance;
@@ -33,27 +34,16 @@ static gboolean
 fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	g_autofree gchar *name = NULL;
-
-	/* from the self tests */
-	if (parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no parent FuIgscDevice");
-		return FALSE;
-	}
 
 	/* fix name */
-	name = g_strdup_printf("%s Data", fu_device_get_name(parent));
-	fu_device_set_name(device, name);
+	if (parent != NULL) {
+		g_autofree gchar *name = NULL;
+		name = g_strdup_printf("%s Data", fu_device_get_name(parent));
+		fu_device_set_name(device, name);
+	}
 
 	/* add extra instance IDs */
-	fu_device_add_instance_str(device,
-				   "PART",
-				   fu_device_has_private_flag(parent, FU_IGSC_DEVICE_FLAG_IS_WEDGED)
-				       ? "FWDATA_RECOVERY"
-				       : "FWDATA");
+	fu_device_add_instance_str(device, "PART", "FWDATA");
 	if (!fu_device_build_instance_id(device, error, "MEI", "VEN", "DEV", "PART", NULL))
 		return FALSE;
 	return fu_device_build_instance_id(device,
@@ -82,11 +72,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get aux version: ");
 		return FALSE;
 	}
-	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
-		version = g_strdup("0.0");
-	} else {
-		version = g_strdup_printf("%u.%x", self->major_version, self->oem_version);
-	}
+	version = g_strdup_printf("%u.%x", self->major_version, self->oem_version);
 	fu_device_set_version(device, version);
 
 	/* success */

@@ -17,7 +17,6 @@ enum FuMkhiGroupId {
     Gen = 0xFF,
 }
 
-#[derive(ToString)]
 enum FuMkhiStatus {
     Success,
     InvalidState,

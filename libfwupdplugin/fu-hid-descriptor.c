@@ -13,6 +13,7 @@
 #include "fu-hid-report-item.h"
 #include "fu-hid-struct.h"
 #include "fu-input-stream.h"
+#include "fu-mem.h"
 
 /**
  * FuHidDescriptor:

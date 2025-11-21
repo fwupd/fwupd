@@ -1,5 +1,4 @@
-host_machine.system() in ['linux', 'android'] or subdir_done()
-
+if host_machine.system() in ['linux', 'android']
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -54,4 +53,5 @@ if get_option('tests')
     ],
   )
   test('elantp-self-test', e, env: env)
+endif
 endif

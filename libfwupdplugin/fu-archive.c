@@ -19,6 +19,8 @@
 #include "fwupd-error.h"
 
 #include "fu-archive.h"
+#include "fu-bytes.h"
+#include "fu-input-stream.h"
 
 /**
  * FuArchive:

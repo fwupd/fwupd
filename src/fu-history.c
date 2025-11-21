@@ -11,11 +11,14 @@
 #include <glib/gstdio.h>
 #include <json-glib/json-glib.h>
 #include <sqlite3.h>
+#include <stdlib.h>
+
+#include "fwupd-security-attr-private.h"
 
 #include "fu-device-private.h"
 #include "fu-history.h"
 #include "fu-release.h"
-#include "fu-security-attrs-private.h"
+#include "fu-security-attr-common.h"
 
 /*
  * v1	legacy schema

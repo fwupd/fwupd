@@ -1,5 +1,4 @@
-allow_uefi or subdir_done()
-
+if allow_uefi_capsule
 cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoThinkLmi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -40,4 +39,5 @@ if get_option('tests')
     ],
   )
   test('lenovo-thinklmi-self-test', e, env: env)
+endif
 endif

@@ -55,7 +55,6 @@ struct FuStructSynapromReplyGetVersion {
     device_type: u8,
 }
 
-#[derive(ToString)]
 enum FuSynapromResult {
     Ok                      = 0,
     GenOperationCanceled    = 103,

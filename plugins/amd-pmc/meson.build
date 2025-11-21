@@ -1,6 +1,4 @@
-host_machine.system() == 'linux' or subdir_done()
-host_cpu in ['x86', 'x86_64'] or subdir_done()
-
+if host_machine.system() == 'linux' and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdPmc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -17,3 +15,4 @@ plugin_builtins += static_library('fu_plugin_amd_pmc',
 )
 enumeration_data += files('tests/amd-pmc-setup.json')
 device_tests += files('tests/amd-pmc.json')
+endif

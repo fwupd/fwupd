@@ -11,6 +11,7 @@
 #include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-hwids-private.h"
+#include "fu-path.h"
 
 gboolean
 fu_hwids_config_setup(FuContext *ctx, FuHwids *self, GError **error)

@@ -10,7 +10,6 @@
 #include "fu-ti-tps6598x-device.h"
 #include "fu-ti-tps6598x-firmware.h"
 #include "fu-ti-tps6598x-pd-device.h"
-#include "fu-ti-tps6598x-struct.h"
 
 struct _FuTiTps6598xPdDevice {
 	FuDevice parent_instance;
@@ -40,7 +39,7 @@ fu_ti_tps6598x_pd_device_ensure_version(FuTiTps6598xPdDevice *self, GError **err
 
 	buf = fu_ti_tps6598x_device_read_target_register(proxy,
 							 self->target,
-							 FU_TI_TPS6598X_REGISTER_VERSION,
+							 TI_TPS6598X_REGISTER_VERSION,
 							 4,
 							 error);
 	if (buf == NULL)
@@ -63,7 +62,7 @@ fu_ti_tps6598x_pd_device_ensure_tx_identity(FuTiTps6598xPdDevice *self, GError *
 
 	buf = fu_ti_tps6598x_device_read_target_register(proxy,
 							 self->target,
-							 FU_TI_TPS6598X_REGISTER_TX_IDENTITY,
+							 TI_TPS6598X_REGISTER_TX_IDENTITY,
 							 47,
 							 error);
 	if (buf == NULL)

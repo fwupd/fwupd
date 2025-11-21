@@ -125,7 +125,7 @@ dbus_interface = custom_target('fwupd-generate-dbus-interface',
 )
 
 if build_daemon
-executable(
+fwupdmgr = executable(
   'fwupdmgr',
   sources: [
     'fu-util.c',
@@ -206,7 +206,7 @@ fwupdengine = library(
   ],
 )
 
-executable(
+fwupdtool = executable(
   'fwupdtool',
   fwupdengine_rs,
   plugins_hdr,

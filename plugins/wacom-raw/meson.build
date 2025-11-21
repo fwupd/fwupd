@@ -1,5 +1,4 @@
-host_machine.system() == 'linux' or subdir_done()
-
+if host_machine.system() == 'linux'
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
@@ -8,10 +7,10 @@ plugin_builtins += static_library('fu_plugin_wacom_raw',
   rustgen.process('fu-wacom-raw.rs'),
   sources: [
     'fu-wacom-raw-plugin.c',
-    'fu-wacom-raw-common.c',
-    'fu-wacom-raw-device.c',
-    'fu-wacom-raw-aes-device.c',
-    'fu-wacom-raw-emr-device.c',
+    'fu-wacom-common.c',
+    'fu-wacom-device.c',
+    'fu-wacom-aes-device.c',
+    'fu-wacom-emr-device.c',
   ],
   include_directories: plugin_incdirs,
   c_args: cargs,
@@ -22,3 +21,4 @@ plugin_builtins += static_library('fu_plugin_wacom_raw',
 device_tests += files(
   'tests/wacom-g14t.json',
 )
+endif

@@ -8,8 +8,11 @@
 
 #include "config.h"
 
+#include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-cfu-firmware-struct.h"
 #include "fu-cfu-payload.h"
+#include "fu-common.h"
 #include "fu-input-stream.h"
 
 /**

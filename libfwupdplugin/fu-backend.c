@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-backend-private.h"
 #include "fu-device-private.h"
+#include "fu-string.h"
 
 /**
  * FuBackend:

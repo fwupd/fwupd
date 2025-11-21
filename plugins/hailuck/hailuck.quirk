@@ -1,0 +1,25 @@
+# bootloader
+
+[USB\VID_0603&PID_1020]
+Plugin = hailuck
+GType = FuHailuckBlDevice
+#Flags = is-bootloader
+
+[USB\VID_258A&PID_001E]
+Plugin = hailuck
+GType = FuHailuckKbdDevice
+Vendor = PINE64
+CounterpartGuid = USB\VID_0603&PID_1020
+
+[USB\VID_258A&PID_001E&MODE_KBD]
+Name = Keyboard
+
+[USB\VID_258A&PID_001F]
+Plugin = hailuck
+GType = FuHailuckKbdDevice
+CounterpartGuid = USB\VID_0603&PID_1020
+
+[USB\VID_258A&PID_000D]
+Plugin = hailuck
+GType = FuHailuckKbdDevice
+CounterpartGuid = USB\VID_0603&PID_1020

@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "fwupd-bios-setting.h"
+#include "fwupd-client-private.h"
 #include "fwupd-client-sync.h"
 #include "fwupd-codec.h"
 #include "fwupd-common.h"

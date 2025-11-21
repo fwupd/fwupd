@@ -11,6 +11,7 @@
 #include <zlib.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-cab-firmware-private.h"
 #include "fu-cab-image.h"
 #include "fu-cab-struct.h"

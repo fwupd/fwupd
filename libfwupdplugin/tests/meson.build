@@ -68,8 +68,7 @@ install_data([
     'uswid.builder.xml',
     'uswid-compressed.builder.xml',
   ],
-  install_dir: join_paths(installed_test_datadir, 'tests'),
-  follow_symlinks: true,
+  install_dir: join_paths(installed_test_datadir, 'tests')
 )
 
 install_data([
@@ -106,7 +105,6 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/pending_reboot',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes'),
-  follow_symlinks: true,
 )
 install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/current_value',
@@ -119,7 +117,6 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense/type',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/WlanAutoSense'),
-  follow_symlinks: true,
 )
 
 install_data([
@@ -134,7 +131,6 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop/type',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/CustomChargeStop'),
-  follow_symlinks: true,
 )
 
 install_data([
@@ -148,7 +144,6 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset/max_length',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/Asset'),
-  follow_symlinks: true,
 )
 
 install_data([
@@ -163,7 +158,6 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd/type',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/BiosRcvrFrmHdd'),
-  follow_symlinks: true,
 )
 
 install_data([
@@ -177,5 +171,4 @@ install_data([
     'bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot/type',
   ],
   install_dir: join_paths(installed_test_datadir, 'tests/bios-attrs/dell-xps13-9310/dell-wmi-sysman/attributes/SecureBoot'),
-  follow_symlinks: true,
 )

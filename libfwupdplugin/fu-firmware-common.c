@@ -8,6 +8,9 @@
 
 #include "config.h"
 
+#include <string.h>
+
+#include "fu-common.h"
 #include "fu-firmware-common.h"
 #include "fu-mem.h"
 #include "fu-string.h"

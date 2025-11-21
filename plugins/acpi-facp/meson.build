@@ -1,6 +1,4 @@
-hsi or subdir_done()
-host_cpu in ['x86', 'x86_64'] or subdir_done()
-
+if hsi and (host_cpu == 'x86' or host_cpu == 'x86_64')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -39,4 +37,5 @@ if get_option('tests')
     ],
   )
   test('acpi-facp-self-test', e, env: env)  # added to installed-tests
+endif
 endif

@@ -23,6 +23,7 @@
 
 #include "fwupd-bios-setting.h"
 #include "fwupd-client-private.h"
+#include "fwupd-client-sync.h"
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"

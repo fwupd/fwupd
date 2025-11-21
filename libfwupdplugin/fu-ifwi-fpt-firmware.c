@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "fu-byte-array.h"
+#include "fu-bytes.h"
 #include "fu-ifwi-fpt-firmware.h"
 #include "fu-ifwi-struct.h"
 #include "fu-partial-input-stream.h"

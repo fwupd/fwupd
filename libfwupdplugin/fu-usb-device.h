@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-plugin.h"
 #include "fu-udev-device.h"
 #include "fu-usb-interface.h"
 #include "fu-usb-struct.h"

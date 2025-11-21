@@ -1,7 +1,7 @@
 // Copyright 2023 Richard Hughes <richard@hughsie.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-enum FuUswidHeaderFlags {
+enum FuUswidHeaderFlag {
     None = 0b0,
     Compressed = 0b1,
 }

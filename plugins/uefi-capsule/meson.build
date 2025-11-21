@@ -1,5 +1,4 @@
-allow_uefi or subdir_done()
-
+if allow_uefi_capsule
 subdir('tests')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
@@ -151,3 +150,4 @@ summary({
   'efi binary': get_option('efi_binary'),
   'capsule splash': get_option('plugin_uefi_capsule_splash'),
 }, section:'uefi capsule options')
+endif

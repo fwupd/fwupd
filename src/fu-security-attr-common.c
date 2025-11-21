@@ -12,6 +12,7 @@
 #include "fwupd-security-attr-private.h"
 
 #include "fu-security-attr-common.h"
+#include "fu-security-attrs-private.h"
 
 gchar *
 fu_security_attr_get_name(FwupdSecurityAttr *attr)

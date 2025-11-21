@@ -1,5 +1,4 @@
-allow_uefi or subdir_done()
-
+if allow_uefi_capsule
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiEsrt"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -16,4 +15,5 @@ plugin_builtins += static_library('fu_plugin_uefi_esrt',
     plugin_deps,
   ],
 )
+endif
 

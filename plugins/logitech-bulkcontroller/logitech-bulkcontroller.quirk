@@ -20,3 +20,8 @@ InstallDuration = 1500
 # Sight
 [LOGI\MODEL_VU0067]
 InstallDuration = 1500
+
+# Sight as Standalone device
+[USB\VID_046D&PID_087A]
+Plugin = logitech_bulkcontroller
+InstallDuration = 1500
