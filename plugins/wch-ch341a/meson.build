@@ -15,5 +15,4 @@ plugin_builtins += static_library('fu_plugin_wch_ch341a',
   dependencies: plugin_deps,
 )
 
-enumeration_data += files('tests/wch-ch341a-setup.json')
 device_tests += files('tests/wch-ch341a.json')
