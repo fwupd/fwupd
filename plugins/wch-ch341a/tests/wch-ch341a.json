@@ -3,12 +3,12 @@
   "interactive": false,
   "steps": [
     {
-      "emulation-file": "@enumeration_datadir@/wch-ch341a-setup.json",
+      "url": "31e4cf2ae3e5a3aac46eb12005f2dfd15dda85a5ccc4c93251e93bcf4c6035a1-firmware.cab",
+      "emulation-url": "dde0010267589e96126000bf191fce95fcdc30d795e486069b1820ce7e2aa37d-emulation.zip",
       "components": [
         {
-          "version": "3.4",
           "guids": [
-            "e06cabdb-2908-5d74-a63f-0daa8a1be58a"
+            "fdae557c-1f42-5e24-925f-4b6495c8b35c"
           ]
         }
       ]
