@@ -140,7 +140,7 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "ddcci write length exceed max length:256: ");
+				    "DDC/CI write length exceed max length: ");
 		return FALSE;
 	}
 
@@ -149,13 +149,10 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 	buf_write[1] = sub_addr;
 	buf_write[2] = temp | 0x80;
 
-	for (gsize i = 0; i < datasz; i++) {
+	for (gsize i = 0; i < datasz; i++)
 		buf_write[i + 3] = data[i];
-	}
-
-	for (gsize i = 0; i < (datasz + 3); i++) {
+	for (gsize i = 0; i < (datasz + 3); i++)
 		buf_write[3 + datasz] ^= buf_write[i];
-	}
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(self,
 						  target_addr,
@@ -163,7 +160,7 @@ fu_rts54hub_rtd21xx_device_ddcci_write(FuRts54hubRtd21xxDevice *self,
 						  buf_write + 2,
 						  (datasz + 2),
 						  error)) {
-		g_prefix_error_literal(error, "failed to DDCCI write: ");
+		g_prefix_error_literal(error, "failed to DDC/CI write: ");
 		return FALSE;
 	}
 
@@ -218,7 +215,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "ddcci read length exceed max length:256: ");
+				    "DDC/CI read length exceed max length: ");
 		return FALSE;
 	}
 
@@ -228,7 +225,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 						 buf_read,
 						 datasz,
 						 error)) {
-		g_prefix_error_literal(error, "failed to DDCCI read I2C: ");
+		g_prefix_error_literal(error, "failed to DDC/CI read I2C: ");
 		return FALSE;
 	}
 
@@ -236,7 +233,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "failed to DDCCI read I2C target addr invalid: ");
+				    "failed to DDC/CI read I2C target addr invalid: ");
 		return FALSE;
 	}
 
@@ -246,7 +243,7 @@ fu_rts54hub_rtd21xx_device_ddcci_read(FuRts54hubRtd21xxDevice *self,
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_DATA,
-				    "ddcci read cmd length exceed max length:256: ");
+				    "DDC/CI read cmd length exceed max length: ");
 		return FALSE;
 	}
 

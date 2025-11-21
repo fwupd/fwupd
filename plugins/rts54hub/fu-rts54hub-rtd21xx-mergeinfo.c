@@ -289,20 +289,16 @@ fu_rts54hub_rtd21xx_mergeinfo_detach_cb(FuDevice *device, gpointer user_data, GE
 {
 	FuRts54hubRtd21xxMergeinfo *self = FU_RTS54HUB_RTD21XX_MERGEINFO(device);
 
+	/* wait for device ready */
 	if (!fu_rts54hub_rtd21xx_mergeinfo_ddcci_mode(self, error)) {
 		g_prefix_error_literal(error, "change to DDC/CI mode fail: ");
 		return FALSE;
 	}
-
-	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
-
 	if (!fu_rts54hub_rtd21xx_mergeinfo_check_ddcci(self, error)) {
 		g_prefix_error_literal(error, "check DDC/CI mode fail: ");
 		return FALSE;
 	}
-
-	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 300); /* ms */
 
 	/* success */
@@ -442,7 +438,7 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 					    FWUPD_ERROR_INVALID_DATA,
 					    "failed to parse version str: ");
 			return FALSE;
-		};
+		}
 	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -462,16 +458,12 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 
 	/* wait for device ready */
 	fu_device_sleep(FU_DEVICE(self), 1000); /* ms */
-
 	fu_progress_step_done(progress);
 
 	if (!fu_rts54hub_rtd21xx_mergeinfo_read_version(self, read_buf, sizeof(read_buf), error)) {
 		g_prefix_error_literal(error, "failed to read merge version: ");
 		return FALSE;
 	}
-
-	fu_progress_step_done(progress);
-
 	if (!fu_memcmp_safe(read_buf,
 			    VERSION_NUMBER_COUNT,
 			    0x0,
@@ -483,7 +475,6 @@ fu_rts54hub_rtd21xx_mergeinfo_write_firmware(FuDevice *device,
 		g_prefix_error_literal(error, "failed to compare merge version: ");
 		return FALSE;
 	}
-
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -500,7 +491,6 @@ static void
 fu_rts54hub_rtd21xx_mergeinfo_init(FuRts54hubRtd21xxMergeinfo *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	/* set merge version format*/
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
 }
 

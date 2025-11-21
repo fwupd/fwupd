@@ -139,4 +139,3 @@ FirmwareSize = 4
 Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
-
