@@ -415,6 +415,8 @@ fu_wch_ch341a_cfi_device_init(FuWchCh341aCfiDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.cfi");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED);
 }
 
 static void

@@ -769,6 +769,8 @@ fu_release_check_version(FuRelease *self,
 	/* skip */
 	if (self->device == NULL)
 		return TRUE;
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED))
+		return TRUE;
 	if (self->request != NULL &&
 	    fu_engine_request_has_flag(self->request, FU_ENGINE_REQUEST_FLAG_NO_REQUIREMENTS)) {
 		return TRUE;
