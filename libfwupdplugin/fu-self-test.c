@@ -6791,6 +6791,30 @@ fu_device_possible_plugin_func(void)
 }
 
 static void
+fu_device_parent_name_prefix_func(void)
+{
+	g_autoptr(FuDevice) device = fu_device_new(NULL);
+	g_autoptr(FuDevice) parent = fu_device_new(NULL);
+
+	fu_device_set_id(parent, "0000000000000000000000000000000000000000");
+	fu_device_set_name(parent, "Parent1");
+
+	fu_device_set_id(device, "1111111111111111111111111111111111111111");
+	fu_device_set_name(device, "Child1");
+	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_parent(device, parent);
+
+	g_assert_cmpstr(fu_device_get_name(parent), ==, "Parent1");
+	g_assert_cmpstr(fu_device_get_name(device), ==, "Parent1 (Child1)");
+
+	/* still set, change child */
+	g_assert_true(
+	    fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX));
+	fu_device_set_name(device, "Child2");
+	g_assert_cmpstr(fu_device_get_name(device), ==, "Parent1 (Child2)");
+}
+
+static void
 fu_device_id_display_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new(NULL);
@@ -7472,6 +7496,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func("/fwupd/device", fu_device_func);
+	g_test_add_func("/fwupd/device{parent-name-prefix}", fu_device_parent_name_prefix_func);
 	g_test_add_func("/fwupd/device{id-for-display}", fu_device_id_display_func);
 	g_test_add_func("/fwupd/device{possible-plugin}", fu_device_possible_plugin_func);
 	g_test_add_func("/fwupd/device{udev}", fu_device_udev_func);
