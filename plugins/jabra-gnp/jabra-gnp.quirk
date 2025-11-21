@@ -274,3 +274,12 @@ JabraGnpAddress = 0x01
 [USB\VID_0B0E&PID_2E57]
 Plugin = jabra_gnp
 JabraGnpAddress = 0x01
+
+[USB\VID_0B0E&PID_253D]
+Plugin = jabra_gnp
+
+[USB\VID_0B0E&PID_253F]
+Plugin = jabra_gnp
+
+[USB\VID_0B0E&PID_253E]
+Plugin = jabra_gnp

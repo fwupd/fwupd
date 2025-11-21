@@ -18,7 +18,7 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
 ## Update Behavior
 
-The device is updated at runtime using USB control and interrupt transfers.
+The device is updated at runtime using HID GET and SET reports.
 
 ## Vendor ID Security
 
