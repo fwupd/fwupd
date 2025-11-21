@@ -12,6 +12,7 @@ if [ "$(id -u)" -eq 0 ]; then
     dnf install -y python3
     dnf install -y xvfb-run
     ./contrib/ci/fwupd_setup_helpers.py --yes -o fedora -v mingw64 install-dependencies
+    dnf install -y https://kojipkgs.fedoraproject.org//packages/msitools/0.106/1.fc42/x86_64/msitools-0.106-1.fc42.x86_64.rpm
 fi
 
 #prep
@@ -24,7 +25,9 @@ rm -rf $DESTDIR $build
 mkdir -p $build $DESTDIR && cd $build
 
 # Hack for Fedora bug
-sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+if [ "$(id -u)" -eq 0 ]; then
+    sed -i '/^Requires.private: termcap/d'  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/readline.pc
+fi
 
 # run before using meson
 export WINEPREFIX=$build/.wine
@@ -97,6 +100,7 @@ find $MINGW32BINDIR \
 	-o -name "libnettle-*.dll" \
 	-o -name libp11-kit-0.dll \
 	-o -name libpcre2-8-0.dll \
+	-o -name libpsl-5.dll \
 	-o -name libsqlite3-0.dll \
 	-o -name libssh2-1.dll \
 	-o -name libssl-3-x64.dll \
@@ -104,11 +108,13 @@ find $MINGW32BINDIR \
 	-o -name libtermcap-0.dll \
 	-o -name libreadline8.dll \
 	-o -name libtasn1-6.dll \
+	-o -name libunistring-2.dll \
 	-o -name libusb-1.0.dll \
 	-o -name libwinpthread-1.dll \
 	-o -name libxml2-2.dll \
 	-o -name libxmlb-2.dll \
 	-o -name libzstd.dll \
+	-o -name wldap32.dll \
 	-o -name zlib1.dll \
 	| wixl-heat \
 	-p $MINGW32BINDIR/ \
@@ -164,10 +170,6 @@ wixl -v \
 	-D Win64="yes" \
 	-D DESTDIR="$DESTDIR" \
 	-o "${MSI_FILENAME}"
-
-#generate news release
-echo "Generating news for version $VERSION"
-contrib/ci/generate_news.py $VERSION | tee -a $DESTDIR/news.txt
 
 # check the msi archive can be installed and removed (use "wine uninstaller" to do manually)
 wine msiexec /i "${MSI_FILENAME}"

@@ -10,7 +10,6 @@
 
 #include "fu-byte-array.h"
 #include "fu-chunk-array.h"
-#include "fu-input-stream.h"
 #include "fu-mem.h"
 #include "fu-partial-input-stream.h"
 #include "fu-string.h"

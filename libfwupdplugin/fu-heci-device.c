@@ -26,29 +26,15 @@ G_DEFINE_TYPE(FuHeciDevice, fu_heci_device, FU_TYPE_MEI_DEVICE)
 static gboolean
 fu_heci_device_result_to_error(FuMkhiStatus result, GError **error)
 {
-	if (result == FU_MKHI_STATUS_SUCCESS)
-		return TRUE;
-
-	switch (result) {
-	case FU_MKHI_STATUS_UNKNOWN_PERHAPS_NOT_SUPPORTED:
-	case FU_MKHI_STATUS_NOT_SUPPORTED:
-	case FU_MKHI_STATUS_NOT_AVAILABLE:
-	case FU_MKHI_STATUS_NOT_SET:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "not supported [0x%x]",
-			    result);
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "generic failure [0x%x]",
-			    result);
-		break;
-	}
-	return FALSE;
+	const gchar *msg = fu_mkhi_status_to_string(result);
+	const FuErrorMapEntry entries[] = {
+	    {FU_MKHI_STATUS_SUCCESS, FWUPD_ERROR_LAST, NULL},
+	    {FU_MKHI_STATUS_UNKNOWN_PERHAPS_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	    {FU_MKHI_STATUS_NOT_SUPPORTED, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	    {FU_MKHI_STATUS_NOT_AVAILABLE, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	    {FU_MKHI_STATUS_NOT_SET, FWUPD_ERROR_NOT_SUPPORTED, msg},
+	};
+	return fu_error_map_entry_to_gerror(result, entries, G_N_ELEMENTS(entries), error);
 }
 
 /**

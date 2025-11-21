@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="firmware">
+  <id>org.fwupd.mtdram.firmware</id>
+  <name>MTD RAM</name>
+  <summary>System firmware for the MTD RAM device</summary>
+  <description>
+    <p>The RAM device can be updated using MTD.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">26ab306d-d6ce-58f0-94db-2215e24690b9</firmware>
+  </provides>
+  <url type="homepage">http://fwupd.org/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>CC0-1.0</project_license>
+  <categories>
+    <category>X-Device</category>
+  </categories>
+  <custom>
+    <value key="LVFS::DeviceIntegrity">unsigned</value>
+    <value key="LVFS::VersionFormat">triplet</value>
+    <value key="LVFS::UpdateProtocol">org.infradead.mtd</value>
+  </custom>
+  <releases>
+    <release version="1.2.3" date="2025-07-12" urgency="high">
+      <description>
+        <p>This release updates firmware to version 1.2.3 which includes support for a mythical new feature.</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <id compare="ge" version="2.0.13">org.freedesktop.fwupd</id>
+  </requires>
+</component>

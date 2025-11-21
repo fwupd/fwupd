@@ -375,7 +375,7 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	guid_new = fwupd_guid_to_string((fwupd_guid_t *)buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
 	/* ESRT header matches payload */
-	if (g_strcmp0(fu_uefi_capsule_device_get_guid(self), guid_new) == 0) {
+	if (g_strcmp0(priv->fw_class, guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
 	}
@@ -391,11 +391,11 @@ fu_uefi_capsule_device_fixup_firmware(FuUefiCapsuleDevice *self, GBytes *fw, GEr
 	fu_struct_efi_capsule_header_set_flags(st_cap, priv->capsule_flags);
 	fu_struct_efi_capsule_header_set_header_size(st_cap, hdrsize);
 	fu_struct_efi_capsule_header_set_image_size(st_cap, bufsz + hdrsize);
-	if (fu_uefi_capsule_device_get_guid(self) == NULL) {
+	if (priv->fw_class == NULL) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no GUID set");
 		return NULL;
 	}
-	if (!fwupd_guid_from_string(fu_uefi_capsule_device_get_guid(self),
+	if (!fwupd_guid_from_string(priv->fw_class,
 				    &esrt_guid,
 				    FWUPD_GUID_FLAG_MIXED_ENDIAN,
 				    error)) {
@@ -552,14 +552,6 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 		fu_device_set_version_lowest_raw(device, priv->fw_version_lowest);
 		fu_device_set_version_lowest(device, version_lowest);
 	}
-
-	/* set flags */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 
 	/* add icons */
 	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
@@ -765,6 +757,12 @@ static void
 fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);

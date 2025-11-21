@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -63,5 +64,4 @@ if get_option('tests')
     ],
   )
   test('synaptics-mst-self-test', e, env: env)
-endif
 endif

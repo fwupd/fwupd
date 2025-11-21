@@ -10,7 +10,6 @@
 #include "fu-ipmi-device.h"
 #endif
 
-#include "fu-ipmi-device.h"
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-device.h"

@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -19,4 +20,3 @@ plugin_builtins += static_library('fu_plugin_parade_lspcon',
   ],
   dependencies: plugin_deps,
 )
-endif

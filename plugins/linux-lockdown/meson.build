@@ -1,4 +1,6 @@
-if host_machine.system() == 'linux' and hsi
+host_machine.system() == 'linux' or subdir_done()
+hsi or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxLockdown"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -12,4 +14,3 @@ plugin_builtins += static_library('fu_plugin_linux_lockdown',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-endif

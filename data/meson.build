@@ -68,7 +68,7 @@ if build_daemon
     build_conf.set('localstatedir', localstatedir)
     build_conf.set('systemd_service', 'SystemdService=fwupd.service')
     rw_directories = []
-    if allow_uefi_capsule
+    if allow_uefi
       rw_directories += [
         '-/boot/efi',
         '-/boot/EFI',
@@ -100,6 +100,7 @@ if build_daemon
       'char-gpiochip',
       'char-hidraw',
       'char-mei',
+      'char-mtd',
       'char-tpm',
       'char-usb',
       'char-usb_device',
@@ -110,7 +111,7 @@ if build_daemon
     if cc.has_header('linux/nvme_ioctl.h', required: false)
       device_allows += ['char-nvme']
     endif
-    if allow_uefi_capsule
+    if allow_uefi
       # for BLKSSZGET
       device_allows += ['block-blkext']
     endif

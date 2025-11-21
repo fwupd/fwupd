@@ -30,7 +30,7 @@
  *
  * To get a child object, you should use [method@FuProgress.get_child]. and then
  * use the result in any sub-process. You should ensure that the child
- * is not re-used without calling fu_progress_step_done().
+ * is not reused without calling fu_progress_step_done().
  *
  * There are a few nice touches in this module, so that if a module only has
  * one progress step, the child progress is used for parent updates.
@@ -61,11 +61,12 @@ struct _FuProgress {
 	GObject parent_instance;
 	gchar *id;
 	gchar *name;
-	FuProgressFlag flags;
+	FuProgressFlags flags;
 	guint percentage;
 	FwupdStatus status;
 	GPtrArray *children; /* of FuProgress */
 	gboolean profile;
+	gboolean any_child_has_step_weighting;
 	gdouble duration; /* seconds */
 	gdouble global_fraction;
 	guint step_weighting;
@@ -208,7 +209,7 @@ fu_progress_get_status(FuProgress *self)
  * Since: 1.7.0
  **/
 void
-fu_progress_add_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_add_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags |= flag;
@@ -224,7 +225,7 @@ fu_progress_add_flag(FuProgress *self, FuProgressFlag flag)
  * Since: 1.7.0
  **/
 void
-fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_remove_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	self->flags &= ~flag;
@@ -240,7 +241,7 @@ fu_progress_remove_flag(FuProgress *self, FuProgressFlag flag)
  * Since: 1.7.0
  **/
 gboolean
-fu_progress_has_flag(FuProgress *self, FuProgressFlag flag)
+fu_progress_has_flag(FuProgress *self, FuProgressFlags flag)
 {
 	g_return_val_if_fail(FU_IS_PROGRESS(self), FALSE);
 	return (self->flags & flag) > 0;
@@ -459,6 +460,7 @@ fu_progress_reset(FuProgress *self)
 	}
 
 	/* no more step data */
+	self->any_child_has_step_weighting = FALSE;
 	g_ptr_array_set_size(self->children, 0);
 }
 
@@ -559,19 +561,9 @@ fu_progress_get_step_percentage(FuProgress *self, guint idx)
 {
 	guint current = 0;
 	guint total = 0;
-	gboolean any_step_weighting = FALSE;
-
-	/* we set the step weighting manually */
-	for (guint i = 0; i < self->children->len; i++) {
-		FuProgress *child = g_ptr_array_index(self->children, i);
-		if (child->step_weighting > 0) {
-			any_step_weighting = TRUE;
-			break;
-		}
-	}
 
 	/* just use proportional */
-	if (!any_step_weighting)
+	if (!self->any_child_has_step_weighting)
 		return -1;
 
 	/* work out percentage */
@@ -680,6 +672,10 @@ fu_progress_add_step(FuProgress *self, FwupdStatus status, guint value, const gc
 	/* save data */
 	fu_progress_set_status(child, status);
 	child->step_weighting = value;
+
+	/* compute ahead of time */
+	if (child->step_weighting > 0)
+		self->any_child_has_step_weighting = TRUE;
 
 	/* adjust global percentage */
 	if (value > 0)

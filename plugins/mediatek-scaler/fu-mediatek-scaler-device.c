@@ -489,7 +489,7 @@ fu_mediatek_scaler_device_set_data(FuMediatekScalerDevice *self, FuChunk *chk, G
 	g_autoptr(FuChunkArray) chk_slices = NULL;
 	g_autoptr(GBytes) chk_bytes = fu_chunk_get_bytes(chk);
 
-	/* smaller slices to accodomate pch variants */
+	/* smaller slices to accommodate pch variants */
 	chk_slices = fu_chunk_array_new_from_bytes(chk_bytes,
 						   FU_CHUNK_ADDR_OFFSET_NONE,
 						   FU_CHUNK_PAGESZ_NONE,
