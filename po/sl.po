@@ -36,7 +36,7 @@ msgid "%s Battery Update"
 msgstr "Posodobitev baterije %s"
 
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-#. * at system bootup
+#. * at system boot-up
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "Posodobitev mikrokode CPE %s"
@@ -698,6 +698,10 @@ msgstr "Ni možno uveljaviti, ker je bila posodobitev dbx že uveljavljena."
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Spremenjeno"
+
+#. TRANSLATORS: command description
+msgid "Check if any devices are pending a reboot to complete update"
+msgstr "Preveri, če katera od naprav čaka na ponoven zagon za zaključek posodobitve"
 
 #. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
@@ -1546,6 +1550,10 @@ msgid "Gets the list of blocked firmware"
 msgstr "Pridobi seznam blokirane vdelane programske opreme"
 
 #. TRANSLATORS: command description
+msgid "Gets the list of updates for all specified devices, or all devices if unspecified"
+msgstr "Pridobi seznam posodobitev za vse navedene naprave ali za vse naprave, če nobena ni izrecno navedena"
+
+#. TRANSLATORS: command description
 msgid "Gets the releases for a device"
 msgstr "Pridobi izdaje za napravo"
 
@@ -2123,6 +2131,10 @@ msgstr "Vdelane programske opreme ni bilo mogoče najti"
 msgid "No hardware detected with firmware update capability"
 msgstr "Zaznana ni nobena strojna oprema z možnostjo posodobitve vdelane programske opreme"
 
+#. TRANSLATORS: no rebooting needed
+msgid "No reboot is necessary"
+msgstr "Ponoven zagon ni potreben"
+
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
 msgstr "Izdaje niso na voljo"
@@ -2176,6 +2188,10 @@ msgid "Old version"
 msgstr "Stara različica"
 
 #. TRANSLATORS: command line option
+msgid "Only install onto emulated devices"
+msgstr "Namesti samo na emulirane naprave"
+
+#. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Pokaži samo eno vrednost PCR"
 
@@ -2187,6 +2203,10 @@ msgstr "Omrežje vrstnikov uporabljaj samo pri prenosu datotek"
 #. * be downgraded or reinstalled with the existing version
 msgid "Only version upgrades are allowed"
 msgstr "Dovoljene so samo nadgradnje različic"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format (disables all interactive prompts)"
+msgstr "Izpis v zapisu JSON (onemogoči vsa vprašanja uporabniku)"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"

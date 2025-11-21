@@ -214,17 +214,11 @@ fu_i2c_device_read(FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
 }
 
 static void
-fu_i2c_device_register_flags(FuDevice *device)
-{
-	FU_DEVICE_CLASS(fu_i2c_device_parent_class)->register_flags(device);
-	fu_device_register_private_flag_safe(device, FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
-}
-
-static void
 fu_i2c_device_init(FuI2cDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_register_private_flag(FU_DEVICE(self), FU_I2C_DEVICE_PRIVATE_FLAG_NO_HWID_GUIDS);
 }
 
 static void
@@ -232,5 +226,4 @@ fu_i2c_device_class_init(FuI2cDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
 	device_class->probe = fu_i2c_device_probe;
-	device_class->register_flags = fu_i2c_device_register_flags;
 }

@@ -10,12 +10,10 @@
 
 #include <curl/curl.h>
 #include <glib/gi18n.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <xmlb.h>
 
 #include "fu-console.h"
-#include "fu-device-private.h"
 #include "fu-util-common.h"
 
 static gchar *
@@ -139,19 +137,20 @@ fu_util_print_node(FuConsole *console, FwupdClient *client, FuUtilNode *n)
 }
 
 static gboolean
-fu_util_is_interesting_child(FwupdDevice *dev)
+fu_util_is_interesting_child(GPtrArray *devs, FwupdDevice *dev)
 {
-	GPtrArray *children = fwupd_device_get_children(dev);
-	for (guint i = 0; i < children->len; i++) {
-		FwupdDevice *child = g_ptr_array_index(children, i);
-		if (fu_util_is_interesting_device(child))
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *child = g_ptr_array_index(devs, i);
+		if (fwupd_device_get_parent(child) != dev)
+			continue;
+		if (fu_util_is_interesting_device(devs, child))
 			return TRUE;
 	}
 	return FALSE;
 }
 
 gboolean
-fu_util_is_interesting_device(FwupdDevice *dev)
+fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev)
 {
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 		return TRUE;
@@ -162,7 +161,7 @@ fu_util_is_interesting_device(FwupdDevice *dev)
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags(dev) == 0)
 		return TRUE;
-	if (fu_util_is_interesting_child(dev))
+	if (fu_util_is_interesting_child(devs, dev))
 		return TRUE;
 	return FALSE;
 }
@@ -483,7 +482,7 @@ fu_util_cmd_array_add(GPtrArray *array,
 
 gboolean
 fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtilPrivate *priv,
+		      FuUtil *self,
 		      const gchar *command,
 		      gchar **values,
 		      GError **error)
@@ -501,7 +500,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 	for (guint i = 0; i < array->len; i++) {
 		FuUtilCmd *item = g_ptr_array_index(array, i);
 		if (g_strcmp0(item->name, command) == 0)
-			return item->callback(priv, values_copy, error);
+			return item->callback(self, values_copy, error);
 	}
 
 	/* not found */
@@ -620,7 +619,7 @@ fu_util_release_get_name(FwupdRelease *release)
 		}
 		if (g_strcmp0(cat, "X-CpuMicrocode") == 0) {
 			/* TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-			 * at system bootup */
+			 * at system boot-up */
 			return g_strdup_printf(_("%s CPU Microcode Update"), name);
 		}
 		if (g_strcmp0(cat, "X-Battery") == 0) {

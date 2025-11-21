@@ -1,4 +1,5 @@
-if allow_uefi_capsule
+allow_uefi or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiRecovery"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -14,4 +15,3 @@ plugin_builtins += static_library('fu_plugin_uefi_recovery',
   ],
   dependencies: plugin_deps,
 )
-endif

@@ -138,6 +138,8 @@ class EnumItem:
     @property
     def c_define(self) -> str:
         name_snake = _camel_to_snake(self.obj.name)
+        if name_snake.endswith("flags"):
+            name_snake = name_snake[:-1]
         return f"{name_snake.upper()}_{_camel_to_snake(self.name).replace('-', '_').upper()}"
 
     def parse_default(self, val: str) -> None:
@@ -225,11 +227,7 @@ class StructObj:
             self.add_private_export("Validate")
         elif derive == "ValidateInternal":
             for item in self.items:
-                if (
-                    item.constant
-                    and item.type != Type.STRING
-                    and not (item.type == Type.U8 and item.n_elements)
-                ):
+                if item.constant and not (item.type == Type.U8 and item.n_elements):
                     item.add_private_export("Getters")
                 if item.struct_obj:
                     item.struct_obj.add_private_export("ValidateInternal")

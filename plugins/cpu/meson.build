@@ -1,4 +1,5 @@
-if hsi
+hsi or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -57,5 +58,4 @@ if build_fwupdcethelper
     install: true,
     install_dir: join_paths(libexecdir, 'fwupd')
   )
-endif
 endif

@@ -16,7 +16,6 @@
 #ifdef HAVE_PASSIM
 #include <passim.h>
 #endif
-#include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
@@ -24,7 +23,6 @@
 #ifdef HAVE_AUXV_H
 #include <sys/auxv.h>
 #endif
-#include <errno.h>
 
 #ifdef _WIN32
 #include <sysinfoapi.h>
@@ -34,19 +32,15 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-common-private.h"
-#include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend-private.h"
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
-#include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
@@ -70,7 +64,6 @@
 #include "fu-usb-backend.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
-#include "fu-usb-device-private.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -110,7 +103,6 @@ struct _FuEngine {
 	FuEngineConfig *config;
 	FuRemoteList *remote_list;
 	FuDeviceList *device_list;
-	gboolean only_trusted;
 	gboolean write_history;
 	gboolean host_emulation;
 	guint percentage;
@@ -121,7 +113,6 @@ struct _FuEngine {
 	XbQuery *query_container_checksum1; /* container checksum -> release */
 	XbQuery *query_container_checksum2; /* artifact checksum -> release */
 	XbQuery *query_tag_by_guid_version;
-	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
 	FuContext *ctx;
@@ -131,7 +122,6 @@ struct _FuEngine {
 	GHashTable *device_changed_allowlist; /* (element-type str int) */
 	gchar *host_machine_id;
 	JcatContext *jcat_context;
-	gboolean loaded;
 	FuSecurityAttrs *host_security_attrs;
 	GPtrArray *local_monitors; /* (element-type GFileMonitor) */
 	GMainLoop *acquiesce_loop;
@@ -140,6 +130,7 @@ struct _FuEngine {
 	guint update_motd_id;
 	FuEngineEmulatorPhase emulator_phase;
 	guint emulator_write_cnt;
+	FuEngineLoadFlags load_flags;
 #ifdef HAVE_PASSIM
 	PassimClient *passim_client;
 #endif
@@ -159,12 +150,23 @@ enum {
 
 static guint signals[SIGNAL_LAST] = {0};
 
+enum {
+	QUARK_AUTO_PARENT_CHILDREN,
+	QUARK_HOST_FIRMWARE,
+	QUARK_HOST_FIRMWARE_CHILD,
+	QUARK_HOST_CPU,
+	QUARK_HOST_CPU_CHILD,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 G_DEFINE_TYPE(FuEngine, fu_engine, G_TYPE_OBJECT)
 
 gboolean
 fu_engine_get_loaded(FuEngine *self)
 {
-	return self->loaded;
+	return (self->load_flags & FU_ENGINE_LOAD_FLAG_READY) > 0;
 }
 
 static gboolean
@@ -201,7 +203,7 @@ fu_engine_emit_changed(FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* do nothing */
-	if (!self->loaded)
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
 		return;
 
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0);
@@ -220,7 +222,7 @@ static void
 fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
 	/* do nothing */
-	if (!self->loaded)
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_READY) == 0)
 		return;
 
 	/* invalidate host security attributes */
@@ -274,6 +276,11 @@ fu_engine_ensure_device_problem_priority_full(FuEngine *self,
 					      FuDevice *device,
 					      FuDevice *device_tmp)
 {
+	/* not important */
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) ||
+	    !fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return;
+
 	/* not a match */
 	if (g_strcmp0(fu_device_get_id(device_tmp), fu_device_get_equivalent_id(device)) != 0 &&
 	    g_strcmp0(fu_device_get_equivalent_id(device_tmp), fu_device_get_id(device)) != 0)
@@ -446,6 +453,19 @@ fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *devic
 }
 
 static void
+fu_engine_ensure_device_maybe_remove_affects_fde(FuEngine *self, FuDevice *device)
+{
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+		return;
+	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD)) {
+		g_debug("removing affects-fde from %s as no FDE detected",
+			fu_device_get_id(device));
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	}
+}
+
+static void
 fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT) &&
@@ -509,6 +529,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_ensure_device_lid_inhibit(self, device);
 	fu_engine_ensure_device_display_required_inhibit(self, device);
 	fu_engine_ensure_device_system_inhibit(self, device);
+	fu_engine_ensure_device_maybe_remove_affects_fde(self, device);
 	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
@@ -1719,7 +1740,7 @@ fu_engine_get_cpu_device(FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU))
+		if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]))
 			return g_object_ref(device);
 	}
 	return NULL;
@@ -2906,8 +2927,10 @@ fu_engine_prepare(FuEngine *self,
 	}
 	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 
-	if (!fu_engine_device_check_power(self, device, flags, error))
+	if (!fu_engine_device_check_power(self, device, flags, error)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		return FALSE;
+	}
 
 	str = fu_device_to_string(device);
 	g_info("prepare -> %s", str);
@@ -5038,7 +5061,7 @@ fu_engine_get_history(FuEngine *self, GError **error)
 	/* if this is the system firmware device, add the HSI attrs */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE))
+		if (fu_device_has_private_flag_quark(dev, quarks[QUARK_HOST_FIRMWARE]))
 			fu_engine_get_history_set_hsi_attrs(self, dev);
 	}
 #endif
@@ -6076,26 +6099,26 @@ fu_engine_plugin_device_added_cb(FuPlugin *plugin, FuDevice *device, gpointer us
 static void
 fu_engine_adopt_children_device(FuEngine *self, FuDevice *device, FuDevice *device_tmp)
 {
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE])) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_FIRMWARE]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_FIRMWARE_CHILD])) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU_CHILD]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU])) {
 		fu_device_set_parent(device, device_tmp);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
 	}
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_HOST_CPU) &&
-	    fu_device_has_private_flag(device_tmp, FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_HOST_CPU]) &&
+	    fu_device_has_private_flag_quark(device_tmp, quarks[QUARK_HOST_CPU_CHILD])) {
 		fu_device_set_parent(device_tmp, device);
 		fu_engine_ensure_device_supported(self, device_tmp);
 		return;
@@ -6124,9 +6147,8 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_private_flag(
-				device_tmp,
-				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
+			if (!fu_device_has_private_flag_quark(device_tmp,
+							      quarks[QUARK_AUTO_PARENT_CHILDREN]))
 				continue;
 			if (fu_device_get_physical_id(device_tmp) == NULL)
 				continue;
@@ -6141,9 +6163,8 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	if (fu_device_get_parent(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (!fu_device_has_private_flag(
-				device_tmp,
-				FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN))
+			if (!fu_device_has_private_flag_quark(device_tmp,
+							      quarks[QUARK_AUTO_PARENT_CHILDREN]))
 				continue;
 			if (fu_device_get_backend_id(device_tmp) == NULL)
 				continue;
@@ -7599,6 +7620,23 @@ fu_engine_backend_device_added_run_plugins(FuEngine *self, FuDevice *device, FuP
 {
 	g_autoptr(GPtrArray) possible_plugins = fu_device_get_possible_plugins(device);
 
+	/* useful for fwupdtool get-devices --show-all --force */
+	if ((self->load_flags & FU_ENGINE_LOAD_FLAG_COLDPLUG_FORCE) > 0 &&
+	    possible_plugins->len == 0) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		locker = fu_device_locker_new(device, &error_local);
+		if (locker == NULL) {
+			g_debug("ignoring: %s", error_local->message);
+			return;
+		}
+		if (fu_device_get_instance_ids(device)->len > 0) {
+			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+			fu_engine_add_device(self, device);
+		}
+		return;
+	}
+
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, possible_plugins->len);
@@ -8215,7 +8253,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
-	if (self->loaded)
+	if (self->load_flags & FU_ENGINE_LOAD_FLAG_READY)
 		return TRUE;
 
 	/* progress */
@@ -8370,6 +8408,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_INHIBIT_VOLUME_MOUNT);
 
+	/* required on Linux kernel < 6.4, or when `RT->QueryVariableInfo` is not supported */
+	if (fu_engine_config_get_ignore_efivars_free_space(self->config))
+		fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE);
+
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		if (!fu_context_load_hwinfo(self->ctx,
@@ -8464,6 +8506,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 	}
 
 	/* set up backends */
+	self->load_flags = flags;
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
 		FuBackendSetupFlags backend_flags = FU_BACKEND_SETUP_FLAG_NONE;
 		if (flags & FU_ENGINE_LOAD_FLAG_DEVICE_HOTPLUG)
@@ -8577,7 +8620,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, FuProgress *progress, GE
 		g_info("failed to update list of devices: %s", error_json_devices->message);
 
 	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
-	self->loaded = TRUE;
+	self->load_flags |= FU_ENGINE_LOAD_FLAG_READY;
 
 	/* let clients know engine finished starting up */
 	fu_engine_emit_changed(self);
@@ -8651,11 +8694,23 @@ fu_engine_class_init(FuEngineClass *klass)
 {
 	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	const gchar *quark_flags[] = {
+	    FU_DEVICE_PRIVATE_FLAG_AUTO_PARENT_CHILDREN,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU,
+	    FU_DEVICE_PRIVATE_FLAG_HOST_CPU_CHILD,
+	};
+
 	object_class->dispose = fu_engine_dispose;
 	object_class->finalize = fu_engine_finalize;
 	object_class->get_property = fu_engine_get_property;
 	object_class->set_property = fu_engine_set_property;
 	object_class->constructed = fu_engine_constructed;
+
+	/* used as device flags, order is important! */
+	for (guint i = 0; i < G_N_ELEMENTS(quark_flags); i++)
+		quarks[i] = g_quark_from_static_string(quark_flags[i]);
 
 	pspec = g_param_spec_object("context",
 				    NULL,
@@ -9016,8 +9071,6 @@ fu_engine_finalize(GObject *obj)
 		g_object_unref(self->query_container_checksum2);
 	if (self->query_tag_by_guid_version != NULL)
 		g_object_unref(self->query_tag_by_guid_version);
-	if (self->coldplug_id != 0)
-		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)
 		g_hash_table_unref(self->approved_firmware);
 	if (self->blocked_firmware != NULL)

@@ -10,11 +10,9 @@
 
 #include <fcntl.h>
 #include <glib/gstdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "fwupd-remote-private.h"
-#include "fwupd-security-attr-private.h"
 
 #include "../plugins/test/fu-test-plugin.h"
 #include "fu-bios-settings-private.h"
@@ -37,13 +35,14 @@
 #include "fu-release-common.h"
 #include "fu-remote-list.h"
 #include "fu-remote.h"
-#include "fu-security-attr-common.h"
-#include "fu-smbios-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-usb-backend.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
 #endif
+
+#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
 
 typedef struct {
 	FuPlugin *plugin;
@@ -442,6 +441,92 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 
 	/* set up a dummy version */
 	fu_engine_request_set_feature_flags(request, FWUPD_FEATURE_FLAG_DETACH_ACTION);
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fu_engine_requirements_vercmp_glob_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <client>id-requirement-glob</client>"
+			   "    <id compare=\"ge\" "
+			   "version=\"1.8.*=1.8.5|1.9.*=1.9.7|2.0.13\">org.freedesktop.fwupd</id>\n"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
+
+	/* hardcode to specific branch */
+	fu_context_add_runtime_version(self->ctx, "org.freedesktop.fwupd", "1.9.8");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this passes */
+	fu_release_set_request(release, request);
+	ret = fu_release_load(release, NULL, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_engine_requirements_check(engine, release, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* reset back to reality */
+	fu_context_add_runtime_version(self->ctx, "org.freedesktop.fwupd", VERSION);
+}
+
+static void
+fu_engine_requirements_vercmp_glob_fallback_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new(self->ctx);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(NULL);
+	g_autoptr(FuRelease) release = fu_release_new();
+	g_autoptr(GError) error = NULL;
+	const gchar *xml = "<component>"
+			   "  <requires>"
+			   "    <id compare=\"ge\" "
+			   "version=\"1.8.*=1.8.5|1.9.*=1.9.7|2.0.13\">org.freedesktop.fwupd</id>\n"
+			   "    <client>id-requirement-glob</client>"
+			   "  </requires>"
+			   "  <releases>"
+			   "    <release version=\"1.2.3\"/>"
+			   "  </releases>"
+			   "</component>";
 
 	/* make the component require one thing */
 	silo = xb_silo_new_from_xml(xml, &error);
@@ -1188,7 +1273,7 @@ fu_engine_test_plugin_mutable_enumeration(gconstpointer user_data)
 	/* ensure empty tree */
 	fu_self_test_mkroot();
 
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
 
 	ret = fu_path_mkdir_parent(fake_localconf_fn, &error);
@@ -1943,6 +2028,7 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	fu_device_add_protocol(device1, "com.acme");
 	fu_device_set_plugin(device1, "test");
 	fu_device_add_instance_id(device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_id(device1, "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 	fu_engine_add_device(engine, device1);
 	fu_device_set_id(device2, "device21");
 	fu_device_build_vendor_id_u16(device2, "USB", 0xFFFF);
@@ -1950,6 +2036,7 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	fu_device_set_plugin(device2, "test");
 	fu_device_set_equivalent_id(device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
 	fu_device_add_instance_id(device2, "87654321-1234-1234-1234-123456789012");
+	fu_device_set_id(device2, "99244162a6daa0b033d649c8d464529cec41d3de");
 	fu_engine_add_device(engine, device2);
 
 	/* match nothing */
@@ -1958,21 +2045,21 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	g_assert_false(ret);
 
 	/* match both */
-	ret = fu_engine_unlock(engine, "9", &error_both);
+	ret = fu_engine_unlock(engine, "9924", &error_both);
 	g_assert_error(error_both, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 
 	/* match one exactly */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
-	ret = fu_engine_unlock(engine, "934b4162a6daa0b033d649c8d464529cec41d3de", &error);
+	ret = fu_engine_unlock(engine, "99244162a6daa0b033d649c8d464529cec41d3de", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
 	/* match one partially */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
-	ret = fu_engine_unlock(engine, "934b", &error);
+	ret = fu_engine_unlock(engine, "99249", &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4387,7 +4474,8 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuDevice) device1 = fu_device_new(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new(self->ctx);
-	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device3 = NULL;
+	g_autoptr(FuDevice) device4 = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(GError) error = NULL;
 
@@ -4399,16 +4487,16 @@ fu_device_list_equivalent_id_func(gconstpointer user_data)
 	fu_device_set_priority(device2, 999);
 	fu_device_list_add(device_list, device2);
 
-	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	device3 = fu_device_list_get_by_id(device_list, "8e9c", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(device);
-	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_assert_nonnull(device3);
+	g_assert_cmpstr(fu_device_get_id(device3), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 
 	/* two devices with the 'same' priority */
 	fu_device_set_priority(device2, 0);
-	device = fu_device_list_get_by_id(device_list, "8e9c", &error);
+	device4 = fu_device_list_get_by_id(device_list, "8e9c", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert_null(device);
+	g_assert_null(device4);
 }
 
 static void
@@ -6991,7 +7079,7 @@ fu_config_migrate_1_9_func(void)
 	/* ensure empty tree */
 	fu_self_test_mkroot();
 
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 	(void)g_setenv("FWUPD_SYSCONFDIR", "/tmp/fwupd-self-test", TRUE);
 
 	ret = fu_path_mkdir_parent(fake_sysconf_fn, &error);
@@ -7071,7 +7159,7 @@ fu_config_migrate_1_7_func(void)
 
 	/* working directory */
 	(void)g_setenv("FWUPD_SYSCONFDIR", sysconfdir, TRUE);
-	(void)g_unsetenv("CONFIGURATION_DIRECTORY");
+	g_unsetenv("CONFIGURATION_DIRECTORY");
 
 	fn_mut = g_build_filename(sysconfdir, "fwupd", "fwupd.conf", NULL);
 	g_assert_nonnull(fn_mut);
@@ -7775,9 +7863,15 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/engine{requirements-other-device}",
 			     self,
 			     fu_engine_requirements_other_device_func);
-	g_test_add_data_func("/fwupd/engine{fu_engine_requirements_sibling_device_func}",
+	g_test_add_data_func("/fwupd/engine{requirements-sibling-device}",
 			     self,
 			     fu_engine_requirements_sibling_device_func);
+	g_test_add_data_func("/fwupd/engine{requirements-vercmp-glob}",
+			     self,
+			     fu_engine_requirements_vercmp_glob_func);
+	g_test_add_data_func("/fwupd/engine{requirements-vercmp-glob-fallback}",
+			     self,
+			     fu_engine_requirements_vercmp_glob_fallback_func);
 	g_test_add_data_func("/fwupd/engine{plugin-gtypes}", self, fu_engine_plugin_gtypes_func);
 	g_test_add_data_func("/fwupd/plugin/mutable",
 			     self,

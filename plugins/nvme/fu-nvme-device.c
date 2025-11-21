@@ -9,8 +9,8 @@
 #include <linux/nvme_ioctl.h>
 #include <sys/ioctl.h>
 
-#include "fu-nvme-common.h"
 #include "fu-nvme-device.h"
+#include "fu-nvme-struct.h"
 
 #define FU_NVME_ID_CTRL_SIZE 0x1000
 
@@ -125,11 +125,11 @@ fu_nvme_device_submit_admin_passthru(FuNvmeDevice *self,
 	/* check the error code */
 	err = rc & 0x3ff;
 	switch (err) {
-	case NVME_SC_SUCCESS:
+	case FU_NVME_STATUS_SUCCESS:
 	/* devices are always added with _NEEDS_REBOOT, so ignore */
-	case NVME_SC_FW_NEEDS_CONV_RESET:
-	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
-	case NVME_SC_FW_NEEDS_RESET:
+	case FU_NVME_STATUS_FW_NEEDS_CONV_RESET:
+	case FU_NVME_STATUS_FW_NEEDS_SUBSYS_RESET:
+	case FU_NVME_STATUS_FW_NEEDS_RESET:
 		return TRUE;
 	default:
 		break;

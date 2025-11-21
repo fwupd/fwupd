@@ -1,14 +1,14 @@
-nvme_header = cc.has_header('linux/nvme_ioctl.h', required: false)
+host_machine.system() == 'linux' or subdir_done()
+cc.has_header('linux/nvme_ioctl.h', required: false) or subdir_done()
 
-if nvme_header and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('nvme.quirk')
 plugin_builtin_nvme = static_library('fu_plugin_nvme',
+  rustgen.process('fu-nvme.rs'),
   sources: [
     'fu-nvme-plugin.c',
-    'fu-nvme-common.c',
     'fu-nvme-device.c',
   ],
   include_directories: plugin_incdirs,
@@ -49,5 +49,4 @@ if get_option('tests')
     ],
   )
   test('nvme-self-test', e, env: env)  # added to installed-tests
-endif
 endif

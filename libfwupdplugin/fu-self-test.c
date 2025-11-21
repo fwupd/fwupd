@@ -16,10 +16,8 @@
 #include "fwupd-enums-private.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend-private.h"
 #include "fu-bios-settings-private.h"
 #include "fu-cab-firmware-private.h"
-#include "fu-common-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-event-private.h"
@@ -348,6 +346,29 @@ fu_common_align_up_func(void)
 	g_assert_cmpint(fu_common_align_up(1023, 10), ==, 1024);
 	g_assert_cmpint(fu_common_align_up(1024, 10), ==, 1024);
 	g_assert_cmpint(fu_common_align_up(G_MAXSIZE - 1, 10), ==, G_MAXSIZE);
+}
+
+static void
+fu_common_error_map_func(void)
+{
+	const FuErrorMapEntry entries[] = {
+	    {0, FWUPD_ERROR_LAST, NULL},
+	    {1, FWUPD_ERROR_NOT_SUPPORTED, "not supported"},
+	};
+	gboolean ret;
+	g_autoptr(GError) error1 = NULL;
+	g_autoptr(GError) error2 = NULL;
+	g_autoptr(GError) error3 = NULL;
+
+	ret = fu_error_map_entry_to_gerror(0, entries, G_N_ELEMENTS(entries), &error1);
+	g_assert_no_error(error1);
+	g_assert_true(ret);
+	ret = fu_error_map_entry_to_gerror(1, entries, G_N_ELEMENTS(entries), &error2);
+	g_assert_error(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false(ret);
+	ret = fu_error_map_entry_to_gerror(255, entries, G_N_ELEMENTS(entries), &error3);
+	g_assert_error(error3, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false(ret);
 }
 
 static void
@@ -2750,7 +2771,7 @@ fu_device_incorporate_func(void)
 	fu_device_register_private_flag(donor, "self-test");
 	fu_device_add_private_flag(donor, "self-test");
 
-	/* match a quirk entry, and then clear to ensure encorporate uses the quirk instance ID */
+	/* match a quirk entry, and then clear to ensure incorporate uses the quirk instance ID */
 	ret = fu_device_build_instance_id_full(donor,
 					       FU_DEVICE_INSTANCE_FLAG_QUIRKS,
 					       &error,
@@ -2945,6 +2966,10 @@ fu_backend_emulate_func(void)
 	device2 = fu_device_get_backend_parent_with_subsystem(device, "usb", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null(device2);
+
+	/* check version */
+	g_assert_false(fu_device_check_fwupd_version(device, "5.0.0"));
+	g_assert_true(fu_device_check_fwupd_version(device, "1.9.19"));
 }
 
 static void
@@ -7043,6 +7068,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/backend{emulate}", fu_backend_emulate_func);
 	g_test_add_func("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func("/fwupd/chunks", fu_chunk_array_func);
+	g_test_add_func("/fwupd/common{error-map}", fu_common_error_map_func);
 	g_test_add_func("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func("/fwupd/volume{gpt-type}", fu_volume_gpt_type_func);
 	g_test_add_func("/fwupd/common{bitwise}", fu_common_bitwise_func);

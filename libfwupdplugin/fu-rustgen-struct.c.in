@@ -376,11 +376,31 @@
 {%- else %}
     if ({{item.c_getter}}(st) != {{item.constant}}) {
 {%- endif %}
+{%- if item.type == Type.STRING %}
+        g_autofree gchar *str = {{item.c_getter}}(st);
+        g_set_error(error,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
+                    "constant {{obj.name}}.{{item.element_id}} was not valid, "
+                    "expected '{{item.constant}}' and got '%s'",
+                    str);
+        return FALSE;
+{%- elif item.type in [Type.U16, Type.U24, Type.U32, Type.U64, Type.I8, Type.I16, Type.I32, Type.I64] %}
+        g_set_error(error,
+                    FWUPD_ERROR,
+                    FWUPD_ERROR_INVALID_DATA,
+                    "constant {{obj.name}}.{{item.element_id}} was not valid, "
+                    "expected 0x%x and got 0x%x",
+                    (guint) {{item.constant}},
+                    (guint) {{item.c_getter}}(st));
+        return FALSE;
+{%- else %}
         g_set_error_literal(error,
                             FWUPD_ERROR,
                             FWUPD_ERROR_INVALID_DATA,
                             "constant {{obj.name}}.{{item.element_id}} was not valid");
         return FALSE;
+{%- endif %}
     }
 {%- endfor %}
 {%- for item in obj.items | selectattr('struct_obj') %}
@@ -467,12 +487,12 @@
 {{export.value}}gboolean
 {{obj.c_method('ParseInternal')}}({{obj.name}} *st, GError **error)
 {
-    if (!{{obj.c_method('ValidateInternal')}}(st, error))
-        return FALSE;
     if (g_getenv("FWUPD_VERBOSE") != NULL) {
         g_autofree gchar *str = {{obj.c_method('ToString')}}(st);
         g_debug("%s", str);
     }
+    if (!{{obj.c_method('ValidateInternal')}}(st, error))
+        return FALSE;
     return TRUE;
 }
 {%- endif %}

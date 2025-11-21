@@ -2,10 +2,10 @@ libmm_glib = dependency('mm-glib', version: '>= 1.22.0', required: get_option('p
 libqmi_glib = dependency('qmi-glib', version: '>= 1.32.0', required: get_option('plugin_modem_manager'))
 libmbim_glib = dependency('mbim-glib', version: '>= 1.28.0', required: get_option('plugin_modem_manager'))
 
-if libmm_glib.found() and \
-   libqmi_glib.found() and \
-   libmbim_glib.found() and \
-   get_option('plugin_modem_manager').allowed()
+libmm_glib.found() or subdir_done()
+libqmi_glib.found() or subdir_done()
+libmbim_glib.found() or subdir_done()
+get_option('plugin_modem_manager').allowed() or subdir_done()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
@@ -25,7 +25,6 @@ shared_module('fu_plugin_modem_manager',
     'fu-mm-fastboot-device.c',
     'fu-mm-fdl-device.c',
     'fu-mm-firehose-device.c',
-    'fu-mm-mbim-common.c',
     'fu-mm-mbim-device.c',
     'fu-mm-mhi-qcdm-device.c',
     'fu-mm-plugin.c',
@@ -47,9 +46,11 @@ shared_module('fu_plugin_modem_manager',
 )
 
 device_tests += files(
+  'tests/foxconn-t99w373-mbim.json',
   'tests/qc-eg25ggc-fastboot.json',
 )
 enumeration_data += files(
+  'tests/foxconn-t99w373-mbim-setup.json',
   'tests/qc-eg25ggc-fastboot-setup.json',
 )
 
@@ -76,6 +77,4 @@ if get_option('tests')
     ],
   )
   test('modem-manager-self-test', e)
-endif
-
 endif

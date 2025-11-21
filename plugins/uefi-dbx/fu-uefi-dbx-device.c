@@ -128,13 +128,22 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 
 	/* add the last checksum to the device */
 	sigs = fu_firmware_get_images(dbx);
-	if (sigs->len > 0) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, sigs->len - 1);
+
+	for (guint i = sigs->len; i > 0; i--) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
+		const gchar *owner = fu_efi_signature_get_owner(sig);
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+
+		if (g_strcmp0(owner, FU_EFI_SIGNATURE_GUID_MICROSOFT) != 0) {
+			g_debug("skipping dbx entry %s as non-microsoft (%s)", csum, owner);
+			continue;
+		}
+
 		if (csum != NULL) {
 			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
 				return FALSE;
+			break;
 		}
 	}
 
@@ -197,7 +206,6 @@ static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
 	FuUefiDbxDevice *self = FU_UEFI_DBX_DEVICE(device);
-	FuContext *ctx = fu_device_get_context(device);
 	g_autoptr(FuFirmware) kek = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) sigs = NULL;
@@ -230,12 +238,6 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 						 NULL);
 		fu_device_build_instance_id(device, NULL, "UEFI", "CRT", "ARCH", NULL);
 	}
-
-	/* dbx changes are expected to change PCR7, warn the user that BitLocker might ask for
-	recovery key after fw update */
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER))
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
-
 	return fu_uefi_dbx_device_ensure_checksum(self, error);
 }
 

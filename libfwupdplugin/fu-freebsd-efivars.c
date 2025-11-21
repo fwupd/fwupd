@@ -15,7 +15,6 @@
 
 #include "fwupd-error.h"
 
-#include "fu-common.h"
 #include "fu-freebsd-efivars.h"
 
 struct _FuFreebsdEfivars {

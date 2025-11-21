@@ -264,7 +264,7 @@ fu_redfish_request_perform_full(FuRedfishRequest *self,
 					    json_object_get_string_member(json_obj, "@odata.etag"));
 		}
 
-		/* allow us to re-use the request */
+		/* allow us to reuse the request */
 		fu_redfish_request_reset(self);
 	}
 

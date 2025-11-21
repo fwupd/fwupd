@@ -13,8 +13,6 @@
 
 #include <glib/gi18n.h>
 
-#include "fwupd-device-private.h"
-
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
 

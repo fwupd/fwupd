@@ -10,8 +10,6 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fwupd-security-attr-private.h"
-
 #include "fu-console.h"
 
 /* custom return codes */
@@ -22,9 +20,8 @@
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
-typedef struct FuUtilPrivate FuUtilPrivate;
-typedef gboolean (*FuUtilCmdFunc)(FuUtilPrivate *util, gchar **values, GError **error)
-    G_GNUC_NON_NULL(1);
+typedef struct FuUtil FuUtil;
+typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
 	gchar *arguments;
@@ -49,7 +46,7 @@ fu_util_free_node(FuUtilNode *n) G_GNUC_NON_NULL(1);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilNode, fu_util_free_node)
 
 gboolean
-fu_util_is_interesting_device(FwupdDevice *dev) G_GNUC_NON_NULL(1);
+fu_util_is_interesting_device(GPtrArray *devs, FwupdDevice *dev) G_GNUC_NON_NULL(1, 2);
 gchar *
 fu_util_get_user_cache_path(const gchar *fn) G_GNUC_NON_NULL(1);
 
@@ -86,7 +83,7 @@ void
 fu_util_cmd_array_sort(GPtrArray *array) G_GNUC_NON_NULL(1);
 gboolean
 fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtilPrivate *priv,
+		      FuUtil *self,
 		      const gchar *command,
 		      gchar **values,
 		      GError **error) G_GNUC_NON_NULL(1, 2);

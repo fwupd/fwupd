@@ -10,7 +10,6 @@
 
 #include "fu-cab-image.h"
 #include "fu-common.h"
-#include "fu-string.h"
 
 struct _FuCabImage {
 	FuFirmware parent_instance;

@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include "fwupd-codec.h"
-#include "fwupd-common-private.h"
 
 #include "fu-input-stream.h"
 #include "fu-partial-input-stream-private.h"

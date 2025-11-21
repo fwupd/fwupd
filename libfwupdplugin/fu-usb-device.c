@@ -64,6 +64,13 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_UDEV_DEVICE);
 
 enum { PROP_0, PROP_LIBUSB_DEVICE, PROP_LAST };
 
+enum {
+	QUARK_ADD_INSTANCE_ID_REV,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
+
 #define GET_PRIVATE(o) (fu_usb_device_get_instance_private(o))
 
 #define FU_DEVICE_CLAIM_INTERFACE_DELAY 500 /* ms */
@@ -119,53 +126,16 @@ fu_usb_device_libusb_error_to_gerror(gint rc, GError **error)
 static gboolean
 fu_usb_device_libusb_status_to_gerror(gint status, GError **error)
 {
-	gboolean ret = FALSE;
-
-	switch (status) {
-	case LIBUSB_TRANSFER_COMPLETED:
-		ret = TRUE;
-		break;
-	case LIBUSB_TRANSFER_ERROR:
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "transfer failed");
-		break;
-	case LIBUSB_TRANSFER_TIMED_OUT:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_TIMED_OUT,
-				    "transfer timed out");
-		break;
-	case LIBUSB_TRANSFER_CANCELLED:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "transfer cancelled");
-		break;
-	case LIBUSB_TRANSFER_STALL:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "endpoint stalled or request not supported");
-		break;
-	case LIBUSB_TRANSFER_NO_DEVICE:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "device was disconnected");
-		break;
-	case LIBUSB_TRANSFER_OVERFLOW:
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "device sent more data than requested");
-		break;
-	default:
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "unknown status [%i]",
-			    status);
-	}
-	return ret;
+	const FuErrorMapEntry entries[] = {
+	    {LIBUSB_TRANSFER_COMPLETED, FWUPD_ERROR_LAST, NULL},
+	    {LIBUSB_TRANSFER_ERROR, FWUPD_ERROR_INTERNAL, "failed"},
+	    {LIBUSB_TRANSFER_TIMED_OUT, FWUPD_ERROR_TIMED_OUT, NULL},
+	    {LIBUSB_TRANSFER_CANCELLED, FWUPD_ERROR_NOTHING_TO_DO, "cancelled"},
+	    {LIBUSB_TRANSFER_STALL, FWUPD_ERROR_NOT_SUPPORTED, "stalled or not supported"},
+	    {LIBUSB_TRANSFER_NO_DEVICE, FWUPD_ERROR_NOT_FOUND, "device was disconnected"},
+	    {LIBUSB_TRANSFER_OVERFLOW, FWUPD_ERROR_INTERNAL, "sent more data than requested"},
+	};
+	return fu_error_map_entry_to_gerror(status, entries, G_N_ELEMENTS(entries), error);
 }
 
 /**
@@ -1219,7 +1189,7 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 					 "VID",
 					 "PID",
 					 NULL);
-	if (fu_device_has_private_flag(device, FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV)) {
+	if (fu_device_has_private_flag_quark(device, quarks[QUARK_ADD_INSTANCE_ID_REV])) {
 		fu_device_build_instance_id_full(device,
 						 FU_DEVICE_INSTANCE_FLAG_GENERIC |
 						     FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -1988,7 +1958,7 @@ fu_usb_device_get_interfaces(FuUsbDevice *self, GError **error)
  * Gets the first interface that matches the vendor class interface descriptor.
  * If you want to find all the interfaces that match (there may be other
  * 'alternate' interfaces you have to use fu_usb_device_get_interfaces() and
- * check each one manally.
+ * check each one manually.
  *
  * Return value: (transfer full): a #FuUsbInterface or %NULL for not found
  *
@@ -3088,6 +3058,10 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->convert_version = fu_usb_device_convert_version;
 	device_class->from_json = fu_usb_device_from_json;
 	device_class->add_json = fu_usb_device_add_json;
+
+	/* used as device flags */
+	quarks[QUARK_ADD_INSTANCE_ID_REV] =
+	    g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
 
 	/**
 	 * FuUsbDevice:libusb-device:

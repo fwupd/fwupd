@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -15,6 +16,11 @@ plugin_builtin_mtd = static_library('fu_plugin_mtd',
   dependencies: plugin_deps,
 )
 plugin_builtins += plugin_builtin_mtd
+
+if not supported_build
+  plugin_quirks += files('ci.quirk')
+  device_tests += files('tests/mtdram.json')
+endif
 
 if get_option('tests')
   env = environment()
@@ -40,5 +46,4 @@ if get_option('tests')
     ],
   )
   test('mtd-self-test', e, env: env)  # added to installed-tests
-endif
 endif

@@ -191,6 +191,11 @@ run get-devices --json
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
 
 # ---
+echo "Getting all devices, even unsupported ones..."
+run get-devices --show-all --force
+rc=$?; if [ $rc != 0 ]; then error $rc; fi
+
+# ---
 echo "Changing VALID config on test device..."
 run modify-config test AnotherWriteRequired true
 rc=$?; if [ $rc != 0 ]; then error $rc; fi
