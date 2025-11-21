@@ -322,6 +322,7 @@ fu_device_register_private_flags(FuDevice *self)
 	    FU_DEVICE_PRIVATE_FLAG_MD_SET_REQUIRED_FREE,
 	    FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX,
 	    FU_DEVICE_PRIVATE_FLAG_LAZY_VERFMT,
+	    FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED,
 	};
 	GQuark quarks_tmp[G_N_ELEMENTS(flags)] = {0};
 	if (G_LIKELY(priv->private_flags_registered->len > 0))

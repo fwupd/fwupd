@@ -774,6 +774,21 @@ fu_release_check_version(FuRelease *self,
 		return TRUE;
 	}
 
+	/* allow using no-version-expected on emulated devices, or when not build as supported */
+	if (fu_device_has_private_flag(self->device, FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED)) {
+#ifdef SUPPORTED_BUILD
+		if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_EMULATED)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "only emulated devices can install releases with no "
+					    "version when -Dsupported_build");
+			return FALSE;
+		}
+#endif
+		return TRUE;
+	}
+
 	/* ensure device has a version */
 	version = fu_device_get_version(self->device);
 	if (version == NULL) {
