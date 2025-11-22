@@ -100,6 +100,15 @@ fu_qc_firehose_usb_device_write(FuQcFirehoseUsbDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GByteArray) bufmut = g_byte_array_sized_new(sz);
 
+	/* sanity check */
+	if (self->maxpktsize_out == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no max packet size defined");
+		return FALSE;
+	}
+
 	/* copy const data to mutable GByteArray */
 	g_byte_array_append(bufmut, buf, sz);
 	chunks = fu_chunk_array_mutable_new(bufmut->data, bufmut->len, 0, 0, self->maxpktsize_out);

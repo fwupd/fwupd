@@ -202,6 +202,12 @@ fu_corsair_device_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	FuCorsairDevice *self = FU_CORSAIR_DEVICE(device);
 
+	/* sanity check */
+	if (self->bp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no bp");
+		return FALSE;
+	}
+
 	fu_corsair_bp_flush_input_reports(self->bp);
 
 	if (!fu_corsair_bp_get_property(self->bp, FU_CORSAIR_BP_PROPERTY_MODE, &mode, error))
@@ -324,6 +330,12 @@ static gboolean
 fu_corsair_device_ensure_mode(FuCorsairDevice *self, FuCorsairDeviceMode mode, GError **error)
 {
 	FuCorsairDeviceMode current_mode;
+
+	/* sanity check */
+	if (self->bp == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no bp");
+		return FALSE;
+	}
 
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		current_mode = FU_CORSAIR_DEVICE_MODE_BOOTLOADER;
