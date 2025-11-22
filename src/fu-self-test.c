@@ -1420,6 +1420,11 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 					      progress_tmp,
 					      FU_FIRMWARE_PARSE_FLAG_NONE,
 					      NULL);
+	if (firmware == NULL) {
+		GType firmware_gtype = fu_device_get_firmware_gtype(device);
+		if (firmware_gtype != G_TYPE_INVALID)
+			firmware = g_object_new(firmware_gtype, NULL);
+	}
 	if (firmware != NULL) {
 		if (fu_device_write_firmware(device,
 					     firmware,
