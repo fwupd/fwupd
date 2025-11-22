@@ -34,10 +34,13 @@ fu_devlink_component_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy;
 	gboolean omit_component_name =
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_devlink_device_write_firmware_component(FU_DEVLINK_DEVICE(proxy),
 							  fu_device_get_logical_id(device),
 							  omit_component_name,
@@ -59,12 +62,15 @@ static gboolean
 fu_devlink_component_probe(FuDevice *device, GError **error)
 {
 	FuDevlinkComponent *self = FU_DEVLINK_COMPONENT(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy;
 	g_autofree gchar *subsystem = NULL;
 	g_autoptr(GStrvBuilder) basekeys_builder = NULL;
 	g_auto(GStrv) basekeys = NULL;
 
 	/* declare all variables at the beginning */
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	subsystem = g_ascii_strup(fu_devlink_device_get_bus_name(FU_DEVLINK_DEVICE(proxy)), -1);
 
 	basekeys_builder = g_strv_builder_new();
@@ -106,14 +112,18 @@ fu_devlink_component_probe(FuDevice *device, GError **error)
 static gboolean
 fu_devlink_component_reload(FuDevice *device, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_device_reload(proxy, error);
 }
 
 static gboolean
 fu_devlink_component_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_device_activate(proxy, progress, error);
 }
 
@@ -123,7 +133,9 @@ fu_devlink_component_prepare(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_device_prepare(proxy, progress, flags, error);
 }
 
@@ -133,7 +145,9 @@ fu_devlink_component_cleanup(FuDevice *device,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	return fu_device_cleanup(proxy, progress, flags, error);
 }
 
@@ -176,6 +190,7 @@ fu_devlink_component_init(FuDevlinkComponent *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FALLBACK);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DEVLINK_DEVICE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DEVLINK_DEVICE_FLAG_OMIT_COMPONENT_NAME);
 }

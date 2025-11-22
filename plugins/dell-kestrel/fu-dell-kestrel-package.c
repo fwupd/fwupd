@@ -25,10 +25,16 @@ fu_dell_kestrel_package_convert_version(FuDevice *device, guint64 version_raw)
 static gboolean
 fu_dell_kestrel_package_setup(FuDevice *device, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-	FuDellKestrelDockSku dock_sku = fu_dell_kestrel_ec_get_dock_sku(FU_DELL_KESTREL_EC(proxy));
-	FuDellDockBaseType dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
+	FuDevice *proxy;
+	FuDellKestrelDockSku dock_sku;
+	FuDellDockBaseType dock_type;
 	guint32 pkg_version_raw;
+
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+	dock_sku = fu_dell_kestrel_ec_get_dock_sku(FU_DELL_KESTREL_EC(proxy));
+	dock_type = fu_dell_kestrel_ec_get_dock_type(FU_DELL_KESTREL_EC(proxy));
 
 	/* instance ID */
 	fu_device_add_instance_u8(device, "DOCKTYPE", dock_type);
@@ -50,7 +56,7 @@ fu_dell_kestrel_package_write(FuDevice *device,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy;
 	guint32 pkg_version = 0;
 	g_autoptr(GInputStream) stream = NULL;
 	g_autofree gchar *dynamic_version = NULL;
@@ -76,6 +82,9 @@ fu_dell_kestrel_package_write(FuDevice *device,
 		dynamic_version);
 
 	/* write to device */
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_dell_kestrel_ec_commit_package(FU_DELL_KESTREL_EC(proxy), stream, error))
 		return FALSE;
 
@@ -88,7 +97,9 @@ fu_dell_kestrel_package_write(FuDevice *device,
 static gboolean
 fu_dell_kestrel_package_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
 
 	/* register post message */
 	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
@@ -121,6 +132,7 @@ fu_dell_kestrel_package_init(FuDellKestrelPackage *self)
 	fu_device_set_name(FU_DEVICE(self), "Package Version of Dell dock");
 	fu_device_set_summary(FU_DEVICE(self), "Dell Dock Package");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DELL_KESTREL_EC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_request_flag(FU_DEVICE(self), FWUPD_REQUEST_FLAG_ALLOW_GENERIC_MESSAGE);

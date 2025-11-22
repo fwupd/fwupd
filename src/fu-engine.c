@@ -6589,7 +6589,7 @@ fu_engine_set_proxy_device(FuEngine *self, FuDevice *device)
 	g_autoptr(FuDevice) proxy = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
-	if (fu_device_get_proxy(device) != NULL)
+	if (fu_device_get_proxy_internal(device) != NULL)
 		return;
 	if (fu_device_get_proxy_guid(device) == NULL)
 		return;

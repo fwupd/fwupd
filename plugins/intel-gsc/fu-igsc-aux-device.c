@@ -195,6 +195,7 @@ fu_igsc_aux_device_init(FuIgscAuxDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_IGSC_DEVICE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 	fu_device_set_logical_id(FU_DEVICE(self), "fw-data");
 	fu_device_set_name(FU_DEVICE(self), "Data");

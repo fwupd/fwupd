@@ -123,14 +123,9 @@ fu_efi_x509_device_write_firmware(FuDevice *device,
 	fu_progress_set_steps(progress, imgs->len);
 
 	/* process by the parent */
-	proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no proxy device assigned");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	device_class = FU_DEVICE_GET_CLASS(proxy);
 
 	/* install each blob */
@@ -169,6 +164,7 @@ static void
 fu_efi_x509_device_init(FuEfiX509Device *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_DEVICE);
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.dbx2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);

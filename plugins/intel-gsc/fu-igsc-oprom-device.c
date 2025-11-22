@@ -291,6 +291,7 @@ fu_igsc_oprom_device_init(FuIgscOpromDevice *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_IGSC_DEVICE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.gsc");
 }
 

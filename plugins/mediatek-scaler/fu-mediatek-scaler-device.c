@@ -62,7 +62,7 @@ fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
 				    FuStructDdcCmd *st_req,
 				    GError **error)
 {
-	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuI2cDevice *proxy;
 	guint8 chksum = 0;
 	g_autoptr(GByteArray) ddc_msgbox_write = g_byte_array_new();
 	const guint8 ddc_wfmt[] = {FU_DDC_I2C_ADDR_HOST_DEVICE,
@@ -83,7 +83,10 @@ fu_mediatek_scaler_device_ddc_write(FuMediatekScalerDevice *self,
 		    ddc_msgbox_write->data,
 		    ddc_msgbox_write->len);
 
-	return fu_i2c_device_write(i2c_proxy, ddc_msgbox_write->data, ddc_msgbox_write->len, error);
+	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	return fu_i2c_device_write(proxy, ddc_msgbox_write->data, ddc_msgbox_write->len, error);
 }
 
 static GByteArray *
@@ -91,7 +94,7 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 				   FuStructDdcCmd *st_req,
 				   GError **error)
 {
-	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuI2cDevice *proxy;
 	guint8 buf[0x40] = {0x00}; /* default 64 bytes */
 	gsize report_data_sz = 0;
 	guint8 checksum = 0;
@@ -106,7 +109,10 @@ fu_mediatek_scaler_device_ddc_read(FuMediatekScalerDevice *self,
 	fu_device_sleep(FU_DEVICE(self), FU_MEDIATEK_SCALER_DDC_MSG_DELAY_MS);
 
 	/* read into tmp buffer */
-	if (!fu_i2c_device_read(i2c_proxy, buf, sizeof(buf), error))
+	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_i2c_device_read(proxy, buf, sizeof(buf), error))
 		return NULL;
 
 	/* read buffer = addr(src) + length + data + checksum */
@@ -197,7 +203,7 @@ fu_mediatek_scaler_device_set_ddc_priority(FuMediatekScalerDevice *self,
 static gboolean
 fu_mediatek_scaler_device_display_is_connected(FuMediatekScalerDevice *self, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	g_autoptr(FuStructDdcCmd) st_req = fu_struct_ddc_cmd_new();
 	g_autoptr(GByteArray) st_res = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -231,6 +237,9 @@ fu_mediatek_scaler_device_display_is_connected(FuMediatekScalerDevice *self, GEr
 		return FALSE;
 	}
 
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	g_info("found mediatek display controller: %s, i2c-dev: %s",
 	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(self)),
 	       fu_udev_device_get_device_file(FU_UDEV_DEVICE(proxy)));
@@ -298,17 +307,17 @@ static gboolean
 fu_mediatek_scaler_device_open(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuI2cDevice *proxy;
 
 	/* FuUdevDevice->open */
 	if (!FU_DEVICE_CLASS(fu_mediatek_scaler_device_parent_class)->open(device, error))
 		return FALSE;
 
 	/* set the target address -- should be safe */
-	if (!fu_i2c_device_set_address(i2c_proxy,
-				       FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-				       FALSE,
-				       error))
+	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_i2c_device_set_address(proxy, FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1, FALSE, error))
 		return FALSE;
 
 	/* we know this is a Mediatek scaler now */
@@ -325,13 +334,13 @@ static gboolean
 fu_mediatek_scaler_device_close(FuDevice *device, GError **error)
 {
 	FuMediatekScalerDevice *self = FU_MEDIATEK_SCALER_DEVICE(device);
-	FuI2cDevice *i2c_proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuI2cDevice *proxy;
 
 	/* set the target address */
-	if (!fu_i2c_device_set_address(i2c_proxy,
-				       FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1,
-				       FALSE,
-				       error))
+	proxy = FU_I2C_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_i2c_device_set_address(proxy, FU_DDC_I2C_ADDR_DISPLAY_DEVICE >> 1, FALSE, error))
 		return FALSE;
 
 	/* reset DDC priority */
@@ -917,6 +926,7 @@ fu_mediatek_scaler_device_init(FuMediatekScalerDevice *self)
 	fu_device_set_name(FU_DEVICE(self), "Display Controller");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_MEDIATEK_SCALER_FW_SIZE_MAX);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_I2C_DEVICE);
 	fu_device_register_private_flag(FU_DEVICE(self), FWUPD_MEDIATEK_SCALER_FLAG_BANK2_ONLY);
 }
 

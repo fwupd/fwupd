@@ -1703,8 +1703,20 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 }
 
 /**
+ * fu_device_get_proxy_internal: (skip):
+ **/
+FuDevice *
+fu_device_get_proxy_internal(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->proxy;
+}
+
+/**
  * fu_device_get_proxy:
  * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
  *
  * Gets any proxy device. A proxy device can be used to perform an action on
  * behalf of another device, for instance attach()ing it after a successful
@@ -1715,14 +1727,39 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
  *
  * Returns: (transfer none): a device or %NULL
  *
- * Since: 1.4.1
+ * Since: 2.0.18
  **/
 FuDevice *
-fu_device_get_proxy(FuDevice *self)
+fu_device_get_proxy(FuDevice *self, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return priv->proxy;
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	if (priv->proxy_gtype == G_TYPE_INVALID) {
+#ifndef SUPPORTED_BUILD
+		g_critical("plugin used fu_device_get_proxy() but did not define proxy GType -- "
+			   "use fu_device_set_proxy_gtype() or ProxyGType=");
+#endif
+	} else if (priv->proxy == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no proxy device assigned");
+		return NULL;
+	}
+
+	/* check is the correct type */
+	if (!g_type_is_a(G_OBJECT_TYPE(priv->proxy), priv->proxy_gtype)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "wrong proxy GType, got %s and expected %s",
+			    G_OBJECT_TYPE_NAME(priv->proxy),
+			    g_type_name(priv->proxy_gtype));
+		return NULL;
+	}
+	return fu_device_get_proxy_internal(self);
 }
 
 /**
@@ -6116,14 +6153,9 @@ fu_device_open(FuDevice *self, GError **error)
 		return fu_device_open_internal(parent, error);
 	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
-		FuDevice *proxy = fu_device_get_proxy(self);
-		if (proxy == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no proxy device");
+		FuDevice *proxy = fu_device_get_proxy(self, error);
+		if (proxy == NULL)
 			return FALSE;
-		}
 		if (!fu_device_open_internal(proxy, error))
 			return FALSE;
 	}
@@ -6205,14 +6237,9 @@ fu_device_close(FuDevice *self, GError **error)
 		return fu_device_close_internal(parent, error);
 	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
-		FuDevice *proxy = fu_device_get_proxy(self);
-		if (proxy == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no proxy device");
+		FuDevice *proxy = fu_device_get_proxy(self, error);
+		if (proxy == NULL)
 			return FALSE;
-		}
 		if (!fu_device_close_internal(proxy, error))
 			return FALSE;
 	}
@@ -6952,6 +6979,9 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor, FuDeviceIncorporateFlags 
 			if (priv->proxy == NULL && priv_donor->proxy != NULL)
 				fu_device_set_proxy(self, priv_donor->proxy);
 		}
+		if (priv->proxy_gtype == G_TYPE_INVALID &&
+		    priv_donor->proxy_gtype != G_TYPE_INVALID)
+			fu_device_set_proxy_gtype(self, priv_donor->proxy_gtype);
 		if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
 			fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
 		if (priv->custom_flags == NULL && priv_donor->custom_flags != NULL)
@@ -8499,6 +8529,7 @@ fu_device_init(FuDevice *self)
 	priv->acquiesce_delay = 50; /* ms */
 	priv->private_flags_registered = g_array_new(FALSE, FALSE, sizeof(GQuark));
 	priv->private_flags = g_array_new(FALSE, FALSE, sizeof(GQuark));
+	priv->proxy_gtype = G_TYPE_INVALID;
 }
 
 static void

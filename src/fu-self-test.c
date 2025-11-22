@@ -1344,9 +1344,11 @@ fu_engine_requirements_only_upgrade_reinstall_func(gconstpointer user_data)
 static void
 fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 {
+	GType proxy_gtype;
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuProgress) progress_tmp = fu_progress_new(G_STRLOC);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
@@ -1354,12 +1356,6 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	g_autoptr(GHashTable) metadata_post = NULL;
 	g_autoptr(GHashTable) metadata_pre = NULL;
 	g_autoptr(GInputStream) stream = g_memory_input_stream_new();
-	const gchar *nolocker[] = {
-	    "FuPciPspDevice",
-	    "FuSynapticsRmiPs2Device",
-	    "FuUefiSbatDevice",
-	    NULL,
-	};
 
 	g_debug("loading %s", g_type_name(gtype));
 	device = g_object_new(gtype, "context", self->ctx, "physical-id", "/sys", NULL);
@@ -1398,12 +1394,19 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	str = fu_device_to_string(device);
 	g_assert_nonnull(str);
 
-	/* ->probe() and ->setup */
-	if (!g_strv_contains(nolocker, g_type_name(gtype))) {
-		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, NULL);
-		if (locker != NULL)
-			g_debug("did ->probe() and ->setup()!");
+	/* proxy required */
+	proxy_gtype = fu_device_get_proxy_gtype(device);
+	if (proxy_gtype != G_TYPE_INVALID && G_TYPE_FUNDAMENTAL(proxy_gtype) == G_TYPE_OBJECT) {
+		g_autoptr(FuDevice) proxy =
+		    g_object_new(proxy_gtype, "context", self->ctx, "physical-id", "/sys", NULL);
+		fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);
+		fu_device_set_proxy(device, proxy);
 	}
+
+	/* ->probe() and ->setup */
+	locker = fu_device_locker_new(device, NULL);
+	if (locker != NULL)
+		g_debug("did ->probe() and ->setup()!");
 
 	/* ->prepare() and ->cleanup */
 	if (fu_device_prepare(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))

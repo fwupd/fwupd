@@ -257,6 +257,7 @@ fu_dell_dock_ec_devicetype_to_str(guint device_type, guint sub_type)
 static gboolean
 fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **bytes, GError **error)
 {
+	FuDevice *proxy;
 	/* The first byte of result data will be the size of the return,
 	hide this from callers */
 	guint8 result_length = length + 1;
@@ -264,10 +265,12 @@ fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **byt
 	const guint8 *result;
 
 	g_return_val_if_fail(self != NULL, FALSE);
-	g_return_val_if_fail(fu_device_get_proxy(FU_DEVICE(self)) != NULL, FALSE);
 	g_return_val_if_fail(bytes != NULL, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_read(fu_device_get_proxy(FU_DEVICE(self)),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_hid_i2c_read(proxy,
 				       cmd,
 				       result_length,
 				       &bytes_local,
@@ -295,15 +298,15 @@ fu_dell_dock_ec_read(FuDellDockEc *self, guint32 cmd, gsize length, GBytes **byt
 static gboolean
 fu_dell_dock_ec_write(FuDellDockEc *self, gsize length, guint8 *data, GError **error)
 {
+	FuDevice *proxy;
+
 	g_return_val_if_fail(self != NULL, FALSE);
-	g_return_val_if_fail(fu_device_get_proxy(FU_DEVICE(self)) != NULL, FALSE);
 	g_return_val_if_fail(length > 1, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_write(fu_device_get_proxy(FU_DEVICE(self)),
-					data,
-					length,
-					&ec_base_settings,
-					error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_hid_i2c_write(proxy, data, length, &ec_base_settings, error)) {
 		g_prefix_error_literal(error, "write over HID-I2C failed: ");
 		return FALSE;
 	}
@@ -772,6 +775,7 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 			       GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
+	FuDevice *proxy;
 	gsize fw_size = 0;
 	const guint8 *data;
 	gsize write_size = 0;
@@ -815,11 +819,14 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 	if (!fu_dell_dock_ec_modify_lock(self, self->unlock_target, TRUE, error))
 		return FALSE;
 
-	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(FU_DEVICE(self)), TRUE, error))
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_hid_raise_mcu_clock(proxy, TRUE, error))
 		return FALSE;
 
 	/* erase */
-	if (!fu_dell_dock_hid_erase_bank(fu_device_get_proxy(FU_DEVICE(self)), 0xff, error))
+	if (!fu_dell_dock_hid_erase_bank(proxy, 0xff, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -829,11 +836,7 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 		if (fw_size - nwritten < write_size)
 			write_size = fw_size - nwritten;
 
-		if (!fu_dell_dock_hid_write_flash(fu_device_get_proxy(FU_DEVICE(self)),
-						  address,
-						  data,
-						  write_size,
-						  error)) {
+		if (!fu_dell_dock_hid_write_flash(proxy, address, data, write_size, error)) {
 			g_prefix_error_literal(error, "write over HID failed: ");
 			return FALSE;
 		}
@@ -844,7 +847,7 @@ fu_dell_dock_ec_write_firmware(FuDevice *device,
 	} while (nwritten < fw_size);
 	fu_progress_step_done(progress);
 
-	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(FU_DEVICE(self)), FALSE, error))
+	if (!fu_dell_dock_hid_raise_mcu_clock(proxy, FALSE, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
@@ -932,14 +935,13 @@ static gboolean
 fu_dell_dock_ec_open(FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
+	FuDevice *proxy;
 
 	/* sanity check */
-	if (fu_device_get_proxy(device) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-
-	if (!fu_device_open(fu_device_get_proxy(device), error))
+	if (!fu_device_open(proxy, error))
 		return FALSE;
 	if (!self->data->dock_type)
 		return fu_dell_dock_ec_is_valid_dock(self, error);
@@ -949,12 +951,10 @@ fu_dell_dock_ec_open(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_close(FuDevice *device, GError **error)
 {
-	/* sanity check */
-	if (fu_device_get_proxy(device) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-	return fu_device_close(fu_device_get_proxy(device), error);
+	return fu_device_close(proxy, error);
 }
 
 static void
@@ -989,6 +989,7 @@ fu_dell_dock_ec_init(FuDellDockEc *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_HID_DEVICE);
 }
 
 static void

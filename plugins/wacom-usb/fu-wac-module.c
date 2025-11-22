@@ -279,6 +279,7 @@ fu_wac_module_init(FuWacModule *self)
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_WAC_DEVICE);
 }
 
 static void
@@ -286,7 +287,7 @@ fu_wac_module_constructed(GObject *object)
 {
 	FuWacModule *self = FU_WAC_MODULE(object);
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self), NULL);
 
 	/* not set in tests */
 	if (proxy != NULL) {
