@@ -24,7 +24,7 @@ struct _FuRedfishDeviceClass {
 #define FU_REDFISH_DEVICE_FLAG_NO_MANAGER_RESET_REQUEST "no-manager-reset-request"
 
 FuRedfishBackend *
-fu_redfish_device_get_backend(FuRedfishDevice *self);
+fu_redfish_device_get_backend(FuRedfishDevice *self, GError **error);
 gboolean
 fu_redfish_device_parse_message_id(FuRedfishDevice *self,
 				   const gchar *message_id,
