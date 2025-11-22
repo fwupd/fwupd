@@ -276,11 +276,14 @@ static gboolean
 fu_dell_dock_mst_trigger_rc_command(FuDellDockMst *self, GError **error)
 {
 	const guint8 *result = NULL;
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	guint32 tmp;
 
 	/* trigger the write */
 	tmp = MST_TRIGGER_WRITE;
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_dell_dock_mst_write_register(proxy,
 					     self->mst_rc_trigger_addr,
 					     (guint8 *)&tmp,
@@ -352,12 +355,10 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 			    GError **error)
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	gint buffer_len = (data == NULL) ? 12 : length + 16;
 	g_autofree guint8 *buffer = g_malloc0(buffer_len);
 	guint32 tmp;
-
-	g_return_val_if_fail(proxy != NULL, FALSE);
 
 	/* command */
 	tmp = (cmd | 0x80) << 16;
@@ -371,6 +372,9 @@ fu_dell_dock_mst_rc_command(FuDellDockMst *self,
 		memcpy(buffer + 16, data, length); /* nocheck:blocked */
 
 	/* write the combined register stream */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_dell_dock_mst_write_register(proxy,
 					     self->mst_rc_command_addr,
 					     buffer,
@@ -401,8 +405,12 @@ fu_dell_dock_mst_d19_check_fw(FuDellDockMst *self, GError **error)
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *data;
 	gsize length = 4;
+	FuDevice *proxy;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_mst_read_register(proxy,
 					    self->mst_core_mcu_bootloader_addr,
 					    length,
 					    &bytes,
@@ -500,6 +508,7 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 			       gboolean *checksum,
 			       GError **error)
 {
+	FuDevice *proxy;
 	g_autoptr(GBytes) csum_bytes = NULL;
 	const FuDellDockMstBankAttributes *attribs = NULL;
 	gsize length = 0;
@@ -546,11 +555,10 @@ fu_dell_dock_mst_checksum_bank(FuDellDockMst *self,
 		return FALSE;
 	}
 	/* read result from data register */
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
-					    self->mst_rc_data_addr,
-					    4,
-					    &csum_bytes,
-					    error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_mst_read_register(proxy, self->mst_rc_data_addr, 4, &csum_bytes, error))
 		return FALSE;
 	data = g_bytes_get_data(csum_bytes, NULL);
 	bank_sum = GUINT32_FROM_LE(data[0] | data[1] << 8 | /* nocheck:blocked nocheck:endian */
@@ -654,6 +662,7 @@ fu_dell_dock_mst_write_flash_bank(FuDellDockMst *self,
 static gboolean
 fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 {
+	FuDevice *proxy;
 	g_autoptr(GBytes) quad_bytes = NULL;
 	g_autoptr(GBytes) hdcp_bytes = NULL;
 	guint32 payload = 0x21;
@@ -682,7 +691,10 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 					 error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_mst_read_register(proxy,
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &quad_bytes,
@@ -709,7 +721,7 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 					 error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
+	if (!fu_dell_dock_mst_read_register(proxy,
 					    PANAMERA_MST_RC_DATA_ADDR,
 					    length,
 					    &hdcp_bytes,
@@ -733,6 +745,7 @@ fu_dell_dock_mst_stop_esm(FuDellDockMst *self, GError **error)
 static gboolean
 fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_use, GError **error)
 {
+	FuDevice *proxy;
 	const FuDellDockMstBankAttributes *attribs;
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *crc_tag;
@@ -757,11 +770,10 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 		g_prefix_error_literal(error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
-					    PANAMERA_MST_RC_DATA_ADDR,
-					    1,
-					    &bytes,
-					    error)) {
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_mst_read_register(proxy, PANAMERA_MST_RC_DATA_ADDR, 1, &bytes, error)) {
 		return FALSE;
 	}
 	crc_tag = g_bytes_get_data(bytes, NULL);
@@ -812,7 +824,7 @@ fu_dell_dock_mst_invalidate_bank(FuDellDockMst *self, FuDellDockMstBank bank_in_
 			g_prefix_error_literal(error, "failed to read tag from flash: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_mst_read_register(fu_device_get_proxy(FU_DEVICE(self)),
+		if (!fu_dell_dock_mst_read_register(proxy,
 						    PANAMERA_MST_RC_DATA_ADDR,
 						    4,
 						    &bytes_new,
@@ -906,6 +918,7 @@ fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 				FuProgress *progress,
 				GError **error)
 {
+	FuDevice *proxy;
 	gboolean checksum = FALSE;
 	FuDellDockMstBank bank_in_use = 0;
 	guint8 order[2] = {FU_DELL_DOCK_MST_BANK_ESM, FU_DELL_DOCK_MST_BANK_0};
@@ -914,10 +927,12 @@ fu_dell_dock_mst_write_panamera(FuDellDockMst *self,
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "stop-esm");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99, NULL);
+
 	/* determine the flash order */
-	if (!fu_dell_dock_mst_query_active_bank(fu_device_get_proxy(FU_DEVICE(self)),
-						&bank_in_use,
-						error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_dell_dock_mst_query_active_bank(proxy, &bank_in_use, error))
 		return FALSE;
 
 	if (bank_in_use == FU_DELL_DOCK_MST_BANK_0)
@@ -1024,6 +1039,7 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 				GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	FuDevice *proxy;
 	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -1031,10 +1047,12 @@ fu_dell_dock_mst_write_firmware(FuDevice *device,
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
-	g_return_val_if_fail(fu_device_get_proxy(device) != NULL, FALSE);
 
 	/* open the hub*/
-	if (!fu_device_open(fu_device_get_proxy(device), error))
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_open(proxy, error))
 		return FALSE;
 
 	/* open up access to controller bus */
@@ -1191,15 +1209,19 @@ static gboolean
 fu_dell_dock_mst_open(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	FuDevice *proxy;
 	FuDevice *parent = fu_device_get_parent(device);
 
 	g_return_val_if_fail(self->unlock_target != 0, FALSE);
 	g_return_val_if_fail(parent != NULL, FALSE);
 
-	if (fu_device_get_proxy(device) == NULL)
-		fu_device_set_proxy(device, fu_device_get_proxy(parent));
+	if (fu_device_get_proxy(device, NULL) == NULL)
+		fu_device_set_proxy(device, fu_device_get_proxy(parent, NULL));
 
-	if (!fu_device_open(fu_device_get_proxy(device), error))
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
+		return FALSE;
+	if (!fu_device_open(proxy, error))
 		return FALSE;
 
 	/* open up access to controller bus */
@@ -1213,12 +1235,16 @@ static gboolean
 fu_dell_dock_mst_close(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
+	FuDevice *proxy;
 
 	/* close access to controller bus */
 	if (!fu_dell_dock_set_power(device, self->unlock_target, FALSE, error))
 		return FALSE;
 
-	return fu_device_close(fu_device_get_proxy(device), error);
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
+	return fu_device_close(proxy, error);
 }
 
 static void
@@ -1237,6 +1263,7 @@ fu_dell_dock_mst_init(FuDellDockMst *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_HID_DEVICE);
 }
 
 static void

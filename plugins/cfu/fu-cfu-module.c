@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-cfu-device.h"
 #include "fu-cfu-module.h"
 #include "fu-cfu-struct.h"
 
@@ -141,14 +142,9 @@ fu_cfu_module_write_firmware(FuDevice *device,
 	FuDeviceClass *device_class;
 
 	/* process by the parent */
-	proxy = fu_device_get_proxy(device);
-	if (proxy == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no proxy device assigned");
+	proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 	device_class = FU_DEVICE_GET_CLASS(proxy);
 	return device_class->write_firmware(proxy, firmware, progress, flags, error);
 }
@@ -177,6 +173,7 @@ fu_cfu_module_init(FuCfuModule *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.cfu");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_SURFACE);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_CFU_DEVICE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);

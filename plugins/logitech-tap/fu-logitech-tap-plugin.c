@@ -36,10 +36,12 @@ fu_logitech_tap_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, G
 			dev,
 			FU_LOGITECH_TAP_HDMI_DEVICE_FLAG_SENSOR_NEEDS_REBOOT)) &&
 		    self->hdmi_device != NULL) {
+			FuLogitechTapSensorDevice *proxy;
 			g_debug("device needs reboot");
-			if (!fu_logitech_tap_sensor_device_reboot_device(
-				FU_LOGITECH_TAP_SENSOR_DEVICE(fu_device_get_proxy(dev)),
-				error))
+			proxy = FU_LOGITECH_TAP_SENSOR_DEVICE(fu_device_get_proxy(dev, error));
+			if (proxy == NULL)
+				return FALSE;
+			if (!fu_logitech_tap_sensor_device_reboot_device(proxy, error))
 				return FALSE;
 			fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 			break;

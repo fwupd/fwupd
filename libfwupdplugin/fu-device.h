@@ -1177,7 +1177,7 @@ fu_device_add_parent_physical_id(FuDevice *self, const gchar *physical_id) G_GNU
 void
 fu_device_add_parent_backend_id(FuDevice *self, const gchar *backend_id) G_GNUC_NON_NULL(1, 2);
 FuDevice *
-fu_device_get_proxy(FuDevice *self) G_GNUC_NON_NULL(1);
+fu_device_get_proxy(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 void
 fu_device_set_proxy(FuDevice *self, FuDevice *proxy) G_GNUC_NON_NULL(1);
 FuDevice *
@@ -1319,6 +1319,8 @@ GType
 fu_device_get_specialized_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_proxy_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
+void
+fu_device_set_proxy_gtype(FuDevice *self, GType gtype) G_GNUC_NON_NULL(1);
 GType
 fu_device_get_firmware_gtype(FuDevice *self) G_GNUC_NON_NULL(1);
 void

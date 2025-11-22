@@ -34,10 +34,13 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 					  guint8 report,
 					  GError **error)
 {
-	FuHidrawDevice *hid_dev = FU_HIDRAW_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuHidrawDevice *proxy;
 
+	proxy = FU_HIDRAW_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	if (req != NULL) {
-		if (!fu_hidraw_device_set_feature(hid_dev,
+		if (!fu_hidraw_device_set_feature(proxy,
 						  req->data,
 						  req->len,
 						  FU_IOCTL_FLAG_NONE,
@@ -47,7 +50,7 @@ fu_asus_hid_child_device_transfer_feature(FuAsusHidChildDevice *self,
 		}
 	}
 	if (res != NULL) {
-		if (!fu_hidraw_device_get_feature(hid_dev,
+		if (!fu_hidraw_device_get_feature(proxy,
 						  res->data,
 						  res->len,
 						  FU_IOCTL_FLAG_NONE,
@@ -141,18 +144,17 @@ static gboolean
 fu_asus_hid_child_device_setup(FuDevice *device, GError **error)
 {
 	FuAsusHidChildDevice *self = FU_ASUS_HID_CHILD_DEVICE(device);
+	FuDevice *proxy;
 	g_autofree gchar *name = NULL;
 
-	if (fu_device_get_proxy(FU_DEVICE(self)) == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
 		return FALSE;
-	}
 
 	name = g_strdup_printf("Microcontroller %u", self->idx);
 	fu_device_set_name(FU_DEVICE(self), name);
 
-	if (fu_device_has_flag(fu_device_get_proxy(FU_DEVICE(self)),
-			       FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag(proxy, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_autofree gchar *recovery_str = g_strdup_printf("%d", self->idx);
 		/* RC71LS = 0, RC71LM = 1 */
 		fu_device_add_instance_strsafe(FU_DEVICE(self), "RECOVERY", recovery_str);
@@ -191,26 +193,18 @@ fu_asus_hid_child_device_reload(FuDevice *device, GError **error)
 static gboolean
 fu_asus_hid_child_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-
 	return fu_device_attach(proxy, error);
 }
 
 static gboolean
 fu_asus_hid_child_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
-
-	if (proxy == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no proxy");
+	FuDevice *proxy = fu_device_get_proxy(device, error);
+	if (proxy == NULL)
 		return FALSE;
-	}
-
 	return fu_device_detach(proxy, error);
 }
 
@@ -223,6 +217,7 @@ fu_asus_hid_child_device_init(FuAsusHidChildDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_ASUS_HID_DEVICE);
 }
 
 static void

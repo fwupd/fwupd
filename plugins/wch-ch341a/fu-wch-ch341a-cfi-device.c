@@ -20,7 +20,10 @@ G_DEFINE_TYPE(FuWchCh341aCfiDevice, fu_wch_ch341a_cfi_device, FU_TYPE_CFI_DEVICE
 static gboolean
 fu_wch_ch341a_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	return fu_wch_ch341a_device_chip_select(proxy, value, error);
 }
 
@@ -34,11 +37,14 @@ fu_wch_ch341a_cfi_device_wait_for_status_cb(FuDevice *device, gpointer user_data
 {
 	FuWchCh341aCfiDeviceHelper *helper = (FuWchCh341aCfiDeviceHelper *)user_data;
 	FuWchCh341aCfiDevice *self = FU_WCH_CH341A_CFI_DEVICE(device);
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(device));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[2] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 
 	/* enable chip */
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(device, error));
+	if (proxy == NULL)
+		return FALSE;
 	cslocker = fu_cfi_device_chip_select_locker_new(FU_CFI_DEVICE(self), error);
 	if (cslocker == NULL)
 		return FALSE;
@@ -85,7 +91,7 @@ fu_wch_ch341a_cfi_device_wait_for_status(FuWchCh341aCfiDevice *self,
 static gboolean
 fu_wch_ch341a_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[WCH_CH341A_PAYLOAD_SIZE] = {0x9F};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(GString) flash_id = g_string_new(NULL);
@@ -96,6 +102,9 @@ fu_wch_ch341a_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 		return FALSE;
 
 	/* read JEDEC ID */
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_wch_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error)) {
 		g_prefix_error_literal(error, "failed to request JEDEC ID: ");
 		return FALSE;
@@ -123,7 +132,7 @@ fu_wch_ch341a_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 static gboolean
 fu_wch_ch341a_cfi_device_write_enable(FuWchCh341aCfiDevice *self, GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[1] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 
@@ -132,6 +141,9 @@ fu_wch_ch341a_cfi_device_write_enable(FuWchCh341aCfiDevice *self, GError **error
 		return FALSE;
 	cslocker = fu_cfi_device_chip_select_locker_new(FU_CFI_DEVICE(self), error);
 	if (cslocker == NULL)
+		return FALSE;
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 	if (!fu_wch_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error))
 		return FALSE;
@@ -145,7 +157,7 @@ fu_wch_ch341a_cfi_device_write_enable(FuWchCh341aCfiDevice *self, GError **error
 static gboolean
 fu_wch_ch341a_cfi_device_chip_erase(FuWchCh341aCfiDevice *self, GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 
@@ -160,6 +172,9 @@ fu_wch_ch341a_cfi_device_chip_erase(FuWchCh341aCfiDevice *self, GError **error)
 				   &buf[0],
 				   error))
 		return FALSE;
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_wch_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error))
 		return FALSE;
 	if (!fu_device_locker_close(cslocker, error))
@@ -172,7 +187,7 @@ fu_wch_ch341a_cfi_device_chip_erase(FuWchCh341aCfiDevice *self, GError **error)
 static gboolean
 fu_wch_ch341a_cfi_device_write_page(FuWchCh341aCfiDevice *self, FuChunk *page, GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[4] = {0x0};
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
@@ -191,6 +206,9 @@ fu_wch_ch341a_cfi_device_write_page(FuWchCh341aCfiDevice *self, FuChunk *page, G
 				   FU_CFI_DEVICE_CMD_PAGE_PROG,
 				   &buf[0],
 				   error))
+		return FALSE;
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
 		return FALSE;
 	if (!fu_wch_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error))
 		return FALSE;
@@ -257,7 +275,7 @@ fu_wch_ch341a_cfi_device_read_firmware(FuWchCh341aCfiDevice *self,
 				       FuProgress *progress,
 				       GError **error)
 {
-	FuWchCh341aDevice *proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh341aDevice *proxy;
 	guint8 buf[WCH_CH341A_PAYLOAD_SIZE] = {0x0};
 	g_autoptr(FuDeviceLocker) cslocker = NULL;
 	g_autoptr(GByteArray) blob = g_byte_array_new();
@@ -281,6 +299,9 @@ fu_wch_ch341a_cfi_device_read_firmware(FuWchCh341aCfiDevice *self,
 				   &buf[0],
 				   error))
 		return NULL;
+	proxy = FU_WCH_CH341A_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
@@ -309,13 +330,16 @@ fu_wch_ch341a_cfi_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuWchCh341aCfiDevice *self = FU_WCH_CH341A_CFI_DEVICE(device);
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(FuChunkArray) pages = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open programmer */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
@@ -378,11 +402,14 @@ static GBytes *
 fu_wch_ch341a_cfi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWchCh341aCfiDevice *self = FU_WCH_CH341A_CFI_DEVICE(device);
-	FuDevice *proxy = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *proxy;
 	gsize bufsz = fu_device_get_firmware_size_max(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open programmer */
+	proxy = fu_device_get_proxy(FU_DEVICE(self), error);
+	if (proxy == NULL)
+		return NULL;
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return NULL;
@@ -417,6 +444,7 @@ fu_wch_ch341a_cfi_device_init(FuWchCh341aCfiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_WCH_CH341A_DEVICE);
 }
 
 static void

@@ -18,7 +18,9 @@ G_DEFINE_TYPE(FuWchCh347CfiDevice, fu_wch_ch347_cfi_device, FU_TYPE_CFI_DEVICE)
 static gboolean
 fu_wch_ch347_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
 {
-	FuWchCh347Device *proxy = FU_WCH_CH347_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh347Device *proxy = FU_WCH_CH347_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	return fu_wch_ch347_device_chip_select(proxy, value, error);
 }
 
@@ -31,7 +33,9 @@ fu_wch_ch347_cfi_device_send_command(FuCfiDevice *self,
 				     FuProgress *progress,
 				     GError **error)
 {
-	FuWchCh347Device *proxy = FU_WCH_CH347_DEVICE(fu_device_get_proxy(FU_DEVICE(self)));
+	FuWchCh347Device *proxy = FU_WCH_CH347_DEVICE(fu_device_get_proxy(FU_DEVICE(self), error));
+	if (proxy == NULL)
+		return FALSE;
 	return fu_wch_ch347_device_send_command(proxy, wbuf, wbufsz, rbuf, rbufsz, progress, error);
 }
 
@@ -40,6 +44,7 @@ fu_wch_ch347_cfi_device_init(FuWchCh347CfiDevice *self)
 {
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_NO_VERSION_EXPECTED);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_EMULATION_TAG);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_WCH_CH347_DEVICE);
 }
 
 static void

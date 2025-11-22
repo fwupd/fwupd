@@ -1928,7 +1928,8 @@ fu_plugin_backend_proxy_device_func(void)
 	g_assert_true(FU_IS_DEVICE(device_new));
 
 	/* check proxy was constructed */
-	proxy = fu_device_get_proxy(device_new);
+	proxy = fu_device_get_proxy(device_new, &error);
+	g_assert_no_error(error);
 	g_assert_nonnull(proxy);
 	g_assert_true(FU_IS_SELF_TEST_DEVICE(proxy));
 }

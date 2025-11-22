@@ -25,12 +25,15 @@ fu_legion_hid_child_write_firmware(FuDevice *device,
 				   GError **error)
 {
 	FuLegionHidChild *self = FU_LEGION_HID_CHILD(device);
-	FuLegionHidDevice *proxy = FU_LEGION_HID_DEVICE(fu_device_get_proxy(device));
+	FuLegionHidDevice *proxy;
 	guint32 version = 0;
 	g_autoptr(FuFirmware) img = NULL;
 
 	img = fu_firmware_get_image_by_id(firmware, fu_device_get_logical_id(device), error);
 	if (img == NULL)
+		return FALSE;
+	proxy = FU_LEGION_HID_DEVICE(fu_device_get_proxy(device, error));
+	if (proxy == NULL)
 		return FALSE;
 	if (!fu_legion_hid_device_execute_upgrade(proxy, img, error)) {
 		g_prefix_error(error, "execute %s failed: ", fu_device_get_logical_id(device));
@@ -70,9 +73,12 @@ static gboolean
 fu_legion_hid_child_setup(FuDevice *device, GError **error)
 {
 	FuLegionHidChild *self = FU_LEGION_HID_CHILD(device);
-	FuLegionHidDevice *proxy = FU_LEGION_HID_DEVICE(fu_device_get_proxy(device));
+	FuLegionHidDevice *proxy;
 	guint32 version = 0;
 
+	proxy = FU_LEGION_HID_DEVICE(fu_device_get_proxy(device, error));
+	if (proxy == NULL)
+		return FALSE;
 	if (!fu_legion_hid_device_get_version(proxy, self->id, &version, error))
 		return FALSE;
 	fu_device_set_version_raw(device, version);
@@ -101,6 +107,7 @@ fu_legion_hid_child_init(FuLegionHidChild *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.legion-hid");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID_FIRMWARE);
+	fu_device_set_proxy_gtype(FU_DEVICE(self), FU_TYPE_LEGION_HID_DEVICE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_REFCOUNTED_PROXY);

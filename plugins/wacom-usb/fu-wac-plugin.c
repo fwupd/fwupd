@@ -70,7 +70,11 @@ fu_wac_plugin_composite_cleanup(FuPlugin *self, GPtrArray *devices, GError **err
 			break;
 		}
 		if (FU_IS_WAC_MODULE(device_tmp)) {
-			g_set_object(&main_device, FU_WAC_DEVICE(fu_device_get_proxy(device_tmp)));
+			FuWacDevice *proxy;
+			proxy = FU_WAC_DEVICE(fu_device_get_proxy(device_tmp, error));
+			if (proxy == NULL)
+				return FALSE;
+			g_set_object(&main_device, proxy);
 			break;
 		}
 	}

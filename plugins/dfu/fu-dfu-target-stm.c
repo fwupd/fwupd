@@ -90,17 +90,20 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 				 FuProgress *progress,
 				 GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
+	FuDfuDevice *proxy;
 	FuDfuSector *sector;
 	FuChunk *chk = NULL;
 	GBytes *chunk_tmp;
 	guint32 offset = address;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
-	guint16 transfer_size = fu_dfu_device_get_transfer_size(device);
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GBytes) contents_truncated = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target), error));
+	if (proxy == NULL)
+		return NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -136,7 +139,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 	fu_progress_step_done(progress);
 
 	/* abort back to IDLE */
-	if (!fu_dfu_device_abort(device, error))
+	if (!fu_dfu_device_abort(proxy, error))
 		return NULL;
 	fu_progress_step_done(progress);
 
@@ -174,7 +177,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 		}
 
 		/* detect short write as EOF */
-		if (chunk_size < transfer_size)
+		if (chunk_size < fu_dfu_device_get_transfer_size(proxy))
 			break;
 
 		/* more data than we needed */
@@ -184,7 +187,7 @@ fu_dfu_target_stm_upload_element(FuDfuTarget *target,
 	fu_progress_step_done(progress);
 
 	/* abort back to IDLE */
-	if (!fu_dfu_device_abort(device, error))
+	if (!fu_dfu_device_abort(proxy, error))
 		return NULL;
 	fu_progress_step_done(progress);
 
@@ -419,7 +422,7 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
-	FuDfuDevice *device = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target)));
+	FuDfuDevice *proxy;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(FuChunkArray) chunks = NULL;
 	g_autoptr(GPtrArray) sectors_array = g_ptr_array_new();
@@ -431,11 +434,14 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50, NULL);
 
 	/* 1st pass: work out which sectors need erasing */
+	proxy = FU_DFU_DEVICE(fu_device_get_proxy(FU_DEVICE(target), error));
+	if (proxy == NULL)
+		return FALSE;
 	bytes = fu_chunk_get_bytes(chk);
 	chunks = fu_chunk_array_new_from_bytes(bytes,
 					       fu_chunk_get_address(chk),
 					       FU_CHUNK_PAGESZ_NONE,
-					       fu_dfu_device_get_transfer_size(device));
+					       fu_dfu_device_get_transfer_size(proxy));
 	if (!fu_dfu_target_stm_download_element1(target,
 						 chunks,
 						 sectors_array,
