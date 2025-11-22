@@ -1408,9 +1408,13 @@ fu_engine_plugin_device_gtype(FuTest *self, GType gtype)
 	if (locker != NULL)
 		g_debug("did ->probe() and ->setup()!");
 
-	/* ->prepare() and ->cleanup */
+	/* ->prepare(), ->attach(), ->detach, ->cleanup */
 	if (fu_device_prepare(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->prepare()");
+	if (fu_device_attach_full(device, progress_tmp, NULL))
+		g_debug("did ->attach()");
+	if (fu_device_detach_full(device, progress_tmp, NULL))
+		g_debug("did ->detach()");
 	if (fu_device_cleanup(device, progress_tmp, FWUPD_INSTALL_FLAG_FORCE, NULL))
 		g_debug("did ->cleanup()");
 
