@@ -16,12 +16,14 @@ G_DECLARE_FINAL_TYPE(FuIoctl, fu_ioctl, FU, IOCTL, GObject)
  * FuIoctlFlags:
  * @FU_IOCTL_FLAG:			No flags set
  * @FU_IOCTL_FLAG_RETRY:		Retry the call on failure
+ * @FU_IOCTL_FLAG_PTR_AS_INTEGER:	The @ptr passed to ioctl is an integer, not a buffer
  *
  * Flags used when calling fu_ioctl_execute() and fu_udev_device_ioctl().
  **/
 typedef enum {
 	FU_IOCTL_FLAG_NONE = 0,
 	FU_IOCTL_FLAG_RETRY = 1 << 0,
+	FU_IOCTL_FLAG_PTR_AS_INTEGER = 1 << 1,
 	/*< private >*/
 	FU_IOCTL_FLAG_LAST
 } G_GNUC_FLAG_ENUM FuIoctlFlags;
