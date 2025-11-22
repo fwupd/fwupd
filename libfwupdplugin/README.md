@@ -202,4 +202,5 @@ Remember: Plugins should be upstream!
 ## 2.0.18
 
 * `fu_input_stream_find()`: Add a start offset, typically `0x0`.
+* `fu_device_get_parent()`: Add a `GError`
 * `fu_device_get_proxy()`: Add a `GError`

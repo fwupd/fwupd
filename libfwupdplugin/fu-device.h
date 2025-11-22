@@ -1155,7 +1155,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 FuDevice *
 fu_device_get_root(FuDevice *self) G_GNUC_NON_NULL(1);
 FuDevice *
-fu_device_get_parent(FuDevice *self) G_GNUC_NON_NULL(1);
+fu_device_get_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_backend_parent(FuDevice *self, GError **error) G_GNUC_NON_NULL(1);
 FuDevice *

@@ -129,7 +129,7 @@ fu_device_list_get_children(FuDeviceList *self, FuDevice *device)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (device == fu_device_get_parent(item->device))
+		if (device == fu_device_get_parent_internal(item->device))
 			g_ptr_array_add(devices, g_object_ref(item->device));
 	}
 	g_rw_lock_reader_unlock(&self->devices_mutex);
@@ -791,10 +791,11 @@ fu_device_list_replace(FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 	fu_device_incorporate_flag(device, item->device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 
 	/* copy the parent if not already set */
-	if (fu_device_get_parent(item->device) != NULL &&
-	    fu_device_get_parent(item->device) != device &&
-	    fu_device_get_parent(device) != item->device && fu_device_get_parent(device) == NULL) {
-		FuDevice *parent = fu_device_get_parent(item->device);
+	if (fu_device_get_parent_internal(item->device) != NULL &&
+	    fu_device_get_parent_internal(item->device) != device &&
+	    fu_device_get_parent_internal(device) != item->device &&
+	    fu_device_get_parent_internal(device) == NULL) {
+		FuDevice *parent = fu_device_get_parent_internal(item->device);
 		g_info("copying parent %s to new device", fu_device_get_id(parent));
 		fu_device_set_parent(device, parent);
 	}

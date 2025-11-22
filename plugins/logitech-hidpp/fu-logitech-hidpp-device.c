@@ -1439,7 +1439,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 		/* so we detect off then on */
-		parent = fu_device_get_parent(device);
+		parent = fu_device_get_parent(device, NULL);
 		if (parent != NULL)
 			fu_device_set_poll_interval(parent, 500);
 
@@ -1959,11 +1959,11 @@ fu_logitech_hidpp_device_cleanup(FuDevice *device,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	if (parent != NULL)
+	FuDevice *parent = fu_device_get_parent(device, NULL);
+	if (parent != NULL) {
 		fu_device_set_poll_interval(parent,
 					    FU_LOGITECH_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
-
+	}
 	return TRUE;
 }
 

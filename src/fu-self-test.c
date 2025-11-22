@@ -2154,8 +2154,8 @@ fu_engine_device_parent_guid_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device3);
 
 	/* verify both children were adopted */
-	g_assert_true(fu_device_get_parent(device3) == device2);
-	g_assert_true(fu_device_get_parent(device1) == device2);
+	g_assert_true(fu_device_get_parent_internal(device3) == device2);
+	g_assert_true(fu_device_get_parent_internal(device1) == device2);
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 
 	/* verify order */
@@ -2239,10 +2239,10 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device5);
 
 	/* verify both children were adopted */
-	g_assert_true(fu_device_get_parent(device3) == device2);
-	g_assert_true(fu_device_get_parent(device4) == device2);
-	g_assert_true(fu_device_get_parent(device5) == device2);
-	g_assert_true(fu_device_get_parent(device1) == device2);
+	g_assert_true(fu_device_get_parent_internal(device3) == device2);
+	g_assert_true(fu_device_get_parent_internal(device4) == device2);
+	g_assert_true(fu_device_get_parent_internal(device5) == device2);
+	g_assert_true(fu_device_get_parent_internal(device1) == device2);
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 }
 
@@ -4331,7 +4331,7 @@ fu_device_list_replug_auto_func(gconstpointer user_data)
 	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 
 	/* check device2 now has parent too */
-	g_assert_true(fu_device_get_parent(device2) == parent);
+	g_assert_true(fu_device_get_parent_internal(device2) == parent);
 
 	/* waiting, failed */
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -5603,11 +5603,11 @@ fu_plugin_composite_func(gconstpointer user_data)
 		} else if (g_strcmp0(fu_device_get_id(device),
 				     "c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
 			g_assert_cmpstr(fu_device_get_version(device), ==, "1");
-			g_assert_nonnull(fu_device_get_parent(device));
+			g_assert_nonnull(fu_device_get_parent_internal(device));
 		} else if (g_strcmp0(fu_device_get_id(device),
 				     "bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
 			g_assert_cmpstr(fu_device_get_version(device), ==, "10");
-			g_assert_nonnull(fu_device_get_parent(device));
+			g_assert_nonnull(fu_device_get_parent_internal(device));
 		}
 	}
 

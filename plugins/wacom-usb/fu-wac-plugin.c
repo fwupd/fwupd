@@ -32,7 +32,7 @@ fu_wac_plugin_write_firmware(FuPlugin *plugin,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, NULL);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	locker = fu_device_locker_new(parent != NULL ? parent : device, error);
 	if (locker == NULL)

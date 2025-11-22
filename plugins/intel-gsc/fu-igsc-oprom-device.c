@@ -33,7 +33,7 @@ static gboolean
 fu_igsc_oprom_device_probe(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, error);
 
 	/* from the self tests */
 	if (parent == NULL) {
@@ -84,7 +84,7 @@ static gboolean
 fu_igsc_oprom_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
 	guint8 buf[FU_STRUCT_IGSC_OPROM_VERSION_SIZE] = {0x0};
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuStructIgscOpromVersion) st = NULL;
@@ -125,7 +125,7 @@ fu_igsc_oprom_device_prepare_firmware(FuDevice *device,
 				      GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
 	g_autoptr(GInputStream) stream_igsc = NULL;
 	g_autoptr(FuFirmware) firmware_igsc = g_object_new(FU_TYPE_IGSC_OPROM_FIRMWARE, NULL);
 	g_autoptr(FuFirmware) firmware_oprom = NULL;
@@ -242,7 +242,7 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuIgscOpromDevice *self = FU_IGSC_OPROM_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *parent;
 	g_autoptr(FuStructIgscFwuHeciImageMetadata) st_md = NULL;
 	g_autoptr(GBytes) fw_info = NULL;
 	g_autoptr(GInputStream) partial_stream = NULL;
@@ -263,7 +263,10 @@ fu_igsc_oprom_device_write_firmware(FuDevice *device,
 	fw_info = fu_struct_igsc_fwu_heci_image_metadata_to_bytes(st_md);
 
 	/* OPROM image doesn't require metadata */
-	return fu_igsc_device_write_blob(igsc_parent,
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	return fu_igsc_device_write_blob(parent,
 					 self->payload_type,
 					 fw_info,
 					 partial_stream,

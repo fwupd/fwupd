@@ -27,10 +27,13 @@ static gboolean
 fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidppRadio *self = FU_LOGITECH_HIDPP_RADIO(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
@@ -45,10 +48,13 @@ fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **
 static gboolean
 fu_logitech_hidpp_radio_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
@@ -65,10 +71,13 @@ fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;

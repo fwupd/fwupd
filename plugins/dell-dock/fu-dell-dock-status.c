@@ -46,7 +46,9 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 	guint32 status_version;
 	g_autofree gchar *dynamic_version = NULL;
 
-	parent = fu_device_get_parent(device);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	status_version = fu_dell_dock_ec_get_status_version(FU_DELL_DOCK_EC(parent));
 
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
@@ -134,11 +136,9 @@ fu_dell_dock_status_open(FuDevice *device, GError **error)
 
 	proxy = fu_device_get_proxy(device, NULL);
 	if (proxy == NULL) {
-		proxy = fu_device_get_parent(device);
-		if (proxy == NULL) {
-			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+		proxy = fu_device_get_parent(device, error);
+		if (proxy == NULL)
 			return FALSE;
-		}
 		fu_device_set_proxy(device, proxy);
 	}
 	return fu_device_open(proxy, error);

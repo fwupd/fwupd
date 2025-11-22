@@ -1158,7 +1158,9 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set version from EC if we know it */
-	parent = fu_device_get_parent(device);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	version = fu_dell_dock_ec_get_mst_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -1210,7 +1212,7 @@ fu_dell_dock_mst_open(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
 	FuDevice *proxy;
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, NULL);
 
 	g_return_val_if_fail(self->unlock_target != 0, FALSE);
 	g_return_val_if_fail(parent != NULL, FALSE);

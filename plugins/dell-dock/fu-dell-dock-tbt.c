@@ -55,6 +55,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
 	FuDevice *proxy;
+	FuDevice *parent;
 	guint32 start_offset = 0;
 	gsize image_size = 0;
 	const guint8 *buffer;
@@ -131,7 +132,10 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(fu_device_get_parent(device)))) {
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
+	if (fu_dell_dock_ec_tbt_passive(FU_DELL_DOCK_EC(parent))) {
 		g_info("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate(proxy, &tbt_base_settings, error)) {
 		g_prefix_error_literal(error, "failed to authenticate: ");
@@ -200,7 +204,9 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 	const gchar *version;
 
 	/* set version from EC if we know it */
-	parent = fu_device_get_parent(device);
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	version = fu_dell_dock_ec_get_tbt_version(FU_DELL_DOCK_EC(parent));
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
@@ -234,13 +240,12 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_tbt_probe(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 
 	/* sanity check */
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	}
 
 	fu_device_incorporate(device, parent, FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
 	fu_device_set_logical_id(FU_DEVICE(device), "tbt");
