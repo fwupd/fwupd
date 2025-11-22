@@ -79,6 +79,8 @@ void
 fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags) G_GNUC_NON_NULL(1);
 FuDevice *
 fu_device_get_proxy_internal(FuDevice *self) G_GNUC_NON_NULL(1);
+FuDevice *
+fu_device_get_parent_internal(FuDevice *self) G_GNUC_NON_NULL(1);
 
 void
 fu_device_clear_events(FuDevice *self);

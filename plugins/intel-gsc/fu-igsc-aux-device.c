@@ -32,16 +32,12 @@ fu_igsc_aux_device_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_igsc_aux_device_probe(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 
 	/* from the self tests */
-	if (parent == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no parent FuIgscDevice");
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	}
 
 	/* add extra instance IDs */
 	fu_device_add_instance_str(device,
@@ -65,11 +61,14 @@ static gboolean
 fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *parent;
 	g_autofree gchar *version = NULL;
 
 	/* get version */
-	if (!fu_igsc_device_get_aux_version(igsc_parent,
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_igsc_device_get_aux_version(parent,
 					    &self->oem_version,
 					    &self->major_version,
 					    &self->major_vcn,
@@ -77,7 +76,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 		g_prefix_error_literal(error, "failed to get aux version: ");
 		return FALSE;
 	}
-	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
+	if (fu_device_has_private_flag(FU_DEVICE(parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {
 		version = g_strdup("0.0");
 	} else {
 		version = g_strdup_printf("%u.%u", self->major_version, self->oem_version);
@@ -96,7 +95,7 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 				    GError **error)
 {
 	FuIgscAuxDevice *self = FU_IGSC_AUX_DEVICE(device);
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *parent;
 	g_autoptr(FuIgscAuxFirmware) firmware = FU_IGSC_AUX_FIRMWARE(fu_igsc_aux_firmware_new());
 
 	/* parse container */
@@ -104,11 +103,14 @@ fu_igsc_aux_device_prepare_firmware(FuDevice *device,
 		return NULL;
 
 	/* search the device list for a match */
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return NULL;
 	if (!fu_igsc_aux_firmware_match_device(firmware,
-					       fu_device_get_vid(FU_DEVICE(igsc_parent)),
-					       fu_device_get_pid(FU_DEVICE(igsc_parent)),
-					       fu_igsc_device_get_ssvid(igsc_parent),
-					       fu_igsc_device_get_ssdid(igsc_parent),
+					       fu_device_get_vid(FU_DEVICE(parent)),
+					       fu_device_get_pid(FU_DEVICE(parent)),
+					       fu_igsc_device_get_ssvid(parent),
+					       fu_igsc_device_get_ssdid(parent),
 					       error))
 		return NULL;
 
@@ -152,7 +154,7 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	FuIgscDevice *igsc_parent = FU_IGSC_DEVICE(fu_device_get_parent(device));
+	FuIgscDevice *parent;
 	g_autoptr(GBytes) fw_info = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 
@@ -165,7 +167,10 @@ fu_igsc_aux_device_write_firmware(FuDevice *device,
 	    fu_firmware_get_image_by_idx_stream(firmware, FU_IFWI_FPT_FIRMWARE_IDX_SDTA, error);
 	if (stream_payload == NULL)
 		return FALSE;
-	return fu_igsc_device_write_blob(igsc_parent,
+	parent = FU_IGSC_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
+	return fu_igsc_device_write_blob(parent,
 					 FU_IGSC_FWU_HECI_PAYLOAD_TYPE_FWDATA,
 					 fw_info,
 					 stream_payload,

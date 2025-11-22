@@ -275,12 +275,12 @@ fu_dell_kestrel_plugin_config_parentship(FuPlugin *plugin)
 	FuDevice *device_usb4 = fu_plugin_cache_lookup(plugin, "usb4");
 	FuDevice *device_mst = fu_plugin_cache_lookup(plugin, "mst");
 
-	if (device_ec && device_usb4 && !fu_device_get_parent(device_usb4)) {
+	if (device_ec && device_usb4 && !fu_device_get_parent(device_usb4, NULL)) {
 		fu_device_add_child(device_ec, device_usb4);
 		fu_plugin_cache_remove(plugin, "usb4");
 	}
 
-	if (device_ec && device_mst && !fu_device_get_parent(device_mst)) {
+	if (device_ec && device_mst && !fu_device_get_parent(device_mst, NULL)) {
 		fu_device_add_child(device_ec, device_mst);
 		fu_plugin_cache_remove(plugin, "mst");
 	}
@@ -332,7 +332,7 @@ fu_dell_kestrel_plugin_get_ec_from_devices(GPtrArray *devices)
 {
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index(devices, i);
-		FuDevice *parent = fu_device_get_parent(dev);
+		FuDevice *parent = fu_device_get_parent(dev, NULL);
 
 		if (parent == NULL)
 			parent = dev;
@@ -438,7 +438,7 @@ static gboolean
 fu_dell_kestrel_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *cache_keys[] = {"ec", "mst", "usb4"};
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, NULL);
 
 	if (parent == NULL)
 		return TRUE;

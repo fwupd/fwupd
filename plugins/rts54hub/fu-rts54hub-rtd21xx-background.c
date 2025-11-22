@@ -104,10 +104,13 @@ fu_rts54hub_rtd21xx_background_detach_cb(FuDevice *device, gpointer user_data, G
 static gboolean
 fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
@@ -122,12 +125,15 @@ fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GE
 static gboolean
 fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	guint8 buf[] = {FU_RTS54HUB_RTD21XX_BG_ISP_CMD_FW_UPDATE_EXIT};
 
 	/* open device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
@@ -169,10 +175,13 @@ fu_rts54hub_rtd21xx_background_setup(FuDevice *device, GError **error)
 static gboolean
 fu_rts54hub_rtd21xx_background_reload(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open parent device */
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
+		return FALSE;
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;

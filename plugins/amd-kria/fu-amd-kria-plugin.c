@@ -80,6 +80,7 @@ static void
 fu_amd_kria_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 {
 	FuAmdKriaPlugin *self;
+	FuDevice *parent;
 	const gchar *name;
 	g_autoptr(GError) error_local = NULL;
 
@@ -102,12 +103,13 @@ fu_amd_kria_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
 	}
 
 	/* mark the active partition version on the created KRIA device */
-	if (fu_device_get_parent(dev) != NULL && fu_device_get_version(dev) != NULL) {
+	parent = fu_device_get_parent(dev, NULL);
+	if (parent != NULL && fu_device_get_version(dev) != NULL) {
 		if (g_strcmp0(self->active, "A") == 0 && self->version_a != NULL)
-			fu_device_set_version(fu_device_get_parent(dev), self->version_a);
+			fu_device_set_version(parent, self->version_a);
 		else if (g_strcmp0(self->active, "B") == 0 && self->version_b != NULL)
-			fu_device_set_version(fu_device_get_parent(dev), self->version_b);
-		fu_device_add_flag(fu_device_get_parent(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_set_version(parent, self->version_b);
+		fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
 	fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);

@@ -43,12 +43,15 @@ fu_wac_module_to_string(FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_wac_module_refresh(FuWacModule *self, GError **error)
 {
-	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
+	FuWacDevice *parent;
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE, [1 ... FU_WAC_PACKET_LEN - 1] = 0xff};
 
 	/* get from hardware */
-	if (!fu_wac_device_get_feature_report(parent_device,
+	parent = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+	if (!fu_wac_device_get_feature_report(parent,
 					      buf,
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
@@ -124,22 +127,28 @@ fu_wac_module_set_feature(FuWacModule *self,
 			  guint busy_timeout,  /* ms */
 			  GError **error)
 {
-	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
+	FuWacDevice *parent;
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
-	guint delay_ms = fu_device_has_flag(FU_DEVICE(parent_device), FWUPD_DEVICE_FLAG_EMULATED)
-			     ? 10
-			     : poll_interval;
-	guint busy_poll_loops = busy_timeout / delay_ms;
-	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
-			[1] = priv->fw_type,
-			[2] = command,
-			[3 ... FU_WAC_PACKET_LEN - 1] = 0xff};
+	guint delay_ms;
+	guint busy_poll_loops;
+	guint8 buf[] = {
+	    [0] = FU_WAC_REPORT_ID_MODULE,
+	    [1] = priv->fw_type,
+	    [2] = command,
+	    [3 ... FU_WAC_PACKET_LEN - 1] = 0xff,
+	};
 
 	/* sanity check */
 	g_return_val_if_fail(FU_IS_WAC_MODULE(self), FALSE);
-	g_return_val_if_fail(FU_IS_WAC_DEVICE(parent_device), FALSE);
+
+	parent = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
+	if (parent == NULL)
+		return FALSE;
+	delay_ms =
+	    fu_device_has_flag(FU_DEVICE(parent), FWUPD_DEVICE_FLAG_EMULATED) ? 10 : poll_interval;
+	busy_poll_loops = busy_timeout / delay_ms;
 
 	/* verify the size of the blob */
 	if (blob != NULL) {
@@ -173,7 +182,7 @@ fu_wac_module_set_feature(FuWacModule *self,
 	}
 
 	/* send to hardware */
-	if (!fu_wac_device_set_feature_report(parent_device,
+	if (!fu_wac_device_set_feature_report(parent,
 					      buf,
 					      sizeof(buf),
 					      FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
@@ -217,14 +226,13 @@ fu_wac_module_cleanup(FuDevice *device,
 		      FwupdInstallFlags flags,
 		      GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* sanity check */
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
+	parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	}
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;

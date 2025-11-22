@@ -31,17 +31,6 @@ fu_rts54hub_rtd21xx_device_to_string(FuDevice *module, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "RegisterAddrLen", priv->register_addr_len);
 }
 
-static FuRts54hubDevice *
-fu_rts54hub_rtd21xx_device_get_parent(FuRts54hubRtd21xxDevice *self, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent set");
-		return NULL;
-	}
-	return FU_RTS54HUB_DEVICE(parent);
-}
-
 static gboolean
 fu_rts54hub_rtd21xx_device_set_quirk_kv(FuDevice *device,
 					const gchar *key,
@@ -100,7 +89,7 @@ fu_rts54hub_rtd21xx_device_i2c_write(FuRts54hubRtd21xxDevice *self,
 	FuRts54hubDevice *parent;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
-	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);
+	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
 	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))
@@ -134,7 +123,7 @@ fu_rts54hub_rtd21xx_device_i2c_read(FuRts54hubRtd21xxDevice *self,
 	FuRts54hubDevice *parent;
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
 
-	parent = fu_rts54hub_rtd21xx_device_get_parent(self, error);
+	parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(FU_DEVICE(self), error));
 	if (parent == NULL)
 		return FALSE;
 	if (!fu_rts54hub_device_vendor_cmd(parent, FU_RTS54HUB_RTD21XX_VENDOR_CMD_ENABLE, error))

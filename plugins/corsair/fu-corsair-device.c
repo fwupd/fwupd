@@ -299,16 +299,14 @@ fu_corsair_device_is_subdevice_connected_cb(FuDevice *device, gpointer user_data
 static gboolean
 fu_corsair_device_reconnect_subdevice(FuCorsairDevice *self, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
-
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "cannot get parent");
-		return FALSE;
-	}
+	FuDevice *parent;
 
 	/* wait some time to make sure that a subdevice was disconnected */
 	fu_device_sleep(FU_DEVICE(self), CORSAIR_SUBDEVICE_REBOOT_DELAY);
 
+	parent = fu_device_get_parent(FU_DEVICE(self), error);
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_device_retry_full(parent,
 				  fu_corsair_device_is_subdevice_connected_cb,
 				  CORSAIR_SUBDEVICE_RECONNECT_RETRIES,

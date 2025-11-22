@@ -44,7 +44,11 @@ gboolean
 fu_jabra_gnp_child_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 {
 	FuJabraGnpTxData *tx_data = (FuJabraGnpTxData *)user_data;
-	FuJabraGnpDevice *parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device));
+	FuJabraGnpDevice *parent;
+
+	parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_usb_device_control_transfer(FU_USB_DEVICE(parent),
 					    FU_USB_DIRECTION_HOST_TO_DEVICE,
 					    FU_USB_REQUEST_TYPE_CLASS,
@@ -79,8 +83,11 @@ fu_jabra_gnp_child_device_rx_cb(FuDevice *device, gpointer user_data, GError **e
 	};
 	const guint8 empty_buf[FU_JABRA_GNP_BUF_SIZE] = {0x00};
 	FuJabraGnpRxData *rx_data = (FuJabraGnpRxData *)user_data;
-	FuJabraGnpDevice *parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device));
+	FuJabraGnpDevice *parent;
 
+	parent = FU_JABRA_GNP_DEVICE(fu_device_get_parent(device, error));
+	if (parent == NULL)
+		return FALSE;
 	if (!fu_usb_device_interrupt_transfer(FU_USB_DEVICE(parent),
 					      fu_jabra_gnp_device_get_epin(parent),
 					      rx_data->rxbuf,

@@ -195,7 +195,7 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 		g_value_set_object(value, priv->proxy);
 		break;
 	case PROP_PARENT:
-		g_value_set_object(value, fu_device_get_parent(self));
+		g_value_set_object(value, fu_device_get_parent_internal(self));
 		break;
 	case PROP_PRIVATE_FLAGS:
 		g_value_set_uint64(value, priv->private_flags->len);
@@ -1508,8 +1508,19 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
 }
 
 /**
+ * fu_device_get_parent_internal: (skip):
+ **/
+FuDevice *
+fu_device_get_parent_internal(FuDevice *self)
+{
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return FU_DEVICE(fwupd_device_get_parent(FWUPD_DEVICE(self)));
+}
+
+/**
  * fu_device_get_parent:
  * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
  *
  * Gets any parent device. An parent device is logically "above" the current
  * device and this may be reflected in client tools.
@@ -1522,12 +1533,20 @@ fu_device_set_equivalent_id(FuDevice *self, const gchar *equivalent_id)
  *
  * Returns: (transfer none): a device or %NULL
  *
- * Since: 1.0.8
+ * Since: 2.0.18
  **/
 FuDevice *
-fu_device_get_parent(FuDevice *self)
+fu_device_get_parent(FuDevice *self, GError **error)
 {
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	if (fwupd_device_get_parent(FWUPD_DEVICE(self)) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no parent device");
+		return NULL;
+	}
 	return FU_DEVICE(fwupd_device_get_parent(FWUPD_DEVICE(self)));
 }
 
@@ -1550,7 +1569,7 @@ fu_device_get_root(FuDevice *self)
 	FuDevice *parent;
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
 	do {
-		parent = fu_device_get_parent(self);
+		parent = fu_device_get_parent_internal(self);
 		if (parent != NULL)
 			self = parent;
 	} while (parent != NULL);
@@ -1854,7 +1873,7 @@ static void
 fu_device_ensure_exported_name(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
-	FuDevice *parent = fu_device_get_parent(self);
+	FuDevice *parent = fu_device_get_parent_internal(self);
 
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_PARENT_NAME_PREFIX) &&
 	    priv->name != NULL && parent != NULL && fu_device_get_name(parent) != NULL) {
@@ -5027,7 +5046,7 @@ fu_device_get_battery_level(FuDevice *self)
 	/* use the parent if the child is unset */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
 	    fwupd_device_get_battery_level(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
-		FuDevice *parent = fu_device_get_parent(self);
+		FuDevice *parent = fu_device_get_parent_internal(self);
 		if (parent != NULL)
 			return fu_device_get_battery_level(parent);
 	}
@@ -5077,7 +5096,7 @@ fu_device_get_battery_threshold(FuDevice *self)
 	/* use the parent if the child is unset */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_BATTERY) &&
 	    fwupd_device_get_battery_threshold(FWUPD_DEVICE(self)) == FWUPD_BATTERY_LEVEL_INVALID) {
-		FuDevice *parent = fu_device_get_parent(self);
+		FuDevice *parent = fu_device_get_parent_internal(self);
 		if (parent != NULL)
 			return fu_device_get_battery_threshold(parent);
 	}
@@ -6142,14 +6161,9 @@ fu_device_open(FuDevice *self, GError **error)
 
 	/* use parent */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
-		FuDevice *parent = fu_device_get_parent(self);
-		if (parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no parent device");
+		FuDevice *parent = fu_device_get_parent(self, error);
+		if (parent == NULL)
 			return FALSE;
-		}
 		return fu_device_open_internal(parent, error);
 	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
@@ -6226,14 +6240,9 @@ fu_device_close(FuDevice *self, GError **error)
 
 	/* use parent */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PARENT_FOR_OPEN)) {
-		FuDevice *parent = fu_device_get_parent(self);
-		if (parent == NULL) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no parent device");
+		FuDevice *parent = fu_device_get_parent(self, error);
+		if (parent == NULL)
 			return FALSE;
-		}
 		return fu_device_close_internal(parent, error);
 	}
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_USE_PROXY_FOR_OPEN)) {
@@ -7763,7 +7772,7 @@ fu_device_build_instance_id_strv(FuDevice *self,
 				 gchar **keys,
 				 GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(self);
+	FuDevice *parent = fu_device_get_parent_internal(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GString) str = g_string_new(subsystem);
 
@@ -7935,7 +7944,7 @@ fu_device_security_attr_new(FuDevice *self, const gchar *appstream_id)
 
 	/* if the device is a child of the host firmware then add those GUIDs too */
 	if (fu_device_has_private_flag(self, FU_DEVICE_PRIVATE_FLAG_HOST_FIRMWARE_CHILD)) {
-		FuDevice *msf_device = fu_device_get_parent(self);
+		FuDevice *msf_device = fu_device_get_parent_internal(self);
 		if (msf_device != NULL) {
 			GPtrArray *guids = fu_device_get_guids(msf_device);
 			for (guint i = 0; i < guids->len; i++) {

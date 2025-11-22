@@ -17,7 +17,7 @@ G_DEFINE_TYPE(FuUsiDockDmcDevice, fu_usi_dock_dmc_device, FU_TYPE_USB_DEVICE)
 static void
 fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *parent = fu_device_get_parent(device, NULL);
 	if (parent != NULL) {
 		g_autoptr(GError) error = NULL;
 		const gchar *serialnum;

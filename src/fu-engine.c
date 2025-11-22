@@ -6491,11 +6491,11 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active(self->device_list);
 
 	/* find the parent in any existing device */
-	for (guint i = 0; fu_device_get_parent(device) == NULL && i < devices->len; i++) {
+	for (guint i = 0; fu_device_get_parent_internal(device) == NULL && i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		fu_engine_adopt_children_device(self, device, device_tmp);
 	}
-	if (fu_device_get_parent(device) == NULL) {
+	if (fu_device_get_parent_internal(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
 			if (!fu_device_has_private_flag_quark(device_tmp,
@@ -6511,7 +6511,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 			}
 		}
 	}
-	if (fu_device_get_parent(device) == NULL) {
+	if (fu_device_get_parent_internal(device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
 			if (!fu_device_has_private_flag_quark(device_tmp,
@@ -6526,7 +6526,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 			}
 		}
 	}
-	if (fu_device_get_parent(device) == NULL) {
+	if (fu_device_get_parent_internal(device) == NULL) {
 		guids = fu_device_get_parent_guids(device);
 		for (guint j = 0; j < guids->len; j++) {
 			const gchar *guid = g_ptr_array_index(guids, j);
@@ -6544,7 +6544,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	for (guint j = 0; j < devices->len; j++) {
 		GPtrArray *parent_physical_ids = NULL;
 		FuDevice *device_tmp = g_ptr_array_index(devices, j);
-		if (fu_device_get_parent(device_tmp) != NULL)
+		if (fu_device_get_parent_internal(device_tmp) != NULL)
 			continue;
 		parent_physical_ids = fu_device_get_parent_physical_ids(device_tmp);
 		if (parent_physical_ids == NULL)
@@ -6558,7 +6558,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 	for (guint j = 0; j < devices->len; j++) {
 		GPtrArray *parent_backend_ids = NULL;
 		FuDevice *device_tmp = g_ptr_array_index(devices, j);
-		if (fu_device_get_parent(device_tmp) != NULL)
+		if (fu_device_get_parent_internal(device_tmp) != NULL)
 			continue;
 		parent_backend_ids = fu_device_get_parent_backend_ids(device_tmp);
 		if (parent_backend_ids == NULL)
@@ -6574,7 +6574,7 @@ fu_engine_adopt_children(FuEngine *self, FuDevice *device)
 		const gchar *guid = g_ptr_array_index(guids, j);
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (fu_device_get_parent(device_tmp) != NULL)
+			if (fu_device_get_parent_internal(device_tmp) != NULL)
 				continue;
 			if (fu_device_has_parent_guid(device_tmp, guid))
 				fu_engine_set_device_parent(self, device_tmp, device);

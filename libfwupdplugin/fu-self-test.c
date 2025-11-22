@@ -2710,9 +2710,9 @@ fu_device_parent_func(void)
 	fu_device_add_child(parent, child);
 
 	/* check parents */
-	g_assert_true(fu_device_get_parent(child) == parent);
-	g_assert_true(fu_device_get_parent(parent) == grandparent);
-	g_assert_true(fu_device_get_parent(grandparent) == NULL);
+	g_assert_true(fu_device_get_parent_internal(child) == parent);
+	g_assert_true(fu_device_get_parent_internal(parent) == grandparent);
+	g_assert_true(fu_device_get_parent_internal(grandparent) == NULL);
 
 	/* check root */
 	child_root = fu_device_get_root(child);

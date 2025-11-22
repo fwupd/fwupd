@@ -42,11 +42,9 @@ fu_pxi_wireless_device_to_string(FuDevice *device, guint idt, GString *str)
 static FuPxiReceiverDevice *
 fu_pxi_wireless_device_get_parent(FuPxiWirelessDevice *self, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self));
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent set");
+	FuDevice *parent = fu_device_get_parent(FU_DEVICE(self), error);
+	if (parent == NULL)
 		return NULL;
-	}
 	return FU_PXI_RECEIVER_DEVICE(parent);
 }
 

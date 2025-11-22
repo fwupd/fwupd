@@ -46,11 +46,9 @@ fu_usi_dock_child_device_prepare_firmware(FuDevice *device,
 					  FuFirmwareParseFlags flags,
 					  GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	FuDevice *parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return NULL;
-	}
 	return fu_device_prepare_firmware(parent, stream, progress, flags, error);
 }
 
@@ -63,11 +61,9 @@ fu_usi_dock_child_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuUsiDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
-	FuDevice *parent = fu_device_get_parent(device);
-	if (parent == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "no parent");
+	FuDevice *parent = fu_device_get_parent(device, error);
+	if (parent == NULL)
 		return FALSE;
-	}
 	return fu_usi_dock_mcu_device_write_firmware_with_idx(FU_USI_DOCK_MCU_DEVICE(parent),
 							      firmware,
 							      self->chip_idx,

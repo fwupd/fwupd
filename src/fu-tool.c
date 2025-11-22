@@ -891,7 +891,7 @@ fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FuDev
 			continue;
 		if (!self->show_all && !fu_util_is_interesting_device(devs, FWUPD_DEVICE(dev_tmp)))
 			continue;
-		if (fu_device_get_parent(dev_tmp) == dev) {
+		if (fu_device_get_parent_internal(dev_tmp) == dev) {
 			FuUtilNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
 			fu_util_build_device_tree(self, child, devs, dev_tmp);
 		}
