@@ -95,6 +95,13 @@ fu_ioctl_append_key_as_u16(GString *event_id, const gchar *key, gsize value)
 }
 
 static void
+fu_ioctl_append_key_as_u32(GString *event_id, const gchar *key, guint32 value)
+{
+	g_autofree gchar *value2 = g_strdup_printf("0x%08x", (guint)value);
+	fu_ioctl_append_key(event_id, key, value2);
+}
+
+static void
 fu_ioctl_append_key_from_buf(GString *event_id, const gchar *key, const guint8 *buf, gsize bufsz)
 {
 	g_autofree gchar *key_data = g_strdup_printf("%sData", key != NULL ? key : "");
@@ -249,7 +256,11 @@ fu_ioctl_execute(FuIoctl *self,
 		event_id = g_string_new(self->event_id->str);
 		if (g_strcmp0(event_id->str, "Ioctl:") == 0) {
 			fu_ioctl_append_key_as_u16(event_id, "Request", request);
-			fu_ioctl_append_key_from_buf(event_id, NULL, buf, bufsz);
+			if (flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) {
+				fu_ioctl_append_key_as_u32(event_id, NULL, GPOINTER_TO_UINT(buf));
+			} else {
+				fu_ioctl_append_key_from_buf(event_id, NULL, buf, bufsz);
+			}
 		}
 	}
 
@@ -259,8 +270,15 @@ fu_ioctl_execute(FuIoctl *self,
 		if (event == NULL)
 			return FALSE;
 		if (self->fixups->len == 0) {
-			if (!fu_device_event_copy_data(event, "DataOut", buf, bufsz, NULL, error))
-				return FALSE;
+			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0) {
+				if (!fu_device_event_copy_data(event,
+							       "DataOut",
+							       buf,
+							       bufsz,
+							       NULL,
+							       error))
+					return FALSE;
+			}
 		}
 		for (guint i = 0; i < self->fixups->len; i++) {
 			FuIoctlFixup *fixup = g_ptr_array_index(self->fixups, i);
@@ -311,8 +329,10 @@ fu_ioctl_execute(FuIoctl *self,
 	if (event != NULL) {
 		if (rc != NULL && *rc != 0)
 			fu_device_event_set_i64(event, "Rc", *rc);
-		if (self->fixups->len == 0)
-			fu_device_event_set_data(event, "DataOut", buf, bufsz);
+		if (self->fixups->len == 0) {
+			if ((flags & FU_IOCTL_FLAG_PTR_AS_INTEGER) == 0)
+				fu_device_event_set_data(event, "DataOut", buf, bufsz);
+		}
 		for (guint i = 0; i < self->fixups->len; i++) {
 			FuIoctlFixup *fixup = g_ptr_array_index(self->fixups, i);
 			g_autofree gchar *key = fu_ioctl_fixup_build_key(fixup, "DataOut");
