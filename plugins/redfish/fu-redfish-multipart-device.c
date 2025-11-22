@@ -92,7 +92,7 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 					   GError **error)
 {
 	FuRedfishMultipartDevice *self = FU_REDFISH_MULTIPART_DEVICE(device);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	CURL *curl;
 	JsonObject *json_obj;
 	curl_mimepart *part;
@@ -108,6 +108,9 @@ fu_redfish_multipart_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* create the multipart request */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);

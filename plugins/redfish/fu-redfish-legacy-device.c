@@ -21,8 +21,8 @@ static gboolean
 fu_redfish_legacy_device_detach(FuDevice *dev, FuProgress *progress, GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	FuRedfishBackend *backend;
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* create header */
@@ -36,6 +36,10 @@ fu_redfish_legacy_device_detach(FuDevice *dev, FuProgress *progress, GError **er
 	json_builder_end_object(builder);
 
 	/* patch the two fields */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
@@ -49,8 +53,8 @@ static gboolean
 fu_redfish_legacy_device_attach(FuDevice *dev, FuProgress *progress, GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	FuRedfishBackend *backend;
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* create header */
@@ -63,6 +67,10 @@ fu_redfish_legacy_device_attach(FuDevice *dev, FuProgress *progress, GError **er
 	json_builder_end_object(builder);
 
 	/* patch the two fields */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	return fu_redfish_request_perform_full(request,
 					       "/redfish/v1/UpdateService",
 					       "PATCH",
@@ -80,7 +88,7 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(device);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	CURL *curl;
 	JsonObject *json_obj;
 	const gchar *location;
@@ -93,6 +101,9 @@ fu_redfish_legacy_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* POST data */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");

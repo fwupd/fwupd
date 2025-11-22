@@ -96,13 +96,17 @@ fu_redfish_smc_device_get_parameters(FuRedfishSmcDevice *self)
 static gboolean
 fu_redfish_smc_device_start_update(FuRedfishSmcDevice *self, FuProgress *progress, GError **error)
 {
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	JsonObject *json_obj;
 	CURL *curl;
 	const gchar *location = NULL;
-	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
+	g_autoptr(FuRedfishRequest) request = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
+	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	(void)curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 
@@ -138,7 +142,7 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuRedfishSmcDevice *self = FU_REDFISH_SMC_DEVICE(device);
-	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
+	FuRedfishBackend *backend;
 	CURL *curl;
 	JsonObject *json_obj;
 	curl_mimepart *part;
@@ -160,6 +164,9 @@ fu_redfish_smc_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* create the multipart for uploading the image request */
+	backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self), error);
+	if (backend == NULL)
+		return FALSE;
 	request = fu_redfish_backend_request_new(backend);
 	curl = fu_redfish_request_get_curl(request);
 	mime = curl_mime_init(curl);
