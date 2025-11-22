@@ -997,37 +997,6 @@ fu_dfu_target_upload(FuDfuTarget *self,
 	return fu_firmware_add_image(firmware, image, error);
 }
 
-static gchar *
-_g_bytes_compare_verbose(GBytes *bytes1, GBytes *bytes2)
-{
-	const guint8 *data1;
-	const guint8 *data2;
-	gsize length1;
-	gsize length2;
-
-	data1 = g_bytes_get_data(bytes1, &length1);
-	data2 = g_bytes_get_data(bytes2, &length2);
-
-	/* not the same length */
-	if (length1 != length2) {
-		return g_strdup_printf("got %" G_GSIZE_FORMAT " bytes, "
-				       "expected %" G_GSIZE_FORMAT,
-				       length1,
-				       length2);
-	}
-
-	/* return 00 01 02 03 */
-	for (guint i = 0; i < length1; i++) {
-		if (data1[i] != data2[i]) {
-			return g_strdup_printf("got 0x%02x, expected 0x%02x @ 0x%04x",
-					       data1[i],
-					       data2[i],
-					       i);
-		}
-	}
-	return NULL;
-}
-
 static gboolean
 fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 				   FuChunk *chk,
@@ -1139,14 +1108,8 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 		if (chunk_tmp == NULL)
 			return FALSE;
 		bytes_tmp = fu_chunk_get_bytes(chunk_tmp);
-		if (g_bytes_compare(bytes_tmp, bytes) != 0) {
-			g_autofree gchar *bytes_cmp_str = NULL;
-			bytes_cmp_str = _g_bytes_compare_verbose(bytes_tmp, bytes);
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_READ,
-				    "verify failed: %s",
-				    bytes_cmp_str);
+		if (!fu_bytes_compare(bytes_tmp, bytes, error)) {
+			g_prefix_error_literal(error, "verify failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
