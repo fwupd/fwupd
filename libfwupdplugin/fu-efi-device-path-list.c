@@ -44,25 +44,26 @@ fu_efi_device_path_list_gtype_to_member_name(GType gtype)
 }
 
 static void
-fu_efi_device_path_list_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_efi_device_path_list_add_json(FwupdCodec *codec,
+				 FwupdJsonObject *json_obj,
+				 FwupdCodecFlags flags)
 {
 	FuFirmware *firmware = FU_FIRMWARE(codec);
 	g_autoptr(GPtrArray) imgs = fu_firmware_get_images(firmware);
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 
-	json_builder_set_member_name(builder, "DPs");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		json_builder_begin_object(builder);
-		json_builder_set_member_name(
-		    builder,
-		    fu_efi_device_path_list_gtype_to_member_name(G_OBJECT_TYPE(img)));
-		json_builder_begin_object(builder);
-		fwupd_codec_to_json(FWUPD_CODEC(img), builder, flags);
-		json_builder_end_object(builder);
-		json_builder_end_object(builder);
+		g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+		g_autoptr(FwupdJsonObject) json_object_tmp2 = fwupd_json_object_new();
+		fwupd_codec_to_json(FWUPD_CODEC(img), json_object_tmp2, flags);
+		fwupd_json_object_add_object(
+		    json_obj_tmp,
+		    fu_efi_device_path_list_gtype_to_member_name(G_OBJECT_TYPE(img)),
+		    json_object_tmp2);
+		fwupd_json_array_add_object(json_arr, json_obj_tmp);
 	}
-	json_builder_end_array(builder);
+	fwupd_json_object_add_array(json_obj, "DPs", json_arr);
 }
 
 static gboolean

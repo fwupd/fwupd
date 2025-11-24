@@ -550,35 +550,23 @@ fu_bios_settings_to_variant(FwupdCodec *codec, FwupdCodecFlags flags)
 }
 
 static gboolean
-fu_bios_settings_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_bios_settings_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuBiosSettings *self = FU_BIOS_SETTINGS(codec);
-	JsonArray *array;
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	obj = json_node_get_object(json_node);
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* this has to exist */
-	if (!json_object_has_member(obj, "BiosSettings")) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "no BiosSettings property in object");
+	json_arr = fwupd_json_object_get_array(json_obj, "BiosSettings", error);
+	if (json_arr == NULL)
 		return FALSE;
-	}
-	array = json_object_get_array_member(obj, "BiosSettings");
-	for (guint i = 0; i < json_array_get_length(array); i++) {
-		JsonNode *node_tmp = json_array_get_element(array, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 		g_autoptr(FwupdBiosSetting) attr = fwupd_bios_setting_new(NULL, NULL);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), node_tmp, error))
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(attr), json_obj_tmp, error))
 			return FALSE;
 		g_ptr_array_add(self->attrs, g_steal_pointer(&attr));
 	}

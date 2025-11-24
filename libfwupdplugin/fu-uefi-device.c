@@ -278,63 +278,64 @@ fu_uefi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **er
 }
 
 static void
-fu_uefi_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_uefi_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *events = fu_device_get_events(device);
 
 	/* optional properties */
-	fwupd_codec_json_append(builder, "GType", "FuUefiDevice");
+	fwupd_json_object_add_string(json_obj, "GType", "FuUefiDevice");
 	if (fu_device_get_backend_id(device) != NULL)
-		fwupd_codec_json_append(builder, "BackendId", fu_device_get_backend_id(device));
+		fwupd_json_object_add_string(json_obj,
+					     "BackendId",
+					     fu_device_get_backend_id(device));
 	if (priv->guid != NULL)
-		fwupd_codec_json_append(builder, "Guid", priv->guid);
+		fwupd_json_object_add_string(json_obj, "Guid", priv->guid);
 	if (priv->name != NULL)
-		fwupd_codec_json_append(builder, "Name", priv->name);
+		fwupd_json_object_add_string(json_obj, "Name", priv->name);
 
 #if GLIB_CHECK_VERSION(2, 80, 0)
 	if (fu_device_get_created_usec(device) != 0) {
 		g_autoptr(GDateTime) dt =
 		    g_date_time_new_from_unix_utc_usec(fu_device_get_created_usec(device));
 		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		json_builder_set_member_name(builder, "Created");
-		json_builder_add_string_value(builder, str);
+		fwupd_json_object_add_string(json_obj, "Created", str);
 	}
 #endif
 
 	/* events */
 	if (events->len > 0) {
-		json_builder_set_member_name(builder, "Events");
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < events->len; i++) {
 			FuDeviceEvent *event = g_ptr_array_index(events, i);
-			json_builder_begin_object(builder);
-			fwupd_codec_to_json(FWUPD_CODEC(event), builder, flags);
-			json_builder_end_object(builder);
+			g_autoptr(FwupdJsonObject) json_obj_tmp = fwupd_json_object_new();
+			fwupd_codec_to_json(FWUPD_CODEC(event), json_obj_tmp, flags);
+			fwupd_json_array_add_object(json_arr, json_obj_tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, "Events", json_arr);
 	}
 }
 
 static gboolean
-fu_uefi_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_uefi_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	const gchar *tmp;
+	g_autoptr(FwupdJsonArray) json_array_events = NULL;
 
-	tmp = json_object_get_string_member_with_default(json_object, "Guid", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Guid", NULL);
 	if (tmp != NULL)
 		fu_uefi_device_set_guid(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "Name", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Name", NULL);
 	if (tmp != NULL)
 		fu_uefi_device_set_name(self, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "BackendId", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "BackendId", NULL);
 	if (tmp != NULL)
 		fu_device_set_backend_id(device, tmp);
 
 #if GLIB_CHECK_VERSION(2, 80, 0)
-	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Created", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
 		if (dt != NULL)
@@ -343,12 +344,16 @@ fu_uefi_device_from_json(FuDevice *device, JsonObject *json_object, GError **err
 #endif
 
 	/* array of events */
-	if (json_object_has_member(json_object, "Events")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "Events");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			JsonNode *node_tmp = json_array_get_element(json_array, i);
+	json_array_events = fwupd_json_object_get_array(json_obj, "Events", NULL);
+	if (json_array_events != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_events); i++) {
 			g_autoptr(FuDeviceEvent) event = fu_device_event_new(NULL);
-			if (!fwupd_codec_from_json(FWUPD_CODEC(event), node_tmp, error))
+			g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+			json_obj_tmp = fwupd_json_array_get_object(json_array_events, i, error);
+			if (json_obj_tmp == NULL)
+				return FALSE;
+			if (!fwupd_codec_from_json(FWUPD_CODEC(event), json_obj_tmp, error))
 				return FALSE;
 			fu_device_add_event(device, event);
 		}

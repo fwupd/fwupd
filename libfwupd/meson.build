@@ -153,7 +153,7 @@ libfwupd_dep = declare_dependency(
 pkgg = import('pkgconfig')
 pkgg.generate(
   fwupd,
-  requires: ['gio-2.0', 'json-glib-1.0'],
+  requires: ['gio-2.0'],
   subdirs: base_dir,
   version: meson.project_version(),
   name: 'fwupd',

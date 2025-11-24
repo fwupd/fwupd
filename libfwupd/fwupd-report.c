@@ -12,6 +12,7 @@
 #include "fwupd-codec.h"
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
+#include "fwupd-json-array.h"
 #include "fwupd-report.h"
 
 /**
@@ -595,34 +596,54 @@ fwupd_report_from_key_value(FwupdReport *self, const gchar *key, GVariant *value
 }
 
 static void
-fwupd_report_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_report_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FwupdReport *self = FWUPD_REPORT(codec);
 	FwupdReportPrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DEVICE_NAME, priv->device_name);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_VARIANT, priv->distro_variant);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_DISTRO_VERSION, priv->distro_version);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VERSION_OLD, priv->version_old);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	if (priv->device_name != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DEVICE_NAME,
+					     priv->device_name);
+	}
+	if (priv->distro_id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_DISTRO_ID, priv->distro_id);
+	if (priv->distro_variant != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DISTRO_VARIANT,
+					     priv->distro_variant);
+	}
+	if (priv->distro_version != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_DISTRO_VERSION,
+					     priv->distro_version);
+	}
+	if (priv->version_old != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     FWUPD_RESULT_KEY_VERSION_OLD,
+					     priv->version_old);
+	}
+	if (priv->vendor != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	if (priv->remote_id != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	if (priv->vendor_id > 0) {
-		fwupd_codec_json_append_int(builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+		fwupd_json_object_add_integer(json_obj,
+					      FWUPD_RESULT_KEY_VENDOR_ID,
+					      priv->vendor_id);
 	}
 
 	if (priv->flags != FWUPD_REPORT_FLAG_NONE) {
-		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < 64; i++) {
 			const gchar *tmp;
 			if ((priv->flags & ((guint64)1 << i)) == 0)
 				continue;
 			tmp = fwupd_report_flag_to_string((guint64)1 << i);
-			json_builder_add_string_value(builder, tmp);
+			fwupd_json_array_add_string(json_arr, tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_FLAGS, json_arr);
 	}
 
 	/* metadata */
@@ -630,7 +651,7 @@ fwupd_report_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags f
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup(priv->metadata, key);
-		fwupd_codec_json_append(builder, key, value);
+		fwupd_json_object_add_string(json_obj, key, value);
 	}
 }
 
