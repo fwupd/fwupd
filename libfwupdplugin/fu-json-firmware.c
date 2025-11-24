@@ -24,9 +24,20 @@ fu_json_firmware_parse(FuFirmware *firmware,
 		       FuFirmwareParseFlags flags,
 		       GError **error)
 {
+	g_autoptr(FwupdJsonParser) json_parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+
 	/* just load into memory, no extraction performed */
-	g_autoptr(JsonParser) parser = json_parser_new();
-	return json_parser_load_from_stream(parser, stream, NULL, error);
+	json_node = fwupd_json_parser_load_from_stream(json_parser,
+						       stream,
+						       FWUPD_JSON_LOAD_FLAG_TRUSTED |
+							   FWUPD_JSON_LOAD_FLAG_STATIC_KEYS,
+						       error);
+	if (json_node == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
 }
 
 static void

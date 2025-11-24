@@ -13,7 +13,6 @@
 #include <gio/gunixoutputstream.h>
 #endif
 
-#include <json-glib/json-glib.h>
 
 #include "fwupd-common.h"
 

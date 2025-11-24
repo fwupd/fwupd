@@ -127,7 +127,6 @@ def test_files() -> int:
             + lib_headers1,
             "gio/gio.h": ["glib.h", "glib-object.h"],
             "glib-object.h": ["glib.h"],
-            "json-glib/json-glib.h": ["glib.h", "glib-object.h"],
             "xmlb.h": ["gio/gio.h"],
         }
         for key, values in implied_headers.items():

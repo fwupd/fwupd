@@ -147,7 +147,6 @@ parts:
       - libgnutls28-dev
       - libgpgme11-dev
       - libusb-1.0-0-dev
-      - libjson-glib-dev
       - libjcat-dev
       - liblzma-dev
       - libpango1.0-dev

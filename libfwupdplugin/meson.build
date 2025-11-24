@@ -366,7 +366,6 @@ pkgg_requires = [
   'gmodule-2.0',
   'gobject-2.0',
   'fwupd',
-  'json-glib-1.0',
   'libarchive',
   'xmlb',
   'libusb',
@@ -375,7 +374,6 @@ pkgg_requires = [
 library_deps = [
   introspection_deps,
   gmodule,
-  libjsonglib,
   zlib,
   valgrind,
   lzma,

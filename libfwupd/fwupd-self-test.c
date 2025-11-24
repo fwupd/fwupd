@@ -16,6 +16,8 @@
 #include "fwupd-device-private.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-json-array.h"
+#include "fwupd-json-parser.h"
 #include "fwupd-plugin.h"
 #include "fwupd-release.h"
 #include "fwupd-remote-private.h"
@@ -133,6 +135,232 @@ fwupd_enums_func(void)
 			continue;
 		g_assert_cmpint(fwupd_install_flags_from_string(tmp), ==, i);
 	}
+}
+
+static void
+fwupd_json_parser_depth_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *json = "{\"one\": {\"two\": {\"three\": []}}}";
+
+	fwupd_json_parser_set_max_depth(parser, 3);
+	json_node =
+	    fwupd_json_parser_load_from_data(parser, json, FWUPD_JSON_LOAD_FLAG_NONE, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(json_node);
+}
+
+static void
+fwupd_json_parser_array_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	const gchar *data[] = {
+	    "[]",
+	    "[\"one\", \"two\", \"three\"]",
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
+		g_autoptr(FwupdJsonNode) json_node = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GString) str = NULL;
+
+		g_debug("IN: %s", data[i]);
+		json_node = fwupd_json_parser_load_from_data(parser,
+							     data[i],
+							     FWUPD_JSON_LOAD_FLAG_NONE,
+							     &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(json_node);
+		str = fwupd_json_node_to_string(json_node, FWUPD_JSON_EXPORT_FLAG_NONE);
+		g_debug("OUT: %s", str->str);
+		g_assert_cmpstr(data[i], ==, str->str);
+	}
+}
+
+static void
+fwupd_json_parser_string_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	const gchar *data[] = {
+	    "\"one\"",
+	    "\"two\\nthree\"",
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
+		g_autoptr(FwupdJsonNode) json_node = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GString) str = NULL;
+
+		g_debug("IN: %s", data[i]);
+		json_node = fwupd_json_parser_load_from_data(parser,
+							     data[i],
+							     FWUPD_JSON_LOAD_FLAG_NONE,
+							     &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(json_node);
+		str = fwupd_json_node_to_string(json_node, FWUPD_JSON_EXPORT_FLAG_NONE);
+		g_debug("OUT: %s", str->str);
+		g_assert_cmpstr(data[i], ==, str->str);
+	}
+}
+
+static void
+fwupd_json_parser_object_func(void)
+{
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
+	const gchar *data[] = {
+	    "{\"one\": \"alice\", \"two\": \"bob\"}",
+	    "{\"one\": True, \"two\": 123}",
+	};
+
+	for (guint i = 0; i < G_N_ELEMENTS(data); i++) {
+		g_autoptr(FwupdJsonNode) json_node = NULL;
+		g_autoptr(GError) error = NULL;
+		g_autoptr(GString) str = NULL;
+
+		g_debug("IN: %s", data[i]);
+		json_node = fwupd_json_parser_load_from_data(parser,
+							     data[i],
+							     FWUPD_JSON_LOAD_FLAG_NONE,
+							     &error);
+		g_assert_no_error(error);
+		g_assert_nonnull(json_node);
+		str = fwupd_json_node_to_string(json_node, FWUPD_JSON_EXPORT_FLAG_NONE);
+		g_debug("OUT: %s", str->str);
+		g_assert_cmpstr(data[i], ==, str->str);
+	}
+}
+
+static void
+fwupd_json_object_func(void)
+{
+	const gchar *tmp;
+	gboolean ret;
+	gint64 rc;
+	gboolean tmpb;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error3 = NULL;
+	g_autoptr(GError) error4 = NULL;
+	g_autoptr(GError) error5 = NULL;
+	g_autoptr(GError) error6 = NULL;
+	g_autoptr(GString) str = NULL;
+	g_autoptr(GString) str2 = NULL;
+	g_autoptr(FwupdJsonArray) json_array = fwupd_json_array_new();
+	g_autoptr(FwupdJsonArray) json_array_tmp = NULL;
+	g_autoptr(FwupdJsonObject) json_object2 = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_object = fwupd_json_object_new();
+	g_autoptr(FwupdJsonObject) json_object_tmp = NULL;
+
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), ==, 0);
+
+	fwupd_json_object_add_string(json_object, "one", "alice");
+	fwupd_json_object_add_string(json_object, "one", "bob");
+	fwupd_json_object_add_string(json_object, "two", "clara\ndave");
+	fwupd_json_object_add_string(json_object, "thr", "");
+	g_assert_cmpint(fwupd_json_object_get_size(json_object), ==, 3);
+
+	tmp = fwupd_json_object_get_string(json_object, "one", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "bob");
+	tmp = fwupd_json_object_get_string(json_object, "two", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "clara\ndave");
+	tmp = fwupd_json_object_get_string(json_object, "thr", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "");
+	tmp = fwupd_json_object_get_string(json_object, "three", &error3);
+	g_assert_error(error3, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(tmp);
+
+	str2 = fwupd_json_object_to_string(json_object, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	g_debug("%s", str2->str);
+	ret = fu_test_compare_lines(str2->str,
+				    "{\n"
+				    "  \"one\": \"bob\",\n"
+				    "  \"two\": \"clara\\ndave\",\n"
+				    "  \"thr\": \"\"\n"
+				    "}",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* does not exist */
+	json_array_tmp = fwupd_json_object_get_array(json_object, "one", &error4);
+	g_assert_error(error4, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(json_array_tmp);
+	json_object_tmp = fwupd_json_object_get_object(json_object, "one", &error5);
+	g_assert_error(error5, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA);
+	g_assert_null(json_object_tmp);
+
+	/* add array */
+	fwupd_json_array_add_string(json_array, "dave");
+	fwupd_json_object_add_array(json_object, "array", json_array);
+
+	/* add object */
+	fwupd_json_object_add_integer(json_object2, "int", 123);
+	fwupd_json_object_add_object(json_object, "object", json_object2);
+
+	/* get unknown with default value */
+	ret = fwupd_json_object_get_integer_with_default(json_object2, "XXX", &rc, 123, &error6);
+	g_assert_no_error(error6);
+	g_assert_true(ret);
+	g_assert_cmpint(rc, ==, 123);
+	tmp = fwupd_json_object_get_string_with_default(json_object, "XXX", "dave", &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "dave");
+	ret = fwupd_json_object_get_boolean_with_default(json_object, "XXX", &tmpb, TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_true(tmpb);
+
+	str = fwupd_json_object_to_string(json_object, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	g_debug("%s", str->str);
+	ret = fu_test_compare_lines(str->str,
+				    "{\n"
+				    "  \"one\": \"bob\",\n"
+				    "  \"two\": \"clara\\ndave\",\n"
+				    "  \"thr\": \"\",\n"
+				    "  \"array\": [\n"
+				    "    \"dave\"\n"
+				    "  ],\n"
+				    "  \"object\": {\n"
+				    "    \"int\": 123\n"
+				    "  }\n"
+				    "}",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
+static void
+fwupd_json_array_func(void)
+{
+	const gchar *tmp;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GString) str = NULL;
+	g_autoptr(FwupdJsonArray) json_array = fwupd_json_array_new();
+
+	g_assert_cmpint(fwupd_json_array_get_size(json_array), ==, 0);
+
+	fwupd_json_array_add_string(json_array, "hello");
+	fwupd_json_array_add_string(json_array, "world");
+	g_assert_cmpint(fwupd_json_array_get_size(json_array), ==, 2);
+
+	tmp = fwupd_json_array_get_string(json_array, 0, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "hello");
+	tmp = fwupd_json_array_get_string(json_array, 1, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(tmp, ==, "world");
+	tmp = fwupd_json_array_get_string(json_array, 2, &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null(tmp);
+
+	str = fwupd_json_array_to_string(json_array, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	g_debug("%s", str->str);
+	g_assert_cmpstr(str->str, ==, "[\n  \"hello\",\n  \"world\"\n]");
 }
 
 static void
@@ -712,6 +940,7 @@ fwupd_client_api(void)
 static void
 fwupd_common_history_report_func(void)
 {
+	gboolean ret;
 	g_autofree gchar *json = NULL;
 	g_autoptr(FwupdClient) client = fwupd_client_new();
 	g_autoptr(FwupdDevice) dev = fwupd_device_new();
@@ -743,38 +972,40 @@ fwupd_common_history_report_func(void)
 	json = fwupd_client_build_report_history(client, devs, NULL, metadata, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(json);
-	g_assert_cmpstr(json,
-			==,
-			"{\n"
-			"  \"ReportType\" : \"history\",\n"
-			"  \"ReportVersion\" : 2,\n"
-			"  \"Metadata\" : {\n"
-			"    \"DistroId\" : \"generic\",\n"
-			"    \"DistroVariant\" : \"workstation\",\n"
-			"    \"DistroVersion\" : \"39\"\n"
-			"  },\n"
-			"  \"Reports\" : [\n"
-			"    {\n"
-			"      \"Checksum\" : \"beefdead\",\n"
-			"      \"ChecksumDevice\" : [\n"
-			"        \"beefdead\"\n"
-			"      ],\n"
-			"      \"ReleaseId\" : \"123\",\n"
-			"      \"UpdateState\" : 3,\n"
-			"      \"UpdateError\" : \"device dead\",\n"
-			"      \"UpdateMessage\" : \"oops\",\n"
-			"      \"Guid\" : [\n"
-			"        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
-			"      ],\n"
-			"      \"Plugin\" : \"hughski_colorhug\",\n"
-			"      \"VersionOld\" : \"1.2.3\",\n"
-			"      \"VersionNew\" : \"1.2.4\",\n"
-			"      \"Flags\" : 0,\n"
-			"      \"Created\" : 0,\n"
-			"      \"Modified\" : 0\n"
-			"    }\n"
-			"  ]\n"
-			"}");
+	ret = fu_test_compare_lines(json,
+				    "{\n"
+				    "  \"ReportType\": \"history\",\n"
+				    "  \"ReportVersion\": 2,\n"
+				    "  \"Metadata\": {\n"
+				    "    \"DistroId\": \"generic\",\n"
+				    "    \"DistroVariant\": \"workstation\",\n"
+				    "    \"DistroVersion\": \"39\"\n"
+				    "  },\n"
+				    "  \"Reports\": [\n"
+				    "    {\n"
+				    "      \"Checksum\": \"beefdead\",\n"
+				    "      \"ChecksumDevice\": [\n"
+				    "        \"beefdead\"\n"
+				    "      ],\n"
+				    "      \"ReleaseId\": \"123\",\n"
+				    "      \"UpdateState\": 3,\n"
+				    "      \"UpdateError\": \"device dead\",\n"
+				    "      \"UpdateMessage\": \"oops\",\n"
+				    "      \"Guid\": [\n"
+				    "        \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\"\n"
+				    "      ],\n"
+				    "      \"Plugin\": \"hughski_colorhug\",\n"
+				    "      \"VersionOld\": \"1.2.3\",\n"
+				    "      \"VersionNew\": \"1.2.4\",\n"
+				    "      \"Flags\": 0,\n"
+				    "      \"Created\": 0,\n"
+				    "      \"Modified\": 0\n"
+				    "    }\n"
+				    "  ]\n"
+				    "}",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -875,52 +1106,52 @@ fwupd_device_func(void)
 	ret =
 	    fu_test_compare_lines(data,
 				  "{\n"
-				  "  \"Name\" : \"ColorHug2\",\n"
-				  "  \"DeviceId\" : \"0000000000000000000000000000000000000000\",\n"
-				  "  \"InstanceIds\" : [\n"
+				  "  \"Name\": \"ColorHug2\",\n"
+				  "  \"DeviceId\": \"0000000000000000000000000000000000000000\",\n"
+				  "  \"InstanceIds\": [\n"
 				  "    \"USB\\\\VID_1234&PID_0001\"\n"
 				  "  ],\n"
-				  "  \"Guid\" : [\n"
+				  "  \"Guid\": [\n"
 				  "    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
 				  "    \"00000000-0000-0000-0000-000000000000\"\n"
 				  "  ],\n"
-				  "  \"Branch\" : \"community\",\n"
-				  "  \"Flags\" : [\n"
+				  "  \"Branch\": \"community\",\n"
+				  "  \"Flags\": [\n"
 				  "    \"updatable\",\n"
 				  "    \"require-ac\"\n"
 				  "  ],\n"
-				  "  \"Checksums\" : [\n"
+				  "  \"Checksums\": [\n"
 				  "    \"beefdead\"\n"
 				  "  ],\n"
-				  "  \"VendorIds\" : [\n"
+				  "  \"VendorIds\": [\n"
 				  "    \"USB:0x1234\",\n"
 				  "    \"PCI:0x5678\"\n"
 				  "  ],\n"
-				  "  \"Icons\" : [\n"
+				  "  \"Icons\": [\n"
 				  "    \"input-gaming\",\n"
 				  "    \"input-mouse\"\n"
 				  "  ],\n"
-				  "  \"Created\" : 1,\n"
-				  "  \"Modified\" : 86400,\n"
-				  "  \"Releases\" : [\n"
+				  "  \"Created\": 1,\n"
+				  "  \"Modified\": 86400,\n"
+				  "  \"Releases\": [\n"
 				  "    {\n"
-				  "      \"AppstreamId\" : \"org.dave.ColorHug.firmware\",\n"
-				  "      \"Description\" : \"<p>Hi there!</p>\",\n"
-				  "      \"Version\" : \"1.2.3\",\n"
-				  "      \"Filename\" : \"firmware.bin\",\n"
-				  "      \"Checksum\" : [\n"
+				  "      \"AppstreamId\": \"org.dave.ColorHug.firmware\",\n"
+				  "      \"Description\": \"<p>Hi there!</p>\",\n"
+				  "      \"Version\": \"1.2.3\",\n"
+				  "      \"Filename\": \"firmware.bin\",\n"
+				  "      \"Checksum\": [\n"
 				  "        \"deadbeef\"\n"
 				  "      ],\n"
-				  "      \"Tags\" : [\n"
+				  "      \"Tags\": [\n"
 				  "        \"vendor-2021q1\",\n"
 				  "        \"vendor-2021q2\"\n"
 				  "      ],\n"
-				  "      \"Size\" : 1024,\n"
-				  "      \"Locations\" : [\n"
+				  "      \"Size\": 1024,\n"
+				  "      \"Locations\": [\n"
 				  "        \"http://foo.com\",\n"
 				  "        \"ftp://foo.com\"\n"
 				  "      ],\n"
-				  "      \"Flags\" : [\n"
+				  "      \"Flags\": [\n"
 				  "        \"trusted-payload\"\n"
 				  "      ]\n"
 				  "    }\n"
@@ -1267,20 +1498,20 @@ fwupd_security_attr_func(void)
 	g_assert_nonnull(json);
 	ret = fu_test_compare_lines(json,
 				    "{\n"
-				    "  \"AppstreamId\" : \"org.fwupd.hsi.baz\",\n"
-				    "  \"HsiLevel\" : 2,\n"
-				    "  \"HsiResult\" : \"enabled\",\n"
-				    "  \"Name\" : \"DCI\",\n"
-				    "  \"Plugin\" : \"uefi-capsule\",\n"
-				    "  \"Version\" : \"2.0.7\",\n"
-				    "  \"Uri\" : \"https://foo.bar\",\n"
-				    "  \"Flags\" : [\n"
+				    "  \"AppstreamId\": \"org.fwupd.hsi.baz\",\n"
+				    "  \"HsiLevel\": 2,\n"
+				    "  \"HsiResult\": \"enabled\",\n"
+				    "  \"Name\": \"DCI\",\n"
+				    "  \"Plugin\": \"uefi-capsule\",\n"
+				    "  \"Version\": \"2.0.7\",\n"
+				    "  \"Uri\": \"https://foo.bar\",\n"
+				    "  \"Flags\": [\n"
 				    "    \"success\"\n"
 				    "  ],\n"
-				    "  \"Guid\" : [\n"
+				    "  \"Guid\": [\n"
 				    "    \"af3fc12c-d090-5783-8a67-845b90d3cfec\"\n"
 				    "  ],\n"
-				    "  \"KEY\" : \"VALUE\"\n"
+				    "  \"KEY\": \"VALUE\"\n"
 				    "}",
 				    &error);
 	g_assert_no_error(error);
@@ -1381,13 +1612,13 @@ fwupd_bios_settings_func(void)
 	g_assert_nonnull(json1);
 	ret = fu_test_compare_lines(json1,
 				    "{\n"
-				    "  \"Name\" : \"UEFISecureBoot\",\n"
-				    "  \"Description\" : \"Controls Secure boot\",\n"
-				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
-				    "  \"BiosSettingReadOnly\" : false,\n"
-				    "  \"BiosSettingType\" : 1,\n"
-				    "  \"BiosSettingPossibleValues\" : [\n"
+				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"Description\": \"Controls Secure boot\",\n"
+				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingReadOnly\": false,\n"
+				    "  \"BiosSettingType\": 1,\n"
+				    "  \"BiosSettingPossibleValues\": [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1435,13 +1666,13 @@ fwupd_bios_settings_func(void)
 	g_assert_nonnull(json2);
 	ret = fu_test_compare_lines(json2,
 				    "{\n"
-				    "  \"Name\" : \"UEFISecureBoot\",\n"
-				    "  \"Description\" : \"Controls Secure boot\",\n"
-				    "  \"Filename\" : \"/path/to/bar\",\n"
-				    "  \"BiosSettingCurrentValue\" : \"Disabled\",\n"
-				    "  \"BiosSettingReadOnly\" : false,\n"
-				    "  \"BiosSettingType\" : 1,\n"
-				    "  \"BiosSettingPossibleValues\" : [\n"
+				    "  \"Name\": \"UEFISecureBoot\",\n"
+				    "  \"Description\": \"Controls Secure boot\",\n"
+				    "  \"Filename\": \"/path/to/bar\",\n"
+				    "  \"BiosSettingCurrentValue\": \"Disabled\",\n"
+				    "  \"BiosSettingReadOnly\": false,\n"
+				    "  \"BiosSettingType\": 1,\n"
+				    "  \"BiosSettingPossibleValues\": [\n"
 				    "    \"Disabled\",\n"
 				    "    \"Enabled\"\n"
 				    "  ]\n"
@@ -1472,6 +1703,12 @@ main(int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func("/fwupd/enums", fwupd_enums_func);
+	g_test_add_func("/fwupd/json{array}", fwupd_json_array_func);
+	g_test_add_func("/fwupd/json{object}", fwupd_json_object_func);
+	g_test_add_func("/fwupd/json{parser-string}", fwupd_json_parser_string_func);
+	g_test_add_func("/fwupd/json{parser-object}", fwupd_json_parser_object_func);
+	g_test_add_func("/fwupd/json{parser-array}", fwupd_json_parser_array_func);
+	g_test_add_func("/fwupd/json{parser-depth}", fwupd_json_parser_depth_func);
 	g_test_add_func("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func("/fwupd/common{history-report}", fwupd_common_history_report_func);

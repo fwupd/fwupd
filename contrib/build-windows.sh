@@ -65,7 +65,6 @@ cp -f -v \
     $MINGW32BINDIR/libhogweed-*.dll \
     $MINGW32BINDIR/libidn2-0.dll \
     $MINGW32BINDIR/libintl-8.dll \
-    $MINGW32BINDIR/libjson-glib-1.0-0.dll \
     $MINGW32BINDIR/liblzma-5.dll \
     $MINGW32BINDIR/libnettle-*.dll \
     $MINGW32BINDIR/libp11-kit-0.dll \

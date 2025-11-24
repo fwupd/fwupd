@@ -8164,7 +8164,7 @@ fu_device_set_target(FuDevice *self, FuDevice *target)
 
 /* private; used to save an emulated device */
 void
-fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_device_add_json(FuDevice *self, FwupdJsonObject *json_object, FwupdCodecFlags flags)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
@@ -8178,13 +8178,12 @@ fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
 		    fu_device_get_created_usec(self) / G_USEC_PER_SEC);
 #endif
 		g_autofree gchar *str = g_date_time_format_iso8601(dt);
-		json_builder_set_member_name(builder, "Created");
-		json_builder_add_string_value(builder, str);
+		fwupd_json_object_add_string(json_object, "Created", str);
 	}
 
 	/* subclassed */
 	if (device_class->add_json != NULL) {
-		device_class->add_json(self, builder, flags);
+		device_class->add_json(self, json_object, flags);
 		return;
 	}
 
@@ -8192,19 +8191,19 @@ fu_device_add_json(FuDevice *self, JsonBuilder *builder, FwupdCodecFlags flags)
 	if (priv->proxy != NULL) {
 		device_class = FU_DEVICE_GET_CLASS(priv->proxy);
 		if (device_class->add_json != NULL)
-			device_class->add_json(priv->proxy, builder, flags);
+			device_class->add_json(priv->proxy, json_object, flags);
 	}
 }
 
 /* private; used to load an emulated device */
 gboolean
-fu_device_from_json(FuDevice *self, JsonObject *json_object, GError **error)
+fu_device_from_json(FuDevice *self, FwupdJsonObject *json_object, GError **error)
 {
 	const gchar *tmp;
 	FuDeviceClass *device_class = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 
-	tmp = json_object_get_string_member_with_default(json_object, "Created", NULL);
+	tmp = fwupd_json_object_get_string(json_object, "Created", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GDateTime) dt = g_date_time_new_from_iso8601(tmp, NULL);
 #if GLIB_CHECK_VERSION(2, 80, 0)

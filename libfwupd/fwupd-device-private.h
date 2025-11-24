@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <json-glib/json-glib.h>
 
 #include "fwupd-device.h"
 

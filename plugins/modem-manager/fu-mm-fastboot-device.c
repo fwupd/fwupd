@@ -64,7 +64,7 @@ fu_mm_fastboot_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_mm_fastboot_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_mm_fastboot_device_from_json(FuDevice *device, FwupdJsonObject *json_object, GError **error)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 	const gchar *tmp;
@@ -75,7 +75,7 @@ fu_mm_fastboot_device_from_json(FuDevice *device, JsonObject *json_object, GErro
 		return FALSE;
 
 	/* optional properties */
-	tmp = json_object_get_string_member_with_default(json_object, "DetachAt", NULL);
+	tmp = fwupd_json_object_get_string(json_object, "DetachAt", NULL);
 	if (tmp != NULL)
 		fu_mm_fastboot_device_set_detach_at(self, tmp);
 
@@ -84,16 +84,18 @@ fu_mm_fastboot_device_from_json(FuDevice *device, JsonObject *json_object, GErro
 }
 
 static void
-fu_mm_fastboot_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_mm_fastboot_device_add_json(FuDevice *device,
+			       FwupdJsonObject *json_object,
+			       FwupdCodecFlags flags)
 {
 	FuMmFastbootDevice *self = FU_MM_FASTBOOT_DEVICE(device);
 
 	/* FuMmDevice->add_json */
-	FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)->add_json(device, builder, flags);
+	FU_DEVICE_CLASS(fu_mm_fastboot_device_parent_class)->add_json(device, json_object, flags);
 
 	/* optional properties */
 	if (self->detach_at != NULL)
-		fwupd_codec_json_append(builder, "DetachAt", self->detach_at);
+		fwupd_codec_json_append(json_object, "DetachAt", self->detach_at);
 }
 
 static void

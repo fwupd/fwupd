@@ -115,12 +115,12 @@ fu_efi_file_path_device_path_export(FuFirmware *firmware,
 
 static void
 fu_efi_file_path_device_path_add_json(FwupdCodec *codec,
-				      JsonBuilder *builder,
+				      FwupdJsonObject *json_object,
 				      FwupdCodecFlags flags)
 {
 	FuEfiFilePathDevicePath *self = FU_EFI_FILE_PATH_DEVICE_PATH(codec);
 	g_autofree gchar *name = fu_efi_file_path_device_path_get_name(self, NULL);
-	fwupd_codec_json_append(builder, "Name", name);
+	fwupd_codec_json_append(json_object, "Name", name);
 }
 
 static gboolean

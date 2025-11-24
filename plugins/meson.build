@@ -6,7 +6,6 @@ plugin_deps = [
   gmodule,
   libusb,
   libarchive,
-  libjsonglib,
   libxmlb,
   libdrm_amdgpu,
   protobufc,

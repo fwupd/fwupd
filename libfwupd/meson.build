@@ -28,6 +28,10 @@ install_headers(
     'fwupd-remote.h',
     'fwupd-report.h',
     'fwupd-request.h',
+    'fwupd-json-array.h',
+    'fwupd-json-common.h',
+    'fwupd-json-object.h',
+    'fwupd-json-parser.h',
     'fwupd-bios-setting.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
@@ -37,7 +41,7 @@ install_headers(
   subdir: join_paths(base_dir, 'libfwupd'),
 )
 
-libfwupd_deps = [giounix, libjcat, libjsonglib, libcurl]
+libfwupd_deps = [giounix, libjcat, libcurl]
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -48,6 +52,11 @@ libfwupd_src = [
   'fwupd-enums.c', # fuzzing
   'fwupd-error.c', # fuzzing
   'fwupd-bios-setting.c', # fuzzing
+  'fwupd-json-array.c', # fuzzing
+  'fwupd-json-common.c', # fuzzing
+  'fwupd-json-node.c', # fuzzing
+  'fwupd-json-object.c', # fuzzing
+  'fwupd-json-parser.c', # fuzzing
   'fwupd-security-attr.c', # fuzzing
   'fwupd-release.c', # fuzzing
   'fwupd-plugin.c',
@@ -114,6 +123,16 @@ if introspection.allowed()
       'fwupd-error.h',
       'fwupd-bios-setting.c',
       'fwupd-bios-setting.h',
+      'fwupd-json-array.c',
+      'fwupd-json-array.h',
+      'fwupd-json-common.c',
+      'fwupd-json-common.h',
+      'fwupd-json-node.c',
+      'fwupd-json-node.h',
+      'fwupd-json-object.c',
+      'fwupd-json-object.h',
+      'fwupd-json-parser.c',
+      'fwupd-json-parser.h',
       'fwupd-security-attr.c',
       'fwupd-security-attr.h',
       'fwupd-security-attr-private.h',
@@ -139,14 +158,14 @@ if introspection.allowed()
     export_packages: 'fwupd',
     header: 'fwupd.h',
     dependencies: fwupd_gir_deps,
-    includes: ['Gio-2.0', 'GObject-2.0', 'Json-1.0'],
+    includes: ['Gio-2.0', 'GObject-2.0'],
     install: true,
   )
 
   gnome.generate_vapi(
     'fwupd',
     sources: fwupd_gir[0],
-    packages: ['gio-2.0', 'json-glib-1.0'],
+    packages: ['gio-2.0'],
     install: true,
   )
 

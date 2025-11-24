@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <glib/gi18n.h>
-#include <json-glib/json-glib.h>
 
 #include "fwupd-security-attr-private.h"
 
