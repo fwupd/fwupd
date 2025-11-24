@@ -45,11 +45,11 @@ fu_efi_device_path_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbB
 }
 
 static void
-fu_efi_device_path_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_efi_device_path_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuEfiDevicePath *self = FU_EFI_DEVICE_PATH(codec);
 	FuEfiDevicePathPrivate *priv = GET_PRIVATE(self);
-	fwupd_codec_json_append_int(builder, "Subtype", priv->subtype);
+	fwupd_json_object_add_integer(json_obj, "Subtype", priv->subtype);
 }
 
 /**

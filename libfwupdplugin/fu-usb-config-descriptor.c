@@ -34,44 +34,45 @@ G_DEFINE_TYPE_EXTENDED(FuUsbConfigDescriptor,
 					     fu_usb_config_descriptor_codec_iface_init));
 
 static gboolean
-fu_usb_config_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_config_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbConfigDescriptor *self = FU_USB_CONFIG_DESCRIPTOR(codec);
-	JsonObject *json_object;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
+	gint64 tmpi = 0;
 
 	/* optional properties */
-	self->configuration =
-	    json_object_get_int_member_with_default(json_object, "Configuration", 0x0);
-	self->configuration_value =
-	    json_object_get_int_member_with_default(json_object, "ConfigurationValue", 0x0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"Configuration",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->configuration = tmpi;
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"ConfigurationValue",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->configuration_value = tmpi;
 
 	/* success */
 	return TRUE;
 }
 
 static void
-fu_usb_config_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_config_descriptor_add_json(FwupdCodec *codec,
+				  FwupdJsonObject *json_obj,
+				  FwupdCodecFlags flags)
 {
 	FuUsbConfigDescriptor *self = FU_USB_CONFIG_DESCRIPTOR(codec);
 
 	/* optional properties */
-	if (self->configuration != 0) {
-		json_builder_set_member_name(builder, "Configuration");
-		json_builder_add_int_value(builder, self->configuration);
-	}
+	if (self->configuration != 0)
+		fwupd_json_object_add_integer(json_obj, "Configuration", self->configuration);
 	if (self->configuration_value != 0) {
-		json_builder_set_member_name(builder, "ConfigurationValue");
-		json_builder_add_int_value(builder, self->configuration_value);
+		fwupd_json_object_add_integer(json_obj,
+					      "ConfigurationValue",
+					      self->configuration_value);
 	}
 }
 

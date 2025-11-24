@@ -72,28 +72,23 @@ fu_usb_bos_descriptor_build(FuFirmware *firmware, XbNode *n, GError **error)
 }
 
 static gboolean
-fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_usb_bos_descriptor_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(codec);
 	const gchar *str;
-	JsonObject *json_object;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_node);
+	gint64 tmpi = 0;
 
 	/* optional properties */
-	self->bos_cap.bDevCapabilityType =
-	    json_object_get_int_member_with_default(json_object, "DevCapabilityType", 0x0);
+	if (!fwupd_json_object_get_integer_with_default(json_obj,
+							"DevCapabilityType",
+							&tmpi,
+							0x0,
+							error))
+		return FALSE;
+	self->bos_cap.bDevCapabilityType = tmpi;
 
 	/* data */
-	str = json_object_get_string_member_with_default(json_object, "ExtraData", NULL);
+	str = fwupd_json_object_get_string(json_obj, "ExtraData", NULL);
 	if (str != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = g_base64_decode(str, &bufsz);
@@ -118,15 +113,16 @@ fu_usb_bos_descriptor_from_json(FwupdCodec *codec, JsonNode *json_node, GError *
 }
 
 static void
-fu_usb_bos_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_usb_bos_descriptor_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuUsbBosDescriptor *self = FU_USB_BOS_DESCRIPTOR(codec);
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* optional properties */
 	if (self->bos_cap.bDevCapabilityType != 0) {
-		json_builder_set_member_name(builder, "DevCapabilityType");
-		json_builder_add_int_value(builder, self->bos_cap.bDevCapabilityType);
+		fwupd_json_object_add_integer(json_obj,
+					      "DevCapabilityType",
+					      self->bos_cap.bDevCapabilityType);
 	}
 
 	/* data */
@@ -134,8 +130,7 @@ fu_usb_bos_descriptor_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCod
 	if (bytes != NULL && g_bytes_get_size(bytes) > 0) {
 		g_autofree gchar *str =
 		    g_base64_encode(g_bytes_get_data(bytes, NULL), g_bytes_get_size(bytes));
-		json_builder_set_member_name(builder, "ExtraData");
-		json_builder_add_string_value(builder, str);
+		fwupd_json_object_add_string(json_obj, "ExtraData", str);
 	}
 }
 

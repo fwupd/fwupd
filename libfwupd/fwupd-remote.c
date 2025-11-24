@@ -82,51 +82,51 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 
 static void
-fwupd_remote_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_remote_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FwupdRemote *self = FWUPD_REMOTE(codec);
 	FwupdRemotePrivate *priv = GET_PRIVATE(self);
 
-	fwupd_codec_json_append(builder, "Id", priv->id);
+	fwupd_codec_json_append(json_obj, "Id", priv->id);
 	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
-		fwupd_codec_json_append(builder, "Kind", fwupd_remote_kind_to_string(priv->kind));
+		fwupd_codec_json_append(json_obj, "Kind", fwupd_remote_kind_to_string(priv->kind));
 	}
-	fwupd_codec_json_append(builder, "ReportUri", priv->report_uri);
-	fwupd_codec_json_append(builder, "MetadataUri", priv->metadata_uri);
-	fwupd_codec_json_append(builder, "MetadataUriSig", priv->metadata_uri_sig);
-	fwupd_codec_json_append(builder, "FirmwareBaseUri", priv->firmware_base_uri);
-	fwupd_codec_json_append(builder, "Username", priv->username);
-	fwupd_codec_json_append(builder, "Password", priv->password);
-	fwupd_codec_json_append(builder, "Title", priv->title);
-	fwupd_codec_json_append(builder, "PrivacyUri", priv->privacy_uri);
-	fwupd_codec_json_append(builder, "Agreement", priv->agreement);
-	fwupd_codec_json_append(builder, "Checksum", priv->checksum);
-	fwupd_codec_json_append(builder, "ChecksumSig", priv->checksum_sig);
-	fwupd_codec_json_append(builder, "FilenameCache", priv->filename_cache);
-	fwupd_codec_json_append(builder, "FilenameCacheSig", priv->filename_cache_sig);
-	fwupd_codec_json_append(builder, "FilenameSource", priv->filename_source);
-	fwupd_codec_json_append_int(builder, "Flags", priv->flags);
-	fwupd_codec_json_append_bool(builder,
-				     "Enabled",
-				     fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED));
-	fwupd_codec_json_append_bool(
-	    builder,
+	fwupd_codec_json_append(json_obj, "ReportUri", priv->report_uri);
+	fwupd_codec_json_append(json_obj, "MetadataUri", priv->metadata_uri);
+	fwupd_codec_json_append(json_obj, "MetadataUriSig", priv->metadata_uri_sig);
+	fwupd_codec_json_append(json_obj, "FirmwareBaseUri", priv->firmware_base_uri);
+	fwupd_codec_json_append(json_obj, "Username", priv->username);
+	fwupd_codec_json_append(json_obj, "Password", priv->password);
+	fwupd_codec_json_append(json_obj, "Title", priv->title);
+	fwupd_codec_json_append(json_obj, "PrivacyUri", priv->privacy_uri);
+	fwupd_codec_json_append(json_obj, "Agreement", priv->agreement);
+	fwupd_codec_json_append(json_obj, "Checksum", priv->checksum);
+	fwupd_codec_json_append(json_obj, "ChecksumSig", priv->checksum_sig);
+	fwupd_codec_json_append(json_obj, "FilenameCache", priv->filename_cache);
+	fwupd_codec_json_append(json_obj, "FilenameCacheSig", priv->filename_cache_sig);
+	fwupd_codec_json_append(json_obj, "FilenameSource", priv->filename_source);
+	fwupd_json_object_add_integer(json_obj, "Flags", priv->flags);
+	fwupd_json_object_add_boolean(json_obj,
+				      "Enabled",
+				      fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_ENABLED));
+	fwupd_json_object_add_boolean(
+	    json_obj,
 	    "ApprovalRequired",
 	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_APPROVAL_REQUIRED));
-	fwupd_codec_json_append_bool(
-	    builder,
+	fwupd_json_object_add_boolean(
+	    json_obj,
 	    "AutomaticReports",
 	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_REPORTS));
-	fwupd_codec_json_append_bool(
-	    builder,
+	fwupd_json_object_add_boolean(
+	    json_obj,
 	    "AutomaticSecurityReports",
 	    fwupd_remote_has_flag(self, FWUPD_REMOTE_FLAG_AUTOMATIC_SECURITY_REPORTS));
-	fwupd_codec_json_append_int(builder, "Priority", priv->priority);
-	fwupd_codec_json_append_int(builder, "Mtime", priv->mtime);
-	fwupd_codec_json_append_int(builder, "RefreshInterval", priv->refresh_interval);
-	fwupd_codec_json_append(builder, "RemotesDir", priv->remotes_dir);
-	fwupd_codec_json_append_strv(builder, "OrderAfter", priv->order_after);
-	fwupd_codec_json_append_strv(builder, "OrderBefore", priv->order_before);
+	fwupd_json_object_add_integer(json_obj, "Priority", priv->priority);
+	fwupd_json_object_add_integer(json_obj, "Mtime", priv->mtime);
+	fwupd_json_object_add_integer(json_obj, "RefreshInterval", priv->refresh_interval);
+	fwupd_codec_json_append(json_obj, "RemotesDir", priv->remotes_dir);
+	fwupd_codec_json_append_strv(json_obj, "OrderAfter", priv->order_after);
+	fwupd_codec_json_append_strv(json_obj, "OrderBefore", priv->order_before);
 }
 
 /**
