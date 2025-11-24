@@ -76,6 +76,32 @@ fu_test_loop_quit(void)
 	}
 }
 
+static gboolean
+fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
+{
+	g_autofree gchar *output = NULL;
+
+	/* exactly the same */
+	if (g_strcmp0(txt1, txt2) == 0)
+		return TRUE;
+
+	/* matches a pattern */
+	if (g_pattern_match_simple(txt2, txt1))
+		return TRUE;
+
+	/* save temp files and diff them */
+	if (!g_file_set_contents("/tmp/a", txt1, -1, error))
+		return FALSE;
+	if (!g_file_set_contents("/tmp/b", txt2, -1, error))
+		return FALSE;
+	if (!g_spawn_command_line_sync("diff -urNp /tmp/b /tmp/a", &output, NULL, NULL, error))
+		return FALSE;
+
+	/* just output the diff */
+	g_set_error_literal(error, 1, 0, output);
+	return FALSE;
+}
+
 static void
 fu_msgpack_lookup_func(void)
 {
@@ -2340,11 +2366,11 @@ fu_device_event_func(void)
 	g_assert_cmpstr(json,
 			==,
 			"{\n"
-			"  \"Id\" : \"#f9f98a90\",\n"
-			"  \"Name\" : \"Richard\",\n"
-			"  \"Age\" : 123,\n"
-			"  \"Blob\" : \"aGVsbG8A\",\n"
-			"  \"Data\" : \"\"\n"
+			"  \"Id\": \"#f9f98a90\",\n"
+			"  \"Name\": \"Richard\",\n"
+			"  \"Age\": 123,\n"
+			"  \"Blob\": \"aGVsbG8A\",\n"
+			"  \"Data\": \"\"\n"
 			"}");
 
 	ret = fwupd_codec_from_json_string(FWUPD_CODEC(event2), json, &error);
@@ -2387,8 +2413,8 @@ fu_device_event_uncompressed_func(void)
 	g_assert_cmpstr(json,
 			==,
 			"{\n"
-			"  \"Id\" : \"foo:bar:baz\",\n"
-			"  \"Name\" : \"Richard\"\n"
+			"  \"Id\": \"foo:bar:baz\",\n"
+			"  \"Name\": \"Richard\"\n"
 			"}");
 }
 
@@ -2899,34 +2925,34 @@ fu_backend_emulate_func(void)
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuIoctl) ioctl = NULL;
 	g_autoptr(GError) error = NULL;
-	const gchar *json1 = "{"
-			     "  \"UsbDevices\" : ["
-			     "    {"
-			     "      \"Created\" : \"2023-02-01T16:35:03.302027Z\","
-			     "      \"GType\" : \"FuUdevDevice\",\n"
-			     "      \"BackendId\" : \"foo:bar:baz\","
-			     "      \"Events\" : ["
-			     "        {"
-			     "          \"Id\" : \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\","
-			     "          \"Data\" : \"Aw==\","
-			     "          \"DataOut\" : \"Aw==\""
-			     "        },"
-			     "        {"
-			     "          \"Id\" : \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\","
-			     "          \"Data\" : \"Aw==\","
-			     "          \"DataOut\" : \"Aw==\""
-			     "        }"
-			     "      ]"
-			     "    }"
-			     "  ]"
+	const gchar *json1 = "{\n"
+			     "  \"UsbDevices\": [\n"
+			     "    {\n"
+			     "      \"Created\": \"2023-02-01T16:35:03.302027Z\",\n"
+			     "      \"GType\": \"FuUdevDevice\",\n"
+			     "      \"BackendId\": \"foo:bar:baz\",\n"
+			     "      \"Events\": [\n"
+			     "        {\n"
+			     "          \"Id\": \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\",\n"
+			     "          \"Data\": \"Aw==\",\n"
+			     "          \"DataOut\": \"Aw==\"\n"
+			     "        },\n"
+			     "        {\n"
+			     "          \"Id\": \"Ioctl:Request=0x007b,Data=AAA=,Length=0x2\",\n"
+			     "          \"Data\": \"Aw==\",\n"
+			     "          \"DataOut\": \"Aw==\"\n"
+			     "        }\n"
+			     "      ]\n"
+			     "    }\n"
+			     "  ]\n"
 			     "}";
 	const gchar *json2 = "{\n"
-			     "  \"FwupdVersion\" : \"" PACKAGE_VERSION "\",\n"
-			     "  \"UsbDevices\" : [\n"
+			     "  \"FwupdVersion\": \"" PACKAGE_VERSION "\",\n"
+			     "  \"UsbDevices\": [\n"
 			     "    {\n"
-			     "      \"Created\" : \"2099-02-01T16:35:03Z\",\n"
-			     "      \"GType\" : \"FuUdevDevice\",\n"
-			     "      \"BackendId\" : \"usb:FF:FF:06\"\n"
+			     "      \"Created\": \"2099-02-01T16:35:03Z\",\n"
+			     "      \"GType\": \"FuUdevDevice\",\n"
+			     "      \"BackendId\": \"usb:FF:FF:06\"\n"
 			     "    }\n"
 			     "  ]\n"
 			     "}";
@@ -3022,7 +3048,9 @@ fu_backend_emulate_func(void)
 	g_assert_no_error(error);
 	g_assert_nonnull(json3);
 	g_debug("%s", json3);
-	g_assert_cmpstr(json3, ==, json2);
+	ret = fu_test_compare_lines(json3, json2, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* missing event, new path */
 	fu_device_set_fwupd_version(device, PACKAGE_VERSION);

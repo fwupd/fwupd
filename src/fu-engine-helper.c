@@ -249,39 +249,20 @@ gboolean
 fu_engine_update_devices_file(FuEngine *self, GError **error)
 {
 	FwupdCodecFlags flags = FWUPD_CODEC_FLAG_NONE;
-	gsize len;
-	g_autoptr(JsonBuilder) builder = NULL;
-	g_autoptr(JsonGenerator) generator = NULL;
-	g_autoptr(JsonNode) root = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = fwupd_json_object_new();
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autofree gchar *data = NULL;
-	g_autofree gchar *target = NULL;
+	g_autoptr(GString) data = NULL;
+	g_autofree gchar *target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
 
 	if (fu_engine_config_get_show_device_private(fu_engine_get_config(self)))
 		flags |= FWUPD_CODEC_FLAG_TRUSTED;
 
-	builder = json_builder_new();
-	json_builder_begin_object(builder);
-
 	devices = fu_engine_get_devices(self, NULL);
 	if (devices != NULL)
-		fwupd_codec_array_to_json(devices, "Devices", builder, flags);
+		fwupd_codec_array_to_json(devices, "Devices", json_obj, flags);
 
-	root = json_builder_get_root(builder);
-	generator = json_generator_new();
-	json_generator_set_pretty(generator, TRUE);
-	json_generator_set_root(generator, root);
-	data = json_generator_to_data(generator, &len);
-	if (data == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Failed to convert to JSON string");
-		return FALSE;
-	}
-
-	target = fu_path_build(FU_PATH_KIND_CACHEDIR_PKG, "devices.json", NULL);
-	return g_file_set_contents(target, data, (gssize)len, error);
+	data = fwupd_json_object_to_string(json_obj, FWUPD_JSON_EXPORT_FLAG_INDENT);
+	return g_file_set_contents(target, data->str, -1, error);
 }
 
 static void
