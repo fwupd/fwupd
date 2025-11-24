@@ -10,6 +10,7 @@
 
 #include "fu-device-event-private.h"
 #include "fu-mem.h"
+#include "fu-string.h"
 
 /**
  * FuDeviceEvent:
@@ -21,8 +22,7 @@
 
 typedef struct {
 	GType gtype;
-	gchar *key;
-	GDestroyNotify key_destroy;
+	GRefString *key;
 	gpointer data;
 	GDestroyNotify data_destroy;
 } FuDeviceEventBlob;
@@ -51,39 +51,41 @@ G_DEFINE_TYPE_WITH_CODE(FuDeviceEvent,
 static void
 fu_device_event_blob_free(FuDeviceEventBlob *blob)
 {
-	if (blob->key_destroy != NULL)
-		g_free(blob->key);
+	g_ref_string_release(blob->key);
 	if (blob->data_destroy != NULL)
 		blob->data_destroy(blob->data);
 	g_free(blob);
 }
 
 static FuDeviceEventBlob *
-fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyNotify data_destroy)
+fu_device_event_blob_new_internal(GType gtype,
+				  GRefString *key,
+				  gpointer data,
+				  GDestroyNotify data_destroy)
 {
 	FuDeviceEventBlob *blob = g_new0(FuDeviceEventBlob, 1);
+	blob->key = g_ref_string_acquire(key);
+	blob->gtype = gtype;
+	blob->data = data;
+	blob->data_destroy = data_destroy;
+	return blob;
+}
+
+static FuDeviceEventBlob *
+fu_device_event_blob_new(GType gtype, const gchar *key, gpointer data, GDestroyNotify data_destroy)
+{
+	g_autoptr(GRefString) key_ref = NULL;
 	const gchar *known_keys[] = {
 	    "Data",
 	    "DataOut",
 	    "Error",
 	    "ErrorMsg",
 	    "Rc",
+	    NULL,
 	};
-
-	for (guint i = 0; i < G_N_ELEMENTS(known_keys); i++) {
-		if (g_strcmp0(key, known_keys[i]) == 0) {
-			blob->key = (gchar *)known_keys[i];
-			break;
-		}
-	}
-	if (blob->key == NULL) {
-		blob->key = g_strdup(key);
-		blob->key_destroy = g_free;
-	}
-	blob->gtype = gtype;
-	blob->data = data;
-	blob->data_destroy = data_destroy;
-	return blob;
+	key_ref = g_strv_contains(known_keys, key) ? g_ref_string_new_intern(key)
+						   : g_ref_string_new(key);
+	return fu_device_event_blob_new_internal(gtype, key_ref, data, data_destroy);
 }
 
 /**
@@ -422,26 +424,24 @@ fu_device_event_copy_data(FuDeviceEvent *self,
 }
 
 static void
-fu_device_event_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_device_event_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
 
 	if (self->id_uncompressed != NULL && (flags & FWUPD_CODEC_FLAG_COMPRESSED) == 0) {
-		json_builder_set_member_name(builder, "Id");
-		json_builder_add_string_value(builder, self->id_uncompressed);
+		fwupd_json_object_add_string(json_obj, "Id", self->id_uncompressed);
 	} else if (self->id != NULL) {
-		json_builder_set_member_name(builder, "Id");
-		json_builder_add_string_value(builder, self->id);
+		fwupd_json_object_add_string(json_obj, "Id", self->id);
 	}
 
 	for (guint i = 0; i < self->values->len; i++) {
 		FuDeviceEventBlob *blob = g_ptr_array_index(self->values, i);
 		if (blob->gtype == G_TYPE_INT) {
-			json_builder_set_member_name(builder, blob->key);
-			json_builder_add_int_value(builder, *((gint64 *)blob->data));
+			fwupd_json_object_add_integer(json_obj, blob->key, *((gint64 *)blob->data));
 		} else if (blob->gtype == G_TYPE_BYTES || blob->gtype == G_TYPE_STRING) {
-			json_builder_set_member_name(builder, blob->key);
-			json_builder_add_string_value(builder, (const gchar *)blob->data);
+			fwupd_json_object_add_string(json_obj,
+						     blob->key,
+						     (const gchar *)blob->data);
 		} else {
 			g_warning("invalid GType %s, ignoring", g_type_name(blob->gtype));
 		}
@@ -467,34 +467,59 @@ fu_device_event_set_id(FuDeviceEvent *self, const gchar *id)
 }
 
 static gboolean
-fu_device_event_from_json(FwupdCodec *codec, JsonNode *json_node, GError **error)
+fu_device_event_from_json(FwupdCodec *codec, FwupdJsonObject *json_obj, GError **error)
 {
 	FuDeviceEvent *self = FU_DEVICE_EVENT(codec);
-	JsonNode *member_node;
-	JsonObjectIter iter;
-	JsonObject *json_object = json_node_get_object(json_node);
-	const gchar *member_name;
+	for (guint i = 0; i < fwupd_json_object_get_size(json_obj); i++) {
+		GRefString *key = fwupd_json_object_get_key_for_index(json_obj, i, NULL);
+		g_autoptr(FwupdJsonNode) json_node = NULL;
 
-	json_object_iter_init(&iter, json_object);
-	while (json_object_iter_next(&iter, &member_name, &member_node)) {
-		GType gtype;
-		if (JSON_NODE_TYPE(member_node) != JSON_NODE_VALUE)
-			continue;
-		gtype = json_node_get_value_type(member_node);
-		if (gtype == G_TYPE_STRING) {
-			const gchar *str = json_node_get_string(member_node);
-			if (g_strcmp0(member_name, "Id") == 0) {
+		json_node = fwupd_json_object_get_node_for_index(json_obj, i, error);
+		if (json_node == NULL)
+			return FALSE;
+		if (fwupd_json_node_get_kind(json_node) == FWUPD_JSON_NODE_KIND_STRING) {
+			GRefString *str = fwupd_json_node_get_string(json_node, NULL);
+			if (g_strcmp0(key, "Id") == 0) {
 				fu_device_event_set_id(self, str);
+			} else if (str != NULL) {
+				g_ptr_array_add(self->values,
+						fu_device_event_blob_new_internal(
+						    G_TYPE_STRING,
+						    key,
+						    g_ref_string_acquire(str),
+						    (GDestroyNotify)g_ref_string_release));
 			} else {
-				fu_device_event_set_str(self, member_name, str);
+				g_ptr_array_add(self->values,
+						fu_device_event_blob_new_internal(G_TYPE_STRING,
+										  key,
+										  NULL,
+										  NULL));
 			}
-		} else if (gtype == G_TYPE_INT64) {
-			fu_device_event_set_i64(self, member_name, json_node_get_int(member_node));
+		} else if (fwupd_json_node_get_kind(json_node) == FWUPD_JSON_NODE_KIND_RAW) {
+			GRefString *str;
+			gint64 value = 0;
+
+			str = fwupd_json_node_get_raw(json_node, error);
+			if (str == NULL)
+				return FALSE;
+			if (!fu_strtoll(str,
+					&value,
+					G_MININT64,
+					G_MAXINT64,
+					FU_INTEGER_BASE_AUTO,
+					error))
+				return FALSE;
+			g_ptr_array_add(
+			    self->values,
+			    fu_device_event_blob_new_internal(G_TYPE_INT,
+							      key,
+							      g_memdup2(&value, sizeof(value)),
+							      g_free));
 		}
 	}
 
 	/* we do not need this again, so avoid keeping all the tree data in memory */
-	json_node_init_null(json_node);
+	fwupd_json_object_clear(json_obj);
 
 	/* success */
 	return TRUE;

@@ -10,6 +10,7 @@
 
 #include "fwupd-codec.h"
 #include "fwupd-enums-private.h"
+#include "fwupd-json-array.h"
 #include "fwupd-plugin.h"
 
 /**
@@ -237,26 +238,26 @@ fwupd_plugin_string_append_flags(GString *str, guint idt, const gchar *key, guin
 }
 
 static void
-fwupd_plugin_add_json(FwupdCodec *codec, JsonBuilder *builder, FwupdCodecFlags flags)
+fwupd_plugin_add_json(FwupdCodec *codec, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FwupdPlugin *self = FWUPD_PLUGIN(codec);
 	FwupdPluginPrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail(FWUPD_IS_PLUGIN(self));
-	g_return_if_fail(builder != NULL);
+	g_return_if_fail(json_obj != NULL);
 
-	fwupd_codec_json_append(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	if (priv->name != NULL)
+		fwupd_json_object_add_string(json_obj, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->flags != FWUPD_PLUGIN_FLAG_NONE) {
-		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
-		json_builder_begin_array(builder);
+		g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
 		for (guint i = 0; i < 64; i++) {
 			const gchar *tmp;
 			if ((priv->flags & ((guint64)1 << i)) == 0)
 				continue;
 			tmp = fwupd_plugin_flag_to_string((guint64)1 << i);
-			json_builder_add_string_value(builder, tmp);
+			fwupd_json_array_add_string(json_arr, tmp);
 		}
-		json_builder_end_array(builder);
+		fwupd_json_object_add_array(json_obj, FWUPD_RESULT_KEY_FLAGS, json_arr);
 	}
 }
 

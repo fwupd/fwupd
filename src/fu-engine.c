@@ -7456,24 +7456,12 @@ fu_engine_undo_host_security_attr(FuEngine *self, const gchar *appstream_id, GEr
 }
 
 static gboolean
-fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+fu_engine_security_attrs_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
-
 	/* not supplied */
-	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "SecurityAttributes"))
+	if (!fwupd_json_object_has_node(json_obj, "SecurityAttributes"))
 		return TRUE;
-	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_node, error))
+	if (!fwupd_codec_from_json(FWUPD_CODEC(self->host_security_attrs), json_obj, error))
 		return FALSE;
 
 	/* success */
@@ -7481,31 +7469,22 @@ fu_engine_security_attrs_from_json(FuEngine *self, JsonNode *json_node, GError *
 }
 
 static gboolean
-fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
+fu_engine_devices_from_json(FuEngine *self, FwupdJsonObject *json_obj, GError **error)
 {
-	JsonArray *array;
-	JsonObject *obj;
-
-	/* sanity check */
-	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_DATA,
-				    "not JSON object");
-		return FALSE;
-	}
+	g_autoptr(FwupdJsonArray) json_arr = NULL;
 
 	/* not supplied */
-	obj = json_node_get_object(json_node);
-	if (!json_object_has_member(obj, "Devices"))
+	json_arr = fwupd_json_object_get_array(json_obj, "Devices", NULL);
+	if (json_arr == NULL)
 		return TRUE;
-
-	/* this has to exist */
-	array = json_object_get_array_member(obj, "Devices");
-	for (guint i = 0; i < json_array_get_length(array); i++) {
-		JsonNode *node_tmp = json_array_get_element(array, i);
+	for (guint i = 0; i < fwupd_json_array_get_size(json_arr); i++) {
 		g_autoptr(FuDevice) device = fu_device_new(self->ctx);
-		if (!fwupd_codec_from_json(FWUPD_CODEC(device), node_tmp, error))
+		g_autoptr(FwupdJsonObject) json_obj_tmp = NULL;
+
+		json_obj_tmp = fwupd_json_array_get_object(json_arr, i, error);
+		if (json_obj_tmp == NULL)
+			return FALSE;
+		if (!fwupd_codec_from_json(FWUPD_CODEC(device), json_obj_tmp, error))
 			return FALSE;
 		fu_device_set_plugin(device, "dummy");
 		fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_IS_EMULATED);
@@ -7521,7 +7500,9 @@ fu_engine_devices_from_json(FuEngine *self, JsonNode *json_node, GError **error)
 static gboolean
 fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 {
-	g_autoptr(JsonParser) parser = json_parser_new();
+	g_autoptr(FwupdJsonNode) json_node = NULL;
+	g_autoptr(FwupdJsonObject) json_obj = NULL;
+	g_autoptr(FwupdJsonParser) parser = fwupd_json_parser_new();
 	g_autoptr(GFile) file = g_file_new_for_path(fn);
 	g_autoptr(GInputStream) istream_json = NULL;
 	g_autoptr(GInputStream) istream_raw = NULL;
@@ -7546,13 +7527,20 @@ fu_engine_load_host_emulation(FuEngine *self, const gchar *fn, GError **error)
 	} else {
 		istream_json = g_object_ref(istream_raw);
 	}
-	if (!json_parser_load_from_stream(parser, istream_json, NULL, error))
+	json_node = fwupd_json_parser_load_from_stream(parser,
+						       istream_json,
+						       FWUPD_JSON_LOAD_FLAG_NONE,
+						       error);
+	if (json_node == NULL)
 		return FALSE;
-	if (!fu_engine_devices_from_json(self, json_parser_get_root(parser), error))
+	json_obj = fwupd_json_node_get_object(json_node, error);
+	if (json_obj == NULL)
 		return FALSE;
-	if (!fu_engine_security_attrs_from_json(self, json_parser_get_root(parser), error))
+	if (!fu_engine_devices_from_json(self, json_obj, error))
 		return FALSE;
-	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_parser_get_root(parser), error))
+	if (!fu_engine_security_attrs_from_json(self, json_obj, error))
+		return FALSE;
+	if (!fwupd_codec_from_json(FWUPD_CODEC(bios_settings), json_obj, error))
 		return FALSE;
 
 #ifdef HAVE_HSI

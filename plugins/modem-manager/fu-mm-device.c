@@ -816,45 +816,56 @@ fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value
 }
 
 static gboolean
-fu_mm_device_from_json(FuDevice *device, JsonObject *json_object, GError **error)
+fu_mm_device_from_json(FuDevice *device, FwupdJsonObject *json_obj, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	const gchar *tmp;
+	g_autoptr(FwupdJsonArray) json_array_ids = NULL;
+	g_autoptr(FwupdJsonObject) json_object_ports = NULL;
 
 	/* FuUdevDevice->from_json */
-	if (!FU_DEVICE_CLASS(fu_mm_device_parent_class)->from_json(device, json_object, error))
+	if (!FU_DEVICE_CLASS(fu_mm_device_parent_class)->from_json(device, json_obj, error))
 		return FALSE;
 
 	/* optional properties */
-	tmp = json_object_get_string_member_with_default(json_object, "Version", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "Version", NULL);
 	if (tmp != NULL)
 		fu_device_set_version(device, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "PhysicalId", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "PhysicalId", NULL);
 	if (tmp != NULL)
 		fu_device_set_physical_id(device, tmp);
-	tmp = json_object_get_string_member_with_default(json_object, "BranchAt", NULL);
+	tmp = fwupd_json_object_get_string(json_obj, "BranchAt", NULL);
 	if (tmp != NULL)
 		fu_mm_device_set_branch_at(self, tmp);
 
 	/* specified by ModemManager, unusually */
-	if (json_object_has_member(json_object, "DeviceIds")) {
-		JsonArray *json_array = json_object_get_array_member(json_object, "DeviceIds");
-		for (guint i = 0; i < json_array_get_length(json_array); i++) {
-			const gchar *instance_id = json_array_get_string_element(json_array, i);
+	json_array_ids = fwupd_json_object_get_array(json_obj, "DeviceIds", NULL);
+	if (json_array_ids != NULL) {
+		for (guint i = 0; i < fwupd_json_array_get_size(json_array_ids); i++) {
+			const gchar *instance_id;
+			instance_id = fwupd_json_array_get_string(json_array_ids, i, error);
+			if (instance_id == NULL)
+				return FALSE;
 			if (!fu_mm_device_add_instance_id(self, instance_id, error))
 				return FALSE;
 		}
 	}
 
 	/* ports */
-	if (json_object_has_member(json_object, "Ports")) {
-		JsonObject *json_ports = json_object_get_object_member(json_object, "Ports");
-		g_autoptr(GList) keys = json_object_get_members(json_ports);
-		for (GList *l = keys; l != NULL; l = l->next) {
-			const gchar *port_type = l->data;
+	json_object_ports = fwupd_json_object_get_object(json_obj, "Ports", NULL);
+	if (json_object_ports != NULL) {
+		g_autoptr(GPtrArray) keys = fwupd_json_object_get_keys(json_object_ports);
+		for (guint i = 0; i < keys->len; i++) {
+			const gchar *device_file;
+			const gchar *port_type = g_ptr_array_index(keys, i);
+
+			device_file =
+			    fwupd_json_object_get_string(json_object_ports, port_type, error);
+			if (device_file == NULL)
+				return FALSE;
 			fu_mm_device_add_port(self,
 					      fu_mm_device_port_type_from_string(port_type),
-					      json_object_get_string_member(json_ports, port_type),
+					      device_file,
 					      FU_MM_DEVICE_PORT_FLAG_NONE);
 		}
 	}
@@ -864,55 +875,56 @@ fu_mm_device_from_json(FuDevice *device, JsonObject *json_object, GError **error
 }
 
 static void
-fu_mm_device_add_json(FuDevice *device, JsonBuilder *builder, FwupdCodecFlags flags)
+fu_mm_device_add_json(FuDevice *device, FwupdJsonObject *json_obj, FwupdCodecFlags flags)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	FuMmDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *instance_ids = fu_device_get_instance_ids(device);
 	GPtrArray *vendor_ids = fu_device_get_vendor_ids(device);
+	g_autoptr(FwupdJsonArray) json_arr = fwupd_json_array_new();
+	g_autoptr(FwupdJsonObject) json_object_ports = fwupd_json_object_new();
 
 	/* FuUdevDevice->add_json */
-	FU_DEVICE_CLASS(fu_mm_device_parent_class)->add_json(device, builder, flags);
+	FU_DEVICE_CLASS(fu_mm_device_parent_class)->add_json(device, json_obj, flags);
 
 	/* optional properties */
-	fwupd_codec_json_append(builder, "GType", G_OBJECT_TYPE_NAME(self));
+	fwupd_json_object_add_string(json_obj, "GType", G_OBJECT_TYPE_NAME(self));
 	if (fu_device_get_version(device) != NULL)
-		fwupd_codec_json_append(builder, "Version", fu_device_get_version(device));
-	if (fu_device_get_physical_id(device) != NULL)
-		fwupd_codec_json_append(builder, "PhysicalId", fu_device_get_physical_id(device));
+		fwupd_json_object_add_string(json_obj, "Version", fu_device_get_version(device));
+	if (fu_device_get_physical_id(device) != NULL) {
+		fwupd_json_object_add_string(json_obj,
+					     "PhysicalId",
+					     fu_device_get_physical_id(device));
+	}
 	if (priv->branch_at != NULL)
-		fwupd_codec_json_append(builder, "BranchAt", priv->branch_at);
+		fwupd_json_object_add_string(json_obj, "BranchAt", priv->branch_at);
 
 	/* specified by ModemManager, unusually */
-	json_builder_set_member_name(builder, "DeviceIds");
-	json_builder_begin_array(builder);
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index(instance_ids, i);
-		json_builder_add_string_value(builder, instance_id);
+		fwupd_json_array_add_string(json_arr, instance_id);
 	}
 	for (guint i = 0; i < vendor_ids->len; i++) {
 		const gchar *vendor_id = g_ptr_array_index(vendor_ids, i);
 		if (g_str_has_prefix(vendor_id, "USB:0x")) {
 			g_autofree gchar *id = g_strdup_printf("USB\\VID_%s", vendor_id + 6);
-			json_builder_add_string_value(builder, id);
+			fwupd_json_array_add_string(json_arr, id);
 		}
 		if (g_str_has_prefix(vendor_id, "PCI:0x")) {
 			g_autofree gchar *id = g_strdup_printf("PCI\\VEN_%s", vendor_id + 6);
-			json_builder_add_string_value(builder, id);
+			fwupd_json_array_add_string(json_arr, id);
 		}
 	}
-	json_builder_end_array(builder);
+	fwupd_json_object_add_array(json_obj, "DeviceIds", json_arr);
 
 	/* ports always specified */
-	json_builder_set_member_name(builder, "Ports");
-	json_builder_begin_object(builder);
 	for (guint i = 0; i < priv->ports->len; i++) {
 		FuMmDevicePort *port = g_ptr_array_index(priv->ports, i);
-		fwupd_codec_json_append(builder,
-					fu_mm_device_port_type_to_string(port->type),
-					port->device_file);
+		fwupd_json_object_add_string(json_object_ports,
+					     fu_mm_device_port_type_to_string(port->type),
+					     port->device_file);
 	}
-	json_builder_end_object(builder);
+	fwupd_json_object_add_object(json_obj, "Ports", json_object_ports);
 }
 
 static void
