@@ -14,7 +14,6 @@
 #include "fu-byte-array.h"
 #include "fu-efi-lz77-decompressor.h"
 #include "fu-input-stream.h"
-#include "fu-string.h"
 
 struct _FuEfiLz77Decompressor {
 	FuFirmware parent_instance;

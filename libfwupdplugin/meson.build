@@ -14,6 +14,7 @@ fwupdplugin_structs = [
   'fu-efi.rs', # fuzzing
   'fu-elf.rs', # fuzzing
   'fu-fdt.rs', # fuzzing
+  'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
   'fu-ifd.rs', # fuzzing

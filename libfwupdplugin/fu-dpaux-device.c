@@ -14,7 +14,6 @@
 #include "fu-dpaux-struct.h"
 #include "fu-dump.h"
 #include "fu-io-channel.h"
-#include "fu-string.h"
 
 /**
  * FuDpauxDevice

@@ -612,6 +612,10 @@ conf.set_quoted('MOTD_DIR', motd_dir)
 
 conf.set_quoted('FU_DEFAULT_P2P_POLICY', get_option('p2p_policy'))
 
+if get_option('plugin_uefi_capsule_splash')
+  conf.set('FWUPD_UEFI_CAPSULE_SPLASH_ENABLED', '1')
+endif
+
 configure_file(
   output: 'config.h',
   configuration: conf
@@ -690,7 +694,7 @@ umockdev_integration_tests = get_option('umockdev_tests')                     \
                               .disable_auto_if(not introspection.allowed())   \
                               .disable_auto_if(not run_sanitize_unsafe_tests) \
                               .disable_auto_if(dbusmock.returncode() != 0)
-umockdev = dependency('umockdev-1.0', required: get_option('umockdev_tests'))
+dependency('umockdev-1.0', required: get_option('umockdev_tests'))
 
 if dbusmock.returncode() != 0 and get_option('umockdev_tests').allowed()
   warning('python dbusmock not found, umockdev tests will be disabled')

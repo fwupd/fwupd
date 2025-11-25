@@ -327,6 +327,7 @@ fu_uefi_capsule_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 	fu_uefi_capsule_plugin_add_security_attrs_bootservices(plugin, attrs);
 }
 
+#ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 static GBytes *
 fu_uefi_capsule_plugin_get_splash_data(guint width, guint height, GError **error)
 {
@@ -544,6 +545,7 @@ fu_uefi_capsule_plugin_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	/* perform the upload */
 	return fu_uefi_capsule_plugin_write_splash_data(self, device, image_bmp, error);
 }
+#endif // FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 
 static gboolean
 fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
@@ -583,8 +585,10 @@ fu_uefi_capsule_plugin_write_firmware(FuPlugin *plugin,
 
 	/* perform the update */
 	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
+#ifdef FWUPD_UEFI_CAPSULE_SPLASH_ENABLED
 	if (!fu_uefi_capsule_plugin_update_splash(plugin, device, &error_splash))
 		g_info("failed to upload UEFI UX capsule text: %s", error_splash->message);
+#endif
 
 	return fu_device_write_firmware(device, firmware, progress, flags, error);
 }
@@ -1064,7 +1068,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	FuUefiCapsulePlugin *self = FU_UEFI_CAPSULE_PLUGIN(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *str;
-	gboolean has_fde = FALSE;
 	gboolean bootloader_supports_fwupd = fu_uefi_capsule_plugin_bootloader_supports_fwupd(ctx);
 	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -1073,8 +1076,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "check-cod");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 8, "check-bitlocker");
-	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 64, "coldplug");
+	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 72, "coldplug");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 26, "add-devices");
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 1, "setup-bgrt");
 
@@ -1089,11 +1091,6 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 			    FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
-	fu_progress_step_done(progress);
-
-	/*  warn the user that BitLocker might ask for recovery key after fw update */
-	if (fu_context_has_flag(ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER))
-		has_fde = TRUE;
 	fu_progress_step_done(progress);
 
 	/* add each device */
@@ -1126,8 +1123,7 @@ fu_uefi_capsule_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError *
 
 		/* system firmware "BIOS" can change the PCRx registers */
 		if (fu_uefi_capsule_device_get_kind(dev) ==
-			FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE &&
-		    has_fde)
+		    FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE)
 			fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 
 		/* load all configuration variables */

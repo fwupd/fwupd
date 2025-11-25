@@ -15,7 +15,6 @@
 #include "fu-bytes.h"
 #include "fu-common-struct.h"
 #include "fu-drm-device.h"
-#include "fu-string.h"
 
 /**
  * FuDrmDevice

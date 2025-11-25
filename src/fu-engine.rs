@@ -47,6 +47,12 @@ enum FuClientFlag {
     Active = 1 << 0,
 }
 
+#[derive(FromString)]
+enum FuEngineCapabilityFlag {
+    Unknown = 0,
+    IdRequirementGlob = 1 << 0,
+}
+
 #[derive(ParseBytes, Default)]
 #[repr(C, packed)]
 struct FuStructUdevMonitorNetlinkHeader {

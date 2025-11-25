@@ -10,6 +10,10 @@
 #include <mtd/mtd-user.h>
 #endif
 
+#ifdef HAVE_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 
@@ -312,7 +316,7 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 		erase.start = fu_chunk_get_address(chk);
 		erase.length = fu_chunk_get_data_sz(chk);
 		if (!fu_ioctl_execute(ioctl,
-				      2,
+				      MEMERASE,
 				      (guint8 *)&erase,
 				      sizeof(erase),
 				      NULL,

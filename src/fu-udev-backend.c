@@ -16,7 +16,6 @@
 #include <sys/socket.h>
 
 #include "fu-context-private.h"
-#include "fu-device-private.h"
 #include "fu-engine-struct.h"
 #include "fu-udev-backend.h"
 #include "fu-udev-device-private.h"

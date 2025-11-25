@@ -989,7 +989,7 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	guint8 flags = FU_LOGITECH_HIDPP_RDFU_APPLY_FLAGS_FORCE_DFU_BIT;
+	guint8 flags = FU_LOGITECH_HIDPP_RDFU_APPLY_FLAG_FORCE_DFU_BIT;
 	g_autoptr(FuStructLogitechHidppRdfuApplyDfu) msg =
 	    fu_struct_logitech_hidpp_rdfu_apply_dfu_new();
 	FuLogitechHidppHidppMsg *hidpp_msg = NULL;

@@ -18,7 +18,6 @@
 #include "fu-byte-array.h"
 #include "fu-bytes.h"
 #include "fu-chunk-array.h"
-#include "fu-common.h"
 #include "fu-device-event-private.h"
 #include "fu-device-private.h"
 #include "fu-input-stream.h"

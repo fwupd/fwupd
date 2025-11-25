@@ -30,6 +30,13 @@ They also define custom per-part PCI IDs such as:
 * `PCI\VID_8086&DEV_4905&PART_OPROMCODE`
 * `PCI\VID_8086&DEV_4905&PART_OPROMDATA`
 
+When the device needs recovery, the instance IDs will instead be:
+
+* `PCI\VEN_8086&DEV_4905&PART_FWCODE_RECOVERY`
+* `PCI\VID_8086&DEV_4905&PART_FWDATA_RECOVERY`
+* `PCI\VID_8086&DEV_4905&PART_OPROMCODE_RECOVERY`
+* `PCI\VID_8086&DEV_4905&PART_OPROMDATA_RECOVERY`
+
 ## Quirk Use
 
 This plugin uses the following plugin-specific quirks:

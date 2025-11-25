@@ -21,12 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-common-private.h"
-#include "fwupd-device-private.h"
-#include "fwupd-remote-private.h"
-
 #include "fu-console.h"
-#include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-util-bios-setting.h"
 #include "fu-util-common.h"
@@ -443,74 +438,21 @@ fu_util_perhaps_show_unreported(FuUtil *self, GError **error)
 }
 
 static void
-fu_util_build_device_tree_node(FuUtil *self, FuUtilNode *root, FwupdDevice *dev)
+fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
-	FuUtilNode *root_child = g_node_append_data(root, g_object_ref(dev));
-	if (fwupd_device_get_release_default(dev) != NULL)
-		g_node_append_data(root_child, g_object_ref(fwupd_device_get_release_default(dev)));
-}
-
-static gboolean
-fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
-{
-	FuUtil *self = (FuUtil *)user_data;
-	FwupdDevice *dev = n->data;
-
-	/* root node */
-	if (dev == NULL)
-		return FALSE;
-
-	/* release */
-	if (FWUPD_IS_RELEASE(n->data))
-		return FALSE;
-
-	/* an interesting child, so include the parent */
-	for (FuUtilNode *c = n->children; c != NULL; c = c->next) {
-		if (c->data != NULL)
-			return FALSE;
-	}
-
-	/* not interesting, clear the node data */
-	if (!fwupd_device_match_flags(dev,
-				      self->filter_device_include,
-				      self->filter_device_exclude))
-		g_clear_object(&n->data);
-	else if (!self->show_all && !fu_util_is_interesting_device(dev))
-		g_clear_object(&n->data);
-
-	/* continue */
-	return FALSE;
-}
-
-static void
-fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs)
-{
-	/* add the top-level parents */
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
-		if (fwupd_device_get_parent(dev_tmp) != NULL)
+		if (!fwupd_device_match_flags(dev_tmp,
+					      self->filter_device_include,
+					      self->filter_device_exclude))
 			continue;
-		fu_util_build_device_tree_node(self, root, dev_tmp);
+		if (!self->show_all && !fu_util_is_interesting_device(devs, dev_tmp))
+			continue;
+		if (fwupd_device_get_parent(dev_tmp) == dev) {
+			FuUtilNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
+			fu_util_build_device_tree(self, child, devs, dev_tmp);
+		}
 	}
-
-	/* children */
-	for (guint i = 0; i < devs->len; i++) {
-		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
-		FuUtilNode *root_parent;
-
-		if (fwupd_device_get_parent(dev_tmp) == NULL)
-			continue;
-		root_parent = g_node_find(root,
-					  G_PRE_ORDER,
-					  G_TRAVERSE_ALL,
-					  fwupd_device_get_parent(dev_tmp));
-		if (root_parent == NULL)
-			continue;
-		fu_util_build_device_tree_node(self, root_parent, dev_tmp);
-	}
-
-	/* prune children that are not updatable */
-	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, self);
 }
 
 static gboolean
@@ -660,7 +602,7 @@ fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 
 	/* print */
 	if (devs->len > 0)
-		fu_util_build_device_tree(self, root, devs);
+		fu_util_build_device_tree(self, root, devs, NULL);
 	if (g_node_n_children(root) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1203,6 +1145,24 @@ fu_util_device_test_filename(FuUtil *self,
 			return TRUE;
 		}
 	}
+	if (json_object_has_member(json_obj, "platform-architectures")) {
+		JsonArray *json_array =
+		    json_object_get_array_member(json_obj, "platform-architectures");
+		gboolean matched = FALSE;
+		const gchar *arch =
+		    g_hash_table_lookup(helper->report_metadata, "PlatformArchitecture");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			const gchar *arch_tmp = json_array_get_string_element(json_array, i);
+			if (g_strcmp0(arch, arch_tmp) == 0) {
+				matched = TRUE;
+				break;
+			}
+		}
+		if (!matched) {
+			helper->nr_skipped++;
+			return TRUE;
+		}
+	}
 
 	/* process each step */
 	if (json_object_has_member(json_obj, "repeat")) {
@@ -1490,7 +1450,7 @@ fu_util_device_test_full(FuUtil *self,
 			    g_strv_length(values));
 		return FALSE;
 	}
-	if (helper->nr_success == 0) {
+	if (helper->nr_success == 0 && helper->nr_skipped == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1648,7 +1608,7 @@ fu_util_get_details(FuUtil *self, gchar **values, GError **error)
 		return fu_util_print_builder(self->console, builder, error);
 	}
 
-	fu_util_build_device_tree(self, root, array);
+	fu_util_build_device_tree(self, root, array, NULL);
 	fu_util_print_node(self->console, self->client, root);
 
 	return TRUE;
@@ -1735,16 +1695,10 @@ fu_util_report_history_for_remote(FuUtil *self,
 }
 
 static gboolean
-fu_util_report_history_force(FuUtil *self, GError **error)
+fu_util_report_history_force(FuUtil *self, GPtrArray *devices, GError **error)
 {
 	g_autoptr(FwupdRemote) remote_upload = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = g_string_new(NULL);
-
-	/* get all devices */
-	devices = fwupd_client_get_history(self->client, self->cancellable, error);
-	if (devices == NULL)
-		return FALSE;
 
 	/* just assume every report goes to this remote */
 	remote_upload =
@@ -1982,7 +1936,7 @@ fu_util_report_history_full(FuUtil *self, gboolean only_automatic_reports, GErro
 	/* nothing to report, but try harder with --force */
 	if (cnt == 0) {
 		if (!only_automatic_reports && self->flags & FWUPD_INSTALL_FLAG_FORCE)
-			return fu_util_report_history_force(self, error);
+			return fu_util_report_history_force(self, devices, error);
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,

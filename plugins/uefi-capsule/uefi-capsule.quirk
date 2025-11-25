@@ -20,7 +20,7 @@ Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-cl
 
 # Intel CSME reference value
 [23192307-d667-4bdf-af1a-6059db171246]
-Fags = ~md-set-vendor
+Flags = ~md-set-vendor
 
 # Dell Inc.
 [85d38fda-fc0e-5c6f-808f-076984ae7978]

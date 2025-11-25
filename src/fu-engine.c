@@ -16,7 +16,6 @@
 #ifdef HAVE_PASSIM
 #include <passim.h>
 #endif
-#include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
@@ -24,7 +23,6 @@
 #ifdef HAVE_AUXV_H
 #include <sys/auxv.h>
 #endif
-#include <errno.h>
 
 #ifdef _WIN32
 #include <sysinfoapi.h>
@@ -34,19 +32,15 @@
 
 #include <fwupdplugin.h>
 
-#include "fwupd-common-private.h"
-#include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 #include "fwupd-security-attr-private.h"
 
-#include "fu-backend-private.h"
 #include "fu-bios-setting.h"
 #include "fu-bios-settings-private.h"
 #include "fu-config-private.h"
 #include "fu-context-private.h"
-#include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-device-progress.h"
@@ -70,7 +64,6 @@
 #include "fu-usb-backend.h"
 #include "fu-usb-device-fw-ds20.h"
 #include "fu-usb-device-ms-ds20.h"
-#include "fu-usb-device-private.h"
 
 #ifdef HAVE_GIO_UNIX
 #include "fu-unix-seekable-input-stream.h"
@@ -446,6 +439,19 @@ fu_engine_ensure_device_display_required_inhibit(FuEngine *self, FuDevice *devic
 }
 
 static void
+fu_engine_ensure_device_maybe_remove_affects_fde(FuEngine *self, FuDevice *device)
+{
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+		return;
+	if (!fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_BITLOCKER) &&
+	    !fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_FDE_SNAPD)) {
+		g_debug("removing affects-fde from %s as no FDE detected",
+			fu_device_get_id(device));
+		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_AFFECTS_FDE);
+	}
+}
+
+static void
 fu_engine_ensure_device_system_inhibit(FuEngine *self, FuDevice *device)
 {
 	if (fu_context_has_flag(self->ctx, FU_CONTEXT_FLAG_SYSTEM_INHIBIT) &&
@@ -509,6 +515,7 @@ fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine 
 	fu_engine_ensure_device_lid_inhibit(self, device);
 	fu_engine_ensure_device_display_required_inhibit(self, device);
 	fu_engine_ensure_device_system_inhibit(self, device);
+	fu_engine_ensure_device_maybe_remove_affects_fde(self, device);
 	fu_engine_acquiesce_reset(self);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
@@ -2906,8 +2913,10 @@ fu_engine_prepare(FuEngine *self,
 	}
 	fu_device_add_problem(device, FWUPD_DEVICE_PROBLEM_UPDATE_IN_PROGRESS);
 
-	if (!fu_engine_device_check_power(self, device, flags, error))
+	if (!fu_engine_device_check_power(self, device, flags, error)) {
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		return FALSE;
+	}
 
 	str = fu_device_to_string(device);
 	g_info("prepare -> %s", str);
