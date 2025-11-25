@@ -14,3 +14,20 @@ GType = FuSynapticsRmiPs2Device
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiPs2Device
 InstallDuration = 236
+
+# ALSO
+[HIDRAW\VEN_06CB&DEV_96E7]
+Plugin = synaptics_rmi
+GType = FuSynapticsRmiHidDevice
+Vendor = Synaptics
+
+[HIDRAW\VEN_06CB&DEV_D014]
+Plugin = synaptics_rmi
+GType = FuSynapticsRmiHidDevice
+Vendor = Synaptics
+
+# HP Lapaz14N
+[HIDRAW\VEN_06CB&DEV_CFE2]
+Plugin = synaptics_rmi
+GType = FuSynapticsRmiHidDevice
+Vendor = Synaptics
