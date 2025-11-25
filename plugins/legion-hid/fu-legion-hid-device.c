@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-legion-hid-device.h"
 #include "fu-legion-hid-child.h"
+#include "fu-legion-hid-device.h"
 #include "fu-legion-hid-firmware.h"
 
 struct _FuLegionHidDevice {

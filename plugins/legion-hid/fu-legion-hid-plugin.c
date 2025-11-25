@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include "fu-legion-hid-plugin.h"
-
 #include "config.h"
+
 #include "fu-legion-hid-child.h"
 #include "fu-legion-hid-device.h"
 #include "fu-legion-hid-firmware.h"
+#include "fu-legion-hid-plugin.h"
 
 struct _FuLegionHidPlugin {
 	FuPlugin parent_instance;

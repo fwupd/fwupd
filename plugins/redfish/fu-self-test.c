@@ -5,6 +5,7 @@
  */
 
 #include "config.h"
+
 #include "fu-config-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"

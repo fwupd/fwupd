@@ -8,7 +8,6 @@
 
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-
 #include <string.h>
 
 #include "fu-logitech-tap-struct.h"

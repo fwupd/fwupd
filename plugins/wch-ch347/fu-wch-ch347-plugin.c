@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include "fu-wch-ch347-plugin.h"
-
 #include "config.h"
+
 #include "fu-wch-ch347-device.h"
+#include "fu-wch-ch347-plugin.h"
 
 struct _FuWchCh347Plugin {
 	FuPlugin parent_instance;
