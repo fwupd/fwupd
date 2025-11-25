@@ -92,7 +92,7 @@ fu_fpc_device_dfu_cmd(FuFpcDevice *self,
 		FPC_USB_TRANSFER_TIMEOUT,
 		NULL,
 		error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (actual_len != length) {
@@ -131,7 +131,7 @@ fu_fpc_device_fw_cmd(FuFpcDevice *self,
 					    FPC_USB_TRANSFER_TIMEOUT,
 					    NULL,
 					    error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (actual_len != length) {

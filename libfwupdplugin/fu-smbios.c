@@ -277,7 +277,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	/* get the smbios entry point */
 	ep_fn = g_build_filename(path, "smbios_entry_point", NULL);
 	if (!g_file_get_contents(ep_fn, &ep_raw, &sz, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
@@ -313,7 +313,7 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	/* get the DMI data */
 	dmi_fn = g_build_filename(path, "DMI", NULL);
 	if (!g_file_get_contents(dmi_fn, &dmi_raw, &sz, error)) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 	if (sz > self->structure_table_len) {

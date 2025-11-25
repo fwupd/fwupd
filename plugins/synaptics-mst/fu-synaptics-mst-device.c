@@ -1674,9 +1674,9 @@ fu_synaptics_mst_device_setup(FuDevice *device, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "downstream endpoint not supported");
-		} else {
-			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
 		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
 

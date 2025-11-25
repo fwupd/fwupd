@@ -519,11 +519,13 @@ fu_volume_get_block_size_from_device_name(const gchar *device_name, GError **err
 				    g_io_error_from_errno(errno),
 				    fwupd_strerror(errno));
 		fwupd_error_convert(error);
+		/* nocheck:error-false-return */
 	} else if (sector_size == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "failed to get non-zero logical sector size");
+		/* nocheck:error-false-return */
 	}
 	g_close(fd, NULL);
 	return sector_size;

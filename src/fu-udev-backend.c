@@ -528,7 +528,7 @@ fu_udev_backend_netlink_parse_blob(FuUdevBackend *self, GBytes *blob, GError **e
 		if (device_donor == NULL) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_DATA,
+					    FWUPD_ERROR_NOT_FOUND,
 					    "no device to change");
 			return FALSE;
 		}

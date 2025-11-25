@@ -34,14 +34,24 @@ fu_mm_device_func(void)
 	g_assert_false(fu_mm_device_get_inhibited(mm_device));
 
 	/* convert the instance IDs */
-	fu_mm_device_add_instance_id(mm_device, "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC");
-	fu_mm_device_add_instance_id(mm_device, "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC");
+	ret = fu_mm_device_add_instance_id(mm_device,
+					   "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC",
+					   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_mm_device_add_instance_id(mm_device,
+					   "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC",
+					   &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 
 	/* show what we've got */
 	str = fu_device_to_string(FU_DEVICE(mm_device));
 	g_debug("%s", str);
 
 	/* check it all makes sense */
+	g_assert_cmpint(fu_device_get_vid(FU_DEVICE(mm_device)), ==, 0x17CB);
+	g_assert_cmpint(fu_device_get_pid(FU_DEVICE(mm_device)), ==, 0x0308);
 	g_assert_true(fu_device_has_instance_id(FU_DEVICE(mm_device),
 						"PCI\\VID_17CB",
 						FU_DEVICE_INSTANCE_FLAG_QUIRKS));
@@ -57,8 +67,12 @@ fu_mm_device_func(void)
 	/* add rev */
 	fu_device_add_private_flag(FU_DEVICE(mm_device),
 				   FU_DEVICE_PRIVATE_FLAG_ADD_INSTANCE_ID_REV);
-	fu_mm_device_add_instance_id(mm_device, "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC");
-	fu_mm_device_add_instance_id(mm_device, "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC");
+	fu_mm_device_add_instance_id(mm_device,
+				     "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC",
+				     NULL);
+	fu_mm_device_add_instance_id(mm_device,
+				     "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC",
+				     NULL);
 	g_assert_true(fu_device_has_instance_id(FU_DEVICE(mm_device),
 						"PCI\\VID_17CB&PID_0308&REV_0000",
 						FU_DEVICE_INSTANCE_FLAG_VISIBLE |
@@ -70,8 +84,12 @@ fu_mm_device_func(void)
 
 	/* add branch */
 	fu_device_add_private_flag(FU_DEVICE(mm_device), FU_MM_DEVICE_FLAG_USE_BRANCH);
-	fu_mm_device_add_instance_id(mm_device, "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC");
-	fu_mm_device_add_instance_id(mm_device, "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC");
+	fu_mm_device_add_instance_id(mm_device,
+				     "PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC",
+				     NULL);
+	fu_mm_device_add_instance_id(mm_device,
+				     "PCI\\SSVID_105B&SSPID_E142&REV_0000&CARRIER_CMCC",
+				     NULL);
 	g_assert_true(fu_device_has_instance_id(FU_DEVICE(mm_device),
 						"PCI\\VID_17CB&PID_0308&REV_0000&CARRIER_CMCC",
 						FU_DEVICE_INSTANCE_FLAG_VISIBLE |

@@ -61,8 +61,11 @@ fu_engine_requirements_require_vercmp_part(const gchar *compare,
 			    version_req,
 			    compare,
 			    version);
+		return FALSE;
 	}
-	return ret;
+
+	/* success */
+	return TRUE;
 }
 
 typedef struct {
@@ -315,13 +318,13 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 				    "Not compatible with firmware version %s, requires >= %s",
 				    version,
 				    xb_node_get_attr(req, "version"));
-			} else {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "Not compatible with firmware version: %s",
-					    error_local->message);
+				return FALSE;
 			}
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "Not compatible with firmware version: %s",
+				    error_local->message);
 			return FALSE;
 		}
 		return TRUE;
@@ -344,14 +347,12 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 				    "Not compatible with bootloader version %s, requires >= %s",
 				    version,
 				    xb_node_get_attr(req, "version"));
-
-			} else {
-				g_debug("Bootloader is not compatible: %s", error_local->message);
-				g_set_error_literal(error,
-						    FWUPD_ERROR,
-						    FWUPD_ERROR_NOT_SUPPORTED,
-						    "Bootloader is not compatible");
+				return FALSE;
 			}
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "Bootloader is not compatible");
 			return FALSE;
 		}
 		return TRUE;
@@ -493,14 +494,14 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 				    fu_device_get_name(device_actual),
 				    version,
 				    xb_node_get_attr(req, "version"));
-		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "Not compatible with %s: %s",
-				    fu_device_get_name(device_actual),
-				    error_local->message);
+			return FALSE;
 		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "Not compatible with %s: %s",
+			    fu_device_get_name(device_actual),
+			    error_local->message);
 		return FALSE;
 	}
 
@@ -548,14 +549,14 @@ fu_engine_requirements_check_id(FuEngine *self,
 				    xb_node_get_text(req),
 				    version,
 				    xb_node_get_attr(req, "version"));
-		} else {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "Not compatible with %s version: %s",
-				    xb_node_get_text(req),
-				    error_local->message);
+			return FALSE;
 		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "Not compatible with %s version: %s",
+			    xb_node_get_text(req),
+			    error_local->message);
 		return FALSE;
 	}
 

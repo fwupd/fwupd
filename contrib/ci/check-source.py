@@ -313,6 +313,31 @@ class Checker:
                 f"limit of {magic_inlines_limit}"
             )
 
+    def _test_lines_gerror_false_returns(self, lines: List[str]) -> None:
+        self._current_nocheck = "nocheck:error-false-return"
+
+        func_begin: int = 0
+        for linecnt, line in enumerate(lines):
+            self._current_linecnt = linecnt + 1
+            if (
+                line.find("g_set_error_literal(") != -1
+                or line.find("g_set_error(") != -1
+            ):
+                func_begin = linecnt
+                continue
+            if line.find(self._current_nocheck) != -1:
+                func_begin = 0
+                continue
+            if not func_begin:
+                continue
+            if line.find("return") != -1 or line.find("break;") != -1:
+                func_begin = 0
+                continue
+            if line.find("}") != -1:
+                func_begin = 0
+                self.add_failure("uses g_set_error() without returning FALSE")
+                continue
+
     def _test_lines_gerror(self, lines: List[str]) -> None:
         self._current_nocheck = "nocheck:error"
         linecnt_g_set_error: int = 0
@@ -484,6 +509,9 @@ class Checker:
 
         # using FUWPD_ERROR domains
         self._test_lines_gerror(lines)
+
+        # setting GError, not returning
+        self._test_lines_gerror_false_returns(lines)
 
         # not nesting too deep
         self._test_lines_depth(lines)

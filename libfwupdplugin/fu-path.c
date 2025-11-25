@@ -650,7 +650,7 @@ fu_path_get_symlink_target(const gchar *filename, GError **error)
 				 NULL,
 				 error);
 	if (info == NULL) {
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	target =

@@ -4145,6 +4145,7 @@ fu_util_sync(FuUtil *self, gchar **values, GError **error)
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
 					    "No device branch or system HostBkc set");
+			/* nocheck:error-false-return */
 		}
 		if (rel == NULL) {
 			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||

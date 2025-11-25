@@ -295,11 +295,12 @@ fu_uefi_bootmgr_shim_is_safe(FuEfivars *efivars, const gchar *source_shim, GErro
 				    "(missing entry in current UEFI variable)",
 				    source_shim,
 				    entry_id);
-			} else {
-				g_prefix_error(&error_local,
-					       "while looking for entry in current sbatlevel: ");
-				g_propagate_error(error, g_steal_pointer(&error_local));
+				return FALSE;
 			}
+			g_propagate_prefixed_error(
+			    error,
+			    g_steal_pointer(&error_local),
+			    "while looking for entry in current sbatlevel: ");
 			return FALSE;
 		}
 

@@ -845,7 +845,7 @@ fu_udev_device_get_device_file_from_subsystem(FuUdevDevice *self,
 			return NULL;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return NULL;
 	}
 	fn = g_dir_read_name(dir);

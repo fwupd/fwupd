@@ -564,7 +564,7 @@ fu_logitech_bulkcontroller_device_upd_send_cmd(FuLogitechBulkcontrollerDevice *s
 					 NULL,
 					 error)) {
 		g_prefix_error(error, "failed to send upd bulk transfer: ");
-		fu_error_convert(error);
+		fwupd_error_convert(error);
 		return FALSE;
 	}
 
