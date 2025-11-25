@@ -97,6 +97,11 @@ fu_console_setup(FuConsole *self, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a TTY");
 		return FALSE;
 	}
+	if (isatty(fileno(stdout)) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a TTY");
+		return FALSE;
+	}
+
 #endif
 	/* success */
 	return TRUE;

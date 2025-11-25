@@ -9,6 +9,13 @@ enum FuDfuDeviceAttr {
     CanAccelerate = 1 << 7,
 }
 
+enum FuDfuTargetTransferFlags {
+    None = 0,
+    Verify = 1 << 0,
+    WildcardVid = 1 << 4,
+    WildcardPid = 1 << 5,
+    AddrHeuristic = 1 << 7, // automatically detect
+}
 
 enum FuDfuRequest {
     Detach,
@@ -59,6 +66,25 @@ enum FuDfuState {
 enum FuDfuSectorCap {
     None = 0, // No operations possible
     Readable = 1 << 0,
-    Writeable = 1 << 1,
+    Writable = 1 << 1,
     Erasable = 1 << 2,
+}
+
+// ATMEL AVR version of DFU: http://www.atmel.com/Images/doc7618.pdf
+enum FuDfuAvrCmd {
+    ProgStart = 0x01,
+    DisplayData = 0x03,
+    WriteCommand = 0x04,
+    ReadCommand = 0x05,
+    ChangeBaseAddr = 0x06,
+}
+
+enum FuDfuAvr32MemoryUnit {
+    Flash,
+    Eeprom,
+    Security,
+    Configuration,
+    Bootloader,
+    Signature,
+    User,
 }

@@ -5,15 +5,18 @@ rm -rf build-openbmc
 meson setup build-openbmc \
     -Dauto_features=disabled \
     -Ddocs=disabled \
+    -Dbuildtype=minsize \
+    -Dstrip=true \
     -Dpolkit=disabled \
     -Dbash_completion=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
+    -Dplugin_uefi_capsule_splash=false \
     -Dhsi=disabled \
     -Dman=false \
     -Dmetainfo=false \
     -Dtests=true \
-    -Dsystemd_root_prefix=/tmp \
+    -Dsystemd=disabled \
     -Dlibxmlb:gtkdoc=false \
     $@
 

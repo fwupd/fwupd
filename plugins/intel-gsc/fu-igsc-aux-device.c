@@ -10,7 +10,6 @@
 #include "fu-igsc-aux-device.h"
 #include "fu-igsc-aux-firmware.h"
 #include "fu-igsc-device.h"
-#include "fu-igsc-heci.h"
 
 struct _FuIgscAuxDevice {
 	FuDevice parent_instance;

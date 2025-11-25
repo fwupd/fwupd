@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
@@ -11,5 +12,3 @@ plugin_builtins += static_library('fu_plugin_upower',
   c_args: cargs,
   dependencies: plugin_deps,
 )
-
-endif

@@ -128,13 +128,22 @@ fu_uefi_dbx_device_ensure_checksum(FuUefiDbxDevice *self, GError **error)
 
 	/* add the last checksum to the device */
 	sigs = fu_firmware_get_images(dbx);
-	if (sigs->len > 0) {
-		FuEfiSignature *sig = g_ptr_array_index(sigs, sigs->len - 1);
+
+	for (guint i = sigs->len; i > 0; i--) {
+		FuEfiSignature *sig = g_ptr_array_index(sigs, i - 1);
+		const gchar *owner = fu_efi_signature_get_owner(sig);
 		g_autofree gchar *csum =
 		    fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, NULL);
+
+		if (g_strcmp0(owner, FU_EFI_SIGNATURE_GUID_MICROSOFT) != 0) {
+			g_debug("skipping dbx entry %s as non-microsoft (%s)", csum, owner);
+			continue;
+		}
+
 		if (csum != NULL) {
 			if (!fu_uefi_dbx_device_set_checksum(self, csum, error))
 				return FALSE;
+			break;
 		}
 	}
 

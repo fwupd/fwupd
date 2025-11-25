@@ -22,6 +22,7 @@ VersionFormat = quad
 # Star Labs generic (HwId - coreboot)
 [b8cf5af6-8a46-5deb-ac01-a35b1ea5fb48]
 Plugin = flashrom
+FlashromFmapRegions = COREBOOT,EC
 
 # Star Labs generic (HwID - AMI)
 [29230df7-d1e5-5c38-859b-229e966b22e9]

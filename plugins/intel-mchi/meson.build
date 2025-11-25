@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelMchi"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -15,4 +16,3 @@ plugin_builtins += static_library('fu_plugin_intel_mchi',
 )
 enumeration_data += files('tests/intel-mchi-setup.json')
 device_tests += files('tests/intel-mchi.json')
-endif

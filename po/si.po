@@ -34,7 +34,7 @@ msgid "%s Battery Update"
 msgstr "%s බැටරි යාවත්කාලීන කිරීම"
 
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
-#. * at system bootup
+#. * at system boot-up
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "%s CPU මයික්‍රොකෝඩ් යාවත්කාලීන කිරීම"

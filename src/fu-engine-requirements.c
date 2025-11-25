@@ -672,7 +672,7 @@ fu_engine_requirements_check_client(FuEngine *self,
 	feature_split = g_strsplit(xb_node_get_text(req), "|", -1);
 	feature_flags = fu_engine_request_get_feature_flags(request);
 	for (guint i = 0; feature_split[i] != NULL; i++) {
-		FuEngineCapabilityFlag capability_flag;
+		FuEngineCapabilityFlags capability_flag;
 		FwupdFeatureFlags feature_flag;
 
 		/* client feature */
@@ -690,7 +690,7 @@ fu_engine_requirements_check_client(FuEngine *self,
 		}
 
 		/* assumed by the daemon version, see https://github.com/fwupd/fwupd/pull/8949 */
-		capability_flag = fu_engine_capability_flag_from_string(feature_split[i]);
+		capability_flag = fu_engine_capability_flags_from_string(feature_split[i]);
 		if (capability_flag != FU_ENGINE_CAPABILITY_FLAG_UNKNOWN) {
 			if (capability_flag == FU_ENGINE_CAPABILITY_FLAG_ID_REQUIREMENT_GLOB) {
 				helper->has_client_id_requirement_glob = TRUE;

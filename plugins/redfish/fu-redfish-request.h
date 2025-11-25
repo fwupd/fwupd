@@ -10,15 +10,10 @@
 
 #include <curl/curl.h>
 
+#include "fu-redfish-struct.h"
+
 #define FU_TYPE_REDFISH_REQUEST (fu_redfish_request_get_type())
 G_DECLARE_FINAL_TYPE(FuRedfishRequest, fu_redfish_request, FU, REDFISH_REQUEST, GObject)
-
-typedef enum {
-	FU_REDFISH_REQUEST_PERFORM_FLAG_NONE = 0,
-	FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON = 1 << 0,
-	FU_REDFISH_REQUEST_PERFORM_FLAG_USE_CACHE = 1 << 1,
-	FU_REDFISH_REQUEST_PERFORM_FLAG_USE_ETAG = 1 << 2,
-} FuRedfishRequestPerformFlags;
 
 gboolean
 fu_redfish_request_perform(FuRedfishRequest *self,

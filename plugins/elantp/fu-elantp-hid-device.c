@@ -10,6 +10,7 @@
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
 #include "fu-elantp-hid-haptic-device.h"
+#include "fu-elantp-struct.h"
 
 struct _FuElantpHidDevice {
 	FuHidrawDevice parent_instance;
@@ -137,7 +138,11 @@ static gboolean
 fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 {
 	guint8 buf[2] = {0x0};
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_IAP_CTRL, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   FU_ETP_CMD_I2C_IAP_CTRL,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 		g_prefix_error(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
@@ -167,7 +172,7 @@ fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **e
 	guint16 value;
 
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_FORCE_TYPE_ENABLE,
+					   FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -175,7 +180,7 @@ fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **e
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
+	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -200,7 +205,7 @@ fu_elantp_hid_device_read_haptic_enable(FuElantpHidDevice *self, GError **error)
 	guint8 buf[2] = {0x0};
 	guint16 value;
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_FORCE_TYPE_ENABLE,
+					   FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -208,7 +213,7 @@ fu_elantp_hid_device_read_haptic_enable(FuElantpHidDevice *self, GError **error)
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (value == 0xFFFF || value == ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
+	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
 		return FALSE;
 	}
@@ -236,7 +241,7 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 		self->force_table_addr = 0xFF40 * 2;
 		return TRUE;
 	}
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to read force table address cmd: ");
 		return FALSE;
 	}
@@ -269,12 +274,12 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 	if (iap_ver < 0x5 || ic_type != 0x13)
 		return TRUE;
 
-	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_FW_PW, pw, error)) {
+	if (!fu_elantp_hid_device_write_cmd(self, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
 		g_prefix_error(error, "failed to write fw password cmd: ");
 		return FALSE;
 	}
 
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_FW_PW, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_I2C_FW_PW, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "failed to read fw password cmd: ");
 		return FALSE;
 	}
@@ -304,7 +309,11 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_forcetable = NULL;
 
 	/* get pattern */
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_GET_HID_ID, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   FU_ETP_CMD_I2C_GET_HID_ID,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 		g_prefix_error(error, "failed to read HID ID: ");
 		return FALSE;
 	}
@@ -312,19 +321,23 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	self->pattern = tmp != 0xFFFF ? (tmp & 0xFF00) >> 8 : 0;
 
 	/* get current firmware version */
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_I2C_FW_VERSION, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   FU_ETP_CMD_I2C_FW_VERSION,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 		g_prefix_error(error, "failed to read fw version: ");
 		return FALSE;
 	}
 	fwver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
+	if (fwver == 0xFFFF || fwver == FU_ETP_CMD_I2C_FW_VERSION)
 		fwver = 0;
 	fu_device_set_version_raw(device, fwver);
 
 	/* get IAP firmware version */
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION
-							      : ETP_CMD_I2C_IAP_VERSION_2,
+					   self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
+							      : FU_ETP_CMD_I2C_IAP_VERSION_2,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -340,7 +353,11 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version_bootloader(device, version_bl);
 
 	/* get module ID */
-	if (!fu_elantp_hid_device_read_cmd(self, ETP_CMD_GET_MODULE_ID, buf, sizeof(buf), error)) {
+	if (!fu_elantp_hid_device_read_cmd(self,
+					   FU_ETP_CMD_GET_MODULE_ID,
+					   buf,
+					   sizeof(buf),
+					   error)) {
 		g_prefix_error(error, "failed to read module ID: ");
 		return FALSE;
 	}
@@ -355,7 +372,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 
 	/* get OSM version */
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_OSM_VERSION,
+					   FU_ETP_CMD_I2C_OSM_VERSION,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -363,9 +380,9 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
+	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
 		if (!fu_elantp_hid_device_read_cmd(self,
-						   ETP_CMD_I2C_IAP_ICBODY,
+						   FU_ETP_CMD_I2C_IAP_ICBODY,
 						   buf,
 						   sizeof(buf),
 						   error)) {
@@ -715,7 +732,7 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 
 	/* verify the written checksum */
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_IAP_CHECKSUM,
+					   FU_ETP_CMD_I2C_IAP_CHECKSUM,
 					   csum_buf,
 					   sizeof(csum_buf),
 					   error))
@@ -759,7 +776,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_info("in bootloader mode, reset IC");
 		if (!fu_elantp_hid_device_write_cmd(self,
-						    ETP_CMD_I2C_IAP_RESET,
+						    FU_ETP_CMD_I2C_IAP_RESET,
 						    ETP_I2C_IAP_RESET,
 						    error))
 			return FALSE;
@@ -768,7 +785,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 
 	/* get OSM version */
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   ETP_CMD_I2C_OSM_VERSION,
+					   FU_ETP_CMD_I2C_OSM_VERSION,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -776,9 +793,9 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
-	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
+	if (tmp == FU_ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
 		if (!fu_elantp_hid_device_read_cmd(self,
-						   ETP_CMD_I2C_IAP_ICBODY,
+						   FU_ETP_CMD_I2C_IAP_ICBODY,
 						   buf,
 						   sizeof(buf),
 						   error)) {
@@ -792,8 +809,8 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 
 	/* get IAP firmware version */
 	if (!fu_elantp_hid_device_read_cmd(self,
-					   self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION
-							      : ETP_CMD_I2C_IAP_VERSION_2,
+					   self->pattern == 0 ? FU_ETP_CMD_I2C_IAP_VERSION
+							      : FU_ETP_CMD_I2C_IAP_VERSION_2,
 					   buf,
 					   sizeof(buf),
 					   error)) {
@@ -818,12 +835,12 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 			}
 
 			if (!fu_elantp_hid_device_write_cmd(self,
-							    ETP_CMD_I2C_IAP_TYPE,
+							    FU_ETP_CMD_I2C_IAP_TYPE,
 							    self->fw_page_size / 2,
 							    error))
 				return FALSE;
 			if (!fu_elantp_hid_device_read_cmd(self,
-							   ETP_CMD_I2C_IAP_TYPE,
+							   FU_ETP_CMD_I2C_IAP_TYPE,
 							   buf,
 							   sizeof(buf),
 							   error)) {
@@ -842,7 +859,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 	}
 	if (!fu_elantp_hid_device_write_fw_password(self, ic_type, iap_ver, error))
 		return FALSE;
-	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_IAP, self->iap_password, error))
+	if (!fu_elantp_hid_device_write_cmd(self, FU_ETP_CMD_I2C_IAP, self->iap_password, error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_UNLOCK);
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
@@ -871,11 +888,14 @@ fu_elantp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **err
 	}
 
 	/* reset back to runtime */
-	if (!fu_elantp_hid_device_write_cmd(self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_IAP_RESET, error))
+	if (!fu_elantp_hid_device_write_cmd(self,
+					    FU_ETP_CMD_I2C_IAP_RESET,
+					    ETP_I2C_IAP_RESET,
+					    error))
 		return FALSE;
 	fu_device_sleep(FU_DEVICE(self), ELANTP_DELAY_RESET);
 	if (!fu_elantp_hid_device_write_cmd(self,
-					    ETP_CMD_I2C_IAP_RESET,
+					    FU_ETP_CMD_I2C_IAP_RESET,
 					    ETP_I2C_ENABLE_REPORT,
 					    error)) {
 		g_prefix_error(error, "cannot enable TP report: ");

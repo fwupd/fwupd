@@ -7,3 +7,6 @@ Plugin = mediatek_scaler
 
 [DRM\VEN_DEL&DEV_9410]
 Plugin = mediatek_scaler
+
+[DRM\VEN_DEL&DEV_9411]
+Plugin = mediatek_scaler
