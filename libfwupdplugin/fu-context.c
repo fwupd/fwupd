@@ -185,6 +185,10 @@ fu_context_efivars_check_free_space(FuContext *self, gsize count, GError **error
 	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+	/* escape hatch */
+	if (fu_context_has_flag(self, FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE))
+		return TRUE;
+
 	total = fu_efivars_space_free(priv->efivars, error);
 	if (total == G_MAXUINT64)
 		return FALSE;

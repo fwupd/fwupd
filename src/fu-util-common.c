@@ -483,7 +483,7 @@ fu_util_cmd_array_add(GPtrArray *array,
 
 gboolean
 fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtilPrivate *priv,
+		      FuUtil *self,
 		      const gchar *command,
 		      gchar **values,
 		      GError **error)
@@ -501,7 +501,7 @@ fu_util_cmd_array_run(GPtrArray *array,
 	for (guint i = 0; i < array->len; i++) {
 		FuUtilCmd *item = g_ptr_array_index(array, i);
 		if (g_strcmp0(item->name, command) == 0)
-			return item->callback(priv, values_copy, error);
+			return item->callback(self, values_copy, error);
 	}
 
 	/* not found */

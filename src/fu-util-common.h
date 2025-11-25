@@ -22,9 +22,8 @@
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS (FWUPD_ERROR_LAST + 1)
 
-typedef struct FuUtilPrivate FuUtilPrivate;
-typedef gboolean (*FuUtilCmdFunc)(FuUtilPrivate *util, gchar **values, GError **error)
-    G_GNUC_NON_NULL(1);
+typedef struct FuUtil FuUtil;
+typedef gboolean (*FuUtilCmdFunc)(FuUtil *util, gchar **values, GError **error) G_GNUC_NON_NULL(1);
 typedef struct {
 	gchar *name;
 	gchar *arguments;
@@ -86,7 +85,7 @@ void
 fu_util_cmd_array_sort(GPtrArray *array) G_GNUC_NON_NULL(1);
 gboolean
 fu_util_cmd_array_run(GPtrArray *array,
-		      FuUtilPrivate *priv,
+		      FuUtil *self,
 		      const gchar *command,
 		      gchar **values,
 		      GError **error) G_GNUC_NON_NULL(1, 2);

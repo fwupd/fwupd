@@ -18,6 +18,10 @@ Flags = uefi-force-enable
 [6de5d951-d755-576b-bd09-c5cf66b27234]
 Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-closed,modify-bootorder
 
+# Intel CSME reference value
+[23192307-d667-4bdf-af1a-6059db171246]
+Fags = ~md-set-vendor
+
 # Dell Inc.
 [85d38fda-fc0e-5c6f-808f-076984ae7978]
 Flags = modify-bootorder,cod-dell-recovery

@@ -553,14 +553,6 @@ fu_uefi_capsule_device_probe(FuDevice *device, GError **error)
 		fu_device_set_version_lowest(device, version_lowest);
 	}
 
-	/* set flags */
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
-	fu_device_add_private_flag(device, FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
-
 	/* add icons */
 	if (priv->kind == FU_UEFI_CAPSULE_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		fu_device_add_icon(device, FU_DEVICE_ICON_COMPUTER);
@@ -765,6 +757,12 @@ static void
 fu_uefi_capsule_device_init(FuUefiCapsuleDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.uefi.capsule");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_UEFI_CAPSULE_DEVICE_FLAG_NO_UX_CAPSULE);
