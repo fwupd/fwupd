@@ -1,0 +1,18 @@
+{
+  "name": "Synaptics RMI (TM4066)",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "edc2518b2cbc707ac4099db425084ee4bb47a657aa20519ded8e221df450d14c-Synaptics-RMI-touchpad.4442899.cab",
+      "emulation-url": "6b7370eba5569643909af12831d48caa03806a273ce6edcf6eba85537571a1e6-synaptics_HapticsPad.zip",
+      "components": [
+        {
+          "version": "1.2.4442899",
+          "guids": [
+            "cee8e2d1-bb2a-54bf-9a9f-3d38359dc76a"
+          ]
+        }
+      ]
+    }
+  ]
+}

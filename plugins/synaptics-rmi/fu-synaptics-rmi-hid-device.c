@@ -92,6 +92,7 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 	/* request */
 	for (guint j = req->len; j < 21; j++)
 		fu_byte_array_append_uint8(req, 0x0);
+
 	fu_dump_full(G_LOG_DOMAIN, "ReportWrite", req->data, req->len, 80, FU_DUMP_FLAGS_NONE);
 	if (!fu_udev_device_write_byte_array(FU_UDEV_DEVICE(self),
 					     req,
@@ -367,6 +368,26 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 			    FWUPD_ERROR_INVALID_FILE,
 			    "no parent device for %s",
 			    fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(parent_hid)));
+		return FALSE;
+	}
+	if (!fu_device_probe(FU_DEVICE(parent_phys), error)) {
+		g_prefix_error_literal(error, "failed to probe parent: ");
+		return FALSE;
+	}
+	if (fu_udev_device_get_subsystem(parent_phys) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent subsystem for %s",
+			    fu_device_get_id_display(FU_DEVICE(parent_phys)));
+		return FALSE;
+	}
+	if (fu_udev_device_get_driver(parent_phys) == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no parent driver for %s",
+			    fu_device_get_id_display(FU_DEVICE(parent_phys)));
 		return FALSE;
 	}
 
