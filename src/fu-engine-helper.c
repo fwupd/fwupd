@@ -139,7 +139,8 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 
 			/* skip devices with failed updates */
 			if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED ||
-			    fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+			    fwupd_device_get_update_state(dev) ==
+				FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
 				continue;
 			}
 
@@ -158,8 +159,10 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 				g_autoptr(FwupdRelease) rel = NULL;
 
 				/* skip devices with failed updates */
-				if (fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED ||
-				    fwupd_device_get_update_state(dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+				if (fwupd_device_get_update_state(dev) ==
+					FWUPD_UPDATE_STATE_FAILED ||
+				    fwupd_device_get_update_state(dev) ==
+					FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
 					continue;
 				}
 

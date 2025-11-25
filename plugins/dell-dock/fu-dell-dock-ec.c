@@ -563,7 +563,8 @@ fu_dell_dock_ec_get_dock_data(FuDellDockEc *self, GError **error)
 		fu_device_remove_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
 	} else {
 		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_UPDATE_PENDING);
-		g_debug("found a staged firmware update for %s", fu_device_get_name(FU_DEVICE(self)));
+		g_debug("found a staged firmware update for %s",
+			fu_device_get_name(FU_DEVICE(self)));
 	}
 
 	return TRUE;

@@ -3389,11 +3389,7 @@ fu_engine_history_func(gconstpointer user_data)
 	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3768,11 +3764,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3794,11 +3786,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_progress_reset(progress);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_object_unref(engine);
@@ -3914,11 +3902,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -4040,11 +4024,7 @@ fu_engine_install_request(gconstpointer user_data)
 			 G_CALLBACK(fu_test_engine_status_changed_cb),
 			 &helper);
 
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	g_assert_cmpint(helper.request_cnt, ==, 1);
@@ -4125,11 +4105,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	ret = fu_release_load(release, cabinet, component, NULL, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	ret = fu_engine_install_release(engine,
-					release,
-					progress,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error);
+	ret = fu_engine_install_release(engine, release, progress, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_cmpstr(error->message,
 			==,
