@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#include "fu-wch-ch341a-cfi-device.h"
-
 #include "config.h"
+
+#include "fu-wch-ch341a-cfi-device.h"
 #include "fu-wch-ch341a-device.h"
 
 struct _FuWchCh341aCfiDevice {
