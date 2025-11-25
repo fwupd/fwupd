@@ -226,7 +226,7 @@ fu_udev_backend_create_device_for_donor(FuBackend *backend, FuDevice *donor, GEr
 		device = g_object_new(gtype, "backend", FU_BACKEND(self), NULL);
 		fu_device_incorporate(device, donor, FU_DEVICE_INCORPORATE_FLAG_ALL);
 		if (!fu_device_probe(device, error)) {
-			g_prefix_error(error, "failed to probe: ");
+			g_prefix_error_literal(error, "failed to probe: ");
 			return NULL;
 		}
 	}
@@ -716,7 +716,7 @@ fu_udev_backend_setup(FuBackend *backend,
 	/* set up hotplug events */
 	if (flags & FU_BACKEND_SETUP_FLAG_USE_HOTPLUG) {
 		if (!fu_udev_backend_netlink_setup(self, error)) {
-			g_prefix_error(error, "failed to set up netlink: ");
+			g_prefix_error_literal(error, "failed to set up netlink: ");
 			return FALSE;
 		}
 	}

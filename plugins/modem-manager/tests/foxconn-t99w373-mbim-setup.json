@@ -3,7 +3,7 @@
   "UsbDevices": [
     {
       "Created": "2025-06-20T10:35:23.098731Z",
-      "GType": "FuMmMbimDevice",
+      "GType": "FuMmQduMbimDevice",
       "BackendId": "/org/freedesktop/ModemManager1/Modem/0",
       "DeviceFile": "/dev/wwan0mbim0",
       "Events": [

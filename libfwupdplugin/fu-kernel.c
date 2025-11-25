@@ -67,12 +67,11 @@ gboolean
 fu_kernel_check_version(const gchar *minimum_kernel, GError **error)
 {
 #ifdef HAVE_UTSNAME_H
-	struct utsname name_tmp;
+	struct utsname name_tmp = {0};
 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	g_return_val_if_fail(minimum_kernel != NULL, FALSE);
 
-	memset(&name_tmp, 0, sizeof(struct utsname));
 	if (uname(&name_tmp) < 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -397,7 +396,7 @@ fu_kernel_set_commandline(const gchar *arg, gboolean enable, GError **error)
 
 	grubby_path = fu_path_find_program("grubby", error);
 	if (grubby_path == NULL) {
-		g_prefix_error(error, "failed to find grubby: ");
+		g_prefix_error_literal(error, "failed to find grubby: ");
 		return FALSE;
 	}
 	if (enable)

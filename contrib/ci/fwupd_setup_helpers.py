@@ -29,6 +29,8 @@ def detect_profile():
         import distro
 
         target = distro.id()
+        if target == "rhel":
+            return "centos"
         if target not in get_possible_profiles():
             target = distro.like()
         return target

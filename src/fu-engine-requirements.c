@@ -296,7 +296,7 @@ fu_engine_requirements_check_firmware(FuEngine *self,
 	/* check fwupd version requirement */
 	if (depth < 0) {
 		if (!fu_engine_requirements_check_fwupd_version(helper, "1.9.7", error)) {
-			g_prefix_error(error, "requirement child firmware: ");
+			g_prefix_error_literal(error, "requirement child firmware: ");
 			return FALSE;
 		}
 	}
@@ -620,7 +620,7 @@ fu_engine_requirements_check_not_hardware(FuEngine *self,
 
 	/* check fwupd version requirement */
 	if (!fu_engine_requirements_check_fwupd_version(helper, "1.9.10", error)) {
-		g_prefix_error(error, "requirement not_hardware: ");
+		g_prefix_error_literal(error, "requirement not_hardware: ");
 		return FALSE;
 	}
 

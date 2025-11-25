@@ -280,15 +280,15 @@ fu_fresco_pd_device_write_firmware(FuDevice *device,
 	 * 0x6C04 = 0x08 */
 	g_debug("disable MCU, and enable mtp write");
 	if (!fu_fresco_pd_device_and_byte(self, 0xa001, ~(1 << 2), error)) {
-		g_prefix_error(error, "failed to disable MCU bit 2: ");
+		g_prefix_error_literal(error, "failed to disable MCU bit 2: ");
 		return FALSE;
 	}
 	if (!fu_fresco_pd_device_and_byte(self, 0x6c00, ~(1 << 1), error)) {
-		g_prefix_error(error, "failed to disable MCU bit 1: ");
+		g_prefix_error_literal(error, "failed to disable MCU bit 1: ");
 		return FALSE;
 	}
 	if (!fu_fresco_pd_device_write_byte(self, 0x6c04, 0x08, error)) {
-		g_prefix_error(error, "failed to disable MCU: ");
+		g_prefix_error_literal(error, "failed to disable MCU: ");
 		return FALSE;
 	}
 

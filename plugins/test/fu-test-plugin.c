@@ -42,10 +42,10 @@ fu_test_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 	if (fu_plugin_get_config_value_boolean(plugin, "RegistrationSupported")) {
 		fu_plugin_device_register(plugin, device);
 		if (fu_device_get_metadata(device, "BestDevice") == NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "Device not set by another plugin");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "Device not set by another plugin");
 			return FALSE;
 		}
 	}
@@ -208,7 +208,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse DecompressDelay: ");
+			g_prefix_error_literal(error, "failed to parse DecompressDelay: ");
 			return FALSE;
 		}
 	}
@@ -238,7 +238,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 					 10000,
 					 FU_INTEGER_BASE_AUTO,
 					 error)) {
-				g_prefix_error(error, "failed to parse RequestDelay: ");
+				g_prefix_error_literal(error, "failed to parse RequestDelay: ");
 				return FALSE;
 			}
 		}
@@ -254,7 +254,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse WriteDelay: ");
+			g_prefix_error_literal(error, "failed to parse WriteDelay: ");
 			return FALSE;
 		}
 	}
@@ -271,7 +271,7 @@ fu_test_plugin_write_firmware(FuPlugin *plugin,
 				 10000,
 				 FU_INTEGER_BASE_AUTO,
 				 error)) {
-			g_prefix_error(error, "failed to parse VerifyDelay: ");
+			g_prefix_error_literal(error, "failed to parse VerifyDelay: ");
 			return FALSE;
 		}
 	}

@@ -31,7 +31,7 @@ fu_bnr_dp_firmware_xml_func(void)
 	g_assert_true(ret);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "e5d645902551f55258827223905fb097cf3af58c");
+	g_assert_cmpstr(csum1, ==, "b83504af44c2a53561f9e5f25fb133903e1c19fc");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);

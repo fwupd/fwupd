@@ -86,7 +86,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 	/* FuIfwiFptFirmware->parse */
 	if (!FU_FIRMWARE_CLASS(fu_igsc_code_firmware_parent_class)
 		 ->parse(firmware, stream, flags, error)) {
-		g_prefix_error(error, "failed to parse as FuIfwiFptFirmware: ");
+		g_prefix_error_literal(error, "failed to parse as FuIfwiFptFirmware: ");
 		return FALSE;
 	}
 
@@ -94,7 +94,7 @@ fu_igsc_code_firmware_parse(FuFirmware *firmware,
 							  FU_IFWI_FPT_FIRMWARE_IDX_INFO,
 							  error);
 	if (stream_info == NULL) {
-		g_prefix_error(error, "info not found: ");
+		g_prefix_error_literal(error, "info not found: ");
 		return FALSE;
 	}
 

@@ -102,7 +102,7 @@ fu_kinetic_dp_device_dpcd_read_oui(FuKineticDpDevice *self,
 				  DPCD_SIZE_IEEE_OUI,
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "aux dpcd read OUI failed: ");
+		g_prefix_error_literal(error, "aux dpcd read OUI failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -117,7 +117,7 @@ fu_kinetic_dp_device_dpcd_write_oui(FuKineticDpDevice *self, const guint8 *buf, 
 				   DPCD_SIZE_IEEE_OUI,
 				   FU_KINETIC_DP_DEVICE_TIMEOUT,
 				   error)) {
-		g_prefix_error(error, "aux dpcd write OUI failed: ");
+		g_prefix_error_literal(error, "aux dpcd write OUI failed: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -135,7 +135,7 @@ fu_kinetic_dp_device_ensure_customer(FuKineticDpDevice *self, GError **error)
 				  sizeof(priv->customer_board),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "aux dpcd read customer board failed: ");
+		g_prefix_error_literal(error, "aux dpcd read customer board failed: ");
 		return FALSE;
 	}
 	fu_device_add_instance_u8(FU_DEVICE(self), "CHW", priv->customer_board);
@@ -147,7 +147,7 @@ fu_kinetic_dp_device_ensure_customer(FuKineticDpDevice *self, GError **error)
 				  sizeof(priv->customer_id),
 				  FU_KINETIC_DP_DEVICE_TIMEOUT,
 				  error)) {
-		g_prefix_error(error, "aux dpcd read customer ID failed: ");
+		g_prefix_error_literal(error, "aux dpcd read customer ID failed: ");
 		return FALSE;
 	}
 	fu_device_add_instance_u8(FU_DEVICE(self), "CID", priv->customer_id);
@@ -245,7 +245,7 @@ static void
 fu_kinetic_dp_device_init(FuKineticDpDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.kinet-ic.dp");
-	fu_device_set_vendor(FU_DEVICE(self), "Kinetic Technologies");
+	fu_device_set_vendor(FU_DEVICE(self), "Kinetic");
 	fu_device_build_vendor_id_u16(FU_DEVICE(self), "DRM_DP_AUX_DEV", 0x329A);
 	fu_device_set_summary(FU_DEVICE(self), "DisplayPort Protocol Converter");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);

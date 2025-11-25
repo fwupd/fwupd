@@ -29,7 +29,7 @@ fu_synaptics_rmi_v6_device_setup(FuSynapticsRmiDevice *self, GError **error)
 	/* get bootloader ID */
 	f34_data0 = fu_synaptics_rmi_device_read(self, f34->query_base, 0x2, error);
 	if (f34_data0 == NULL) {
-		g_prefix_error(error, "failed to read bootloader ID: ");
+		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint8_safe(f34_data0->data,

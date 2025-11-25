@@ -19,7 +19,7 @@
 #define FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT 1000 /* ms */
 
 struct _FuJabraFileDevice {
-	FuHidDevice parent_instance;
+	FuUsbDevice parent_instance;
 	guint8 sequence_number;
 	guint8 address;
 	guint8 epin;
@@ -27,7 +27,7 @@ struct _FuJabraFileDevice {
 	guint dfu_pid;
 };
 
-G_DEFINE_TYPE(FuJabraFileDevice, fu_jabra_file_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuJabraFileDevice, fu_jabra_file_device, FU_TYPE_USB_DEVICE)
 
 static void
 fu_jabra_file_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -91,7 +91,7 @@ fu_jabra_file_device_tx_cb(FuDevice *device, gpointer user_data, GError **error)
 					      FU_JABRA_FILE_STANDARD_SEND_TIMEOUT,
 					      NULL, /* cancellable */
 					      error)) {
-		g_prefix_error(error, "failed to write to device: ");
+		g_prefix_error_literal(error, "failed to write to device: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -122,7 +122,7 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 					      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
 					      NULL, /* cancellable */
 					      error)) {
-		g_prefix_error(error, "failed to read from device: ");
+		g_prefix_error_literal(error, "failed to read from device: ");
 		return FALSE;
 	}
 	if (cmd_rsp->data[2] == self->address &&
@@ -141,7 +141,7 @@ fu_jabra_file_device_rx_cb(FuDevice *device, gpointer user_data, GError **error)
 						      FU_JABRA_FILE_STANDARD_RECEIVE_TIMEOUT,
 						      NULL, /* cancellable */
 						      error)) {
-			g_prefix_error(error, "failed to read from device: ");
+			g_prefix_error_literal(error, "failed to read from device: ");
 			return FALSE;
 		}
 	}
@@ -656,10 +656,11 @@ fu_jabra_file_device_write_firmware(FuDevice *device,
 		if (!fu_jabra_file_device_file_checksum(self, firmware_checksum, &match, error))
 			return FALSE;
 		if (!match) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "error transferring file to device, checksum doesn't match");
+			g_set_error_literal(
+			    error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error transferring file to device, checksum does not match");
 			return FALSE;
 		}
 	} else {

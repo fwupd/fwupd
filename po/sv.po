@@ -1232,8 +1232,8 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILNAMN CERTIFIKAT PRIVAT-NYCKEL"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FILNAMN ENHETS-ID"
+msgid "FILENAME DEVICE-ID [VERSION]"
+msgstr "FILNAMN ENHETS-ID [VERSION]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
@@ -1562,7 +1562,6 @@ msgid "Host Security Events"
 msgstr "Säkerhetshändelser för värd"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "Värdsäkerhets-ID (HSI) stöds inte"
 
@@ -2268,6 +2267,10 @@ msgstr "Ange antingen %s eller %s:"
 #. TRANSLATORS: Failed to open plugin, hey Arch users
 msgid "Plugin dependencies missing"
 msgstr "Beroenden för insticksmodul saknas"
+
+#. TRANSLATORS: The plugin enumeration might change the device current mode
+msgid "Plugin enumeration may change device state"
+msgstr "Insticksmoduluppräkning kan ändra enhetens tillstånd"
 
 #. TRANSLATORS: The plugin is only for testing
 msgid "Plugin is only for testing"

@@ -4,7 +4,7 @@ title: UEFI Secure Boot Certificates
 
 ## Executive Summary
 
-On the 11th September 2025 a certificate used for signing boot media will expire. Microsoft will not sign updated boot media with the old key, and that **at least one major OEM** is not going to be shipping the expired key on new hardware. This means that existing install media may not boot on some new laptop, desktop and server devices, and that future updates to boot packages may not boot on old hardware.
+On the 26th June 2026 a root certificate used for signing boot media will expire. Microsoft will not sign updated boot media with the old key, and that **at least one major OEM** is not going to be shipping the expired key on new hardware. This means that existing install media may not boot on some new laptop, desktop and server devices, and that future updates to boot packages may not boot on old hardware. It is important to note that machines running Linux **will not stop booting** when the certificate expires.
 
 Microsoft is shipping fixes for select OEMs using Windows Updates automatically. The workaround for Linux is to manually disable secure boot which would be unpopular with anyone that cares about security. Using fwupd is a way that can distribute the updated certificates in Linux.
 

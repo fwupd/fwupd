@@ -56,7 +56,7 @@ fu_ccgx_dmc_device_ensure_dock_id(FuCcgxDmcDevice *self, GError **error)
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "get_dock_id error: ");
+		g_prefix_error_literal(error, "get_dock_id error: ");
 		return FALSE;
 	}
 	self->custom_meta_flag = fu_struct_ccgx_dmc_dock_identity_get_custom_meta_data_flag(st_id);
@@ -87,7 +87,7 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "get_dock_status min size error: ");
+		g_prefix_error_literal(error, "failed to get_dock_status min size: ");
 		return FALSE;
 	}
 
@@ -113,7 +113,7 @@ fu_ccgx_dmc_device_ensure_status(FuCcgxDmcDevice *self, GError **error)
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "get_dock_status actual size error: ");
+		g_prefix_error_literal(error, "failed to get_dock_status actual size: ");
 		return FALSE;
 	}
 	fu_dump_raw(G_LOG_DOMAIN, "DmcDockStatus", buf, bufsz);
@@ -162,7 +162,7 @@ fu_ccgx_dmc_device_send_reset_state_machine(FuCcgxDmcDevice *self, GError **erro
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send reset state machine error: ");
+		g_prefix_error_literal(error, "failed to reset state machine: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -184,7 +184,7 @@ fu_ccgx_dmc_device_send_soft_reset(FuCcgxDmcDevice *self, gboolean reset_later, 
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send reset error: ");
+		g_prefix_error_literal(error, "failed to send reset: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -217,7 +217,7 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self, GBytes *fw, GError 
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send reset error: ");
+		g_prefix_error_literal(error, "failed to send reset: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -239,7 +239,7 @@ fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger,
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send download trigger error: ");
+		g_prefix_error_literal(error, "failed to send download trigger: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -271,7 +271,7 @@ fu_ccgx_dmc_device_send_fwct(FuCcgxDmcDevice *self,
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send fwct error: ");
+		g_prefix_error_literal(error, "failed to send fwct: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -293,7 +293,7 @@ fu_ccgx_dmc_device_read_intr_req(FuCcgxDmcDevice *self, GByteArray *intr_rqt, GE
 					      DMC_GET_REQUEST_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error(error, "read intr rqt error: ");
+		g_prefix_error_literal(error, "failed to read intr rqt: ");
 		return FALSE;
 	}
 
@@ -329,7 +329,7 @@ fu_ccgx_dmc_device_send_write_command(FuCcgxDmcDevice *self,
 					    DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send fwct error: ");
+		g_prefix_error_literal(error, "failed to send fwct: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -351,7 +351,7 @@ fu_ccgx_dmc_device_send_row_data(FuCcgxDmcDevice *self,
 					 DMC_BULK_OUT_PIPE_TIMEOUT,
 					 NULL,
 					 error)) {
-		g_prefix_error(error, "write row data error: ");
+		g_prefix_error_literal(error, "failed to write row data: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -384,7 +384,7 @@ fu_ccgx_dmc_device_get_image_write_status_cb(FuDevice *device, gpointer user_dat
 
 	/* get interrupt request */
 	if (!fu_ccgx_dmc_device_read_intr_req(self, dmc_int_req, error)) {
-		g_prefix_error(error, "failed to read intr req in image write status: ");
+		g_prefix_error_literal(error, "failed to read intr req in image write status: ");
 		return FALSE;
 	}
 
@@ -687,13 +687,13 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			if (!fu_ccgx_dmc_device_send_download_trigger(self,
 								      self->trigger_code,
 								      error)) {
-				g_prefix_error(error, "download trigger error: ");
+				g_prefix_error_literal(error, "download trigger error: ");
 				return FALSE;
 			}
 		}
 	} else if (self->update_model == FU_CCGX_DMC_UPDATE_MODEL_PENDING_RESET) {
 		if (!fu_ccgx_dmc_device_send_soft_reset(self, manual_replug, error)) {
-			g_prefix_error(error, "soft reset error: ");
+			g_prefix_error_literal(error, "soft reset error: ");
 			return FALSE;
 		}
 	}

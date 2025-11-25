@@ -24,6 +24,10 @@ const gchar *
 fu_edid_get_serial_number(FuEdid *self) G_GNUC_NON_NULL(1);
 void
 fu_edid_set_serial_number(FuEdid *self, const gchar *serial_number) G_GNUC_NON_NULL(1);
+const gchar *
+fu_edid_get_product_name(FuEdid *self) G_GNUC_NON_NULL(1);
+void
+fu_edid_set_product_name(FuEdid *self, const gchar *product_name) G_GNUC_NON_NULL(1);
 guint16
 fu_edid_get_product_code(FuEdid *self) G_GNUC_NON_NULL(1);
 void

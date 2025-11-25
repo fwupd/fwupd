@@ -35,7 +35,7 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 					      FU_AVER_HID_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					      error)) {
-			g_prefix_error(error, "failed to send packet: ");
+			g_prefix_error_literal(error, "failed to send packet: ");
 			return FALSE;
 		}
 	}
@@ -47,7 +47,7 @@ fu_aver_hid_device_transfer(FuAverHidDevice *self, GByteArray *req, GByteArray *
 					      FU_AVER_HID_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER,
 					      error)) {
-			g_prefix_error(error, "failed to receive packet: ");
+			g_prefix_error_literal(error, "failed to receive packet: ");
 			return FALSE;
 		}
 		g_debug("custom-isp-cmd: %s [0x%x]",

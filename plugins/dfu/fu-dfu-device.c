@@ -467,7 +467,7 @@ fu_dfu_device_get_target_by_alt_setting(FuDfuDevice *self, guint8 alt_setting, G
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_FOUND,
-		    "No target with alt-setting %i",
+		    "no target with alt-setting %i",
 		    alt_setting);
 	return NULL;
 }
@@ -1089,7 +1089,7 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_WILL_DETACH)) {
 		g_info("bus reset is not required; device will reboot to normal");
 	} else if (!fu_dfu_target_attach(target, progress, error)) {
-		g_prefix_error(error, "failed to attach target: ");
+		g_prefix_error_literal(error, "failed to attach target: ");
 		return FALSE;
 	}
 
@@ -1224,19 +1224,19 @@ fu_dfu_device_download(FuDfuDevice *self,
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
 		if (firmware_vid == 0xffff) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware vendor ID not specified");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware vendor ID not specified");
 			return FALSE;
 		}
 	}
 	if ((flags & FU_DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
 		if (firmware_pid == 0xffff) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "firmware product ID not specified");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "firmware product ID not specified");
 			return FALSE;
 		}
 	}
@@ -1355,10 +1355,10 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 		/* ignore */
 		break;
 	case FU_DFU_STATUS_ERR_VENDOR:
-		g_prefix_error(error, "read protection is active: ");
+		g_prefix_error_literal(error, "read protection is active: "); /* nocheck:error */
 		break;
 	default:
-		g_prefix_error(error,
+		g_prefix_error(error, /* nocheck:error */
 			       "[%s,%s]: ",
 			       fu_dfu_state_to_string(priv->state),
 			       fu_dfu_status_to_string(priv->status));

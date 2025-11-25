@@ -60,14 +60,14 @@ fu_analogix_device_send(FuAnalogixDevice *self,
 					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "send data error: ");
+		g_prefix_error_literal(error, "send data error: ");
 		return FALSE;
 	}
 	if (actual_len != bufsz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "send data length is incorrect");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "send data length is incorrect");
 		return FALSE;
 	}
 
@@ -103,14 +103,14 @@ fu_analogix_device_receive(FuAnalogixDevice *self,
 					    (guint)ANX_BB_TRANSACTION_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "receive data error: ");
+		g_prefix_error_literal(error, "receive data error: ");
 		return FALSE;
 	}
 	if (actual_len != bufsz) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "receive data length is incorrect");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "receive data length is incorrect");
 		return FALSE;
 	}
 
@@ -222,7 +222,7 @@ static gboolean
 fu_analogix_device_probe(FuDevice *device, GError **error)
 {
 	if (!fu_analogix_device_find_interface(FU_USB_DEVICE(device), error)) {
-		g_prefix_error(error, "failed to find update interface: ");
+		g_prefix_error_literal(error, "failed to find update interface: ");
 		return FALSE;
 	}
 
@@ -303,7 +303,7 @@ fu_analogix_device_write_image(FuAnalogixDevice *self,
 				     buf_init,
 				     3,
 				     error)) {
-		g_prefix_error(error, "program initialized failed: ");
+		g_prefix_error_literal(error, "program initialized failed: ");
 		return FALSE;
 	}
 	if (!fu_analogix_device_get_update_status(self, &status, error))
@@ -399,7 +399,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 						    ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
 						    fu_progress_get_child(progress),
 						    error)) {
-			g_prefix_error(error, "program custom define failed: ");
+			g_prefix_error_literal(error, "program custom define failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -412,7 +412,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 						    ANX_BB_WVAL_UPDATE_SECURE_TX,
 						    fu_progress_get_child(progress),
 						    error)) {
-			g_prefix_error(error, "program secure TX failed: ");
+			g_prefix_error_literal(error, "program secure TX failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -425,7 +425,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 						    ANX_BB_WVAL_UPDATE_SECURE_RX,
 						    fu_progress_get_child(progress),
 						    error)) {
-			g_prefix_error(error, "program secure RX failed: ");
+			g_prefix_error_literal(error, "program secure RX failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -438,7 +438,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 						    ANX_BB_WVAL_UPDATE_OCM,
 						    fu_progress_get_child(progress),
 						    error)) {
-			g_prefix_error(error, "program OCM failed: ");
+			g_prefix_error_literal(error, "program OCM failed: ");
 			return FALSE;
 		}
 		fu_progress_step_done(progress);

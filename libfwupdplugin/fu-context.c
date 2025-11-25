@@ -135,7 +135,7 @@ fu_context_get_fdt(FuContext *self, GError **error)
 					    file,
 					    FU_FIRMWARE_PARSE_FLAG_NO_SEARCH,
 					    error)) {
-			g_prefix_error(error, "failed to parse FDT: ");
+			g_prefix_error_literal(error, "failed to parse FDT: ");
 			return NULL;
 		}
 		priv->fdt = g_steal_pointer(&fdt_tmp);
@@ -1098,8 +1098,14 @@ fu_context_hwid_quirk_cb(FuContext *self,
 	FuContextPrivate *priv = GET_PRIVATE(self);
 	if (value != NULL) {
 		g_auto(GStrv) values = g_strsplit(value, ",", -1);
-		for (guint j = 0; values[j] != NULL; j++)
-			g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+		for (guint i = 0; values[i] != NULL; i++) {
+			const gchar *value_tmp = values[i];
+			if (g_str_has_prefix(value, "~")) {
+				g_hash_table_remove(priv->hwid_flags, value_tmp + 1);
+				continue;
+			}
+			g_hash_table_add(priv->hwid_flags, g_strdup(value_tmp));
+		}
 	}
 }
 
@@ -1123,6 +1129,7 @@ fu_context_load_hwinfo(FuContext *self,
 		       GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	FuConfigLoadFlags config_load_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	GPtrArray *guids;
 	g_autoptr(GError) error_hwids = NULL;
 	g_autoptr(GError) error_bios_settings = NULL;
@@ -1150,7 +1157,11 @@ fu_context_load_hwinfo(FuContext *self,
 	fu_progress_add_step(progress, FWUPD_STATUS_LOADING, 94, "reload-bios-settings");
 
 	/* required always */
-	if (!fu_config_load(priv->config, error))
+	if (flags & FU_CONTEXT_HWID_FLAG_WATCH_FILES)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_WATCH_FILES;
+	if (flags & FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS)
+		config_load_flags |= FU_CONFIG_LOAD_FLAG_FIX_PERMISSIONS;
+	if (!fu_config_load(priv->config, config_load_flags, error))
 		return FALSE;
 
 	/* run all the HWID setup funcs */
@@ -1812,10 +1823,10 @@ fu_context_get_default_esp(FuContext *self, GError **error)
 		}
 
 		if (g_hash_table_size(esp_scores) == 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no EFI system partition found");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no EFI system partition found");
 			return NULL;
 		}
 
@@ -1898,7 +1909,7 @@ fu_context_get_esp_volume_by_hard_drive_device_path(FuContext *self,
 	}
 
 	/* failed */
-	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "could not find EFI DP");
 	return NULL;
 }
 

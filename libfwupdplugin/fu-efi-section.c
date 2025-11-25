@@ -89,12 +89,12 @@ fu_efi_section_parse_lzma_sections(FuEfiSection *self,
 		return FALSE;
 	blob_uncomp = fu_lzma_decompress_bytes(blob, 128 * 1024 * 1024, error);
 	if (blob_uncomp == NULL) {
-		g_prefix_error(error, "failed to decompress: ");
+		g_prefix_error_literal(error, "failed to decompress: ");
 		return FALSE;
 	}
 	stream_uncomp = g_memory_input_stream_new_from_bytes(blob_uncomp);
 	if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream_uncomp, 0, flags, error)) {
-		g_prefix_error(error, "failed to parse sections: ");
+		g_prefix_error_literal(error, "failed to parse sections: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -137,18 +137,18 @@ fu_efi_section_parse_version(FuEfiSection *self,
 	g_autoptr(GByteArray) buf = NULL;
 
 	if (!fu_input_stream_read_u16(stream, 0x0, &version_raw, G_LITTLE_ENDIAN, error)) {
-		g_prefix_error(error, "failed to read raw version: ");
+		g_prefix_error_literal(error, "failed to read raw version: ");
 		return FALSE;
 	}
 	fu_firmware_set_version_raw(FU_FIRMWARE(self), version_raw);
 	buf = fu_input_stream_read_byte_array(stream, sizeof(guint16), G_MAXSIZE, NULL, error);
 	if (buf == NULL) {
-		g_prefix_error(error, "failed to read version buffer: ");
+		g_prefix_error_literal(error, "failed to read version buffer: ");
 		return FALSE;
 	}
 	version = fu_utf16_to_utf8_byte_array(buf, G_LITTLE_ENDIAN, error);
 	if (version == NULL) {
-		g_prefix_error(error, "failed to convert to UTF-16: ");
+		g_prefix_error_literal(error, "failed to convert to UTF-16: ");
 		return FALSE;
 	}
 	fu_firmware_set_version(FU_FIRMWARE(self), version); /* nocheck:set-version */
@@ -168,7 +168,7 @@ fu_efi_section_parse_compression_sections(FuEfiSection *self,
 	if (fu_struct_efi_section_compression_get_compression_type(st) ==
 	    FU_EFI_COMPRESSION_TYPE_NOT_COMPRESSED) {
 		if (!fu_efi_parse_sections(FU_FIRMWARE(self), stream, st->len, flags, error)) {
-			g_prefix_error(error, "failed to parse sections: ");
+			g_prefix_error_literal(error, "failed to parse sections: ");
 			return FALSE;
 		}
 	} else {
@@ -180,7 +180,7 @@ fu_efi_section_parse_compression_sections(FuEfiSection *self,
 		if (lz77_stream == NULL)
 			return FALSE;
 		if (!fu_efi_parse_sections(FU_FIRMWARE(self), lz77_stream, 0, flags, error)) {
-			g_prefix_error(error, "failed to parse sections: ");
+			g_prefix_error_literal(error, "failed to parse sections: ");
 			return FALSE;
 		}
 	}
@@ -320,7 +320,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 	offset += st->len;
 	partial_stream = fu_partial_input_stream_new(stream, offset, size - offset, error);
 	if (partial_stream == NULL) {
-		g_prefix_error(error, "failed to cut data: ");
+		g_prefix_error_literal(error, "failed to cut data: ");
 		return FALSE;
 	}
 	fu_firmware_set_offset(firmware, offset);
@@ -331,14 +331,14 @@ fu_efi_section_parse(FuFirmware *firmware,
 	/* nested volume */
 	if (priv->type == FU_EFI_SECTION_TYPE_VOLUME_IMAGE) {
 		if (!fu_efi_section_parse_volume_image(self, partial_stream, flags, error)) {
-			g_prefix_error(error, "failed to parse nested volume: ");
+			g_prefix_error_literal(error, "failed to parse nested volume: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
 		   g_strcmp0(fu_firmware_get_id(firmware), FU_EFI_SECTION_GUID_LZMA_COMPRESS) ==
 		       0) {
 		if (!fu_efi_section_parse_lzma_sections(self, partial_stream, flags, error)) {
-			g_prefix_error(error, "failed to parse lzma section: ");
+			g_prefix_error_literal(error, "failed to parse lzma section: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_GUID_DEFINED &&
@@ -352,12 +352,12 @@ fu_efi_section_parse(FuFirmware *firmware,
 			  fu_firmware_get_id(firmware));
 	} else if (priv->type == FU_EFI_SECTION_TYPE_USER_INTERFACE) {
 		if (!fu_efi_section_parse_user_interface(self, partial_stream, flags, error)) {
-			g_prefix_error(error, "failed to parse user interface: ");
+			g_prefix_error_literal(error, "failed to parse user interface: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_VERSION) {
 		if (!fu_efi_section_parse_version(self, partial_stream, flags, error)) {
-			g_prefix_error(error, "failed to parse version: ");
+			g_prefix_error_literal(error, "failed to parse version: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_COMPRESSION) {
@@ -365,7 +365,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 							       partial_stream,
 							       flags,
 							       error)) {
-			g_prefix_error(error, "failed to parse compression: ");
+			g_prefix_error_literal(error, "failed to parse compression: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_FREEFORM_SUBTYPE_GUID) {
@@ -373,7 +373,7 @@ fu_efi_section_parse(FuFirmware *firmware,
 								partial_stream,
 								flags,
 								error)) {
-			g_prefix_error(error, "failed to parse compression: ");
+			g_prefix_error_literal(error, "failed to parse compression: ");
 			return FALSE;
 		}
 	} else if (priv->type == FU_EFI_SECTION_TYPE_PEI_DEPEX ||

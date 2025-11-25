@@ -1,0 +1,18 @@
+{
+  "name": "SteelSeries Arctis Nova 3P Headset",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "095e56cdf09d5811382a0b0d0e1ff2ec3aa0a77e59b02597f3aaab782bf16374-SteelSeries_Nova_3P_Headset_1.0.0.cab",
+      "emulation-url": "20bfb20058c54431b4e4cb1f1fa2fd93b18f6f950f6aade37155a498fc19254f-SteelSeries_Nova_3P_Headset_1.0.0.zip",
+      "components": [
+        {
+          "version": "1.0.0",
+          "guids": [
+            "8de6b474-c01f-50ec-b44f-892069a95e58"
+          ]
+        }
+      ]
+    }
+  ]
+}

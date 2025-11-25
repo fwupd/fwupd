@@ -24,6 +24,8 @@ This plugin supports the following protocol ID:
 These devices build their GUIDs by adding the `OUI` from the DpAux DPCD with
 additional B&R-specific device, variant and revision metadata, e.g.
 
+- `DPAUX\OUI_00006065&DEV_00002F1A`
+- `DPAUX\OUI_00006065&DEV_00002F1A&VARIANT_00000000`
 - `DPAUX\OUI_00006065&DEV_00002F1A&VARIANT_00000000&HW_REV_A0`
 
 ## Update Behavior

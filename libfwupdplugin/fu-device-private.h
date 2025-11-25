@@ -81,11 +81,7 @@ void
 fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags) G_GNUC_NON_NULL(1);
 
 void
-fu_device_add_event(FuDevice *self, FuDeviceEvent *event);
-void
 fu_device_clear_events(FuDevice *self);
-GPtrArray *
-fu_device_get_events(FuDevice *self);
 void
 fu_device_set_target(FuDevice *self, FuDevice *target);
 

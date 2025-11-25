@@ -256,7 +256,10 @@ fwupd_codec_to_json_string(FwupdCodec *self, FwupdCodecFlags flags, GError **err
 	json_generator_set_root(json_generator, json_root);
 	data = json_generator_to_data(json_generator, NULL);
 	if (data == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed to convert to json");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to convert to json");
 		return NULL;
 	}
 	return g_steal_pointer(&data);
@@ -605,7 +608,7 @@ fwupd_codec_string_append_time(GString *str, guint idt, const gchar *key, guint6
 		return;
 
 	date = g_date_time_new_from_unix_utc((gint64)value);
-	tmp = g_date_time_format(date, "%F");
+	tmp = g_date_time_format(date, "%F %T");
 	fwupd_codec_string_append(str, idt, key, tmp);
 }
 

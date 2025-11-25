@@ -109,11 +109,11 @@ fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
 			    GError **error)
 {
 	if (!fu_usi_dock_mcu_device_tx(self, tag2, inbuf, inbufsz, error)) {
-		g_prefix_error(error, "failed to transmit: ");
+		g_prefix_error_literal(error, "failed to transmit: ");
 		return FALSE;
 	}
 	if (!fu_usi_dock_mcu_device_rx(self, FU_USI_DOCK_MCU_CMD_ALL, outbuf, outbufsz, error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -132,7 +132,7 @@ fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 					 &response,
 					 sizeof(response),
 					 error)) {
-		g_prefix_error(error, "failed to send CMD MCU: ");
+		g_prefix_error_literal(error, "failed to send CMD MCU: ");
 		return FALSE;
 	}
 	if (response == 0x1) {
@@ -383,11 +383,11 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 
 	/* get status and component versions */
 	if (!fu_usi_dock_mcu_device_get_status(self, error)) {
-		g_prefix_error(error, "failed to get status: ");
+		g_prefix_error_literal(error, "failed to get status: ");
 		return FALSE;
 	}
 	if (!fu_usi_dock_mcu_device_enumerate_children(self, error)) {
-		g_prefix_error(error, "failed to enumerate children: ");
+		g_prefix_error_literal(error, "failed to enumerate children: ");
 		return FALSE;
 	}
 
@@ -572,7 +572,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 			     30,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to wait for initial: ");
+		g_prefix_error_literal(error, "failed to wait for initial: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -592,7 +592,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 			     30,
 			     NULL,
 			     error)) {
-		g_prefix_error(error, "failed to wait for erase: ");
+		g_prefix_error_literal(error, "failed to wait for erase: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -642,7 +642,7 @@ fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 			     300,
 			     &checksum,
 			     error)) {
-		g_prefix_error(error, "failed to wait for checksum: ");
+		g_prefix_error_literal(error, "failed to wait for checksum: ");
 		return FALSE;
 	}
 

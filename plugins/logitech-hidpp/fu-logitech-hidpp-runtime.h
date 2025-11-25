@@ -8,11 +8,11 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_HIDPP_RUNTIME (fu_logitech_hidpp_runtime_get_type())
+#define FU_TYPE_LOGITECH_HIDPP_RUNTIME (fu_logitech_hidpp_runtime_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuLogitechHidppRuntime,
 			 fu_logitech_hidpp_runtime,
 			 FU,
-			 HIDPP_RUNTIME,
+			 LOGITECH_HIDPP_RUNTIME,
 			 FuHidrawDevice)
 
 struct _FuLogitechHidppRuntimeClass {

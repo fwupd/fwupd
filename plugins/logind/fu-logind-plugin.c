@@ -42,7 +42,7 @@ fu_logind_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 	    NULL,
 	    error);
 	if (self->logind_proxy == NULL) {
-		g_prefix_error(error, "failed to connect to logind: ");
+		g_prefix_error_literal(error, "failed to connect to logind: ");
 		return FALSE;
 	}
 	name_owner = g_dbus_proxy_get_name_owner(self->logind_proxy);

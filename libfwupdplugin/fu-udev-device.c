@@ -349,7 +349,7 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		g_autofree gchar *subsystem_tmp =
 		    fu_udev_device_get_symlink_target(self, "subsystem", error);
 		if (subsystem_tmp == NULL) {
-			g_prefix_error(error, "failed to read subsystem: ");
+			g_prefix_error_literal(error, "failed to read subsystem: ");
 			return FALSE;
 		}
 		fu_udev_device_set_subsystem(self, subsystem_tmp);
@@ -1237,7 +1237,10 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 			    fwupd_strerror(errno),
 			    errno);
 #else
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "unspecified ioctl error");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "unspecified ioctl error");
 #endif
 		return FALSE;
 	}
@@ -1245,10 +1248,10 @@ fu_udev_device_ioctl(FuUdevDevice *self,
 	/* success */
 	return TRUE;
 #else
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Not supported as <sys/ioctl.h> not found");
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "not supported as <sys/ioctl.h> not found");
 	return FALSE;
 #endif
 }

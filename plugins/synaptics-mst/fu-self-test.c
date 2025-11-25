@@ -190,7 +190,7 @@ fu_synaptics_mst_firmware_xml_func(void)
 	g_assert_true(ret);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "bfcdf3e6ca6cef45543bfbb57509c92aec9a39fb");
+	g_assert_cmpstr(csum1, ==, "67b8fc4661f7585a8cd6c46ef6088293d4399135");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);

@@ -18,12 +18,14 @@ struct _FuLogitechHidppRuntimeBolt {
 	guint8 pairing_slots;
 };
 
-G_DEFINE_TYPE(FuLogitechHidppRuntimeBolt, fu_logitech_hidpp_runtime_bolt, FU_TYPE_HIDPP_RUNTIME)
+G_DEFINE_TYPE(FuLogitechHidppRuntimeBolt,
+	      fu_logitech_hidpp_runtime_bolt,
+	      FU_TYPE_LOGITECH_HIDPP_RUNTIME)
 
 static gboolean
 fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
@@ -45,7 +47,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
 		} else {
-			g_prefix_error(&error_local, "failed to detach to bootloader: ");
+			g_prefix_error_literal(&error_local, "failed to detach to bootloader: ");
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -57,7 +59,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 static void
 fu_logitech_hidpp_runtime_bolt_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuLogitechHidppRuntimeBolt *self = FU_HIDPP_RUNTIME_BOLT(device);
+	FuLogitechHidppRuntimeBolt *self = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
 	fwupd_codec_string_append_int(str, idt, "PairingSlots", self->pairing_slots);
 }
 
@@ -68,9 +70,10 @@ fu_logitech_hidpp_runtime_bolt_find_paired_device(FuDevice *device, guint16 hidp
 
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index(children, i);
-		if (FU_IS_HIDPP_DEVICE(child) &&
-		    fu_logitech_hidpp_device_get_hidpp_pid(FU_HIDPP_DEVICE(child)) == hidpp_pid)
-			return FU_HIDPP_DEVICE(g_object_ref(child));
+		if (FU_IS_LOGITECH_HIDPP_DEVICE(child) &&
+		    fu_logitech_hidpp_device_get_hidpp_pid(FU_LOGITECH_HIDPP_DEVICE(child)) ==
+			hidpp_pid)
+			return FU_LOGITECH_HIDPP_DEVICE(g_object_ref(child));
 	}
 
 	return NULL;
@@ -107,7 +110,7 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 						    FuLogitechHidppHidppMsg *msg,
 						    GError **error)
 {
-	FuLogitechHidppRuntime *runtime = FU_HIDPP_RUNTIME(self);
+	FuLogitechHidppRuntime *runtime = FU_LOGITECH_HIDPP_RUNTIME(self);
 	gboolean reachable = FALSE;
 	guint16 hidpp_pid;
 	g_autoptr(FuLogitechHidppDevice) child = NULL;
@@ -129,7 +132,7 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 			fu_device_probe_invalidate(FU_DEVICE(child));
 			locker = fu_device_locker_new(FU_DEVICE(child), error);
 			if (locker == NULL) {
-				g_prefix_error(error, "cannot rescan paired device: ");
+				g_prefix_error_literal(error, "cannot rescan paired device: ");
 				return FALSE;
 			}
 			fu_device_remove_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -176,8 +179,8 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidppRuntimeBolt *
 static void
 fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimeBolt *bolt = FU_HIDPP_RUNTIME_BOLT(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
 
 	for (guint i = 1; i <= bolt->pairing_slots; i++) {
 		g_autofree gchar *name = NULL;
@@ -276,8 +279,8 @@ fu_logitech_hidpp_runtime_bolt_find_newest_msg(GPtrArray *msgs, guint8 device_id
 static gboolean
 fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 {
-	FuLogitechHidppRuntime *runtime = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimeBolt *self = FU_HIDPP_RUNTIME_BOLT(device);
+	FuLogitechHidppRuntime *runtime = FU_LOGITECH_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimeBolt *self = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
 	const guint timeout = 1; /* ms */
 	g_autoptr(GPtrArray) msgs = g_ptr_array_new_with_free_func(g_free);
 
@@ -335,8 +338,8 @@ static gboolean
 fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidppRuntimeBolt *bolt = FU_HIDPP_RUNTIME_BOLT(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntimeBolt *bolt = FU_LOGITECH_HIDPP_RUNTIME_BOLT(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
 	msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_SHORT;
@@ -346,7 +349,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 	msg->data[0] = 0x02; /* FW Version (contains the number of pairing slots) */
 	msg->hidpp_version = 1;
 	if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-		g_prefix_error(error, "failed to fetch the number of pairing slots: ");
+		g_prefix_error_literal(error, "failed to fetch the number of pairing slots: ");
 		return FALSE;
 	}
 	bolt->pairing_slots = msg->data[8];
@@ -368,7 +371,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to read device config: ");
+			g_prefix_error_literal(error, "failed to read device config: ");
 			return FALSE;
 		}
 
@@ -444,7 +447,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications(self, error)) {
-		g_prefix_error(error, "failed to enable notifications: ");
+		g_prefix_error_literal(error, "failed to enable notifications: ");
 		return FALSE;
 	}
 	fu_logitech_hidpp_runtime_bolt_poll_peripherals(device);
@@ -490,7 +493,6 @@ fu_logitech_hidpp_runtime_bolt_init(FuLogitechHidppRuntimeBolt *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
-	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_set_name(FU_DEVICE(self), "Bolt Receiver");
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 }

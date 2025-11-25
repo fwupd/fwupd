@@ -106,7 +106,7 @@ fu_ifwi_fpt_firmware_parse(FuFirmware *firmware,
 			partial_stream =
 			    fu_partial_input_stream_new(stream, data_offset, data_length, error);
 			if (partial_stream == NULL) {
-				g_prefix_error(error, "failed to cut FPT image: ");
+				g_prefix_error_literal(error, "failed to cut FPT image: ");
 				return FALSE;
 			}
 			if (!fu_firmware_parse_stream(img, partial_stream, 0x0, flags, error))

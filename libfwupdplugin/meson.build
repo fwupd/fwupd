@@ -17,6 +17,7 @@ fwupdplugin_structs = [
   'fu-firmware.rs', # fuzzing
   'fu-fmap.rs', # fuzzing
   'fu-hid.rs', # fuzzing
+  'fu-hidraw.rs', # fuzzing
   'fu-ifd.rs', # fuzzing
   'fu-ifwi.rs', # fuzzing
   'fu-ihex.rs', # fuzzing
@@ -495,6 +496,7 @@ if get_option('tests')
     ],
     install: true,
     install_rpath: libdir_pkg,
+    install_tag: 'tests',
     install_dir: installed_test_bindir,
   )
   test('fwupdplugin-self-test', e, is_parallel: false, timeout: 180, env: env)

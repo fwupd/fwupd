@@ -190,7 +190,7 @@ fu_focalfp_hid_device_enter_upgrade_mode(FuFocalfpHidDevice *self, GError **erro
 	guint8 rbuf[64] = {0x0};
 
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
-		g_prefix_error(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
+		g_prefix_error_literal(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
 
@@ -377,11 +377,11 @@ fu_focalfp_hid_device_setup(FuDevice *device, GError **error)
 
 	/* get current firmware version */
 	if (!fu_focalfp_hid_device_read_reg(self, 0xA6, buf, error)) {
-		g_prefix_error(error, "failed to read version1: ");
+		g_prefix_error_literal(error, "failed to read version1: ");
 		return FALSE;
 	}
 	if (!fu_focalfp_hid_device_read_reg(self, 0xAD, buf + 1, error)) {
-		g_prefix_error(error, "failed to read version2: ");
+		g_prefix_error_literal(error, "failed to read version2: ");
 		return FALSE;
 	}
 	fu_device_set_version_raw(device, fu_memread_uint16(buf, G_BIG_ENDIAN));
@@ -554,7 +554,7 @@ fu_focalfp_hid_device_detach_cb(FuDevice *device, gpointer user_data, GError **e
 	guint8 uc_mode = 0;
 
 	if (!fu_focalfp_hid_device_enter_upgrade_mode(self, error)) {
-		g_prefix_error(error, "failed to enter upgrade mode: ");
+		g_prefix_error_literal(error, "failed to enter upgrade mode: ");
 		return FALSE;
 	}
 
@@ -587,7 +587,7 @@ fu_focalfp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **er
 
 	/* command to go from APP --> Bootloader -- but we do not check crc */
 	if (!fu_focalfp_hid_device_io(self, wbuf, 1, rbuf, 6, error)) {
-		g_prefix_error(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
+		g_prefix_error_literal(error, "failed to FU_FOCALFP_CMD_ENTER_UPGRADE_MODE: ");
 		return FALSE;
 	}
 	fu_device_sleep(device, 200);

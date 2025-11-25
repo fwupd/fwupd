@@ -17,9 +17,8 @@ G_DEFINE_TYPE(FuMmDfotaDevice, fu_mm_dfota_device, FU_TYPE_MM_DEVICE)
 
 #define FU_MM_DFOTA_DEVICE_FILENAME "dfota_update.bin"
 
-#define FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS    90
-#define FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS 15
-#define FU_MM_DFOTA_DEVICE_TIMEOUT_SECS		     5
+#define FU_MM_DFOTA_DEVICE_FOTA_READ_TIMEOUT_SECS 90
+#define FU_MM_DFOTA_DEVICE_TIMEOUT_SECS		  5
 
 static gboolean
 fu_mm_dfota_device_probe(FuDevice *device, GError **error)
@@ -35,7 +34,7 @@ fu_mm_dfota_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), "AT+QFLST=?", TRUE, error)) {
-		g_prefix_error(error, "listing files not supported: ");
+		g_prefix_error_literal(error, "listing files not supported: ");
 		return FALSE;
 	}
 	/* if listing firmware file does not fail, there is an old firmware file to remove */
@@ -52,7 +51,7 @@ fu_mm_dfota_device_setup(FuDevice *device, GError **error)
 				 "AT+QFDEL=\"" FU_MM_DFOTA_DEVICE_FILENAME "\"",
 				 TRUE,
 				 error)) {
-		g_prefix_error(error, "failed to delete existing firmware file: ");
+		g_prefix_error_literal(error, "failed to delete existing firmware file: ");
 		return FALSE;
 	}
 
@@ -100,7 +99,7 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 					1500,
 					FU_IO_CHANNEL_FLAG_NONE,
 					error)) {
-		g_prefix_error(error, "failed to upload firmware to the device: ");
+		g_prefix_error_literal(error, "failed to upload firmware to the device: ");
 		return FALSE;
 	}
 	if (acks_expected == 0)
@@ -112,7 +111,7 @@ fu_mm_dfota_device_upload_chunk(FuMmDfotaDevice *self, FuChunk *chk, GError **er
 					      FU_IO_CHANNEL_FLAG_NONE,
 					      error);
 	if (ack_bytes == NULL) {
-		g_prefix_error(error, "failed to read response: ");
+		g_prefix_error_literal(error, "failed to read response: ");
 		return FALSE;
 	}
 
@@ -155,7 +154,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 	/* +QFUPL: <filesize>,<hex checksum> */
 	result_regex = g_regex_new("\\r\\n\\+QFUPL:\\s*(\\d+),([0-9a-f]+)\\r\\n", 0, 0, error);
 	if (result_regex == NULL) {
-		g_prefix_error(error, "failed to build regex: ");
+		g_prefix_error_literal(error, "failed to build regex: ");
 		return FALSE;
 	}
 
@@ -165,7 +164,7 @@ fu_mm_dfota_device_parse_upload_result(FuMmDfotaDevice *self,
 						 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 						 error);
 	if (result_bytes == NULL) {
-		g_prefix_error(error, "failed to read AT+QFUPL response: ");
+		g_prefix_error_literal(error, "failed to read AT+QFUPL response: ");
 		return FALSE;
 	}
 	result = g_bytes_get_data(result_bytes, NULL);
@@ -282,7 +281,7 @@ fu_mm_dfota_device_parse_fota_response(FuMmDfotaDevice *self,
 	/* +QIND: "FOTA","<STATUS>"(,<number>)? */
 	fota_regex = g_regex_new("\\+QIND:\\s*\"FOTA\",\"([A-Z]+)\"(,(\\d+))?", 0, 0, error);
 	if (fota_regex == NULL) {
-		g_prefix_error(error, "failed to build regex: ");
+		g_prefix_error_literal(error, "failed to build regex: ");
 		return FALSE;
 	}
 
@@ -391,6 +390,7 @@ fu_mm_dfota_device_attach(FuDevice *device, FuProgress *progress, GError **error
 			return FALSE;
 	}
 
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -415,7 +415,7 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 				     FU_MM_DFOTA_DEVICE_FILENAME,
 				     fu_firmware_get_size(firmware));
 	if (!fu_mm_device_at_cmd(FU_MM_DEVICE(self), upload_cmd, TRUE, error)) {
-		g_prefix_error(error, "failed to enable upload mode: ");
+		g_prefix_error_literal(error, "failed to enable upload mode: ");
 		return FALSE;
 	}
 	if (!fu_mm_dfota_device_upload_stream(self, stream, error))
@@ -424,10 +424,10 @@ fu_mm_dfota_device_write_firmware(FuDevice *device,
 				 "AT+QFOTADL=\"/data/ufs/" FU_MM_DFOTA_DEVICE_FILENAME "\"",
 				 TRUE,
 				 error)) {
-		g_prefix_error(error, "failed to start update: ");
+		g_prefix_error_literal(error, "failed to start update: ");
 		return FALSE;
 	}
-	fu_device_sleep(FU_DEVICE(self), FU_MM_DFOTA_DEVICE_FOTA_RESTART_TIMEOUT_SECS * 1000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -462,8 +462,8 @@ fu_mm_dfota_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 0, "prepare-fw");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "detach");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 97, "write");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1, "attach");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 13, "write");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 85, "attach");
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "reload");
 }
 
@@ -471,6 +471,7 @@ static void
 fu_mm_dfota_device_init(FuMmDfotaDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.quectel.dfota");
+	fu_device_set_remove_delay(FU_DEVICE(self), 15000);
 }
 
 static void

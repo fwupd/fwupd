@@ -177,7 +177,7 @@ fu_android_boot_device_write(FuAndroidBootDevice *self,
 
 	/* rewind */
 	if (!fu_udev_device_seek(FU_UDEV_DEVICE(self), 0x0, error)) {
-		g_prefix_error(error, "failed to rewind: ");
+		g_prefix_error_literal(error, "failed to rewind: ");
 		return FALSE;
 	}
 

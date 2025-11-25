@@ -102,8 +102,7 @@ fu_csv_entry_get_value_by_column_id_uint64(FuCsvEntry *self,
 	const gchar *str_value = fu_csv_entry_get_value_by_column_id(self, column_id);
 
 	if (str_value == NULL) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "CSV value not found");
-
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "value not found");
 		return FALSE;
 	}
 

@@ -15,6 +15,8 @@ G_DECLARE_DERIVABLE_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuUdevDevice)
 
 #define FU_MM_DEVICE_FLAG_USE_BRANCH "use-branch"
 
+#define FU_MM_DEVICE_FLAG_MAKE_SERIAL_RAW "make-serial-raw"
+
 /* less ifdefs */
 #if !MM_CHECK_VERSION(1, 24, 0)
 #define MM_MODEM_FIRMWARE_UPDATE_METHOD_DFOTA	      (1 << 5)

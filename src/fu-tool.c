@@ -237,7 +237,6 @@ fu_util_start_engine(FuUtil *self, FuEngineLoadFlags flags, FuProgress *progress
 			g_info("failed to stop daemon: %s", error_local->message);
 	}
 #endif
-	flags |= FU_ENGINE_LOAD_FLAG_NO_IDLE_SOURCES;
 	flags |= FU_ENGINE_LOAD_FLAG_BUILTIN_PLUGINS;
 	flags |= FU_ENGINE_LOAD_FLAG_EXTERNAL_PLUGINS;
 	if (!fu_engine_load(self->engine, flags, progress, error))
@@ -1032,6 +1031,7 @@ fu_util_display_current_message(FuUtil *self)
 static gboolean
 fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 {
+	g_autofree gchar *firmware_basename = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuRelease) release = fu_release_new();
 	g_autoptr(GInputStream) stream_fw = NULL;
@@ -1061,6 +1061,10 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 	fu_release_set_stream(release, stream_fw);
 	fu_progress_step_done(self->progress);
 
+	/* some plugins need the firmware name */
+	firmware_basename = g_path_get_basename(values[0]);
+	fu_release_set_firmware_basename(release, firmware_basename);
+
 	/* load engine */
 	if (!fu_util_start_engine(self,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG |
@@ -1083,6 +1087,10 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	/* optional version */
+	if (g_strv_length(values) >= 3)
+		fu_release_set_version(release, values[2]);
+
 	self->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-changed",
@@ -1095,7 +1103,7 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(devices, g_object_ref(device));
 		if (!fu_engine_composite_prepare(self->engine, devices, error)) {
-			g_prefix_error(error, "failed to prepare composite action: ");
+			g_prefix_error_literal(error, "failed to prepare composite action: ");
 			return FALSE;
 		}
 	}
@@ -1124,7 +1132,8 @@ fu_util_install_blob(FuUtil *self, gchar **values, GError **error)
 			    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 			g_ptr_array_add(devices_new, g_steal_pointer(&device_new));
 			if (!fu_engine_composite_cleanup(self->engine, devices_new, error)) {
-				g_prefix_error(error, "failed to cleanup composite action: ");
+				g_prefix_error_literal(error,
+						       "failed to cleanup composite action: ");
 				return FALSE;
 			}
 		}
@@ -2452,10 +2461,10 @@ fu_util_enable_test_devices(FuUtil *self, gchar **values, GError **error)
 	if (!found) {
 		if (!fu_util_set_test_devices_enabled(self, FALSE, error))
 			return FALSE;
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "failed to enable fwupd-tests remote");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to enable fwupd-tests remote");
 		return FALSE;
 	}
 
@@ -3249,7 +3258,7 @@ fu_util_firmware_build(FuUtil *self, gchar **values, GError **error)
 
 	/* parse XML */
 	if (!xb_builder_source_load_bytes(source, blob_src, XB_BUILDER_SOURCE_FLAG_NONE, error)) {
-		g_prefix_error(error, "could not parse XML: ");
+		g_prefix_error_literal(error, "could not parse XML: ");
 		fwupd_error_convert(error);
 		return FALSE;
 	}
@@ -3476,7 +3485,7 @@ fu_util_firmware_patch(FuUtil *self, gchar **values, GError **error)
 
 	/* parse offset */
 	if (!fu_strtoull(values[1], &offset, 0x0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error)) {
-		g_prefix_error(error, "failed to parse offset: ");
+		g_prefix_error_literal(error, "failed to parse offset: ");
 		return FALSE;
 	}
 
@@ -3485,7 +3494,10 @@ fu_util_firmware_patch(FuUtil *self, gchar **values, GError **error)
 	if (patch == NULL)
 		return FALSE;
 	if (g_bytes_get_size(patch) == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "no data provided");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "no data provided");
 		return FALSE;
 	}
 
@@ -3824,11 +3836,11 @@ fu_util_security(FuUtil *self, gchar **values, GError **error)
 	g_autofree gchar *host_security_id = NULL;
 
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4269,7 +4281,7 @@ fu_util_set_bios_setting(FuUtil *self, gchar **input, GError **error)
 
 	if (!fu_engine_modify_bios_settings(self->engine, settings, FALSE, error)) {
 		if (!g_error_matches(*error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			g_prefix_error(error, "failed to set BIOS setting: ");
+			g_prefix_error_literal(error, "failed to set BIOS setting: ");
 		return FALSE;
 	}
 
@@ -4301,11 +4313,11 @@ static gboolean
 fu_util_security_fix(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -4338,11 +4350,11 @@ static gboolean
 fu_util_security_undo(FuUtil *self, gchar **values, GError **error)
 {
 #ifndef HAVE_HSI
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    /* TRANSLATORS: error message for unsupported feature */
-		    _("Host Security ID (HSI) is not supported"));
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    /* TRANSLATORS: error message for unsupported feature */
+			    _("Host Security ID (HSI) is not supported"));
 	return FALSE;
 #endif /* HAVE_HSI */
 
@@ -5291,7 +5303,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "install-blob",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("FILENAME DEVICE-ID"),
+			      _("FILENAME DEVICE-ID [VERSION]"),
 			      /* TRANSLATORS: command description */
 			      _("Install a raw firmware blob on a device"),
 			      fu_util_install_blob);
@@ -5816,6 +5828,7 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	self->ctx = fu_context_new();
+	fu_context_add_flag(self->ctx, FU_CONTEXT_FLAG_NO_IDLE_SOURCES);
 	self->engine = fu_engine_new(self->ctx);
 	g_signal_connect(FU_ENGINE(self->engine),
 			 "device-request",

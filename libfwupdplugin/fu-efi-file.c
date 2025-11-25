@@ -141,7 +141,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	/* add simple blob */
 	partial_stream = fu_partial_input_stream_new(stream, st->len, size - st->len, error);
 	if (partial_stream == NULL) {
-		g_prefix_error(error, "failed to cut EFI blob: ");
+		g_prefix_error_literal(error, "failed to cut EFI blob: ");
 		return FALSE;
 	}
 
@@ -165,7 +165,7 @@ fu_efi_file_parse(FuFirmware *firmware,
 	/* add sections */
 	if (priv->type != FU_EFI_FILE_TYPE_FFS_PAD && priv->type != FU_EFI_FILE_TYPE_RAW) {
 		if (!fu_efi_parse_sections(firmware, partial_stream, 0, flags, error)) {
-			g_prefix_error(error, "failed to add firmware image: ");
+			g_prefix_error_literal(error, "failed to add firmware image: ");
 			return FALSE;
 		}
 	} else {

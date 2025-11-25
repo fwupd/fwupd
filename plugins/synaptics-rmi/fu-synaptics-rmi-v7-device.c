@@ -52,7 +52,7 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 					   enable_req,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to enable programming: ");
+		g_prefix_error_literal(error, "failed to enable programming: ");
 		return FALSE;
 	}
 
@@ -94,7 +94,7 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 					   erase_cmd,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to unlock erasing: ");
+		g_prefix_error_literal(error, "failed to unlock erasing: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
@@ -104,12 +104,12 @@ fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
 						   RMI_F34_ERASE_WAIT_MS,
 						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 						   error)) {
-		g_prefix_error(error, "failed to wait for idle: ");
+		g_prefix_error_literal(error, "failed to wait for idle: ");
 		return FALSE;
 	}
 
 	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-		g_prefix_error(error, "failed to get flash success: ");
+		g_prefix_error_literal(error, "failed to get flash success: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -147,7 +147,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 					   erase_cmd,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to unlock erasing: ");
+		g_prefix_error_literal(error, "failed to unlock erasing: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
@@ -157,12 +157,12 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 							   RMI_F34_ERASE_WAIT_MS,
 							   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
 							   error)) {
-			g_prefix_error(error, "failed to wait for idle: ");
+			g_prefix_error_literal(error, "failed to wait for idle: ");
 			return FALSE;
 		}
 	}
 	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-		g_prefix_error(error, "failed to get flash success: ");
+		g_prefix_error_literal(error, "failed to get flash success: ");
 		return FALSE;
 	}
 
@@ -180,7 +180,7 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 						   erase_config_cmd,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to erase core config: ");
+			g_prefix_error_literal(error, "failed to erase core config: ");
 			return FALSE;
 		}
 
@@ -191,11 +191,11 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 			RMI_F34_ERASE_WAIT_MS,
 			RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
 			error)) {
-			g_prefix_error(error, "failed to wait for idle: ");
+			g_prefix_error_literal(error, "failed to wait for idle: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-			g_prefix_error(error, "failed to get flash success: ");
+			g_prefix_error_literal(error, "failed to get flash success: ");
 			return FALSE;
 		}
 	}
@@ -285,7 +285,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 					   req_offset,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write offset: ");
+		g_prefix_error_literal(error, "failed to write offset: ");
 		return FALSE;
 	}
 
@@ -313,7 +313,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 						   req_trans_sz,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to write transfer length: ");
+			g_prefix_error_literal(error, "failed to write transfer length: ");
 			return FALSE;
 		}
 		fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_SIGNATURE);
@@ -322,7 +322,7 @@ fu_synaptics_rmi_v7_device_write_partition_signature(FuSynapticsRmiDevice *self,
 						   req_cmd,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to write signature command: ");
+			g_prefix_error_literal(error, "failed to write signature command: ");
 			return FALSE;
 		}
 		chk_blob = fu_chunk_get_bytes(chk);
@@ -363,7 +363,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					   req_partition_id,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write flash partition: ");
+		g_prefix_error_literal(error, "failed to write flash partition: ");
 		return FALSE;
 	}
 	fu_byte_array_append_uint16(req_offset, 0x0, G_LITTLE_ENDIAN);
@@ -372,7 +372,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					   req_offset,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write offset: ");
+		g_prefix_error_literal(error, "failed to write offset: ");
 		return FALSE;
 	}
 
@@ -403,7 +403,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 						   req_trans_sz,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to write transfer length: ");
+			g_prefix_error_literal(error, "failed to write transfer length: ");
 			return FALSE;
 		}
 		fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_WRITE);
@@ -412,7 +412,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 						   req_cmd,
 						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						   error)) {
-			g_prefix_error(error, "failed to flash command: ");
+			g_prefix_error_literal(error, "failed to flash command: ");
 			return FALSE;
 		}
 		chk_blob = fu_chunk_get_bytes(chk);
@@ -458,7 +458,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 					   req_partition_id,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write flash partition id: ");
+		g_prefix_error_literal(error, "failed to write flash partition id: ");
 		return NULL;
 	}
 	fu_byte_array_append_uint16(req_addr_zero, 0x0, G_LITTLE_ENDIAN);
@@ -467,7 +467,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 					   req_addr_zero,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write flash config address: ");
+		g_prefix_error_literal(error, "failed to write flash config address: ");
 		return NULL;
 	}
 
@@ -480,7 +480,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 					   req_transfer_length,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to set transfer length: ");
+		g_prefix_error_literal(error, "failed to set transfer length: ");
 		return NULL;
 	}
 
@@ -491,18 +491,18 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self, GError **error
 					   req_cmd,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write command to read: ");
+		g_prefix_error_literal(error, "failed to write command to read: ");
 		return NULL;
 	}
 	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-		g_prefix_error(error, "failed to wait: ");
+		g_prefix_error_literal(error, "failed to wait: ");
 		return NULL;
 	}
 
 	/* read back entire buffer in blocks */
 	res = fu_synaptics_rmi_device_read(self, f34->data_base + 0x5, (guint32)key_size, error);
 	if (res == NULL) {
-		g_prefix_error(error, "failed to read: ");
+		g_prefix_error_literal(error, "failed to read: ");
 		return NULL;
 	}
 
@@ -527,7 +527,7 @@ fu_synaptics_rmi_v7_device_secure_check(FuSynapticsRmiDevice *self,
 
 	pubkey = fu_synaptics_rmi_v7_device_get_pubkey(self, error);
 	if (pubkey == NULL) {
-		g_prefix_error(error, "get pubkey failed: ");
+		g_prefix_error_literal(error, "get pubkey failed: ");
 		return FALSE;
 	}
 
@@ -693,7 +693,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 
 	/* erase all */
 	if (!fu_synaptics_rmi_v7_device_erase_all(self, error)) {
-		g_prefix_error(error, "failed to erase all: ");
+		g_prefix_error_literal(error, "failed to erase all: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -788,7 +788,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 					   req_partition_id,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write flash partition id: ");
+		g_prefix_error_literal(error, "failed to write flash partition id: ");
 		return FALSE;
 	}
 	fu_byte_array_append_uint16(req_addr_zero, 0x0, G_LITTLE_ENDIAN);
@@ -797,7 +797,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 					   req_addr_zero,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write flash config address: ");
+		g_prefix_error_literal(error, "failed to write flash config address: ");
 		return FALSE;
 	}
 
@@ -808,7 +808,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 					   req_transfer_length,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to set transfer length: ");
+		g_prefix_error_literal(error, "failed to set transfer length: ");
 		return FALSE;
 	}
 
@@ -819,11 +819,11 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 					   req_cmd,
 					   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					   error)) {
-		g_prefix_error(error, "failed to write command to read: ");
+		g_prefix_error_literal(error, "failed to write command to read: ");
 		return FALSE;
 	}
 	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-		g_prefix_error(error, "failed to wait: ");
+		g_prefix_error_literal(error, "failed to wait: ");
 		return FALSE;
 	}
 
@@ -834,7 +834,7 @@ fu_synaptics_rmi_v7_device_read_flash_config(FuSynapticsRmiDevice *self, GError 
 					 (guint32)flash->block_size * (guint32)flash->config_length,
 					 error);
 	if (res == NULL) {
-		g_prefix_error(error, "failed to read: ");
+		g_prefix_error_literal(error, "failed to read: ");
 		return FALSE;
 	}
 
@@ -893,7 +893,7 @@ fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error)
 
 	f34_data0 = fu_synaptics_rmi_device_read(self, f34->query_base, 1, error);
 	if (f34_data0 == NULL) {
-		g_prefix_error(error, "failed to read bootloader ID: ");
+		g_prefix_error_literal(error, "failed to read bootloader ID: ");
 		return FALSE;
 	}
 	offset = (f34_data0->data[0] & 0b00000111) + 1;
@@ -969,7 +969,7 @@ fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **err
 		return FALSE;
 	f34_data = fu_synaptics_rmi_device_read(self, f34->data_base, 0x1, error);
 	if (f34_data == NULL) {
-		g_prefix_error(error, "failed to read the f01 data base: ");
+		g_prefix_error_literal(error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
 	status = f34_data->data[0];

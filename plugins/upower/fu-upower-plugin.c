@@ -137,7 +137,7 @@ fu_upower_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 							    NULL,
 							    error);
 	if (self->proxy_manager == NULL) {
-		g_prefix_error(error, "failed to connect to upower: ");
+		g_prefix_error_literal(error, "failed to connect to upower: ");
 		return FALSE;
 	}
 	self->proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
@@ -149,7 +149,7 @@ fu_upower_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 						    NULL,
 						    error);
 	if (self->proxy == NULL) {
-		g_prefix_error(error, "failed to connect to upower: ");
+		g_prefix_error_literal(error, "failed to connect to upower: ");
 		return FALSE;
 	}
 	name_owner = g_dbus_proxy_get_name_owner(self->proxy);

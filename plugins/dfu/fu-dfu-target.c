@@ -109,7 +109,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Invalid number of sectors: %s",
+			    "invalid number of sectors: %s",
 			    dfuse_sector_id);
 		return FALSE;
 	}
@@ -119,7 +119,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Invalid sector ID: %s",
+			    "invalid sector ID: %s",
 			    dfuse_sector_id);
 		return FALSE;
 	}
@@ -130,7 +130,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Invalid sector size: %s",
+			    "invalid sector size: %s",
 			    dfuse_sector_id);
 		return FALSE;
 	}
@@ -159,7 +159,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Invalid sector multiplier: %s",
+			    "invalid sector multiplier: %s",
 			    tmp);
 		return FALSE;
 	}
@@ -192,7 +192,7 @@ fu_dfu_target_parse_sector(FuDfuTarget *self,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Invalid sector type: %s",
+			    "invalid sector type: %s",
 			    tmp);
 		return FALSE;
 	}
@@ -276,7 +276,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 				 G_MAXUINT32,
 				 FU_INTEGER_BASE_16,
 				 error)) {
-			g_prefix_error(error, "sector address invalid: ");
+			g_prefix_error_literal(error, "sector address invalid: ");
 			return FALSE;
 		}
 		addr = (guint32)addr_tmp;
@@ -299,7 +299,7 @@ fu_dfu_target_parse_sectors(FuDfuTarget *self, const gchar *alt_name, GError **e
 							(i - 1) / 2,
 							j,
 							error)) {
-				g_prefix_error(error, "Failed to parse: '%s': ", sectors[j]);
+				g_prefix_error(error, "failed to parse: '%s': ", sectors[j]);
 				return FALSE;
 			}
 		}
@@ -483,17 +483,17 @@ fu_dfu_target_check_status(FuDfuTarget *self, GError **error)
 	status = fu_dfu_device_get_status(device);
 	if (fu_dfu_device_get_version(device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
 		if (status == FU_DFU_STATUS_ERR_VENDOR) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Read protection is active");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "read protection is active");
 			return FALSE;
 		}
 		if (status == FU_DFU_STATUS_ERR_TARGET) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Address is wrong or unsupported");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "address is wrong or unsupported");
 			return FALSE;
 		}
 	}
@@ -715,7 +715,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 
 	/* find out if the write was successful, waiting for BUSY to clear */
 	if (!fu_dfu_target_check_status(self, error)) {
-		g_prefix_error(error, "cannot wait for busy: ");
+		g_prefix_error_literal(error, "cannot wait for busy: ");
 		return FALSE;
 	}
 

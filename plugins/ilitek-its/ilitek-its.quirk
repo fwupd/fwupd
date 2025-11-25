@@ -1,0 +1,16 @@
+# ILI2901 Bootloader
+[HIDRAW\VEN_222A&DEV_FF29]
+Plugin = ilitek_its
+Flags = is-bootloader
+
+# Framework Laptop 12 (13th Gen Intel Core) (FWID: 0x0049)
+[HIDRAW\VEN_222A&DEV_5539]
+Plugin = ilitek_its
+
+# Lenovo X1 (FWID: 0x0035, EDID: AUO-6DB4)
+[HIDRAW\VEN_222A&DEV_5520]
+Plugin = ilitek_its
+
+# Lenovo X1 (FWID: 0x0037, EDID: CMN-1490)
+[HIDRAW\VEN_222A&DEV_54D7]
+Plugin = ilitek_its

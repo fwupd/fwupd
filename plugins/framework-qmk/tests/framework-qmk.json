@@ -1,0 +1,26 @@
+{
+  "name": "Framework QMK",
+  "interactive": false,
+  "steps": [
+    {
+      "emulation-file": "@enumeration_datadir@/framework16-macropad-setup.json",
+      "components": [
+        {
+          "guids": [
+            "aa1f48fb-ae6f-5f3f-96eb-1ce0002cdae3"
+          ]
+        }
+      ]
+    },
+    {
+      "emulation-file": "@enumeration_datadir@/framework16-ansi-setup.json",
+      "components": [
+        {
+          "guids": [
+            "bf9a4319-494f-5c88-9637-72f97222cac9"
+          ]
+        }
+      ]
+    }
+  ]
+}

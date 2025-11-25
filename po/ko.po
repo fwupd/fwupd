@@ -1076,10 +1076,6 @@ msgid "FILENAME CERTIFICATE PRIVATE-KEY"
 msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "FILENAME DEVICE-ID"
-msgstr "FILENAME DEVICE-ID"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
 msgstr "<파일이름> <오프셋> <데이터> [<펌웨어형식>]"
 
@@ -1369,7 +1365,6 @@ msgid "Host Security Events"
 msgstr "호스트 보안 이벤트"
 
 #. TRANSLATORS: error message for unsupported feature
-#, c-format
 msgid "Host Security ID (HSI) is not supported"
 msgstr "호스트 보안 ID(HSI)를 지원하지 않습니다"
 

@@ -83,7 +83,7 @@ fu_genesys_scaler_device_enter_serial_debug_mode(FuGenesysScalerDevice *self, GE
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error entering Serial Debug Mode: ");
+		g_prefix_error_literal(error, "error entering Serial Debug Mode: ");
 		return FALSE;
 	}
 
@@ -112,7 +112,7 @@ fu_genesys_scaler_device_exit_serial_debug_mode(FuGenesysScalerDevice *self, GEr
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error exiting Serial Debug Mode: ");
+		g_prefix_error_literal(error, "error exiting Serial Debug Mode: ");
 		return FALSE;
 	}
 
@@ -140,7 +140,7 @@ fu_genesys_scaler_device_enter_single_step_mode(FuGenesysScalerDevice *self, GEr
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error entering Single Step Mode: ");
+		g_prefix_error_literal(error, "error entering Single Step Mode: ");
 		return FALSE;
 	}
 
@@ -157,7 +157,7 @@ fu_genesys_scaler_device_enter_single_step_mode(FuGenesysScalerDevice *self, GEr
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error entering Single Step Mode: ");
+		g_prefix_error_literal(error, "error entering Single Step Mode: ");
 		return FALSE;
 	}
 
@@ -184,7 +184,7 @@ fu_genesys_scaler_device_exit_single_step_mode(FuGenesysScalerDevice *self, GErr
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error exiting Single Step Mode: ");
+		g_prefix_error_literal(error, "error exiting Single Step Mode: ");
 		return FALSE;
 	}
 
@@ -211,7 +211,7 @@ fu_genesys_scaler_device_enter_debug_mode(FuGenesysScalerDevice *self, GError **
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error entering Debug Mode: ");
+		g_prefix_error_literal(error, "error entering Debug Mode: ");
 		return FALSE;
 	}
 
@@ -369,7 +369,7 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading GPIO-Out Register 0x%02x%02x: ",
+			    "error reading GPIO-Out Register 0x%02x%02x",
 			    data_out[1],
 			    data_out[2]);
 		return FALSE;
@@ -452,7 +452,7 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading GPIO-Enable Register 0x%02x%02x: ",
+			    "error reading GPIO-Enable Register 0x%02x%02x",
 			    data_en[1],
 			    data_en[2]);
 		return FALSE;
@@ -548,7 +548,7 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INTERNAL,
-			    "error reading register 0x%02x%02x%02x%02x%02x: ",
+			    "error reading register 0x%02x%02x%02x%02x%02x",
 			    data[0],
 			    data[1],
 			    data[2],
@@ -631,7 +631,7 @@ fu_genesys_scaler_device_enter_isp_mode(FuGenesysScalerDevice *self, GError **er
 				  1000 /* 1ms */,
 				  self,
 				  error)) {
-		g_prefix_error(error, "error entering ISP mode: ");
+		g_prefix_error_literal(error, "error entering ISP mode: ");
 		return FALSE;
 	}
 
@@ -658,7 +658,7 @@ fu_genesys_scaler_device_exit_isp_mode(FuGenesysScalerDevice *self, GError **err
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error exiting ISP mode: ");
+		g_prefix_error_literal(error, "error exiting ISP mode: ");
 		return FALSE;
 	}
 
@@ -749,7 +749,7 @@ fu_genesys_scaler_device_get_level(FuGenesysScalerDevice *self, guint8 *level, G
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error getting level: ");
+		g_prefix_error_literal(error, "error getting level: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100); /* ms */
@@ -779,7 +779,7 @@ fu_genesys_scaler_device_get_version(FuGenesysScalerDevice *self,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error getting version: ");
+		g_prefix_error_literal(error, "error getting version: ");
 		return FALSE;
 	}
 
@@ -816,7 +816,7 @@ fu_genesys_scaler_device_get_public_key(FuGenesysScalerDevice *self,
 						    GENESYS_SCALER_USB_TIMEOUT,
 						    NULL,
 						    error)) {
-			g_prefix_error(error, "error getting public key: ");
+			g_prefix_error_literal(error, "error getting public key: ");
 			return FALSE;
 		}
 
@@ -959,7 +959,7 @@ fu_genesys_scaler_device_wait_flash_control_register_cb(FuDevice *dev,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error reading flash control register: ");
+		g_prefix_error_literal(error, "error reading flash control register: ");
 		return FALSE;
 	}
 
@@ -1003,7 +1003,7 @@ fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error sending flash control write enable: ");
+		g_prefix_error_literal(error, "error sending flash control write enable: ");
 		return FALSE;
 	}
 
@@ -1020,7 +1020,7 @@ fu_genesys_scaler_device_flash_control_write_enable(FuGenesysScalerDevice *self,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error sending flash control write enable: ");
+		g_prefix_error_literal(error, "error sending flash control write enable: ");
 		return FALSE;
 	}
 
@@ -1133,7 +1133,8 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 				  50, /* 50ms */
 				  &helper,
 				  error)) {
-		g_prefix_error(error, "error waiting for flash control read status register: ");
+		g_prefix_error_literal(error,
+				       "error waiting for flash control read status register: ");
 		return FALSE;
 	}
 
@@ -1185,7 +1186,8 @@ fu_genesys_scaler_device_flash_control_sector_erase(FuGenesysScalerDevice *self,
 				  50, /* 50ms */
 				  &helper,
 				  error)) {
-		g_prefix_error(error, "error waiting for flash control read status register: ");
+		g_prefix_error_literal(error,
+				       "error waiting for flash control read status register: ");
 		return FALSE;
 	}
 
@@ -1316,7 +1318,8 @@ fu_genesys_scaler_device_flash_control_page_program(FuGenesysScalerDevice *self,
 			     20,
 			     &helper,
 			     error)) {
-		g_prefix_error(error, "error waiting for flash control read status register: ");
+		g_prefix_error_literal(error,
+				       "error waiting for flash control read status register: ");
 		return FALSE;
 	}
 
@@ -1422,7 +1425,7 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error setting dddci data: ");
+		g_prefix_error_literal(error, "error setting dddci data: ");
 		return FALSE;
 	}
 
@@ -1441,7 +1444,7 @@ fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
 					    GENESYS_SCALER_USB_TIMEOUT,
 					    NULL,
 					    error)) {
-		g_prefix_error(error, "error getting dddci data: ");
+		g_prefix_error_literal(error, "error getting dddci data: ");
 		return FALSE;
 	}
 
@@ -1456,7 +1459,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 						     FuGenesysScalerFirmwarePacketVersion *ver,
 						     GError **error)
 {
-	guint8 buf[0x40];
+	guint8 buf[0x40] = {0};
 	guint8 offset = 4;
 
 	if (!fu_genesys_scaler_device_get_ddcci_data(
@@ -1476,7 +1479,7 @@ fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "error dddci length too large, got 0x%x, expected <= 0x%zx: ",
+				    "error dddci length too large, got 0x%x, expected <= 0x%zx",
 				    (guint)len,
 				    sizeof(buf));
 			return FALSE;
@@ -1897,7 +1900,7 @@ fu_genesys_scaler_device_set_quirk_kv(FuDevice *device,
 static void
 fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 {
-	fu_device_set_vendor(FU_DEVICE(self), "MStar Semiconductor");
+	fu_device_set_vendor(FU_DEVICE(self), "MStar");
 	fu_device_set_name(FU_DEVICE(self), "TSUMG");
 	fu_device_add_protocol(FU_DEVICE(self), "com.mstarsemi.scaler");
 	fu_device_retry_set_delay(FU_DEVICE(self), 10); /* 10ms */

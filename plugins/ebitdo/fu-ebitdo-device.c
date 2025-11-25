@@ -48,7 +48,10 @@ fu_ebitdo_device_send(FuEbitdoDevice *self,
 
 	/* check size */
 	if (in_len > 64 - 8) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_DATA, "input buffer too large");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "input buffer too large");
 		return FALSE;
 	}
 
@@ -144,9 +147,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "payload too small, expected %" G_GSIZE_FORMAT
-					    " got %u",
-					    out_len,
+					    "payload too small, expected 0x%x got 0x%x",
+					    (guint)out_len,
 					    fu_struct_ebitdo_pkt_get_payload_len(st_hdr));
 				return FALSE;
 			}
@@ -195,9 +197,8 @@ fu_ebitdo_device_receive(FuEbitdoDevice *self, guint8 *out, gsize out_len, GErro
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INVALID_DATA,
-					    "outbuf size wrong, expected %" G_GSIZE_FORMAT
-					    " got %i",
-					    out_len,
+					    "outbuf size wrong, expected 0x%x got 0x%i",
+					    (guint)out_len,
 					    fu_struct_ebitdo_pkt_get_cmd_len(st_hdr));
 				return FALSE;
 			}
@@ -254,10 +255,10 @@ fu_ebitdo_device_validate(FuEbitdoDevice *self, GError **error)
 	/* verify the vendor prefix against a allowlist */
 	ven = fu_device_get_vendor(FU_DEVICE(self));
 	if (ven == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_DATA,
-			    "could not check vendor descriptor: ");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_DATA,
+				    "could not check vendor descriptor");
 		return FALSE;
 	}
 	for (guint i = 0; allowlist[i] != NULL; i++) {
@@ -447,7 +448,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE(device);
 	const guint8 *buf;
 	gsize bufsz = 0;
-	guint32 serial_new[3];
+	guint32 serial_new[3] = {0};
 	g_autoptr(GBytes) fw_hdr = NULL;
 	g_autoptr(GInputStream) stream_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -501,11 +502,11 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   buf,
 				   bufsz,
 				   error)) {
-		g_prefix_error(error, "failed to set up firmware header: ");
+		g_prefix_error_literal(error, "failed to set up firmware header: ");
 		return FALSE;
 	}
 	if (!fu_ebitdo_device_receive(self, NULL, 0, error)) {
-		g_prefix_error(error, "failed to get ACK for fw update header: ");
+		g_prefix_error_literal(error, "failed to get ACK for fw update header: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -566,7 +567,7 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   (guint8 *)serial_new,
 				   sizeof(serial_new),
 				   error)) {
-		g_prefix_error(error, "failed to set encoding ID: ");
+		g_prefix_error_literal(error, "failed to set encoding ID: ");
 		return FALSE;
 	}
 
@@ -578,11 +579,12 @@ fu_ebitdo_device_write_firmware(FuDevice *device,
 				   NULL,
 				   0,
 				   error)) {
-		g_prefix_error(error, "failed to mark firmware as successful: ");
+		g_prefix_error_literal(error, "failed to mark firmware as successful: ");
 		return FALSE;
 	}
 	if (!fu_ebitdo_device_receive(self, NULL, 0, &error_local)) {
-		g_prefix_error(&error_local, "failed to get ACK for mark firmware as successful: ");
+		g_prefix_error_literal(&error_local,
+				       "failed to get ACK for mark firmware as successful: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 			fu_device_set_remove_delay(device, 0);
 			g_debug("%s", error_local->message);
@@ -605,7 +607,7 @@ fu_ebitdo_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the FuUsbDevice */
 	if (!fu_usb_device_reset(FU_USB_DEVICE(device), &error_local)) {
-		g_prefix_error(&error_local, "failed to force-reset device: ");
+		g_prefix_error_literal(&error_local, "failed to force-reset device: ");
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 			fu_device_set_remove_delay(device, 0);
 			g_debug("%s", error_local->message);

@@ -22,7 +22,10 @@ fu_bios_plugin_startup(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
 	if (g_strcmp0(vendor, "coreboot") == 0) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "system uses coreboot");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "system uses coreboot");
 		return FALSE;
 	}
 

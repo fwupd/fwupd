@@ -11,7 +11,7 @@
 #include "fu-elantp-struct.h"
 
 struct _FuElantpFirmware {
-	FuFirmwareClass parent_instance;
+	FuFirmware parent_instance;
 	guint16 module_id;
 	guint16 ic_type;
 	guint16 iap_addr;

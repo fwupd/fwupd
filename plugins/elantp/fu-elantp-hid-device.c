@@ -143,7 +143,7 @@ fu_elantp_hid_device_ensure_iap_ctrl(FuElantpHidDevice *self, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read IAPControl: ");
+		g_prefix_error_literal(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
 	self->iap_ctrl = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -176,22 +176,22 @@ fu_elantp_hid_device_read_force_table_enable(FuElantpHidDevice *self, GError **e
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read force type cmd: ");
+		g_prefix_error_literal(error, "failed to read force type cmd: ");
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "forcetype cmd not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "forcetype cmd not supported");
 		return FALSE;
 	}
 	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "force type table not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "force type table not supported");
 		return FALSE;
 	}
 
@@ -209,21 +209,21 @@ fu_elantp_hid_device_read_haptic_enable(FuElantpHidDevice *self, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read haptic enable cmd: ");
+		g_prefix_error_literal(error, "failed to read haptic enable cmd: ");
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
 	if (value == 0xFFFF || value == FU_ETP_CMD_I2C_FORCE_TYPE_ENABLE) {
-		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not hapticpad");
 		return FALSE;
 	}
 
 	if ((buf[0] & ETP_FW_FORCE_TYPE_ENABLE_BIT) == 0 ||
 	    (buf[0] & ETP_FW_EEPROM_ENABLE_BIT) == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "the haptic eeprom not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "the haptic eeprom not supported");
 		return FALSE;
 	}
 
@@ -242,7 +242,7 @@ fu_elantp_hid_device_get_forcetable_address(FuElantpHidDevice *self, GError **er
 		return TRUE;
 	}
 	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_FORCE_ADDR, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to read force table address cmd: ");
+		g_prefix_error_literal(error, "failed to read force table address cmd: ");
 		return FALSE;
 	}
 	addr_wrds = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -275,12 +275,12 @@ fu_elantp_hid_device_write_fw_password(FuElantpHidDevice *self,
 		return TRUE;
 
 	if (!fu_elantp_hid_device_write_cmd(self, FU_ETP_CMD_I2C_FW_PW, pw, error)) {
-		g_prefix_error(error, "failed to write fw password cmd: ");
+		g_prefix_error_literal(error, "failed to write fw password cmd: ");
 		return FALSE;
 	}
 
 	if (!fu_elantp_hid_device_read_cmd(self, FU_ETP_CMD_I2C_FW_PW, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to read fw password cmd: ");
+		g_prefix_error_literal(error, "failed to read fw password cmd: ");
 		return FALSE;
 	}
 	value = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -314,7 +314,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read HID ID: ");
+		g_prefix_error_literal(error, "failed to read HID ID: ");
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -326,7 +326,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read fw version: ");
+		g_prefix_error_literal(error, "failed to read fw version: ");
 		return FALSE;
 	}
 	fwver = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -341,7 +341,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read bootloader version: ");
+		g_prefix_error_literal(error, "failed to read bootloader version: ");
 		return FALSE;
 	}
 	if (self->pattern >= 1) {
@@ -358,7 +358,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read module ID: ");
+		g_prefix_error_literal(error, "failed to read module ID: ");
 		return FALSE;
 	}
 	self->module_id = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -376,7 +376,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read OSM version: ");
+		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -386,7 +386,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 						   buf,
 						   sizeof(buf),
 						   error)) {
-			g_prefix_error(error, "failed to read IC body: ");
+			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
 		self->ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
@@ -430,7 +430,7 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 		g_debug("no forcetable detected: %s", error_forcetable->message);
 	} else {
 		if (!fu_elantp_hid_device_get_forcetable_address(self, error)) {
-			g_prefix_error(error, "get forcetable address fail: ");
+			g_prefix_error_literal(error, "get forcetable address fail: ");
 			return FALSE;
 		}
 		self->force_table_support = TRUE;
@@ -493,10 +493,10 @@ fu_elantp_hid_device_prepare_firmware(FuDevice *device,
 	force_table_support =
 	    fu_elantp_firmware_get_forcetable_support(FU_ELANTP_FIRMWARE(firmware));
 	if (self->force_table_support != force_table_support) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "firmware incompatible, forcetable incorrect.");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "firmware incompatible, forcetable incorrect.");
 		return NULL;
 	}
 	if (self->force_table_support) {
@@ -552,7 +552,7 @@ fu_elantp_hid_device_filling_forcetable_firmware(FuDevice *device,
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_INVALID_FILE,
-			    "forcetable address wrong (%x,%x): ",
+			    "forcetable address wrong (0x%x, 0x%x)",
 			    force_table_addr,
 			    self->force_table_addr);
 		return FALSE;
@@ -658,10 +658,10 @@ fu_elantp_hid_device_write_firmware(FuDevice *device,
 			bufsz,
 			fu_elantp_firmware_get_forcetable_addr(FU_ELANTP_FIRMWARE(firmware)),
 			error)) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_WRITE,
-				    "filling forcetable failed");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_WRITE,
+					    "filling forcetable failed");
 			return FALSE;
 		}
 		chunks = fu_chunk_array_new(buf2 + iap_addr,
@@ -789,7 +789,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read OSM version: ");
+		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
 	tmp = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -799,7 +799,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 						   buf,
 						   sizeof(buf),
 						   error)) {
-			g_prefix_error(error, "failed to read IC body: ");
+			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
 		ic_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN) & 0xFF;
@@ -814,7 +814,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read bootloader version: ");
+		g_prefix_error_literal(error, "failed to read bootloader version: ");
 		return FALSE;
 	}
 	if (self->pattern >= 1) {
@@ -844,7 +844,7 @@ fu_elantp_hid_device_detach(FuDevice *device, FuProgress *progress, GError **err
 							   buf,
 							   sizeof(buf),
 							   error)) {
-				g_prefix_error(error, "failed to read IAP type: ");
+				g_prefix_error_literal(error, "failed to read IAP type: ");
 				return FALSE;
 			}
 			self->iap_type = fu_memread_uint16(buf, G_LITTLE_ENDIAN);
@@ -898,11 +898,11 @@ fu_elantp_hid_device_attach(FuDevice *device, FuProgress *progress, GError **err
 					    FU_ETP_CMD_I2C_IAP_RESET,
 					    ETP_I2C_ENABLE_REPORT,
 					    error)) {
-		g_prefix_error(error, "cannot enable TP report: ");
+		g_prefix_error_literal(error, "cannot enable TP report: ");
 		return FALSE;
 	}
 	if (!fu_elantp_hid_device_write_cmd(self, 0x0306, 0x003, error)) {
-		g_prefix_error(error, "cannot switch to TP PTP mode: ");
+		g_prefix_error_literal(error, "cannot switch to TP PTP mode: ");
 		return FALSE;
 	}
 	if (!fu_elantp_hid_device_ensure_iap_ctrl(self, error))
@@ -967,7 +967,7 @@ fu_elantp_hid_device_init(FuElantpHidDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Touchpad");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
-	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
+	fu_device_set_vendor(FU_DEVICE(self), "Elan");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_priority(FU_DEVICE(self), 1); /* better than i2c */
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);

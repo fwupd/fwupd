@@ -71,7 +71,7 @@ fu_corsair_bp_command(FuCorsairBp *self,
 					       NULL,
 					       error);
 	if (!ret) {
-		g_prefix_error(error, "failed to write command: ");
+		g_prefix_error_literal(error, "failed to write command: ");
 		return FALSE;
 	}
 	if (actual_len != self->cmd_write_size) {
@@ -97,7 +97,7 @@ fu_corsair_bp_command(FuCorsairBp *self,
 					       NULL,
 					       error);
 	if (!ret) {
-		g_prefix_error(error, "failed to get command response: ");
+		g_prefix_error_literal(error, "failed to get command response: ");
 		return FALSE;
 	}
 	if (actual_len != self->cmd_read_size) {
@@ -159,7 +159,7 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 	guint8 init_cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x0d, 0x00, 0x03};
 	guint8 write_cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x06, 0x00};
 	if (!fu_corsair_bp_command(self, init_cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
-		g_prefix_error(error, "firmware init fail: ");
+		g_prefix_error_literal(error, "firmware init fail: ");
 		return FALSE;
 	}
 
@@ -169,7 +169,7 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 				     firmware_size,
 				     G_LITTLE_ENDIAN,
 				     error)) {
-		g_prefix_error(error, "cannot serialize firmware size: ");
+		g_prefix_error_literal(error, "cannot serialize firmware size: ");
 		return FALSE;
 	}
 	if (!fu_memcpy_safe(write_cmd,
@@ -180,11 +180,11 @@ fu_corsair_bp_write_first_chunk(FuCorsairBp *self,
 			    0,
 			    fu_chunk_get_data_sz(chunk),
 			    error)) {
-		g_prefix_error(error, "cannot set data: ");
+		g_prefix_error_literal(error, "cannot set data: ");
 		return FALSE;
 	}
 	if (!fu_corsair_bp_command(self, write_cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
-		g_prefix_error(error, "write command fail: ");
+		g_prefix_error_literal(error, "write command fail: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -202,11 +202,11 @@ fu_corsair_bp_write_chunk(FuCorsairBp *self, FuChunk *chunk, GError **error)
 			    0,
 			    fu_chunk_get_data_sz(chunk),
 			    error)) {
-		g_prefix_error(error, "cannot set data: ");
+		g_prefix_error_literal(error, "cannot set data: ");
 		return FALSE;
 	}
 	if (!fu_corsair_bp_command(self, cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
-		g_prefix_error(error, "write command fail: ");
+		g_prefix_error_literal(error, "write command fail: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -263,7 +263,7 @@ fu_corsair_bp_set_mode(FuCorsairBp *self, FuCorsairDeviceMode mode, GError **err
 	cmd[CORSAIR_OFFSET_CMD_SET_MODE] = mode;
 
 	if (!fu_corsair_bp_command(self, cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
-		g_prefix_error(error, "set mode command fail: ");
+		g_prefix_error_literal(error, "set mode command fail: ");
 		return FALSE;
 	}
 
@@ -282,7 +282,7 @@ fu_corsair_bp_write_firmware_chunks(FuCorsairBp *self,
 	fu_progress_set_steps(progress, fu_chunk_array_length(chunks) + 1);
 
 	if (!fu_corsair_bp_write_first_chunk(self, first_chunk, firmware_size, error)) {
-		g_prefix_error(error, "cannot write first chunk: ");
+		g_prefix_error_literal(error, "cannot write first chunk: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -309,7 +309,7 @@ fu_corsair_bp_commit_firmware(FuCorsairBp *self, GError **error)
 {
 	guint8 commit_cmd[FU_CORSAIR_MAX_CMD_SIZE] = {0x08, 0x05, 0x01, 0x00};
 	if (!fu_corsair_bp_command(self, commit_cmd, CORSAIR_TRANSACTION_TIMEOUT, TRUE, error)) {
-		g_prefix_error(error, "firmware commit fail: ");
+		g_prefix_error_literal(error, "firmware commit fail: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -333,21 +333,21 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL) {
-		g_prefix_error(error, "cannot get firmware data: ");
+		g_prefix_error_literal(error, "cannot get firmware data: ");
 		return FALSE;
 	}
 	firmware_raw = fu_bytes_get_data_safe(blob, &firmware_size, error);
 	if (firmware_raw == NULL) {
-		g_prefix_error(error, "cannot get firmware data: ");
+		g_prefix_error_literal(error, "cannot get firmware data: ");
 		return FALSE;
 	}
 
 	/* the firmware size should be greater than 1 chunk */
 	if (firmware_size <= first_chunk_size) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "update file should be bigger");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "update file should be bigger");
 		return FALSE;
 	}
 
@@ -355,7 +355,7 @@ fu_corsair_bp_write_firmware(FuDevice *device,
 	rest_of_firmware =
 	    fu_bytes_new_offset(blob, first_chunk_size, firmware_size - first_chunk_size, error);
 	if (rest_of_firmware == NULL) {
-		g_prefix_error(error, "cannot get firmware past first chunk: ");
+		g_prefix_error_literal(error, "cannot get firmware past first chunk: ");
 		return FALSE;
 	}
 	chunks =
@@ -386,7 +386,7 @@ fu_corsair_bp_activate_firmware(FuCorsairBp *self, FuFirmware *firmware, GError 
 
 	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL) {
-		g_prefix_error(error, "cannot get firmware bytes: ");
+		g_prefix_error_literal(error, "cannot get firmware bytes: ");
 		return FALSE;
 	}
 	fu_memwrite_uint32(&cmd[CORSAIR_OFFSET_CMD_CRC],

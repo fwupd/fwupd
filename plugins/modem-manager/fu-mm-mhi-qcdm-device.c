@@ -25,10 +25,10 @@ fu_mm_mhi_qcdm_device_detach(FuDevice *device, FuProgress *progress, GError **er
 
 	/* sanity check */
 	if (self->firehose_prog_file == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_FOUND,
-			    "Firehose prog filename is not set for the device");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "Firehose prog filename is not set for the device");
 		return FALSE;
 	}
 
@@ -116,7 +116,10 @@ fu_mm_mhi_qcdm_device_write_firmware(FuDevice *device,
 
 	/* firehose modems that use mhi_pci drivers require firehose binary
 	 * to be present in the firmware-loader search path. */
-	firehose_prog = fu_firmware_get_image_by_id_bytes(firmware, "firehose-prog.mbn", error);
+	firehose_prog =
+	    fu_firmware_get_image_by_id_bytes(firmware,
+					      "firehose-prog.mbn|prog_nand*.mbn|prog_firehose*",
+					      error);
 	if (firehose_prog == NULL)
 		return FALSE;
 	if (!fu_mm_mhi_qcdm_device_copy_firehose_prog(self, firehose_prog, error))
@@ -167,7 +170,6 @@ fu_mm_mhi_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_mm_mhi_qcdm_device_init(FuMmMhiQcdmDevice *self)
 {
-	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_add_protocol(FU_UDEV_DEVICE(self), "com.qualcomm.firehose");

@@ -37,13 +37,13 @@ fu_bitmap_image_parse(FuFirmware *firmware,
 
 	st_file = fu_struct_bitmap_file_header_parse_stream(stream, 0x0, error);
 	if (st_file == NULL) {
-		g_prefix_error(error, "image is corrupt: ");
+		g_prefix_error_literal(error, "image is corrupt: ");
 		return FALSE;
 	}
 	fu_firmware_set_size(firmware, fu_struct_bitmap_file_header_get_size(st_file));
 	st_info = fu_struct_bitmap_info_header_parse_stream(stream, st_file->len, error);
 	if (st_info == NULL) {
-		g_prefix_error(error, "header is corrupt: ");
+		g_prefix_error_literal(error, "header is corrupt: ");
 		return FALSE;
 	}
 	self->width = fu_struct_bitmap_info_header_get_width(st_info);

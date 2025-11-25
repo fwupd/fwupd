@@ -152,6 +152,14 @@ typedef enum {
 	 * Since: 2.0.13
 	 **/
 	FU_CONTEXT_FLAG_IGNORE_EFIVARS_FREE_SPACE = 1u << 6,
+	/**
+	 * FU_CONTEXT_FLAG_NO_IDLE_SOURCES:
+	 *
+	 * Do not use idle or timeout sources for device cleanup or enumeration.
+	 *
+	 * Since: 2.0.14
+	 **/
+	FU_CONTEXT_FLAG_NO_IDLE_SOURCES = 1u << 7,
 
 	/**
 	 * FU_CONTEXT_FLAG_LOADED_UNKNOWN:

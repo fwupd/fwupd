@@ -108,7 +108,7 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 	g_autoptr(FuStructBnrDpAuxTxHeader) st_header = fu_struct_bnr_dp_aux_tx_header_new();
 
 	if (!fu_struct_bnr_dp_aux_tx_header_set_request(st_header, st_request, error)) {
-		g_prefix_error(error, "failed to set request: ");
+		g_prefix_error_literal(error, "failed to set request: ");
 		return FALSE;
 	}
 
@@ -123,7 +123,7 @@ fu_bnr_dp_device_write_request(FuBnrDpDevice *self,
 					   bufsz,
 					   FU_BNR_DP_DEVICE_DPAUX_TIMEOUT_MSEC,
 					   error)) {
-			g_prefix_error(error, "failed to write request: ");
+			g_prefix_error_literal(error, "failed to write request: ");
 			return FALSE;
 		}
 
@@ -369,7 +369,7 @@ fu_bnr_dp_device_write_data(FuBnrDpDevice *self,
 						    FU_BNR_DP_DEVICE_DATA_CHUNK_SIZE,
 						    error);
 	if (st_request == NULL) {
-		g_prefix_error(error, "failed to build request: ");
+		g_prefix_error_literal(error, "failed to build request: ");
 		return FALSE;
 	}
 
@@ -545,6 +545,11 @@ fu_bnr_dp_device_setup(FuDevice *device, GError **error)
 
 	oui = g_strdup_printf("%06X", fu_dpaux_device_get_dpcd_ieee_oui(FU_DPAUX_DEVICE(device)));
 	fu_device_build_vendor_id(FU_DEVICE(self), "OUI", oui);
+
+	if (!fu_device_build_instance_id(device, error, "DPAUX", "OUI", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "DPAUX", "OUI", "DEV", "VARIANT", NULL))
+		return FALSE;
 	return fu_device_build_instance_id(device,
 					   error,
 					   "DPAUX",
@@ -761,7 +766,7 @@ fu_bnr_dp_device_write_firmware(FuDevice *device,
 					       fu_progress_get_child(progress),
 					       error);
 	if (read_back == NULL) {
-		g_prefix_error(error, "failed to read data: ");
+		g_prefix_error_literal(error, "failed to read data: ");
 		return FALSE;
 	}
 	if (!fu_memcmp_safe(g_bytes_get_data(bytes, NULL),
@@ -779,7 +784,7 @@ fu_bnr_dp_device_write_firmware(FuDevice *device,
 
 	/* apply new firmware by resetting the device */
 	if (!fu_bnr_dp_device_reset(self, FU_BNR_DP_MODULE_NUMBER_RECEIVER, error)) {
-		g_prefix_error(error, "failed to reset: ");
+		g_prefix_error_literal(error, "failed to reset: ");
 		return FALSE;
 	}
 
@@ -833,8 +838,9 @@ static void
 fu_bnr_dp_device_init(FuBnrDpDevice *self)
 {
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_vendor(FU_DEVICE(self), "B&R Industrial Automation GmbH");
+	fu_device_set_vendor(FU_DEVICE(self), "B&R");
 	fu_device_add_protocol(FU_DEVICE(self), "com.br-automation.dpaux");
+	fu_device_set_summary(FU_DEVICE(self), "DisplayPort receiver");
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_VIDEO_DISPLAY);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), FU_BNR_DP_FIRMWARE_SIZE_MAX);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);

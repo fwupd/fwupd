@@ -17,13 +17,13 @@ struct _FuLogitechHidppRuntimeUnifying {
 
 G_DEFINE_TYPE(FuLogitechHidppRuntimeUnifying,
 	      fu_logitech_hidpp_runtime_unifying,
-	      FU_TYPE_HIDPP_RUNTIME)
+	      FU_TYPE_LOGITECH_HIDPP_RUNTIME)
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_unifying_get_instance_private(o))
 
 static gboolean
 fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
 
@@ -44,7 +44,7 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			g_debug("failed to detach to bootloader: %s", error_local->message);
 		} else {
-			g_prefix_error(&error_local, "failed to detach to bootloader: ");
+			g_prefix_error_literal(&error_local, "failed to detach to bootloader: ");
 			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
@@ -56,12 +56,11 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress
 static gboolean
 fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **error)
 {
-	FuLogitechHidppRuntime *self = FU_HIDPP_RUNTIME(device);
-	guint8 config[10];
+	FuLogitechHidppRuntime *self = FU_LOGITECH_HIDPP_RUNTIME(device);
+	guint8 config[10] = {0};
 	g_autofree gchar *version_fw = NULL;
 
 	/* read all 10 bytes of the version register */
-	memset(config, 0x00, sizeof(config));
 	for (guint i = 0x01; i < 0x05; i++) {
 		g_autoptr(FuLogitechHidppHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
@@ -77,7 +76,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
 		if (!fu_logitech_hidpp_transfer(FU_UDEV_DEVICE(self), msg, error)) {
-			g_prefix_error(error, "failed to read device config: ");
+			g_prefix_error_literal(error, "failed to read device config: ");
 			return FALSE;
 		}
 		if (!fu_memcpy_safe(config,
@@ -124,7 +123,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications(self, error)) {
-		g_prefix_error(error, "failed to enable notifications: ");
+		g_prefix_error_literal(error, "failed to enable notifications: ");
 		return FALSE;
 	}
 

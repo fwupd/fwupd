@@ -1,0 +1,18 @@
+{
+  "name": "ILITEK Touchscreen",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "151d089e777f2c47642a3c8d6d6a6c65b688a659adb42316e051b02ae89b0485-ilitek-touchscreen-for-emulation.cab",
+      "emulation-url": "76333e48882e6363d6aa3ea58a574490206e21b4309f78040b4e710ea636b716-ilitek_its.zip",
+      "components": [
+        {
+          "version": "700.7.0.0",
+          "guids": [
+            "1cf4c326-2fa3-5229-b982-df7416351a82"
+          ]
+        }
+      ]
+    }
+  ]
+}

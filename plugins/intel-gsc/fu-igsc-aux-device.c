@@ -79,7 +79,7 @@ fu_igsc_aux_device_setup(FuDevice *device, GError **error)
 					    &self->major_version,
 					    &self->major_vcn,
 					    error)) {
-		g_prefix_error(error, "failed to get aux version: ");
+		g_prefix_error_literal(error, "failed to get aux version: ");
 		return FALSE;
 	}
 	if (fu_device_has_private_flag(FU_DEVICE(igsc_parent), FU_IGSC_DEVICE_FLAG_IS_WEDGED)) {

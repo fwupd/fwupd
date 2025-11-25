@@ -130,6 +130,19 @@ fu_release_get_firmware_basename(FuRelease *self)
 	return self->firmware_basename;
 }
 
+void
+fu_release_set_firmware_basename(FuRelease *self, const gchar *firmware_basename)
+{
+	g_return_if_fail(FU_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(self->firmware_basename, firmware_basename) == 0)
+		return;
+
+	g_free(self->firmware_basename);
+	self->firmware_basename = g_strdup(firmware_basename);
+}
+
 static void
 fu_release_set_device_version_old(FuRelease *self, const gchar *device_version_old)
 {
@@ -641,7 +654,8 @@ fu_release_check_requirements(FuRelease *self,
 	/* device requires a version check */
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED)) {
 		if (!fu_release_check_requirements_version_check(self, error)) {
-			g_prefix_error(error, "device requires firmware with a version check: ");
+			g_prefix_error_literal(error,
+					       "device requires firmware with a version check: ");
 			return FALSE;
 		}
 	}
@@ -791,10 +805,10 @@ fu_release_check_version(FuRelease *self,
 				    fu_device_get_version_format(self->device));
 	if (fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) &&
 	    vercmp > 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Device only supports version upgrades");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Device only supports version upgrades");
 		return FALSE;
 	}
 	if (vercmp == 0 && (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {

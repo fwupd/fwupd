@@ -975,6 +975,30 @@ fu_context_hwids_dmi_func(void)
 }
 
 static void
+fu_context_hwids_unset_func(void)
+{
+	g_autofree gchar *testdatadir = NULL;
+	g_autofree gchar *dump = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	(void)g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_LOAD_CONFIG, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* ensure that we processed the ~hwid-test-flag */
+	g_assert_false(fu_context_has_hwid_flag(ctx, "hwid-test-flag"));
+}
+
+static void
 fu_context_hwids_fdt_func(void)
 {
 	gboolean ret;
@@ -1342,7 +1366,7 @@ fu_config_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	ret = fu_config_load(config, &error);
+	ret = fu_config_load(config, FU_CONFIG_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1408,7 +1432,7 @@ fu_plugin_config_func(void)
 	g_assert_true(ret);
 
 	/* load context */
-	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_NONE, &error);
+	ret = fu_context_load_hwinfo(ctx, progress, FU_CONTEXT_HWID_FLAG_FIX_PERMISSIONS, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2081,7 +2105,7 @@ fu_device_locker_fail_func(void)
 static void
 fu_common_endian_func(void)
 {
-	guint8 buf[3];
+	guint8 buf[3] = {0};
 
 	fu_memwrite_uint16(buf, 0x1234, G_LITTLE_ENDIAN);
 	g_assert_cmpint(buf[0], ==, 0x34);
@@ -5281,13 +5305,13 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_SREC_FIRMWARE,
 		"srec.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"c8b405b7995d5934086c56b091a4c5df47b3b0d7",
 		FU_FIRMWARE_BUILDER_FLAG_NO_BINARY_COMPARE,
 	    },
 	    {
 		FU_TYPE_IHEX_FIRMWARE,
 		"ihex.builder.xml",
-		"a8d74f767f3fc992b413e5ba801cedc80a4cf013",
+		"e7c39355f1c87a3e9bf2195a406584c5dac828bc",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5323,13 +5347,13 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
 		FU_TYPE_EFI_SECTION,
 		"efi-section.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"a0ede7316209c536b50b6e5fb22cce8135153bc3",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5365,7 +5389,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_EFI_VOLUME,
 		"efi-volume.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"e4d8e1a15ef20f97acf2d5bf3a75da5865a2db0b",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -5401,7 +5425,7 @@ fu_firmware_builder_round_trip_func(void)
 	    {
 		FU_TYPE_OPROM_FIRMWARE,
 		"oprom.builder.xml",
-		"2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
+		"2e8387c1ef14ed4038e6bc637146b86b4d702fa8",
 		FU_FIRMWARE_BUILDER_FLAG_NONE,
 	    },
 	    {
@@ -6776,7 +6800,7 @@ fu_plugin_struct_func(void)
 	g_autofree gchar *oem_table_id = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 51);
+	g_assert_cmpint(st->len, ==, 59);
 
 	/* getters and setters */
 	fu_struct_self_test_set_revision(st, 0xFF);
@@ -6792,7 +6816,7 @@ fu_plugin_struct_func(void)
 	g_assert_cmpstr(str1,
 			==,
 			"12345678adde0000ff000000000000000000000000000000004142434445465800000000"
-			"00000000000000dfdfdfdf00000000");
+			"00000000000000dfdfdfdf00000000ffffffffffffffff");
 
 	/* parse */
 	st2 = fu_struct_self_test_parse(st->data, st->len, 0x0, &error);
@@ -6842,7 +6866,7 @@ fu_plugin_struct_wrapped_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* size */
-	g_assert_cmpint(st->len, ==, 53);
+	g_assert_cmpint(st->len, ==, 61);
 
 	/* getters and setters */
 	fu_struct_self_test_wrapped_set_less(st, 0x99);
@@ -6851,8 +6875,8 @@ fu_plugin_struct_wrapped_func(void)
 	str1 = fu_byte_array_to_string(st);
 	g_assert_cmpstr(str1,
 			==,
-			"991234567833000000000000000000000000000000000000000041424344454600000000"
-			"0000000000000000dfdfdfdf0000000012");
+			"99123456783b000000000000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf00000000ffffffffffffffff12");
 
 	/* modify the base */
 	fu_struct_self_test_set_revision(st_base, 0xFE);
@@ -6862,8 +6886,8 @@ fu_plugin_struct_wrapped_func(void)
 	str4 = fu_byte_array_to_string(st);
 	g_assert_cmpstr(str4,
 			==,
-			"991234567833000000fe0000000000000000000000000000000041424344454600000000"
-			"0000000000000000dfdfdfdf0000000012");
+			"99123456783b000000fe0000000000000000000000000000000041424344454600000000"
+			"0000000000000000dfdfdfdf00000000ffffffffffffffff12");
 
 	/* parse */
 	st2 = fu_struct_self_test_wrapped_parse(st->data, st->len, 0x0, &error);
@@ -6881,7 +6905,7 @@ fu_plugin_struct_wrapped_func(void)
 			"FuStructSelfTestWrapped:\n"
 			"  less: 0x99\n"
 			"  base: FuStructSelfTest:\n"
-			"  length: 0x33\n"
+			"  length: 0x3b\n"
 			"  revision: 0xfe\n"
 			"  owner: 00000000-0000-0000-0000-000000000000\n"
 			"  oem_revision: 0x0\n"
@@ -7107,6 +7131,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/context{backends}", fu_context_backends_func);
 	g_test_add_func("/fwupd/context{efivars}", fu_context_efivars_func);
 	g_test_add_func("/fwupd/context{hwids-dmi}", fu_context_hwids_dmi_func);
+	g_test_add_func("/fwupd/context{hwids-unset}", fu_context_hwids_unset_func);
 	g_test_add_func("/fwupd/context{hwids-fdt}", fu_context_hwids_fdt_func);
 	g_test_add_func("/fwupd/context{firmware-gtypes}", fu_context_firmware_gtypes_func);
 	g_test_add_func("/fwupd/context{state}", fu_context_state_func);

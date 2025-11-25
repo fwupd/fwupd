@@ -144,7 +144,7 @@ fu_goodixtp_gtx8_device_send_cmd(FuGoodixtpGtx8Device *self,
 					       hidbuf,
 					       bufsz,
 					       error)) {
-		g_prefix_error(error, "failed to send cmd: ");
+		g_prefix_error_literal(error, "failed to send cmd: ");
 		return FALSE;
 	}
 
@@ -163,11 +163,11 @@ fu_goodixtp_gtx8_device_ensure_version(FuGoodixtpGtx8Device *self, GError **erro
 	g_autofree gchar *patch_pid = NULL;
 
 	if (!fu_goodixtp_gtx8_device_hid_read(self, 0x60DC, &cfg_ver, 1, error)) {
-		g_prefix_error(error, "failed to read cfg version: ");
+		g_prefix_error_literal(error, "failed to read cfg version: ");
 		return FALSE;
 	}
 	if (!fu_goodixtp_gtx8_device_hid_read(self, 0x452C, fw_info, sizeof(fw_info), error)) {
-		g_prefix_error(error, "failed to read firmware version: ");
+		g_prefix_error_literal(error, "failed to read firmware version: ");
 		return FALSE;
 	}
 
@@ -212,7 +212,7 @@ fu_goodixtp_gtx8_device_disable_report(FuGoodixtpGtx8Device *self, GError **erro
 						       buf_disable,
 						       sizeof(buf_disable),
 						       error)) {
-			g_prefix_error(error, "send close report cmd failed: ");
+			g_prefix_error_literal(error, "send close report cmd failed: ");
 			return FALSE;
 		}
 		fu_device_sleep(FU_DEVICE(self), 10);
@@ -223,12 +223,12 @@ fu_goodixtp_gtx8_device_disable_report(FuGoodixtpGtx8Device *self, GError **erro
 					       buf_confirm,
 					       sizeof(buf_confirm),
 					       error)) {
-		g_prefix_error(error, "send confirm cmd failed: ");
+		g_prefix_error_literal(error, "send confirm cmd failed: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 30);
 	if (!fu_goodixtp_gtx8_device_hid_read(self, CMD_ADDR, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "read confirm flag failed: ");
+		g_prefix_error_literal(error, "read confirm flag failed: ");
 		return FALSE;
 	}
 	if (buf[1] != 1) {
@@ -267,7 +267,7 @@ fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **erro
 
 	/* close report */
 	if (!fu_goodixtp_gtx8_device_disable_report(self, error)) {
-		g_prefix_error(error, "disable report failed: ");
+		g_prefix_error_literal(error, "disable report failed: ");
 		return FALSE;
 	}
 
@@ -275,7 +275,7 @@ fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **erro
 					      cmd_switch_to_patch,
 					      sizeof(cmd_switch_to_patch),
 					      error)) {
-		g_prefix_error(error, "failed switch to patch: ");
+		g_prefix_error_literal(error, "failed switch to patch: ");
 		return FALSE;
 	}
 
@@ -287,12 +287,12 @@ fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **erro
 				  30,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "wait gtx8 BL status failed: ");
+		g_prefix_error_literal(error, "wait gtx8 BL status failed: ");
 		return FALSE;
 	}
 
 	if (!fu_goodixtp_gtx8_device_disable_report(self, error)) {
-		g_prefix_error(error, "disable report failed: ");
+		g_prefix_error_literal(error, "disable report failed: ");
 		return FALSE;
 	}
 
@@ -301,7 +301,7 @@ fu_goodixtp_gtx8_device_update_prepare(FuGoodixtpGtx8Device *self, GError **erro
 					      cmd_start_update,
 					      sizeof(cmd_start_update),
 					      error)) {
-		g_prefix_error(error, "failed to start update: ");
+		g_prefix_error_literal(error, "failed to start update: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100);
@@ -316,7 +316,7 @@ fu_goodixtp_gtx8_device_soft_reset_ic(FuGoodixtpGtx8Device *self, GError **error
 	guint8 cmd_switch_ptp_mode[] = {0x03, 0x03, 0x00, 0x00, 0x01, 0x01};
 
 	if (!fu_goodixtp_gtx8_device_send_cmd(self, cmd_reset, sizeof(cmd_reset), error)) {
-		g_prefix_error(error, "failed write reset command: ");
+		g_prefix_error_literal(error, "failed write reset command: ");
 		return FALSE;
 	}
 	fu_device_sleep(FU_DEVICE(self), 100);
@@ -324,7 +324,7 @@ fu_goodixtp_gtx8_device_soft_reset_ic(FuGoodixtpGtx8Device *self, GError **error
 					      cmd_switch_ptp_mode,
 					      sizeof(cmd_switch_ptp_mode),
 					      error)) {
-		g_prefix_error(error, "failed switch to ptp mode: ");
+		g_prefix_error_literal(error, "failed switch to ptp mode: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -383,7 +383,7 @@ fu_goodixtp_gtx8_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 	fu_memwrite_uint16(buf_load_flash + 7, fu_chunk_get_address(chk) >> 8, G_BIG_ENDIAN);
 	fu_memwrite_uint16(buf_load_flash + 9, check_sum, G_BIG_ENDIAN);
 	if (!fu_goodixtp_gtx8_device_send_cmd(self, buf_load_flash, 11, error)) {
-		g_prefix_error(error, "failed write load flash command: ");
+		g_prefix_error_literal(error, "failed write load flash command: ");
 		return FALSE;
 	}
 
@@ -395,7 +395,7 @@ fu_goodixtp_gtx8_device_load_sub_firmware_cb(FuDevice *device, gpointer user_dat
 				  20,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "wait flash status failed: ");
+		g_prefix_error_literal(error, "wait flash status failed: ");
 		return FALSE;
 	}
 
@@ -431,7 +431,7 @@ fu_goodixtp_gtx8_device_setup(FuDevice *device, GError **error)
 {
 	FuGoodixtpGtx8Device *self = FU_GOODIXTP_GTX8_DEVICE(device);
 	if (!fu_goodixtp_gtx8_device_ensure_version(self, error)) {
-		g_prefix_error(error, "gtx8 read version failed: ");
+		g_prefix_error_literal(error, "gtx8 read version failed: ");
 		return FALSE;
 	}
 	return TRUE;

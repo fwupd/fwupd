@@ -73,7 +73,7 @@ fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 		msg->function_id |= FU_LOGITECH_HIDPP_HIDPP_MSG_SW_ID;
 
 	/* force long reports for BLE-direct devices */
-	if (msg->hidpp_version == FU_HIDPP_VERSION_BLE) {
+	if (msg->hidpp_version == FU_LOGITECH_HIDPP_VERSION_BLE) {
 		msg->report_id = FU_LOGITECH_HIDPP_REPORT_ID_LONG;
 		len = 20;
 	}
@@ -94,7 +94,7 @@ fu_logitech_hidpp_send(FuUdevDevice *udev_device,
 				  timeout,
 				  write_flags,
 				  error)) {
-		g_prefix_error(error, "failed to send: ");
+		g_prefix_error_literal(error, "failed to send: ");
 		return FALSE;
 	}
 
@@ -118,7 +118,7 @@ fu_logitech_hidpp_receive(FuUdevDevice *udev_device,
 				 timeout,
 				 FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 				 error)) {
-		g_prefix_error(error, "failed to receive: ");
+		g_prefix_error_literal(error, "failed to receive: ");
 		return FALSE;
 	}
 
@@ -172,13 +172,13 @@ fu_logitech_hidpp_transfer(FuUdevDevice *udev_device, FuLogitechHidppHidppMsg *m
 							       msg_tmp,
 							       timeout,
 							       error)) {
-					g_prefix_error(error, "failed to receive: ");
+					g_prefix_error_literal(error, "failed to receive: ");
 					return FALSE;
 				}
 			}
 		} else {
 			if (!fu_logitech_hidpp_receive(udev_device, msg_tmp, timeout, error)) {
-				g_prefix_error(error, "failed to receive: ");
+				g_prefix_error_literal(error, "failed to receive: ");
 				return FALSE;
 			}
 		}
@@ -222,10 +222,10 @@ fu_logitech_hidpp_transfer(FuUdevDevice *udev_device, FuLogitechHidppHidppMsg *m
 
 		/* hardware not responding */
 		if (ignore_cnt++ > 10) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "too many messages to ignore");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "too many messages to ignore");
 			return FALSE;
 		}
 

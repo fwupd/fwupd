@@ -95,10 +95,10 @@ fu_amd_gpu_device_set_device_file(FuAmdGpuDevice *self, const gchar *base, GErro
 
 	/* nothing found */
 	if (device_file == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no DRM device file found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no DRM device file found");
 		return FALSE;
 	}
 
@@ -219,7 +219,7 @@ fu_amd_gpu_device_ioctl_drm_info(FuAmdGpuDevice *self, guint8 *buf, gsize bufsz,
 			      1000, /* ms */
 			      FU_IOCTL_FLAG_NONE,
 			      error)) {
-		g_prefix_error(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
+		g_prefix_error_literal(error, "failed to DRM_IOCTL_AMDGPU_INFO: ");
 		return FALSE;
 	}
 

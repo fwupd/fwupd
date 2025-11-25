@@ -82,10 +82,10 @@ fu_elantp_i2c_device_rebind_driver(FuElantpI2cDevice *self, GError **error)
 	g_autofree gchar *bind_fn = g_build_filename(self->bind_path, "bind", NULL);
 
 	if (self->bind_path == NULL || self->bind_id == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INVALID_FILE,
-			    "no Path or ID for rebind driver");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no Path or ID for rebind driver");
 		return FALSE;
 	}
 
@@ -150,7 +150,7 @@ fu_elantp_i2c_device_send_cmd(FuElantpI2cDevice *self,
 static gboolean
 fu_elantp_i2c_device_write_cmd(FuElantpI2cDevice *self, guint16 reg, guint16 cmd, GError **error)
 {
-	guint8 buf[4];
+	guint8 buf[4]; /* nocheck:zero-init */
 	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
 	fu_memwrite_uint16(buf + 0x2, cmd, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), NULL, 0, error);
@@ -163,7 +163,7 @@ fu_elantp_i2c_device_read_cmd(FuElantpI2cDevice *self,
 			      gsize rxsz,
 			      GError **error)
 {
-	guint8 buf[2];
+	guint8 buf[2]; /* nocheck:zero-init */
 	fu_memwrite_uint16(buf + 0x0, reg, G_LITTLE_ENDIAN);
 	return fu_elantp_i2c_device_send_cmd(self, buf, sizeof(buf), rx, rxsz, error);
 }
@@ -177,7 +177,7 @@ fu_elantp_i2c_device_ensure_iap_ctrl(FuElantpI2cDevice *self, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read IAPControl: ");
+		g_prefix_error_literal(error, "failed to read IAPControl: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &self->iap_ctrl, G_LITTLE_ENDIAN, error))
@@ -211,7 +211,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to get HID descriptor: ");
+		g_prefix_error_literal(error, "failed to get HID descriptor: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 20, &vid, G_LITTLE_ENDIAN, error))
@@ -232,7 +232,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read I2C ID: ");
+		g_prefix_error_literal(error, "failed to read I2C ID: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
@@ -245,7 +245,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read fw version: ");
+		g_prefix_error_literal(error, "failed to read fw version: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &fwver, G_LITTLE_ENDIAN, error))
@@ -261,7 +261,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read bootloader version: ");
+		g_prefix_error_literal(error, "failed to read bootloader version: ");
 		return FALSE;
 	}
 	if (self->pattern >= 1) {
@@ -284,7 +284,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read module ID: ");
+		g_prefix_error_literal(error, "failed to read module ID: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf,
@@ -308,7 +308,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read OSM version: ");
+		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
@@ -319,7 +319,7 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 						   buf,
 						   sizeof(buf),
 						   error)) {
-			g_prefix_error(error, "failed to read IC body: ");
+			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
@@ -581,7 +581,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read OSM version: ");
+		g_prefix_error_literal(error, "failed to read OSM version: ");
 		return FALSE;
 	}
 	if (!fu_memread_uint16_safe(buf, sizeof(buf), 0x0, &tmp, G_LITTLE_ENDIAN, error))
@@ -592,7 +592,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 						   buf,
 						   sizeof(buf),
 						   error)) {
-			g_prefix_error(error, "failed to read IC body: ");
+			g_prefix_error_literal(error, "failed to read IC body: ");
 			return FALSE;
 		}
 		if (!fu_memread_uint16_safe(buf,
@@ -613,7 +613,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 					   buf,
 					   sizeof(buf),
 					   error)) {
-		g_prefix_error(error, "failed to read bootloader version: ");
+		g_prefix_error_literal(error, "failed to read bootloader version: ");
 		return FALSE;
 	}
 	if (self->pattern >= 1) {
@@ -648,7 +648,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **err
 							   buf,
 							   sizeof(buf),
 							   error)) {
-				g_prefix_error(error, "failed to read IAP type: ");
+				g_prefix_error_literal(error, "failed to read IAP type: ");
 				return FALSE;
 			}
 			if (!fu_memread_uint16_safe(buf,
@@ -706,7 +706,7 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 					    FU_ETP_CMD_I2C_IAP_RESET,
 					    ETP_I2C_ENABLE_REPORT,
 					    error)) {
-		g_prefix_error(error, "cannot enable TP report: ");
+		g_prefix_error_literal(error, "cannot enable TP report: ");
 		return FALSE;
 	}
 
@@ -717,7 +717,7 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_elantp_i2c_device_write_cmd(self, 0x0300, 0x001, error)) {
-			g_prefix_error(error, "cannot switch to TP ABS mode: ");
+			g_prefix_error_literal(error, "cannot switch to TP ABS mode: ");
 			return FALSE;
 		}
 
@@ -733,7 +733,7 @@ fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **err
 		}
 	} else {
 		if (!fu_elantp_i2c_device_write_cmd(self, 0x0306, 0x003, error)) {
-			g_prefix_error(error, "cannot switch to TP PTP mode: ");
+			g_prefix_error_literal(error, "cannot switch to TP PTP mode: ");
 			return FALSE;
 		}
 	}
@@ -803,7 +803,7 @@ fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_INPUT_TOUCHPAD);
 	fu_device_add_protocol(FU_DEVICE(self), "tw.com.emc.elantp");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_vendor(FU_DEVICE(self), "ELAN Microelectronics");
+	fu_device_set_vendor(FU_DEVICE(self), "Elan");
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 	fu_device_register_private_flag(FU_DEVICE(self), FU_ELANTP_I2C_DEVICE_ABSOLUTE);

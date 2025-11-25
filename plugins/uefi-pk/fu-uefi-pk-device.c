@@ -110,7 +110,7 @@ fu_uefi_pk_device_probe(FuDevice *device, GError **error)
 				     FU_FIRMWARE_PARSE_FLAG_IGNORE_CHECKSUM,
 				     error);
 	if (pk == NULL) {
-		g_prefix_error(error, "failed to parse PK: ");
+		g_prefix_error_literal(error, "failed to parse PK: ");
 		return FALSE;
 	}
 

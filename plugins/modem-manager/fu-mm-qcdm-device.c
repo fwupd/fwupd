@@ -10,10 +10,6 @@
 
 #include "fu-mm-qcdm-device.h"
 
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#endif
-
 G_DEFINE_TYPE(FuMmQcdmDevice, fu_mm_qcdm_device, FU_TYPE_MM_DEVICE)
 
 static gboolean
@@ -30,7 +26,7 @@ fu_mm_qcdm_device_cmd(FuMmQcdmDevice *self, const guint8 *buf, gsize bufsz, GErr
 					1500,
 					FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
 					error)) {
-		g_prefix_error(error, "failed to write qcdm command: ");
+		g_prefix_error_literal(error, "failed to write qcdm command: ");
 		return FALSE;
 	}
 
@@ -41,17 +37,17 @@ fu_mm_qcdm_device_cmd(FuMmQcdmDevice *self, const guint8 *buf, gsize bufsz, GErr
 					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
 					     error);
 	if (qcdm_res == NULL) {
-		g_prefix_error(error, "failed to read qcdm response: ");
+		g_prefix_error_literal(error, "failed to read qcdm response: ");
 		return FALSE;
 	}
 	fu_dump_bytes(G_LOG_DOMAIN, "read", qcdm_res);
 
 	/* command == response */
 	if (g_bytes_compare(qcdm_res, qcdm_req) != 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "failed to read valid qcdm response");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "failed to read valid qcdm response");
 		return FALSE;
 	}
 
@@ -93,73 +89,6 @@ fu_mm_qcdm_device_probe(FuDevice *device, GError **error)
 	return fu_mm_device_set_device_file(FU_MM_DEVICE(self), MM_MODEM_PORT_TYPE_QCDM, error);
 }
 
-static gboolean
-fu_mm_qcdm_device_set_io_flags(FuMmQcdmDevice *self, GError **error)
-{
-#ifdef HAVE_TERMIOS_H
-	gint fd = fu_io_channel_unix_get_fd(fu_udev_device_get_io_channel(FU_UDEV_DEVICE(self)));
-	struct termios tio;
-
-	if (tcgetattr(fd, &tio) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "could not get termios attributes");
-		return FALSE;
-	}
-
-	cfmakeraw(&tio);
-
-	if (tcsetattr(fd, TCSANOW, &tio) != 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "could not set termios attributes");
-		return FALSE;
-	}
-
-	return TRUE;
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <termios.h> not found");
-	return FALSE;
-#endif
-}
-
-static gboolean
-fu_mm_qcdm_device_open(FuDevice *device, GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-
-	if (!FU_DEVICE_CLASS(fu_mm_qcdm_device_parent_class)->open(device, error))
-		return FALSE;
-	return fu_mm_qcdm_device_set_io_flags(self, error);
-}
-
-static gboolean
-fu_mm_qcdm_device_prepare(FuDevice *device,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), TRUE);
-	return TRUE;
-}
-
-static gboolean
-fu_mm_qcdm_device_cleanup(FuDevice *device,
-			  FuProgress *progress,
-			  FwupdInstallFlags flags,
-			  GError **error)
-{
-	FuMmQcdmDevice *self = FU_MM_QCDM_DEVICE(device);
-	fu_mm_device_set_inhibited(FU_MM_DEVICE(self), FALSE);
-	return TRUE;
-}
-
 static void
 fu_mm_qcdm_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -177,6 +106,10 @@ fu_mm_qcdm_device_init(FuMmQcdmDevice *self)
 {
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_add_instance_id_full(FU_DEVICE(self),
+				       "USB\\VID_05C6&PID_9008",
+				       FU_DEVICE_INSTANCE_FLAG_COUNTERPART);
+	fu_device_set_remove_delay(FU_DEVICE(self), 5000);
 	fu_device_add_protocol(FU_UDEV_DEVICE(self), "com.qualcomm.firehose");
 }
 
@@ -184,10 +117,7 @@ static void
 fu_mm_qcdm_device_class_init(FuMmQcdmDeviceClass *klass)
 {
 	FuDeviceClass *device_class = FU_DEVICE_CLASS(klass);
-	device_class->open = fu_mm_qcdm_device_open;
 	device_class->probe = fu_mm_qcdm_device_probe;
 	device_class->detach = fu_mm_qcdm_device_detach;
-	device_class->prepare = fu_mm_qcdm_device_prepare;
-	device_class->cleanup = fu_mm_qcdm_device_cleanup;
 	device_class->set_progress = fu_mm_qcdm_device_set_progress;
 }

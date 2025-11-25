@@ -116,13 +116,18 @@ fu_remote_list_fixup_inotify_error(GError **error)
 
 	fd = inotify_init();
 	if (fd == -1) {
-		g_prefix_error(error, "Could not initialize inotify, check %s: ", fn);
+		g_prefix_error(error, /* nocheck:error */
+			       "Could not initialize inotify, check %s: ",
+			       fn);
 		return;
 	}
 	wd = inotify_add_watch(fd, fn, IN_MODIFY);
 	if (wd < 0) {
-		if (errno == ENOSPC)
-			g_prefix_error(error, "No space for inotify, check %s: ", fn);
+		if (errno == ENOSPC) {
+			g_prefix_error(error, /* nocheck:error */
+				       "No space for inotify, check %s: ",
+				       fn);
+		}
 	} else {
 		inotify_rm_watch(fd, wd);
 	}

@@ -33,7 +33,7 @@ fu_vbe_plugin_coldplug_img(FuPlugin *plugin,
 				       FU_FIT_FIRMWARE_ATTR_COMPATIBLE,
 				       &compatible,
 				       error)) {
-		g_prefix_error(error, "missing update mechanism: ");
+		g_prefix_error_literal(error, "missing update mechanism: ");
 		return FALSE;
 	}
 	split = g_strsplit(compatible, ",", 2);
@@ -113,10 +113,10 @@ fu_vbe_plugin_coldplug(FuPlugin *plugin, FuProgress *progress, GError **error)
 
 	/* nothing found? */
 	if (fu_plugin_get_devices(plugin)->len == 0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "no valid VBE update mechanism found");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no valid VBE update mechanism found");
 		return FALSE;
 	}
 

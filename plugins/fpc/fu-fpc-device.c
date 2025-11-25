@@ -209,7 +209,8 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 						   FALSE,
 						   FALSE,
 						   error)) {
-				g_prefix_error(error, "fail to clear status in setup version");
+				g_prefix_error_literal(error,
+						       "fail to clear status in setup version");
 				return FALSE;
 			}
 		}
@@ -223,7 +224,7 @@ fu_fpc_device_setup_version(FuFpcDevice *self, GError **error)
 					   TRUE,
 					   TRUE,
 					   error)) {
-			g_prefix_error(error, "fail to get fw status in setup version");
+			g_prefix_error_literal(error, "fail to get fw status in setup version");
 			return FALSE;
 		}
 
@@ -255,7 +256,7 @@ fu_fpc_device_check_dfu_status_cb(FuDevice *device, gpointer user_data, GError *
 				   TRUE,
 				   FALSE,
 				   error)) {
-		g_prefix_error(error, "failed to get status: ");
+		g_prefix_error_literal(error, "failed to get status: ");
 		return FALSE;
 	}
 
@@ -292,7 +293,7 @@ fu_fpc_device_update_init(FuFpcDevice *self, GError **error)
 					   FALSE,
 					   FALSE,
 					   error)) {
-			g_prefix_error(error, "failed to clear status: ");
+			g_prefix_error_literal(error, "failed to clear status: ");
 			return FALSE;
 		}
 	}
@@ -381,13 +382,13 @@ fu_fpc_device_setup(FuDevice *device, GError **error)
 	}
 
 	if (!fu_fpc_device_setup_mode(self, error)) {
-		g_prefix_error(error, "failed to get device mode: ");
+		g_prefix_error_literal(error, "failed to get device mode: ");
 		return FALSE;
 	}
 
 	/* ensure version */
 	if (!fu_fpc_device_setup_version(self, error)) {
-		g_prefix_error(error, "failed to get firmware version: ");
+		g_prefix_error_literal(error, "failed to get firmware version: ");
 		return FALSE;
 	}
 
@@ -491,7 +492,7 @@ fu_fpc_device_write_ff2_firmware(FuFpcDevice *self,
 						   FALSE,
 						   FALSE,
 						   error)) {
-				g_prefix_error(error, "failed to write sec-link: ");
+				g_prefix_error_literal(error, "failed to write sec-link: ");
 				return FALSE;
 			}
 
@@ -639,7 +640,7 @@ fu_fpc_device_write_firmware(FuDevice *device,
 					   FALSE,
 					   FALSE,
 					   error)) {
-			g_prefix_error(error, "fail to exit dnload loop: ");
+			g_prefix_error_literal(error, "fail to exit dnload loop: ");
 			return FALSE;
 		}
 	}

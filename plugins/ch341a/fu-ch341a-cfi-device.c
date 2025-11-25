@@ -48,7 +48,7 @@ fu_ch341a_cfi_device_wait_for_status_cb(FuDevice *device, gpointer user_data, GE
 				   error))
 		return FALSE;
 	if (!fu_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to want to status: ");
+		g_prefix_error_literal(error, "failed to want to status: ");
 		return FALSE;
 	}
 	if ((buf[0x1] & helper->mask) != helper->value) {
@@ -97,7 +97,7 @@ fu_ch341a_cfi_device_read_jedec(FuCfiDevice *self, GError **error)
 
 	/* read JEDEC ID */
 	if (!fu_ch341a_device_spi_transfer(proxy, buf, sizeof(buf), error)) {
-		g_prefix_error(error, "failed to request JEDEC ID: ");
+		g_prefix_error_literal(error, "failed to request JEDEC ID: ");
 		return FALSE;
 	}
 	if (buf[1] == 0x0 && buf[2] == 0x0 && buf[3] == 0x0) {
@@ -331,11 +331,11 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 
 	/* erase */
 	if (!fu_ch341a_cfi_device_write_enable(self, error)) {
-		g_prefix_error(error, "failed to enable writes: ");
+		g_prefix_error_literal(error, "failed to enable writes: ");
 		return FALSE;
 	}
 	if (!fu_ch341a_cfi_device_chip_erase(self, error)) {
-		g_prefix_error(error, "failed to erase: ");
+		g_prefix_error_literal(error, "failed to erase: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -349,7 +349,7 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 					      pages,
 					      fu_progress_get_child(progress),
 					      error)) {
-		g_prefix_error(error, "failed to write pages: ");
+		g_prefix_error_literal(error, "failed to write pages: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -360,7 +360,7 @@ fu_ch341a_cfi_device_write_firmware(FuDevice *device,
 						       fu_progress_get_child(progress),
 						       error);
 	if (fw_verify == NULL) {
-		g_prefix_error(error, "failed to verify blocks: ");
+		g_prefix_error_literal(error, "failed to verify blocks: ");
 		return FALSE;
 	}
 	if (!fu_bytes_compare(fw, fw_verify, error))

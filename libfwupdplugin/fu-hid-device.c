@@ -230,7 +230,7 @@ fu_hid_device_open(FuDevice *device, GError **error)
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND) == 0)
 		flags |= FU_USB_DEVICE_CLAIM_FLAG_KERNEL_DRIVER;
 	if (!fu_usb_device_claim_interface(FU_USB_DEVICE(self), priv->interface, flags, error)) {
-		g_prefix_error(error, "failed to claim HID interface: ");
+		g_prefix_error_literal(error, "failed to claim HID interface: ");
 		return FALSE;
 	}
 
@@ -441,7 +441,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						      helper->timeout,
 						      NULL, /* cancellable */
 						      error)) {
-			g_prefix_error(error, "failed to SetReport [interrupt-transfer]: ");
+			g_prefix_error_literal(error, "failed to SetReport [interrupt-transfer]: ");
 			return FALSE;
 		}
 	} else {
@@ -469,7 +469,7 @@ fu_hid_device_set_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						    helper->timeout,
 						    NULL,
 						    error)) {
-			g_prefix_error(error, "failed to SetReport: ");
+			g_prefix_error_literal(error, "failed to SetReport: ");
 			return FALSE;
 		}
 	}
@@ -598,7 +598,7 @@ fu_hid_device_get_report_internal(FuHidDevice *self, FuHidDeviceRetryHelper *hel
 						    helper->timeout,
 						    NULL,
 						    error)) {
-			g_prefix_error(error, "failed to GetReport: ");
+			g_prefix_error_literal(error, "failed to GetReport: ");
 			return FALSE;
 		}
 		fu_dump_raw(G_LOG_DOMAIN, title, helper->buf, actual_len);

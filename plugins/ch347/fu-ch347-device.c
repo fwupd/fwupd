@@ -233,11 +233,11 @@ fu_ch347_device_configure_stream(FuCh347Device *self, GError **error)
 			   [16] = 7,			      /* ?? */
 			   [21] = 0}; /* CS polarity: bit 7 CS2, bit 6 CS1. 0 = active low */
 	if (!fu_ch347_device_write(self, FU_CH347_CMD_SPI_SET_CFG, data, sizeof(data), error)) {
-		g_prefix_error(error, "failed to configure stream: ");
+		g_prefix_error_literal(error, "failed to configure stream: ");
 		return FALSE;
 	}
 	if (!fu_ch347_device_read(self, FU_CH347_CMD_SPI_SET_CFG, data, 1, error)) {
-		g_prefix_error(error, "failed to confirm configure stream: ");
+		g_prefix_error_literal(error, "failed to confirm configure stream: ");
 		return FALSE;
 	}
 
@@ -297,7 +297,6 @@ fu_ch347_device_init(FuCh347Device *self)
 	self->divisor = 0b10;
 	fu_usb_device_add_interface(FU_USB_DEVICE(self), FU_CH347_MODE1_IFACE);
 	fu_device_set_name(FU_DEVICE(self), "CH347");
-	fu_device_set_vendor(FU_DEVICE(self), "WinChipHead");
 }
 
 static void

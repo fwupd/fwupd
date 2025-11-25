@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version: '2.0.14',
   license: 'LGPL-2.1-or-later',
-  meson_version: '>=1.3.0',
+  meson_version: '>=0.63.0', # limited by RHEL-9
   default_options: ['warning_level=2', 'c_std=c17'],
 )
 
@@ -86,6 +86,7 @@ warning_flags = [
   '-Wmissing-prototypes',
   '-Wnested-externs',
   '-Wno-cast-function-type',
+  '-Wno-deprecated-declarations',
   '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-missing-field-initializers',
@@ -212,8 +213,8 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 diffcmd = find_program('diff')
-gio = dependency('gio-2.0', version: '>= 2.72.0')
-giounix = dependency('gio-unix-2.0', version: '>= 2.72.0', required: false)
+gio = dependency('gio-2.0', version: '>= 2.68.0') # limited by RHEL-9, which has v2.68.4
+giounix = dependency('gio-unix-2.0', version: '>= 2.68.0', required: false)
 if giounix.found()
   conf.set('HAVE_GIO_UNIX', '1')
 endif
@@ -551,6 +552,9 @@ if build_standalone
   if libflashrom.type_name() == 'pkgconfig' and cc.has_function('flashrom_set_progress_callback_v2', dependencies: libflashrom)
       conf.set('HAVE_FLASHROM_SET_PROGRESS_CALLBACK_V2' , '1')
   endif
+  if libflashrom.type_name() == 'pkgconfig' and cc.has_function('flashrom_flash_probe_v2', dependencies: libflashrom)
+      conf.set('HAVE_FLASHROM_FLASH_PROBE_V2' , '1')
+  endif
 endif
 
 if libsystemd.found()
@@ -742,6 +746,7 @@ if build_standalone
       '@INPUT@',
     ],
     install: true,
+    install_tag: 'runtime',
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'),
   )
 endif
