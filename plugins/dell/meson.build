@@ -1,4 +1,5 @@
-if allow_uefi_capsule
+allow_uefi or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -18,5 +19,3 @@ plugin_builtin_dell = static_library('fu_plugin_dell',
   ],
 )
 plugin_builtins += plugin_builtin_dell
-
-endif

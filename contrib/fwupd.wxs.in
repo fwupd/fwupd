@@ -23,7 +23,11 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLDIR" Name="fwupd">
-          <Directory Id="BINDIR" Name="bin"/>
+          <Directory Id="BINDIR" Name="bin">
+            <Component Id="AddToPath">
+              <Environment Id="PATH" Name="PATH" Value="[BINDIR]" Permanent="yes" Part="last" Action="set" System="yes" />
+            </Component>
+          </Directory>
         </Directory>
       </Directory>
     </Directory>
@@ -31,6 +35,7 @@
       <ComponentGroupRef Id="CG.fwupd-deps"/>
       <ComponentGroupRef Id="CG.fwupd-crts"/>
       <ComponentGroupRef Id="CG.fwupd-files"/>
+      <ComponentRef Id="AddToPath"/>
     </Feature>
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallValidate"/>

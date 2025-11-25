@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #[derive(ToBitString)]
-enum FuIoChannelOpenFlag {
+enum FuIoChannelOpenFlags {
     None = 0,
     Read = 1 << 0,
     Write = 1 << 1,

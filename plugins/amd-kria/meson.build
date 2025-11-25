@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmdKria"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -21,5 +22,3 @@ plugin_builtin_kria = static_library('fu_plugin_amd_kria',
   dependencies: plugin_deps,
 )
 plugin_builtins += plugin_builtin_kria
-
-endif

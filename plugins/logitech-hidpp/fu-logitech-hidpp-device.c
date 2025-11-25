@@ -989,7 +989,7 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 {
 	FuLogitechHidppDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	guint8 flags = FU_LOGITECH_HIDPP_RDFU_APPLY_FLAGS_FORCE_DFU_BIT;
+	guint8 flags = FU_LOGITECH_HIDPP_RDFU_APPLY_FLAG_FORCE_DFU_BIT;
 	g_autoptr(FuStructLogitechHidppRdfuApplyDfu) msg =
 	    fu_struct_logitech_hidpp_rdfu_apply_dfu_new();
 	FuLogitechHidppHidppMsg *hidpp_msg = NULL;
@@ -1019,7 +1019,7 @@ fu_logitech_hidpp_device_rdfu_apply_dfu(FuLogitechHidppDevice *self,
 	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_fw_entity(msg, fw_entity);
 	fu_struct_logitech_hidpp_rdfu_apply_dfu_set_flags(msg, flags);
 
-	/* re-use pre-rustgen send */
+	/* reuse pre-rustgen send */
 	hidpp_msg = (FuLogitechHidppHidppMsg *)msg->data;
 	hidpp_msg->hidpp_version = priv->hidpp_version;
 	/* don't expect the reply for forced applyDfu */

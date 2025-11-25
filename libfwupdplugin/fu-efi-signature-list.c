@@ -9,16 +9,13 @@
 #include "config.h"
 
 #include <fwupd.h>
-#include <string.h>
 
 #include "fu-byte-array.h"
-#include "fu-common.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efi-signature-private.h"
 #include "fu-efi-struct.h"
 #include "fu-efi-x509-signature-private.h"
 #include "fu-input-stream.h"
-#include "fu-mem.h"
 
 /**
  * FuEfiSignatureList:

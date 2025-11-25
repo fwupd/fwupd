@@ -108,6 +108,18 @@ gsize
 fu_common_align_up(gsize value, guint8 alignment);
 gboolean
 fu_power_state_is_ac(FuPowerState power_state);
+
+typedef struct {
+	guint value;
+	FwupdError code;
+	const gchar *message;
+} FuErrorMapEntry;
+
+gboolean
+fu_error_map_entry_to_gerror(guint value,
+			     const FuErrorMapEntry entries[],
+			     guint n_entries,
+			     GError **error) G_GNUC_NON_NULL(2);
 void
 fu_error_convert(GError **perror);
 

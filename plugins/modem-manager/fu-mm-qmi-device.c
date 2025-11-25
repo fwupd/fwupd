@@ -35,8 +35,8 @@ fu_mm_qmi_device_qmi_device_open_attempt(FuMmQmiDeviceOpenContext *ctx);
 
 static void
 fu_mm_qmi_device_qmi_device_open_abort_ready(GObject *qmi_device,
-					      GAsyncResult *res,
-					      gpointer user_data)
+					     GAsyncResult *res,
+					     gpointer user_data)
 {
 	FuMmQmiDeviceOpenContext *ctx = (FuMmQmiDeviceOpenContext *)user_data;
 
@@ -70,8 +70,8 @@ fu_mm_qmi_device_open_abort(FuMmQmiDeviceOpenContext *ctx)
 
 static void
 fu_mm_qmi_device_qmi_device_allocate_client_ready(GObject *qmi_device,
-						   GAsyncResult *res,
-						   gpointer user_data)
+						  GAsyncResult *res,
+						  gpointer user_data)
 {
 	FuMmQmiDeviceOpenContext *ctx = (FuMmQmiDeviceOpenContext *)user_data;
 
@@ -187,8 +187,8 @@ fu_mm_qmi_device_qmi_device_close_ready(GObject *qmi_device, GAsyncResult *res, 
 
 static void
 fu_mm_qmi_device_qmi_device_release_client_ready(GObject *qmi_device,
-						  GAsyncResult *res,
-						  gpointer user_data)
+						 GAsyncResult *res,
+						 gpointer user_data)
 {
 	FuMmQmiDeviceCloseContext *ctx = (FuMmQmiDeviceCloseContext *)user_data;
 
@@ -648,8 +648,8 @@ fu_mm_qmi_device_set_selected_config_indication(QmiClientPdc *client,
 
 static void
 fu_mm_qmi_device_set_selected_config_ready(GObject *qmi_client,
-					    GAsyncResult *res,
-					    gpointer user_data)
+					   GAsyncResult *res,
+					   gpointer user_data)
 {
 	FuMmQmiDeviceActivateContext *ctx = (FuMmQmiDeviceActivateContext *)user_data;
 	g_autoptr(QmiMessagePdcSetSelectedConfigOutput) output = NULL;

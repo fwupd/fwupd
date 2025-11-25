@@ -3,6 +3,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('ch341a.quirk')
 plugin_builtins += static_library('fu_plugin_ch341a',
+  rustgen.process('fu-ch341a.rs'),
   sources: [
     'fu-ch341a-cfi-device.c',
     'fu-ch341a-device.c',

@@ -1,4 +1,5 @@
-if host_machine.system() in ['linux', 'android']
+host_machine.system() in ['linux', 'android'] or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -44,5 +45,4 @@ if get_option('tests')
     ],
   )
   test('uf2-self-test', e, env: env)
-endif
 endif

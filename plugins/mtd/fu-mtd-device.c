@@ -10,6 +10,10 @@
 #include <mtd/mtd-user.h>
 #endif
 
+#ifdef HAVE_IOCTL_H
+#include <sys/ioctl.h>
+#endif
+
 #include "fu-mtd-device.h"
 #include "fu-mtd-ifd-device.h"
 
@@ -18,6 +22,7 @@ struct _FuMtdDevice {
 	guint64 erasesize;
 	guint64 metadata_offset;
 	guint64 metadata_size;
+	gboolean is_pci_device;
 };
 
 G_DEFINE_TYPE(FuMtdDevice, fu_mtd_device, FU_TYPE_UDEV_DEVICE)
@@ -31,16 +36,67 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 	fwupd_codec_string_append_hex(str, idt, "EraseSize", self->erasesize);
 	fwupd_codec_string_append_hex(str, idt, "MetadataOffset", self->metadata_offset);
 	fwupd_codec_string_append_hex(str, idt, "MetadataSize", self->metadata_size);
+	fwupd_codec_string_append_hex(str, idt, "IsPciDevice", self->is_pci_device);
+}
+
+static gchar *
+fu_mtd_device_convert_version(FuDevice *device, guint64 version_raw)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+
+	/* let's assume for now that any PCI device with pair version format uses B&R encoding */
+	if (self->is_pci_device &&
+	    fu_device_get_version_format(self) == FWUPD_VERSION_FORMAT_PAIR) {
+		guint64 major = version_raw / 100;
+		guint64 minor = version_raw % 100;
+
+		return g_strdup_printf("%" G_GUINT64_FORMAT ".%02" G_GUINT64_FORMAT, major, minor);
+	}
+
+	return NULL;
 }
 
 static FuFirmware *
 fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	FuDeviceEvent *event = NULL;
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
 	const gchar *fn;
-	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *event_id = NULL;
+	g_autoptr(FuFirmware) firmware = g_object_new(firmware_gtype, NULL);
 	g_autoptr(GInputStream) stream = NULL;
 	g_autoptr(GInputStream) stream_partial = NULL;
+
+	/* need event ID */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED) ||
+	    fu_context_has_flag(fu_device_get_context(FU_DEVICE(self)),
+				FU_CONTEXT_FLAG_SAVE_EVENTS)) {
+		event_id = g_strdup("MtdReadFirmware");
+	}
+
+	/* emulated */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED)) {
+		g_autoptr(GBytes) blob = NULL;
+		event = fu_device_load_event(FU_DEVICE(self), event_id, error);
+		if (event == NULL)
+			return NULL;
+		blob = fu_device_event_get_bytes(event, "Data", error);
+		if (blob == NULL)
+			return NULL;
+		if (!fu_firmware_parse_bytes(firmware,
+					     blob,
+					     0x0,
+					     FU_FIRMWARE_PARSE_FLAG_CACHE_STREAM,
+					     error)) {
+			return NULL;
+		}
+		return g_steal_pointer(&firmware);
+	}
+
+	/* save */
+	if (event_id != NULL)
+		event = fu_device_save_event(FU_DEVICE(self), event_id);
 
 	/* read contents at the search offset */
 	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(self));
@@ -66,7 +122,17 @@ fu_mtd_device_read_firmware(FuDevice *device, FuProgress *progress, GError **err
 	} else {
 		stream_partial = g_object_ref(stream);
 	}
-	firmware = g_object_new(fu_device_get_firmware_gtype(FU_DEVICE(self)), NULL);
+
+	/* save response */
+	if (event != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_input_stream_read_bytes(stream_partial, 0x0, G_MAXSIZE, progress, error);
+		if (blob == NULL)
+			return NULL;
+		fu_device_event_set_bytes(event, "Data", blob);
+	}
+
+	/* parse as firmware image */
 	if (!fu_firmware_parse_stream(firmware,
 				      stream_partial,
 				      0x0,
@@ -146,7 +212,23 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 {
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	gsize firmware_size_max = fu_device_get_firmware_size_max(device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (self->metadata_offset > firmware_size_max) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "offset of metadata (0x%x) greater than image size (0x%x)",
+			    (guint)self->metadata_offset,
+			    (guint)firmware_size_max);
+		return FALSE;
+	}
+	if (self->metadata_size > firmware_size_max - self->metadata_offset) {
+		self->metadata_size = firmware_size_max - self->metadata_offset;
+		g_debug("truncating metadata size to 0x%x", (guint)self->metadata_size);
+	}
 
 	/* nothing to do */
 	if (firmware_gtype == G_TYPE_INVALID)
@@ -187,13 +269,13 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
-	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
 	g_autofree gchar *attr_flags = NULL;
 	g_autofree gchar *attr_size = NULL;
 	g_autofree gchar *attr_name = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDevice) parent_device = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->probe(device, error))
@@ -230,19 +312,45 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	if (attr_name != NULL)
 		fu_device_set_name(FU_DEVICE(self), attr_name);
 
-	/* set vendor ID as the BIOS vendor */
-	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
-	fu_device_build_vendor_id(device, "DMI", vendor);
+	/* MTD devices backed by PCI should use that for identification */
+	parent_device = fu_device_get_backend_parent_with_subsystem(device, "pci", NULL);
+	if (parent_device != NULL) {
+		self->is_pci_device = TRUE;
 
-	/* use vendor and product as an optional instance ID prefix */
-	fu_device_add_instance_strsafe(device, "NAME", attr_name);
-	fu_device_add_instance_strsafe(device, "VENDOR", vendor);
-	fu_device_add_instance_strsafe(device,
-				       "PRODUCT",
-				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
-	fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
-	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "NAME", NULL);
-	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
+		fu_device_incorporate(
+		    device,
+		    parent_device,
+		    FU_DEVICE_INCORPORATE_FLAG_VENDOR | FU_DEVICE_INCORPORATE_FLAG_VENDOR_IDS |
+			FU_DEVICE_INCORPORATE_FLAG_VID | FU_DEVICE_INCORPORATE_FLAG_PID |
+			FU_DEVICE_INCORPORATE_FLAG_PHYSICAL_ID);
+
+		if (fu_device_get_version(device) == NULL)
+			fu_device_set_version_raw(
+			    device,
+			    fu_pci_device_get_revision(FU_PCI_DEVICE(parent_device)));
+
+		fu_device_add_instance_strsafe(device, "NAME", attr_name);
+		fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VEN", "DEV", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VEN", "DEV", "NAME", NULL);
+	} else {
+		const gchar *vendor;
+
+		/* set vendor ID as the BIOS vendor */
+		vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
+		fu_device_build_vendor_id(device, "DMI", vendor);
+
+		/* use vendor and product as an optional instance ID prefix */
+		fu_device_add_instance_strsafe(device, "NAME", attr_name);
+		fu_device_add_instance_strsafe(device, "VENDOR", vendor);
+		fu_device_add_instance_strsafe(
+		    device,
+		    "PRODUCT",
+		    fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
+		fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "NAME", NULL);
+		fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
+	}
 
 	/* get properties about the device */
 	attr_size = fu_udev_device_read_sysfs(FU_UDEV_DEVICE(self),
@@ -311,8 +419,19 @@ fu_mtd_device_erase(FuMtdDevice *self, GInputStream *stream, FuProgress *progres
 			return FALSE;
 		erase.start = fu_chunk_get_address(chk);
 		erase.length = fu_chunk_get_data_sz(chk);
+
+		/* the last chunk may be smaller than the erasesize. if it is, extend the last erase
+		 * up to the erasesize */
+		if (erase.length < self->erasesize) {
+			g_debug("extending last erase from %" G_GUINT32_FORMAT
+				" bytes to %" G_GUINT64_FORMAT " bytes",
+				erase.length,
+				self->erasesize);
+			erase.length = self->erasesize;
+		}
+
 		if (!fu_ioctl_execute(ioctl,
-				      2,
+				      MEMERASE,
 				      (guint8 *)&erase,
 				      sizeof(erase),
 				      NULL,
@@ -579,7 +698,12 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_FLAGS);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_ICON);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_NAME);
 	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_SIGNED);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VENDOR);
+	fu_device_add_private_flag(FU_DEVICE(self), FU_DEVICE_PRIVATE_FLAG_MD_SET_VERFMT);
 	fu_device_add_icon(FU_DEVICE(self), FU_DEVICE_ICON_DRIVE_SSD);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_SYNC);
@@ -593,6 +717,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	device_class->probe = fu_mtd_device_probe;
 	device_class->setup = fu_mtd_device_setup;
 	device_class->to_string = fu_mtd_device_to_string;
+	device_class->convert_version = fu_mtd_device_convert_version;
 	device_class->dump_firmware = fu_mtd_device_dump_firmware;
 	device_class->read_firmware = fu_mtd_device_read_firmware;
 	device_class->write_firmware = fu_mtd_device_write_firmware;

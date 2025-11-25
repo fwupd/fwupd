@@ -284,7 +284,7 @@ fu_dfu_target_stm_download_element1(FuDfuTarget *target,
 					    (guint)address + offset_dev);
 				return FALSE;
 			}
-			if (!fu_dfu_sector_has_cap(sector, FU_DFU_SECTOR_CAP_WRITEABLE)) {
+			if (!fu_dfu_sector_has_cap(sector, FU_DFU_SECTOR_CAP_WRITABLE)) {
 				g_set_error(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,

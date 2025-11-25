@@ -4,6 +4,7 @@
 #
 # Translators:
 # Omar TS <ots@duck.com>, 2024-2025
+# ver nos, 2025
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -14,6 +15,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ar\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "نُسخة %s"
 
 msgid "Activate the new firmware on the device"
 msgstr "نشّط البرنامج الثابت الجديد على الجهاز"
@@ -106,6 +117,10 @@ msgstr "المصادقة مطلوبة لتحديث المجموع الاختبا
 msgid "BIOS updates delivered via LVFS or Windows Update"
 msgstr "تُسلّم تحديثات البايوس عبر LVFS أو Windows Update"
 
+#. TRANSLATORS: success
+msgid "Done!"
+msgstr "تم!"
+
 msgid "Enable"
 msgstr "يُمكَِن"
 
@@ -153,6 +168,11 @@ msgstr "تثبيت البرامج الثابتة للنظام غير الموق�
 msgid "Installing firmware update…"
 msgstr "جارٍ تثبيت تحديث البرنامج الثابت..."
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "جارِ التثبيت على %s…"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "خدمة البرامج الثابتة لموردي Linux (البرامج الثابتة المستقرة)"
 
@@ -166,6 +186,13 @@ msgstr "قائمة الإدخالات في dbx"
 #. TRANSLATORS: command description
 msgid "Load device emulation data"
 msgstr "حمّل بيانات محاكاة الجهاز"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "جارِ التحميل…"
+
+msgid "MEI version"
+msgstr "نُسخة MEI"
 
 msgid "Modify a configured remote"
 msgstr "عدّل جهاز التحكم عن بعد المكوَّن"
@@ -241,6 +268,19 @@ msgstr "الغ قفل الجهاز للسماح بالوصول"
 
 msgid "Update the stored device verification information"
 msgstr "حدّث معلومات التحقق من الجهاز المخزن"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "جارِ تحديث %s…"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING"
+msgstr "تحذير"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "جارِ الكتابة…"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"

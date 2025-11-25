@@ -71,7 +71,7 @@ fu_bnr_dp_device_eval_result(const FuStructBnrDpAuxStatus *st_status, GError **e
 	guint8 error_byte = fu_struct_bnr_dp_aux_status_get_error(st_status);
 	guint8 error_code = error_byte & 0x0F;
 
-	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_ERROR) {
+	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAG_ERROR) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_READ,
@@ -88,7 +88,7 @@ fu_bnr_dp_device_is_done(const FuStructBnrDpAuxStatus *st_status, GError **error
 {
 	guint8 error_byte = fu_struct_bnr_dp_aux_status_get_error(st_status);
 
-	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAGS_BUSY) {
+	if (error_byte & FU_BNR_DP_AUX_STATUS_FLAG_BUSY) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_BUSY, "device is busy");
 		return FALSE;
 	}
@@ -580,7 +580,7 @@ fu_bnr_dp_device_read_firmware(FuDevice *device, FuProgress *progress, GError **
 
 	/* the flash is 3 * `FU_BNR_DP_FW_SIZE`; first third is boot loader, then low and high
 	 * images */
-	if ((flags & FU_BNR_DP_PAYLOAD_FLAGS_BOOT_AREA) == (guint)FU_BNR_DP_BOOT_AREA_HIGH)
+	if ((flags & FU_BNR_DP_PAYLOAD_FLAG_BOOT_AREA) == (guint)FU_BNR_DP_BOOT_AREA_HIGH)
 		offset *= 2;
 
 	image = fu_bnr_dp_device_read_data(self,
@@ -795,9 +795,9 @@ fu_bnr_dp_device_write_firmware(FuDevice *device,
 	}
 
 	boot_area_pre = (fu_struct_bnr_dp_info_flags_get_inner(st_info_flags_pre) &
-			 FU_BNR_DP_INFO_FLAGS_BOOT_AREA);
+			 FU_BNR_DP_INFO_FLAG_BOOT_AREA);
 	boot_area_post = (fu_struct_bnr_dp_info_flags_get_inner(st_info_flags_post) &
-			  FU_BNR_DP_INFO_FLAGS_BOOT_AREA);
+			  FU_BNR_DP_INFO_FLAG_BOOT_AREA);
 	if (boot_area_pre == boot_area_post) {
 		g_set_error(
 		    error,

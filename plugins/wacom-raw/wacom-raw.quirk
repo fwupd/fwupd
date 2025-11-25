@@ -140,10 +140,10 @@ WacomI2cFlashBaseAddr = 0x3000
 FirmwareSizeMax = 0x3c000
 
 [WacomEMR]
-GType = FuWacomEmrDevice
+GType = FuWacomRawEmrDevice
 
 [WacomAES]
-GType = FuWacomAesDevice
+GType = FuWacomRawAesDevice
 WacomI2cFlashBlockSize = 128
 WacomI2cFlashBaseAddr = 0x8000
 FirmwareSizeMax = 0x28000

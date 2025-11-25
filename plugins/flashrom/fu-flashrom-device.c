@@ -17,7 +17,8 @@
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
-	FuIfdRegion region;
+	FuIfdRegion ifd_region;
+	gchar *fmap_regions;
 	struct flashrom_flashctx *flashctx;
 	struct flashrom_layout *layout;
 };
@@ -26,12 +27,33 @@ G_DEFINE_TYPE(FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
 
 enum { PROP_0, PROP_FLASHCTX, PROP_REGION, PROP_LAST };
 
+static void
+fu_flashrom_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
+	fwupd_codec_string_append(str, idt, "IfdRegion", fu_ifd_region_to_string(self->ifd_region));
+	fwupd_codec_string_append(str, idt, "FmapRegions", self->fmap_regions);
+}
+
 static gboolean
 fu_flashrom_device_set_quirk_kv(FuDevice *device,
 				const gchar *key,
 				const gchar *value,
 				GError **error)
 {
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(device);
+	if (g_strcmp0(key, "FlashromFmapRegions") == 0) {
+		if (g_strcmp0(value, "") == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "FMAP regions cannot be empty");
+			return FALSE;
+		}
+		g_free(self->fmap_regions);
+		self->fmap_regions = g_strdup(value);
+		return TRUE;
+	}
 	if (g_strcmp0(key, "PciBcrAddr") == 0) {
 		guint64 tmp = 0;
 		if (!fu_strtoull(value, &tmp, 0, G_MAXUINT32, FU_INTEGER_BASE_AUTO, error))
@@ -64,6 +86,62 @@ fu_flashrom_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+typedef struct flashrom_layout _flashrom_layout;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(_flashrom_layout, flashrom_layout_release)
+
+static gboolean
+fu_flashrom_device_open_fmap(FuFlashromDevice *self, GError **error)
+{
+	g_auto(GStrv) fmap_regions = g_strsplit(self->fmap_regions, ",", 0);
+	g_autoptr(_flashrom_layout) layout = NULL;
+
+	if (flashrom_layout_read_fmap_from_rom(&layout, self->flashctx, 0, 0)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "failed to read layout from FMAP");
+		return FALSE;
+	}
+	for (guint i = 0; fmap_regions[i] != NULL; i++)
+		flashrom_layout_include_region(layout, fmap_regions[i]);
+
+	/* does not transfer ownership, so we must manage the lifetime of layout */
+	self->layout = g_steal_pointer(&layout);
+	flashrom_layout_set(self->flashctx, self->layout);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_flashrom_device_open_ifd(FuFlashromDevice *self, GError **error)
+{
+	g_autoptr(_flashrom_layout) layout = NULL;
+
+	if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_READ,
+				    "failed to read layout from Intel ICH descriptor");
+		return FALSE;
+	}
+	if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->ifd_region))) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "partition '%s' not found in IFD",
+			    fu_ifd_region_to_string(self->ifd_region));
+		return FALSE;
+	}
+
+	/* does not transfer ownership, so we must manage the lifetime of layout */
+	self->layout = g_steal_pointer(&layout);
+	flashrom_layout_set(self->flashctx, self->layout);
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_flashrom_device_open(FuDevice *device, GError **error)
 {
@@ -88,31 +166,18 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
-	/* update only one specific region of the flash and do not touch others */
+	/* either use IFD or FMAP */
 	if (fu_cpu_get_vendor() == FU_CPU_VENDOR_INTEL) {
-		struct flashrom_layout *layout = NULL;
-		if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_READ,
-					    "failed to read layout from Intel ICH descriptor");
-			return FALSE;
+		if (self->fmap_regions != NULL) {
+			if (!fu_flashrom_device_open_fmap(self, error))
+				return FALSE;
+		} else {
+			if (!fu_flashrom_device_open_ifd(self, error))
+				return FALSE;
 		}
-		if (flashrom_layout_include_region(layout, fu_ifd_region_to_string(self->region))) {
-			flashrom_layout_release(layout);
-
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "invalid region name");
-			return FALSE;
-		}
-
-		/* does not transfer ownership, so we must manage the lifetime of layout */
-		self->layout = layout;
-		flashrom_layout_set(self->flashctx, self->layout);
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -321,7 +386,7 @@ fu_flashrom_device_get_property(GObject *object, guint prop_id, GValue *value, G
 		g_value_set_pointer(value, self->flashctx);
 		break;
 	case PROP_REGION:
-		g_value_set_uint(value, self->region);
+		g_value_set_uint(value, self->ifd_region);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -341,8 +406,9 @@ fu_flashrom_device_set_property(GObject *object,
 		self->flashctx = g_value_get_pointer(value);
 		break;
 	case PROP_REGION:
-		self->region = g_value_get_uint(value);
-		fu_device_set_logical_id(FU_DEVICE(self), fu_ifd_region_to_string(self->region));
+		self->ifd_region = g_value_get_uint(value);
+		fu_device_set_logical_id(FU_DEVICE(self),
+					 fu_ifd_region_to_string(self->ifd_region));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -356,6 +422,7 @@ fu_flashrom_device_finalize(GObject *object)
 	FuFlashromDevice *self = FU_FLASHROM_DEVICE(object);
 	if (self->layout != NULL)
 		flashrom_layout_release(self->layout);
+	g_free(self->fmap_regions);
 
 	G_OBJECT_CLASS(fu_flashrom_device_parent_class)->finalize(object);
 }
@@ -397,6 +464,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 	g_object_class_install_property(object_class, PROP_FLASHCTX, pspec);
 
 	object_class->finalize = fu_flashrom_device_finalize;
+	device_class->to_string = fu_flashrom_device_to_string;
 	device_class->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
 	device_class->probe = fu_flashrom_device_probe;
 	device_class->open = fu_flashrom_device_open;
@@ -408,7 +476,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 }
 
 FuDevice *
-fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfdRegion region)
+fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfdRegion ifd_region)
 {
 	return FU_DEVICE(g_object_new(FU_TYPE_FLASHROM_DEVICE,
 				      "context",
@@ -416,14 +484,14 @@ fu_flashrom_device_new(FuContext *ctx, struct flashrom_flashctx *flashctx, FuIfd
 				      "flashctx",
 				      flashctx,
 				      "region",
-				      region,
+				      ifd_region,
 				      NULL));
 }
 
 gboolean
 fu_flashrom_device_unlock(FuFlashromDevice *self, GError **error)
 {
-	if (self->region == FU_IFD_REGION_ME &&
+	if (self->ifd_region == FU_IFD_REGION_ME &&
 	    fu_device_has_private_flag(FU_DEVICE(self), FU_FLASHROM_DEVICE_FLAG_FN_M_ME_UNLOCK)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,

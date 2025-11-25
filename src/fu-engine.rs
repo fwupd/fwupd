@@ -29,10 +29,26 @@ enum FuEngineEmulatorPhase {
 }
 
 #[derive(ToBitString)]
-enum FuEngineRequestFlag {
+enum FuEngineRequestFlags {
     None = 0,
     NoRequirements = 1 << 0,
     AnyRelease = 1 << 1,
+}
+
+enum FuEngineLoadFlags {
+    None = 0,
+    Readonly = 1 << 0,
+    Coldplug = 1 << 1,
+    Remotes = 1 << 2,
+    Hwinfo = 1 << 3,
+    NoCache = 1 << 4,
+    NoIdleSources = 1 << 5,
+    BuiltinPlugins = 1 << 6,
+    EnsureClientCert = 1 << 7,
+    ExternalPlugins = 1 << 8,   // dload'ed plugins such as flashrom
+    DeviceHotplug = 1 << 9,
+    ColdplugForce = 1 << 10,    // even without a matched plugin
+    Ready = 1 << 11,
 }
 
 #[derive(ToBitString)]
@@ -42,9 +58,15 @@ enum FuIdleInhibit {
     Signals = 1 << 1,
 }
 
-enum FuClientFlag {
+enum FuClientFlags {
     None = 0,
     Active = 1 << 0,
+}
+
+#[derive(FromString)]
+enum FuEngineCapabilityFlags {
+    Unknown = 0,
+    IdRequirementGlob = 1 << 0,
 }
 
 #[derive(ParseBytes, Default)]

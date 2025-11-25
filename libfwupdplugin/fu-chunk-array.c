@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include "fu-bytes.h"
 #include "fu-chunk-array.h"
 #include "fu-chunk-private.h"
 #include "fu-input-stream.h"

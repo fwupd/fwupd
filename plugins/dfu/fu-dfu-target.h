@@ -10,29 +10,10 @@
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
+#include "fu-dfu-struct.h"
 
 #define FU_TYPE_DFU_TARGET (fu_dfu_target_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuDfuTarget, fu_dfu_target, FU, DFU_TARGET, FuDevice)
-
-/**
- * FuDfuTargetTransferFlags:
- * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
- * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
- * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
- * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
- * @DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC:	Automatically detect the address to use
- *
- * The optional flags used for transferring firmware.
- **/
-typedef enum {
-	DFU_TARGET_TRANSFER_FLAG_NONE = 0,
-	DFU_TARGET_TRANSFER_FLAG_VERIFY = (1 << 0),
-	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID = (1 << 4),
-	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID = (1 << 5),
-	DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC = (1 << 7),
-	/*< private >*/
-	DFU_TARGET_TRANSFER_FLAG_LAST
-} FuDfuTargetTransferFlags;
 
 struct _FuDfuTargetClass {
 	FuDeviceClass parent_class;

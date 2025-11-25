@@ -97,6 +97,11 @@ fu_console_setup(FuConsole *self, GError **error)
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a TTY");
 		return FALSE;
 	}
+	if (isatty(fileno(stdout)) == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not a TTY");
+		return FALSE;
+	}
+
 #endif
 	/* success */
 	return TRUE;
@@ -174,6 +179,9 @@ fu_console_input_uint(FuConsole *self, guint maxnum, const gchar *format, ...)
 	do {
 		g_autofree gchar *buffer = readline(prompt);
 
+		if (buffer == NULL)
+			break;
+
 		/* get a number */
 		retval = sscanf(buffer, "%u", &answer);
 
@@ -209,7 +217,7 @@ fu_console_input_bool(FuConsole *self, gboolean def, const gchar *format, ...)
 	do {
 		g_autofree gchar *buffer = readline(prompt);
 
-		if (!strlen(buffer))
+		if (buffer == NULL || !strlen(buffer))
 			return def;
 		buffer[0] = g_ascii_toupper(buffer[0]);
 		if (g_strcmp0(buffer, "Y") == 0)

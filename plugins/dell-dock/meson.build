@@ -3,6 +3,7 @@ plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('dell-dock.quirk')
 plugin_builtins += static_library('fu_plugin_dell_dock',
+  rustgen.process('fu-dell-dock.rs'),
   sources: [
     'fu-dell-dock-plugin.c',
     'fu-dell-dock-common.c',

@@ -1,4 +1,5 @@
-if host_machine.system() == 'linux'
+host_machine.system() == 'linux' or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginIgsc"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
@@ -6,6 +7,7 @@ plugin_quirks += files('igsc.quirk')
 plugin_builtins += static_library('fu_plugin_igsc',
   rustgen.process('fu-igsc.rs'),
   sources: [
+    'fu-igsc-common.c',
     'fu-igsc-plugin.c',
     'fu-igsc-device.c',
     'fu-igsc-code-firmware.c',
@@ -21,4 +23,3 @@ plugin_builtins += static_library('fu_plugin_igsc',
 )
 enumeration_data += files('tests/intel-gsc-setup.json')
 device_tests += files('tests/intel-gsc.json')
-endif

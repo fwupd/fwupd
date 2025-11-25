@@ -24,7 +24,6 @@
 #include <poll.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -36,6 +35,8 @@ struct _FuPolkitAgent {
 };
 
 G_DEFINE_TYPE(FuPolkitAgent, fu_polkit_agent, G_TYPE_OBJECT)
+
+#pragma GCC diagnostic ignored "-Wanalyzer-fd-leak"
 
 static int
 fu_polkit_agent_fork_agent(FuPolkitAgent *self, const char *path, ...)

@@ -18,10 +18,7 @@
 #include "fwupd-common.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
-#include "fwupd-remote-private.h"
 
-#include "fu-bytes.h"
-#include "fu-common.h"
 #include "fu-path.h"
 #include "fu-quirks.h"
 #include "fu-string.h"

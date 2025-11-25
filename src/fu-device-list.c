@@ -12,7 +12,6 @@
 
 #include "fu-device-list.h"
 #include "fu-device-private.h"
-#include "fu-engine.h"
 
 /**
  * FuDeviceList:
@@ -39,6 +38,13 @@ struct _FuDeviceList {
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
+
+enum {
+	QUARK_UNCONNECTED,
+	QUARK_LAST,
+};
+
+static guint quarks[QUARK_LAST] = {0};
 
 typedef struct {
 	FuDevice *device;
@@ -223,7 +229,7 @@ fu_device_list_get_active(FuDeviceList *self)
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (fu_device_has_private_flag(item->device, FU_DEVICE_PRIVATE_FLAG_UNCONNECTED))
+		if (fu_device_has_private_flag_quark(item->device, quarks[QUARK_UNCONNECTED]))
 			continue;
 		if (fu_device_has_inhibit(item->device, "hidden"))
 			continue;
@@ -322,6 +328,14 @@ fu_device_list_filter_by_id(FuDeviceList *self, const gchar *device_id, GError *
 
 	/* support abbreviated hashes */
 	device_id_len = strlen(device_id);
+	if (device_id_len < 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "invalid device ID: %s",
+			    device_id);
+		return NULL;
+	}
 	g_rw_lock_reader_lock(&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index(self->devices, i);
@@ -1120,6 +1134,9 @@ fu_device_list_class_init(FuDeviceListClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->dispose = fu_device_list_dispose;
 	object_class->finalize = fu_device_list_finalize;
+
+	/* used as device flags */
+	quarks[QUARK_UNCONNECTED] = g_quark_from_static_string(FU_DEVICE_PRIVATE_FLAG_UNCONNECTED);
 
 	/**
 	 * FuDeviceList::added:

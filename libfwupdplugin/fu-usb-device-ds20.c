@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include "fu-byte-array.h"
-#include "fu-bytes.h"
 #include "fu-dump.h"
 #include "fu-input-stream.h"
 #include "fu-usb-device-ds20-struct.h"

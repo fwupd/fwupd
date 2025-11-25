@@ -1,9 +1,11 @@
-if host_machine.system() in ['linux', 'android']
+host_machine.system() in ['linux', 'android'] or subdir_done()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginFocalfp"']
 plugins += {meson.current_source_dir().split('/')[-1]: true}
 
 plugin_quirks += files('focalfp.quirk')
 plugin_builtins += static_library('fu_plugin_focalfp',
+  rustgen.process('fu-focalfp.rs'),
   sources: [
     'fu-focalfp-plugin.c',
     'fu-focalfp-firmware.c',
@@ -16,4 +18,3 @@ plugin_builtins += static_library('fu_plugin_focalfp',
   link_with: plugin_libs,
   dependencies: plugin_deps,
 )
-endif

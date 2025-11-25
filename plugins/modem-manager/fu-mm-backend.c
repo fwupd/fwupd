@@ -8,13 +8,13 @@
 
 #include "fu-mm-backend.h"
 #include "fu-mm-common.h"
+#include "fu-mm-dfota-device.h"
 #include "fu-mm-fastboot-device.h"
+#include "fu-mm-fdl-device.h"
 #include "fu-mm-firehose-device.h"
+#include "fu-mm-mbim-device.h"
 #include "fu-mm-mhi-qcdm-device.h"
 #include "fu-mm-qcdm-device.h"
-#include "fu-mm-dfota-device.h"
-#include "fu-mm-fdl-device.h"
-#include "fu-mm-mbim-device.h"
 #include "fu-mm-qmi-device.h"
 
 struct _FuMmBackend {

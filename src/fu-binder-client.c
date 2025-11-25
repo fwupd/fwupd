@@ -39,7 +39,7 @@ typedef enum {
 	FU_UTIL_OPERATION_LAST
 } FuUtilOperation;
 
-struct FuUtilPrivate {
+struct FuUtil {
 	GCancellable *cancellable;
 	GMainContext *main_ctx;
 	GMainLoop *loop;
@@ -75,47 +75,36 @@ struct FuUtilPrivate {
 	FwupdReleaseFlags filter_release_exclude;
 };
 
-typedef struct self {
-	GMainLoop *loop;
-	gulong death_id;
-} FuUtil;
+typedef struct FuUtil FuUtil;
 
 static void
-fu_util_private_free(FuUtilPrivate *priv)
+fu_util_private_free(FuUtil *self)
 {
-	if (priv->client != NULL) {
+	if (self->client != NULL) {
 		/* when destroying GDBusProxy in a custom GMainContext, the context must be
 		 * iterated enough after finalization of the proxies that any pending D-Bus traffic
 		 * can be freed */
-		fwupd_client_disconnect(priv->client, NULL);
-		while (g_main_context_iteration(priv->main_ctx, FALSE)) {
+		fwupd_client_disconnect(self->client, NULL);
+		while (g_main_context_iteration(self->main_ctx, FALSE)) {
 			/* nothing needs to be done here */
 		};
-		g_object_unref(priv->client);
+		g_object_unref(self->client);
 	}
-	if (priv->current_device != NULL)
-		g_object_unref(priv->current_device);
-	// g_ptr_array_unref(priv->post_requests);
-	g_main_loop_unref(priv->loop);
-	g_main_context_unref(priv->main_ctx);
-	// g_object_unref(priv->cancellable);
-	g_object_unref(priv->console);
-	// g_option_context_free(priv->context);
-	g_free(priv);
+	if (self->current_device != NULL)
+		g_object_unref(self->current_device);
+	// g_ptr_array_unref(self->post_requests);
+	g_main_loop_unref(self->loop);
+	g_main_context_unref(self->main_ctx);
+	// g_object_unref(self->cancellable);
+	g_object_unref(self->console);
+	// g_option_context_free(self->context);
+	g_free(self);
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_util_private_free)
 #pragma clang diagnostic pop
-
-static void
-fu_self_free(FuUtil *self)
-{
-	g_free(self);
-}
-
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_self_free)
 
 /* Attempts to set error from the parcel status
  * sets error and returns FALSE if the header is invalid or contains an error
@@ -173,7 +162,7 @@ fu_util_binder_parcel_read_header(AParcel *parcel, GError **error)
 }
 
 static gboolean
-fu_util_setup_event_listener(FuUtilPrivate *priv,
+fu_util_setup_event_listener(FuUtil *self,
 			     const AIBinder_Class *binder_listener_class,
 			     GError **error)
 {
@@ -183,9 +172,9 @@ fu_util_setup_event_listener(FuUtilPrivate *priv,
 	g_autoptr(AStatus) status = NULL;
 	binder_status_t nstatus = STATUS_OK;
 
-	priv->listener_binder = AIBinder_new(binder_listener_class, priv);
+	self->listener_binder = AIBinder_new(binder_listener_class, self);
 
-	nstatus = AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+	nstatus = AIBinder_prepareTransaction(self->fwupd_binder, &pending_in);
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
 		g_set_error(error,
@@ -196,10 +185,10 @@ fu_util_setup_event_listener(FuUtilPrivate *priv,
 		return FALSE;
 	}
 
-	AParcel_writeStrongBinder(pending_in, priv->listener_binder);
+	AParcel_writeStrongBinder(pending_in, self->listener_binder);
 
 	in = g_steal_pointer(&pending_in);
-	nstatus = AIBinder_transact(priv->fwupd_binder,
+	nstatus = AIBinder_transact(self->fwupd_binder,
 				    FWUPD_BINDER_CALL_ADD_EVENT_LISTENER,
 				    &in,
 				    &out,
@@ -231,7 +220,7 @@ fu_util_setup_event_listener(FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_transact(FuUtilPrivate *priv,
+fu_util_transact(FuUtil *self,
 		 transaction_code_t code,
 		 GVariant *parameters,
 		 binder_flags_t flags,
@@ -243,7 +232,7 @@ fu_util_transact(FuUtilPrivate *priv,
 	g_autoptr(AStatus) status = NULL;
 	binder_status_t nstatus = STATUS_OK;
 
-	nstatus = AIBinder_prepareTransaction(priv->fwupd_binder, &pending_in);
+	nstatus = AIBinder_prepareTransaction(self->fwupd_binder, &pending_in);
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
 		g_set_error(error,
@@ -259,7 +248,7 @@ fu_util_transact(FuUtilPrivate *priv,
 			return FALSE;
 
 	in = g_steal_pointer(&pending_in);
-	nstatus = AIBinder_transact(priv->fwupd_binder, code, &in, out, flags);
+	nstatus = AIBinder_transact(self->fwupd_binder, code, &in, out, flags);
 
 	if (nstatus != STATUS_OK) {
 		status = AStatus_fromStatus(nstatus);
@@ -289,7 +278,7 @@ fu_util_transact(FuUtilPrivate *priv,
 }
 
 static GPtrArray *
-fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **error)
+fu_util_get_upgrades_call(FuUtil *self, const gchar *device_id, GError **error)
 {
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
@@ -301,7 +290,7 @@ fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **
 
 	parameters = g_variant_new("(s)", device_id);
 
-	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_UPGRADES, parameters, 0, &out, error)) {
+	if (!fu_util_transact(self, FWUPD_BINDER_CALL_GET_UPGRADES, parameters, 0, &out, error)) {
 		return NULL;
 	}
 
@@ -321,7 +310,7 @@ fu_util_get_upgrades_call(FuUtilPrivate *priv, const gchar *device_id, GError **
 }
 
 static GPtrArray *
-fu_util_get_devices_call(FuUtilPrivate *priv, GError **error)
+fu_util_get_devices_call(FuUtil *self, GError **error)
 {
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
@@ -330,7 +319,7 @@ fu_util_get_devices_call(FuUtilPrivate *priv, GError **error)
 	GVariantBuilder builder;
 	const GVariantType *vtype = G_VARIANT_TYPE("(aa{sv})");
 
-	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_DEVICES, NULL, 0, &out, error)) {
+	if (!fu_util_transact(self, FWUPD_BINDER_CALL_GET_DEVICES, NULL, 0, &out, error)) {
 		return NULL;
 	}
 
@@ -350,7 +339,7 @@ fu_util_get_devices_call(FuUtilPrivate *priv, GError **error)
 }
 
 static GPtrArray *
-fu_util_get_remotes_call(FuUtilPrivate *priv, GError **error)
+fu_util_get_remotes_call(FuUtil *self, GError **error)
 {
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -358,7 +347,7 @@ fu_util_get_remotes_call(FuUtilPrivate *priv, GError **error)
 	GVariantBuilder builder;
 	const GVariantType *vtype = G_VARIANT_TYPE("(aa{sv})");
 
-	if (!fu_util_transact(priv, FWUPD_BINDER_CALL_GET_REMOTES, NULL, 0, &out, error)) {
+	if (!fu_util_transact(self, FWUPD_BINDER_CALL_GET_REMOTES, NULL, 0, &out, error)) {
 		return NULL;
 	}
 
@@ -376,105 +365,52 @@ fu_util_get_remotes_call(FuUtilPrivate *priv, GError **error)
 	return g_steal_pointer(&array);
 }
 
-// Taken from FuUtil
-static void
-fu_util_build_device_tree_node(FuUtilPrivate *priv, FuUtilNode *root, FwupdDevice *dev)
-{
-	FuUtilNode *root_child = g_node_append_data(root, g_object_ref(dev));
-	if (fwupd_device_get_release_default(dev) != NULL)
-		g_node_append_data(root_child, g_object_ref(fwupd_device_get_release_default(dev)));
-}
 
-// Taken from FuUtil
-static gboolean
-fu_util_build_device_tree_cb(FuUtilNode *n, gpointer user_data)
-{
-	FuUtilPrivate *priv = (FuUtilPrivate *)user_data;
-	FwupdDevice *dev = n->data;
-
-	/* root node */
-	if (dev == NULL)
-		return FALSE;
-
-	/* release */
-	if (FWUPD_IS_RELEASE(n->data))
-		return FALSE;
-
-	/* an interesting child, so include the parent */
-	for (FuUtilNode *c = n->children; c != NULL; c = c->next) {
-		if (c->data != NULL)
-			return FALSE;
-	}
-
-	/* not interesting, clear the node data */
-	if (!fwupd_device_match_flags(dev,
-				      priv->filter_device_include,
-				      priv->filter_device_exclude))
-		g_clear_object(&n->data);
-	else if (!priv->show_all && !fu_util_is_interesting_device(dev))
-		g_clear_object(&n->data);
-
-	/* continue */
-	return FALSE;
-}
 
 // Taken from FuUtil
 static void
-fu_util_build_device_tree(FuUtilPrivate *priv, FuUtilNode *root, GPtrArray *devs)
+fu_util_build_device_tree(FuUtil *self, FuUtilNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
-	/* add the top-level parents */
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
-		if (fwupd_device_get_parent(dev_tmp) != NULL)
+		if (!fwupd_device_match_flags(dev_tmp,
+					      self->filter_device_include,
+					      self->filter_device_exclude))
 			continue;
-		fu_util_build_device_tree_node(priv, root, dev_tmp);
+		if (!self->show_all && !fu_util_is_interesting_device(devs, dev_tmp))
+			continue;
+		if (fwupd_device_get_parent(dev_tmp) == dev) {
+			FuUtilNode *child = g_node_append_data(root, g_object_ref(dev_tmp));
+			fu_util_build_device_tree(self, child, devs, dev_tmp);
+		}
 	}
-
-	/* children */
-	for (guint i = 0; i < devs->len; i++) {
-		FwupdDevice *dev_tmp = g_ptr_array_index(devs, i);
-		FuUtilNode *root_parent;
-
-		if (fwupd_device_get_parent(dev_tmp) == NULL)
-			continue;
-		root_parent = g_node_find(root,
-					  G_PRE_ORDER,
-					  G_TRAVERSE_ALL,
-					  fwupd_device_get_parent(dev_tmp));
-		if (root_parent == NULL)
-			continue;
-		fu_util_build_device_tree_node(priv, root_parent, dev_tmp);
-	}
-
-	/* prune children that are not updatable */
-	g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1, fu_util_build_device_tree_cb, priv);
 }
 
 static gboolean
-fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_devices(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
-	g_autoptr(GPtrArray) devs = fu_util_get_devices_call(priv, error);
+	g_autoptr(GPtrArray) devs = fu_util_get_devices_call(self, error);
 
 	if (devs == NULL)
 		return FALSE;
 
 	/* print */
 	if (devs->len > 0)
-		fu_util_build_device_tree(priv, root, devs);
+		fu_util_build_device_tree(self, root, devs, NULL);
 	if (g_node_n_children(root) == 0) {
-		fu_console_print_literal(priv->console,
+		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: nothing attached that can be upgraded */
 					 _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_print_node(priv->console, priv->client, root);
+	fu_util_print_node(self->console, self->client, root);
 
 	return TRUE;
 }
 
 static gchar *
-fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
+fu_util_download_if_required(FuUtil *self, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -494,10 +430,10 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 	if (!fu_path_mkdir_parent(filename, error))
 		return NULL;
 
-	blob = fwupd_client_download_bytes(priv->client,
+	blob = fwupd_client_download_bytes(self->client,
 					   perhapsfn,
-					   priv->download_flags,
-					   priv->cancellable,
+					   self->download_flags,
+					   self->cancellable,
 					   error);
 
 	if (blob == NULL)
@@ -511,7 +447,7 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 }
 
 static gboolean
-fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_local_install(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
@@ -520,15 +456,15 @@ fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
-	FwupdInstallFlags install_flags = priv->flags;
+	FwupdInstallFlags install_flags = self->flags;
 
 	/* for now we ignore the requested device */
 	id = FWUPD_DEVICE_ID_ANY;
 
-	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	self->current_operation = FU_UTIL_OPERATION_INSTALL;
 
 	/* install with flags chosen by the user */
-	filename = fu_util_download_if_required(priv, values[0], error);
+	filename = fu_util_download_if_required(self, values[0], error);
 	if (filename == NULL)
 		return FALSE;
 
@@ -558,32 +494,32 @@ fu_util_local_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	g_message("encoding install params %s", g_variant_print(val, TRUE));
 
-	return fu_util_transact(priv, FWUPD_BINDER_CALL_INSTALL, val, 0, &out, error);
+	return fu_util_transact(self, FWUPD_BINDER_CALL_INSTALL, val, 0, &out, error);
 }
 
 static void
-fu_util_print_error(FuUtilPrivate *priv, const GError *error)
+fu_util_print_error(FuUtil *self, const GError *error)
 {
-	if (priv->as_json) {
-		fu_util_print_error_as_json(priv->console, error);
+	if (self->as_json) {
+		fu_util_print_error_as_json(self->console, error);
 		return;
 	}
-	fu_console_print_full(priv->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
+	fu_console_print_full(self->console, FU_CONSOLE_PRINT_FLAG_STDERR, "%s\n", error->message);
 }
 
 static gboolean
-fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_remotes(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(FuUtilNode) root = g_node_new(NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
-	remotes = fu_util_get_remotes_call(priv, error);
+	remotes = fu_util_get_remotes_call(self, error);
 	if (remotes == NULL)
 		return FALSE;
 
 	if (remotes->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
-		fu_console_print_literal(priv->console, _("No remotes available"));
+		fu_console_print_literal(self->console, _("No remotes available"));
 		return TRUE;
 	}
 
@@ -591,13 +527,13 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index(remotes, i);
 		g_node_append_data(root, g_object_ref(remote_tmp));
 	}
-	fu_util_print_node(priv->console, priv->client, root);
+	fu_util_print_node(self->console, self->client, root);
 
 	return TRUE;
 }
 
 static gboolean
-fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_refresh(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(AParcel) out = NULL;
 	g_autoptr(AStatus) status = NULL;
@@ -621,11 +557,11 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 			    g_unix_input_stream_get_fd(istr),
 			    g_unix_input_stream_get_fd(istr_sig));
 
-	return fu_util_transact(priv, FWUPD_BINDER_CALL_UPDATE_METADATA, val, 0, &out, error);
+	return fu_util_transact(self, FWUPD_BINDER_CALL_UPDATE_METADATA, val, 0, &out, error);
 }
 
 static gboolean
-fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_upgrades(FuUtil *self, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
@@ -634,18 +570,18 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
 
 	/* are the remotes very old */
-	// if (!fu_util_perhaps_refresh_remotes(priv, error))
+	// if (!fu_util_perhaps_refresh_remotes(self, error))
 	//	return FALSE;
 
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
-		devices = fu_util_get_devices_call(priv, error);
-		// fwupd_client_get_devices(priv->client, priv->cancellable, error);
+		devices = fu_util_get_devices_call(self, error);
+		// fwupd_client_get_devices(self->client, self->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length(values) == 1) {
 		// TODO: get by id
-		FwupdDevice *device = NULL; // fu_util_get_device_by_id(priv, values[0], error);
+		FwupdDevice *device = NULL; // fu_util_get_device_by_id(self, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
@@ -669,8 +605,8 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
 			continue;
 		if (!fwupd_device_match_flags(dev,
-					      priv->filter_device_include,
-					      priv->filter_device_exclude))
+					      self->filter_device_include,
+					      self->filter_device_exclude))
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			g_ptr_array_add(devices_no_support, dev);
@@ -679,10 +615,10 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 		supported = TRUE;
 
 		/* get the releases for this device and filter for validity */
-		rels = fu_util_get_upgrades_call(priv, fwupd_device_get_id(dev), &error_local);
-		/*fwupd_client_get_upgrades(priv->client,
+		rels = fu_util_get_upgrades_call(self, fwupd_device_get_id(dev), &error_local);
+		/*fwupd_client_get_upgrades(self->client,
 						 fwupd_device_get_id(dev),
-						 priv->cancellable,
+						 self->cancellable,
 						 &error_local);*/
 		if (rels == NULL) {
 			g_ptr_array_add(devices_no_upgrades, dev);
@@ -696,8 +632,8 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index(rels, j);
 			if (!fwupd_release_match_flags(rel,
-						       priv->filter_release_include,
-						       priv->filter_release_exclude))
+						       self->filter_release_include,
+						       self->filter_release_exclude))
 				continue;
 			g_node_append_data(child, g_object_ref(rel));
 		}
@@ -705,28 +641,28 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* devices that have no updates available for whatever reason */
 	if (devices_no_support->len > 0) {
-		fu_console_print_literal(priv->console,
+		fu_console_print_literal(self->console,
 					 /* TRANSLATORS: message letting the user know no device
 					  * upgrade available due to missing on LVFS */
 					 _("Devices with no available firmware updates: "));
 		for (guint i = 0; i < devices_no_support->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
-			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
 	if (devices_no_upgrades->len > 0) {
 		fu_console_print_literal(
-		    priv->console,
+		    self->console,
 		    /* TRANSLATORS: message letting the user know no device upgrade available */
 		    _("Devices with the latest available firmware version:"));
 		for (guint i = 0; i < devices_no_upgrades->len; i++) {
 			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
-			fu_console_print(priv->console, " • %s", fwupd_device_get_name(dev));
+			fu_console_print(self->console, " • %s", fwupd_device_get_name(dev));
 		}
 	}
 
 	/* nag? */
-	// if (!fu_util_perhaps_show_unreported(priv, error))
+	// if (!fu_util_perhaps_show_unreported(self, error))
 	//	return FALSE;
 
 	/* no devices supported by LVFS or all are filtered */
@@ -748,18 +684,18 @@ fu_util_get_upgrades(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	fu_util_print_node(priv->console, priv->client, root);
+	fu_util_print_node(self->console, self->client, root);
 
 	return TRUE;
 }
 
-typedef binder_status_t (*FuBinderListenerMethodFunc)(FuUtilPrivate *priv,
+typedef binder_status_t (*FuBinderListenerMethodFunc)(FuUtil *self,
 						      const AParcel *in,
 						      AParcel *out,
 						      GError **error);
 
 static binder_status_t
-fu_binder_listener_method_on_properties_changed(FuUtilPrivate *priv,
+fu_binder_listener_method_on_properties_changed(FuUtil *self,
 						const AParcel *in,
 						AParcel *out,
 						GError **error)
@@ -773,7 +709,7 @@ fu_binder_listener_method_on_properties_changed(FuUtilPrivate *priv,
 	GVariant *value;
 
 	if (!gp_parcel_to_variant(&builder, in, param_type, error)) {
-		fu_util_print_error(priv, *error);
+		fu_util_print_error(self, *error);
 		return STATUS_OK;
 	}
 
@@ -783,15 +719,15 @@ fu_binder_listener_method_on_properties_changed(FuUtilPrivate *priv,
 	g_variant_get(parameters, "(a{sv})", &iter);
 	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Status") == 0) {
-			fu_console_print(priv->console,
+			fu_console_print(self->console,
 					 "daemon status is %s",
 					 fwupd_status_to_string(g_variant_get_int32(value)));
 		} else if (g_strcmp0(key, "Percentage") == 0) {
-			fu_console_print(priv->console,
+			fu_console_print(self->console,
 					 "install progress is %d%%",
 					 g_variant_get_int32(value));
 		} else {
-			fu_console_print(priv->console,
+			fu_console_print(self->console,
 					 "property changed, %s: %s",
 					 key,
 					 g_variant_print(value, TRUE));
@@ -823,7 +759,7 @@ fwupd_listener_on_transact(AIBinder *binder,
 {
 	// TODO: Currently all listener events are `oneway` which means responding is unnecessary
 	//  They should probably be logged to stdout though
-	FuUtilPrivate *priv = AIBinder_getUserData(binder);
+	FuUtil *self = AIBinder_getUserData(binder);
 	g_autoptr(GError) error = NULL;
 	FuBinderListenerMethodFunc method_func = NULL;
 	uid_t binder_caller_uid = 0;
@@ -855,7 +791,7 @@ fwupd_listener_on_transact(AIBinder *binder,
 			    FWUPD_ERROR_INVALID_ARGS,
 			    "listener transaction %d out of range",
 			    code);
-		fu_util_print_error(priv, error);
+		fu_util_print_error(self, error);
 		return STATUS_INVALID_OPERATION;
 	}
 
@@ -867,11 +803,11 @@ fwupd_listener_on_transact(AIBinder *binder,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "listener transaction %d unimplemented",
 			    code);
-		fu_util_print_error(priv, error);
+		fu_util_print_error(self, error);
 		return STATUS_OK;
 	}
 
-	return method_func(priv, in, out, &error);
+	return method_func(self, in, out, &error);
 }
 
 static void *
@@ -896,7 +832,7 @@ fwupd_service_on_transact(AIBinder *binder,
 }
 
 typedef struct _FuUtilBinderThreadData {
-	FuUtilPrivate *priv;
+	FuUtil *self;
 	GMainContext *worker_context;
 	GSource *source;
 	int binder_fd;
@@ -936,9 +872,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilBinderThreadData, fu_util_binder_thread_data
 int
 main(int argc, char *argv[])
 {
-	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
 	g_autoptr(GOptionContext) context = g_option_context_new(NULL);
-	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
+	g_autoptr(FuUtil) self = g_new0(FuUtil, 1);
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autoptr(FuUtilBinderThreadData) thread_data = g_new0(FuUtilBinderThreadData, 1);
 	g_autoptr(GThread) listener_thread = NULL;
@@ -1013,7 +948,7 @@ main(int argc, char *argv[])
 					 '\0',
 					 0,
 					 G_OPTION_ARG_NONE,
-					 &priv->as_json,
+					 &self->as_json,
 					 /* TRANSLATORS: command line option */
 					 N_("Output in JSON format"),
 					 NULL},
@@ -1036,11 +971,11 @@ main(int argc, char *argv[])
 					{NULL}};
 
 	/* create helper object */
-	priv->main_ctx = g_main_context_new();
-	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
-	priv->console = fu_console_new();
-	priv->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	fu_console_set_main_context(priv->console, priv->main_ctx);
+	self->main_ctx = g_main_context_new();
+	self->loop = g_main_loop_new(self->main_ctx, FALSE);
+	self->console = fu_console_new();
+	self->post_requests = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	fu_console_set_main_context(self->console, self->main_ctx);
 
 	// TODO: Add binder alternative to fwupd-client.c
 	/* add commands */
@@ -1079,11 +1014,11 @@ main(int argc, char *argv[])
 			      fu_util_refresh);
 
 	/* get a list of the commands */
-	priv->context = g_option_context_new(NULL);
+	self->context = g_option_context_new(NULL);
 	cmd_descriptions = fu_util_cmd_array_to_string(cmd_array);
-	g_option_context_set_summary(priv->context, cmd_descriptions);
+	g_option_context_set_summary(self->context, cmd_descriptions);
 	g_option_context_set_description(
-	    priv->context,
+	    self->context,
 	    /* TRANSLATORS: CLI description */
 	    _("This tool allows an administrator to query and control the "
 	      "fwupd daemon, allowing them to perform actions such as "
@@ -1091,10 +1026,10 @@ main(int argc, char *argv[])
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("Firmware Utility"));
-	g_option_context_add_main_entries(priv->context, options, NULL);
-	ret = g_option_context_parse(priv->context, &argc, &argv, &error);
+	g_option_context_add_main_entries(self->context, options, NULL);
+	ret = g_option_context_parse(self->context, &argc, &argv, &error);
 	if (!ret) {
-		fu_console_print(priv->console,
+		fu_console_print(self->console,
 				 "%s: %s",
 				 /* TRANSLATORS: the user didn't read the man page */
 				 _("Failed to parse arguments"),
@@ -1112,52 +1047,52 @@ main(int argc, char *argv[])
 
 	/* set flags */
 	if (allow_reinstall)
-		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+		self->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
-		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+		self->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
-		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+		self->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (force) {
-		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
+		self->flags |= FWUPD_INSTALL_FLAG_FORCE;
+		self->flags |= FWUPD_INSTALL_FLAG_IGNORE_REQUIREMENTS;
 	}
 	if (no_history)
-		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+		self->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
 	/* connect to the daemon */
 	// TODO: Maybe create FuClientBinder
-	// priv->client = fwupd_client_new();
-	// fwupd_client_set_main_context(priv->client, priv->main_ctx);
+	// self->client = fwupd_client_new();
+	// fwupd_client_set_main_context(self->client, self->main_ctx);
 
-	thread_data->priv = priv;
+	thread_data->self = self;
 	thread_data->worker_context = g_main_context_new();
 	g_atomic_int_set(&thread_data->status, FWUPD_STATUS_UNKNOWN);
 
 	listener_thread = g_thread_new("fwupd-client-listener", listener_thread_cb, thread_data);
 
-	priv->fwupd_binder = AServiceManager_checkService(BINDER_SERVICE_NAME);
+	self->fwupd_binder = AServiceManager_checkService(BINDER_SERVICE_NAME);
 
 	/* fail if daemon doesn't exist */
-	if (!priv->fwupd_binder) {
+	if (!self->fwupd_binder) {
 		/* TRANSLATORS: could not contact the fwupd service over binder */
 		g_set_error_literal(&error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_FOUND,
 				    _("Failed to connect to daemon"));
-		fu_util_print_error(priv, error);
+		fu_util_print_error(self, error);
 		return EXIT_FAILURE;
 	}
 
-	AIBinder_associateClass(priv->fwupd_binder, fwupd_binder_class);
+	AIBinder_associateClass(self->fwupd_binder, fwupd_binder_class);
 
-	if (!fu_util_setup_event_listener(priv, binder_listener_class, &error)) {
+	if (!fu_util_setup_event_listener(self, binder_listener_class, &error)) {
 		g_prefix_error(&error, _("Failed to attach listener to daemon"));
-		fu_util_print_error(priv, error);
+		fu_util_print_error(self, error);
 		return EXIT_FAILURE;
 	}
 
 	/* run the specified command */
-	ret = fu_util_cmd_array_run(cmd_array, priv, argv[1], (gchar **)&argv[2], &error);
+	ret = fu_util_cmd_array_run(cmd_array, self, argv[1], (gchar **)&argv[2], &error);
 
 	/* join listener thread */
 	g_atomic_int_set(&thread_data->status, FWUPD_STATUS_SHUTDOWN);
@@ -1172,14 +1107,14 @@ main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 #endif
-		fu_util_print_error(priv, error);
+		fu_util_print_error(self, error);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			g_autofree gchar *cmd = g_strdup_printf("%s --help", g_get_prgname());
 			g_autoptr(GString) str = g_string_new("\n");
 			/* TRANSLATORS: explain how to get help,
 			 * where $1 is something like 'fwupdmgr --help' */
 			g_string_append_printf(str, _("Use %s for help"), cmd);
-			fu_console_print_literal(priv->console, str->str);
+			fu_console_print_literal(self->console, str->str);
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return EXIT_NOTHING_TO_DO;
 		else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND))
