@@ -148,6 +148,7 @@ fwupdplugin_src = [
   'fu-intel-thunderbolt-nvm.c', # fuzzing
   'fu-io-channel.c', # fuzzing
   'fu-ioctl.c', # fuzzing
+  'fu-json-firmware.c', # fuzzing
   'fu-kenv.c', # fuzzing
   'fu-kernel.c', # fuzzing
   'fu-kernel-search-path.c', # fuzzing
@@ -299,6 +300,7 @@ fwupdplugin_headers = [
   'fu-intel-thunderbolt-nvm.h',
   'fu-io-channel.h',
   'fu-ioctl.h',
+  'fu-json-firmware.h',
   'fu-kenv.h',
   'fu-kernel.h',
   'fu-kernel-search-path.h',
