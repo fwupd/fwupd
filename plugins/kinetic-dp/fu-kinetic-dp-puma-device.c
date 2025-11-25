@@ -137,9 +137,7 @@ fu_kinetic_dp_puma_device_enter_code_loading_mode(FuKineticDpPumaDevice *self, G
 }
 
 static gboolean
-fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self,
-				     GBytes *fw,
-				     GError **error)
+fu_kinetic_dp_puma_device_send_chunk(FuKineticDpPumaDevice *self, GBytes *fw, GError **error)
 {
 	g_autoptr(FuChunkArray) chunks =
 	    fu_chunk_array_new_from_bytes(fw, FU_CHUNK_ADDR_OFFSET_NONE, FU_CHUNK_PAGESZ_NONE, 16);
@@ -215,8 +213,7 @@ fu_kinetic_dp_puma_device_send_payload(FuKineticDpPumaDevice *self,
 }
 
 static gboolean
-fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self,
-					 GError **error)
+fu_kinetic_dp_puma_device_wait_drv_ready(FuKineticDpPumaDevice *self, GError **error)
 {
 	guint8 flashinfo[FU_STRUCT_KINETIC_DP_FLASH_INFO_SIZE] = {0};
 	g_autoptr(FuStructKineticDpFlashInfo) st = NULL;

@@ -78,9 +78,9 @@ fu_uefi_pk_device_parse_certificate(FuUefiPkDevice *self, FuEfiX509Signature *si
 			return FALSE;
 	}
 
-
 	if (self->has_pk_test_key) {
-		fu_context_add_flag(fu_device_get_context(FU_DEVICE(self)), FU_CONTEXT_FLAG_INSECURE_UEFI);
+		fu_context_add_flag(fu_device_get_context(FU_DEVICE(self)),
+				    FU_CONTEXT_FLAG_INSECURE_UEFI);
 		fu_device_add_problem(FU_DEVICE(self), FWUPD_DEVICE_PROBLEM_INSECURE_PLATFORM);
 	}
 

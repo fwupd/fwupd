@@ -88,9 +88,9 @@ fu_uefi_capsule_backend_device_new(FuUefiCapsuleBackend *self,
 
 static gboolean
 fu_uefi_capsule_backend_freebsd_setup(FuBackend *backend,
-				    FuBackendSetupFlags flags,
-				    FuProgress *progress,
-				    GError **error)
+				      FuBackendSetupFlags flags,
+				      FuProgress *progress,
+				      GError **error)
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string("efi-version", error);
 	if (efi_ver == NULL) {
